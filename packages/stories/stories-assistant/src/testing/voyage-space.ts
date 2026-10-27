@@ -12,7 +12,7 @@ import * as Project from '@dxos/compute/Project';
 import { Feed } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { Outline, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -45,29 +45,30 @@ export const voyageSpace: AppCapabilities.SpaceTemplate = {
   label: 'Voyage',
   description: 'One project whose instructions steer every reply, and an empty mailbox.',
   icon: 'ph--boat--regular',
-  apply: async ({ client, space }) => {
-    await client.addTypes([
-      Project.Project,
-      Instructions.Instructions,
-      TaskSet.TaskSet,
-      Outline.Outline,
-      Mailbox.Mailbox,
-      Feed.Feed,
-    ]);
-    space.db.add(Mailbox.make({ name: 'Clients' }));
-    // Parented by the scaffold, so the single add cascades the instructions, task set and outline.
-    space.db.add(
-      scaffoldProject({
-        name: 'Voyage',
-        description: 'Project chat-binding test fixture.',
-        text: PROJECT_INSTRUCTIONS,
-        commands: PROJECT_COMMANDS,
-      }),
-    );
-    // Indexed before returning, like the space-template builder: the caller queries this content as
-    // soon as `apply` resolves, and an unindexed project reads as a space that has none.
-    await space.db.flush({ indexes: true });
-  },
+  apply: ({ client, space }) =>
+    Effect.promise(async () => {
+      await client.addTypes([
+        Project.Project,
+        Instructions.Instructions,
+        TaskSet.TaskSet,
+        Outline.Outline,
+        Mailbox.Mailbox,
+        Feed.Feed,
+      ]);
+      space.db.add(Mailbox.make({ name: 'Clients' }));
+      // Parented by the scaffold, so the single add cascades the instructions, task set and outline.
+      space.db.add(
+        Templates.scaffoldProject({
+          name: 'Voyage',
+          description: 'Project chat-binding test fixture.',
+          text: PROJECT_INSTRUCTIONS,
+          commands: PROJECT_COMMANDS,
+        }),
+      );
+      // Indexed before returning, like the space-template builder: the caller queries this content as
+      // soon as `apply` resolves, and an unindexed project reads as a space that has none.
+      await space.db.flush({ indexes: true });
+    }),
 };
 
 /** Contributes {@link voyageSpace} alongside the space templates plugin-debug contributes. */

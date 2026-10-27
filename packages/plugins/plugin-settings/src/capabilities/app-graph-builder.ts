@@ -14,7 +14,8 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { Position, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { SettingsPath } from '#types';

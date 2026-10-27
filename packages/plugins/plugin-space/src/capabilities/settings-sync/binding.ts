@@ -8,7 +8,7 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /** One namespace's two-way link between a local value and the synced store. */
 export type Binding = {

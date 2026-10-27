@@ -6,18 +6,15 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import {
-  Surface,
-  useActivationSignal,
-  useCapabilities,
-  useOperationInvoker,
-  usePluginManager,
-} from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SpaceCapabilities, SpaceEvents } from '#types';
 
@@ -30,11 +27,11 @@ export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknow
  */
 export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesProps>(
   ({ role, subject: object }, forwardedRef) => {
-    const manager = usePluginManager();
-    const operationInvoker = useOperationInvoker();
+    const manager = PluginManagerProvider.usePluginManager();
+    const operationInvoker = Hooks.useOperationInvoker();
     // Demand signal: this companion can create related objects, so pull parked entry providers.
-    useActivationSignal(SpaceEvents.CreateObjectRequested);
-    const createEntries = useCapabilities(SpaceCapabilities.CreateObjectEntry);
+    Hooks.useActivationSignal(SpaceEvents.CreateObjectRequested);
+    const createEntries = Hooks.useCapabilities(SpaceCapabilities.CreateObjectEntry);
     const data = useMemo<AppSurface.ObjectPropertiesData>(() => ({ subject: object }), [object]);
 
     const resolveCreateEntry = useCallback(

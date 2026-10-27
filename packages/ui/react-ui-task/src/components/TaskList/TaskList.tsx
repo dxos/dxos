@@ -2,24 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
-import {
-  Block,
-  Button,
-  Flex,
-  Grid,
-  Icon,
-  Tag,
-  composable,
-  composableProps,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Tag as EchoTag, Filter, Obj } from '@dxos/echo';
+import { useLabel, useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Util from '@dxos/react-ui/Util';
 import { type Actor, PullRequest, Task } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -323,9 +320,9 @@ type TaskListViewportProps = ComposableProps<{
   rows?: number;
 }>;
 
-const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
+const TaskListViewport = Util.composable<HTMLDivElement, TaskListViewportProps>(
   ({ children, rows: rowsProp, ...props }, forwardedRef) => {
-    const { className, style, ...rest } = composableProps(props);
+    const { className, style, ...rest } = Util.composableProps(props);
     // Whole rows only: a fractional count would cut through the next row.
     const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
     return (
@@ -487,8 +484,8 @@ TaskListContent.displayName = 'TaskList.Content';
 
 type TaskListGroupLabelProps = ComposableProps;
 
-const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
+const TaskListGroupLabel = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { className, ...rest } = Util.composableProps(props);
   return (
     <div
       {...rest}
@@ -517,7 +514,7 @@ const TaskListItem = ({
   onTaskCheck,
   onTaskUpdate,
 }: TaskItemProps) => {
-  const { t } = useTranslation(itemTranslationKey);
+  const { t } = Hooks.useTranslation(itemTranslationKey);
   const { showGutter, showMnemonics, showAssignees, showEstimates } = useTaskListContext('TaskList.Item');
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit does not change, so
@@ -536,7 +533,7 @@ const TaskListItem = ({
       {/* The one cell not placed by name: it flows into the template's unnamed first track. */}
       {indicator}
       {showGutter && (
-        <Flex center gap='xs' classNames={TRACK.gutter}>
+        <Layout.Flex center gap='xs' classNames={TRACK.gutter}>
           {onTaskCheck && <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />}
           {/* One button for the number and the reference it copies. Not beside a checkbox: a number beside a box reads
               as two ways to act on the row. The live task, not the snapshot: only the live object knows its space,
@@ -544,7 +541,7 @@ const TaskListItem = ({
           {(showMnemonics || ordinal !== undefined) && (
             <TaskMnemonic task={task} ordinal={onTaskCheck ? undefined : ordinal} />
           )}
-        </Flex>
+        </Layout.Flex>
       )}
       <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />
       {/* Inset as the editor's fields are, so a title reads at the x the field below types it. The placeholder is
@@ -562,22 +559,32 @@ const TaskListItem = ({
       </span>
       {/* On the title line, beside who has the task: the pull request is what the row is scanned for once work is under
           way, and on a line of its own it pushed the description down. */}
-      <Flex align='center' gap='xs' classNames={mx(TRACK.artifacts, 'ps-1')} data-testid='taskList.item.artifacts'>
+      <Layout.Flex
+        align='center'
+        gap='xs'
+        classNames={mx(TRACK.artifacts, 'ps-1')}
+        data-testid='taskList.item.artifacts'
+      >
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
-      </Flex>
+      </Layout.Flex>
       {showAssignees && current.assignee && (
-        <Grid center classNames={TRACK.assignee}>
+        <Layout.Grid center classNames={TRACK.assignee}>
           <TaskListAssignee assignee={current.assignee} iconOnly />
-        </Grid>
+        </Layout.Grid>
       )}
       {showEstimates && <TaskEstimateControl task={task} classNames={TRACK.estimate} />}
       <TaskPriorityIcon task={task} classNames={TRACK.priority} />
       <TaskListItemActions task={task} classNames={TRACK.actions} />
 
-      {/* The row's second line, under the title; it takes no height when the task has no chips. */}
-      <Flex align='center' classNames='col-[title] row-start-2 empty:hidden' data-testid='taskList.item.chips'>
-        <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
-      </Flex>
+      {/* The row's second line, under the title and inset as it is; it takes no height when the task has no chips. */}
+      <Layout.Flex
+        align='center'
+        gap='xs'
+        classNames='col-[title] row-start-2 px-(--dx-gap-size) empty:hidden'
+        data-testid='taskList.item.chips'
+      >
+        <TaskListItemTags task={task} />
+      </Layout.Flex>
       {/* Under the title and the chips, clearing the gutter and the status control so it does not read as the row
           above's, and stopping short of the trailing controls. What the task says, and nothing the log recorded. */}
       {description && (
@@ -603,7 +610,7 @@ const isMenuAction = (item: MenuItem): item is MenuAction => 'data' in item && t
  * to discover nothing — and several collapse into the overflow menu, matching the nav tree's rows.
  */
 const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { getTaskActions } = useTaskListContext('TaskList.ItemActions');
   const actions = useMemo(() => getTaskActions?.(task) ?? [], [getTaskActions, task]);
 
@@ -615,12 +622,12 @@ const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames
   if (actions.length === 1 && isMenuAction(only)) {
     return (
       <Tree.ItemActions>
-        <Block classNames={classNames}>
-          <Button
+        <Layout.Block classNames={classNames}>
+          <Button.Root
             variant='ghost'
             iconOnly
             icon={only.properties?.icon ?? fallbackIcon}
-            label={toLocalizedString(only.properties?.label, t)}
+            label={Theme.toLocalizedString(only.properties?.label, t)}
             data-testid={only.properties?.testId}
             onClick={(event) => {
               // The row is the selection target; running its action must not also select it.
@@ -628,18 +635,18 @@ const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames
               void executeMenuAction(only);
             }}
           />
-        </Block>
+        </Layout.Block>
       </Tree.ItemActions>
     );
   }
 
   return (
     <Tree.ItemActions>
-      <Block classNames={classNames}>
+      <Layout.Block classNames={classNames}>
         {/* The button is the trigger, not the block: the button stops the click so the row is not
             selected too, and a trigger above it would never receive it. */}
         <ActionMenu deferUntilOpen actions={actions}>
-          <Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--dots-three-vertical--regular'
@@ -648,7 +655,7 @@ const TaskListItemActions = ({ task, classNames }: { task: Task.Task; classNames
             onClick={(event) => event.stopPropagation()}
           />
         </ActionMenu>
-      </Block>
+      </Layout.Block>
     </Tree.ItemActions>
   );
 };
@@ -661,18 +668,19 @@ TaskListItemActions.displayName = 'TaskList.ItemActions';
  */
 const TaskListItemArtifacts = ({ task, filter }: { task: Task.Task; filter?: (obj: Obj.Unknown) => boolean }) => {
   const db = Obj.getDatabase(task);
+  const [refs] = useObject(task, 'artifacts');
   const ids = useMemo(
     () =>
-      (task.artifacts ?? []).flatMap((ref) => {
+      (refs ?? []).flatMap((ref) => {
         const id = Task.refEntityId(ref);
         return id ? [id] : [];
       }),
-    [task.artifacts],
+    [refs],
   );
   const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
   // Without a database — a story, a preview — the refs were made from objects already in hand,
   // so their targets resolve synchronously and the row still shows what the task produced.
-  const resolved = db ? queried : (task.artifacts ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
+  const resolved = db ? queried : (refs ?? []).flatMap((ref) => (ref.target ? [ref.target] : []));
   const artifacts = filter ? resolved.filter(filter) : resolved;
 
   return (
@@ -692,7 +700,7 @@ TaskListItemArtifacts.displayName = 'TaskList.ItemArtifacts';
 export const TaskTags = ({ task }: { task: Task.Task }) => {
   return (
     <>
-      <TaskListItemTags task={task} tags={Obj.getMeta(task).tags} />
+      <TaskListItemTags task={task} />
       <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
     </>
   );
@@ -701,32 +709,29 @@ export const TaskTags = ({ task }: { task: Task.Task }) => {
 TaskTags.displayName = 'TaskList.Tags';
 
 /**
- * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the
- * reason artifacts are: a tag's target is not in memory on a cold load.
+ * The task's tags, as chips in the same cell as its artifacts and assignee. Tags are strong
+ * dependencies of the task, so they are in memory whenever the task is.
  */
-const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.Ref<EchoTag.Tag>[] }) => {
-  const db = Obj.getDatabase(task);
-  const ids = useMemo(
+const TaskListItemTags = ({ task }: { task: Task.Task }) => {
+  const tags = useAtomValue(Obj.tagsAtom(task));
+  const labelledAtom = useMemo(
     () =>
-      tags.flatMap((ref) => {
-        const id = Task.refEntityId(ref);
-        return id ? [id] : [];
-      }),
+      Atom.make((get) =>
+        tags
+          .filter((tag) => !Obj.isDeleted(tag))
+          .map((tag) => get(Obj.atom(tag)))
+          .sort(EchoTag.sortTags),
+      ),
     [tags],
   );
-  const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
-  const resolved = db ? queried : tags.flatMap((ref) => (ref.target ? [ref.target] : []));
-  const labelled = useMemo(
-    () => resolved.filter((object) => Obj.instanceOf(EchoTag.Tag, object)).sort(EchoTag.sortTags),
-    [resolved],
-  );
+  const labelled = useAtomValue(labelledAtom);
 
   return (
     <>
       {labelled.map((tag) => (
-        <Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
+        <Tag.Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
           {tag.label}
-        </Tag>
+        </Tag.Tag>
       ))}
     </>
   );
@@ -743,33 +748,46 @@ TaskListItemTags.displayName = 'TaskList.ItemTags';
  * markdown — so a row reads the same as the text that references it.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
-  const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
+  const label = useLabel(artifact, { fallback: 'typename' }) ?? '';
   const anchor = usePreviewAnchor({ eid: Obj.getURI(artifact).toString(), label });
 
-  if (PullRequest.instanceOf(artifact)) {
-    return (
-      <Button
-        {...anchor}
-        hue='neutral'
-        size='sm'
-        // The anchor chip's outlined look (`.dx-tag-anchor`), so the pill matches a PR link in a description.
-        classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
-        icon='ph--git-pull-request--regular'
-        iconClassNames={pullRequestStateStyle[artifact.state]}
-        label={`#${artifact.number}`}
-        tabIndex={-1}
-      />
-    );
+  if (Obj.instanceOf(PullRequest.PullRequest, artifact)) {
+    return <PullRequestTag pullRequest={artifact} anchor={anchor} />;
   }
 
   return (
-    <Tag {...anchor} hue='amber' classNames='cursor-pointer'>
+    <Tag.Tag {...anchor} hue='amber' classNames='cursor-pointer'>
       {label}
-    </Tag>
+    </Tag.Tag>
   );
 };
 
 ArtifactTag.displayName = 'TaskList.ArtifactTag';
+
+const PullRequestTag = ({
+  pullRequest,
+  anchor,
+}: {
+  pullRequest: PullRequest.PullRequest;
+  anchor: ReturnType<typeof usePreviewAnchor>;
+}) => {
+  const [state] = useObject(pullRequest, 'state');
+  const [number] = useObject(pullRequest, 'number');
+  return (
+    <Button.Root
+      {...anchor}
+      hue='neutral'
+      size='sm'
+      classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
+      icon='ph--git-pull-request--regular'
+      iconClassNames={pullRequestStateStyle[state]}
+      label={`#${number}`}
+      tabIndex={-1}
+    />
+  );
+};
+
+PullRequestTag.displayName = 'TaskList.PullRequestTag';
 
 /** GitHub's own state colours, so the icon reads as open, merged or closed at a glance. */
 const pullRequestStateStyle: Record<PullRequest.State, string> = {
@@ -790,52 +808,54 @@ type TaskListAssigneeProps = {
   iconOnly?: boolean;
 };
 
-const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee, iconOnly }, _forwardedRef) => {
-  const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
-  const [session] = useObject(assignee.subject);
-  const anchor = usePreviewAnchor({
-    eid: session && Obj.getURI(session).toString(),
-    label: label ?? '',
-    // Without this the card falls back to the type's placeholder ("New item"), since a session's
-    // label prop is its title and the harness reports none.
-    title: harness?.title ?? label,
-  });
+const TaskListAssignee = Util.composable<HTMLSpanElement, TaskListAssigneeProps>(
+  ({ assignee, iconOnly }, _forwardedRef) => {
+    const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
+    const [session] = useObject(assignee.subject);
+    const anchor = usePreviewAnchor({
+      eid: session && Obj.getURI(session).toString(),
+      label: label ?? '',
+      // Without this the card falls back to the type's placeholder ("New item"), since a session's
+      // label prop is its title and the harness reports none.
+      title: harness?.title ?? label,
+    });
 
-  if (!label && !agent) {
-    return null;
-  }
+    if (!label && !agent) {
+      return null;
+    }
 
-  const hue = agent ? 'purple' : 'indigo';
+    const hue = agent ? 'purple' : 'indigo';
 
-  // Icon-only, a square button in the row's controls; its tooltip names the assignee, unless a session shows its card
-  // on hover, which already names the run and a tooltip would stack on.
-  if (iconOnly && label) {
+    // Icon-only, a square button in the row's controls; its tooltip names the assignee, unless a session shows its card
+    // on hover, which already names the run and a tooltip would stack on.
+    if (iconOnly && label) {
+      return (
+        <Button.Root
+          iconOnly
+          icon={icon}
+          hue={hue}
+          label={label}
+          showTooltip={!session}
+          data-testid='taskList.item.assignee'
+          {...(session && anchor)}
+        />
+      );
+    }
+
     return (
-      <Button
-        iconOnly
-        icon={icon}
+      <Tag.Tag
         hue={hue}
-        label={label}
-        showTooltip={!session}
         data-testid='taskList.item.assignee'
-        {...(session && anchor)}
-      />
+        // A button when there is a session to open, so the keyboard reaches it as the pointer does.
+        {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
+        classNames={session && 'cursor-pointer'}
+      >
+        {agent && <Icon.Icon icon={icon} classNames='inline-block size-4 me-1' />}
+        {label}
+      </Tag.Tag>
     );
-  }
-
-  return (
-    <Tag
-      hue={hue}
-      data-testid='taskList.item.assignee'
-      // A button when there is a session to open, so the keyboard reaches it as the pointer does.
-      {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
-      classNames={session && 'cursor-pointer'}
-    >
-      {agent && <Icon icon={icon} classNames='inline-block size-4 me-1' />}
-      {label}
-    </Tag>
-  );
-});
+  },
+);
 
 TaskListAssignee.displayName = 'TaskList.Assignee';
 

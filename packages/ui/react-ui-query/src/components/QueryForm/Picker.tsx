@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { Select, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
 
 import { translationKey } from '#translations';
 
@@ -24,7 +25,7 @@ export const Picker = <T extends { value: string; label: string }>({
   value,
   onChange,
 }: PickerProps<T>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const sorted = useMemo(() => values?.sort(({ label: a }, { label: b }) => a.localeCompare(b)) ?? [], [values]);
 
   return (

@@ -16,7 +16,9 @@ import {
   type QueryExecutorMode,
   runSqliteHealthCheck,
 } from '@dxos/echo-host';
-import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { SqliteKeyring } from '@dxos/keyring';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
@@ -27,7 +29,8 @@ import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/confi
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
-import { type IdentityManagerProps, identityProviderFromManager } from '../identity/index.ts';
+import { migrateBlobStore } from '../blobs/index.ts';
+import { type IdentityManagerProps, type InboxRelay, identityProviderFromManager } from '../identity/index.ts';
 import { type InvitationConnectionProps } from '../invitations/index.ts';
 import { IMetadataStoreService, SqliteMetadataStore } from '../metadata/index.ts';
 import { SpaceManagerService } from '../space/index.ts';
@@ -72,6 +75,9 @@ export type ServiceStackServices = ServiceContextRuntimeProps & {
    * router outlives the stack and serves every tab; otherwise the stack builds its own.
    */
   externalRouter?: boolean;
+
+  /** Replaces the EDGE inbox; tests share one relay between clients. */
+  inboxRelay?: InboxRelay;
 };
 
 /**
@@ -127,6 +133,7 @@ export const storageMigrationLayer = Layer.effect(
         new SqliteMetadataStore({ runtime }).migrate,
         new SqliteKeyring({ runtime }).migrate,
         new SqliteStorage.SqliteStorage({ runtime }).migrate,
+        migrateBlobStore,
       ],
       { discard: true },
     );
@@ -174,6 +181,13 @@ export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?
   Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
+      const controller = yield* Hook.Controller;
+      const unsubscribeStatus = echoHost.indexStatus.updated.on((status) => {
+        void EffectEx.runPromise(
+          Hook.emit(Events.IndexStatus, status).pipe(Effect.provideService(Hook.Controller, controller)),
+        );
+      });
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribeStatus()));
       yield* Effect.acquireRelease(
         Effect.promise(() => echoHost.open()),
         () => Effect.promise(() => echoHost.close()),

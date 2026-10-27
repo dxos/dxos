@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { githubReferences, referenceUrl } from '@dxos/plugin-github/extensions';
+import * as Extensions from '@dxos/plugin-github/Extensions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -28,7 +28,10 @@ const OutlineStory = ({ content = '- [x] Initial content', references, onSelectL
   // The outline owns its core extensions; a host adds what only it knows about. Here that is
   // plugin-github's `#123` decoration, which in the app resolves against the project's repository.
   const extensions = useMemo(
-    () => (references ? [githubReferences({ resolve: (number) => referenceUrl(references, number) })] : undefined),
+    () =>
+      references
+        ? [Extensions.githubReferences({ resolve: (number) => Extensions.referenceUrl(references, number) })]
+        : undefined,
     [references],
   );
   if (text) {
@@ -101,13 +104,17 @@ export const TestLinkActivation: Story = {
   play: async ({ canvasElement, args }) => {
     const { page } = await import('@vitest/browser/context');
     const canvas = within(canvasElement);
-    const anchor = await waitFor(() => {
-      const element = canvasElement.querySelector<HTMLElement>(`dx-anchor[eid="${LINK_DXN}"]`);
-      if (!element) {
-        throw new Error('No anchor chip');
-      }
-      return element;
-    });
+    // The chip renders once the editor has mounted and decorated the document.
+    const anchor = await waitFor(
+      () => {
+        const element = canvasElement.querySelector<HTMLElement>(`dx-anchor[eid="${LINK_DXN}"]`);
+        if (!element) {
+          throw new Error('No anchor chip');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
 
     // The chip's own activation still reaches the window, where the app's preview popover listens.
     const activations: string[] = [];
@@ -115,9 +122,8 @@ export const TestLinkActivation: Story = {
     window.addEventListener('dx-anchor-activate', listen, { capture: true });
 
     await page.getByText(LINK_LABEL).hover();
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await waitFor(() => expect(activations).toContain('open'));
     await expect(args.onSelectLink).not.toHaveBeenCalled();
-    await expect(activations).toContain('open');
     await expect(canvas.getByText('Another item')).toBeVisible();
 
     await userEvent.click(anchor);

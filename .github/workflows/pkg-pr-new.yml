@@ -1,23 +1,20 @@
 name: pkg.pr.new
 
-# TODO(wittjosiah): stays on GitHub Actions. pkg.pr.new's own publish CLI verifies the calling CI
-# run against GitHub's real Actions run tracking - on Depot CI (#12779) it failed every run with
-# `Check failed (404): There is no workflow defined for <id>`, since a Depot-executed run isn't a
-# real GitHub Actions run from pkg.pr.new's backend's perspective. Same underlying issue as
-# pr-deploy.yml's artifact-download failure: third-party tools that verify against GitHub's own
-# run identity don't work once the workflow actually executes on Depot's infrastructure.
-
+# Publishes every commit to `main`: dxos/plugins' SDK nightly and edge's catalog bump pin the newest
+# commit pkg.pr.new serves, so an unpublished commit 404s for them. `deploy-apps.yml` calls this for
+# every commit it deploys, since a Composer bundle pins its plugin template to its own commit. Dispatch
+# it to publish anything else.
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
+  workflow_call:
 
+# One group per commit, never cancelled: GitHub keeps a single pending run per group, so a shared group
+# would let the next merge or deploy cancel the publish of a commit something already pins.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  # Queue rather than cancel: a cancelled run uploads nothing, so the commit it was building stays
-  # permanently un-installable for anything pinning pkg.pr.new — which is how the composer plugins
-  # repo tracks the SDK, and its nightly 404s when it lands on such a commit.
+  group: pkg-pr-new-${{ github.sha }}
   cancel-in-progress: false
 
 env:
@@ -28,8 +25,24 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
+  # A deploy usually lands on a commit its push already published.
+  published:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - id: check
+        run: |
+          if curl -sfIL -o /dev/null "https://pkg.pr.new/dxos/dxos/@dxos/compute@${GITHUB_SHA}"; then
+            echo "pkg.pr.new already serves ${GITHUB_SHA}."
+            echo 'exists=true' >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
-    runs-on: depot-ubuntu-24.04-4
+    needs: published
+    if: needs.published.outputs.exists != 'true'
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -50,7 +63,7 @@ jobs:
       # general CI pool nor trusted without an integrity check. Same reasoning already applied to
       # dxos/edge's copy of this workflow.
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
         with:
           cache-scope: 'publish'
           verify-integrity: 'true'

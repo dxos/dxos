@@ -64,11 +64,24 @@ export const isOAuthShapedMessage = (data: unknown): boolean =>
 export const beginOAuthFlow = (
   edge: EdgeHttpClient,
   spaceId: Key.SpaceId,
-  oauth: NonNullable<ConnectorSpec.ConnectorEntry['oauth']>,
+  {
+    kind,
+    oauth,
+    resource,
+  }: {
+    kind: ConnectorSpec.ConnectorKind;
+    oauth: ConnectorSpec.ConnectorOAuthSpec;
+    /** The MCP server a `provider: 'mcp'` grant is for. */
+    resource?: string;
+  },
   accessTokenId: string,
   loginHint: string | undefined,
-): Effect.Effect<void, OAuthFlowError> =>
-  NativeOAuth.supportsNativeOAuth()
+): Effect.Effect<void, OAuthFlowError> => {
+  // Only an app connection says so: a request without `kind` is a user grant, which keeps every
+  // other flow byte-identical for an EDGE that predates the field.
+  const appKind = kind === 'app' ? ({ kind: 'app' } as const) : {};
+  const forResource = resource ? { resource } : {};
+  return NativeOAuth.supportsNativeOAuth()
     ? Effect.tryPromise({
         try: async () =>
           NativeOAuth.startNativeOAuth({
@@ -78,6 +91,8 @@ export const beginOAuthFlow = (
             spaceId,
             accessTokenId,
             authHeader: await edge.getAuthHeader(),
+            ...appKind,
+            ...forResource,
             ...(loginHint ? { loginHint } : {}),
           }),
         catch: OAuthFlowError.wrap(),
@@ -90,6 +105,8 @@ export const beginOAuthFlow = (
               scopes: [...oauth.scopes],
               spaceId,
               accessTokenId,
+              ...appKind,
+              ...forResource,
               ...(loginHint ? { loginHint } : {}),
             }),
           catch: OAuthFlowError.wrap(),
@@ -109,3 +126,4 @@ export const beginOAuthFlow = (
           return yield* Effect.fail(new OAuthFlowError({ message: 'Unable to open OAuth window (popup blocked?).' }));
         }
       });
+};

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -16,11 +16,22 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Task } from '@dxos/types';
 
 import { ProjectsPlugin } from '#plugin';
 import { ProjectOperation } from '#types';
+
+await Harness.preload({
+  plugins: [
+    ClientPlugin.make({}),
+    SpacePlugin.make({}),
+    TasksPlugin.make(),
+    AssistantPlugin.make(),
+    RoutinePlugin.make(),
+    ProjectsPlugin(),
+  ],
+});
 
 describe('ProjectOperation.CopyTaskPrompt', () => {
   test('renders the task, its addresses and the project it belongs to', async ({ expect }) => {
@@ -119,7 +130,7 @@ describe('ProjectOperation.CopyTaskPrompt', () => {
 });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({
+  const harness = await Harness.createComposerTestApp({
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),

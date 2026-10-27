@@ -1,5 +1,79 @@
 # @dxos/link
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/pipeline@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 45ab961: Large Gmail mailboxes sync again: attachments past the inline blob cap are skipped before download, the dedup seed reads 50 messages per query instead of 1,000 objects at once (which outgrew EDGE's 32 MiB query cap), a binding whose mailbox was deleted no longer fails every run, and a reference to a deleted object no longer downloads every feed in the space. Local syncs no longer fail on an unset `priority`, one bad trigger or failed tick no longer stops the trigger runner until a reload, and feed reads under Safari 18 (the macOS desktop app) no longer fail with `RangeError: Bad value` once a worker has decoded 2 GiB.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [16bde33]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/pipeline@0.15.0
+  - @dxos/invariant@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/pipeline@0.14.0
+  - @dxos/invariant@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [161f994]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/pipeline@0.13.0
+  - @dxos/invariant@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

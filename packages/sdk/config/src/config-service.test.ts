@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { afterEach, describe, test } from 'vitest';
 
 import { DEFAULT_HUB_URL } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { ConfigService } from './config-service.ts';
 import { EDGE_URLS } from './edge-services.ts';

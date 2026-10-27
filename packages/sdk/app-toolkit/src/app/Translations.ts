@@ -6,7 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-export { Label } from '@dxos/app-framework';
+import * as Translations from '@dxos/app-framework/Translations';
+
+export const Label = Translations.Label;
+export type Label = Translations.Label;
 
 export const ResourceKey = Schema.Union([Schema.String, Schema.Record(Schema.String, Schema.Any)]);
 export type ResourceKey = Schema.Schema.Type<typeof ResourceKey>;

@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ChatContextSkill, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import type * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 

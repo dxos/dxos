@@ -4,7 +4,8 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Button, Popover } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { type ArtifactKind, type ArtifactLink } from '../../pull-request-body.ts';
 
@@ -61,12 +62,12 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
   return (
     <Popover.Root autoFocus={false}>
       <Popover.Trigger asChild>
-        <Button
+        <Button.Root
           hue='neutral'
           size='sm'
           classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'
           icon={artifactIcon[artifact.kind]}
-          iconClassNames={artifact.kind === 'video' ? 'text-violet-500' : 'text-sky-500'}
+          iconClassNames={artifact.kind === 'video' ? 'text-violet-text' : 'text-sky-text'}
           label={label}
           data-testid='pull-request.artifact.pill'
         />

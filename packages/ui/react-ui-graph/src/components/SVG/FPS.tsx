@@ -4,14 +4,14 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useSvgContext } from '../../hooks/index.ts';
 
 export type FPSCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
-export type FPSProps = ThemedClassName<{
+export type FPSProps = Util.ThemedClassName<{
   /** Which corner of the SVG viewport to anchor the readout to. */
   corner?: FPSCorner;
   /** Pixels of padding from the chosen corner. */

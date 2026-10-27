@@ -140,6 +140,9 @@ export interface PluginModule {
   activate: (
     props?: any,
   ) => Effect.Effect<ModuleActivateResult, Error, Capability.Service | Service | Scope.Scope | never>;
+
+  /** Imports a lazy module's body without activating it; absent on inline modules. */
+  readonly load?: () => Promise<unknown>;
 }
 
 /**
@@ -212,6 +215,7 @@ export type ModuleEntry = {
   readonly requires?: readonly Capability.AnyTag[];
   readonly provides?: readonly Capability.AnyTag[];
   readonly activate: (props?: any) => Effect.Effect<any, Error, any>;
+  readonly load?: () => Promise<unknown>;
 };
 
 class PluginModuleImpl implements PluginModule {
@@ -219,11 +223,18 @@ class PluginModuleImpl implements PluginModule {
   readonly id: string;
   readonly activation: ActivationSpec;
   readonly activate: PluginModule['activate'];
+  readonly load: PluginModule['load'];
 
-  constructor(options: { id: string; activation: ActivationSpec; activate: PluginModule['activate'] }) {
+  constructor(options: {
+    id: string;
+    activation: ActivationSpec;
+    activate: PluginModule['activate'];
+    load: PluginModule['load'];
+  }) {
     this.id = options.id;
     this.activation = options.activation;
     this.activate = options.activate;
+    this.load = options.load;
   }
 }
 
@@ -428,6 +439,7 @@ export function addModule<T>(
         requires: module.requires,
         provides: module.provides,
         activate: () => module(pluginOptions),
+        load: module.load,
       }));
   }
   // Direct-call style: addModule(builder, moduleOptions).
@@ -494,6 +506,7 @@ const resolveModule = (
     // Erasure boundary: the authoring layer constrained the effect's environment to the
     // declared requires; the manager supplies exactly those services plus the ambient ones.
     activate: moduleOptions.activate as PluginModule['activate'],
+    load: moduleOptions.load,
   });
 };
 
@@ -520,6 +533,12 @@ export function make<T>(builder: PluginBuilder<T>): ((options: T) => Plugin) & {
     // safe for option-reading module callbacks; ignored by `void` and record modules.
     const resolved = (options ?? {}) as T;
     const modules = builder.modules.map((module) => resolveModule(meta, module, resolved));
+    // The manager keys modules by id, so a second module with the same id would be dropped silently.
+    const ids = new Set<string>();
+    for (const module of modules) {
+      invariant(!ids.has(module.id), `Duplicate module id ${module.id} in plugin ${meta.profile.key}.`);
+      ids.add(module.id);
+    }
     return new PluginImpl(meta, modules);
   };
 
@@ -561,7 +580,7 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * @example
  * ```ts
  * // plugin-markdown/src/index.ts
- * import { Plugin } from '@dxos/app-framework';
+ * import * as Plugin from '@dxos/app-framework/Plugin';
  * import { meta } from './meta';
  *
  * export const MarkdownPlugin = Plugin.lazy(meta, () => import('./MarkdownPlugin'));

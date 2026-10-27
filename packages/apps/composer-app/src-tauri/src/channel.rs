@@ -24,6 +24,9 @@ pub enum ReleaseChannel {
     Staging,
     Preview,
     Dev,
+    /// Local automation builds (`tauri.test.conf.json`), kept off every shipped channel's identifier,
+    /// port and storage.
+    Test,
 }
 
 impl ReleaseChannel {
@@ -38,6 +41,7 @@ impl ReleaseChannel {
             Some("staging") => Self::Staging,
             Some("preview") => Self::Preview,
             Some("dev") => Self::Dev,
+            Some("test") => Self::Test,
             _ => Self::Production,
         }
     }
@@ -51,6 +55,7 @@ impl ReleaseChannel {
             Self::Staging => 26778,
             Self::Preview => 26779,
             Self::Dev => 26780,
+            Self::Test => 26781,
         }
     }
 
@@ -61,6 +66,7 @@ impl ReleaseChannel {
             Self::Staging => "staging",
             Self::Preview => "preview",
             Self::Dev => "dev",
+            Self::Test => "test",
         }
     }
 }
@@ -86,6 +92,10 @@ mod tests {
         assert_eq!(
             ReleaseChannel::from_identifier("org.dxos.composer.dev"),
             ReleaseChannel::Dev
+        );
+        assert_eq!(
+            ReleaseChannel::from_identifier("org.dxos.composer.test"),
+            ReleaseChannel::Test
         );
     }
 
@@ -113,6 +123,7 @@ mod tests {
             ReleaseChannel::Staging,
             ReleaseChannel::Preview,
             ReleaseChannel::Dev,
+            ReleaseChannel::Test,
         ]
         .map(ReleaseChannel::localhost_port);
 

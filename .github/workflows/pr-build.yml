@@ -5,17 +5,20 @@ name: PR Build
 # The artifact is picked up by pr-deploy.yml (workflow_run) which runs
 # from the base branch with secrets and performs the Cloudflare deploy.
 #
-# TODO(wittjosiah): stays on GitHub Actions, see the TODO on pr-deploy.yml - its artifact download
-# failed once this workflow ran on Depot CI instead.
 # Named for the trigger, not the output: `preview` is a deploy ENVIRONMENT
 # (preview.composer.space), while these are Worker preview versions of `dev`.
 
+# Opt-in: builds only for a ready PR labeled `preview`, on the label, on marking it ready, and on every
+# push after. A skipped run concludes `skipped`, which pr-deploy.yml ignores. Any other label gets its
+# own concurrency group so adding it cannot cancel an in-flight preview build.
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
 
 concurrency:
-  group: pr-build-${{ github.event.pull_request.number }}
+  group: >-
+    pr-build-${{ github.event.pull_request.number }}-${{ github.event.action == 'labeled' &&
+    github.event.label.name != 'preview' && github.run_id || '' }}
   cancel-in-progress: true
 
 permissions:
@@ -32,8 +35,11 @@ jobs:
   build:
     # Skip forks (per project policy) — not required for safety (no secrets are
     # used here), but fork previews are intentionally unsupported.
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: depot-ubuntu-24.04-8
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'preview') && !github.event.pull_request.draft &&
+      (github.event.action != 'labeled' || github.event.label.name == 'preview')
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -48,7 +54,7 @@ jobs:
           filter: blob:none
 
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
 
       - name: Bundle composer-app
         run: moon run composer-app:bundle

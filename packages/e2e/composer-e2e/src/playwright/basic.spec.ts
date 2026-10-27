@@ -41,6 +41,26 @@ test.describe('Basic tests', () => {
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
   });
 
+  test('re-order workspaces', { tag: ['@QA-2'] }, async () => {
+    await host.createSpace();
+    await expect(host.getWorkspaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
+    const [first, second] = await host.getWorkspaceOrder();
+    if (!first || !second) {
+      throw new Error('workspace rows have no data-object-id');
+    }
+
+    await host.dragTo(host.getWorkspaceItem(second), host.getWorkspaceItem(first), {
+      instruction: 'reorder-above',
+      offset: { x: 0, y: -8 },
+    });
+    await expect.poll(() => host.getWorkspaceOrder()).toEqual([second, first]);
+
+    await host.waitForSaved();
+    await host.page.reload();
+    await expect(host.getWorkspaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 30_000 });
+    await expect.poll(() => host.getWorkspaceOrder()).toEqual([second, first]);
+  });
+
   test('create document', { tag: ['@QA-1'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
@@ -126,6 +146,9 @@ test.describe('Basic tests', () => {
       await host.openUserSecurity();
       const recoveryCode = await host.createRecoveryCode();
       const document = await host.markDocument();
+      // Only this device can admit the EDGE agent that notarizes a recovered device, so it must be in
+      // before the device is deleted; the wait also lets the agent register the recovery code.
+      await host.waitForAgentInSpaces();
 
       await host.showUserDevices();
       await host.recoverIdentity(recoveryCode);

@@ -32,10 +32,10 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import { Filter, Obj } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
 import { EmailPipeline, type FactIndexer, Thread } from '@dxos/pipeline-email';
@@ -68,6 +68,7 @@ import {
   type OutputDetail,
   type PipelineInfo,
   type StatItem,
+  spaceOntology,
 } from '../components/index.ts';
 import { PIPELINE_RUN, PipelineStoryContext } from '../modules/index.ts';
 import { StoryRole } from '../modules/index.ts';
@@ -90,10 +91,11 @@ const SAMPLE_TRANSCRIPT = trim`
   Plato is joining the project next week.
 `;
 
-// Demo synonym table for the RDF normalize stage (keys are relation-key normalized, so inflections match).
+// Demo synonym table for the RDF normalize stage (keys are relation-key normalized, so inflections match); the
+// ontology then maps the canonical form onto its predicate (`schema:worksFor`).
 const SYNONYMS: Record<string, string> = {
-  'works for': 'works at',
-  'employed by': 'works at',
+  'works at': 'works for',
+  'employed by': 'works for',
 };
 
 const toPreview = (message: Message.Message): InputDatasetMessage => ({
@@ -151,8 +153,8 @@ type StoryArgs = { ai: AiConfig };
 
 const DefaultStory = ({ ai }: StoryArgs) => {
   const [space] = useSpaces();
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
-  const progress = useCapability(AppCapabilities.ProgressRegistry);
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const progress = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   // Fact-extraction options for the active backend (undefined → pipeline-rdf's Claude/edge defaults).
   const extractOptions = useMemo<RDF.ExtractOptions | undefined>(
     () => (ai.preset === 'ollama' ? { model: ai.model, provider: Provider.ollama.id, strict: false } : undefined),
@@ -176,13 +178,30 @@ const DefaultStory = ({ ai }: StoryArgs) => {
       }
       const startedMs = Date.now();
       const collected: DocumentFacts[] = [];
+      // The space's brain: the predicates it learned in earlier runs, minting new ones in its own namespace.
+      const ontology = spaceOntology(space.id);
       const program = Effect.gen(function* () {
+        const store = registry.forSpace(space.id);
+        const learned = ontology.include(yield* store.predicates());
+        // The space's people and organizations, so a mention of one is stored under its ECHO URI.
+        const people = yield* Effect.promise(() => space.db.query(Filter.type(Person.Person)).run());
+        const organizations = yield* Effect.promise(() => space.db.query(Filter.type(Organization.Organization)).run());
+        const entities: RDF.KnownEntity[] = [
+          ...people.flatMap((person) =>
+            person.fullName ? [{ iri: Obj.getURI(person), label: person.fullName, type: 'person' as const }] : [],
+          ),
+          ...organizations.flatMap((organization) =>
+            organization.name
+              ? [{ iri: Obj.getURI(organization), label: organization.name, type: 'org' as const }]
+              : [],
+          ),
+        ];
         // Extract one proposition per line/sentence rather than the whole document in a single call:
         // weaker local models (e.g. llama3.2) emit malformed JSON for multi-sentence prompts, so
         // per-proposition inputs are what make them extract cleanly (matching the benchmark corpus).
         yield* Stream.fromIterable(toDocs(text)).pipe(
-          extractFactsStage(extractOptions),
-          normalizeFactsStage({ synonyms: SYNONYMS }),
+          extractFactsStage({ ...extractOptions, ontology: learned, entities }),
+          normalizeFactsStage({ ontology: learned, synonyms: SYNONYMS }),
           Pipeline.run({
             // Stream facts into Brain's FactStore as each document is emitted (the output module reads
             // them reactively), and advance the progress monitor.
@@ -190,7 +209,7 @@ const DefaultStory = ({ ai }: StoryArgs) => {
               Effect.gen(function* () {
                 collected.push(out);
                 handle.advance();
-                yield* registry.forSpace(space.id).putFacts([...out.facts]);
+                yield* store.putFacts([...out.facts]);
               }),
           }),
         );
@@ -406,7 +425,7 @@ const toDocs = (text: string): { readonly text: string; readonly source: string 
     .map((part, index) => ({ text: part, source: `doc-${index}` }));
 
 const factEntities = (fact: RDF.Fact): string[] =>
-  [fact.assertion.subject, fact.assertion.object].flatMap((term) => ('entity' in term ? [term.entity] : []));
+  [fact.assertion.subject, fact.assertion.object].flatMap((term) => (term.kind === 'entity' ? [term.entity] : []));
 
 const round = (value: number): number => Math.round(value * 100) / 100;
 
@@ -481,7 +500,7 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
 );
 
 const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?: string }) => (
-  <div className='flex flex-col gap-3 p-3 h-full overflow-auto'>
+  <div className='flex flex-col gap-3 p-trim-md h-full overflow-auto'>
     {summary && (
       <div className='flex flex-col gap-1'>
         <span className='text-sm text-fg-muted'>Summary</span>

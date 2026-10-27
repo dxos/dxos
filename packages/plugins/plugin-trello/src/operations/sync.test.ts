@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
@@ -54,7 +54,7 @@ describe('reconcileBoardCards (pull)', () => {
   ): Cursor.ExternalCursor => {
     const binding = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(kanban),
         externalId: boardId,
       }),
@@ -364,7 +364,7 @@ describe('pushBoardCards (push)', () => {
   ): Cursor.ExternalCursor => {
     const binding = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(kanban),
         externalId: boardId,
       }),

@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, test } from 'vitest';
 
 import { AgentRegistry, StateStore } from '@dxos/crawler';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 
 import { replayStream } from '../replay.ts';

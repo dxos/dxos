@@ -8,12 +8,14 @@ import * as Stream from 'effect/Stream';
 import React, { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /** Cap on retained events so a long-running story does not grow the list unbounded. */
 const MAX_EVENTS = 200;
@@ -32,7 +34,7 @@ type ReceivedEvent = Trace.FlatEvent & {
  * The monitor is subscribed with a space-scoped filter so it surfaces all swarm traffic for this space.
  */
 export const SwarmTraceModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -41,8 +43,8 @@ export const SwarmTraceModule = () => {
 };
 
 const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
-  const monitor = useOptionalCapability(Capabilities.RemoteTraceMonitor);
-  const runtime = useOptionalCapability(Capabilities.ProcessManagerRuntime);
+  const monitor = Hooks.useOptionalCapability(Capabilities.RemoteTraceMonitor);
+  const runtime = Hooks.useOptionalCapability(Capabilities.ProcessManagerRuntime);
   const [events, setEvents] = useState<ReceivedEvent[]>([]);
   const seqRef = useRef(0);
 
@@ -89,9 +91,9 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Separator />
           <Toolbar.Text>{events.length} events</Toolbar.Text>
           <Toolbar.Separator />
-          <Button onClick={() => setEvents([])} disabled={events.length === 0}>
+          <Button.Root onClick={() => setEvents([])} disabled={events.length === 0}>
             Clear
-          </Button>
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='overflow-hidden'>

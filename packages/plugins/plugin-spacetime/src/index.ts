@@ -3,5 +3,5 @@
 //
 
 export * as SpacetimePlugin from './SpacetimePlugin.ts';
-export * from '#meta';
+export * as SpacetimePresets from './SpacetimePresets.ts';
 export * from '#types';

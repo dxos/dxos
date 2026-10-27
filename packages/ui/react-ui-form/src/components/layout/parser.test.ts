@@ -19,6 +19,12 @@ describe('parseLayout', () => {
     });
   });
 
+  test('fixed grid keeps its columns', ({ expect }) => {
+    const tree = parseLayout(`<grid cols="2" fixed="true"><field name="x"/><field name="y"/></grid>`);
+    expect(tree).toMatchObject({ kind: 'grid', cols: 2, fixed: true });
+    expect(parseLayout(`<grid cols="2"><field name="x"/></grid>`)).not.toHaveProperty('fixed');
+  });
+
   test('field with span attribute', ({ expect }) => {
     const tree = parseLayout(`<grid cols="3"><field name="a" span="2"/><field name="b"/></grid>`);
     expect(tree).toEqual({

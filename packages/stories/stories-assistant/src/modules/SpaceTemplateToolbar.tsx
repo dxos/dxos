@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Model } from '@dxos/ai';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -16,7 +16,11 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Checkbox, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
@@ -48,8 +52,8 @@ export const SpaceTemplateToolbar = () => (
 
 const TemplateSelect = () => {
   const client = useClient();
-  const templates = useCapabilities(AppCapabilities.SpaceTemplate);
-  const { invokePromise } = useOperationInvoker();
+  const templates = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [templateId, setTemplateId] = useState(VOYAGE_SPACE_ID);
   // Guards the seed effect against the re-renders between an open starting and its space landing.
   const busy = useRef(false);
@@ -135,7 +139,7 @@ const TemplateSelect = () => {
   // template rather than on any: each contributing module activates on its own, so the samples can
   // register a beat before the story's own, and a one-shot on the first arrival would open nothing.
   const [opened, setOpened] = useState(false);
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!opened && !busy.current && templates.some(({ id }) => id === templateId)) {
       setOpened(true);
       await handleSelect(templateId);
@@ -207,26 +211,26 @@ const ProfileControls = () => {
 
   return (
     <>
-      <Button
+      <Button.Root
         icon='ph--download-simple--regular'
         iconOnly
         label='Export profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleExport()}
       />
-      <Button
+      <Button.Root
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleImport()}
       />
-      <Checkbox
+      <Input.Checkbox
         checked={persistent}
         onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
         label='Persistent'
       />
-      <Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
+      <Button.Root icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
 };

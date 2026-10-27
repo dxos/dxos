@@ -74,6 +74,9 @@
       "path": "../../core/echo/echo-query"
     },
     {
+      "path": "../../plugins/plugin-agent"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -156,6 +159,9 @@
     },
     {
       "path": "../../plugins/plugin-transcription"
+    },
+    {
+      "path": "../../plugins/plugin-uml"
     },
     {
       "path": "../../sdk/app-framework"

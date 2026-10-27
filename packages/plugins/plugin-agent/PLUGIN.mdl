@@ -1,0 +1,1308 @@
+---
+id: org.dxos.plugin.agent
+name: AgentPlugin
+version: 0.1.0
+---
+
+Manages autonomous agents in a space: assistant `Agent` objects that converse with
+people in channels (Discord, freeq, local feeds) and Composer chats, interview them, and keep what they learn: facts
+in the agent's brain, about the `Person` or `Organization` they name, and `Goal`s as ECHO objects.
+
+This document records what is built. Design intent lives in [`docs/DESIGN.md`](./docs/DESIGN.md)
+(architecture, EDGE gateway, identity) and [`docs/FACTS.md`](./docs/FACTS.md) (facts, profiles and
+the interview skill); items there that are not built are listed under "Not built" below rather than
+specified.
+
+The plugin depends on `org.dxos.plugin.assistant` (which registers `Agent`, `Chat` and `HasSubject`
+and renders the Agent article) and `org.dxos.plugin.thread`, whose channel operations carry every
+message the agent sends outside Composer. It knows no channel backend: Discord lives in
+plugin-discord as a `ChannelBackendProvider`. It ships a workerd variant with no React surfaces, so
+EDGE's operation service can host the agent and knowledge operations.
+
+## Extensions
+
+The following extension dialects are used in this document. `op@1.1`, `test@1.0` and `step@1.0`
+are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.mdl); `node`,
+`companion` and `surface` in [`packages/reflect/deus/lang/app.mdl`](../../reflect/deus/lang/app.mdl); `skill@1.0` in
+[`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); `decision@1.0` in
+[`packages/reflect/deus/lang/changelog.mdl`](../../reflect/deus/lang/changelog.mdl); the rest in the Appendix.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `skill`     | `org.dxos.mdl.skill@1.0`       |
+| `node`      | `org.dxos.mdl.node@1.0`        |
+| `companion` | `org.dxos.mdl.companion@1.0`   |
+| `surface`   | `org.dxos.mdl.surface@1.0`     |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
+
+## External types
+
+Used, not defined, here: `Agent` and `Chat` (`@dxos/assistant`), `Instructions` and `Skill`
+(`@dxos/compute`), `Feed` (`@dxos/echo`), `AccessToken` (`@dxos/link`), `Person`, `Organization` and
+the `HasSubject` relation (`@dxos/types`), `ProfileOf` (`@dxos/plugin-crm`, registered here too so
+profiles can be written without plugin-crm enabled) and `Markdown.Document` (`@dxos/plugin-markdown`).
+
+## Types
+
+```mdl
+type AgentChannels
+  desc: |
+    The channels an agent converses in, whatever their backend. Typename
+    `org.dxos.type.agent.channels@0.1.0`. Parented to its agent (`Obj.Parent`), so it is deleted with
+    the agent; `loadForAgent` returns the first child list and `loadChannels` loads its channels.
+    The backend's own settings (a Discord bot token) live on each channel's config, not here.
+  fields:
+    agent: Ref<Agent>               # hidden from forms; set once by make()
+    channels: Ref<Channel>[]        # "Channels"
+```
+
+```mdl
+type AgentChannels.Properties
+  desc: The user-editable subset (channels); the Activity companion's channel picker.
+  fields:
+    channels: Ref<Channel>[]
+```
+
+```mdl
+type Relay
+  desc: |
+    The delivery record of a relay. Typename `org.dxos.type.agent.relay@0.2.0` (0.1.0 held a Discord
+    `replyChannelId`; relays at 0.1.0 are not migrated and no longer list). Parented to the agent.
+  fields:
+    task: Ref<Task>
+    recipient: Ref<Obj>
+    requester?: Ref<Person>
+    replyChannel?: Ref<Channel>     # where the requester asked, for the report
+    replyThread?: string            # the thread inside replyChannel (a Discord thread or DM)
+    message: string
+    dueAt: DateTime
+    status: pending | delivered | reported | failed | expired
+    deliveredAt?: DateTime
+    reportedAt?: DateTime
+    outcome?: string
+```
+
+```mdl
+type RecordedFact
+  desc: |
+    Not a stored ECHO type: one structured fact an agent records with op:recordFacts, stored in its brain as an
+    `RDF.Fact` in a named graph of its own, stated by the agent (`attribution.agent`), so a correction can
+    supersede it alone. The brain holds only facts: those read from sources and those the agent recorded.
+  fields:
+    subject: Ref<Obj>               # stored as the entity's object URI, with its display name
+    predicate: string               # a seed predicate (RDF.Ontology.DEFAULT, less dx:claim and dx:hasNote) or a new one
+    predicateDescription?: string   # what a new predicate relates
+    object?: Ref<Obj>               # exactly one of object and value
+    value?: string                  # a literal object
+    quote?: string
+    origin?: stated | inferred      # default stated; factuality CT+ when stated, PR+ when inferred
+    confidence?: number             # 0..1
+    supersedes?: string[]           # graph IRIs of the facts it corrects
+```
+
+```mdl
+type Goal
+  desc: |
+    A goal held by one or more people or organizations. Typename
+    `org.dxos.type.agent.goal@0.1.0`. New goals are `proposed`; only the owner's confirmation
+    moves them on. `owners` cannot be typed as Person | Organization in the schema, so the operations
+    enforce it. Label: `title`.
+  fields:
+    title: string
+    description?: string
+    horizon: now | quarter | year | long-term
+    status: proposed | confirmed | active | achieved | dropped
+    owners: Ref<Obj>[]              # Person | Organization, checked by suggestGoal
+    parent?: Ref<Obj>               # the goal this one serves
+```
+
+```mdl
+type Profile
+  desc: |
+    Not a stored type — a `Markdown.Document` parented to the subject and linked to it by `ProfileOf`,
+    rendered deterministically by `Profile.render` from the subject's live goals (sections Goals,
+    Proposed goals, Achieved goals; dropped omitted) and the current facts about it, one section per
+    predicate (its ontology label), each line the object, or the whole fact when the subject is its
+    object; inferred ones are marked _(inferred)_.
+    Regenerated, never edited as the source of truth.
+```
+
+## Operations
+
+Agent operations (`AgentOperationHandlerSet`, every host including workerd).
+
+```mdl
+op createAgent
+  key: org.dxos.operation.agent.create
+  desc: Creates an autonomous agent with its instructions, first chat and context bindings.
+  input:
+    name: string
+    instructions?: string           # markdown; default ''
+  output: { agent: Ref<Agent> }
+  effects: [echo:write]
+  requires: [Database.Service]
+  note: |
+    `Agent.makeInitialized` with the Interview skill in the agent's Instructions skill set and the
+    Agent conversation skill bound to the first chat. Settings › Agents › Add agent invokes it with the name typed
+    beside it ('' shows the placeholder "New agent") and, while the plugin's "Create identities for agents" setting is
+    on, follows it with op:ensureIdentity and `mint: true` (F-7.4).
+```
+
+```mdl
+op ensureIdentity
+  key: org.dxos.operation.agent.ensureIdentity
+  desc: Gives the agent its own identity and default space on EDGE and puts the caller in that space.
+  input:
+    agent: Ref<Agent>
+    mint?: boolean                  # provisions an agent without a DID; default false
+  output: { provisioned: boolean, identityDid?: string }
+  effects: [echo:write, net:edge, halo:write]
+  requires: [Database.Service, Capability.Service]
+  note: |
+    `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity and its
+    default space (owned by that identity, named after the agent, tagged `org.dxos.space.agent`), and admits the
+    caller to that space as ADMIN. The members who may write to the default space become the agent's admins (a
+    reader does not); the caller, its creator, is an ADMIN, while the agent's identity owns the space, and the agent
+    issues the creator its first `IdentityAdmin` credential. Members join through the space's Members panel like any
+    space's members, and their clients ask EDGE to make them admins (F-7.9); admins are only added. The caller must
+    be able to write to `homeSpaceId`.
+    The agent takes the DID as soon as EDGE answers, since the DID names its brain and must exist before its first
+    turn, and records its creator's DID and its own space (`Obj.Meta` keys `org.dxos.agent/creator` and
+    `org.dxos.agent/space`). Then, in the background and retried for about two minutes, the caller's `SpaceMember`
+    credential is written to their HALO (which is what makes the client join the space) and the agent's identity is
+    admitted to `homeSpaceId`; if every retry fails this is only logged, and the agent keeps its DID. Invoked again
+    for an agent with a DID, as opening the agent does, it finishes for the agent's creator whichever of those two
+    steps did not happen (`missingJoin`): it asks EDGE again, which answers its creator with the same identity and
+    membership, and runs only the missing steps. When nothing is missing, or the caller is not the creator, it asks
+    EDGE nothing and changes nothing. An agent without a DID is provisioned only with `mint`, for an agent created a
+    moment before: the DID names the agent's brain, so provisioning an agent that has talked would lose what it
+    learned. For the same reason the operation stays out of the registry (`skipRegistry`), where models and MCP
+    clients find operations. Without an EDGE client (a headless host) nothing changes. A refusal from EDGE fails the
+    operation and changes nothing.
+```
+
+```mdl
+op ensureChannelChat
+  key: org.dxos.operation.agent.ensureChannelChat
+  desc: Returns the chat mirroring a channel conversation (a channel, or a thread or DM in it), creating it on first contact.
+  input:
+    agent: Ref<Agent>
+    channel: Ref<Channel>
+    thread?: string                 # backend-scoped thread id
+    title?: string                  # names a new chat
+  output: { chat: Ref<Chat>, feed: Ref<Feed> }
+  effects: [echo:read, echo:write]
+  requires: [Database.Service]
+  note: |
+    Idempotent on (agent, channel, thread): the chat carries the `Obj.Meta` key
+    `{ source: 'org.dxos.agent/channel', id: '<channelId>' | '<channelId>/<thread>' }`
+    (`AgentChannels.chatKey`); a chat with the key parented to another agent is not a match. A new chat
+    is parented to the agent, shares its Instructions, and is bound to the skills and objects of the
+    agent's current chat (an agent with no chat contributes itself), plus the new chat. Called by
+    sendMessage and, from step 4, by the EDGE gateway.
+```
+
+```mdl
+op sendMessage
+  key: org.dxos.operation.agent.sendMessage
+  desc: Delivers a message to a person through the agent's conversation with them.
+  input:
+    agent: Ref<Agent>
+    recipient: Ref<Obj>
+    text: string
+    relay?: Ref<Relay>
+  output: { delivered: boolean, via?: chat | channel, chat?: Ref<Chat>, reason?: string }
+  requires: [Database.Service]
+  note: |
+    In order: a report to a relay's requester goes to `relay.replyChannel`/`replyThread`; else the
+    recipient's participant chat (appended, or posted through its channel when it mirrors one); else
+    the first of the agent's channels whose backend opens a direct conversation (`openDirect`), which
+    then becomes the person's chat. Posts go through plugin-thread's `sendToChannel` and are recorded
+    in the conversation's chat with the backend's receipt properties. A backend refusal is returned
+    as `{ delivered: false, reason }`.
+```
+
+```mdl
+op listAgents
+  key: org.dxos.operation.agent.list
+  desc: Lists every Agent in the space with the number of chats parented to it.
+  input: {}
+  output: { agents: { agent: Ref<Agent>, name?: string, chats: number }[] }
+  effects: [echo:read]
+  requires: [Database.Service]
+  note: Lists all `Agent` objects, not only ones this plugin created.
+```
+
+```mdl
+op inviteAgent
+  key: org.dxos.operation.agent.invite
+  desc: Invites an agent from another space into this one; it keeps one brain across the spaces it is in.
+  input:
+    agent: Ref<Agent>               # in any space it is in
+  output: { agent: Ref<Agent>, created: boolean }
+  effects: [echo:read, echo:write, net:edge]
+  requires: [Database.Service, Hypergraph.Service, Capability.Service]
+  note: |
+    Runs in the target space after the members panel has admitted the agent; only AgentAdmission invokes it
+    (F-8.1), so it is not in the registry. It admits no one: the agent's membership is the regular admission's.
+    Outside its home it registers the space with EDGE (`POST /compute/brain/:agent/spaces`), then returns the
+    presence keyed `AgentPresence.homeKey(<home agent URI>)`, created on first invitation with the home's name,
+    DID and instructions (`makeAgent`, so its modes and first chat match op:createAgent); in the home it returns
+    the home agent. It writes no conversation. Customized skills stay home: a presence binds the compiled ones.
+    The DID is the one EDGE confirms (`GET /compute/brain/:agent`), never a space's claim, since a client chooses
+    its own space's tags and owner.
+```
+
+Knowledge operations (the Interview skill's tools).
+
+```mdl
+op resolveEntity
+  key: org.dxos.operation.agent.resolveEntity
+  desc: Finds the Person or Organization matching the handles or name, creating it if absent.
+  input:
+    name?: string
+    handles?: { label?: string, value: string }[]   # e.g. { label: 'discord', value: '<user id>' }
+    kind?: person | organization                    # default person
+  output: { entity: Ref<Obj>, created: boolean }
+  errors:
+    AgentOperationError: neither a name nor a handle was given
+  effects: [echo:read, echo:write]
+  requires: [Database.Service]
+  note: |
+    Person: a handle match wins (value equal, and label equal when the handle has one); otherwise a
+    case-insensitive match on fullName or preferredName. Handles the match lacks are appended to its
+    `identities`. Organization: case-insensitive name match only; handles are ignored.
+```
+
+```mdl
+op recordFacts
+  key: org.dxos.operation.agent.recordFacts
+  desc: Records structured facts in the agent's brain, each stated by the agent.
+  input:
+    agent?: Ref<Agent>              # default: the space's only agent
+    facts: RecordedFact[]           # at least one
+    source?: Ref<Obj>               # the message or chat they came from
+  output: { facts: string[] }       # the graph IRIs, in order
+  errors:
+    AgentOperationError: no facts, a fact with neither or both of object and value, a prose predicate (claim, has note), confidence outside 0..1, or no agent given in a space with several
+  effects: [echo:read, brain:write]
+  requires: [Database.Service, BrainService]
+  note: |
+    Pushed as the agent's own words (`quiet: [agent]`), so it wakes no watch. The predicate list is the tool's
+    `predicate` description; a predicate outside it is minted in the agent's brain namespace, as extraction mints it.
+```
+
+```mdl
+op retrieveFacts
+  key: org.dxos.operation.agent.retrieveFacts
+  desc: Returns the current facts about a subject (newest first) and the live goals it owns.
+  input:
+    subject?: Ref<Obj>              # all facts and goals if omitted
+    query?: string                  # every word must start a word of the fact or its quote
+    limit?: number
+  output: |
+    { queryMatched?: false,
+      facts: { id, fact, quote?, speaker?, source, sourceName?, saidAt }[],
+      goals: { goal: Ref<Goal>, title, horizon, status }[] }
+  effects: [echo:read, brain:read]
+  requires: [Database.Service, BrainService]
+  note: |
+    Superseded, retracted and expired facts are left out, as are the free-text memory graphs a brain may still hold.
+    A fact's id is its graph IRI, which facts read from the same words share. Live goals are every status but
+    `dropped`. Facts come from the agent's brain, the one `AgentPresence.brainId` names: an agent invited from
+    another space reads its home's brain, so the facts it learned in every space are one tool call away (F-6.1).
+```
+
+```mdl
+op suggestGoal
+  key: org.dxos.operation.agent.suggestGoal
+  desc: Records a goal the owners described; it stays proposed until confirmed.
+  input:
+    title: string
+    description?: string
+    horizon: now | quarter | year | long-term
+    owners: Ref<Obj>[]              # at least one; each a Person or Organization
+    parent?: Ref<Goal>
+  output: { goal: Ref<Goal> }
+  errors:
+    AgentOperationError: no owners, or an owner that is not a Person or Organization
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+```mdl
+op setGoalStatus
+  key: org.dxos.operation.agent.setGoalStatus
+  desc: Sets the status of a goal its owner has answered for.
+  input:
+    goal: Ref<Goal>
+    status?: confirmed | active | achieved | dropped   # default confirmed
+  output: { goal: Ref<Goal> }
+  effects: [echo:write]
+  requires: [Database.Service]
+  note: No transition rules are enforced; any listed status may be set from any other.
+```
+
+```mdl
+op updateProfile
+  key: org.dxos.operation.agent.updateProfile
+  desc: Rewrites the subject's profile document from its live goals and the current facts about it.
+  input:
+    subject: Ref<Obj>               # Person or Organization
+  output: { document: Ref<Obj> }
+  effects: [echo:read, echo:write, brain:read]
+  requires: [Database.Service, BrainService]
+  note: |
+    Updates the existing `ProfileOf` document's text in place (and its `lastResearchedAt`);
+    otherwise creates a `Markdown.Document` parented to the subject plus a `ProfileOf` relation.
+```
+
+## Skills
+
+```mdl
+skill ConversationSkill
+  key: org.dxos.skill.agentConversation
+  desc: Bound to every autonomous agent's first chat; the conversational role.
+  contributes:
+    - op:createAgent
+    - op:ensureChannelChat
+    - op:listAgents
+  instructions: >
+    Authored in `src/skills/ConversationSkill.ts`: reply in the conversation (which may mirror a
+    channel conversation), address the latest message, be concise.
+```
+
+```mdl
+skill InterviewSkill
+  key: org.dxos.skill.interview
+  desc: Interviews a person to learn their role, goals, team and preferences, and records it.
+  contributes:
+    - op:resolveEntity
+    - op:recordFacts
+    - op:retrieveFacts
+    - op:suggestGoal
+    - op:setGoalStatus
+    - op:updateProfile
+  instructions: >
+    Authored in `src/skills/InterviewSkill.ts`. Start: state the purpose, resolve the person (name and
+    handles), recall what is known and do not re-ask it, and — only if a checklist tool is available —
+    track four topics (role, goals, team, preferences). During: one open question at a time, reflect
+    back, probe each goal (why, by when, obstacles, who), record what it learns as facts (subject, listed
+    predicate, entity or value) with stated or inferred origin, supersede contradictions, propose each goal. End: read the goals back, set each
+    answer's status (dropped for rejections), update the person's and any team's profile, summarise.
+```
+
+```mdl
+skill SupportSkill
+  key: org.dxos.skill.agentSupport
+  desc: Community support in a public channel; bound by the built-in Support mode.
+  contributes:
+    - op:resolveEntity
+    - op:retrieveFacts
+    - op:recordFacts
+    - op:sendMessage
+  instructions: >
+    Authored in `src/skills/SupportSkill.ts`; also binds the relay operations (create, update). Resolve the
+    asker and recall their setup and earlier answers first. A question gets the shortest correct answer, never
+    an invented command, API or link. A bug report gets the missing details asked for once, a summary, and a
+    "filed" fact. A feature request gets a "proposes" fact and no promise. What it cannot answer it offers to
+    the team member whose expertise fits — the team and each member's areas are facts it recalls ("support
+    team"), not part of the skill — and relays only once the person agrees (security, data loss, billing and
+    account access go at once), with the thread as the reply channel; with no fitting member, or an
+    undelivered message, it says so rather than claim a handoff. Never asks for secrets, tells anyone who
+    posts one to rotate it, shares of the team only a first name and an area.
+```
+
+Both are contributed as `SkillDefinition`s; createAgent puts the Interview skill in every new agent's
+Instructions. The Support skill is bound by the built-in Support mode.
+
+## App graph
+
+```mdl
+node AgentsSection
+  desc: |
+    Settings › Agents, under the space's settings beside Members and Connections: the space's agents, each opening
+    its article, and Add agent, which creates one with the name typed beside it ('' shows the placeholder "New agent")
+    through `containers/AgentsSettings/create-agent.ts` and opens it. `Agent` is not a user type, so agents are not listed with the
+    space's content and "Add to space" does not offer them.
+  source: node:SpaceRoot
+  subject: type:Agent
+  actions: [op:createAgent]
+  note: |
+    Add agent gives the new agent its identity (op:ensureIdentity) only while the plugin's "Create identities for
+    agents" setting is on (F-7.4). The name is asked for before the agent exists because EDGE names the agent's
+    identity and its own space when it mints them.
+```
+
+```mdl
+node AccountAgents
+  desc: |
+    The account's Agents panel (`dxos:account/agents`, URL key `agents`), one of the account's panels beside
+    plugin-client's. Its `position` is `Position.last`, so the panel is listed after them.
+  source: dxos:account
+  properties:
+    label: Agents
+    icon: ph--robot--regular
+  article: surface:AccountAgents
+```
+
+## Components
+
+```mdl
+component AgentAdmission
+  desc: |
+    Capability (capabilities/agent-admission.ts), no UI: it follows `SpaceOperation.AddMembers`. A space's Members
+    panel admits an agent's identity as it admits any contact's, and its picker offers only the agents the member
+    administers (`AppSpace.agentsNotAdministeredBy`). For each admitted agent this client's identity administers
+    (`AgentSpace.administeredAgents`, by the home its own space records), other than the space's own agent, it
+    invokes op:inviteAgent there, retrying a few times; an agent EDGE refuses stays a member that does not answer.
+  actions:
+    admitted(agent) → op:inviteAgent
+```
+
+```mdl
+component ProfileGraph
+  desc: |
+    Two labelled regions, "Goals" (title; horizon · status) and "Facts" (the fact; predicate · origin ·
+    date), or "Nothing recorded yet." when both are empty.
+  props:
+    goals: Goal[]
+    facts: { id, text, predicate, origin?, saidAt }[]
+```
+
+```mdl
+component AgentActivity
+  desc: |
+    Pure activity panel (components/AgentActivity), a composite. Root: Panel over a scrolling body.
+    Channels: an auto-saving form over AgentChannels.Properties (a picker over the space's Channels)
+    followed by its children (each channel's backend settings). Skills and Skill: the bound skills
+    with customize/reset. Conversations: a "Conversations" list, or "No channel conversations yet."
+    when empty. Conversation: one row (chat icon, title or "Untitled conversation", compact
+    last-activity Timestamp) that emits onSelect.
+  props:
+    values?: Partial<AgentChannels.Properties>
+    conversations: { id: string, title?: string, lastActivity?: string }[]
+  emits:
+    onSave(values: AgentChannels.Properties)
+    onSelect(id: string)
+```
+
+```mdl
+component AgentActivityContainer
+  desc: |
+    Container (containers/AgentActivity) wiring AgentActivity to the agent. Finds the agent's
+    AgentChannels and its Chats with child-of queries (`Filter.and(Filter.type(T), Filter.childOf(agent))`,
+    never `.children()` — EDGE cannot run traversals). With no list, saving adds one parented to the
+    agent (`db.add`, no operation); with one, edits auto-save into it. Under the picker, each channel
+    renders the generic `ObjectProperties` surface for the Channel, so its backend plugin shows its
+    settings (plugin-discord: the bot form, status and Start/Stop). Lists the chats carrying an
+    `org.dxos.agent/channel` key, newest first by id; each row subscribes to its own chat name and
+    feed so last activity is the newest message's `created`. Selecting a row opens the chat.
+  props:
+    agent: Agent
+  actions:
+    select(chat) → org.dxos.operation.appToolkit.open
+```
+
+```mdl
+component AgentList
+  desc: |
+    The agents the viewer administers (components/AgentList), in the contacts book's rows: per agent, its avatar, its
+    name ("Unnamed agent" when it has none), a chip per space the agent is a member of that the viewer is too, each
+    opening that space and coloured by the hash of the space's id, and its DID with a copy button. A filter keeps the
+    agents whose name, identity key or DID contains it. With none, a line saying how to get one. It copies the rows of
+    `ContactList` in `@dxos/shell` until the two are factored into one.
+  props:
+    agents: Contact[]
+    spaces: { id: string, key: PublicKey, name?: string }[]
+    filter?: string
+  emits:
+    onSelectSpace(space)
+```
+
+```mdl
+component AgentsPanel
+  desc: |
+    Container (containers/AgentsPanel) wiring AgentList to the client, as the contacts book's container does: a search
+    field once there is more than one agent, then the contacts the identity administers as agents
+    (`AgentSpace.administeredAgents` over the client's spaces), each with the spaces it shares with the viewer, none
+    where the agent was removed. Re-read whenever the spaces, the identity, the contacts or a space's members change.
+  actions:
+    open(spaceId) → org.dxos.operation.appToolkit.switchWorkspace
+```
+
+```mdl
+component ProfileProperties
+  desc: |
+    ProfileGraph over the subject's live goals (owner refers to the subject; not dropped) and the current
+    facts whose subject or object is the subject, newest first. Facts are read from the
+    brains of the space's agents every 3s (EDGE's for an agent with a chat there); every Goal atom is
+    subscribed, so status changes re-render without a membership change.
+  props:
+    subject: Person | Organization
+```
+
+## Surfaces
+
+```mdl
+companion AgentActivity
+  of: type:Agent
+  variant: activity
+  component: component:AgentActivityContainer
+  properties:
+    label: Activity
+    icon: ph--pulse--regular
+```
+
+```mdl
+surface AgentActivity
+  role: article
+  subject: type:Agent               # the companion's `companionTo`; matched with the `activity` literal
+  variant: activity
+  component: component:AgentActivityContainer
+```
+
+```mdl
+surface PersonProfileGraph
+  role: objectProperties
+  subject: type:Person
+  component: component:ProfileProperties
+  position: last
+```
+
+```mdl
+surface OrganizationProfileGraph
+  role: objectProperties
+  subject: type:Organization
+  component: component:ProfileProperties
+  position: last
+```
+
+```mdl
+surface AccountAgents
+  desc: Matched on the panel's path literal, `dxos:account/agents`, not a type.
+  role: article
+  component: component:AgentsPanel
+```
+
+## Features
+
+```mdl
+feat F-1: Agents
+
+  req F-1.1: A space's Settings › Agents lists every Agent in the space; Add agent creates an autonomous agent.
+  req F-1.2:
+    when: op:createAgent runs
+    then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
+  req F-1.3: op:listAgents reports each Agent with the number of chats parented to it.
+  req F-1.4: A space's agents are added, opened and deleted in Settings › Agents; "Add to space" does not offer them.
+  req F-1.5: A member has one private chat with an agent in a space. Opening the agent again while the first open is still making that chat waits for it, and when two opens each made one (two devices at once), the article opens the one with the latest message.
+```
+
+```mdl
+feat F-2: Channel conversations
+
+  req F-2.1:
+    when: op:ensureChannelChat is called twice for the same agent, channel and thread
+    then: the same chat and feed are returned
+  req F-2.2:
+    when: a new conversation arrives
+    then: a new chat is parented to the agent, named after the conversation, sharing the agent's Instructions, keyed by channel and thread
+  req F-2.3: The same conversation bridged to two agents yields two chats.
+  req F-2.4: A channel and a thread inside it are separate conversations.
+```
+
+```mdl
+feat F-3: Agent channels and delivery
+
+  req F-3.1: An Agent's Activity companion shows a channel picker; the first save creates an AgentChannels parented to the agent.
+  req F-3.2: The list is deleted with its agent and found from it by AgentChannels.loadForAgent.
+  req F-3.3: Under the picker, each channel shows its backend's ObjectProperties surface (plugin-discord: bot form, status, Start/Stop).
+  req F-3.4:
+    when: op:sendMessage reaches a person with no chat
+    then: the first of the agent's channels whose backend opens a direct conversation posts it, and that conversation becomes the person's chat
+  req F-3.5:
+    when: a relay's requester is reported to
+    then: the report goes to the relay's replyChannel and replyThread first
+  req F-3.6:
+    when: the backend refuses, or no channel can reach the person
+    then: op:sendMessage returns delivered false with a reason the agent can relay, and records nothing
+  req F-3.7: The Activity companion lists the agent's channel chats newest first, with title and last activity; selecting one opens the chat.
+```
+
+```mdl
+feat F-4: Knowledge graph
+
+  req F-4.1: op:resolveEntity matches a Person by handle first, then case-insensitively by name, and creates one only when nothing matches.
+  req F-4.2: op:recordFacts writes each fact in a named graph of its own, stated by the agent, and rejects an empty list, a fact without exactly one of object and value, and a prose predicate.
+  req F-4.3:
+    when: a fact is recorded with supersedes
+    then: the facts it names are no longer recalled
+  req F-4.4: op:retrieveFacts returns current facts only, filtered by subject and query, and the subject's live goals.
+  req F-4.5: op:suggestGoal creates a proposed goal and rejects owners that are not people or organizations.
+  req F-4.6: op:setGoalStatus confirms a goal by default.
+  req F-4.7: op:updateProfile keeps one profile document per subject and rewrites it in place.
+```
+
+```mdl
+feat F-5: Interview and profile panel
+
+  req F-5.1: An agent with the Interview skill resolves the interviewee, records facts and proposes goals as the conversation runs, and confirms goals at the end.
+  req F-5.2: A Person's or Organization's properties list its live goals and the current facts about it.
+  req F-5.3:
+    when: a goal's status changes or a fact is recorded
+    then: the properties panel updates without reopening
+```
+
+```mdl
+feat F-6: One brain per agent
+
+  req F-6.1: An agent's brain is named by its identity's DID (`AgentPresence.brainId`), which every presence of it carries, so every space it is in shares one brain: its facts, its triggers and its wakes. An agent without an identity keeps a brain named by its home agent's id. EDGE runs the plugin-agent its catalog pins, so its turns do this once edge takes this version.
+  req F-6.2: A watch is delivered in the space it was set from, where its goal and recipient live. `TriggerOperation.WatchFacts` records the agent there as the watch's origin, and an agent delivers only the watches set in its own space, so a turn elsewhere leaves them queued. EDGE's brain delivers those from its alarm, a minute after the facts that woke them or when their time comes, by running `TriggerOperation.RunDue` as the agent in each such space it still serves. A watch stored before watches recorded their origin is delivered at the agent's home. The in-app brain has no alarm, so there such a watch waits until a turn in its own space wakes a watch.
+```
+
+```mdl
+feat F-7: An agent's own space
+
+  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other member who may write to it (an admin or an editor, not a reader) becomes one of the agent's admins. EDGE checks the admin role against the `IdentityAdmin` credentials the agent's identity issues, one per admin and kept in its HALO (`dxos.halo.credentials.IdentityAdmin { identity_key, admin_key }`), not against the space, and the admins' clients ask EDGE for one for each member who may write (F-7.9). Admins are only added: a member made a reader or removed stays an admin, since space membership has no revocation yet.
+  req F-7.2: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, as an editor named after the agent, and the members panel admits it to the spaces it is added to, as any contact (F-8.1). Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership, and no one can add one to such a space.
+  req F-7.3: With the setting on (F-7.4), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. EDGE names the identity and the agent's space after the agent's name at that moment, and renaming the agent later renames neither. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
+  req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
+  req F-7.5: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is an admin of. It asks nothing of EDGE.
+  req F-7.6: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as its DID on a presence, takes it from EDGE instead (op:inviteAgent).
+  req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, listed after the account's other panels, lists the agents the identity administers (F-7.5) in the rows the contacts book gives people: each one's avatar, name and DID, and a chip per space it is a member of that the viewer is too, each switching to that space. It stays current as spaces and their members change.
+  req F-7.8: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-8.1).
+  req F-7.9: An admin's client asks EDGE to make each member who may write to an agent's space (its admins and editors) the agent's admin (`AgentAdminSync`, `POST /compute/brain/:did/admins { identityKey }`), and the agent issues each one an `IdentityAdmin` in its HALO. It never asks EDGE to take an admin off: a member made a reader or removed keeps the role. It acts only on a space EDGE names as the agent's own and only while EDGE counts the identity as the agent's admin, so a space that merely claims to be an agent's adds no one. Each add is sent once a session, and again after a failure; a client whose services reconnect starts over, since they may hold another identity. Sending an add again is harmless: EDGE appends an admin's credential when the agent's HALO lacks it, and never a second one. EDGE's 404 (an EDGE without the admins route, or a caller with no role on the agent) settles an add for the session, and another refusal (a 4xx) is sent again on the next pass. When EDGE could not be reached or failed (no answer, or a 5xx), the sync runs again 30 seconds later even if nothing changes, so an add reaches EDGE without waiting for another change; a space EDGE could not be asked about is asked again the same way.
+```
+
+```mdl
+feat F-8: An agent in several spaces
+
+  req F-8.1: While the plugin's setting creates agents with identities (F-7.4), an agent is added to a space like any contact: a space's Members panel offers, in its "Add from contacts" picker, the agents the member administers, as contacts, and leaves out the agents the member does not (`AppSpace.agentsNotAdministeredBy`); Add admits the agent's identity, and AgentAdmission then brings the agent into the space (op:inviteAgent), including one whose home space the member cannot reach.
+  req F-8.2:
+    when: op:inviteAgent runs for an agent already in the space (its home, or an earlier presence)
+    then: that agent is returned and nothing is created
+  req F-8.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home. An admin who cannot reach the home invites from the agent's own space instead (F-7.8), and the presence starts from the base instructions for its name.
+  req F-8.4:
+    when: a member opens an agent in a space it was invited to
+    then: its article is the member's private chat with the agent in that space, a conversation of its own that the agent's other spaces do not show, and its companions show that space's goals, watches and channels; what the agent knows comes from its one brain (F-6.1), whichever space the member talks to it in
+  req F-8.5: Inviting writes no conversation: nothing is quoted from any chat into the space.
+  req F-8.6: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE, which EDGE refuses anyone else, before it makes the presence; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
+```
+
+## Acceptance
+
+Derived criteria, each executed by a vitest case or a storybook play function.
+
+```mdl
+scenario T-1: Channel chats are idempotent per conversation   # ensure-channel-chat.test.ts
+  # covers [F-2.1, F-2.2, F-2.4]
+  given: an agent created by op:createAgent and a channel on a test backend
+  when: ensureChannelChat for thread-1 (title Hello), again for thread-1, then for thread-2 and for the channel itself
+  then:
+    - both thread-1 calls return the same chat and feed; thread-2 and the channel each return another
+    - the thread chat is not the agent's first chat, is named Hello and is parented to the agent
+    - it shares the agent's Instructions; its only meta key is AgentChannels.chatKey(channel, thread-1)
+```
+
+```mdl
+scenario T-2: Conversations are separate per agent   # ensure-channel-chat.test.ts
+  # covers [F-2.3, F-1.3]
+  given: agents First and Second and one channel
+  when: each ensures a chat for thread "shared"
+  then:
+    - the two chats differ
+    - listAgents reports First and Second with 2 chats each
+```
+
+```mdl
+scenario T-3: Channels belong to their agent   # ensure-channel-chat.test.ts
+  # covers [F-3.2]
+  given: an agent and a channel
+  when: AgentChannels.make for the agent with the channel is added
+  then: its parent is the agent, loadForAgent returns it and loadChannels returns the channel
+```
+
+```mdl
+scenario T-4: An interview builds the graph   # interview.test.ts
+  # covers [F-4.1, F-4.2, F-4.3, F-4.4, F-4.5, F-4.6, F-4.7]
+  when: resolve "Rich Burdon" with a discord handle, then by handle, then by "rich burdon"; resolve the
+    organization "Composer team"; record three facts; propose two goals and confirm one; supersede
+    one fact; recall; update the profile twice
+  then:
+    - the first resolve creates a Person; the other two return it
+    - recall returns the three current facts, not the superseded one, and both goals (confirmed, proposed)
+    - recall with query "STANDUPS" returns only the matching fact; the team recalls only the fact relating it and no goals
+    - both updateProfile calls return the same document, with exactly one ProfileOf
+    - the profile contains the name, the confirmed goal and the new fact under its predicate, and not the superseded one
+```
+
+```mdl
+scenario T-5: Invalid fact and goal input is rejected   # interview.test.ts
+  # covers [F-4.2, F-4.5]
+  then:
+    - recordFacts with no facts, with both object and value, or with the predicate "claim" fails
+    - suggestGoal owned by a Text object fails with "people or organizations"
+```
+
+```mdl
+scenario T-6: Relays travel through channels   # relay.test.ts (test channel backend)
+  # covers [F-3.4, F-3.5, F-3.6]
+  then:
+    - a person with a handle but no chat is reached by a direct thread on the agent's channel, which becomes their chat with the backend's receipt on the recorded message
+    - the report to the requester goes to the relay's replyChannel and replyThread
+    - a refused direct message returns the backend's reason and records no chat
+    - an agent with no channels, or a person with no handle, is not delivered to, with a reason
+```
+
+```mdl
+scenario T-8: Scripted interview fills the profile panel
+  # covers [F-5.1, F-5.2, F-5.3]
+  # stories-assistant Interview › TestInterviewScripted (ScriptedLanguageModel, four turns)
+  given: the agent's Chat beside the interviewee's profile panel, with a scripted model
+  when: Rich introduces himself, states two goals, names the blocker, confirms both goals
+  then:
+    - the Goals region lists both goals and reads "Confirmed" twice
+    - the Facts region lists the recorded facts
+    - the space holds one Person and two confirmed goals, and the agent's brain at least three facts
+```
+
+```mdl
+scenario T-9: A watch is delivered where it was set   # triggers.test.ts
+  # covers [F-6.2]
+  given: Kai with two watches on Dima, one set in Kai's space and one through Kai in another space
+  when: a fact of Dima's is pushed in Kai's space
+  then:
+    - only the watch set here fires, and its recipient gets one update
+    - the other watch's wake stays queued for its own space
+    - an agent delivers a watch in the space it was set from, and its home delivers one stored without an origin
+```
+
+```mdl
+scenario T-10: An agent is admitted to a space as a member   # admit-agent.test.ts
+  # covers [F-7.2, F-7.3]
+  given: a space owned by someone else
+  then:
+    - the agent's identity is admitted as an editor, named after the agent
+    - a space's owner and admins may admit it and an editor may not; in a locked space no one may, its owner included
+    - a current member is left as it is, and one that was removed is admitted again
+    - a space that refuses the admission fails it with AdmitAgentError
+    - for the agent's creator, missingJoin names the step a failed join left undone: the membership, the admission, or both; nothing when both happened
+    - missingJoin names nothing for anyone but the creator, for an agent without a DID or its records, for an agent an admin removed, or where the creator may not admit it, as in a locked space
+```
+
+```mdl
+scenario T-11: Agent identities follow the setting   # create-agent.test.ts
+  # covers [F-7.4]
+  given: the plugin's setting off, as by default, and an EDGE that answers provisioning
+  when: an agent is created, then another with the setting on
+  then:
+    - the first has no DID and EDGE was asked nothing
+    - the second takes the DID EDGE answered with, from one provisioning request
+```
+
+```mdl
+scenario T-12: Agent spaces list their admins   # AgentSpace.test.ts
+  # covers [F-7.5, F-7.6, F-7.8]
+  given: an agent space owned by the agent, with an admin, an editor and a reader; an agent space the identity was removed from; an untagged space
+  then:
+    - agentOf is the owner, and the admins are the admin and the editor, not the reader
+    - the identity administers only the first space, and a reader of it none
+    - administeredAgents reads the name, DID, identity key and home URI an open agent space records, and only the DID and identity key of one still opening
+```
+
+```mdl
+scenario T-13: An invited agent keeps one brain   # invite-agent.test.ts
+  # covers [F-6.1, F-8.1, F-8.2, F-8.3, F-8.5]
+  given: Kai in a home space; a fact Mykola stated in Kai's home brain
+  when: Kai is invited into a second space twice, then as its presence into a third, then back home; the presence recalls and learns
+  then:
+    - one presence exists, keyed to Kai's URI, with Kai's name, DID and instructions; back home Kai itself is returned
+    - every presence names Kai's brain; the presence's chat is empty
+    - op:retrieveMemories in the presence's space returns the home fact, said by Mykola
+    - a fact the presence reads lands in the home brain, and the Brain companion lists both
+    - only an admitted agent the member administers is put to work, by the home its own space records, and never in that space
+    - an admin who cannot reach Kai's home invites it from what Kai's space records: a presence keyed to Kai's URI with its name, its DID and the base instructions; inviting again returns it
+```
+
+```mdl
+scenario T-14: An admin's client adds the agent's admins on EDGE   # agent-admin-sync.test.ts
+  # covers [F-7.9]
+  given: Kai's space with Kai as its owner, the identity as an admin, an editor and a reader; an EDGE that minted Kai
+  when: the sync runs, again unchanged, then after the editor is removed and another member joins as an editor
+  then:
+    - the first run adds the admin and the editor, not the reader, after EDGE names the space as Kai's
+    - an unchanged space sends nothing; the change adds the newcomer and sends nothing for the removed editor
+    - a space EDGE names as another, or where EDGE counts the identity a contact, sends nothing but the check
+    - an add EDGE answered with 404 is not sent again; one that failed with 503 is, and the pass asks to run again
+    - EDGE answering 503 when the space is to be confirmed asks for a retry; a 403, or an agent EDGE does not know, does not
+    - a pass that asked for a retry runs again 30 seconds later without a wake; one that did not waits for a wake
+```
+
+## Not built
+
+Design items from `docs/DESIGN.md` and `docs/FACTS.md` that this package does not implement:
+
+- The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
+  Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
+  which exists any more, so Discord conversations do not reach the agent.
+- The intended shape: an agent is a member of the spaces it is invited to, and people talk to it there as a
+  bot in their chats. As built, an agent with an identity is a member of each shared space it is in (F-7.2), but
+  people talk to it through a presence (an `Agent` keyed to its home), in a private chat of their own in each
+  space (F-8.4); its messages carry no identity (`sender` is `{ role: 'assistant' }`); and chats in a space do
+  not wake the agent.
+- Removing an agent from a space's members leaves its presence there and the space registered with its brain.
+- Goals are objects in the space they were recorded in; only facts are shared through the brain.
+- Runtime-assembled knowledge context at the start of each turn; consolidation (dedupe, promotion of
+  inferred facts); editing or retracting single facts in the UI (Reset wipes the brain).
+- Required provenance: a recorded fact's `source` is optional as built.
+- Linking an entity the extractor could not resolve to the object it names later (`owl:sameAs`):
+  facts read before a Person existed keep their slug, which recall still matches by name.
+- The interview checklist on `Chat.tasks`: the skill uses a checklist only if a tool for it is bound.
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Create an autonomous agent, give it a Discord channel, start the bot
+  desc: |
+    The primary journey: an agent from Settings › Agents, a Discord-backed channel picked as one of
+    its channels, and the bot control round-trip to EDGE through plugin-thread's generic channel
+    operations. Run against a local EDGE with a deliberately invalid bot token, so the gateway cannot
+    connect and the status must carry the gateway's error — a "Connected" banner here is a defect.
+  actors: human
+  covers: [F-1.1, F-3.1, F-3.3]
+  status: unverified         # never run against the app
+  given:
+    - an identity exists
+    - space: a space is open and SPACE_READY
+    - plugin-agent and plugin-discord are enabled (both are tagged labs) and Composer points at a local EDGE
+    - no Agent named "QA: Interlocutor $runId" exists
+  before:
+    - name: Add a bot token
+      do: Add an access token with source "discord.com", account "QA: bot $runId" and value "qa-invalid-token".
+      invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.accessToken", source: "discord.com", account: "QA: bot $runId", token: "qa-invalid-token" } }
+      capture: token
+      expect: the token exists in the space
+    - name: Create a Discord channel
+      do: |
+        Create a channel named "QA: discord $runId" with the Discord backend: Bot token "QA: bot $runId",
+        Application ID "qa-app-$runId", channel "qa-channel-$runId".
+      invoke: org.dxos.operation.thread.createChannel { spaceId: $given.space.id, name: "QA: discord $runId", kind: "org.dxos.channel.backend.discord", options: { accessToken: Ref($token.object), applicationId: "qa-app-$runId", channels: ["qa-channel-$runId"] } }
+      capture: channel
+      expect: the channel exists and its properties show the Discord form and a bot status banner
+  steps:
+    - name: Create the agent
+      do: |
+        Open the space's Settings › Agents, type "QA: Interlocutor $runId" beside Add agent, and click
+        Add agent.
+      invoke: [op:createAgent] { name: "QA: Interlocutor $runId" }
+      capture: agent
+      expect: the agent appears in Settings › Agents with that name
+    - name: Give the agent the channel
+      do: Open the agent's Activity companion and pick "QA: discord $runId" under Channels.
+      expect: |
+        the Discord form, the bot status banner and the Start/Stop/Refresh toolbar appear under the
+        picker, and "Conversations" reads "No channel conversations yet."
+      note: NO `invoke` — the container saves AgentChannels with `db.add`. This step is why the test is `actors: human`.
+    - name: Start the bot
+      do: Click Start bot.
+      invoke: org.dxos.operation.thread.connectChannel { channel: Ref($channel.object) }
+      expect: the toolbar is briefly disabled, then the banner shows a gateway state other than Connected
+      assert: return $result.status.state !== 'ready' && $stepErrors.length === 0
+      note: An invocation failure (EDGE not running) means the fixture is wrong — report the step as blocked.
+    - name: Read the status
+      do: Click Refresh status.
+      invoke: org.dxos.operation.thread.getChannelStatus { channel: Ref($channel.object) }
+      expect: the banner reads "Failed" (or "Connecting" while EDGE retries) and shows the gateway's error; never "Connected"
+      assert: return $result.status.state !== 'ready' && typeof $result.status.error === 'string'
+  after:
+    - name: Stop the bot
+      do: Click Stop bot (if enabled).
+      invoke: org.dxos.operation.thread.disconnectChannel { channel: Ref($channel.object) }
+      expect: the banner reads Stopped or Disconnected
+    - name: Delete the agent, channel and token
+      do: Delete "QA: Interlocutor $runId", the "QA: discord $runId" channel and the "QA: bot $runId" token.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($agent.agent), Obj($channel.object), Obj($token.object)] }
+      expect: none of them remains; the agent's channel list and chats go with it (they are its children)
+```
+
+```mdl
+test QA-2: Interview a person and confirm their goals
+  desc: |
+    The interview skill against a live model: the agent resolves the interviewee, records facts
+    and proposes goals while the conversation runs, and confirming the read-back flips the goals to
+    Confirmed in the Person's properties. The deterministic counterpart is the storybook play
+    `stories-assistant` › Interview › TestInterviewScripted (scenario T-8), which scripts the model;
+    it is a story, not a Playwright spec, so it is not listed under `automated:`.
+  actors: human
+  covers: [F-5.1, F-5.2, F-5.3, F-4.6]
+  status: unverified         # pending — needs a live model key; never run against the app
+  given:
+    - an identity exists
+    - space: a space is open and SPACE_READY
+    - plugin-agent is enabled
+    - a live model is available to the assistant (an Anthropic API key, or the EDGE AI service) — ABORT
+      without one; a scripted model is the storybook's job, not this test's
+    - no Person whose fullName contains "QA-$runId" exists
+    - person: the Person the agent resolves in step 2 — resolved by the runner after that step as the
+      one `org.dxos.type.person` whose fullName contains "QA-$runId"; the model creates it, so there is
+      no invocation to `capture` it from
+  before:
+    - name: Create the interviewer
+      do: In Settings › Agents, type "QA: Interviewer $runId" beside Add agent and click Add agent.
+      invoke: [op:createAgent] { name: "QA: Interviewer $runId" }
+      capture: agent
+      expect: the agent appears in Settings › Agents
+  steps:
+    - name: Open the agent's chat
+      do: Click "QA: Interviewer $runId", then open its chat in the Assistant companion.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/ai/org.dxos.type.agent/$agent.agent.objectId"] }
+      expect: an empty chat with the agent is ready for input
+    - name: Introduce yourself
+      do: Send "Hi, I am Quinn QA-$runId."
+      expect: |
+        the agent states the purpose of the interview in a sentence and asks one open question; the
+        trace shows a resolveEntity call
+      note: NO `invoke` — the model chooses the tool calls. Human-only.
+    - name: State two goals
+      do: |
+        Send "I want the QA demo working by Friday, and to hire one designer this year." Answer any
+        follow-up question briefly until the agent reads the goals back and asks you to confirm them.
+      expect: |
+        each turn asks one question and reflects back what it heard; the read-back names both goals
+      note: NO `invoke` — model-driven.
+    - name: See the proposed goals and facts
+      do: Open Quinn's Properties panel.
+      invoke: [op:retrieveFacts] { subject: Ref($given.person) }
+      capture: proposed
+      expect: |
+        the panel has a "Goals" region listing the two goals, each "Proposed", and a "Facts" region
+        with at least one fact marked Stated
+      assert: |
+        return $result.goals.length >= 2
+          && $result.goals.every((goal) => goal.status === 'proposed')
+          && $result.facts.length > 0;
+      note: Scoped to `$given.person`, whose name carries `$runId`, so goals left by an earlier run cannot count.
+    - name: Confirm the goals
+      do: Send "Yes, both are right."
+      expect: the agent says it confirmed the goals and summarises what it recorded
+      note: NO `invoke` — model-driven.
+    - name: See the goals confirmed
+      do: Look at Quinn's Properties panel again, without reopening it.
+      invoke: [op:retrieveFacts] { subject: Ref($given.person) }
+      capture: final
+      expect: every goal in the Goals region now reads "Confirmed", and the same goals are listed
+      assert: |
+        const titles = (goals) => goals.map((goal) => goal.title).sort().join('\n');
+        return $result.goals.length === $proposed.goals.length
+          && titles($result.goals) === titles($proposed.goals)
+          && $result.goals.every((goal) => goal.status === 'confirmed');
+      note: The panel must update in place (F-5.3); a refresh only after reopening is a failure of this step.
+  after:
+    - name: Delete the interview's goals and facts
+      do: Delete the goals listed in Quinn's properties, and reset the interviewer's knowledge.
+      invoke: |
+        org.dxos.operation.space.removeObjects { objects: $final.goals.map((row) => Obj(row.goal)) };
+        org.dxos.operation.agent.resetBrain { agent: Ref($agent.agent) }
+      expect: Quinn's properties read "Nothing recorded yet."
+      note: Facts live in the agent's brain, so they are wiped with it rather than removed from the space.
+    - name: Delete the person
+      do: Delete Quinn.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($given.person)] }
+      expect: no Person whose fullName contains "QA-$runId" remains; the profile document goes with it (it is a child)
+    - name: Delete the interviewer
+      do: Right-click "QA: Interviewer $runId" and choose Delete agent.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($agent.agent)] }
+      expect: the agent and its chat leave the navtree
+```
+
+```mdl
+test QA-3: Two people, one agent — a watch fires across private chats
+  desc: |
+    Two members, each on their own device and HALO identity, talk to the same agent in their own
+    private chats. One asks to be kept posted on the other's work; when the other says what they are
+    working on, the agent reads it into its brain, the watch wakes, and the update reaches the first
+    member's chat. Facts live only in the agent's brain (BrainService), never in ECHO, so the Brain
+    companion's Facts tab is the only place they show.
+  actors: human
+  covers: [F-1.1]
+  status: unverified         # needs a live model and an EDGE that hosts the agent's chats and brain
+  given:
+    - two devices, each with its own identity: Alice (host) and Bob (guest), display names set
+    - plugin-agent is enabled on both (it is tagged labs)
+    - Composer points at an EDGE that runs agent chats (`Agent.chatLocation` is `edge` for an agent's chat)
+      and serves a live model — ABORT without one
+  steps:
+    - name: Alice creates a space and an agent
+      do: Alice creates a space "Launch room", then clicks Add agent in its Settings › Agents.
+      invoke: [op:createAgent] { name: "" }
+      capture: agent
+      expect: the agent appears in Settings › Agents and its article opens Alice's private chat
+    - name: Alice invites Bob; Bob joins
+      do: Alice opens Members, creates a single-use invitation; Bob joins with the code and the auth code.
+      expect: Bob's navtree shows "Launch room" with the same agent under Agents
+    - name: Each opens a private chat with the agent
+      do: Both click the agent under Agents.
+      expect: |
+        each sees an empty chat ready for input; neither sees the other's conversation (each chat is the
+        member's own participant chat, hosted on EDGE)
+      note: NO `invoke` — the article opens the viewer's chat through op OpenPrivateChat with their identity DID.
+    - name: Alice asks to be kept posted on Bob
+      do: Alice sends "Keep me posted on what Bob is working on."
+      expect: the agent acknowledges; the Brain companion's Goals tab lists Alice's goal with a watch on Bob
+      note: NO `invoke` — the model chooses watchFacts.
+    - name: Bob says what he is working on
+      do: Bob sends "I'm working on the indexer migration this week."
+      expect: the agent replies to Bob
+      note: NO `invoke` — model-driven; the end-request hook (runTriggers) reads the turn into the brain.
+    - name: Alice receives the update
+      do: Watch Alice's chat, without sending anything.
+      expect: a message from the agent appears in Alice's chat telling her Bob is working on the indexer migration
+      note: A watch whose update never reaches Alice's chat is a failure of this step, not of the model.
+    - name: The facts are in the brain
+      do: Open the agent's Brain companion and its Facts tab.
+      expect: |
+        the Facts tab lists a fact that Bob works on the indexer migration, attributed to Bob; no
+        annotation object holds it in the space
+```
+
+```mdl
+test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own space, where it recalls what Alice told it
+  desc: |
+    An agent's admins are the members who can edit its own space. Alice turns on the plugin's "Create identities for
+    agents" setting and adds an agent in her space's Settings › Agents, which mints its identity and its own space on
+    EDGE and joins her space as a member; she adds Bob to the agent's space the way she would add him to any space, and
+    both find the agent in Profile › Agents. Alice then tells the agent about the team offsite, and Bob, who cannot
+    reach Alice's space, adds the agent to his own space from its Members panel and asks it what is planned: it answers
+    from its brain. The autocue flow `autocue/agent-identities.mjs` walks it side by side, one browser per person.
+  actors: human
+  covers: [F-1.4, F-6.1, F-7.1, F-7.2, F-7.3, F-7.4, F-7.5, F-7.7, F-7.8, F-8.1, F-8.4, F-8.6]
+  status: passing             # 2026-10-15, recorded by autocue/agent-identities.mjs against local EDGE (dxos/edge#1313); steps 4 and 7 changed on 2026-10-19 and have not been re-recorded
+  given:
+    - alice: an identity with the display name "Alice", on one device
+    - bob: an identity with the display name "Bob", on another device
+    - home: Alice's own space "Studio"
+    - other: Bob's own space "Offsite team"
+    - plugin-agent is enabled for both; Bob has its "Create identities for agents" setting on (Settings › Plugins › Agent), and Alice turns hers on in step 1
+    - EDGE with brain identities (`POST /compute/brain`) is reachable — ABORT without it
+    - a live model is available to the assistant (EDGE's AI service) — ABORT without one
+  steps:
+    - name: Alice turns on agent identities
+      do: In Alice's window open Settings › Plugins › Agent and turn on "Create identities for agents".
+      expect: the switch is on; agents created from now on get identities (F-7.4)
+    - name: Alice creates an agent named Kai
+      do: In Alice's space open Settings › Agents, type "Kai" beside Add agent and click it.
+      invoke: [op:createAgent] { name: "Kai" }, then [op:ensureIdentity] { agent: Ref($agent.agent), mint: true }
+      capture: agent
+      expect: Kai's chat opens at once, and a space named Kai appears in Alice's space list once EDGE has minted it
+    - name: Alice sees Kai among her space's members
+      do: In Alice's space open Settings › Members.
+      expect: the members list Kai beside Alice
+      note: Kai is admitted once EDGE has minted its identity (op:ensureIdentity), so the row can follow its space by a few seconds.
+    - name: Alice finds Kai in Profile › Agents
+      do: Open Alice's profile and its Agents panel, listed after the account's other panels.
+      expect: Kai is listed as the contacts book lists people, with a chip for its own space and one for Alice's space
+    - name: Alice invites Bob into Kai's space
+      do: Click Kai's space chip on its row; in Kai's space open Settings › Members and invite one person.
+      expect: an invitation code is ready to share
+    - name: Bob joins Kai's space
+      do: In Bob's window click + ("Add space"), choose Join, enter the invitation code and then the PIN.
+      expect: Bob's space list shows Kai
+    - name: Bob finds Kai in Profile › Agents
+      do: Open Bob's profile and its Agents panel.
+      expect: Kai is listed, so Bob administers it
+    - name: Alice tells Kai about the team offsite
+      do: In Alice's space open Kai and send "Hi Kai, I'm Alice. Our team offsite is in Lisbon on November 14, for 12 people, and Dima is booking the venue."
+      expect: Kai acknowledges the place, the date and the headcount in a short reply
+      note: NO `invoke` — the model replies on EDGE; the turn's facts are read into Kai's brain after it.
+    - name: Alice adds the budget
+      do: Send "The budget is 8,000 euros, and flights are still open."
+      expect: Kai acknowledges the budget
+      note: NO `invoke` — model-driven.
+    - name: Bob adds Kai to his own space from its Members panel
+      do: In Bob's window open Offsite team, then Settings › Members; under "Add from contacts" pick Kai and click Add.
+      invoke: [op:inviteAgent] { agent: Ref($agent.agent) }   # run in $given.other, as Bob, after the admission
+      expect: the picker lists Alice and Kai, each once; after Add, Offsite team lists Kai under Settings › Agents and among its members
+      note: Bob is not a member of Alice's space, where Kai lives; Kai is Bob's contact through Kai's own space, which records its home (F-7.8), and EDGE accepts the space because Bob is Kai's admin (F-8.6).
+    - name: Bob opens Kai in Offsite team
+      do: Open Kai from Offsite team's Settings › Agents.
+      expect: Bob's own chat with Kai opens, empty; Alice's conversation stays in her space
+    - name: Bob asks Kai about the offsite
+      do: Send "Check your memory: what do we have so far for the offsite?"
+      expect: |
+        Kai calls Recall and answers from its brain with what Alice told it, naming her: at least Lisbon,
+        November 14, 12 people and the 8,000 euro budget
+      note: NO `invoke` — model-driven; these words were never said in Offsite team. On 2026-10-15 Kai answered "Here's what we have for the offsite: it's in Lisbon on November 14 for 12 people, budget is €8,000, and flights are still open/unbooked. Dima is handling the venue booking. (Alice shared these details on Oct 15.)"
+  after:
+    - name: Remove Kai from Offsite team and Bob from Kai's space
+      do: In Offsite team's Settings › Agents delete Kai; in Kai's space open Settings › Members and remove Bob.
+      expect: Offsite team no longer lists Kai, and Bob's Agents panel no longer lists Kai
+      note: Bob stays Kai's admin on EDGE, since admins are only added (F-7.9); his panel lists the agent spaces he is in.
+```
+
+## Changelog
+
+```mdl
+decision D-1: A member has one private chat with an agent in a space. An open that starts while another is still making that chat waits for it, and of two chats made at once the article opens the one with the latest message.
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-1.5]
+  why: Reopening an agent within the two seconds its first open takes made a second chat, and after a reload the article opened the empty one, so the member's conversation looked lost.
+  rejected:
+    - A lock inside `ensureParticipantChat`: the second open starts in the article, and a lock would leave chats already duplicated opening the empty one.
+  source: https://github.com/dxos/dxos/pull/14082
+```
+
+```mdl
+decision D-2: A member who sees the same conversation with an agent in each space the agent is in has hit a bug, which is to be reproduced and fixed.
+  date: 2026-10-19
+  by: user:mykola-vrmchk
+  affects: [F-8.4]
+```
+
+```mdl
+decision D-3: Opening an agent in a space opens the member's private chat with it in that space, a conversation the agent's other spaces do not show, and what the agent knows stays shared through its one brain. Fills in [D-2].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-8.4]
+  why: The article opened the private chat of the agent's home whichever space it was opened from. A chat per space removes the shared conversation, and the brain every presence names keeps the agent's knowledge whole across spaces (F-6.1).
+  rejected:
+    - One conversation per member, shown in every space the agent is in: the behaviour reported as the bug.
+  source: https://github.com/dxos/dxos/pull/14074
+```
+
+```mdl
+decision D-4: An agent's admins are credentials in the agent's own HALO, one admin per credential, added one at a time. No credential lists the admins, and none supersedes another.
+  date: 2026-10-20
+  by: user:mykola-vrmchk
+  affects: [ensureIdentity, F-7.1, F-7.9]
+  why: Superseding a list is not how the HALO records facts.
+  source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-5: No credential revokes an agent's admin for now.
+  date: 2026-10-20
+  by: user:mykola-vrmchk
+  affects: [F-7.1, F-7.9]
+  why: Space membership has no revocation yet either.
+  source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-6: The credential is `dxos.halo.credentials.IdentityAdmin { identity_key, admin_key }`: the agent's identity issues it, and the admin is its subject. Fills in [D-4].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ensureIdentity, F-7.1, F-7.9]
+  why: The product, EDGE and Composer already call these identities admins, and the shape matches `IdentityRecovery { identity_key, recovery_key }`, which an identity also issues into its own HALO.
+  rejected:
+    - `IdentityController`: the W3C DID term, but no DXOS DID document has a `controller` field, and in this codebase the word means UI and stream controllers.
+  source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-7: An admin's client only asks EDGE to add admins, never to take one off, so a member made a reader or removed stays the agent's admin. It sends each add once a session and again after a failure, since EDGE appends no second credential for an admin. Fills in [D-5].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-7.9, T-14]
+  why: Without revocation there is nothing to send for a removal, and resending an add repairs a credential that never reached the agent's HALO.
+  rejected:
+    - Delisting readers and removed members (`DELETE /compute/brain/:did/admins/:identityKey`): EDGE no longer has the route, since an admin's credential cannot be revoked.
+  source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-8: The account's Agents panel lists agents the way the contacts book lists people, and no longer lists each agent's admins.
+  date: 2026-10-19
+  by: user:mykola-vrmchk
+  affects: [AgentsPanel, F-7.7, QA-5]
+  source: https://github.com/dxos/dxos/pull/14076
+```
+
+```mdl
+decision D-9: The Agents panel builds its own list in the contacts book's style rather than reusing `ContactList` directly, with a TODO to factor the two out and reconcile them. Fills in [D-8].
+  date: 2026-10-22
+  by: user:mykola-vrmchk
+  affects: [AgentList, AgentsPanel]
+  source: https://github.com/dxos/dxos/pull/14076
+```
+
+```mdl
+decision D-10: `AgentList` takes the agents as the contacts they are and copies `ContactList`'s rows, its markup and styles included, so the two panels look the same until they are factored out. Its space chips take the colour hashed from each space's id, as the contacts book's chips do. Fills in [D-9].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [AgentList, F-7.7]
+  why: A copy of the rows keeps the panels identical without widening `@dxos/shell`'s API for one caller.
+  rejected:
+    - Passing each space's own colour to the chips: the space colour fix (dxos/dxos#14075) keeps every chip and the sidebar on the hash of the space id instead.
+  source: https://github.com/dxos/dxos/pull/14076
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using the core `ext` primitive. `op`,
+`test` and `step` are defined in `lang/qa.mdl`, `node` and `surface` in `lang/app.mdl`, and `skill`
+in `plugin-crm/PLUGIN.mdl`.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```

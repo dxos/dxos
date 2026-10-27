@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Placeholder } from '@dxos/devtools';
 import { useClient } from '@dxos/react-client';
-import { Panel } from '@dxos/react-ui';
 import { Terminal } from '@dxos/react-ui-terminal';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { useCliApp } from './useCliApp.ts';
 

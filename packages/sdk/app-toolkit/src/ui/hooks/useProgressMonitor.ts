@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Progress } from '@dxos/progress';
 
 import { AppCapabilities } from '../../app-framework/index.ts';
@@ -18,13 +18,13 @@ const noMonitorAtom = Atom.make<Progress.TaskProgress | undefined>(undefined);
 
 /** All active progress providers (aggregate). */
 export const useProgressMonitors = (): readonly Progress.TaskProgress[] => {
-  const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const registry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
   return useAtomValue(registry?.snapshotAtom ?? emptySnapshotAtom).tasks;
 };
 
 /** One provider's live state, by name. */
 export const useProgressMonitor = (name: string): Progress.TaskProgress | undefined => {
-  const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const registry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
   const atom = useMemo(() => registry?.monitorAtom(name) ?? noMonitorAtom, [registry, name]);
   return useAtomValue(atom);
 };

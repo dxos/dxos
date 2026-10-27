@@ -55,7 +55,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
 export type TasksResult = { taskSet: TaskSet.TaskSet; tasks: Task.Task[] };
 
 /** The four steps, each depending on the one before it. */
-export const Tasks: SampleSpace.Phase<TasksResult> = SampleSpace.phase('tasks', {
+export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task],
   run: () =>
     Effect.gen(function* () {

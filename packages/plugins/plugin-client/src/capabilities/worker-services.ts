@@ -12,10 +12,10 @@ import * as WorkerCapabilities from '@dxos/app-framework/WorkerCapabilities';
 import * as WorkerEvents from '@dxos/app-framework/WorkerEvents';
 import { makeRtcServiceClientOverProtocol } from '@dxos/client-protocol';
 import { Events, ServiceStack, SqliteStorage, WorkerRuntime } from '@dxos/client-services';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { log } from '@dxos/log';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 
 // Hosts the client services in the worker: contributes their layer specs (over the worker's router,
 // so every tab reaches them) and drives the stack through the worker's hooks — open on `StackReady`,
@@ -43,8 +43,26 @@ export default Capability.makeModule(
       yield* Effect.addFinalizer(() => Effect.sync(() => transportFactory.setRtcService(undefined)));
     });
 
+    // Index migrations run while the stack opens; until it is ready the tab has no session to hear them on.
+    let stackOpened = false;
     yield* Effect.all([
-      Hook.on(WorkerEvents.StackReady, ({ stack }) => WorkerRuntime.openStack(stack, tags).pipe(Scope.provide(scope))),
+      Hook.on(Events.IndexStatus, (status) =>
+        Effect.sync(() => {
+          if (!stackOpened) {
+            host.reportStatus(status);
+          }
+        }),
+      ),
+      Hook.on(WorkerEvents.StackReady, ({ stack }) =>
+        WorkerRuntime.openStack(stack, tags).pipe(
+          Scope.provide(scope),
+          Effect.tap(() =>
+            Effect.sync(() => {
+              stackOpened = true;
+            }),
+          ),
+        ),
+      ),
       // The owning tab carries the worker's WebRTC: only a browser tab can hold peer connections.
       Hook.on(WorkerEvents.SessionOpened, ({ isOwner, systemProtocol, scope: sessionScope }) =>
         isOwner ? routeRtcThroughTab(systemProtocol).pipe(Scope.provide(sessionScope)) : Effect.void,
@@ -53,6 +71,8 @@ export default Capability.makeModule(
       // Over a SQLite layer of its own, since the stack's is gone by the time a reset gets here.
       Hook.on(Events.WipingStorage, () => SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie)),
       Hook.on(Events.Reset, () => host.requestShutdown),
+      // The tabs hold every change this process has not saved, and reconnect to a replacement with them.
+      Hook.on(Events.StorageStuck, () => host.requestShutdown),
     ]).pipe(Effect.provideService(Hook.Controller, host.hooks));
 
     return Capability.contributeAll(Capabilities.LayerSpec, [

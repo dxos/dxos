@@ -7,28 +7,36 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Button, Field, Focus, Main, Panel, Textarea, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Input from '@dxos/react-ui/Input';
+import * as Main from '@dxos/react-ui/Main';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
 import { NavTreePlugin } from '#plugin';
 import { type StorybookGraphOptions, storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
+
+import { ContextMenuRoot } from '../../containers/ContextMenuRoot/index.ts';
 
 random.seed(1234);
 
@@ -44,7 +52,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   return (
     <Panel.Header classNames='border-b border-separator'>
-      <Button
+      <Button.Root
         size='lg'
         icon='ph--circle--regular'
         label='Test'
@@ -89,7 +97,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Body classNames='grid'>
           <Toolbar.Root classNames='border-b border-separator-subtle'>
-            <Button>Test</Button>
+            <Button.Root>Test</Button.Root>
           </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
@@ -99,7 +107,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
             <div className={mx(container, 'dx-base-surface')}>
               <Field.Root>
                 <Field.Label>Level 2 (base)</Field.Label>
-                <Textarea placeholder='Enter text' />
+                <Input.Textarea placeholder='Enter text' />
               </Field.Root>
             </div>
           </div>
@@ -110,7 +118,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
 };
 
 const DefaultStory = () => {
-  const state = useAtomCapability(StoryState);
+  const state = Hooks.useAtomCapability(StoryState);
 
   return (
     <Main.Root navigationSidebarState='expanded'>
@@ -131,7 +139,7 @@ const DefaultStory = () => {
 const MISSING_WORKSPACE = 'root/B4NRQGGJ7XSDT4WMGXCTZNBLTDYIWGXNQIB6JW3AVLW3G';
 
 const UnavailableWorkspaceStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   useEffect(() => {
     void invokePromise(LayoutOperation.SwitchWorkspace, { subject: MISSING_WORKSPACE });
   }, [invokePromise]);
@@ -143,7 +151,7 @@ const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       StorybookPlugin.make({
         initialState: { sidebarState: 'expanded' },
       }),
@@ -241,6 +249,26 @@ export const Default: Story = {
 };
 
 /** Opening a row's action menu is not choosing the row: the menu stays open and the selection stays put. */
+/** Right-clicking a row opens the app's context menu: the row's node's actions, as its "…" menu lists them. */
+export const ContextMenu: Story = {
+  render: () => (
+    <>
+      <DefaultStory />
+      <ContextMenuRoot />
+    </>
+  ),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const tree = await canvas.findByRole('tree', {}, { timeout: 10000 });
+    const heading = await within(tree).findByText('Object 2', {}, { timeout: 10000 });
+    const { left, top } = heading.getBoundingClientRect();
+    await fireEvent.contextMenu(heading, { clientX: left + 4, clientY: top + 4 });
+    const menu = await within(document.body).findByRole('menu', {}, { timeout: 5000 });
+    await expect(menu).toBeVisible();
+    await expect(within(menu).getAllByRole('menuitem').length).toBeGreaterThan(0);
+  },
+};
+
 export const RowMenu: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);

@@ -120,8 +120,8 @@ Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `reg
 `light`, `duotone`, `thin`). Use the `Icon` primitive or any primitive that takes an `icon` prop:
 
 ```tsx
-import { Icon } from '@dxos/react-ui';
-<Icon icon='ph--plus--regular' size={5} />;
+import * as Icon from '@dxos/react-ui/Icon';
+<Icon.Icon icon='ph--plus--regular' size={5} />;
 ```
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
@@ -257,6 +257,12 @@ Pick the collection primitive by decision order:
 **Do NOT use `@dxos/react-ui-stack` — it is deprecated.** (Some plugins still import it; don't copy them.)
 The live Stack is the Mosaic one.
 
+**A collapsible header over rows is an `Accordion` item, not a `Collapsible`.** `Accordion.ItemTrigger`
+puts its icon and caret in `Block`s, the same columns as a `Listbox` row's icon and trailing control, so
+the caret sits over the rows' trailing buttons. `Collapsible.Trigger` puts the caret before the label,
+in no column the rows share. One `Accordion.Root` per section is fine when each opens on its own. See
+react-ui-canvas's `InspectorPanel` and plugin-assistant's `ChatDetailsSection`.
+
 **`dx-current` / `dx-selected` are automatic.** `Listbox` and `Stack` drive current-item and selection state
 themselves (via react-tabster keyboard navigation) — you don't set those classes or wire focus by hand.
 Like `Form`, both **own their own padding and spacing**, so drop them straight into a `ScrollArea.Viewport`
@@ -316,7 +322,7 @@ Two app-level homes for atom state — don't conflate them (full detail:
 `packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
-  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  Built with `KvsStore.make` (`@dxos/effect/KvsStore`) (one schema-validated blob per plugin, keyed by `meta.profile.key`);
   read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
 - **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
   view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with

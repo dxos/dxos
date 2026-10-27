@@ -10,10 +10,10 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import * as Statement from 'effect/sql/Statement';
 
 import { Context, Resource } from '@dxos/context';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { FeedStore } from '../feed-store.ts';
@@ -274,6 +274,10 @@ export class TestPeer extends Resource {
 
   append(req: AppendRequest) {
     return this.#feedStore.append(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
+  setFeedOptions(req: Parameters<FeedStore['setFeedOptions']>[0]) {
+    return this.#feedStore.setFeedOptions(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   appendLocal(req: Parameters<FeedStore['appendLocal']>[0]) {

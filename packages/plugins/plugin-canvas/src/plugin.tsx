@@ -4,13 +4,35 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { CanvasSettings, DrawingVariant, Translations } from '#capabilities';
+import {
+  AppGraphBuilder,
+  CanvasSettings,
+  DrawingVariant,
+  Migrations,
+  OperationHandler,
+  ReactSurface,
+  Schema,
+  SkillDefinition,
+  SpaceTemplates,
+  TldrawConverter,
+  Translations,
+  UndoMappings,
+} from '#capabilities';
 import { meta } from '#meta';
 
 export const CanvasPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CanvasSettings),
   Plugin.addModule(DrawingVariant),
+  Plugin.addModule(Migrations),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(SpaceTemplates),
+  Plugin.addModule(TldrawConverter),
   Plugin.addModule(Translations),
+  Plugin.addModule(UndoMappings),
   Plugin.make,
 );
 

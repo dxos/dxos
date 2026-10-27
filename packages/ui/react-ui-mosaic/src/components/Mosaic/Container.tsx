@@ -21,7 +21,6 @@ import React, {
 } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
-import { composable, composableProps, useFocus } from '@dxos/react-ui';
 import {
   type DndContainerData,
   type DndLocation,
@@ -29,6 +28,8 @@ import {
   getSourceData,
   useDndRootContext,
 } from '@dxos/react-ui-dnd';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Util from '@dxos/react-ui/Util';
 import { isTruthy } from '@dxos/util';
 
 import {
@@ -71,10 +72,11 @@ type MosaicContainerProps = PropsWithChildren<
     currentId?: string;
     /** Called when a tile requests to become current. */
     onCurrentChange?: (id: string | undefined) => void;
-    /** Controlled set of selected item IDs. */
-    selectedIds?: ReadonlySet<string>;
-    /** Called when a tile requests to toggle selection. */
-    onSelectionChange?: (id: string, selected: boolean) => void;
+    /**
+     * Each item's selection and activation, as `useListSelection`'s `bind(id).rowProps` gives them; a container whose
+     * items carry `aria-selected` is a listbox of options.
+     */
+    itemProps?: (id: string) => Focus.ItemBinding | undefined;
     debug?: () => ReactNode;
     /** Toggles the `group` target that Placeholder's debug-highlight selectors read (see styles.ts). */
     placeholderDebug?: boolean;
@@ -85,7 +87,7 @@ type MosaicContainerProps = PropsWithChildren<
  * Container for a Mosaic layout.
  */
 // TODO(burdon): Make generic.
-const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
+const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
   (
     {
       children,
@@ -97,8 +99,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       controllerRef,
       currentId,
       onCurrentChange,
-      selectedIds,
-      onSelectionChange,
+      itemProps,
       debug,
       placeholderDebug,
       ...props
@@ -123,10 +124,6 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const [activeLocation, setActiveLocation] = useState<DndLocation | undefined>();
     const [scrolling, setScrolling] = useState(false);
     const setCurrentId = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
-    const setSelected = useCallback(
-      (id: string, selected: boolean) => onSelectionChange?.(id, selected),
-      [onSelectionChange],
-    );
 
     // Scroll-to-item: Stack/VirtualStack registers its implementation.
     const scrollToRef = useRef<((id: string) => void) | undefined>(undefined);
@@ -145,7 +142,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     }, [currentId]);
 
     // Focus container.
-    const { setFocus } = useFocus();
+    const { setFocus } = Focus.useFocus();
     useEffect(() => {
       if (withFocus) {
         setFocus?.(state.type === 'active' ? 'active' : undefined);
@@ -285,13 +282,12 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         setActiveLocation={setActiveLocation}
         currentId={currentId}
         setCurrentId={setCurrentId}
-        selectedIds={selectedIds}
-        setSelected={setSelected}
+        itemProps={itemProps}
         registerScrollTo={registerScrollTo}
       >
         <ark.div
           asChild={asChild}
-          {...composableProps(props, {
+          {...Util.composableProps(props, {
             classNames: 'h-full group',
             style: {
               [MOSAIC_CONTAINER_PLACEHOLDER_WIDTH]:

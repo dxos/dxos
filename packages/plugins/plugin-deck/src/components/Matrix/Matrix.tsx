@@ -7,9 +7,10 @@ import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useI
 import { Obj } from '@dxos/echo';
 import { findFirstFocusable } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type ComposableProps } from '@dxos/ui-types';
 
 //
@@ -136,8 +137,8 @@ type MatrixContentProps = ComposableProps;
 /**
  * Styled container wrapping Mosaic.Container for drag-and-drop support.
  */
-const MatrixContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
+const MatrixContent = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { className, ...rest } = Util.composableProps(props);
   return (
     <Mosaic.Container ref={forwardedRef} classNames={className} orientation='horizontal' {...rest}>
       {children}
@@ -160,7 +161,7 @@ const getId = (item: Obj.Any) => item.id;
 /**
  * Horizontally scrollable viewport that renders tiles from context.
  */
-const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) => {
+const MatrixViewport = Util.composable<HTMLDivElement>(({ ...props }, forwardedRef) => {
   const { items, Tile, registerViewport } = useMatrixContext(MATRIX_VIEWPORT_NAME);
   const viewportRef = useCallback(
     (element: HTMLElement | null) => {
@@ -170,7 +171,7 @@ const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) =
   );
 
   return (
-    <ScrollArea.Root orientation='horizontal' snap {...composableProps(props)} ref={forwardedRef}>
+    <ScrollArea.Root orientation='horizontal' snap {...Util.composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
         <Mosaic.Stack
           orientation='horizontal'

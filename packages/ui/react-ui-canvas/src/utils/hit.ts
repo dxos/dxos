@@ -7,17 +7,10 @@
 // same for every renderer.
 //
 
-import { type Bounds, MAJOR_GRID, type Node, type Point, type Scene } from '../model/types.ts';
+import { type Bounds, MAJOR_GRID, type Node, type Point, type View } from '../model/index.ts';
 import { sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
-/**
- * Centred on the origin, not anchored at it: a scene is laid out around (0, 0), so an extent running
- * from the origin to (1600, 1024) puts its own centre well below and right of the content and the
- * initial fit — which centres the frame — pushes everything into the top-left corner. Each half is a
- * whole number of major cells, so the frame still lands on grid lines.
- */
-export const DEFAULT_EXTENT: Bounds = { x: -832, y: -512, width: 1664, height: 1024 };
 export const BOUNDS_PADDING = MAJOR_GRID;
 
 export const containsPoint = (bounds: Bounds, point: Point) =>
@@ -75,37 +68,37 @@ export const alignBounds = (bounds: Bounds, unit: number): Bounds => {
   };
 };
 
-export const nodeList = (scene: Scene): Node[] => Object.values(scene.nodes);
+export const nodeList = (scene: View): Node[] => Object.values(scene.nodes);
 
 /**
- * Derived scene bounds (decision 6): the union of nodes plus padding, grown to the major grid so the
- * frame sits on grid lines. The default extent is a floor rather than a fallback for an empty scene:
- * content only ever grows the frame, so drawing the first node does not collapse the scene around it.
- *
- * This is the frame of a scene shown on its own — the surface the user edits on. A scene shown through
- * a portal is framed by {@link contentBounds} instead.
+ * What a scene holds (decision 6): the union of its nodes plus padding, grown to the major grid. Fit and a
+ * portal's preview frame it; an empty scene has none.
  */
-export const sceneBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds => {
+export const contentBounds = (scene: View, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds | undefined => {
   const content = unionBounds(nodeList(scene).map(nodeBounds));
-  const union = unionBounds(content ? [DEFAULT_EXTENT, padBounds(content, padding)] : [DEFAULT_EXTENT]);
-  return alignBounds(union ?? DEFAULT_EXTENT, unit);
+  return content ? alignBounds(padBounds(content, padding), unit) : undefined;
 };
 
-/**
- * What a scene is worth showing: the same frame without the floor under it, so a child drawn in a portal
- * fills its tile rather than being shrunk to fit an editing surface it is not being edited on. An empty
- * scene has no content to frame, so there the floor is the frame.
- */
-export const contentBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds => {
-  const content = unionBounds(nodeList(scene).map(nodeBounds));
-  return content ? alignBounds(padBounds(content, padding), unit) : alignBounds(DEFAULT_EXTENT, unit);
+/** `point` turned back by the node's rotation about its centre, into the frame's own axes. */
+export const unrotatePoint = (node: Node, point: Point): Point => {
+  const rotation = node.rotation ?? 0;
+  if (rotation === 0) {
+    return point;
+  }
+  const angle = (-rotation * Math.PI) / 180;
+  const dx = point.x - node.center.x;
+  const dy = point.y - node.center.y;
+  return {
+    x: node.center.x + dx * Math.cos(angle) - dy * Math.sin(angle),
+    y: node.center.y + dx * Math.sin(angle) + dy * Math.cos(angle),
+  };
 };
 
 /** Topmost node under `point`, or none; `margin` widens every node, e.g. to reach its ports. */
-export const hitTest = (scene: Scene, point: Point, margin = 0): Node | undefined => {
+export const hitTest = (scene: View, point: Point, margin = 0): Node | undefined => {
   const nodes = sortByZ(nodeList(scene));
   for (let index = nodes.length - 1; index >= 0; index--) {
-    if (containsPoint(padBounds(nodeBounds(nodes[index]), margin), point)) {
+    if (containsPoint(padBounds(nodeBounds(nodes[index]), margin), unrotatePoint(nodes[index], point))) {
       return nodes[index];
     }
   }
@@ -113,5 +106,5 @@ export const hitTest = (scene: Scene, point: Point, margin = 0): Node | undefine
 };
 
 /** Nodes whose bounds intersect `bounds` (marquee semantics). */
-export const nodesIntersecting = (scene: Scene, bounds: Bounds): Node[] =>
+export const nodesIntersecting = (scene: View, bounds: Bounds): Node[] =>
   nodeList(scene).filter((node) => intersects(nodeBounds(node), bounds));

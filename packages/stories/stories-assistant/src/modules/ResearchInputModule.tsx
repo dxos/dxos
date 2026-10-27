@@ -4,16 +4,18 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Entity, Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/schema.ts';
 
 export const ResearchInputModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -69,7 +71,7 @@ const DebugCard = ({ object }: DebugCardProps) => {
       </div>
       <details className='group'>
         <summary className='cursor-pointer text-sm text-accent-text hover:text-accent-text-hover'>View JSON</summary>
-        <pre className='mt-2 text-xs p-3 rounded-sm overflow-x-auto'>{JSON.stringify(object, null, 2)}</pre>
+        <pre className='mt-2 text-xs p-trim-md rounded-sm overflow-x-auto'>{JSON.stringify(object, null, 2)}</pre>
       </details>
     </div>
   );

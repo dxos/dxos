@@ -13,7 +13,7 @@ import { OpaqueToolkit, ToolId, ToolResolverService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Registry } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import {

@@ -13,7 +13,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Expando } from '@dxos/schema';
@@ -151,6 +151,7 @@ const capabilities = ({ scheduled }: { scheduled: boolean }) => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: {
       operation: TestSync,
       targetTypename: TARGET_TYPENAME,

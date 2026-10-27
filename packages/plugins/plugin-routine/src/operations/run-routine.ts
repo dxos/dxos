@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import { createInvocationPayload } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
       // An edge routine is registered only on the EDGE dispatcher, so running it means force-running that
       // trigger over HTTP; invoking the runnable here would silently run it on the client instead.
       if (trigger?.remote === true) {
-        const monitor = yield* Trigger.TriggerMonitorService;
+        const monitor = yield* Trigger.ManagerService;
         yield* monitor.invokeTrigger({ trigger, event: { tick: Date.now() } });
         return;
       }
@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunRoutine> = Routi
         // The instructions carry their own context objects and skills; RunInstructions binds them when it
         // executes. No Chat session object is created — the run appears in the process monitor only.
         yield* Operation.schedule(
-          RunInstructions,
+          AgentOperation.RunInstructions,
           { instructions: spec.instructions, input: {} },
           { spaceId: db.spaceId },
         );

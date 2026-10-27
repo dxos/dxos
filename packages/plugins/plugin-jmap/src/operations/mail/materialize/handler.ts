@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 
 import { JmapOperation } from '#types';
@@ -26,11 +27,11 @@ const handler: Operation.WithHandler<typeof JmapOperation.MaterializeJmapTarget>
         const connectionObj = connection.target;
         const db = connectionObj ? Obj.getDatabase(connectionObj) : undefined;
         if (!connectionObj || !db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
+          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {
-          const accessToken = yield* Database.load(connectionObj.accessToken);
+          const accessToken = yield* Database.load(Connection.getAccessToken(connectionObj));
           const name = accessToken.account ?? 'Inbox';
           const created = yield* Database.add(Mailbox.make({ name }));
           return { target: Ref.make(created) };

@@ -1,5 +1,75 @@
 # @dxos/react-ui-components
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/progress@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 0d81167: Hand-built agent panels follow the form's layout, and the entity browser slots into its host.
+
+  - `@dxos/react-ui-components`: **Breaking:** `Section` is removed; build a labelled group with react-ui's `Fieldset.Root` and `Fieldset.Legend` (the form's label row) instead.
+  - `@dxos/plugin-agent`: the Activity panel lays out its groups in the form's frame (`Form.Viewport`, `Fieldset`). `AgentKnowledge.Browser` (`EntityBrowser`) is composable, its horizontal scroll frame the root, so a host's `Panel.Body asChild` slots onto it instead of nesting a second panel. Predicate cards title each predicate in kebab case, as the entity cards key it. The email channel's settings are a panel whose header toolbar reads "Email" with one connect/disconnect toggle, as Activity's, and the form scrolls beneath it.
+  - `@dxos/plugin-discord`: the Discord setup panel uses the same form frame and `Fieldset` groups. Its toolbar links to the hub console's Discord page for the EDGE environment the client is configured with.
+  - `@dxos/plugin-client`: recovery credentials show when each was issued to the minute on a 24-hour clock, and a revoked one is marked by its strikethrough alone.
+  - `@dxos/react-ui`: `Layout.Columns` lays out a horizontal run of columns sized to whole shares of the space (as many as fit at a minimum width, each an exact fraction), scrolling a column at a time and following the newest. `Status.Empty` reads at the label's size (`text-sm` by default), so every empty state is the same secondary text. Overlay scroll thumbs sit flush with the ends of their track, as they already did with its side. A tag in a start-aligned card row centres on the first line, as text does.
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [55bdf55]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/react-ui@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/progress@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [b07f49f]
+  - @dxos/react-ui@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/progress@0.14.0
+  - @dxos/react-hooks@0.14.0
+  - @dxos/ui-types@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [7d222fc]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/progress@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

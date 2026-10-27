@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 // Dotted, not slash-separated: the key is an NSID, and `DXN_SPEC_REGEXP` rejects slashes — the old
 // form made `Skill.registryURI` fall back to a bare URI for this skill alone.
@@ -59,12 +58,12 @@ export class Provider extends Type.makeObject<Provider>(DXN.make('org.dxos.type.
     kind: Schema.Literals(['api', 'scrape']).pipe(Schema.annotate({ title: 'Kind' })),
     // Raw JSONSchema of the typed search fields; authored by the skill and hidden from forms
     // (it is converted to an Effect Schema to drive the Search criteria form).
-    searchSchema: JsonSchema.JsonSchema.pipe(FormInputAnnotation.set(false), Schema.optional),
+    searchSchema: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
     // Mapping structs are Effect Schemas and render as nested form fields in the Provider editor.
     request: Schema.optional(RequestMapping),
     result: Schema.optional(ResultMapping),
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--package--regular', hue: 'cyan' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
     Annotation.UserType.set(),

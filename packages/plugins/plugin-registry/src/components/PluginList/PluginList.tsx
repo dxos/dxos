@@ -6,7 +6,7 @@ import React from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Container } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { PluginItem, type PluginItemProps } from './PluginItem.tsx';
 
@@ -40,7 +40,7 @@ export const PluginList = ({
   ...props
 }: PluginListProps) => {
   return (
-    <Container
+    <Layout.Container
       layout='row'
       columns='repeat(auto-fill, minmax(18rem, 1fr))'
       gap='lg'
@@ -59,6 +59,6 @@ export const PluginList = ({
           {...props}
         />
       ))}
-    </Container>
+    </Layout.Container>
   );
 };

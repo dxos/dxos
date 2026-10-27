@@ -5,9 +5,9 @@
 
 export * from './AgentProperties/index.ts';
 export * from './Chat/index.ts';
+export * from './ChatDetails/index.ts';
 export * from './ConnectorAuthMenu/index.ts';
 export { TracePanel } from '../containers/TracePanel/TracePanel.tsx';
 export * from './Toolbox/index.ts';
 
 export { ChatPrompt, type ChatPromptProps } from './ChatPrompt/ChatPrompt.tsx';
-export { ChatQueue as ChatQueueList, type ChatQueueProps as ChatQueueListProps } from './ChatQueue/ChatQueue.tsx';

@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Empty, Panel } from '@dxos/react-ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 
 export type EmptyPanelProps = {
   label: string;
@@ -18,7 +19,7 @@ export type EmptyPanelProps = {
  * actions (Play) all the same.
  */
 export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const menuActions = useMenuBuilder(
     (get) => {
       const builder = MenuBuilder.make().separator('gap');
@@ -36,7 +37,7 @@ export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body classNames='bg-scrim-surface'>
-        <Empty classNames='h-full'>{label}</Empty>
+        <Status.Empty classNames='h-full'>{label}</Status.Empty>
       </Panel.Body>
     </Panel.Root>
   );

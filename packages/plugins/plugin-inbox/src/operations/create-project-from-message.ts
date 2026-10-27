@@ -10,7 +10,7 @@ import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
 import { AnchoredTo, Message } from '@dxos/types';
 

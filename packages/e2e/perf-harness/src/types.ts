@@ -57,6 +57,20 @@ export type Comparability = {
    * a flag that adds one must not split the `instruments` series the timings are trended on.
    */
   counters?: string;
+  /** Served over HTTP/2, as production's CDN serves; absent means HTTP/1.1. */
+  http2?: boolean;
+  /** Built with the PWA service worker, which precaches the bundle mid-run. */
+  serviceWorker?: boolean;
+  /** The page's CPU slowed by this factor; absent means unthrottled. */
+  cpuThrottle?: number;
+  /** The browser reached nothing but loopback; absent means connected to EDGE. */
+  offline?: boolean;
+  /** The one non-production EDGE host a partitioned browser could reach. */
+  edge?: string;
+  /** PostHog (events, exceptions, replay) and OTel export on, delivered to a loopback sink. */
+  telemetry?: boolean;
+  /** The release channel the bundle was built as; absent means none was set. */
+  channel?: string;
 };
 
 /** A CDP target the harness measures. Shared workers matter most: ECHO and automerge live there. */
@@ -379,6 +393,33 @@ export type ResponsivenessMetrics = {
   stillFrameCount?: number;
 };
 
+/** One mark on a latency path, as milliseconds since the path's start. */
+export type LatencyStep = {
+  name: string;
+  kind: TargetKind;
+  ms: number;
+};
+
+/**
+ * Prompt-to-model latency over the stage, joined from every realm's work marks on their absolute time.
+ *
+ * Two quantities because a chat turn has two kinds of input: the user's prompt, and — on every later
+ * turn of an agent loop — the previous response, whose tool calls must run before the next request.
+ * Both are the time the app spends between having its input and asking the model.
+ */
+export type RequestLatency = {
+  /** `chat.submit` → the first agent `ai.request` after it, one per submit. */
+  submitToRequestMs: number[];
+  /** An agent `ai.response` → the next agent `ai.request`, one per later turn. */
+  turnToRequestMs: number[];
+  /** The first submit's path: every mark between it and its request. NDJSON only. */
+  submitPath: LatencyStep[];
+  /** Each mark's median offset into the later turns, where it occurred in at least half of them. NDJSON only. */
+  turnPath: LatencyStep[];
+  /** Realms that published marks; `0` means nothing was instrumented. */
+  realms: number;
+};
+
 /** One stage of one flow, in one mode — the unit both the NDJSON row and the PostHog event carry. */
 export type StageRow = {
   flow: string;
@@ -449,6 +490,13 @@ export type StageRow = {
   react?: ReactCounters;
   /** The app's data-layer counters: automerge, ECHO, SQLite statements. */
   data?: DataCounters;
+  /**
+   * Submit (the keydown) to the first frame showing the submitted prompt in the thread, read by the
+   * flow's in-page probe. Absent unless the flow measured it in this stage.
+   */
+  submitToQueuedVisibleMs?: number;
+  /** Prompt-to-model latency. Absent when the stage made no model request. */
+  latency?: RequestLatency;
   responsiveness: ResponsivenessMetrics;
 
   comparability: Comparability;

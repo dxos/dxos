@@ -6,14 +6,13 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -24,6 +23,10 @@ import {
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
 import { ObjectPicker, type ObjectPickerProps } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { isNonNullable } from '@dxos/util';
 
 import { Board } from '#types';
@@ -49,9 +52,8 @@ const normalizeCells = (cells: Board.Board['layout']['cells']): Layout['items'] 
 export type BoardArticleProps = AppSurface.ObjectArticleProps<Board.Board>;
 
 export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { hasAttention } = useAttention(attendableId);
-  const db = Obj.getDatabase(board);
   const [boardItems] = useObject(board, 'items');
   const itemsAtom = useMemo(
     () =>
@@ -72,25 +74,11 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
   const controller = useRef<BoardController>(null);
   const [zoom, setZoom] = useState(1);
 
-  const layout = useMemo<Layout>(() => ({ items: normalizeCells(board.layout.cells) }), [board.layout.cells]);
+  const [{ layout: boardLayout }] = useObject(board);
+  const layout = useMemo<Layout>(() => ({ items: normalizeCells(boardLayout.cells) }), [boardLayout.cells]);
   const bounds = useMemo(
-    () => ({ columns: board.layout.size.width, rows: board.layout.size.height }),
-    [board.layout.size.width, board.layout.size.height],
-  );
-
-  // TODO(burdon): Use search.
-  const objects = useQuery(db, Filter.everything());
-  const options = useMemo<ObjectPickerProps['options']>(
-    () =>
-      objects
-        .filter((obj) => obj.id !== board.id)
-        .map((obj) => {
-          const label = Obj.getLabel(obj);
-          return label ? { id: obj.id, label, hue: 'neutral' as const } : undefined;
-        })
-        .filter(isNonNullable)
-        .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
-    [objects, board.id],
+    () => ({ columns: boardLayout.size.width, rows: boardLayout.size.height }),
+    [boardLayout.size.width, boardLayout.size.height],
   );
 
   const handleChange = useCallback<NonNullable<BoardRootProps['onChange']>>(
@@ -136,18 +124,13 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
 
   // Toolbar "+" adds an existing object via the picker.
   const handleSelect = useCallback(
-    (id: string | undefined) => {
-      const position = DEFAULT_POSITION;
-      const selected = objects.find((obj) => obj.id === id);
-      if (!Obj.isObject(selected)) {
-        return;
-      }
+    (selected: Obj.Unknown) => {
       Obj.update(board, (board) => {
         board.items.push(Ref.make(selected));
-        board.layout.cells[selected.id.toString()] = position;
+        board.layout.cells[selected.id.toString()] = DEFAULT_POSITION;
       });
     },
-    [objects, board],
+    [board],
   );
 
   return (
@@ -166,25 +149,30 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
         {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
         <Panel.Header>
           <Toolbar.Root>
-            <Button
+            <Button.Root
               icon='ph--crosshair--regular'
               iconOnly
               label={t('move-to-center.button')}
               disabled={!hasAttention}
               onClick={() => controller.current?.center()}
             />
-            <Button
+            <Button.Root
               icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
               iconOnly
               label={t('toggle-zoom.button')}
               disabled={!hasAttention}
               onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
             />
-            <ObjectPicker
-              options={options}
+            <BoardObjectPicker
+              board={board}
               onSelect={handleSelect}
               trigger={
-                <Button icon='ph--plus--regular' iconOnly label={t('add-object.button')} disabled={!hasAttention} />
+                <Button.Root
+                  icon='ph--plus--regular'
+                  iconOnly
+                  label={t('add-object.button')}
+                  disabled={!hasAttention}
+                />
               }
             />
           </Toolbar.Root>
@@ -218,3 +206,49 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
 };
 
 BoardArticle.displayName = 'BoardArticle';
+
+type BoardObjectPickerProps = {
+  board: Board.Board;
+  onSelect: (object: Obj.Unknown) => void;
+  trigger: ObjectPickerProps['trigger'];
+};
+
+const BoardObjectPicker = ({ board, onSelect, trigger }: BoardObjectPickerProps) => {
+  const [open, setOpen] = useState(false);
+  const objects = useQuery(open ? Obj.getDatabase(board) : undefined, Filter.everything());
+  const optionsAtom = useMemo(
+    () =>
+      Atom.make((get): ObjectPickerProps['options'] =>
+        objects
+          .filter((obj) => obj.id !== board.id)
+          .map((obj) => {
+            const label = get(Obj.labelAtom(obj));
+            return label ? { id: obj.id, label, hue: 'neutral' as const } : undefined;
+          })
+          .filter(isNonNullable)
+          .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
+      ),
+    [objects, board.id],
+  );
+  const options = useAtomValue(optionsAtom);
+  const handleSelect = useCallback(
+    (id: string | undefined) => {
+      const selected = objects.find((obj) => obj.id === id);
+      if (Obj.isObject(selected)) {
+        onSelect(selected);
+      }
+    },
+    [objects, onSelect],
+  );
+
+  return (
+    <ObjectPicker
+      options={options}
+      // The board itself is always in the result, so an empty result means the query has not landed.
+      loading={open && objects.length === 0}
+      onSelect={handleSelect}
+      onOpenChange={setOpen}
+      trigger={trigger}
+    />
+  );
+};

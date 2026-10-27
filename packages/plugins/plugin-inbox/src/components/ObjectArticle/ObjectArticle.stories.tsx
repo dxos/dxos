@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -26,7 +26,7 @@ const DefaultStory = () => (
       </Header.Root>
     }
   >
-    <div className='p-3 text-fg-muted'>Article body content.</div>
+    <div className='p-trim-md text-fg-muted'>Article body content.</div>
   </ObjectArticle>
 );
 

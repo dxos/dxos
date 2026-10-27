@@ -29,6 +29,16 @@ export type Subject = {
   readonly objects: readonly Scene.WorldObject[];
   readonly drawing: View.Drawing;
   readonly report: Diagnostics.Report;
+  /** Connectors as a reader traces them (a bus once per spoke), each with the boxes at its ends. */
+  readonly edges: readonly Edge[];
+};
+
+export type Edge = {
+  readonly points: readonly Point[];
+  readonly bends: number;
+  readonly from?: View.Box;
+  readonly to?: View.Box;
+  readonly style?: View.Path['style'];
 };
 
 export type Measure = { readonly score: number; readonly detail: string };
@@ -88,15 +98,6 @@ const pathLength = (points: readonly Point[]) =>
     .slice(1)
     .reduce((total, point, index) => total + Math.hypot(point.x - points[index].x, point.y - points[index].y), 0);
 
-const bends = (points: readonly Point[]) =>
-  points.slice(1, -1).filter((point, index) => {
-    const [previous, next] = [points[index], points[index + 2]];
-    const straight =
-      (Math.abs(previous.x - point.x) < ALIGNED && Math.abs(point.x - next.x) < ALIGNED) ||
-      (Math.abs(previous.y - point.y) < ALIGNED && Math.abs(point.y - next.y) < ALIGNED);
-    return !straight;
-  }).length;
-
 /** Overlap of two intervals' projections, positive when they share some extent. */
 const overlap = (lo1: number, hi1: number, lo2: number, hi2: number) => Math.min(hi1, hi2) - Math.max(lo1, lo2);
 
@@ -118,11 +119,32 @@ const OPPOSITE = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' } 
 const nodesOf = ({ drawing }: Subject) => drawing.boxes.filter(({ frame }) => !frame);
 const framesOf = ({ drawing }: Subject) => drawing.boxes.filter(({ frame }) => frame);
 
+const distance = ({ x, y }: Point, rect: Rect) =>
+  Math.hypot(Math.max(rect.x - x, 0, x - rect.x - rect.w), Math.max(rect.y - y, 0, y - rect.y - rect.h));
+
+/** The routes of a drawing, each resolved to the boxes nearest its ends and styled as its far-end piece. */
+const edgesFor = (objects: readonly Scene.WorldObject[], drawing: View.Drawing): Edge[] => {
+  const nodes = drawing.boxes.filter(({ frame }) => !frame);
+  const styles = new Map(drawing.paths.map(({ ref, style }) => [ref, style]));
+  const nearest = (point: Point) =>
+    nodes.reduce<View.Box | undefined>(
+      (best, box) => (!best || distance(point, box.rect) < distance(point, best.rect) ? box : best),
+      undefined,
+    );
+  return Diagnostics.routes(objects).map(({ ref, points, bends }) => ({
+    points,
+    bends,
+    from: nearest(points[0]),
+    to: nearest(points[points.length - 1]),
+    style: styles.get(ref),
+  }));
+};
+
 /** Connectors that join two distinct boxes, which are the ones rules about arrows are about. */
-const edgesOf = ({ drawing }: Subject) =>
-  drawing.paths.filter(
-    (path): path is View.Path & { from: View.Box; to: View.Box } =>
-      path.from !== undefined && path.to !== undefined && path.from !== path.to && path.points.length >= 2,
+const edgesOf = ({ edges }: Subject) =>
+  edges.filter(
+    (edge): edge is Edge & { from: View.Box; to: View.Box } =>
+      edge.from !== undefined && edge.to !== undefined && edge.from !== edge.to && edge.points.length >= 2,
   );
 
 /** The smallest frame enclosing a box, its innermost group. */
@@ -204,11 +226,11 @@ export const EVALUATORS: Readonly<Record<string, Evaluator>> = {
   },
 
   'few-bends': (subject) => {
-    const excess = edgesOf(subject).map(({ points, from, to }) => {
+    const excess = edgesOf(subject).map(({ bends, from, to }) => {
       const aligned =
         overlap(from.rect.x, from.rect.x + from.rect.w, to.rect.x, to.rect.x + to.rect.w) > 0 ||
         overlap(from.rect.y, from.rect.y + from.rect.h, to.rect.y, to.rect.y + to.rect.h) > 0;
-      return Math.max(0, bends(points) - (aligned ? 0 : 1));
+      return Math.max(0, bends - (aligned ? 0 : 1));
     });
     const average = mean(excess);
     return { score: soften(average), detail: `${average.toFixed(2)} excess bends per arrow` };
@@ -220,7 +242,7 @@ export const EVALUATORS: Readonly<Record<string, Evaluator>> = {
         overlap(from.rect.x, from.rect.x + from.rect.w, to.rect.x, to.rect.x + to.rect.w) > 0 ||
         overlap(from.rect.y, from.rect.y + from.rect.h, to.rect.y, to.rect.y + to.rect.h) > 0,
     );
-    const straight = share(facing.map(({ points }) => bends(points) === 0));
+    const straight = share(facing.map(({ bends }) => bends === 0));
     return { score: straight, detail: `${percent(straight)} of ${facing.length} facing pairs straight` };
   },
 
@@ -476,7 +498,13 @@ export const measure = (
   objects: readonly Scene.WorldObject[],
   rules: readonly Rules.DiagramRule[] = Rules.RULES,
 ): (Rules.DiagramRule & Measure)[] => {
-  const subject: Subject = { objects, drawing: View.extract(objects), report: Diagnostics.analyze(objects) };
+  const drawing = View.extract(objects);
+  const subject: Subject = {
+    objects,
+    drawing,
+    report: Diagnostics.analyze(objects),
+    edges: edgesFor(objects, drawing),
+  };
   return rules.flatMap((rule) => {
     const evaluator = EVALUATORS[rule.id];
     return rule.evaluator !== 'vision' && evaluator ? [{ ...rule, ...evaluator(subject) }] : [];

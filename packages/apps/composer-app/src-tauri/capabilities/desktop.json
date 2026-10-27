@@ -8,7 +8,8 @@
       "http://localhost:26777/*",
       "http://localhost:26778/*",
       "http://localhost:26779/*",
-      "http://localhost:26780/*"
+      "http://localhost:26780/*",
+      "http://localhost:26781/*"
     ]
   },
   "permissions": [
@@ -57,6 +58,11 @@
         },
         {
           "args": [],
+          "cmd": "$RESOURCE/dx-agent",
+          "name": "dx-agent"
+        },
+        {
+          "args": [],
           "cmd": "$RESOURCE/dx-sandbox",
           "name": "dx-sandbox"
         }
@@ -66,6 +72,7 @@
     "opener:allow-open-url",
     "opener:default",
     "updater:default",
+    "meeting-capture:default",
     "allow-cache-plugin-assets",
     "allow-evict-plugin",
     "allow-resolve-cached-url",
@@ -80,6 +87,9 @@
     "allow-remove-xattr",
     "allow-hide-spotlight",
     "allow-take-web-process-terminations",
+    "allow-defer-exit",
+    "allow-confirm-exit",
+    "allow-cancel-exit",
     {
       "identifier": "http:default",
       "allow": [

@@ -167,6 +167,7 @@ test QA-2: Rename, undo and a second space
   actors: both
   status: unverified        # 2026-09-08, rewritten from testing/scripts/basics.md chapter 2 (which passed 2026-09-07)
   automated:
+    - composer-e2e:basic.spec.ts#Basic tests › re-order workspaces
     - composer-e2e:collections.spec.ts#Collection tests › deletion undo restores collection
   given:
     - defaultSpace: the space flagged `default` in the snapshot, SPACE_READY
@@ -256,6 +257,10 @@ test QA-2: Rename, undo and a second space
         const rows = await composer.invoke('org.dxos.operation.space.queryObjects',
           { typename: 'org.dxos.type.document' }, { spaceId: $space.id });
         return $snapshot.layout.workspace === `root/${$space.id}` && rows.results.length === 1;
+    - name: Reorder the workspaces
+      do: In the workspace rail, drag "QA: Undo B $runId" above "QA: Undo $runId", then reload the app.
+      expect: the rail lists "QA: Undo B $runId" above "QA: Undo $runId", before and after the reload
+      note: The rail drag has no operation behind it; the agent skips this step.
   after:
     - name: Remove the document
       do: Delete the document from its ⋮ menu.
@@ -748,7 +753,176 @@ test QA-11: Composer basics tour
     - the default space holds the commented README, "About Composer", the drawing, the table and its type, the sheet and the map
 ```
 
+```mdl
+test QA-13: Plugin showcase
+  desc: |
+    One short, wordless beat per visually distinct plugin, recorded for the Grid montage (tools/autocue/showcase
+    SHOWCASE.md): each plugin creates its object off camera, then performs one characteristic gesture. Its value is
+    that every plugin it touches still creates and renders from a fresh profile. Each plugin's beat is now its own
+    `autocue/showcase.mjs` and its own "Showcase clip" test; `tools/autocue/showcase/overnight.mjs` records them all.
+  actors: human
+  status: unverified        # driven per plugin by tools/autocue/showcase/overnight.mjs
+  given:
+    - a fresh identity whose default space is open
+    - the showcase plugins enabled (the flow enables them with org.dxos.operation.registry.enablePlugins)
+  before:
+    - name: Dismiss the privacy notice
+      do: If the "Privacy Notice" toast shows, close it.
+      expect: no privacy toast remains
+    - name: Close the companion panel
+      do: If the right-hand companion panel is open, close it.
+      expect: the main content takes the width
+  steps:
+    - name: Pan a map
+      do: Create a Map, zoom into Europe and drag across it.
+      expect: map tiles render and follow the drag
+    - name: Spin a planet, a scene and a voxel world
+      do: Create a Terra world, a Spacetime scene and a Voxel world in turn, dragging across each.
+      expect: each renders in 3D and the view orbits with the drag
+    - name: Fill a sheet
+      do: Create a sheet and type three rows of a label, a number and a formula doubling it.
+      expect: the formula cells show the doubled values
+    - name: Grow a diagram
+      do: Create a document with a mermaid block, then add edges one at a time with the cursor outside the block.
+      expect: the rendered diagram gains a node or edge with each line
+    - name: Write, present and outline
+      do: Type a short note into a document; present a document split on `---` and page through it; type an outline.
+      expect: the note formats live, the slides advance, and the outline indents
+    - name: Draw in each drawing variant
+      do: Create tldraw, Excalidraw and Canvas drawings and draw a rectangle, an ellipse and a stroke in each.
+      expect: the shapes appear in each variant
+    - name: Browse the plugin registry
+      do: Open the plugin registry and scroll through it.
+      expect: the plugin cards scroll smoothly
+    - name: Replay a chess game
+      do: Create a Chess game from the Opera Game PGN and step through it with the arrow keys.
+      expect: the board advances one move per key
+    - name: Play a handpan
+      do: Create a Handpan instrument and click around its ring of notes.
+      expect: each clicked note highlights
+    - name: Open a template project
+      do: Create a project from the Composer Plugin template and open its Tasks tab.
+      expect: the template's tasks are listed
+  then:
+    - the default space holds one object of each plugin above
+```
+
 ## Suites
+
+```mdl
+test QA-12: Two people collaborate, then one invites the other from the notifications inbox
+  desc: |
+    The messenger demo. Two identities name themselves, collaborate in a space shared by the standard
+    invitation (QA-8's path), then the second person invites the first to a new space as a known
+    contact; the invitation arrives as a notification and is accepted from the panel — QA-10's
+    contact-picker path with the join link replaced by plugin-messenger's inbox.
+  actors: human
+  covers: [org.dxos.plugin.messenger]
+  status: unverified        # 2026-10-05, written for PR #13701; the invite half is exercised by testing/bin/two-user-invite.mjs
+  automated:
+    - composer-e2e:messenger-demo.spec.ts#Messenger demo › collaborate, then invite a contact from the notifications inbox
+  given:
+    - alice: a booted app in one browser profile, with a fresh identity
+    - bob: a SECOND browser profile with its own, different identity
+    - on a deployed origin, both identities are bound to a hub account (two-user-invite.mjs --account does this with test+…@dxos.org); EDGE serves the inbox only to such identities
+    - no space whose name starts with "QA:" exists on either profile
+  before:
+    - name: Dismiss the privacy notice
+      do: "On both: if the \"Privacy Notice\" toast shows, close it."
+      expect: no privacy toast remains; it is raised only for a new identity on a non-local, non-CI origin
+    - name: Close the companion panel
+      do: "On both: if the right-hand companion panel (R1) is open, close it with the rail's sidebar toggle."
+      expect: the main content takes the width; the rail of companion tabs stays
+  steps:
+    - name: Alice names herself
+      do: "On Alice: open the account menu, set the display name to \"Alice\" and save."
+      expect: Alice's avatar and the account menu read "Alice"
+      invoke: org.dxos.operation.client.updateProfile { displayName: "Alice" }
+    - name: Bob names himself
+      do: "On Bob: open the account menu, set the display name to \"Bob\" and save."
+      expect: Bob's avatar and the account menu read "Bob"
+      invoke: org.dxos.operation.client.updateProfile { displayName: "Bob" }
+    - name: Alice creates a space
+      do: "On Alice: in the navtree, open the space list's +, name the space \"QA: Shared $runId\" and create it."
+      expect: the space opens on Alice and appears in her navtree
+      invoke: org.dxos.operation.space.create { name: "QA: Shared $runId" }
+      capture: sharedSpace
+    - name: Alice shares the space
+      do: "On Alice: open the space's members panel, choose Invite one, and copy the invitation link; note the auth code it shows."
+      expect: an invitation link and a six-digit auth code are shown on Alice
+      note: The standard (interactive, shared-secret) invitation; the code exchange is a human step with no single operation, as in QA-8.
+    - name: Bob joins with the invitation
+      do: "On Bob: open the invitation link and enter Alice's auth code."
+      expect: |
+        the code's six cells sit centred in the Joining space dialog; Bob's navtree lists "QA: Shared $runId";
+        each is now in the other's contacts, and Alice's members panel lists Bob
+    - name: Alice creates a document and Bob opens it
+      do: "On Alice: in \"QA: Shared $runId\", create a document. On Bob: open it from the space's collection."
+      expect: the document appears in the space on BOTH peers and is open on both
+      invoke: org.dxos.operation.markdown.create { name: "QA: Plan $runId", content: "" }
+      space: $sharedSpace
+    - name: Alice writes a title and a paragraph
+      do: |
+        On Alice: type the heading "# Q3 Planning", a blank line, then the paragraph "We will finalise the roadmap
+        and assing owners this week." (the misspelling is deliberate)
+      expect: Bob's open document shows the title and Alice's paragraph, misspelling included, without a reload
+    - name: Bob adds a paragraph
+      do: "On Bob: at the end of the document, add a blank line and the paragraph \"I will draft the launch checklist and share it on Friday.\""
+      expect: Alice's document shows Bob's paragraph beneath hers
+    - name: Bob corrects Alice's misspelling
+      do: "On Bob: select \"assing\" in Alice's paragraph and type \"assign\" over it."
+      expect: |
+        BOTH peers show the title, Alice's paragraph reading "assign owners", and Bob's paragraph; "assing"
+        appears on neither — convergence is the criterion, as in QA-8
+    - name: Bob creates a space
+      do: "On Bob: create a space named \"QA: Design $runId\"."
+      expect: the space opens on Bob
+      invoke: org.dxos.operation.space.create { name: "QA: Design $runId" }
+      capture: designSpace
+    - name: Bob invites Alice as a contact
+      do: "On Bob: open \"QA: Design $runId\"'s members panel, pick Alice in the contact picker and click Add."
+      expect: |
+        Alice is listed as a member on Bob; no "Added, but not notified" toast appears (that toast means the
+        inbox refused the send — on a deployed origin, an identity without an account)
+      note: Bob's contact picker offers Alice only because they share "QA: Shared $runId".
+    - name: Alice is notified
+      do: "On Alice: look at the envelope tab in the right rail, then open it."
+      expect: |
+        the envelope tab shows an unread count, and the Notifications panel lists "Invitation to QA: Design
+        $runId" from Bob with a Join button; Alice also saw a toast announcing it
+    - name: Alice accepts
+      do: "On Alice: click Join on the invitation tile."
+      expect: |
+        Alice switches to "QA: Design $runId"; the tile now reads Open space and the unread count drops by one
+      invoke: org.dxos.operation.appToolkit.joinBySpaceKey { spaceKey: $designSpace.key }
+    - name: Alice finds Bob in her contacts
+      do: "On Alice: open the account menu and choose Contacts."
+      expect: the Contacts panel lists Bob
+  after:
+    - name: Delete the test spaces
+      do: Delete "QA: Design $runId" on Bob and "QA: Shared $runId" on Alice from their settings.
+      expect: neither "QA:" space remains on either profile
+  then:
+    - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
+
+test QA-15: Showcase clip
+  desc: |
+    The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: composer` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-onboarding enabled
+  steps:
+    - name: Create the space from its template
+      do: Open the app menu, choose Create space, pick Bramble Coffee Roasters, and click Create.
+      expect: the space opens and its tree fills with projects, documents and mail
+    - name: Walk the space
+      do: Open the Spring Blend Launch project and its Tasks, then the Roastery Handbook, and scroll.
+      expect: the project, its tasks and the handbook each render
+```
 
 ```mdl
 suite smoke: Boots, one space, three documents, one deletion
@@ -771,7 +945,7 @@ suite multi-peer: Journeys that need a second browser profile
     every member needs a profile the other suites do not: a second TAB shares storage and would
     pass these without replicating anything.
   tags: [nightly]
-  tests: [QA-7, QA-8, QA-10]
+  tests: [QA-7, QA-8, QA-10, QA-12]
 ```
 
 ```mdl
@@ -793,4 +967,41 @@ suite editor: The markdown plugin's own contract, run at app level
   desc: The plugin tests already verified through the port, so the nightly run covers a plugin as well as the app.
   tags: [nightly]
   tests: [markdown:QA-1, markdown:QA-2]
+```
+
+```mdl
+test QA-14: Bramble — Kai locks the Spring Blend
+  desc: |
+    A story demo of the Bramble template: Kai Chen, head roaster, is six weeks from launching a new
+    espresso blend, and every step answers one question, whether the Spring Blend is ready. A
+    wholesale customer's feedback leads to her contact, the cupping on the calendar, the launch
+    project, the roasts, and the protocol the blend is judged by. Recorded by
+    plugin-onboarding/autocue/bramble-spring-blend.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - space: a space created from the "Bramble Coffee Roasters" template, open, with the navtree expanded
+  steps:
+    - name: The ask
+      do: In the Inbox, open "Spring blend v1 — feedback" and read its summary.
+      expect: the thread opens in the conversation view; Priya Shah of Hatch Bakery asks for a standing 20 lb a week
+    - name: Who is asking
+      do: Hover Priya's avatar on her message, then open her contact from the card.
+      expect: the card names Hatch Bakery and lists her mail and the upcoming cupping; her contact opens
+    - name: When we will know
+      do: From her contact, open "Spring Blend cupping — Hatch" under upcoming events.
+      expect: the cupping eight days out, with Kai and Priya attending
+    - name: What has to happen first
+      do: Open the Spring Blend Launch project's tasks.
+      expect: done, started and to-do tasks, and the product-page brief waiting for an agent
+    - name: The roasts
+      do: Open the Roast Log board.
+      expect: Spring Blend v2 under cupped and v3 under planned
+    - name: How it will be judged
+      do: Open "Spring blend tasting protocol".
+      expect: the protocol, with the launch task list embedded in it
+    - name: Close
+      do: Return to the Inbox and hold.
+      expect: the inbox, as the take began
 ```

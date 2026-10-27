@@ -21,9 +21,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/util"
-    },
-    {
       "path": "../brand"
     },
     {
@@ -34,6 +31,9 @@
     },
     {
       "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
     }
   ]
 }

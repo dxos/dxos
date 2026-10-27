@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';

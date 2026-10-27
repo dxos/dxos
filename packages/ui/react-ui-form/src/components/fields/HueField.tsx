@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SelectOption } from '@dxos/react-ui';
+import type * as Select from '@dxos/react-ui/Select';
 import { hues } from '@dxos/ui-types';
 
 import { type FormFieldRendererProps } from '#types';
@@ -16,7 +16,7 @@ import { SelectControl } from './SelectField.tsx';
 const capitalize = (hue: string) => hue.charAt(0).toUpperCase() + hue.slice(1);
 
 /** Every theme hue as a Select option: a filled swatch in the hue, named by the hue. */
-export const HUE_OPTIONS: SelectOption[] = hues.map((hue) => ({
+export const HUE_OPTIONS: Select.Option[] = hues.map((hue) => ({
   value: hue,
   label: capitalize(hue),
   icon: 'ph--circle--fill',

@@ -28,11 +28,11 @@ import {
   Objective,
   type Scene,
   Score,
+  SvgFile,
   View,
 } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { IMAGE_NOTE, decisionModel, isJudge, seesImages } from './judges.ts';
 import { toPngs } from './render.tsx';
 
@@ -97,7 +97,7 @@ const judgeFile = (path: string) =>
       : OPTIONS.layout
         ? `${View.ascii(objects)}\n\n${View.rows(objects)}`
         : undefined;
-    const images = OPTIONS.image ? yield* Effect.promise(() => toPngs([toSvgFile(objects)])) : undefined;
+    const images = OPTIONS.image ? yield* Effect.promise(() => toPngs([SvgFile.toSvgFile(objects)])) : undefined;
     const subject = {
       objects,
       images,

@@ -16,7 +16,7 @@ import {
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';

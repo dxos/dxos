@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
 import { Logger } from '@dxos/react-ui-debug';
+import * as Panel from '@dxos/react-ui/Panel';
 
 export const LoggerPanel = () => (
   <Logger.Root>

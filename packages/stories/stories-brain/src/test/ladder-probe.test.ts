@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
 import { fixtureExists, generateText, parseJsonObject, selectVariants } from '../testing/harness/index.ts';

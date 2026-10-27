@@ -4,13 +4,17 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Empty, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useLabels } from '@dxos/echo-react';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -35,22 +39,23 @@ export type ObjectMasonryArticleProps = {
  * that set is presented, which is all this owns.
  */
 export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage }: ObjectMasonryArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   // Ordered by label: the query returns index order, which reads as arbitrary to someone scanning a
   // directory of cards. Sorted on the INPUT, leaving the search below free to rank by match score.
+  const labels = useLabels(objects);
   const ordered = useMemo(
     () =>
       [...objects].sort((a, b) =>
-        (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '', undefined, { sensitivity: 'base' }),
+        (labels.get(a) ?? '').localeCompare(labels.get(b) ?? '', undefined, { sensitivity: 'base' }),
       ),
-    [objects],
+    [objects, labels],
   );
 
   const { results, handleSearch } = useSearchListResults<Obj.Unknown>({
     items: ordered,
-    extract: (object) => Obj.getLabel(object) ?? '',
+    extract: (object) => labels.get(object) ?? '',
   });
 
   const selectedIds = useSelection(attendableId, 'multi');
@@ -101,9 +106,13 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body>
-          {empty ? <Empty classNames='h-full'>{empty}</Empty> : <ObjectMasonry cacheKey={attendableId} items={items} />}
+          {empty ? (
+            <Status.Empty classNames='h-full'>{empty}</Status.Empty>
+          ) : (
+            <ObjectMasonry cacheKey={attendableId} items={items} />
+          )}
         </Panel.Body>
-        <Panel.Footer classNames='flex items-center p-1 border-t border-separator-subtle'>
+        <Panel.Footer classNames='items-center p-1 border-t border-separator-subtle'>
           {t('item-count.label', { count: items.length })}
         </Panel.Footer>
       </Panel.Root>

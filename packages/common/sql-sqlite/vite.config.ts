@@ -16,6 +16,10 @@ export default defineConfig({
     'platform/browser': 'src/platform/browser.ts',
     'platform/bun': 'src/platform/bun.ts',
     'platform/node': 'src/platform/node.ts',
+    'platform/sql-storage-browser': 'src/platform/sql-storage-browser.ts',
+    'platform/sql-storage-bun': 'src/platform/sql-storage-bun.ts',
+    'platform/sql-storage-node': 'src/platform/sql-storage-node.ts',
+    'platform/sql-storage-workerd': 'src/platform/sql-storage-workerd.ts',
   },
   // Undeclared dep, reached only through this package — inlined rather than left for
   // consumers to resolve.
@@ -23,5 +27,12 @@ export default defineConfig({
   // Both this package and `@effect/sql-sqlite-wasm` import the upstream wa-sqlite; the DXOS
   // fork is the one whose VFS examples `OpfsWorker` builds on, so everything resolves to it.
   alias: { '@effect/wa-sqlite': '@dxos/wa-sqlite' },
-  test: { node: {}, browser: 'chromium' },
+  test: {
+    node: {},
+    browser: {
+      browsers: ['chromium'],
+      // Pulled in only by `opfs-in-worker-test-worker.ts`, so vite discovers them once the worker boots.
+      optimizeDeps: ['effect/Deferred', 'effect/Fiber', 'effect/Option'],
+    },
+  },
 });

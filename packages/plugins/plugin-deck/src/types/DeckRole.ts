@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Role from '@dxos/app-framework/Role';
 
 /** Slot for the main status-bar container. */

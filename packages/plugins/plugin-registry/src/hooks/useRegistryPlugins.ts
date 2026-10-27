@@ -4,8 +4,8 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import type * as Registry from '@dxos/app-framework/Registry';
-import { usePluginManager } from '@dxos/app-framework/ui';
 
 /**
  * Reads the registry plugin catalog from `manager.pluginRegistry.plugins`.
@@ -14,7 +14,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
  * `{entries, loading, error}` state settles.
  */
 export const useRegistryPlugins = (): Registry.PluginsState => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   return useAtomValue(manager.pluginRegistry.plugins);
 };
 
@@ -24,6 +24,6 @@ export const useRegistryPlugins = (): Registry.PluginsState => {
  * is best read through {@link useRegistryPlugins} above.
  */
 export const useRegistryPluginProvider = (): Registry.Manager => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   return manager.pluginRegistry;
 };

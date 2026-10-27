@@ -13,7 +13,7 @@ import { type Obj } from '@dxos/echo';
 import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-client';
 import { type DatabaseRoot, type EchoHost } from '@dxos/echo-host';
 import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertState, invariant } from '@dxos/invariant';
 import { DXN, type EntityId, type IdentityDid, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -90,6 +90,8 @@ export type WriteSerializedSpaceArchiveOptions = {
   space: ExportableSpace;
   echoHost: EchoHost;
   exportedBy?: IdentityDid;
+  /** Export only these feeds: their `Feed` objects and messages, and no other object. */
+  feedIds?: readonly string[];
 };
 
 /**
@@ -103,7 +105,7 @@ export type WriteSerializedSpaceArchiveOptions = {
 export const writeSerializedSpaceArchive = async (
   options: WriteSerializedSpaceArchiveOptions,
 ): Promise<SpacesService.SpaceArchive> => {
-  const { space, echoHost, exportedBy } = options;
+  const { space, echoHost, exportedBy, feedIds } = options;
 
   const rootUrl = space.automergeSpaceState.lastEpoch?.assertion.automergeRoot;
   assertState(rootUrl, 'Space does not have a root URL');
@@ -124,6 +126,12 @@ export const writeSerializedSpaceArchive = async (
       continue;
     }
     collectObjectsFromDoc(lease.doc(), objects);
+  }
+
+  if (feedIds) {
+    const selected = new Set(feedIds);
+    // Only `Feed` objects: an id naming any other object must not pull it into a feeds-only archive.
+    objects.splice(0, objects.length, ...objects.filter((obj) => selected.has(obj.id) && isFeedObject(obj)));
   }
 
   // Export queue/feed messages for every Feed object in the space.
@@ -201,6 +209,11 @@ export const objectStructureToObjJson = (objectId: string, structure: EntityStru
   return result as Obj.JSON;
 };
 
+const isFeedObject = (obj: Obj.JSON): boolean => {
+  const typeDxn = obj[ATTR_TYPE];
+  return typeDxn != null && DXN.isDXN(typeDxn) && DXN.getName(typeDxn) === FEED_TYPENAME;
+};
+
 const exportFeedData = async (
   space: ExportableSpace,
   echoHost: EchoHost,
@@ -210,13 +223,7 @@ const exportFeedData = async (
   const spaceId: SpaceId = space.id;
 
   for (const obj of objects) {
-    if (obj[ATTR_TYPE] == null) {
-      continue;
-    }
-
-    const typeDxn = obj[ATTR_TYPE];
-    const typeDxnNsid = DXN.isDXN(typeDxn) ? DXN.getName(typeDxn) : undefined;
-    if (typeDxnNsid !== FEED_TYPENAME) {
+    if (!isFeedObject(obj)) {
       continue;
     }
 
@@ -239,7 +246,7 @@ const exportFeedData = async (
   return feeds;
 };
 
-const collectFeedMessages = async (
+export const collectFeedMessages = async (
   echoHost: EchoHost,
   spaceId: SpaceId,
   feedId: EntityId,

@@ -13,12 +13,12 @@ import path, { join } from 'node:path';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
-import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from 'vite';
+import { type Plugin, type UserConfig, defineConfig as viteDefineConfig } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
 import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
-import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
+import type { BrowserCommand, Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
@@ -109,7 +109,9 @@ const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
 // Default Workers runtime compatibility for the opt-in `workerd` vitest project. `nodejs_compat`
 // exposes the Node.js built-ins (`node:crypto`, `node:buffer`, …) that @dxos packages resolve to,
 // mirroring what production DXOS functions run against on Cloudflare. Overridable per package.
-const WORKERD_COMPATIBILITY_DATE = '2024-11-01';
+// Pinned to the EDGE operation-service's date: before native `node:os` the pool falls back to a
+// polyfill that crashes workerd on load, and `@dxos/log` (via chalk) imports it.
+const WORKERD_COMPATIBILITY_DATE = '2026-03-17';
 const WORKERD_COMPATIBILITY_FLAGS = ['nodejs_compat'];
 
 // ---------------------------------------------------------------------------
@@ -519,6 +521,8 @@ export type NodeOptions = {
   plugins?: Plugin[];
   /** Which JSX runtime to wire into the vitest node project. Defaults to `'react'`. */
   jsx?: 'react' | 'solid';
+  /** Globs to leave out, such as a nested workspace package that runs its own suite. */
+  exclude?: string[];
 };
 
 export type BrowserOptions = {
@@ -585,15 +589,18 @@ const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
     }
   : {};
 
+const throttleCpu: BrowserCommand<[]> = async ({ context, page }) => {
+  const rate = Number(process.env.DX_STORYBOOK_CPU_THROTTLE ?? 1);
+  if (rate > 1 && context.browser()?.browserType().name() === 'chromium') {
+    const session = await context.newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate });
+  }
+};
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
       name: 'storybook',
-      // The playwright/chromium session occasionally dies mid-run with
-      // "Browser connection was closed while running tests", causing every
-      // subsequent story file to fail to import. Retry once so a transient
-      // browser-side flake doesn't fail the whole job.
-      retry: 1,
       // Defaults to per-file isolation; opt out (see `StorybookOptions.isolate`) to share the WASM-backed
       // module graph across story files and avoid cumulative WebAssembly memory exhaustion.
       ...(options?.isolate !== undefined ? { isolate: options.isolate } : {}),
@@ -607,6 +614,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         // `DX_STORYBOOK_BROWSER` runs the stories elsewhere, for a story that pins browser-specific behaviour.
         instances: [{ browser: process.env.DX_STORYBOOK_BROWSER || 'chromium' }],
+        commands: { throttleCpu },
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
@@ -741,6 +749,24 @@ const createBrowserProject = ({
     },
   });
 
+/**
+ * The vendored hypercore crypto compiles its wasm at module init, which workerd forbids; each module
+ * has a pure-JS fallback that activates when its wasm factory returns null.
+ */
+const WorkerdHypercoreWasmPlugin = (): Plugin => ({
+  name: 'workerd-hypercore-wasm',
+  enforce: 'pre',
+  transform(code, id) {
+    if (!/\/vendor(-|\/)hypercore\/.*\.mjs$/.test(id)) {
+      return;
+    }
+    return code.replaceAll(
+      'var compiled = new WebAssembly.Module(bytes);',
+      'var compiled; try { compiled = new WebAssembly.Module(bytes); } catch { module.exports = () => null; return; }',
+    );
+  },
+});
+
 // Runs tests inside the Cloudflare Workers runtime (`workerd`) via
 // `@cloudflare/vitest-pool-workers`. Opt-in (like `browser`/`storybook`) — only
 // `*.workerd.test.{ts,tsx}` files run here, so packages can exercise the same source
@@ -761,6 +787,7 @@ const createWorkerdProject = ({
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node/browser projects).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      WorkerdHypercoreWasmPlugin(),
       // Log-meta injection only — no file sink (workerd has no filesystem).
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       // Configures the vitest pool to execute tests in workerd. `@cloudflare/vitest-pool-workers`
@@ -770,13 +797,21 @@ const createWorkerdProject = ({
       import('@cloudflare/vitest-pool-workers').then(({ cloudflareTest }) =>
         cloudflareTest({
           ...(main !== undefined ? { main } : {}),
-          miniflare: { ...miniflare, compatibilityDate, compatibilityFlags },
+          miniflare: {
+            // Lets the pool hand a dependency's `.wasm` import to workerd as a compiled module;
+            // without a rule vite inlines it as JS glue, which workerd cannot instantiate.
+            modulesRules: [{ type: 'CompiledWasm', include: ['**/*.wasm'] }],
+            ...miniflare,
+            compatibilityDate,
+            compatibilityFlags,
+          },
         }),
       ),
     ],
     test: {
       name: 'workerd',
-      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 5000),
+      // Matches the node project: a cold plugin activation in workerd alone can take several seconds.
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : 15_000),
       include: ['**/src/**/*.workerd.test.{ts,tsx}', '**/test/**/*.workerd.test.{ts,tsx}'],
       setupFiles,
     },
@@ -789,6 +824,7 @@ const createNodeProject = ({
   setupFiles = [],
   plugins = [],
   jsx = 'react',
+  exclude = [],
 }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
@@ -815,6 +851,7 @@ const createNodeProject = ({
         '!**/test/**/*.browser.test.{ts,tsx}',
         '!**/src/**/*.workerd.test.{ts,tsx}',
         '!**/test/**/*.workerd.test.{ts,tsx}',
+        ...exclude.map((glob) => `!${glob}`),
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
       setupFiles: [

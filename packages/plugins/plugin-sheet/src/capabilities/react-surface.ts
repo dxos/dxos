@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 
-import { RangeList, SheetArticle } from '#containers';
+import { ChartArticle, RangeList, SheetArticle, SheetChartsCompanion } from '#containers';
 import { Sheet } from '#types';
 
 export default Capability.makeModule(() =>
@@ -22,8 +22,28 @@ export default Capability.makeModule(() =>
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
           AppSurface.object(AppSurface.Section, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
+          AppSurface.object(AppSurface.Slide, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
         ),
         component: SheetArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'charts',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'charts'),
+          AppSurface.companion(AppSurface.Article, Sheet.Sheet),
+        ),
+        component: SheetChartsCompanion,
+        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
+      }),
+      Surface.create({
+        id: 'chart',
+        filter: AppSurface.oneOf(
+          AppSurface.object(AppSurface.Article, Sheet.Chart, (data) => !!Obj.getDatabase(data.subject)),
+          AppSurface.object(AppSurface.Section, Sheet.Chart, (data) => !!Obj.getDatabase(data.subject)),
+          AppSurface.object(AppSurface.Slide, Sheet.Chart, (data) => !!Obj.getDatabase(data.subject)),
+        ),
+        component: ChartArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({

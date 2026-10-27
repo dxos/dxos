@@ -10,15 +10,14 @@ import { evalite } from 'evalite';
 import { Model } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import { PlanningSkill } from '@dxos/assistant-toolkit';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { EDGE_URLS } from '@dxos/config';
 import { Blob, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as StockfishSpace from '@dxos/plugin-debug/StockfishSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -26,10 +25,10 @@ import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { SandboxSkill } from '@dxos/plugin-sandbox';
 import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as SandboxOperation from '@dxos/plugin-sandbox/SandboxOperation';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
+import * as SandboxSkill from '@dxos/plugin-sandbox/SandboxSkill';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Actor, File, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -383,8 +382,8 @@ const task = createEvalRunner({
     Sandbox.Sandbox,
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.
     AccessToken.AccessToken,
-    // Stage four registers one; a session that looks for it early must find the type, not an error.
-    McpServer.McpServer,
+    // Stage four adds the server as one; a session that looks for it early must find the type, not an error.
+    Connection.Connection,
     // What the sandbox's download tool persists: a session that pulls its source into the space
     // must land it, not an unregistered-schema error.
     File.File,

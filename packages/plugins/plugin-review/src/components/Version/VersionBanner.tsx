@@ -4,8 +4,16 @@
 
 import React, { useState } from 'react';
 
-import { NamePopover } from '@dxos/app-framework/ui';
-import { Button, Icon, Tag, ToggleGroup, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
+import * as NamePopover from '@dxos/app-toolkit/NamePopover';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -17,33 +25,6 @@ type BranchView = ReviewCapabilities.BranchView;
 const BRANCH_VIEWS: BranchView[] = ['base', 'diff', 'branch'];
 
 const isBranchView = (value: string): value is BranchView => (BRANCH_VIEWS as string[]).includes(value);
-
-/** Compact "time since" for the banner tag — `now`, `30m`, `5h`, `2d`, `3w`, `6mo`, `1y`. */
-const relativeTime = (iso: string): string => {
-  const seconds = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 1) {
-    return 'now';
-  }
-  if (minutes < 60) {
-    return `${minutes}m`;
-  }
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours}h`;
-  }
-  const days = Math.floor(hours / 24);
-  if (days < 7) {
-    return `${days}d`;
-  }
-  if (days < 30) {
-    return `${Math.floor(days / 7)}w`;
-  }
-  if (days < 365) {
-    return `${Math.floor(days / 30)}mo`;
-  }
-  return `${Math.floor(days / 365)}y`;
-};
 
 export type VersionBannerProps = {
   /**
@@ -83,28 +64,28 @@ export const VersionBanner = ({
   onViewChange,
   onClose,
 }: VersionBannerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (
     <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
-      <div className='flex items-center gap-1 px-2 truncate'>
-        <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
-        <Tag hue={hue}>{name}</Tag>
+      <Layout.Flex align='center' gap='xs' classNames='px-2 truncate'>
+        <Icon.Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
+        <Tag.Tag hue={hue}>{name}</Tag.Tag>
         {timestamp && (
           <Tooltip.Trigger asChild content={new Date(timestamp).toLocaleString()} side='bottom'>
-            <Tag hue='sky'>{relativeTime(timestamp)}</Tag>
+            <Tag.Tag hue='sky'>{Typography.formatCompact(timestamp)}</Tag.Tag>
           </Tooltip.Trigger>
         )}
-      </div>
+      </Layout.Flex>
       <Toolbar.Separator />
       {mode === 'checkpoint' && onRestore && (
-        <Button variant='ghost' onClick={onRestore}>
+        <Button.Root variant='ghost' onClick={onRestore}>
           {t('restore.label')}
-        </Button>
+        </Button.Root>
       )}
       {mode === 'checkpoint' && onBranchFrom && (
-        <NamePopover
+        <NamePopover.Root
           open={namingBranch}
           placeholder={t('branch-name.placeholder')}
           submitLabel={t('create.label')}
@@ -114,10 +95,10 @@ export const VersionBanner = ({
             onBranchFrom(name);
           }}
         >
-          <Button variant='ghost' onClick={() => setNamingBranch(true)}>
+          <Button.Root variant='ghost' onClick={() => setNamingBranch(true)}>
             {t('branch-from.label')}
-          </Button>
-        </NamePopover>
+          </Button.Root>
+        </NamePopover.Root>
       )}
       {mode === 'branch' && view && onViewChange && (
         <Toolbar.ToggleGroup
@@ -133,7 +114,7 @@ export const VersionBanner = ({
           ))}
         </Toolbar.ToggleGroup>
       )}
-      <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
+      <Button.Root variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
     </Toolbar.Root>
   );
 };

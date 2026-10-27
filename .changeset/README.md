@@ -11,7 +11,7 @@ version bump of whenever the next release is made. Add one when the change is co
 changeset is not required for chores). See the authoring guide:
 [`agents/instructions/changesets.md`](../agents/instructions/changesets.md).
 
-Releases run in GitHub Actions, never locally: `@latest` is published when a human **merges the
-"Version Packages" PR**; `@next` snapshots come from a manual dispatch of the same `publish-all.yml`. Apps
+Releases run in GitHub Actions, never locally: `@latest` is published when a human marks the "Version
+Packages" draft PR ready and **merges it**; `@next` snapshots come from a manual dispatch of the same `publish-all.yml`. Apps
 deploy separately and never publish. Full flow: the [Releasing](../REPOSITORY_GUIDE.md#releasing) section of
 the repository guide.

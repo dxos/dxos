@@ -11,7 +11,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -62,34 +62,35 @@ export const helpdeskSpace: AppCapabilities.SpaceTemplate = {
   label: 'Helpdesk',
   description: 'A project whose first task cannot be finished without asking the user a question.',
   icon: 'ph--lifebuoy--regular',
-  apply: async ({ client, space }) => {
-    await client.addTypes([
-      Project.Project,
-      Instructions.Instructions,
-      TaskSet.TaskSet,
-      Task.Task,
-      Outline.Outline,
-      Feed.Feed,
-    ]);
-    const project = space.db.add(
-      scaffoldProject({
-        name: 'Helpdesk',
-        description: 'Customer support work-stream.',
-        text: PROJECT_INSTRUCTIONS,
-      }),
-    );
-    // Resolved off the project rather than built here: `Project.make` already owns a ledger, and a
-    // second one would leave the tasks in a set the project's own UI never shows.
-    const taskSet = await project.taskSet?.tryLoad();
-    if (taskSet) {
-      for (const { title, description } of TASKS) {
-        TaskSet.addTask(space.db, taskSet, title, { description });
+  apply: ({ client, space }) =>
+    Effect.promise(async () => {
+      await client.addTypes([
+        Project.Project,
+        Instructions.Instructions,
+        TaskSet.TaskSet,
+        Task.Task,
+        Outline.Outline,
+        Feed.Feed,
+      ]);
+      const project = space.db.add(
+        Templates.scaffoldProject({
+          name: 'Helpdesk',
+          description: 'Customer support work-stream.',
+          text: PROJECT_INSTRUCTIONS,
+        }),
+      );
+      // Resolved off the project rather than built here: `Project.make` already owns a ledger, and a
+      // second one would leave the tasks in a set the project's own UI never shows.
+      const taskSet = await project.taskSet?.tryLoad();
+      if (taskSet) {
+        for (const { title, description } of TASKS) {
+          TaskSet.addTask(space.db, taskSet, title, { description });
+        }
+        // Parent edge stamped after the writes above so the whole ledger lands in one cascade.
+        Obj.setParent(taskSet, project);
       }
-      // Parent edge stamped after the writes above so the whole ledger lands in one cascade.
-      Obj.setParent(taskSet, project);
-    }
-    await space.db.flush({ indexes: true });
-  },
+      await space.db.flush({ indexes: true });
+    }),
 };
 
 /** Contributes {@link helpdeskSpace} alongside the story's other space templates. */

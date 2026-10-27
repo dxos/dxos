@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Select } from '@dxos/react-ui';
+import * as Select from '@dxos/react-ui/Select';
 
 export type ControlledSelectorProps<T> = {
   values: T[];

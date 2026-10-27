@@ -5,6 +5,8 @@ mod audio_input;
 mod asset_cache;
 pub mod channel;
 #[cfg(desktop)]
+mod exit_guard;
+#[cfg(desktop)]
 mod last_url;
 #[cfg(desktop)]
 mod oauth;
@@ -99,6 +101,16 @@ pub fn run() {
     // rewrote for this channel — the only thing a running build knows about which channel it is.
     let context = tauri::generate_context!();
 
+    // App data and WebKit storage are keyed by the identifier, so an automation build under a shipped
+    // channel's identifier would drive that channel's real profile.
+    #[cfg(feature = "webdriver")]
+    assert_eq!(
+        channel::ReleaseChannel::from_identifier(&context.config().identifier),
+        channel::ReleaseChannel::Test,
+        "the webdriver feature needs the test identifier (`--config src-tauri/tauri.test.conf.json`), not {}",
+        context.config().identifier,
+    );
+
     #[cfg(all(not(debug_assertions), desktop))]
     let release_channel = channel::ReleaseChannel::from_identifier(&context.config().identifier);
     #[cfg(all(not(debug_assertions), desktop))]
@@ -139,11 +151,17 @@ pub fn run() {
         )
     };
 
+    // Listens on `TAURI_WEBDRIVER_PORT` (default 4445) on loopback.
+    #[cfg(feature = "webdriver")]
+    let builder = builder.plugin(tauri_plugin_wdio_webdriver::init());
+
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let builder = builder
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_process::init());
+        .plugin(tauri_plugin_process::init())
+        // Meeting detection and system-audio capture for plugin-meeting-recorder.
+        .plugin(tauri_plugin_meeting_capture::init());
 
     // Initialize tauri-nspanel plugin for macOS spotlight panel.
     #[cfg(target_os = "macos")]
@@ -231,6 +249,9 @@ pub fn run() {
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
         web_process::take_web_process_terminations,
+        exit_guard::defer_exit,
+        exit_guard::confirm_exit,
+        exit_guard::cancel_exit,
     ]);
 
     #[cfg(mobile)]
@@ -348,6 +369,13 @@ pub fn run() {
                 let window_builder = window_builder
                     .hidden_title(true)
                     .title_bar_style(tauri::TitleBarStyle::Overlay);
+                // An unbundled binary shares WebKit's container (named after the executable) with every other
+                // one, so an automation build keeps its web storage in a store of its own that a reset can
+                // delete: `WebsiteDataStore/6175746f-6375-6500-0000-000000000001` there.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                let window_builder = window_builder.data_store_identifier([
+                    0x61, 0x75, 0x74, 0x6f, 0x63, 0x75, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                ]);
                 let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
@@ -364,6 +392,26 @@ pub fn run() {
                     .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
                     .devtools(true)
                     .build()?;
+
+                // A covered window otherwise stops rendering and reports itself hidden, which stalls a driven
+                // take whenever another window is in front. WKWebView SPI; skipped where WebKit lacks it.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                main_window.with_webview(|webview| unsafe {
+                    use std::ffi::{c_char, c_void};
+                    extern "C" {
+                        fn sel_registerName(name: *const c_char) -> *const c_void;
+                        fn objc_msgSend();
+                    }
+                    let view = webview.inner();
+                    let responds: unsafe extern "C" fn(*mut c_void, *const c_void, *const c_void) -> bool =
+                        std::mem::transmute(objc_msgSend as *const ());
+                    let set: unsafe extern "C" fn(*mut c_void, *const c_void, bool) =
+                        std::mem::transmute(objc_msgSend as *const ());
+                    let selector = sel_registerName(c"_setWindowOcclusionDetectionEnabled:".as_ptr());
+                    if responds(view, sel_registerName(c"respondsToSelector:".as_ptr()), selector) {
+                        set(view, selector, false);
+                    }
+                })?;
 
                 // Before anything runs in the page: the client opens its storage during boot.
                 #[cfg(target_os = "linux")]
@@ -402,6 +450,19 @@ pub fn run() {
                     main_window.on_window_event(move |event| {
                         if matches!(event, tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Focused(false)) {
                             last_url::save(&window, &root);
+                        }
+                    });
+                }
+
+                // Closing the window ends the page and then the app, so the page is asked first, as on the tray's Quit.
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                            use tauri::Manager;
+                            if exit_guard::on_exit_requested(window.app_handle(), MAIN_WINDOW_LABEL) {
+                                api.prevent_close();
+                            }
                         }
                     });
                 }
@@ -450,10 +511,13 @@ pub fn run() {
         .run(|_app, _event| {
             // Quit from the menu, Cmd+Q and the updater's relaunch exit without closing the window first.
             #[cfg(desktop)]
-            if let tauri::RunEvent::ExitRequested { .. } = _event {
+            if let tauri::RunEvent::ExitRequested { api, .. } = _event {
                 use tauri::Manager;
                 if let Some(window) = _app.get_webview_window(MAIN_WINDOW_LABEL) {
                     last_url::save(&window, &app_root_url(&_app.config().identifier));
+                }
+                if exit_guard::on_exit_requested(_app, MAIN_WINDOW_LABEL) {
+                    api.prevent_exit();
                 }
             }
         });

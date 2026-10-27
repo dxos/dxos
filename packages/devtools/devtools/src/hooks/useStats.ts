@@ -182,7 +182,7 @@ export const useStats = (): [Stats, () => void] => {
   }, []);
 
   const echoStatsDiagnostic = useDiagnostic<EchoStatsDiagnostic>(
-    { id: 'echo-stats', instanceTag: 'shared-worker' },
+    { id: 'echo-stats', instanceTag: 'dedicated-worker' },
     1_000,
   );
 

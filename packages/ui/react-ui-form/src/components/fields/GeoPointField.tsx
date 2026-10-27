@@ -5,7 +5,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import { Container, Field, Input, Typography, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -23,7 +27,7 @@ export const GeoPointField = ({
   getValue,
   onValueChange,
 }: FormFieldRendererProps<GeoPoint>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const geoPoint = getValue();
   const location = useMemo(() => GeoLocation.fromGeoPoint(geoPoint ?? [0, 0]), [geoPoint]);
   const [text, setText] = useState({
@@ -37,10 +41,10 @@ export const GeoPointField = ({
   const resolved = presentationFor(presentation);
   if (resolved.isStatic) {
     return !location.latitude && !location.longitude ? null : (
-      <Typography truncate>
+      <Typography.Text truncate>
         {Math.abs(location.latitude ?? 0).toFixed(5)}°{(location.latitude ?? 0) >= 0 ? 'N' : 'S'}{' '}
         {Math.abs(location.longitude ?? 0).toFixed(5)}°{(location.longitude ?? 0) >= 0 ? 'E' : 'W'}
-      </Typography>
+      </Typography.Text>
     );
   }
 
@@ -59,7 +63,7 @@ export const GeoPointField = ({
           <Field.Label>{t(`${name}.label`)}</Field.Label>
         </Field.Header>
       )}
-      <Input
+      <Input.Root
         type='number'
         step='0.00001'
         min={-bound}
@@ -73,10 +77,10 @@ export const GeoPointField = ({
   );
 
   return (
-    <Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+    <Layout.Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
       {coordinate('latitude', 90)}
       {coordinate('longitude', 180)}
-    </Container>
+    </Layout.Container>
   );
 };
 

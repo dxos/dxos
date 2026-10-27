@@ -3,6 +3,7 @@
 //
 
 export * from './change-context.ts';
+export * from './commit-scope.ts';
 export * from './define-hidden-property.ts';
 export * from './errors.ts';
 export * from './event-batch.ts';

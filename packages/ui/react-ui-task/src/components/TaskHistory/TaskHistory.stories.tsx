@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { useObject } from '@dxos/echo-react';
-import { ScrollArea } from '@dxos/react-ui';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Task } from '@dxos/types';
 

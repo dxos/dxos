@@ -209,7 +209,7 @@ export const Mention: Story = {
       text={join('# Mention', '', 'Type @...', content.footer)}
       extensions={[
         mention({
-          onSearch: (text) => names.filter((name) => name.toLowerCase().startsWith(text.toLowerCase())),
+          names,
         }),
       ]}
     />

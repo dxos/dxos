@@ -12,12 +12,10 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { IllustratorCapabilities, IllustratorEvents } from '#types';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['browser', 'node', 'tauri'],
 });
+export const Commands = AppCapability.commands(() => import('./commands.ts'));
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config.ts'), {
   activatesOn: IllustratorEvents.Start,
 });
@@ -39,6 +37,11 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });
+export const RefitState = Capability.lazyModule(
+  'RefitState',
+  { provides: [IllustratorCapabilities.Refit], activatesOn: ActivationEvents.Startup },
+  () => import('./refit-state.ts'),
+);
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
   environments: ['browser', 'node', 'tauri'],
@@ -56,7 +59,7 @@ export const SvgVariant = Capability.lazyModule(
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const Translations = AppCapability.translations(translations, {

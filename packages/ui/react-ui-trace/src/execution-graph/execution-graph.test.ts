@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import { makeTestProcess } from '@dxos/compute-runtime/testing';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';
@@ -189,17 +189,18 @@ const MESSAGE_ID = '01HQ0000000000000000000000';
 const SHIMMER_EFFECT_TAG = 'effect:shimmer';
 
 const makeActiveProcess = (
-  overrides: Partial<Process.Process> & Pick<Process.Process, 'pid' | 'key' | 'state'>,
-): Process.Process => ({
-  parentPid: null,
-  params: { name: null, annotations: {} },
-  environment: {},
-  error: null,
-  startedAt: 0,
-  completedAt: Option.none(),
-  metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
-  ...overrides,
-});
+  overrides: Partial<Process.Data> & Pick<Process.Data, 'pid' | 'key' | 'state'>,
+): Process.Process =>
+  makeTestProcess({
+    parentPid: null,
+    params: { name: null, annotations: {} },
+    environment: {},
+    error: null,
+    startedAt: 0,
+    completedAt: Option.none(),
+    metrics: { wallTime: 0, inputCount: 0, outputCount: 0 },
+    ...overrides,
+  });
 
 describe('buildExecutionGraph (span-tree based)', () => {
   test('empty input → no commits', ({ expect }) => {
@@ -609,6 +610,75 @@ describe('buildExecutionGraph scenarios', () => {
   });
 
   /**
+   * A run that calls `Operation.runAgain()` continues in a new process; each continuation carries the
+   * first invocation's pid as `runId`. While the run continues it is a branch off main with a commit per
+   * invocation; once it is over it is one commit.
+   */
+  describe('a run-again chain', () => {
+    const yielded = {
+      key: 'sync',
+      name: 'Sync',
+      outcome: 'failure',
+      errorCode: Process.RUN_AGAIN_ERROR_CODE,
+    } as const;
+    const invocation = (meta: Trace.Meta, batch: string, outcome?: Trace.PayloadType<typeof Trace.OperationEnd>) =>
+      withMeta(
+        meta,
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'sync', name: 'Sync' });
+          yield* Trace.write(Trace.CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'assistant',
+            block: { _tag: 'status', statusText: batch, pending: false },
+          });
+          if (outcome) {
+            yield* Trace.write(Trace.OperationEnd, outcome);
+          }
+        }),
+      );
+
+    test('is a branch with a commit per invocation while it continues', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, 'batch 1', yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, 'batch 2', yielded);
+          yield* invocation({ pid: 'sync-3', runId: 'sync-1' }, 'batch 3');
+        }),
+      );
+
+      expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
+        "
+        ●        [function] Sync
+        ├──●     [arrows-clockwise] Sync - Incomplete
+           ●     [arrows-clockwise] Sync - Incomplete
+           ●     [function] Sync
+           ├──●  [info] batch 3
+        "
+      `);
+    });
+
+    test('collapses to one commit once it is over', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, 'batch 1', yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, 'batch 2', yielded);
+          yield* invocation({ pid: 'sync-3', runId: 'sync-1' }, 'batch 3', {
+            key: 'sync',
+            name: 'Sync',
+            outcome: 'success',
+          });
+        }),
+      );
+
+      expect(`\n${renderGraph(messages)}\n`).toMatchInlineSnapshot(`
+        "
+        ●  [function] Sync
+        "
+      `);
+    });
+  });
+
+  /**
    * Top-level operation interleaved with several status updates between begin and end.
    * Status events are middle events: they render on the operation's own branch and the end
    * commit merges them back into main.
@@ -930,7 +1000,7 @@ describe('buildExecutionGraph scenarios', () => {
             name: 'Sync Google Mail',
             outcome: 'failure',
             error: 'Run again',
-            errorCode: RUN_AGAIN_ERROR_CODE,
+            errorCode: Process.RUN_AGAIN_ERROR_CODE,
           });
         }),
       ),
@@ -956,7 +1026,7 @@ describe('buildExecutionGraph scenarios', () => {
             key: 'sync',
             name: 'Sync Google Mail',
             outcome: 'failure',
-            error: RUN_AGAIN_MESSAGE,
+            error: Process.RUN_AGAIN_MESSAGE,
           });
         }),
       ),

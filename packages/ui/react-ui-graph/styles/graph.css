@@ -281,9 +281,10 @@ svg {
 
     g.dx-edges {
       g.dx-edge {
-        path {
+        :is(path, line, polyline) {
           /** NOTE: Set text- so that current color is picked up by marker. */
-          @apply stroke-1 stroke-neutral-700 fill-none;
+          /* Hairline and light: a dense graph draws hundreds of overlapping edges, which read as solid black at 1px. */
+          @apply stroke-[0.5px] stroke-neutral-400 fill-none;
           /* Force higher-quality tessellation. Some browsers' default `auto` shape-rendering
              produces visible gaps in stroked bezier curves at certain curvature / stroke-width
              combinations — geometricPrecision avoids the heuristic and uses precise math. */
@@ -295,14 +296,14 @@ svg {
         }
 
         &.dx-dashed {
-          path {
+          :is(path, line, polyline) {
             @apply [stroke-dasharray:4_4];
           }
         }
       }
 
       g[data-color='orange'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-orange-300;
           .dark & {
             @apply stroke-orange-500;
@@ -310,7 +311,7 @@ svg {
         }
       }
       g[data-color='amber'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-amber-300;
           .dark & {
             @apply stroke-amber-500;
@@ -318,7 +319,7 @@ svg {
         }
       }
       g[data-color='yellow'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-yellow-300;
           .dark & {
             @apply stroke-yellow-500;
@@ -326,7 +327,7 @@ svg {
         }
       }
       g[data-color='lime'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-lime-300;
           .dark & {
             @apply stroke-lime-500;
@@ -334,7 +335,7 @@ svg {
         }
       }
       g[data-color='green'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-green-300;
           .dark & {
             @apply stroke-green-500;
@@ -342,7 +343,7 @@ svg {
         }
       }
       g[data-color='emerald'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-emerald-300;
           .dark & {
             @apply stroke-emerald-500;
@@ -350,7 +351,7 @@ svg {
         }
       }
       g[data-color='teal'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-teal-300;
           .dark & {
             @apply stroke-teal-500;
@@ -358,7 +359,7 @@ svg {
         }
       }
       g[data-color='cyan'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-cyan-300;
           .dark & {
             @apply stroke-cyan-500;
@@ -366,7 +367,7 @@ svg {
         }
       }
       g[data-color='sky'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-sky-300;
           .dark & {
             @apply stroke-sky-500;
@@ -374,7 +375,7 @@ svg {
         }
       }
       g[data-color='indigo'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-indigo-300;
           .dark & {
             @apply stroke-indigo-500;
@@ -382,7 +383,7 @@ svg {
         }
       }
       g[data-color='violet'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-violet-300;
           .dark & {
             @apply stroke-violet-500;
@@ -390,7 +391,7 @@ svg {
         }
       }
       g[data-color='purple'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-purple-300;
           .dark & {
             @apply stroke-purple-500;
@@ -398,7 +399,7 @@ svg {
         }
       }
       g[data-color='fuchsia'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-fuchsia-300;
           .dark & {
             @apply stroke-fuchsia-500;
@@ -406,7 +407,7 @@ svg {
         }
       }
       g[data-color='rose'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-rose-300;
           .dark & {
             @apply stroke-rose-500;
@@ -414,7 +415,7 @@ svg {
         }
       }
       g[data-color='pink'].dx-edge {
-        path {
+        :is(path, line, polyline) {
           @apply stroke-pink-300;
           .dark & {
             @apply stroke-pink-500;

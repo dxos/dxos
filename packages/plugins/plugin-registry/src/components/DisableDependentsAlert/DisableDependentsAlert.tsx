@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { AlertDialog, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -36,7 +37,7 @@ export const DisableDependentsAlert = ({
   onResolvePluginName,
   onConfirm,
 }: DisableDependentsAlertProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const resolveName = onResolvePluginName ?? ((id: string) => id);
   return (
     <AlertDialog.Content>

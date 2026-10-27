@@ -13,21 +13,21 @@ import { Meeting, MeetingOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, channel, event }) {
+    Effect.fnUntraced(function* ({ name, channel, event, db: targetDb }) {
       const eventTarget = event && (yield* Effect.promise(() => event.load()));
       // Space is derived from whichever anchor is supplied (channel for in-call meetings, event otherwise).
       // Both anchors must resolve to the same space, else the meeting would be written to one DB while
       // linking an event in another — breaking event→meeting lookup.
       const channelSpace = channel ? getSpace(channel) : undefined;
       const eventSpace = eventTarget ? getSpace(eventTarget) : undefined;
-      invariant(channelSpace || eventSpace, 'create meeting requires a channel or event anchor');
+      invariant(channelSpace || eventSpace || targetDb, 'create meeting requires a channel, event or db');
       invariant(
         !channelSpace || !eventSpace || channelSpace === eventSpace,
         'channel and event must belong to the same space',
       );
-      const space = channelSpace ?? eventSpace;
-      invariant(space);
-      const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { db: space.db });
+      const db = channelSpace?.db ?? eventSpace?.db ?? targetDb;
+      invariant(db);
+      const { object: transcript } = yield* Operation.invoke(TranscriptOperation.Create, { db });
       // `event` is a Ref (works for feed/queue events, unlike a relation endpoint).
       const meeting = Obj.make(Meeting.Meeting, {
         name,
@@ -38,10 +38,10 @@ const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOp
         ...(event ? { event } : {}),
       });
 
-      // Persist the meeting here when created from an event (the event-graph action has no other add
-      // path); callers that pass only a channel add the returned meeting themselves.
-      if (event) {
-        space.db.add(meeting);
+      // Persist the meeting here when created from an event or a bare db (neither caller has another
+      // add path); callers that pass only a channel add the returned meeting themselves.
+      if (event || (targetDb && !channel)) {
+        db.add(meeting);
       }
 
       return { object: meeting };

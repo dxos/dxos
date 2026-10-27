@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
@@ -50,7 +50,7 @@ const decorators = (credentials: SeedCredential[] = []) => [
             yield* seedCredentials(client, credentials);
           }),
       }),
-      ProcessManagerPlugin(),
+      ProcessManagerPlugin.make(),
     ],
   }),
 ];
@@ -105,8 +105,10 @@ export const Revoke: Story = {
     window.confirm = () => true;
     try {
       await userEvent.click(canvas.getAllByRole('button', { name: 'Revoke' })[0]);
-      // The list re-renders off the HALO credential stream, with no explicit refresh.
-      await waitFor(async () => expect(canvas.getByText('Revoked')).toBeInTheDocument(), { timeout: 10_000 });
+      // The list re-renders off the HALO credential stream, with no explicit refresh; a revoked row is struck through.
+      await waitFor(async () => expect(canvas.getByText('Laptop passkey').closest('.line-through')).not.toBeNull(), {
+        timeout: 10_000,
+      });
       // The survivor is now the only active credential, so its revoke action is withdrawn.
       await expect(canvas.queryByRole('button', { name: 'Revoke' })).toBeNull();
       await expect(canvas.getByText(/only way back into your account/)).toBeInTheDocument();

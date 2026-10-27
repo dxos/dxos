@@ -7,6 +7,8 @@
 export {
   type ArrayPresentation,
   ArrayPresentationAnnotation,
+  ContentVersionAnnotation,
+  type ContentVersionAnnotationValue,
   DEFAULT_LAYOUT_NAME,
   DescriptionAnnotation,
   FieldLookupAnnotationId,
@@ -24,6 +26,7 @@ export {
   IconAnnotation,
   IconFromRefAnnotation,
   LabelAnnotation,
+  RawStringAnnotation,
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -45,7 +48,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Types from 'effect/Types';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import * as Entity from './Entity.ts';
 import * as annotationAtoms from './internal/Annotation/atoms.ts';

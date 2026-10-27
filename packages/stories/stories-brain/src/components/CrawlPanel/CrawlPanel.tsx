@@ -9,8 +9,12 @@ import React, { type ChangeEvent, type ComponentProps, useCallback, useMemo } fr
 
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
-import { Button, Panel, SystemButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 export const CrawlOptions = Schema.Struct({
   token: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Password)).annotate({
@@ -33,7 +37,7 @@ export const initialOptions = (): CrawlOptions => ({
   descendThreads: import.meta.env.VITE_DISCORD_THREADS !== '0',
 });
 
-export type CrawlPanelProps = ThemedClassName<{
+export type CrawlPanelProps = Util.ThemedClassName<{
   options: CrawlOptions;
   channels: ChannelInfo[];
   busy: CrawlAction | null;
@@ -90,13 +94,13 @@ export const CrawlPanel = ({
     <Panel.Root classNames={classNames}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button
+          <Button.Root
             icon='ph--arrow-clockwise--regular'
             label='List channels'
             disabled={!options.token || !!busy}
             onClick={onListChannels}
           />
-          <Button
+          <Button.Root
             icon='ph--bulldozer--regular'
             iconOnly
             label='Crawl'
@@ -110,7 +114,7 @@ export const CrawlPanel = ({
             onFileChange={handleFileChange}
           />
           <Toolbar.Separator />
-          <Button icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
+          <Button.Root icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

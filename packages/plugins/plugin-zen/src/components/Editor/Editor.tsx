@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, omitId } from '@dxos/react-ui-form';
 
 import { Dream } from '#types';

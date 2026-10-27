@@ -28,28 +28,67 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../stories/storybook-testing"
+    },
+    {
+      "path": "../../ui/brand"
     },
     {
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-canvas"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
@@ -58,7 +97,22 @@
       "path": "../plugin-illustrator"
     },
     {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-mermaid"
+    },
+    {
+      "path": "../plugin-presenter"
+    },
+    {
+      "path": "../plugin-sheet"
+    },
+    {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

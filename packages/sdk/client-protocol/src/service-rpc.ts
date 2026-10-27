@@ -15,11 +15,12 @@ import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { Stream as PbStream } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { makeInProcessClient, normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';
+import { makeInProcessClient, normalizeHandlers, runServiceEffect, toServiceError } from '@dxos/protocols';
 import {
+  BlobStoreService,
   ContactsService,
   DataService,
   DevicesService,
@@ -33,6 +34,7 @@ import {
   NetworkService,
   QueryService,
   SpacesService,
+  SqlService,
   SystemService,
 } from '@dxos/protocols/rpc';
 import { type RequestOptions } from '@dxos/protocols/service-contract';
@@ -70,6 +72,8 @@ export class ClientServicesRpcs extends RpcGroup.make().merge(
   ContactsService.Rpcs,
   InboxService.Rpcs,
   EdgeAgentService.Rpcs,
+  SqlService.Rpcs,
+  BlobStoreService.Rpcs,
   DevtoolsHost.Rpcs,
 ) {}
 
@@ -94,6 +98,8 @@ export type ClientServicesHandlers = {
   ContactsService: ContactsService.Handlers;
   InboxService: InboxService.Handlers;
   EdgeAgentService: EdgeAgentService.Handlers;
+  SqlService: SqlService.Handlers;
+  BlobStoreService: BlobStoreService.Handlers;
   DevtoolsHost: DevtoolsHost.Handlers;
 };
 
@@ -350,6 +356,8 @@ export interface ClientServicesRpc
     ContactsService.Client,
     InboxService.Client,
     EdgeAgentService.Client,
+    SqlService.Client,
+    BlobStoreService.Client,
     DevtoolsHost.Client {}
 
 /**
@@ -422,7 +430,7 @@ export const makeServicesFromRpc = (
         streamToPbStream(runtime, invoke(request) as Stream.Stream<unknown, unknown>, tag);
     } else {
       service[methodName] = (request?: unknown, options?: RequestOptions) =>
-        runServiceCall(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
+        runServiceEffect(runtime, invoke(request) as Effect.Effect<unknown, unknown, never>, {
           timeout: options?.timeout,
           label: tag,
         });

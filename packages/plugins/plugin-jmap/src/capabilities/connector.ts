@@ -9,7 +9,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Type } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 
 import { JmapOperation } from '#types';
@@ -25,6 +25,7 @@ export default Capability.makeModule(
         // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
         source: JMAP_DEFAULT_HOST,
         label: 'JMAP Mail',
+        kind: 'user',
         // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
         credentialForm: jmapCredentialForm,
         sync: {
@@ -35,9 +36,9 @@ export default Capability.makeModule(
           // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: JmapOperation.MaterializeJmapTarget,
           optionsSchema: SyncOptions.SyncOptions,
-          auto: MAIL_AUTO_SYNC,
-          trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote: MAIL_REMOTE_SYNC,
+          auto: MailSync.MAIL_AUTO_SYNC,
+          trigger: Trigger.specTimer(MailSync.MAIL_SYNC_CRON),
+          remote: MailSync.MAIL_REMOTE_SYNC,
         },
       },
     ]);

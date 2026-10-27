@@ -50,7 +50,7 @@ export type Result = {
   /** The queries the query explorer ran, failures included; absent for the other explorers. */
   readonly queries?: readonly QueryExplorer.QueryRecord[];
   readonly scored: Graph.Scored;
-  readonly diagrams: readonly Compact.Diagram[];
+  readonly diagrams: readonly Compact.Compacted[];
   readonly usage: Zoom.Usage;
   readonly timings: Timings;
 };
@@ -270,7 +270,7 @@ export const subgraph = (
   }).pipe(Effect.map(toGraphData));
 
 /**
- * The answer an MCP client gets: the pruned graph and a compact mermaid draft. The draft is not laid
+ * The answer an MCP client gets: the pruned graph and a compact diagram draft in the illustrator's DSL. The draft is not laid
  * out or judged — that needs ELK, which only the Node half (`code-index design`) runs.
  */
 export const answer = (
@@ -303,6 +303,6 @@ export const answer = (
           score: Number(score.toFixed(3)),
         })),
       edges: Zoom.keptEdges(scored).map(({ from, to, kind }) => ({ from, to, kind })),
-      mermaid: Compact.build(scored, variant).mermaid,
+      diagram: Compact.build(scored, variant).dsl,
     };
   });

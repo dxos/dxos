@@ -12,7 +12,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
 import { OperationTestLayer } from '../../../testing/index.ts';
-import { Memory } from '../../../types/Memory.ts';
+import * as Memory from '../../../types/Memory.ts';
 import { QueryMemories } from './definitions.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -70,7 +70,7 @@ const titles = (results: readonly unknown[]) =>
   );
 
 const seed = Effect.fnUntraced(function* () {
-  yield* Database.add(Obj.make(Memory, { title: 'Favourite colour', content: 'The colour blue.' }));
-  yield* Database.add(Obj.make(Memory, { title: 'Favourite language', content: 'TypeScript.' }));
+  yield* Database.add(Obj.make(Memory.Memory, { title: 'Favourite colour', content: 'The colour blue.' }));
+  yield* Database.add(Obj.make(Memory.Memory, { title: 'Favourite language', content: 'TypeScript.' }));
   yield* Database.flush({ secondaryIndexes: true });
 });

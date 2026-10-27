@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 

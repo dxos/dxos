@@ -16,7 +16,7 @@ import { Obj, Type } from '@dxos/echo';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Channel } from '@dxos/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 

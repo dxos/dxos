@@ -9,7 +9,7 @@ import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
 import * as Stream from 'effect/Stream';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 
 import { analyticsStdio, makeCorrelator } from './analytics.ts';

@@ -11,6 +11,7 @@ import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityClientProvider';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { isTauri } from '@dxos/util';
 
 import { initEchoHostWasm } from '../util/automerge-wasm.ts';
@@ -39,11 +40,17 @@ log.addProcessor(logProcessor.processor);
 
 let observability: ReturnType<typeof initializeObservability> | undefined;
 
+// Started at evaluation rather than on `init`, so a worker the tab spawned early compiles the wasm
+// while the tab is still booting; `onBeforeStart` awaits the same memoized init, which surfaces a failure.
+void initEchoHostWasm().catch((err) => log.verbose('early wasm init failed; retried on init', { err }));
+
 // The services this worker serves come from the plugins the tab lists in `runtime.client.workerPlugins`
 // (see main.tsx); observability stays here, set up before any plugin loads.
 PluginWorker.run({
   storageLockKey: STORAGE_LOCK_KEY,
   onBeforeStart: Effect.fnUntraced(function* (config) {
+    // Devtools addresses this worker's diagnostics (e.g. echo-stats) by tag.
+    TRACE_PROCESSOR.setInstanceTag('dedicated-worker');
     const logFilter = config.get('runtime.client.log.filter');
     if (logFilter) {
       logProcessor.setFilter(logFilter);

@@ -9,7 +9,7 @@ import * as EffectStream from 'effect/Stream';
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type MemberInfo, createDidFromIdentityKey } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { buf, fromPublicKey } from '@dxos/protocols/buf';
 import {

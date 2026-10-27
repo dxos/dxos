@@ -77,11 +77,11 @@ const clearPersisted = (): void => {
 /**
  * Start/stop handle for the agent debug port.
  *
- * The port evaluates arbitrary code in the page, so activation is always a deliberate act: flipping
- * the switch in the running app, or launching a dev server with the debug-port flag (compiled out of
- * production builds, so it cannot reach a deployed origin). The flag's caller knows the session id
- * up front only when it supplied `DX_DEBUG_PORT_SESSION`; with `DX_DEBUG_PORT` alone the id is
- * generated and read back from `temp/debug-port.json`.
+ * The port evaluates arbitrary code in the page, so on a deployed origin activation is always a
+ * deliberate act: flipping the switch in the running app. A local dev server opens it at boot unless
+ * started with `DX_DEBUG_PORT=false` (compiled out of production builds, so it cannot reach a
+ * deployed origin). The caller knows the session id up front only when it supplied
+ * `DX_DEBUG_PORT_SESSION`; otherwise the id is generated and read back from `temp/debug-port.json`.
  */
 export interface DebugPortController {
   getStatus(): DebugPortStatus;

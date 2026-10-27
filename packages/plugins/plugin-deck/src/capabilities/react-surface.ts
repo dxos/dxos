@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
-import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
+import * as NotFoundArticle from '@dxos/app-toolkit/NotFoundArticle';
 
 import { DeckSettings, DetailCompanion } from '#containers';
 import { meta } from '#meta';
@@ -32,7 +33,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'notFound',
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
-        component: NotFoundArticle,
+        component: NotFoundArticle.Root,
       }),
     ]);
   }),

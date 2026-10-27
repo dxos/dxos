@@ -5,8 +5,11 @@
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import { type Format } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
-import { Block, Field, Icon, Typography } from '@dxos/react-ui';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { type FormFieldLabelPlacement, type FormPresentation } from '#types';
 
@@ -20,7 +23,7 @@ const FORM_FIELD_NAME = 'Form.Field';
 
 /** A bound value rendered as text: what a `static` presentation shows in place of the control. */
 export const FormStaticValue = ({ value, format }: { value: unknown; format?: Format.TypeFormat }) => (
-  <Typography truncate>{formatStaticValue(value, format)}</Typography>
+  <Typography.Text truncate>{formatStaticValue(value, format)}</Typography.Text>
 );
 
 export type FormFieldProps<T = any> = PropsWithChildren<{
@@ -125,7 +128,8 @@ export const FormFieldRow = <T,>({
   const resolved = presentationFor(presentationProp ?? binding?.presentation ?? layout);
   const error = binding?.error ?? errorProp;
   const readonly = binding?.readonly ?? readonlyProp;
-  const required = binding ? binding.required && isEmptyValue(binding.value) : requiredProp;
+  // An indeterminate value is unset only for display, not missing.
+  const required = binding ? binding.required && !binding.indeterminate && isEmptyValue(binding.value) : requiredProp;
 
   let control: ReactNode = children;
   if (binding && resolved.isStatic) {
@@ -158,12 +162,16 @@ export const FormFieldRow = <T,>({
     >
       {showHeader && (
         <Field.Header>
-          {standalone || readonly ? <Typography truncate>{label}</Typography> : <Field.Label>{label}</Field.Label>}
+          {standalone || readonly ? (
+            <Typography.Text truncate>{label}</Typography.Text>
+          ) : (
+            <Field.Label>{label}</Field.Label>
+          )}
           {labelEnd}
           {error && (
-            <Block>
-              <Icon icon='ph--warning--regular' valence='error' label={error} />
-            </Block>
+            <Layout.Block>
+              <Icon.Icon icon='ph--warning--regular' valence='error' label={error} />
+            </Layout.Block>
           )}
         </Field.Header>
       )}

@@ -17,14 +17,17 @@ import * as Option from 'effect/Option';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { createCliApp } from '@dxos/app-framework/cli';
+import * as Cli from '@dxos/app-framework/Cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
+import { CommandConfig } from '@dxos/cli-util';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
+import { JsonOutput, deus } from '@dxos/deus/cli';
 import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
-import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
+import * as PluginLoader from '@dxos/plugin-registry/PluginLoader';
+import * as PluginStorage from '@dxos/plugin-registry/PluginStorage';
 
 import {
   admin,
@@ -32,6 +35,7 @@ import {
   commandConfigLayer,
   debug,
   dx,
+  evaluateCommand,
   fn,
   hub,
   mailbox,
@@ -167,11 +171,11 @@ const program = Effect.gen(function* () {
 
   // `undefined` means the profile has never been configured; an empty array means the user
   // turned everything optional off, which must not be re-seeded with the defaults.
-  const records = yield* loadPlugins({ profile });
-  const enabled = records?.filter(isRecordEnabled).map((record) => record.id) ?? getDefaults();
+  const records = yield* PluginStorage.loadPlugins({ profile });
+  const enabled = records?.filter(PluginStorage.isRecordEnabled).map((record) => record.id) ?? getDefaults();
   // Third-party installs register as lazy stubs built from the metadata cached at install time, so
   // a `dx` invocation imports a plugin's code only once something enables it.
-  const installed = makeInstalledPlugins(records ?? []);
+  const installed = PluginLoader.makeInstalledPlugins(records ?? []);
   const overridden = new Set(installed.map((plugin) => plugin.meta.profile.key));
   // Must precede any plugin import so a third-party plugin's bare specifiers resolve to the host's
   // module instances rather than its own copies.
@@ -181,7 +185,7 @@ const program = Effect.gen(function* () {
   const installationId = yield* Effect.promise(() => Observability.getInstallationId(namespace));
   const observabilityInstance = yield* initializeObservability({ config, namespace, distinctId: installationId });
 
-  const { command, layer: pluginLayer } = yield* createCliApp({
+  const { command, layer: pluginLayer } = yield* Cli.createCliApp({
     rootCommand: dx,
     subCommands: [
       repl,
@@ -192,6 +196,7 @@ const program = Effect.gen(function* () {
       //   Either create cli-specific plugins for these or wait until assistant/script plugins are built w/ Solid.
       // Note: ClientPlugin already contributes ClientService via its layer, so we don't need to provide it again.
       chat,
+      evaluateCommand,
       fn,
       mailbox,
       mcp,
@@ -199,6 +204,7 @@ const program = Effect.gen(function* () {
       // TODO(burdon): Admin-only. Where should these commands live?
       admin,
       debug,
+      deus,
       hub,
       reflect,
     ],
@@ -218,7 +224,16 @@ const program = Effect.gen(function* () {
   // Built once in the program scope, so each `Effect.provide(layer)` — both the top-level command
   // and every REPL dispatch — reuses the already-constructed services (ClientPlugin, Config, etc.)
   // instead of rebuilding them per invocation.
-  const context = yield* Layer.build(Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv)));
+  // `dx deus` reads the root `--json` through its own reference, since the shared flag consumes the subcommand's.
+  const deusJsonLayer = Layer.effect(
+    JsonOutput,
+    Effect.gen(function* () {
+      return (yield* CommandConfig).json;
+    }),
+  ).pipe(Layer.provide(commandConfigLayer(argv)));
+  const context = yield* Layer.build(
+    Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv), deusJsonLayer),
+  );
   const layer = Layer.succeedContext(context);
 
   const manager = yield* Capability.get(Capabilities.PluginManager).pipe(Effect.provide(layer));

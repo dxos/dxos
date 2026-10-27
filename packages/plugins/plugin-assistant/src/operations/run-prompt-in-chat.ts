@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
@@ -17,13 +18,13 @@ import { ContentBlock } from '@dxos/types';
 
 import { AssistantCapabilities, AssistantEvents, AssistantOperation } from '#types';
 
+import { defaultPreset, providerForModel } from '../chat-model/index.ts';
 import { ChatNotSpecifiedError } from '../errors.ts';
-import { defaultPreset, providerForModel } from '../processor/index.ts';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt, disposition }) {
+      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt, disposition, wait }) {
         // Activation first: the state and session providers this reads come from lazy modules that
         // otherwise activate only once the assistant UI has been opened, so a caller arriving through
         // an operation alone (an agent) would find them missing.
@@ -62,13 +63,16 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         const model = chat.session?.model ?? preset?.model;
         const session = yield* AgentService.getSession(chat, {
           provider: model ? providerForModel(model, preset?.provider) : preset?.provider,
-          location: chat.remote ? 'edge' : 'local',
+          location: Agent.chatLocation(chat),
         });
         // A plain string is submitted as-is so the default path keeps its existing shape; a stated
         // disposition needs the block form, which is the only place it can be carried.
         yield* session.submitPrompt(
           disposition === undefined ? prompt : [ContentBlock.Text.make({ text: prompt, disposition })],
         );
+        if (wait) {
+          yield* session.waitForCompletion();
+        }
       }),
     ),
   );

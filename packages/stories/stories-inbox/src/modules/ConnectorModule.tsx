@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';
@@ -15,7 +16,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /** The connection bound to the mailbox (once connected). */
 export const ConnectorModule = ({ data }: { data?: { attendableId?: string } }) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

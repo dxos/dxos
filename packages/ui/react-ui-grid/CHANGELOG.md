@@ -1,5 +1,76 @@
 # @dxos/react-ui-grid
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/lit-grid@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 1f5491a: Every sheet gets a Charts companion that charts its ranges as bar, pie, or xy plots, saved on the sheet in a new optional `charts` field, and sheets publish their selected range through the shared `Selection` view state so companions can read and set it. A new `header` cell style gives header rows a light green look in both themes. In every grid, the focus ring and the cell editor line up with the grid lines on all four sides, and a selected range shows as a faint translucent fill with an outline instead of a solid blue block. In light mode the boot loader's mark keeps its colours at half opacity. A text crawl's line stays vertically centred when its root carries a text-size utility, so a progress meter's label lines up with its percentage.
+- Updated dependencies [3b03db7]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [1bc475e]
+- Updated dependencies [55bdf55]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/lit-grid@0.15.0
+  - @dxos/ui-theme@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [b07f49f]
+  - @dxos/react-ui@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/react-ui-editor@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/lit-grid@0.14.0
+  - @dxos/react-hooks@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [ab1bddf]
+- Updated dependencies [7d222fc]
+- Updated dependencies [7a177b9]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [3d05b7f]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/lit-grid@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

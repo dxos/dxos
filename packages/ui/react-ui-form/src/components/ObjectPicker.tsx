@@ -14,7 +14,10 @@ import React, {
   useState,
 } from 'react';
 
-import { Combobox, type ComboboxOption, Container, Tag, Typography } from '@dxos/react-ui';
+import * as Combobox from '@dxos/react-ui/Combobox';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 
@@ -46,19 +49,41 @@ type PickerBaseProps = PickerCreateProps & {
  * The popup state shared by the pickers: open, and the query a chosen create row turned into a create form. Choosing
  * the create row also asks the popup to close, so `startCreate` reopens it in the same batch.
  */
-const usePickerState = ({ options, createSchema, onCreate }: PickerBaseProps) => {
-  const [open, setOpen] = useState(false);
+const usePickerState = ({
+  options,
+  createSchema,
+  onCreate,
+  onOpenChange,
+}: PickerBaseProps & { onOpenChange?: (open: boolean) => void }) => {
+  const [open, setOpenState] = useState(false);
+  const setOpen = useCallback(
+    (next: boolean) => {
+      setOpenState(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
+  );
   const [creating, setCreating] = useState<string>();
-  const items = useMemo<ComboboxOption[]>(
-    () => options.map(({ id, label, description }) => ({ value: id, label, description })),
+  const items = useMemo<Combobox.Option[]>(
+    () =>
+      options.map(({ id, label, description, icon, iconHue }) => ({
+        value: id,
+        label,
+        description,
+        icon,
+        iconHue: hues.find((hue) => hue === iconHue),
+      })),
     [options],
   );
-  const handleOpenChange = useCallback(({ open }: { open: boolean }) => {
-    setOpen(open);
-    if (!open) {
-      setCreating(undefined);
-    }
-  }, []);
+  const handleOpenChange = useCallback(
+    ({ open }: { open: boolean }) => {
+      setOpen(open);
+      if (!open) {
+        setCreating(undefined);
+      }
+    },
+    [setOpen],
+  );
   const startCreate =
     createSchema !== undefined && onCreate !== undefined
       ? (query: string) => {
@@ -86,12 +111,12 @@ const CreateForm = ({ schema, query, createInitialValuePath, createFieldMap, onS
     onSave={onSave}
     onCancel={onCancel}
   >
-    <Container gutter='inset'>
+    <Layout.Container gutter='inset'>
       <FormContent>
         <FormFields />
         <FormActions />
       </FormContent>
-    </Container>
+    </Layout.Container>
   </FormRoot>
 );
 
@@ -103,6 +128,8 @@ export type ObjectPickerProps = PickerBaseProps & {
   trigger?: ReactElement;
   /** Called with the picked id, or `undefined` when the selected option is picked again. */
   onSelect: (id: string | undefined) => void;
+  /** Called as the popup opens and closes, so a caller can build `options` only while it is open. */
+  onOpenChange?: (open: boolean) => void;
 };
 
 /**
@@ -121,12 +148,14 @@ export const ObjectPicker = ({
   createIcon,
   onCreate,
   onSelect,
+  onOpenChange,
   options,
 }: ObjectPickerProps) => {
   const { setOpen, creating, setCreating, items, open, handleOpenChange, startCreate } = usePickerState({
     options,
     createSchema,
     onCreate,
+    onOpenChange,
   });
   const handleSave = useCallback(
     async (values: any) => {
@@ -134,13 +163,16 @@ export const ObjectPicker = ({
       setCreating(undefined);
       setOpen(false);
     },
-    [onCreate],
+    [onCreate, setOpen],
   );
 
   return (
     <Combobox.Root
       items={items}
       loading={loading}
+      // Pinned to the field's width, since labels (or URIs) can widen the popup past the form; a custom trigger such as
+      // an icon button is too narrow to pin to.
+      positioning={trigger ? undefined : { sameWidth: true }}
       open={open}
       onOpenChange={handleOpenChange}
       value={value ? [value] : []}
@@ -240,16 +272,16 @@ export const ObjectMultiPicker = ({
       createIcon={createIcon}
     >
       <Combobox.Control wrap data-testid={testId}>
-        {selected.length === 0 && placeholder && <Typography tone='muted'>{placeholder}</Typography>}
+        {selected.length === 0 && placeholder && <Typography.Text tone='muted'>{placeholder}</Typography.Text>}
         {selected.map((option) => (
-          <Tag
+          <Tag.Tag
             key={option.id}
             hue={hues.find((hue) => hue === option.hue)}
             onDelete={() => onValueChange(value.filter((id) => id !== option.id))}
             {...(ordered && chipProps(option.id))}
           >
             {option.label}
-          </Tag>
+          </Tag.Tag>
         ))}
         <Combobox.Trigger />
       </Combobox.Control>

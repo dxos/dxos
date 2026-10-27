@@ -12,7 +12,7 @@ import * as Stream from 'effect/Stream';
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

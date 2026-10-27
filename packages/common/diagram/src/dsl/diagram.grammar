@@ -28,7 +28,9 @@ statement {
   DiagramDecl |
   GroupDecl |
   NodeDecl |
-  EdgeDecl
+  EdgeDecl |
+  NoteDecl |
+  FragmentDecl
 }
 
 // object <id> [@ x,y] [scale=…] [index=…] [ref=…] { … }
@@ -50,12 +52,14 @@ ObjectAttr { Origin | Attribute }
 // Semantic statements.
 //
 
-// diagram [@ x,y] [flow=down] [grid=384x224] [box=192x96]
+// diagram [@ x,y] [kind=structure|sequence|dataflow] [flow=down] [grid=384x224] [box=192x96] [aspect=4:3]
 DiagramDecl { kw<"diagram"> (Origin | Attribute)* }
 
-// group <id> ["label"] [relation <group>]* [gap=…] [color=…] { node … edge … }
+// group <id> ["label"] [relation <group>]* [compact] [gap=…] [max-width=…] [color=…] { node … edge … }
 // Groups do not nest; the grammar accepts a nested one so it can be reported rather than mis-parsed.
-GroupDecl { kw<"group"> Id Label? (Relation | Attribute)* GroupBody }
+// `compact` is a keyword, not a name, because a bare name here would read as the start of a relation.
+GroupDecl { kw<"group"> Id Label? (Relation | Attribute | Compact)* GroupBody }
+Compact { kw<"compact"> }
 GroupBody { "{" (NodeDecl | EdgeDecl | GroupDecl)* "}" }
 
 // node <id> ["label"] [@ x,y | @cell(c,r)] [~]<relation> <node> … [ref=…] [color=…] [shape=…]
@@ -71,10 +75,11 @@ Relation { Soft? RelationKind Id }
 Soft { "~" }
 RelationKind { name }
 
-// edge A[:sides] (, B…)* (-> | <-> | -- | <relationship>) C[:sides] (, D…)* ["label"] [via …] [bus[=name]] [attr=…]*
+// edge A[:[~]sides] (, B…)* (-> | <-> | -- | <relationship>) C[:[~]sides] (, D…)* ["label"] [via …] [bus[=name]] [attr=…]*
+// `~` before the sides makes them a preference the router weighs, not a rule.
 EdgeDecl { kw<"edge"> EndList EdgeOp EndList Label? (Via | Bus | Attribute)* }
 EndList { EdgeEnd ("," EdgeEnd)* }
-EdgeEnd { Id (":" SideList)? }
+EdgeEnd { Id (":" Soft? SideList)? }
 SideList { Side ("|" Side)* }
 Side { name }
 // A relationship word in place of the arrow says what the edge means and sets its markers:
@@ -89,6 +94,16 @@ Waypoint { Coord "," Coord | CellRef }
 Coord { Number | Unbound }
 
 Bus { kw<"bus"> ("=" Id)? }
+
+// Sequence diagrams. `note A "…"` sits right of A, `note A:left "…"` left of it, `note A, B "…"` over both.
+NoteDecl { ckw<"note"> EndList Label Attribute* }
+
+// fragment loop "every 5s" { … } — the operator is a plain name the reader checks, like a relation;
+// `alt` and `par` split into sections with `else ["guard"] { … }`. Fragments nest.
+FragmentDecl { ckw<"fragment"> FragmentKind Label? FragmentBody (Else Label? FragmentBody)* }
+FragmentKind { name }
+Else { ckw<"else"> }
+FragmentBody { "{" (EdgeDecl | NoteDecl | FragmentDecl)* "}" }
 Origin { "@" Point }
 
 Body { "{" Element* "}" }
@@ -130,7 +145,9 @@ Ref { name | String }
 // the only case that wanted one.
 Attribute { AttrName "=" AttrValue }
 AttrName  { name }
-AttrValue { Number | Size | String | Word }
+AttrValue { Number | Size | Ratio | String | Word }
+// `aspect=4:3`.
+Ratio { Number ":" Number }
 
 // `head=triangle`, `head=arrow` and `tail=circle` are schema literals that are also element-kind
 // keywords, and a reserved word no longer lexes as a plain name. Listing every reserved word —
@@ -141,7 +158,7 @@ Word {
   kw<"rect"> | kw<"ellipse"> | kw<"diamond"> | kw<"triangle"> |
   kw<"circle"> | kw<"line"> | kw<"curve"> | kw<"arc"> |
   kw<"text"> | kw<"arrow"> | kw<"portal"> |
-  kw<"diagram"> | kw<"group"> | kw<"node"> | kw<"edge"> | kw<"cell"> | kw<"via"> | kw<"bus">
+  kw<"diagram"> | kw<"group"> | kw<"node"> | kw<"edge"> | kw<"cell"> | kw<"via"> | kw<"bus"> | kw<"compact">
 }
 
 Id    { name | String }
@@ -155,6 +172,10 @@ Size   { size }
 // Keyword specialization: the statement and element-kind words drive the structure, so they
 // must not lex as ids. An id that collides is written quoted (the printer does it).
 kw<term> { @specialize[@name={term}]<name, term> }
+
+// The sequence words came after documents already used `note` (and could use the others) as ids, so
+// they are contextual: a keyword where a statement or section starts, an ordinary name anywhere else.
+ckw<term> { @extend[@name={term}]<name, term> }
 
 @tokens {
   nameStart { $[a-zA-Z_] }

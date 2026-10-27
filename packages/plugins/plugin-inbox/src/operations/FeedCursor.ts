@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Ref } from '@dxos/echo';

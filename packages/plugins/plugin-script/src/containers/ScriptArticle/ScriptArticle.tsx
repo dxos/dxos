@@ -4,14 +4,14 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { createDataExtensions, editorClassNames, listener } from '@dxos/ui-editor';
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '#components';

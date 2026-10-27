@@ -1,5 +1,72 @@
 # @dxos/react-ui-list
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/react-focus@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [55bdf55]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/react-ui@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/react-focus@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 347546a: Scenes have layers. `Scene.layers` holds ordered `Layer`s (a scene that names none has one, `DEFAULT_LAYER`), and every node and link is on one (`layer`); created, pasted and fixture-built elements name theirs, and adding a layer first pins elements that name none to the layer they are drawn on (`pinLayers`), so a new bottom layer never takes them. `@dxos/plugin-canvas` names the layers of a drawing saved before layers when it loads. Elements paint by layer, then by their own order, and a hidden layer is neither drawn nor hit. `SceneView.Layers` (`LayersPanel`) selects several layers at once, adds (at the end of the list), deletes, merges the selected layers into the top-most of them, shows or hides, reorders and renames them in place; new shapes go on the top-most selected layer, and the properties panel picks an element's layer. New intents `layer` and `removeLayer` carry the edits, so each is one undo step. `CellGrid` (with `createCellGridAtoms`, `toggleCell`, `ToggleMode` and its headers) is no longer exported from `@dxos/react-ui-canvas`: it moved into `@dxos/plugin-sequencer`, its only user.
+
+  In `@dxos/react-ui`, `Editable`'s pencil opens the field with one click whatever the activation gesture, the field shows a save button (a green check) while editing, and inside a list row the preview takes the row's hover and its presses, so the list keeps its arrow keys. `Listbox.Root` takes `selectionMode='extended'` (Cmd/Ctrl- or Shift-click adds to the selection), and `Listbox.Content` takes `padBlock` to pad the list above and below by its gutter. In `@dxos/react-ui-list`, `OrderedList.Root` takes `multiple`, so `value` and `onValueChange` carry an array of ids.
+
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [b07f49f]
+  - @dxos/react-ui@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-focus@0.14.0
+  - @dxos/ui-types@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [cb1e218]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

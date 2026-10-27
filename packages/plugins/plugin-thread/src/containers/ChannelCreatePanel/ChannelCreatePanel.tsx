@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
@@ -23,7 +23,7 @@ export const ChannelCreatePanel = ({
   onCreateObject,
   onCancel,
 }: SpaceCapabilities.CreateObjectCustomPanelProps) => {
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
+  const providers = Hooks.useCapabilities(ThreadCapabilities.ChannelBackend);
   const schema = useMemo(() => ChannelBackend.buildChannelFormSchema(providers), [providers]);
 
   const handleSave = useCallback(

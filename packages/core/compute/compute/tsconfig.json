@@ -37,6 +37,9 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/sql-sqlite"
+    },
+    {
       "path": "../../../sdk/schema"
     },
     {
@@ -53,9 +56,6 @@
     },
     {
       "path": "../ai"
-    },
-    {
-      "path": "../link"
     }
   ]
 }

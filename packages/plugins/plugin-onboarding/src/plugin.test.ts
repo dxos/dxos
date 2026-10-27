@@ -4,17 +4,19 @@
 
 import { describe, test } from 'vitest';
 
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { OnboardingPlugin } from '#plugin';
 
 import { meta } from './meta.ts';
 
+await Harness.preload({ plugins: [OnboardingPlugin({ generateDemoSpace: false })] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('OnboardingPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [OnboardingPlugin({ generateDemoSpace: false })],
     });
 

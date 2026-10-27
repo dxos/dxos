@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
+import { Blob } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
@@ -50,6 +51,11 @@ export type FetchMessagesProps = {
   readonly searchFilter?: string;
   /** Called with each date chunk's enumerated id count, to accumulate the retrieval total. */
   readonly onEnumerated?: (count: number) => void;
+  /**
+   * Called once with Gmail's `resultSizeEstimate` for the backward window, which then reports no page
+   * counts: the estimate covers the whole remaining backfill, where pages stop at the run's cap.
+   */
+  readonly onEstimate?: (count: number) => void;
   /** Called once per message retrieved (full fetch), to advance progress. */
   readonly onRetrieved?: () => void;
   /** Incremental delta's created message ids; when set, replaces the forward window (backward still runs). */
@@ -80,6 +86,7 @@ export const fetchMessages = (
           end: window.end,
           searchFilter: config.searchFilter,
           onEnumerated: config.onEnumerated,
+          onEstimate: window.direction === 'backward' ? config.onEstimate : undefined,
         })
       : Stream.empty;
 
@@ -125,6 +132,8 @@ type FetchMessageIdsProps = {
   readonly searchFilter?: string;
   /** Called with each date chunk's enumerated id count, to accumulate the retrieval total. */
   readonly onEnumerated?: (count: number) => void;
+  /** Called with the query's `resultSizeEstimate` from its first page, in place of page counts. */
+  readonly onEstimate?: (count: number) => void;
 };
 
 /** Streams Gmail message ids over one window's `[start, end)` range in `direction` order. */
@@ -160,7 +169,7 @@ const fetchMessageIds = (config: FetchMessageIdsProps) =>
 const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChunk, config: FetchMessageIdsProps) =>
   Stream.unwrap(
     Effect.gen(function* () {
-      const { userId, label, direction, searchFilter, onEnumerated } = config;
+      const { userId, label, direction, searchFilter, onEnumerated, onEstimate } = config;
 
       // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
@@ -190,11 +199,18 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
         return Stream.paginate(undefined as string | undefined, (pageToken: string | undefined) =>
           Effect.gen(function* () {
             log('fetching message IDs', { query, pageToken });
-            const { messages, nextPageToken } = yield* listPage(pageToken);
+            const { messages, nextPageToken, resultSizeEstimate } = yield* listPage(pageToken);
             const ids = (messages ?? []).map((message) => message.id);
-            log('fetched message IDs', { count: ids.length, done: !nextPageToken });
-            // Report each page's count as it arrives so the meter's retrieval total leads the fetch.
-            onEnumerated?.(ids.length);
+            log('fetched message IDs', { count: ids.length, done: !nextPageToken, resultSizeEstimate });
+            // The first page's estimate sizes the whole remaining backfill, which this run's cap leaves to
+            // later runs; without it, report each page's count as it arrives so the total leads the fetch.
+            if (onEstimate) {
+              if (pageToken === undefined) {
+                onEstimate(resultSizeEstimate);
+              }
+            } else {
+              onEnumerated?.(ids.length);
+            }
             return [ids, Option.fromNullishOr(nextPageToken)] as const;
           }),
         );
@@ -279,8 +295,25 @@ export const fetchAttachments = (
 ): Effect.Effect<readonly EmailStage.Attachment[], never, GoogleMailApi> =>
   Effect.gen(function* () {
     const api = yield* GoogleMailApi;
+    // Skip an attachment larger than the inline blob cap BEFORE downloading it. The default blob store
+    // is inline (the EDGE operation runtime registers S3 without making it the default), so
+    // `processAttachments` drops anything past this cap anyway — downloading it first only pulls tens of
+    // MB into the 128 MB isolate, enough to end a run with "Worker exceeded memory limit.". `size` is
+    // Gmail part metadata, known here without the download.
+    const downloadable = attachments.filter((attachment) => {
+      if (attachment.size > Blob.MAX_INLINE_SIZE) {
+        log.info('gmail sync: skipping attachment past the inline blob cap', {
+          messageId,
+          attachmentId: attachment.attachmentId,
+          size: attachment.size,
+          limit: Blob.MAX_INLINE_SIZE,
+        });
+        return false;
+      }
+      return true;
+    });
     const fetched = yield* Effect.forEach(
-      attachments,
+      downloadable,
       (attachment) =>
         api.getAttachment(userId, messageId, attachment.attachmentId).pipe(
           Effect.flatMap((body) =>

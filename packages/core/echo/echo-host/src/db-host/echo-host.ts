@@ -2,40 +2,46 @@
 // Copyright 2024 DXOS.org
 //
 
+import { next as A } from '@automerge/automerge';
 import {
   type AnyDocumentId,
   type AutomergeUrl,
   type DocumentId,
   interpretAsDocumentId,
   isValidAutomergeUrl,
+  isValidDocumentId,
+  stringifyAutomergeUrl,
 } from '@automerge/automerge-repo';
+import * as Clock from 'effect/Clock';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { scheduleTask, sleep } from '@dxos/async';
+import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
   DatabaseDirectory,
   EntityStructure,
+  type RetirementReason,
   SPACE_ROOT_TYPE,
   SpaceDocVersion,
   type SpaceRoot,
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
-import { EffectEx, RuntimeProvider } from '@dxos/effect';
-import { FeedStore } from '@dxos/feed';
-import { IndexEngine, type IndexingResult } from '@dxos/index-core';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { type FeedKey, type FeedOptions, FeedStore, type TrimResult } from '@dxos/feed';
+import { IndexEngine, type IndexingResult, type IndexTransactionLimits } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { countWork } from '@dxos/util';
+import { countWork, defaultMap, markMilestone } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -49,16 +55,28 @@ import {
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
 } from '../automerge/index.ts';
+import { SLOW_WORK_MS } from '../util.ts';
 import { AutomergeDataSource } from './automerge-data-source.ts';
 import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
-import { FeedDataSource } from './feed-data-source.ts';
+import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
+import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
+import {
+  HISTORY_BLOAT_MIN_OPS,
+  type IndexedObject,
+  type Retirement,
+  buildReplacementDocument,
+  isHistoryBloated,
+  isRetirableForHistory,
+  makeReplacementDirectory,
+  replacementDocumentId,
+} from './retirement.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
@@ -69,6 +87,24 @@ const CLOSURE_YIELD_INTERVAL = 32;
 
 const AUTOMATIC_GARBAGE_COLLECTION = false;
 
+const AUTOMERGE_URL_PREFIX = 'automerge:';
+
+/**
+ * The document id a link spells, without validating it: for matching against ids already known to be
+ * valid, where a `parseAutomergeUrl` checksum per link would cost more than the lookup it guards.
+ */
+const linkedDocumentIdText = (url: string): string => {
+  if (!url.startsWith(AUTOMERGE_URL_PREFIX)) {
+    return '';
+  }
+  // `parseAutomergeUrl` takes the id verbatim up to a sub-document path (`/`) or heads (`#`).
+  let end = AUTOMERGE_URL_PREFIX.length;
+  while (end < url.length && url[end] !== '/' && url[end] !== '#') {
+    end++;
+  }
+  return url.slice(AUTOMERGE_URL_PREFIX.length, end);
+};
+
 /**
  * Idle window before the second indexing step re-tokenizes what the first one wrote, and the
  * ceiling an unbroken write stream cannot push it past. A typing burst then costs one rebuild
@@ -77,6 +113,34 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
  */
 const FTS_FLUSH_IDLE_MS = 1_000;
 const FTS_FLUSH_MAX_DELAY_MS = 10_000;
+
+/** Trimmed blocks one take of the trimmed log reads, and the takes one index pass makes before it yields to the next. */
+const PURGE_BATCH = 1_000;
+const PURGE_BATCHES_PER_PASS = 10;
+
+const isIndexingDisabled = (options: FeedOptions | undefined): boolean => options?.indexing?.enabled === false;
+
+/** Repeats a bounded trim until it reports nothing left past a limit. */
+const trimUntilDone = Effect.fnUntraced(function* <E, R>(
+  trim: Effect.Effect<TrimResult, E, R>,
+  first: TrimResult = { deleted: 0, more: true },
+) {
+  let result = first;
+  let deleted = result.deleted;
+  while (result.more) {
+    result = yield* trim;
+    deleted += result.deleted;
+  }
+  return deleted;
+});
+
+/** Feeds whose index rows a pass changed outside the index legs, as a hint unconstrained by type or object. */
+type FeedChanges = { spaceIds: Set<SpaceId>; queueIds: Set<EntityId> };
+
+const makeFeedChanges = (): FeedChanges => ({ spaceIds: new Set(), queueIds: new Set() });
+
+const hintFromFeedChanges = (changes: FeedChanges): InvalidationHint | undefined =>
+  changes.queueIds.size === 0 ? undefined : { spaceIds: changes.spaceIds, queueIds: changes.queueIds };
 
 import { type QueryExecutorMode } from '../query/index.ts';
 
@@ -104,6 +168,12 @@ export type EchoHostProps = {
 
   /** Overrides how live queries are debounced in proportion to their cost; see {@link QueryDebounceOptions}. */
   queryDebounce?: Partial<QueryDebounceOptions>;
+
+  /** Overrides the bounds on one index write transaction; see {@link IndexTransactionLimits}. */
+  indexTransactionLimits?: Partial<IndexTransactionLimits>;
+
+  /** Overrides how often index progress is counted, once a second by default. */
+  indexRecountInterval?: number;
 
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
@@ -176,16 +246,39 @@ export class EchoHost extends Resource {
 
   private readonly _indexScheduler: IndexScheduler;
 
+  /** What the index is doing, for boot screens and progress indicators; see {@link DataService.IndexStatus}. */
+  readonly indexStatus: IndexStatusTracker;
+
   private _feedService: FeedService.Handlers;
+
+  readonly #indexTransactionLimits: Partial<IndexTransactionLimits> | undefined;
 
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
+
+  /** Whether the first index pass, and the first pass that left nothing behind, are marked on the timeline. */
+  #indexingMarked = false;
+  #caughtUpMarked = false;
+
+  readonly #secondaryIndexLock = new Mutex();
 
   /** When the oldest unflushed write stops being allowed to wait for an idle moment. */
   #ftsFlushDeadline: number | undefined;
 
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
+
+  /** The latest retirement pass per space; passes are chained so two never write one space's directory at once. */
+  readonly #retirements = new Map<SpaceId, Promise<void>>();
+
+  /** Retired documents wiped this session, since every later directory change still lists them. */
+  readonly #wipedDocuments = new Set<DocumentId>();
+
+  /** Retirements this host wrote or saw this session, to write back an entry a concurrent change dropped. */
+  readonly #knownRetirements = new Map<DocumentId, Retirement & { spaceId: SpaceId }>();
+
+  /** Op counts of loaded documents big enough to be retired for their history. */
+  readonly #historyCandidates = new Map<DocumentId, number>();
 
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
@@ -197,10 +290,14 @@ export class EchoHost extends Resource {
     runtime,
     queryExecutor,
     queryDebounce,
+    indexTransactionLimits,
+    indexRecountInterval,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
     super();
+    this.#indexTransactionLimits = indexTransactionLimits;
+    this.indexStatus = new IndexStatusTracker({ recountInterval: indexRecountInterval });
 
     this._echoDataMonitor = new EchoDataMonitor();
     this._automergeHost = new AutomergeHost({
@@ -255,12 +352,15 @@ export class EchoHost extends Resource {
       // decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: resolveQueryExecutorMode(queryExecutor),
+      feedStore: this._feedStore,
       debounce: queryDebounce,
       sql: () => {
         invariant(this._sql, 'EchoHost is not open.');
         return this._sql;
       },
-      hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
+      hasCompleteSnapshots: (scope) =>
+        RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots(scope)),
+      holdsDocument: (subscriptionIds, documentId) => this._dataService.holds(subscriptionIds, documentId),
     });
 
     this._dataService = new DataServiceImpl({
@@ -270,6 +370,7 @@ export class EchoHost extends Resource {
       // cooperative loop apply uniformly to the RPC handler path.
       updateIndexes: (request) => this.updateIndexes({ ...request, reason: 'rpc-update-indexes' }),
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
+      indexStatus: this.indexStatus,
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
 
@@ -364,15 +465,33 @@ export class EchoHost extends Resource {
     // The index engine holds its SQL client, and resolving one out of the runtime may suspend --
     // the browser's SQLite layer builds asynchronously -- so it cannot be built in the constructor.
     this._sql = await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient);
-    this._indexEngine = new IndexEngine(this._sql);
+    this._indexEngine = new IndexEngine(this._sql, {
+      transactionLimits: this.#indexTransactionLimits,
+      yieldBetweenTransactions: yieldBehindQueuedTasks,
+    });
 
-    log('echo-host: running index engine migration...');
-    await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
+    const pendingMigrations = await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.pendingMigrations());
+    log('echo-host: running index engine migration...', { pending: pendingMigrations });
+    if (pendingMigrations > 0) {
+      this.indexStatus.setMigrating(0, pendingMigrations);
+    }
+    await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.migrate({
+        onProgress: (applied) => this.indexStatus.setMigrating(applied, pendingMigrations),
+      }),
+    );
     log('echo-host: index engine migration done');
 
     log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     log('echo-host: feed store migration done');
+
+    // Age expires with no write to trigger a trim, so open is when expired blocks of an idle feed go.
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen({ self: this }, function* () {
+        yield* this.#trimSpaces(yield* this._feedStore.listSpacesWithOptions());
+      }),
+    );
 
     // AutomergeHost._open() runs its own migrations (automerge_chunks, heads) before
     // constructing the Repo, so table creation is handled there.
@@ -387,6 +506,14 @@ export class EchoHost extends Resource {
     log('echo-host: opening space state manager...');
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
+
+    const pin = await RuntimeProvider.runPromise(this._runtime)(readFeedPin()).catch((err) => {
+      log.warn('index feed pin read failed', { err });
+      return FeedProtocol.FEED_START;
+    });
+    await this.indexStatus.opened(() =>
+      RuntimeProvider.runPromise(this._runtime)(countIndexBacklog({ pin, spaceIds: this._spaceStateManager.spaceIds })),
+    );
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       const previous = this._spaceDocumentIds.get(e.spaceId);
       this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
@@ -413,6 +540,26 @@ export class EchoHost extends Resource {
         const departed = previous ? this.#departedDocuments(previous, e) : [];
         if (departed.length > 0 || e.previousRootId) {
           this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
+        }
+      }
+
+      // A directory change can carry another peer's retirement, and a newly opened space can link a document
+      // quarantined on an earlier start.
+      this.#scheduleRetirement(e.spaceId);
+    });
+    this._automergeHost.documentQuarantined.on(this._ctx, ({ reason }) => {
+      if (reason === 'load-failed') {
+        for (const spaceId of this._spaceStateManager.spaceIds) {
+          this.#scheduleRetirement(spaceId);
+        }
+      }
+    });
+    this._automergeHost.documentLoaded.on(this._ctx, ({ documentId, ops }) => {
+      if (ops >= HISTORY_BLOAT_MIN_OPS) {
+        this.#historyCandidates.set(documentId, ops);
+        // The index may already be current, in which case no index pass will bring the document up again.
+        for (const spaceId of this._spaceStateManager.spaceIds) {
+          this.#scheduleRetirement(spaceId);
         }
       }
     });
@@ -471,34 +618,58 @@ export class EchoHost extends Resource {
 
   /**
    * Indexes the secondary-index backlog to completion, which the debounced flush otherwise gets to
-   * on its own schedule (see {@link IndexEngine.updateSecondaryIndexes}).
+   * on its own schedule (see {@link IndexEngine.updateSecondaryIndexes}). Runs one at a time: a call
+   * made during a run waits for it, then runs on its own to cover what the run may have missed.
    *
    * @returns Number of records indexed.
    */
   async updateSecondaryIndexes(): Promise<number> {
+    return this.#secondaryIndexLock.executeSynchronized(() => this.#indexSecondary());
+  }
+
+  async #indexSecondary(): Promise<number> {
+    const ctx = this._ctx;
+    const startedAt = performance.now();
     let records = 0;
+    let batches = 0;
     let hint: InvalidationHint | undefined;
-    for (;;) {
-      if (this._ctx.disposed || !this.isOpen) {
-        break;
+    try {
+      while (!ctx.disposed && this.isOpen) {
+        if (batches > 0) {
+          await yieldBehindQueuedTasks();
+          if (ctx.disposed) {
+            break;
+          }
+        }
+        const result = await this.indexEngine
+          .updateSecondaryIndexes(ctx)
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        records += result.updated;
+        batches++;
+        const batch = hintFromIndexingResult(result);
+        if (batch) {
+          hint = hint ? mergeHints(hint, batch) : batch;
+        }
+        if (result.done || ctx.disposed || !this.isOpen) {
+          break;
+        }
+        await this.indexStatus.afterFullTextBatch(() =>
+          this.indexEngine.countSecondaryBacklog().pipe(RuntimeProvider.runPromise(this._runtime)),
+        );
       }
-      const result = await this.indexEngine
-        .updateSecondaryIndexes(this._ctx)
-        .pipe(RuntimeProvider.runPromise(this._runtime));
-      records += result.updated;
-      const batch = hintFromIndexingResult(result);
-      if (batch) {
-        hint = hint ? mergeHints(hint, batch) : batch;
-      }
-      if (result.done) {
-        break;
-      }
+    } finally {
+      this.indexStatus.fullTextEnded();
     }
 
     // A text query issued before this catch-up matched nothing and would never re-run on its own:
     // the indexer is the sole invalidation source, and this pass is the only writer of the rows.
     if (hint) {
       this._queryService.invalidateQueries(hint);
+    }
+
+    const durationMs = performance.now() - startedAt;
+    if (durationMs >= SLOW_WORK_MS) {
+      log.warn('slow full-text catch-up', { durationMs, records, batches });
     }
     return records;
   }
@@ -723,6 +894,21 @@ export class EchoHost extends Resource {
     todo();
   }
 
+  /**
+   * Runs `wipe`, which deletes this host's rows while it stays open, with indexing stopped and the feed
+   * store's caches dropped after it: either would otherwise write cursors under tokens the wipe deleted.
+   */
+  async wipeStorage(wipe: () => Promise<void>): Promise<void> {
+    // Closing drains the pass under way.
+    await this._indexScheduler.close();
+    try {
+      await wipe();
+    } finally {
+      this._feedStore.resetCaches();
+      await this._indexScheduler.open(this._ctx);
+    }
+  }
+
   async removeSpace(spaceId: SpaceId): Promise<void> {
     this._spaceDocumentIds.delete(spaceId);
     const root = this._spaceStateManager.getRootBySpaceId(spaceId);
@@ -823,6 +1009,306 @@ export class EchoHost extends Resource {
       removedIndexEntries,
       purgedFeedBlocks: 0,
     };
+  }
+
+  /** Queues a retirement pass for a space behind the one already running. Failures are logged, not propagated. */
+  #scheduleRetirement(spaceId: SpaceId): void {
+    const previous = this.#retirements.get(spaceId) ?? Promise.resolve();
+    const next = previous
+      .then(() => this.#retireDocuments(spaceId))
+      .catch((err) => {
+        if (!this._ctx.disposed) {
+          log.warn('document retirement failed', { spaceId, err });
+        }
+      });
+    this.#retirements.set(spaceId, next);
+  }
+
+  /**
+   * Retirement, in every direction. Documents the space directory has retired are wiped without being read —
+   * the share of every peer. Linked documents this host could not load, or whose history outgrew their state,
+   * are rebuilt from the index and retired in the directory — the share of the peer that found them.
+   */
+  async #retireDocuments(spaceId: SpaceId): Promise<void> {
+    if (this._ctx.disposed || !this.isOpen) {
+      return;
+    }
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+    const directory = root?.doc();
+    if (!root || !directory) {
+      return;
+    }
+
+    await this.#wipeRetiredDocuments(spaceId, DatabaseDirectory.getRetiredDocuments(directory));
+    this.#restoreLostRetirements(spaceId, root);
+
+    // Keyed by the id as it is spelled in a link, so the scan below compares strings: decoding every link
+    // (a base58check checksum each) on every directory change saturated the worker on large spaces.
+    const candidates = new Map<string, DocumentId>();
+    for (const [documentId, record] of this._automergeHost.quarantinedDocuments) {
+      if (record.reason === 'load-failed') {
+        candidates.set(documentId, documentId);
+      }
+    }
+    for (const documentId of this.#historyCandidates.keys()) {
+      candidates.set(documentId, documentId);
+    }
+    if (candidates.size === 0) {
+      return;
+    }
+
+    const unloadable = new Map<DocumentId, string[]>();
+    const bloated = new Map<DocumentId, string[]>();
+    for (const [objectId, link] of Object.entries(directory.links ?? {})) {
+      const documentId = candidates.get(linkedDocumentIdText(link.toString()));
+      if (documentId === undefined || directory.retired?.[documentId] !== undefined) {
+        continue;
+      }
+      if (this._automergeHost.quarantinedDocuments.get(documentId)?.reason === 'load-failed') {
+        defaultMap(unloadable, documentId, () => []).push(objectId);
+      } else if (this.#historyCandidates.has(documentId)) {
+        defaultMap(bloated, documentId, () => []).push(objectId);
+      }
+    }
+    for (const [documentId, objectIds] of unloadable) {
+      await this.#retireUnloadableDocument(spaceId, root, documentId, objectIds);
+    }
+    for (const [documentId, objectIds] of bloated) {
+      await this.#retireBloatedDocument(spaceId, root, documentId, objectIds);
+    }
+  }
+
+  /**
+   * Writes back `retired` entries this host knows of but the directory lacks. Two peers that each create the
+   * map concurrently leave only one of them in the merge, so an entry can vanish after it was written.
+   */
+  #restoreLostRetirements(spaceId: SpaceId, root: DatabaseRoot): void {
+    const directory = root.doc();
+    const lost = [...this.#knownRetirements.values()].filter(
+      (retirement) => retirement.spaceId === spaceId && directory?.retired?.[retirement.documentId] === undefined,
+    );
+    if (lost.length === 0) {
+      return;
+    }
+    root.change((draft) => {
+      draft.retired ??= {};
+      for (const { documentId, replacedBy, reason } of lost) {
+        draft.retired[documentId] = { replacedBy: new A.RawString(replacedBy), reason: new A.RawString(reason) };
+      }
+    });
+    log.info('restored retirements lost to a concurrent change', { spaceId, documents: lost.length });
+  }
+
+  /**
+   * Retires a document that cannot be loaded, rebuilt from the state the index last saw. Left quarantined, and
+   * not retired, while the index lacks any of the document's objects.
+   */
+  async #retireUnloadableDocument(
+    spaceId: SpaceId,
+    root: DatabaseRoot,
+    documentId: DocumentId,
+    objectIds: string[],
+  ): Promise<void> {
+    const indexed = await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen({ self: this }, function* () {
+        const metas = (yield* this.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds })).filter(
+          (meta) => meta.documentId === documentId,
+        );
+        const snapshots = new Map(
+          (yield* this.indexEngine.querySnapshotsJSON(metas.map((meta) => meta.recordId))).map(
+            ({ recordId, snapshot }) => [recordId, snapshot],
+          ),
+        );
+        return metas.flatMap((meta): IndexedObject[] => {
+          const json = snapshots.get(meta.recordId);
+          return json ? [{ objectId: meta.objectId, json, createdAt: meta.createdAt }] : [];
+        });
+      }),
+    );
+    const missing = objectIds.filter((objectId) => !indexed.some((object) => object.objectId === objectId));
+    if (missing.length > 0) {
+      log.warn('unloadable document kept quarantined: the index has no state for some of its objects', {
+        spaceId,
+        documentId,
+        missing,
+      });
+      return;
+    }
+
+    await this.#replaceDocument(
+      spaceId,
+      root,
+      documentId,
+      objectIds,
+      makeReplacementDirectory({ spaceId, spaceKey: root.getSpaceKey(), objects: indexed }),
+      'load-failed',
+    );
+    log.info('retired a document that could not be loaded', { spaceId, documentId, objects: objectIds.length });
+  }
+
+  /**
+   * Retires a loaded document whose history has outgrown its state, if it holds only the objects linked to it and
+   * all are of a type that may be rebuilt (see `HISTORY_RETIREMENT_TYPES`). Rebuilt from the document's own current
+   * state, so it keeps every change, including any the index has not caught up with.
+   */
+  async #retireBloatedDocument(
+    spaceId: SpaceId,
+    root: DatabaseRoot,
+    documentId: DocumentId,
+    objectIds: string[],
+  ): Promise<void> {
+    const ops = this.#historyCandidates.get(documentId) ?? 0;
+    this.#historyCandidates.delete(documentId);
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId);
+    const state = lease ? A.toJS(lease.doc()) : undefined;
+    const objects = state?.objects ?? {};
+    if (
+      !state ||
+      Object.keys(objects).length !== objectIds.length ||
+      !isRetirableForHistory(objectIds.map((objectId) => objects[objectId]?.system?.type?.['/']))
+    ) {
+      return;
+    }
+    const stateBytes = JSON.stringify(objects).length;
+    if (!isHistoryBloated({ ops, stateBytes })) {
+      return;
+    }
+
+    await this.#replaceDocument(
+      spaceId,
+      root,
+      documentId,
+      objectIds,
+      { version: state.version, access: state.access, objects },
+      'history',
+    );
+    log.info('retired a document whose history outgrew its state', {
+      spaceId,
+      documentId,
+      ops,
+      stateBytes,
+      objects: objectIds.length,
+    });
+  }
+
+  /**
+   * Replaces a document with `directory`, which carries no history, then records the retirement in the space
+   * directory, which every peer acts on, and wipes the original here.
+   */
+  async #replaceDocument(
+    spaceId: SpaceId,
+    root: DatabaseRoot,
+    documentId: DocumentId,
+    objectIds: string[],
+    directory: DatabaseDirectory,
+    reason: RetirementReason,
+  ): Promise<void> {
+    const replacementId = await replacementDocumentId(documentId);
+    const replacementUrl = stringifyAutomergeUrl(replacementId);
+    // Another peer's retirement may have delivered the replacement already; importing over it would start a
+    // second history for the same objects.
+    const [existingHeads] = await this._automergeHost.getHeads([replacementId]);
+    const lease =
+      existingHeads && existingHeads.length > 0
+        ? undefined
+        : await this._automergeHost.createDoc<DatabaseDirectory>(
+            await buildReplacementDocument(documentId, directory),
+            { preserveHistory: true, documentId: replacementId },
+          );
+    try {
+      root.change((draft) => {
+        draft.links ??= {};
+        for (const objectId of objectIds) {
+          draft.links[objectId] = new A.RawString(replacementUrl);
+        }
+        draft.retired ??= {};
+        draft.retired[documentId] = { replacedBy: new A.RawString(replacementUrl), reason: new A.RawString(reason) };
+      });
+      await this._automergeHost.flush(this._ctx, { documentIds: [root.documentId, replacementId] });
+    } finally {
+      lease?.[Symbol.dispose]();
+    }
+
+    await this.#wipeRetiredDocuments(spaceId, [{ documentId, replacedBy: replacementUrl, reason }]);
+  }
+
+  /**
+   * Wipes documents the space directory retired, without reading them: the directory naming them is the
+   * attribution, since loading one is what retirement exists to avoid. Idempotent, and run on every open, since the
+   * directory is the only durable record of a retirement.
+   */
+  async #wipeRetiredDocuments(spaceId: SpaceId, entries: readonly Retirement[]): Promise<void> {
+    const candidates = entries.filter(
+      (entry): entry is Retirement & { documentId: DocumentId } =>
+        isValidDocumentId(entry.documentId) && !this.#wipedDocuments.has(entry.documentId),
+    );
+    if (candidates.length === 0) {
+      return;
+    }
+    const referenced = this.#referencedDocuments();
+    const indexedElsewhere = await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.queryDocumentsIndexedElsewhere({
+        spaceId,
+        documentIds: candidates.map((entry) => entry.documentId),
+      }),
+    );
+    const isProtected = (documentId: DocumentId) => referenced.has(documentId) || indexedElsewhere.has(documentId);
+    const retired = candidates.filter((entry) => !isProtected(entry.documentId));
+    if (retired.length < candidates.length) {
+      log.warn('ignored retirements naming documents another space or a live link still uses', {
+        spaceId,
+        documentIds: candidates.filter((entry) => isProtected(entry.documentId)).map((entry) => entry.documentId),
+      });
+    }
+    if (retired.length === 0) {
+      return;
+    }
+    for (const retirement of retired) {
+      this.#knownRetirements.set(retirement.documentId, { ...retirement, spaceId });
+      await this._automergeHost.quarantineDocument(retirement.documentId, { reason: 'retired' });
+    }
+    const documentIds = retired.map(({ documentId }) => documentId);
+    // Index rows first: the indexer finds documents through them, so one outliving its bytes would be read again.
+    await RuntimeProvider.runPromise(this._runtime)(
+      this.indexEngine.deleteObjects({ spaceId, documentIds, objects: [] }),
+    );
+    for (const documentId of documentIds) {
+      await this._automergeHost.removeDocument(documentId);
+      this.#wipedDocuments.add(documentId);
+      this.#historyCandidates.delete(documentId);
+    }
+    log('wiped retired documents', { spaceId, documents: documentIds.length });
+  }
+
+  /**
+   * Documents a space on this host still references: the directory, space root and credentials of every persisted
+   * space, opened or not, and every link and branch of an open directory. A `retired` entry naming one is never acted
+   * on, since any member can write a directory and a document id may belong to another space; a genuine retirement
+   * re-points the links in the same change. Links of an unopened directory are covered by the index instead.
+   */
+  #referencedDocuments(): Set<DocumentId> {
+    const urls: string[] = [];
+    const referenced = new Set<DocumentId>();
+    for (const spaceId of this._spaceStateManager.spaceIds) {
+      const directoryId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
+      if (directoryId) {
+        referenced.add(directoryId);
+      }
+      const refs = this._spaceStateManager.getSpaceRootRefs(spaceId);
+      urls.push(...[refs?.spaceRootDocUrl, refs?.credentialsDocUrl].filter((url) => url !== undefined));
+    }
+    for (const [documentId, root] of this._spaceStateManager.roots) {
+      referenced.add(documentId);
+      if (root.doc()) {
+        urls.push(...root.getAllLinkedDocuments().map((url) => url.toString()));
+      }
+    }
+    for (const url of urls) {
+      if (isValidAutomergeUrl(url)) {
+        referenced.add(interpretAsDocumentId(url));
+      }
+    }
+    return referenced;
   }
 
   /** Document ids present in the space's previous directory listing but not the current one. */
@@ -1180,6 +1666,122 @@ export class EchoHost extends Resource {
   }
 
   /**
+   * Applies each pending feed-options intent to the feed store and clears it. The index side runs
+   * before the store write, so a crash in between redoes it: a disable removes the feed's rows on
+   * every apply, and a re-enable seeds the backfill while the store still holds the disabled options.
+   * A failed apply leaves its intent pending for the next pass.
+   */
+  #applyFeedOptionsIntents(changes: FeedChanges): Effect.Effect<void, never, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      const { maxId, intents } = yield* this.indexEngine.takeFeedOptionsIntents();
+      for (const { spaceId, feedId, namespace, options } of intents) {
+        const feed: FeedKey = { spaceId, feedId, feedNamespace: namespace };
+        yield* Effect.gen({ self: this }, function* () {
+          const previous = yield* this._feedStore.getFeedOptions(feed);
+          if (isIndexingDisabled(options)) {
+            const deleted = yield* this.indexEngine.deleteFeedObjects({ spaceId, queueId: feedId });
+            if (deleted > 0 && EntityId.isValid(feedId)) {
+              changes.spaceIds.add(spaceId);
+              changes.queueIds.add(feedId);
+            }
+          } else if (isIndexingDisabled(previous)) {
+            yield* this.indexEngine.seedCursor({
+              sourceName: this._feedDataSource.sourceName,
+              spaceId,
+              resourceId: backfillResourceId(namespace, feedId),
+              cursor: '',
+            });
+          }
+          const { trim } = yield* this._feedStore.setFeedOptions({ ...feed, options });
+          const now = yield* Clock.currentTimeMillis;
+          yield* trimUntilDone(this._feedStore.trim(feed, now), trim);
+          yield* this.indexEngine.clearFeedOptionsIntents(spaceId, feedId, maxId);
+        }).pipe(
+          Effect.catch((error) =>
+            Effect.sync(() =>
+              log.warn('feed options could not be applied; retrying next pass', { spaceId, feedId, error }),
+            ),
+          ),
+        );
+      }
+    }).pipe(
+      Effect.catch((error) => Effect.sync(() => log.warn('feed-options intents could not be read', { error }))),
+      Effect.withSpan('EchoHost.applyFeedOptionsIntents'),
+    );
+  }
+
+  /** Trims every feed of each space until retention leaves nothing past a limit. */
+  #trimSpaces(spaceIds: Iterable<string>): Effect.Effect<void, never, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      for (const spaceId of spaceIds) {
+        const now = yield* Clock.currentTimeMillis;
+        yield* trimUntilDone(this._feedStore.trimAll(spaceId, now)).pipe(
+          Effect.catch((error) => Effect.sync(() => log.warn('feed retention trim failed', { spaceId, error }))),
+        );
+      }
+    });
+  }
+
+  /** Deletes the backfill cursors the feed source reported finished. */
+  #deleteFinishedBackfills(finished: ReadonlyMap<SpaceId, ReadonlySet<string>>): Effect.Effect<void, never, never> {
+    return Effect.gen({ self: this }, function* () {
+      for (const [spaceId, resourceIds] of finished) {
+        yield* this.indexEngine.deleteFinishedCursors({
+          sourceName: this._feedDataSource.sourceName,
+          spaceId,
+          resourceIds: [...resourceIds],
+          cursor: BACKFILL_FINISHED,
+        });
+      }
+    }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('finished backfill cursors not deleted', { error }))));
+  }
+
+  /**
+   * Removes the index rows of blocks retention deleted, a bounded number per pass, and forgets each
+   * batch once its rows are gone. Returns whether logged blocks remain for a later pass.
+   */
+  #purgeTrimmedBlocks(changes: FeedChanges): Effect.Effect<boolean, never, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      for (let batch = 0; batch < PURGE_BATCHES_PER_PASS; batch++) {
+        const { maxId, blocks } = yield* this._feedStore.takeTrimmed({ limit: PURGE_BATCH });
+        if (blocks.length === 0) {
+          return false;
+        }
+        const byFeed = new Map<string, { spaceId: SpaceId; queueId: string; blocks: typeof blocks }>();
+        for (const block of blocks) {
+          if (!SpaceId.isValid(block.spaceId)) {
+            continue;
+          }
+          const key = `${block.spaceId}/${block.feedId}`;
+          const entry = byFeed.get(key) ?? { spaceId: block.spaceId, queueId: block.feedId, blocks: [] };
+          entry.blocks.push(block);
+          byFeed.set(key, entry);
+        }
+        for (const feed of byFeed.values()) {
+          const deleted = yield* this.indexEngine.purgeFeedBlocks(feed);
+          if (deleted > 0 && EntityId.isValid(feed.queueId)) {
+            changes.spaceIds.add(feed.spaceId);
+            changes.queueIds.add(feed.queueId);
+          }
+        }
+        yield* this._feedStore.clearTrimmed(maxId);
+        if (blocks.length < PURGE_BATCH) {
+          return false;
+        }
+      }
+      return true;
+    }).pipe(
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          log.warn('trimmed blocks could not be purged from the index; retrying next pass', { error });
+          return true;
+        }),
+      ),
+      Effect.withSpan('EchoHost.purgeTrimmedBlocks'),
+    );
+  }
+
+  /**
    * One indexing pass over both data sources.
    *
    * Spanned so that a pass is a single trace naming the requests that caused it, instead of one
@@ -1190,7 +1792,7 @@ export class EchoHost extends Resource {
   @trace.span({
     op: 'indexer',
     // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
-    // would be dropped by the exporter rather than reaching SigNoz.
+    // would be dropped by the exporter rather than reaching PostHog.
     attributes: (_ctx: Context, reasons: Record<string, number>) => ({
       reasons: Object.entries(reasons)
         .map(([reason, count]) => `${reason}:${count}`)
@@ -1215,21 +1817,27 @@ export class EchoHost extends Resource {
       return undefined;
     }
     const startedAt = performance.now();
+    if (!this.#indexingMarked) {
+      this.#indexingMarked = true;
+      markMilestone('indexing.started');
+    }
 
     try {
       const combinedResult = _makeEmptyMergedResult();
+      const feedChanges = makeFeedChanges();
+      const countCatchUp = this.indexStatus.beginPass();
 
       {
         performance.mark('indexEngine.update.automerge:start');
         const result = await this.indexEngine
-          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
+          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
 
         // Convergence-key duplicates are born from replication, and a replicated write is exactly what
         // was just indexed — so this is the earliest a duplicate can be detected on this device.
-        // The trigger is the durable intent log written in the same transaction as the index
-        // cursors: a crash or a faulted merge pass leaves the intents in place, and this pass —
+        // The trigger is the durable intent log, committed no later than the index cursors: a crash
+        // or a faulted merge pass leaves the intents in place, and this pass —
         // which also runs once at every startup — retries them, so no detected duplicate is ever
         // silently dropped. The merge's own writes land back here via `documentsSaved`, which
         // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.
@@ -1254,6 +1862,9 @@ export class EchoHost extends Resource {
           }
           log('cleared serviced convergence-key intents', { cleared, upToId: maxId });
         }
+
+        // After the object leg, which recorded them, and before the feed leg, so it reads under the new options.
+        await this.#applyFeedOptionsIntents(feedChanges).pipe(RuntimeProvider.runPromise(this._runtime));
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',
           detail: {
@@ -1277,6 +1888,25 @@ export class EchoHost extends Resource {
           .update(ctx, this._feedDataSource, { spaceId: null, limit: 50 })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
+
+        const report = this._feedDataSource.takeReport();
+        for (const [spaceId, feedIds] of report.skippedFeeds) {
+          feedChanges.spaceIds.add(spaceId);
+          for (const feedId of feedIds) {
+            if (EntityId.isValid(feedId)) {
+              feedChanges.queueIds.add(feedId);
+            }
+          }
+        }
+        const purgeIncomplete = await Effect.gen({ self: this }, function* () {
+          // An append trims in its own transaction, but at most TRIM_LIMIT blocks; the rest goes here.
+          yield* this.#trimSpaces([...report.spaces]);
+          yield* this.#deleteFinishedBackfills(report.finishedBackfills);
+          return yield* this.#purgeTrimmedBlocks(feedChanges);
+        }).pipe(RuntimeProvider.runPromise(this._runtime));
+        if (purgeIncomplete) {
+          combinedResult.done = false;
+        }
         performance.measure('Index Queues', {
           start: 'indexEngine.update.queue:start',
           detail: {
@@ -1293,14 +1923,23 @@ export class EchoHost extends Resource {
 
       countWork('echo.indexPasses');
       countWork('echo.indexedObjects', combinedResult.updated);
+      // A document is only rebuilt for its history from index state that has caught up with it.
+      if (this.#historyCandidates.size > 0) {
+        for (const spaceId of combinedResult.spaces) {
+          this.#scheduleRetirement(spaceId);
+        }
+      }
       if (combinedResult.updated > 0) {
         this.#scheduleFtsFlush();
       }
 
-      const hint = hintFromIndexingResult(combinedResult);
-      log.verbose('indexEngine update completed', {
+      const indexHint = hintFromIndexingResult(combinedResult);
+      const feedHint = hintFromFeedChanges(feedChanges);
+      const hint = indexHint && feedHint ? mergeHints(indexHint, feedHint) : (indexHint ?? feedHint);
+      const durationMs = performance.now() - startedAt;
+      const summary = {
         reasons,
-        durationMs: performance.now() - startedAt,
+        durationMs,
         // A run that indexed nothing yet still invalidates queries is the signature of a
         // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
         invalidates: !!hint,
@@ -1312,11 +1951,24 @@ export class EchoHost extends Resource {
         documents: combinedResult.documents.size,
         types: combinedResult.types.size,
         objects: combinedResult.objects.size,
-      });
+      };
+      if (durationMs >= SLOW_WORK_MS) {
+        log.warn('slow index pass', summary);
+      } else {
+        log.verbose('indexEngine update completed', summary);
+      }
       await sleep(1);
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
+      }
+
+      if (!this._ctx.disposed && this.isOpen) {
+        await this.indexStatus.afterPass(combinedResult);
+      }
+      if (combinedResult.drained && !this.#caughtUpMarked) {
+        this.#caughtUpMarked = true;
+        markMilestone('indexing.caught-up');
       }
 
       return {
@@ -1331,7 +1983,6 @@ export class EchoHost extends Resource {
       if (this._ctx.disposed || !this.isOpen) {
         return undefined;
       }
-      log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();
       throw err;
@@ -1355,6 +2006,7 @@ type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
   drained: boolean;
+  catchUp?: number;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -1377,6 +2029,9 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
   acc.updated += r.updated;
   acc.done = acc.done && r.done;
   acc.drained = acc.drained && r.drained;
+  if (r.catchUp !== undefined) {
+    acc.catchUp = (acc.catchUp ?? 0) + r.catchUp;
+  }
   for (const s of r.spaces) {
     acc.spaces.add(s);
   }

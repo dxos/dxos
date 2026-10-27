@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { ConfigService } from '@dxos/config';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { DXN } from '@dxos/keys';
 import { RpcRouter } from '@dxos/rpc';
 

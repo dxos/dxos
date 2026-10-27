@@ -274,4 +274,27 @@ describe('UrlPath', () => {
       expect(UrlPath.isReservedKey('collection')).toBe(false);
     });
   });
+
+  describe('withTitle', () => {
+    const base = new URL('https://composer.space/w/space/doc/1?debug=1');
+
+    test('appends the title, keeping other parameters', ({ expect }) => {
+      const url = UrlPath.withTitle(base, '  Quarterly   plan ');
+      expect(url.searchParams.get(UrlPath.TITLE_PARAM)).toBe('Quarterly plan');
+      expect(url.searchParams.get('debug')).toBe('1');
+      expect(base.searchParams.has(UrlPath.TITLE_PARAM)).toBe(false);
+    });
+
+    test('truncates a long title with an ellipsis', ({ expect }) => {
+      const title = UrlPath.withTitle(base, 'x'.repeat(200)).searchParams.get(UrlPath.TITLE_PARAM);
+      expect([...(title ?? '')].length).toBe(UrlPath.MAX_TITLE_LENGTH);
+      expect(title?.endsWith('…')).toBe(true);
+    });
+
+    test('removes the parameter when there is no title', ({ expect }) => {
+      const titled = UrlPath.withTitle(base, 'Plan');
+      expect(UrlPath.withTitle(titled, '   ').searchParams.has(UrlPath.TITLE_PARAM)).toBe(false);
+      expect(UrlPath.withTitle(titled, undefined).searchParams.has(UrlPath.TITLE_PARAM)).toBe(false);
+    });
+  });
 });

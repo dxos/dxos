@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   type Extension,
   type ThemeExtensionsOptions,
@@ -19,7 +20,7 @@ import { isTruthy } from '@dxos/util';
 
 import { inboxMarkdown } from '../../extensions/index.ts';
 
-export type MarkdownViewerProps = ThemedClassName<{
+export type MarkdownViewerProps = Util.ThemedClassName<{
   content: string;
   /** Render markdown decorations; pass `false` for plain text. */
   markdown?: boolean;
@@ -48,7 +49,7 @@ export const MarkdownViewer = ({
   extensions: extensionsProp,
   classNames,
 }: MarkdownViewerProps) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
 
   const extensions = useMemo<Extension[]>(
     () =>

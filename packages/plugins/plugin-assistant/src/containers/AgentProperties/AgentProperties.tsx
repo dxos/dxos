@@ -4,9 +4,9 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { AgentSkillOperations } from '@dxos/assistant-toolkit';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
@@ -23,11 +23,11 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   // reconcile — the schedule routine is untouched). `useSpaceCallback` takes no arguments, so the
   // next set is staged on a ref.
   const pendingSubscriptions = useRef<Ref.Ref<Obj.Unknown>[]>([]);
-  const syncAutomation = useSpaceCallback(
+  const syncAutomation = Hooks.useSpaceCallback(
     spaceId,
     [] as const,
     () =>
-      Operation.invoke(AgentSkillOperations.SyncAutomation, {
+      Operation.invoke(AgentSkill.Operations.SyncAutomation, {
         agent: Ref.make(agent),
         subscriptions: pendingSubscriptions.current,
       }),

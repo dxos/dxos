@@ -14,7 +14,7 @@ import { type ClientServices, makeServicesFromRpc } from '@dxos/client-protocol'
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { failedInvariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';

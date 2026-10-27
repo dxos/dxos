@@ -1,5 +1,287 @@
 # @dxos/app-toolkit
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/migrations@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-syntax-highlighter@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/i18n@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/progress@0.16.0
+  - @dxos/credentials@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/react-focus@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- d250ed2: `AppSpace.AGENT_SPACE_TAG` marks the space an agent's own identity owns, and `AppSpace.agentsNotAdministeredBy` lists the agents in those spaces that an identity may not add elsewhere. A space's "Add from contacts" picker leaves those agents out, so it offers only the agents you administer, as ordinary contacts.
+- 098a536: `SampleSpace.phase` is replaced by `SampleSpace.partial`: the content one `CONTENT.md` spec describes, which may compose smaller partials and carries their schemas. `SampleSpace.make` takes `partials` instead of `phases`. The debug plugin adds a Fieldstone Labs space template, a software team run mostly by agents, built from four partials plus the DXOS architecture diagrams; `@dxos/plugin-canvas` now publishes and exports its architecture partial from `@dxos/plugin-canvas/Architecture`. A contact card shows the employer's name instead of only an icon, related events no longer swap recent and upcoming, a conversation's message header keeps its date and actions to the right with the subject at full width, an event's star sits beside its title, cards have a visible edge in light mode, a calendar card lists at most three attendees, a sheet embedded in a document renders instead of failing, and object links past a document's first screen render as links instead of raw markdown.
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [55bdf55]
+- Updated dependencies [37edd53]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-syntax-highlighter@0.15.0
+  - @dxos/migrations@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/credentials@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/i18n@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/progress@0.15.0
+  - @dxos/react-focus@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-attention@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/react-ui-syntax-highlighter@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/migrations@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/credentials@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/i18n@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/progress@0.14.0
+  - @dxos/react-focus@0.14.0
+  - @dxos/ui-types@0.14.0
+
+## 0.13.0
+
+### Minor Changes
+
+- 69a4a85: Add `activateHeadlessPlugins` to `@dxos/app-toolkit/testing`, which activates plugins without a UI (as the EDGE operation-service does) and reports activation failures plus the operation keys and schema typenames they contribute. Headless hosts such as workerd no longer activate modules that need an app-only capability: the assistant's question resumer, and the sheet's compute-graph registry and markdown extension, are now node-only.
+- e99ee70: `NativePasskey.getPasskeySupport()` now reports `'native'` in the Composer iOS app, which creates and redeems passkeys through its own AuthenticationServices bridge, and `'none'` when that bridge is missing, never WebAuthn. `createNativePasskey` and `loginNativePasskey` invoke whichever bridge the shell names. New: `NativePasskey.isNativePasskeyError()` recognises the iOS bridge's structured rejection, so `PasskeyError` treats only a dismissed sheet as a dismissal and reports every other `ASAuthorizationError` as a failure.
+
+  `@dxos/util`'s storage cleanup helpers (`clearServiceWorkers`, `clearCaches`, `clearOPFS`, `clearIndexedDB`) resolve where their API is absent, as in a WKWebView on a custom scheme, instead of throwing.
+
+- ff92c50: Composer links now carry a `?title=` parameter naming the object they open — in the address bar (kept in step with the attended plank) and in "Copy link" — so messenger previews can name the object. `UrlPath.withTitle` in `@dxos/app-toolkit` builds it.
+- 3e73e53: Chats can run on a coding agent other than Composer's own. `SessionConfig` gains `harness` (which agent runs the chat) and `host` (the device that runs it). Plugins register agents through `AssistantCapabilities.Agent`, and the agent service picks the turn engine per chat from it. `MakeTurnProducerOptions` now includes the `chat`.
+
+  `plugin-code` adds the desktop app's agent helper and an ACP turn engine. It streams the agent's transcript into the chat, keeps the agent's session warm between turns and resumes it after a restart. `plugin-claude` uses it to offer Claude Code on the user's machine.
+
+  An agent's permission requests arrive as a `request` content block (`ContentBlock.Request`). The chat renders it as a card, and the answer goes back through `AssistantOperation.RespondToRequest`.
+
+  `ProjectOperation.DelegateTaskToChat` takes an optional `harness`. Without one, it uses the new `defaultAgent` assistant setting while that agent is available, and Composer otherwise. A task's menu lists an "Assign to" entry per registered agent and disables those that cannot run on this device. To support this, `ObjectAction` gains `group` and `unavailable`.
+
+  A project overview has a settings slot, `ProjectView.Settings`, where other plugins add settings. `plugin-code` uses it for the project's repository folder on this device, and a delegated chat works in its own git worktree of that folder.
+
+  A coding agent gets Composer's operations as the `composer` MCP server, scoped to its chat's space. The page serves the same surface as `dx mcp serve`, and the agent helper relays the agent's requests to it.
+
+  `CodeAgent.make` takes `sessionMeta`, agent-specific ACP session options built from the Composer tools on offer. Claude Code uses it to call Composer's read-only tools without asking each time. The Claude plugin now depends on the Code plugin, which runs the agent helper.
+
+- 9ab98cd: The roots of `@dxos/app-framework`, `@dxos/app-graph`, `@dxos/app-toolkit`, `@dxos/assistant-toolkit`, `@dxos/compute`, `@dxos/effect`, `@dxos/graph`, `@dxos/observability` and every plugin now export namespaces only, and every namespace has its own subpath: import it with `import * as Hooks from '@dxos/app-framework/Hooks'` and call `Hooks.useOperationInvoker()`. A compound component exports its parts (`<ObjectCard.Root>`, `<ObjectCard.Header>`), a single component keeps its own name (`<TracePanel.TracePanel>`), and errors live in the namespace that owns them (`Operation.NoHandlerError`, `Capability.NotFoundError`, `ConnectorSync.DatabaseMissingError`) or in a `<Domain>Error` module (`FunctionsAiError`, `ConnectorError`).
+
+  Breaking: names that were exported flat from a root moved into namespaces, e.g. `ProcessManagerPlugin.make()`, `PluginManager.Context`, `PluginManifest.DEV_SERVER_PORT`, `Progress.makeTraceSink`, `SpaceSurface.RENAME_POPOVER`, `Calendar.getRangeSelectionId`, `AgentSkill.Handlers`, `SlashCommand.resolveSlashCommand`, `SelectionModel.SelectionModel`, `HaloServices.layer`, `PluginStorage.loadPlugins`, `CorePlugins.make()`, `KvsStore.make` (formerly `createKvsStore`), `CardSlot.IconSlot` and `CardSlot.MenuSlot` (formerly `CardIconSlot` and `CardMenuSlot`), `Hooks.useUpdateRow` in `@dxos/app-toolkit` and `OtelTracer.make`/`OtelTracer.layer` in `@dxos/effect`; a plugin's `meta` is `<Name>Plugin.meta`. Flat names nothing imported outside their package are no longer exported. `@dxos/compute/Errors` is removed, `@dxos/app-solid` no longer re-exports `@dxos/app-framework`, and `@dxos/util/Position` is a subpath.
+
+  `HomeSection` and `NamePopover` move from `@dxos/app-framework` to `@dxos/app-toolkit` (`@dxos/app-toolkit/HomeSection`, `@dxos/app-toolkit/NamePopover`), so app-framework no longer depends on `@dxos/react-ui`. A `check-module-structure` guard fails if any app-framework export reaches react-ui again.
+
+- 8fc641a: `NativePasskey.getPasskeySupport()` replaces `supportsNativePasskeys()` and returns `'native'`, `'web'` or `'none'`. The macOS desktop app reports `'none'` unless its shell confirms that its signed identity can complete a passkey request, so builds that can't finish one no longer offer passkeys or hang on an empty system sheet. Breaking: `supportsNativePasskeys()` is removed.
+
+### Patch Changes
+
+- 38e2ddb: `ObjectCard.Header` accepts an object snapshot as its `subject`, so a card subscribed through `useObject` shows its type's icon and hue instead of the dashed-circle fallback.
+- 6ea9d4d: Opening a space's settings closes the companion, as opening the app settings already does. Both use a new `LayoutOperation.closeCompanion()`, which treats a layout without companions as nothing to close.
+- Updated dependencies [ecd099a]
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [c6922ce]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [fe08304]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [596728d]
+- Updated dependencies [64f1a7a]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/react-ui-syntax-highlighter@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/migrations@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/credentials@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/i18n@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/progress@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

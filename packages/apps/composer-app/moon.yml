@@ -33,7 +33,7 @@ tasks:
   bundle-e2e:
     extends: bundle
     env:
-      DX_EDGE_BASE_URL: 'https://dxos.network'
+      DX_EDGE_BASE_URL: 'https://preview.dxos.network'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: 'false'
     options:
@@ -103,6 +103,35 @@ tasks:
           DX_TAURI: 'true'
       - fetch-ollama
       - stage-sandbox-helper
+      - stage-agent-helper
+  # The desktop app for automation (autocue's `--target tauri` on macOS): the embedded frontend, an
+  # embedded WebDriver server (the `webdriver` feature) and the test identifier, so it never opens a
+  # shipped channel's profile. `--no-bundle` leaves the binary at `src-tauri/target/release/app`. The
+  # passkey plugin's Swift bridge is built in its debug configuration, since Xcode 27's release build
+  # makes the swift-rs symbols it exports local and the link fails.
+  tauri-build-test:
+    command: pnpm
+    args:
+      - exec
+      - tauri
+      - build
+      - --config
+      - src-tauri/tauri.test.conf.json
+      - --features
+      - webdriver
+      - --no-bundle
+      - --
+      - --config
+      - profile.release.package.tauri-plugin-macos-passkey.debug=1
+    deps:
+      - target: bundle
+        env:
+          DX_TAURI: 'true'
+      - fetch-ollama
+      - stage-sandbox-helper
+      - stage-agent-helper
+    options:
+      cache: false
   # iOS counterpart of `tauri-build`; no ollama (its runtime is desktop-only). Embeds the
   # PRODUCTION plugin set unconditionally — iOS is still deployed out of the `dev` environment, but what
   # TestFlight carries should be what `composer.space` carries, not the full catalog that environment
@@ -149,6 +178,16 @@ tasks:
       - scripts/stage-sandbox-helper.mjs
     outputs:
       - src-tauri/sandbox
+  # Stages plugin-claude's coding-agent helper and the agents plugins ship for it.
+  stage-agent-helper:
+    command: node scripts/stage-agent-helper.mjs --required
+    deps:
+      - plugin-claude:compile-agent-helper
+      - plugin-claude:compile-agent
+    inputs:
+      - scripts/stage-agent-helper.mjs
+    outputs:
+      - src-tauri/agent
   # Regenerates `src/vite/optimize-deps.ts` from a cold dependency scan. Not cacheable — the point
   # is to re-derive the list from the current source graph, and it rewrites a checked-in file.
   gen-optimize-deps:
@@ -245,10 +284,11 @@ tasks:
   serve-bundle:
     extends: serve
     command: pnpm exec vite dev --configLoader native --experimentalBundle
-  # Dev server with the agent debug port already open, for QA flows an agent drives end to end
-  # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). The session id is minted per
-  # server start and published to `temp/debug-port.json`; set `DX_DEBUG_PORT_SESSION` to choose it
-  # instead, which removes the read-it-back step for a caller that can set the env.
+  # Dev server with the agent debug port open, for QA flows an agent drives end to end
+  # (`packages/reflect/deus` — the `## QA` section of a PLUGIN.mdl). Plain `serve` opens it too
+  # (opt out with `DX_DEBUG_PORT=false`); this task pins it on so a QA run cannot inherit the opt-out.
+  # The session id is minted per server start and published to `temp/debug-port.json`; set
+  # `DX_DEBUG_PORT_SESSION` to choose it instead, which removes the read-it-back step.
   serve-qa:
     extends: serve
     env:

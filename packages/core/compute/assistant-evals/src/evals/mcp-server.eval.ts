@@ -10,7 +10,7 @@ import path from 'node:path';
 import * as Project from '@dxos/compute/Project';
 import { Blob, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
-import { FileSkill } from '@dxos/plugin-file/skills';
+import * as FileSkill from '@dxos/plugin-file/FileSkill';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';

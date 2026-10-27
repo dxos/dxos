@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
@@ -20,7 +20,7 @@ export type RunEvent = {
 };
 
 export type RoutineRun = {
-  /** Root process id. */
+  /** The run's id: the pid of its first invocation, shared by its `Operation.runAgain()` continuations. */
   pid: string;
   startedAt: number;
   duration: number;
@@ -36,7 +36,9 @@ export type RoutineRun = {
  *
  * Only root processes (those whose `meta.parentPid` is absent) are considered
  * run entry points. Child processes contribute their events to the run duration
- * and outcome but do not create separate run entries.
+ * and outcome but do not create separate run entries. A root process that continues
+ * a run after `Operation.runAgain()` carries `meta.runId`, and joins that run as one
+ * of its invocations instead of starting its own.
  *
  * The triggerIds set identifies which messages belong to this routine.
  */
@@ -57,12 +59,16 @@ export const groupIntoRuns = (
     return [];
   }
 
-  // Collect all pids and their parent relationships.
+  // Collect all pids, their parent relationships, and the run each continuation belongs to.
   const pidToParent = new Map<string, string>();
+  const pidToRun = new Map<string, string>();
   for (const msg of relevant) {
     if (msg.meta.pid) {
       if (msg.meta.parentPid) {
         pidToParent.set(msg.meta.pid, msg.meta.parentPid);
+      }
+      if (msg.meta.runId) {
+        pidToRun.set(msg.meta.pid, msg.meta.runId);
       }
     }
   }
@@ -83,22 +89,29 @@ export const groupIntoRuns = (
     return current;
   };
 
-  // Group messages by root pid.
+  // Group messages by run: the root pid, or the run a continuation's root carries.
   const byRoot = new Map<string, Trace.Message[]>();
   for (const msg of relevant) {
     if (!msg.meta.pid) {
       continue;
     }
     const rootPid = getRootPid(msg.meta.pid);
-    const group = byRoot.get(rootPid) ?? [];
+    const runId = pidToRun.get(rootPid) ?? rootPid;
+    const group = byRoot.get(runId) ?? [];
     group.push(msg);
-    byRoot.set(rootPid, group);
+    byRoot.set(runId, group);
   }
 
   const runs: RoutineRun[] = [];
   for (const [pid, msgs] of byRoot) {
     const allEvents = msgs.flatMap((msg) => msg.events.map((evt) => ({ ...evt, meta: msg.meta })));
     allEvents.sort((left, right) => left.timestamp - right.timestamp);
+
+    // The invocation that started last. A run-again ending from any earlier one only handed the run
+    // to the next invocation, so it says nothing about where the run stands now.
+    const latestInvocation = allEvents.findLast(
+      (evt) => Trace.isOfType(Trace.OperationStart, evt) && evt.meta.pid && !pidToParent.has(evt.meta.pid),
+    )?.meta.pid;
 
     const startedAt = allEvents[0]?.timestamp ?? 0;
     const lastTimestamp = allEvents.at(-1)?.timestamp ?? startedAt;
@@ -109,13 +122,16 @@ export const groupIntoRuns = (
     // code, but the run will be re-invoked — surface it as `incomplete`, neither success nor hard failure.
     // Fall back to the legacy message for events persisted before `errorCode` existed.
     const isRunAgain = (data: { errorCode?: string; error?: string }): boolean =>
-      data.errorCode === RUN_AGAIN_ERROR_CODE || (data.errorCode === undefined && data.error === RUN_AGAIN_MESSAGE);
+      data.errorCode === Process.RUN_AGAIN_ERROR_CODE ||
+      (data.errorCode === undefined && data.error === Process.RUN_AGAIN_MESSAGE);
     let status: RunStatus = 'pending';
     for (const evt of allEvents) {
       if (Trace.isOfType(Trace.OperationEnd, evt)) {
         if (evt.data.outcome === 'failure') {
           if (isRunAgain(evt.data)) {
-            status = 'incomplete';
+            if (evt.meta.pid === latestInvocation || latestInvocation === undefined) {
+              status = 'incomplete';
+            }
             continue;
           }
           status = 'failure';

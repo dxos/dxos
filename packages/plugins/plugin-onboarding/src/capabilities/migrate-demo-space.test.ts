@@ -5,21 +5,23 @@
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { OnboardingPlugin } from '#plugin';
 
 import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), OnboardingPlugin({ generateDemoSpace: false })] });
+
 const LEGACY_TAG = 'org.dxos.space.exemplar';
 
 describe('demo space migration', () => {
   test('stamps a space that is still opening when the event fires', { timeout: 60_000 }, async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), OnboardingPlugin({ generateDemoSpace: false })],
     });
     const client = harness.get(ClientCapabilities.Client);

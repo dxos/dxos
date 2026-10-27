@@ -4,10 +4,15 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
-import { AlertDialog, Banner, Button, Field, Input, Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '#types';
@@ -46,7 +51,7 @@ export const RegistrySettings = ({
   onPluginScopeLocalChange,
   scope,
 }: RegistrySettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
@@ -104,7 +109,7 @@ export const RegistrySettings = ({
             <Form.FieldSet label={t('plugin-registry.label')} actions={scope}>
               <Form.Field label={t('plugin-scope.label')} description={t('plugin-scope.description')}>
                 <Field.Root>
-                  <Switch
+                  <Input.Switch
                     data-testid='registrySettings.pluginScope'
                     // The scope is still worth showing without a handler; flipping it is not.
                     disabled={!onPluginScopeLocalChange}
@@ -123,7 +128,7 @@ export const RegistrySettings = ({
               <Banner.Body>{t('dev-plugin.description')}</Banner.Body>
             </Banner.Root>
             <Form.Field label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
-              <Input
+              <Input.Root
                 data-testid='registrySettings.devPluginUrl'
                 disabled={!onSettingsChange || enabled || busy}
                 value={url}
@@ -137,14 +142,14 @@ export const RegistrySettings = ({
               label={t('dev-plugin.toggle.label')}
               description={t('dev-plugin.toggle.description')}
             >
-              <Button
+              <Button.Root
                 data-testid='registrySettings.devPluginToggle'
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
                 onClick={() => void handleToggle()}
               >
                 {buttonLabel}
-              </Button>
+              </Button.Root>
             </Form.Field>
             {enabled && !loadedDevId && !busy && (
               <Banner.Root valence='warning'>

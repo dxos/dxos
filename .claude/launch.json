@@ -9,10 +9,40 @@
     },
     {
       "name": "composer-app",
-      "runtimeExecutable": "moon",
-      "runtimeArgs": ["run", "composer-app:serve", "--", "--port", "5180", "--strictPort"],
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && moon run composer-app:serve -- --port 5180 --strictPort"
+      ],
       "port": 5180,
       "autoPort": true
+    },
+    {
+      "name": "storybook-autocue",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=../tools/autocue,plugins/plugin-navtree,ui/react-ui-editor moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "storybook-autocue-composer",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=../tools/autocue,apps/composer-app moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "composer-autocue",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_PWA=false moon run composer-app:serve -- --port 4173 --strictPort"
+      ],
+      "port": 4173
     },
     {
       "name": "composer-agent-debug",
@@ -249,6 +279,70 @@
       ],
       "port": 9010,
       "autoPort": false
+    },
+    {
+      "name": "composer-app-local-edge",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_EDGE_BASE_URL=http://localhost:8787 DX_STRICT=false moon run composer-app:serve -- --port 5282 --strictPort"
+      ],
+      "port": 5282,
+      "autoPort": true
+    },
+    {
+      "name": "composer-app-bundle-preview",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && cd packages/apps/composer-app && DX_ENVIRONMENT=dev DX_PWA=false pnpm exec vite preview --configLoader native --port 4175 --strictPort"
+      ],
+      "port": 4175
+    },
+    {
+      "name": "storybook-theme",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=ui/ui-theme,ui/react-ui-canvas,ui/react-ui moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "storybook-comments",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=stories/stories-agent,plugins/plugin-review moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "storybook-comments",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=stories/stories-agent,plugins/plugin-review,ui/react-ui-list,plugins/plugin-presenter,plugins/plugin-assistant moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "storybook-graph",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=ui/react-ui-graph,plugins/plugin-explorer moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "storybook-spaces",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=apps/composer-app,plugins/plugin-kanban,ui/react-ui-mosaic moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
     }
   ]
 }

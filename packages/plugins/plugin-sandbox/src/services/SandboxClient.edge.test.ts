@@ -7,7 +7,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as HttpClient from 'effect/http/HttpClient';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

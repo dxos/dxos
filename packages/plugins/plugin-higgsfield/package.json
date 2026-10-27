@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-higgsfield",
-  "version": "0.12.0",
+  "version": "0.16.0",
   "private": true,
   "description": "Higgsfield image/video-generation provider for Composer.",
   "homepage": "https://dxos.org",
@@ -40,6 +40,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./HiggsfieldEvents": {
+      "source": "./src/HiggsfieldEvents.ts",
+      "types": "./dist/types/src/HiggsfieldEvents.d.ts",
+      "import": "./dist/lib/ns/HiggsfieldEvents.mjs"
     },
     "./HiggsfieldPlugin": {
       "source": "./src/HiggsfieldPlugin.ts",

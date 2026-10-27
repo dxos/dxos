@@ -5,7 +5,7 @@
 import React, { type FC, useMemo } from 'react';
 
 import { type TraceEvent } from '@dxos/compute-runtime';
-import { Banner } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
 import { mx } from '@dxos/ui-theme';
 
 type ExceptionPanelProps = {
@@ -63,7 +63,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ objects }) => {
               <div className='mt-1 text-xs font-mono whitespace-pre-wrap'>{errorMessage}</div>
             </div>
 
-            {stack && <pre className='p-3 text-xs bg-neutral-50 dark:bg-neutral-900 overflow-auto'>{stack}</pre>}
+            {stack && <pre className='p-trim-md text-xs bg-neutral-50 dark:bg-neutral-900 overflow-auto'>{stack}</pre>}
           </div>
         );
       })}

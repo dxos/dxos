@@ -18,6 +18,7 @@ import {
 import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -59,6 +60,16 @@ import { InvitationTopology } from './invitation-topology.ts';
 const metrics = _trace.metrics;
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
+
+/**
+ * Host-side callbacks into the invitation flow.
+ */
+export type InvitationFlowHooks = {
+  /**
+   * Awaited after a single-use invitation admitted its guest and before SUCCESS is emitted.
+   */
+  beforeSingleUseComplete?: () => Promise<void>;
+};
 
 export type InvitationConnectionProps = {
   teleport: Partial<TeleportProps>;
@@ -115,6 +126,7 @@ export class InvitationsHandler {
     stream: PushStream<Invitation>,
     protocol: InvitationProtocol,
     invitation: Invitation,
+    hooks: InvitationFlowHooks = {},
   ): void {
     log.verbose('dxos.sdk.invitations-handler.handleInvitationFlow', {
       state: invitation.state,
@@ -142,6 +154,8 @@ export class InvitationsHandler {
         attributes: {
           'ctx.dxos.invitation.id': invitation.invitationId,
           'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
+          // Invitations are rare and counted one by one, so a 30% sample would hide most of them.
+          [SpanAttributes.SAMPLING.keep]: true,
         },
       }) ?? ctx;
     if (ctx !== invitationCtx) {
@@ -149,8 +163,10 @@ export class InvitationsHandler {
         void invitationCtx.dispose();
       });
     }
-    ctx.onDispose(() => _trace.spanEnd(hostSpanId));
     const guardedState = createGuardedInvitationState(ctx, invitation, stream);
+    ctx.onDispose(() =>
+      _trace.spanEnd(hostSpanId, { attributes: { outcome: getInvitationOutcome(guardedState.current.state) } }),
+    );
     const topology = new InvitationTopology(InvitationOptions_Role.HOST);
     // Called for every connecting peer.
     const createExtension = (remotePeerId: PublicKey): InvitationHostExtension => {
@@ -201,6 +217,11 @@ export class InvitationsHandler {
               log.verbose('connected', { ...protocol.toJSON() });
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
+              if (!invitation.multiUse && hooks.beforeSingleUseComplete) {
+                // Settle bookkeeping before SUCCESS is reported: a host that exits as soon as it sees SUCCESS
+                // (e.g. `dx space share`) would otherwise leave the redeemed invitation persisted.
+                await hooks.beforeSingleUseComplete().catch((err) => log.warn('invitation cleanup failed', { err }));
+              }
               guardedState.set(extension, Invitation_State.SUCCESS);
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
               _trace.events.emit(ClientTraceEvents.invitationAdmit, invitationEventAttributes(guardedState.current));
@@ -320,6 +341,7 @@ export class InvitationsHandler {
           'ctx.dxos.invitation.kind': Invitation_Kind[invitation.kind],
           'ctx.dxos.invitation.type': Invitation_Type[invitation.type],
           ...(invitation.spaceId ? { 'ctx.spaceId': invitation.spaceId } : {}),
+          [SpanAttributes.SAMPLING.keep]: true,
         },
       }) ?? ctx;
     if (ctx !== invitationCtx) {

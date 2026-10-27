@@ -10,8 +10,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
@@ -23,7 +23,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useClient } from '@dxos/react-client';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
@@ -144,7 +144,7 @@ const HostModule = () => {
         <dd>{SEED_SENDERS.map((sender) => sender.email).join(', ')}</dd>
       </dl>
 
-      <div className='flex flex-col gap-2 rounded border border-separator p-3'>
+      <div className='flex flex-col gap-2 rounded border border-separator p-trim-md'>
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Recovery code (CLI login)</span>
           <button
@@ -171,7 +171,7 @@ const HostModule = () => {
         )}
       </div>
 
-      <div className='flex flex-col gap-2 rounded border border-separator p-3'>
+      <div className='flex flex-col gap-2 rounded border border-separator p-trim-md'>
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Device invitation (browser / Composer only)</span>
           <button className='rounded bg-neutral-surface px-3 py-1' onClick={onShare} data-testid='share-button'>
@@ -215,7 +215,11 @@ const StoryHostPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.create({ id: 'inbox.mailboxHost', filter: Surface.makeFilter(HostRole), component: HostModule }),
+          Surface.create({
+            id: 'inbox.mailboxHost',
+            filter: Surface.makeFilter(HostRole),
+            component: HostModule,
+          }),
           ...moduleSurfaces,
         ]),
       ]),
@@ -233,7 +237,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager(() => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: HOST_STORY_TYPES,
           ...HOST_STORY_CLIENT_SERVICES,

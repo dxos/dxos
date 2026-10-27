@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { Children, type ReactNode, isValidElement } from 'react';
 
 type RootProps<T> = {
@@ -54,10 +56,6 @@ const MatchRoot = <T,>({ on, fallback = null, children }: RootProps<T>): ReactNo
 };
 
 MatchRoot.displayName = 'Match.Root';
+export type { CaseProps as CaseProps, RootProps as RootProps };
 
-export const Match = {
-  Root: MatchRoot,
-  Case: MatchCase,
-};
-
-export type { CaseProps as MatchCaseProps, RootProps as MatchRootProps };
+export { MatchCase as Case, MatchRoot as Root };

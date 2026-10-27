@@ -21,7 +21,7 @@ import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
-import { CRM_SKILL_KEY } from '#skills';
+import { CrmSkill } from '#skills';
 import { CrmOperation } from '#types';
 
 /** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
@@ -124,7 +124,7 @@ export default Capability.makeModule(
                   yield* Operation.invoke(RoutineOperation.RunPromptInNewChat, {
                     db,
                     objects: [matched.subject],
-                    skills: [CRM_SKILL_KEY],
+                    skills: [CrmSkill.key],
                     background: true,
                     instructions: trim`
                       Research this ${matched.kind} and fill in its Profile document, which has just

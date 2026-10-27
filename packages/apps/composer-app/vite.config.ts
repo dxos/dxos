@@ -33,10 +33,12 @@ import { DxosLogPlugin } from '@dxos/vite-plugin-log';
 import { ModuleUrlPlugin, type ModuleUrlPluginOptions } from '@dxos/vite-plugin-module-url';
 import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { createConfig as createTestConfig } from '../../../vitest.base.config.ts';
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
+import { fileSystemPlugin } from './src/vite/file-system.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
@@ -52,7 +54,7 @@ const PLUGIN_SETS: Record<string, string> = {
   mobile: 'src/plugin-defs.mobile.tsx',
 };
 const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugin-defs.tsx';
-// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+// Non-empty unless `DX_DEBUG_PORT=false`; only `serve` uses it. See `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 // The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
@@ -74,13 +76,48 @@ const isBundledDev =
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+
+/**
+ * Slide theme fonts that plugin-presenter imports only when a deck picks one (`FONTS`/`MONO_FONTS` in its
+ * `SlideTheme.tsx`; keep the two in step). Precaching them would download every one at install, so the service
+ * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-…` file names, so a family
+ * that only shares a prefix (`nunito-sans`) is not caught.
+ */
+const ON_DEMAND_FONTS = [
+  'inter',
+  'nunito',
+  'source-serif-4',
+  'fira-code',
+  'ibm-plex-mono',
+  'space-grotesk',
+  'mali',
+  'geist',
+  'orbitron',
+  'unbounded',
+  'opendyslexic',
+  'lxgw-wenkai',
+];
+
+const FONT_SUBSETS = '@(latin|latin-ext|cyrillic|cyrillic-ext|greek|greek-ext|vietnamese|thai|math|symbols|symbols2)';
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 
 const dirname = import.meta.dirname;
 
 // Boot-path chunk grouping; `entry` is the page whose static closure defines the boot set.
-const boot = bootChunking({ entry: path.resolve(dirname, 'src/main.tsx') });
+const boot = bootChunking({
+  entry: path.resolve(dirname, 'src/main.tsx'),
+  exclude: new RegExp(
+    [
+      /@zag-js\/(accordion|carousel|floating-panel|hover-card|qr-code|scroll-snap|slider|toc)\//,
+      /@ark-ui\/react\/dist\/components\/(accordion|carousel|floating-panel|hover-card|qr-code|slider|toc)\//,
+      /react-ui\/src\/next\/components\/(Accordion|Carousel|FloatingPanel|HoverCard|QrCode|Slider)\//,
+      /node_modules\/(\.pnpm\/)?uqr[@/]/,
+    ]
+      .map((pattern) => pattern.source)
+      .join('|'),
+  ),
+});
 
 // These packages' `browser`-conditioned entrypoints initialize their wasm with top-level await.
 // Besides its bundle cost, top-level await is what trips WebKit's out-of-order evaluation under
@@ -135,6 +172,29 @@ const slimWasm = (): PluginOption => {
     },
   };
 };
+
+/**
+ * Sources compiled by the Solid JSX transform instead of React's.
+ */
+const SOLID_SOURCES = [
+  '**/solid-ui-geo/**',
+  '**/plugin-map-solid/**',
+  '**/effect-atom-solid/**',
+  '**/web-context-solid/**',
+  '**/echo-solid/**',
+  '**/node_modules/solid-js/**',
+  '**/node_modules/solid-element/**',
+  '**/node_modules/@solid-primitives/**',
+];
+
+/**
+ * Sources plugin-react leaves untouched; regexes, because Rolldown hook filters match string globs
+ * against a cwd-relative id that `**` cannot climb out of.
+ */
+const REACT_EXCLUDE = [
+  /\/node_modules\//,
+  /\/(?:solid-ui-geo|plugin-map-solid|effect-atom-solid|web-context-solid|echo-solid)\//,
+];
 
 /**
  * Transpile targets for oxc (dev) and Rolldown (build).
@@ -224,8 +284,8 @@ const PLUGIN_SHARED_PACKAGES = [
 ];
 
 /**
- * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (every push to `main` publishes
- * one) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
+ * The commit this bundle's `@dxos/*` packages are published at on pkg.pr.new (`main` publishes daily, and every
+ * deploy publishes the commit it builds) and the versions of the libraries it shares with a plugin. `DX_PLUGIN_TOOLCHAIN_COMMIT` overrides the
  * commit, for a build of a branch whose own commit was never published, and `DX_PLUGIN_TOOLCHAIN_CLI` the `dx` a
  * sandbox publishes with, for a CLI change no pkg.pr.new build carries yet. Empty when neither is available.
  */
@@ -252,6 +312,26 @@ const pluginToolchain = (): string => {
   const cli = process.env.DX_PLUGIN_TOOLCHAIN_CLI;
   return JSON.stringify({ commit, versions, ...(cli && { cli }) });
 };
+
+/**
+ * Re-arms the watch on a file after every change it reports. Under `useFsEvents: false` each file is watched by a
+ * descriptor bound to its inode, and chokidar re-attaches after a rename-over save only on Linux, so on macOS every
+ * save after the first would be lost (same as storybook's `dxos:rearm-watch`).
+ */
+const rearmWatchPlugin = (): PluginOption => ({
+  name: 'dxos:rearm-watch',
+  apply: 'serve',
+  configureServer: (server) => {
+    server.watcher.on('change', (file) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (file.includes('\0') || !file.startsWith('/')) {
+        return;
+      }
+      server.watcher.unwatch(file);
+      server.watcher.add(file);
+    });
+  },
+});
 
 /**
  * https://vitejs.dev/config
@@ -288,6 +368,9 @@ export default defineConfig((env) => ({
       // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
       // this routing, so the scan happens regardless.
       useFsEvents: false,
+      // Explicit: chokidar turns polling ON for macOS whenever fsevents is off and `usePolling` is unset, which
+      // `fs.watchFile`-stats every watched module and starves the libuv pool that serves transforms on reload.
+      usePolling: false,
       // Build output is not source, and the watch root spans the monorepo, so a single
       // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
       // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
@@ -387,7 +470,14 @@ export default defineConfig((env) => ({
           ? undefined
           : {
               groups: [
-                { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+                // Only what the page renders with: react-dom's other subpaths (server, static,
+                // profiling, test-utils) reach the graph through the import map's wrappers, and
+                // matching them here pinned ~580 KB that never runs into the eager chunk.
+                {
+                  name: 'react',
+                  test: /node_modules[\\/](?:react[\\/]|react-dom[\\/](?!(?:cjs[\\/]react-dom-)?(?:server|static|profiling|test-utils)))/,
+                  priority: 10,
+                },
                 // Naive maxSize splitting cuts through module cycles and breaks evaluation
                 // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
                 // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
@@ -502,6 +592,9 @@ export default defineConfig((env) => ({
 
     plugins: () => [...sharedPlugins(env)],
     rolldownOptions: {
+      // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+      // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+      experimental: { chunkOptimization: false },
       output: {
         // The client plugin the worker hosts reaches `HubHttpClient` only through a lazy module, so default
         // splitting gives it a chunk of its own, which edge-client's barrel chunk re-exports while it imports
@@ -513,6 +606,7 @@ export default defineConfig((env) => ({
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
+    rearmWatchPlugin(),
     ...sharedPlugins(env),
 
     // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
@@ -530,9 +624,18 @@ export default defineConfig((env) => ({
       },
     },
 
-    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // Hosts the dev shell's shell route against the vite process cwd. Imported dynamically
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
-    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
+    import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
+
+    // Serves code-index to plugin-code-graph by running `code-index mcp` beside the dev server. Imported dynamically
+    // for the same reason as the dev shell: the package is ESM-only and this config's static imports are bundled as CJS.
+    import('@dxos/plugin-code-graph/vite-plugin').then(({ CodeIndexVitePlugin }) =>
+      CodeIndexVitePlugin({ root: rootDir }),
+    ),
+
+    // Dev-only: local files for plugin-file-system's FileSystem service (the desktop app uses the Tauri fs plugin instead).
+    fileSystemPlugin(rootDir),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {
@@ -609,20 +712,11 @@ export default defineConfig((env) => ({
 
     // Solid JSX transform for Solid packages.
     // Must be placed before React plugin to process Solid files first.
-    solid({
-      include: [
-        '**/solid-ui-geo/**',
-        '**/plugin-map-solid/**',
-        '**/effect-atom-solid/**',
-        '**/web-context-solid/**',
-        '**/echo-solid/**',
-        '**/node_modules/solid-js/**',
-        '**/node_modules/solid-element/**',
-        '**/node_modules/@solid-primitives/**',
-      ],
-    }),
+    solid({ include: SOLID_SOURCES }),
 
-    react(),
+    // React Compiler via oxc (`oxc-transform-react`) rather than Babel, on `.jsx`/`.tsx` only because
+    // over plain script modules it emits Fast Refresh registrations that throw in the client's workers.
+    react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
 
@@ -689,7 +783,7 @@ export default defineConfig((env) => ({
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
         // so any icon the app has rendered once stays available offline.
-        globIgnores: ['**/phosphor/**'],
+        globIgnores: ['**/phosphor/**', ...ON_DEMAND_FONTS.map((font) => `**/${font}-${FONT_SUBSETS}-*.woff2`)],
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -796,7 +890,8 @@ export default defineConfig((env) => ({
     .filter(isNonNullable)
     .flat(), // Plugins
 
-  ...createTestConfig({ dirname, node: true, storybook: true }),
+  // Space-template stories boot the deck with a dozen content plugins, which the 15s default cannot cover.
+  ...createTestConfig({ dirname, node: true, storybook: { timeout: 120_000 } }),
 }));
 
 /**

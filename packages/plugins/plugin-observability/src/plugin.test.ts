@@ -4,16 +4,18 @@
 
 import { describe, test } from 'vitest';
 
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { ObservabilityPlugin } from '#plugin';
+
+await Harness.preload({ plugins: [ObservabilityPlugin({} as any)] });
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ObservabilityPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // TODO(wittjosiah): Align browser and node variant option types.
       plugins: [ObservabilityPlugin({} as any)],
     });

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { Annotation, DXN, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, DXN, Filter, Obj, Query, Tag, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import { FAVORITE_TAG, findFavoriteTag, toShortcuts } from './shortcuts.ts';
@@ -32,10 +32,9 @@ describe('favorites', () => {
   test('queries the favorite tag and projects the objects onto slots', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [TestItem, Tag.Tag] });
     const tag = await Tag.findOrCreate(db, { label: FAVORITE_TAG });
-    const tagRef = Ref.make(tag);
 
-    db.add(Obj.make(TestItem, { name: 'Zebra', [Obj.Meta]: { tags: [tagRef] } }));
-    db.add(Obj.make(TestItem, { name: 'Apple', [Obj.Meta]: { tags: [tagRef] } }));
+    db.add(Obj.make(TestItem, { name: 'Zebra', [Obj.Meta]: { tags: [tag] } }));
+    db.add(Obj.make(TestItem, { name: 'Apple', [Obj.Meta]: { tags: [tag] } }));
     db.add(Obj.make(TestItem, { name: 'Not a favorite' }));
     await db.flush({ indexes: true });
 

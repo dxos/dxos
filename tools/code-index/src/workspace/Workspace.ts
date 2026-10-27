@@ -13,7 +13,9 @@ import * as Store from '../Store.ts';
 import * as Agent from './Agent.ts';
 import * as Log from './Log.ts';
 import * as Models from './Models.ts';
+import * as Review from './Review.ts';
 import * as Sandbox from './Sandbox.ts';
+import * as Telemetry from './Telemetry.ts';
 import * as Titles from './Titles.ts';
 
 /**
@@ -45,11 +47,18 @@ export const layer = (options: {
   const sandbox = Sandbox.layer.pipe(
     Layer.provide(Layer.mergeAll(stores, SystemOne.available() ? SystemOne.layer : SystemOne.refusing, explorer)),
   );
+  // Turns are reviewed only when the result can be reported; the small model judges them.
+  const reporting = Telemetry.config();
+  const reviewer = reporting
+    ? Review.layer({ selection: options.model }).pipe(
+        Layer.provide(Layer.mergeAll(stores, explorer, Telemetry.layer(reporting))),
+      )
+    : Layer.empty;
   return Layer.mergeAll(
     stores,
     models,
     sandbox,
-    Agent.layer.pipe(Layer.provide(Layer.mergeAll(stores, sandbox, models))),
+    Agent.layer.pipe(Layer.provide(Layer.mergeAll(stores, sandbox, models, reviewer))),
     Titles.layer.pipe(Layer.provide(explorer)),
   );
 };

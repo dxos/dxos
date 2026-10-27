@@ -11,7 +11,7 @@ import { promisify } from 'node:util';
 import { parseSync } from 'oxc-parser';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Crawler from './Crawler.ts';
 import * as Indexer from './Indexer.ts';

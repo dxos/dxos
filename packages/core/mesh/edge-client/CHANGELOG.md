@@ -1,5 +1,130 @@
 # @dxos/edge-client
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/crypto@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/credentials@0.16.0
+  - @dxos/keyring@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 0420f87: The EDGE websocket supports credit-based flow control, negotiated as the `edge-ws-v2` subprotocol.
+  A client no longer runs arbitrarily far ahead of a router that cannot keep up, which previously
+  drove the router into resets that silently dropped in-flight messages while the socket stayed open.
+  Credit is per service channel, so a stalled replication sync no longer blocks presence or
+  invitations on the same connection.
+
+  `EdgeClient.createStream({ serviceId })` returns a `WritableStream<Message>` whose writes resolve
+  only once their bytes reach the socket, so `writer.ready` reports whether EDGE is keeping up and
+  `pipeTo` slows its source instead of buffering without bound. `EdgeClient.send` is unchanged and
+  still returns without waiting.
+
+  Credit is counted in bytes and in messages. `EDGE_FLOW_CONTROL_MAX_MESSAGES` bounds the messages one
+  channel may have unacknowledged, since a byte window alone admits thousands of small replication
+  frames and each is its own request downstream. `EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES` bounds the
+  whole connection, since a channel is one space and a reconnect's feed burst across many spaces would
+  otherwise put thousands of messages in flight to one router. A receiver rebuilt mid-connection asks
+  for the sender's totals and rebases onto them, so a channel never stalls on grants counted from zero.
+
+  EDGE can pause one channel whose replicator is overloaded: the client starts no new message on it
+  until the pause ends, while its other channels keep flowing and the connection stays up.
+  `EdgeClient.pausedUntil(serviceId)` reports a pause in effect.
+
+  `WebSocketMuxer.receiveFrame` and `consumed` expose the credit loop to a muxer's owner, and `pause`
+  lets it pause a peer's channel; `receiveData` keeps its signature for callers without flow control.
+
+### Patch Changes
+
+- d84f9b8: EDGE HTTP calls read each response body once instead of through a clone. WebKit never frees a cloned response whose other branch goes unread, so in Safari and the desktop app every EDGE response stayed in memory for the life of the page.
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/credentials@0.15.0
+  - @dxos/keyring@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1819960]
+  - @dxos/effect@0.14.0
+  - @dxos/keyring@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/credentials@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/crypto@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Minor Changes
+
+- fe08304: The EDGE WebSocket now advertises the client's SDK version, sent as a `dxos-version.<semver>` entry in `Sec-WebSocket-Protocol` (prefix `EDGE_CLIENT_VERSION_PROTOCOL_PREFIX` from `@dxos/protocols`), so EDGE can tell which builds are connecting.
+- 246ee3c: Add `@dxos/plugin-agent`, an agent that talks to people through any channel, remembers them as ECHO objects, reads every conversation turn into facts, relays messages, and keeps one-time and ongoing ("keep me posted") watches whose updates it writes from the conversation's context. Every subpath of the package is a namespace: `AgentState` and `AgentKnowledge` (each with a `Root` container), one per skill (`ConversationSkill`, `GoalsSkill`, `InterviewSkill`, `ModesSkill`, `NoteTakerSkill`, `RelaySkill`), and one per type and operation set.
+
+  `@dxos/plugin-thread` channel backends can now open direct conversations (`openDirect`), post into threads (`threads.send`), run a connection (`connection.start`/`stop`/`status`), and return a send receipt. New operations `sendToChannel`, `openDirect`, `connectChannel`, `disconnectChannel` and `getChannelStatus` dispatch to them, and the handlers are published as the `ThreadOperationHandlerSet` subpath. The Discord and Slack plugins implement these backends.
+
+  An agent prompt can name its sender: `AgentProcess` accepts `{ prompt, sender?, properties? }` as well as a bare prompt (`AgentInput`, `makeInputMessage`), `AgentService.Session.submitPrompt` and the assistant's request and session take a `sender`, and the model sees a named sender as `[From: <name>]`. `useChatProcessor` and `AiChatProcessor` take a `sender`, and `ChatThread` takes a `userHue`.
+
+  `Agent.loadChat` no longer picks a chat bridged from an external conversation as the agent's primary chat, and finds chats with a child-of filter so it also works on EDGE. `Agent.makeInitialized` accepts a skill ref, and `Skill.makeRef` binds a database skill as-is and any other by registry URI.
+
+  The `ProfileOf` relation moves from `@dxos/plugin-crm` to `@dxos/types` with its typename unchanged, so existing profiles still resolve. `EdgeHttpClient.request` makes an authenticated call to any EDGE route. `pipeline-rdf` exports `DEFAULT_MODEL`. `FormInlineAnnotation` now survives the JSON-schema round trip. A plugin that declares two modules with the same id now fails when it is constructed instead of silently dropping one.
+
+### Patch Changes
+
+- Updated dependencies [cb1e218]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/tracing@0.13.0
+  - @dxos/credentials@0.13.0
+  - @dxos/keyring@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/crypto@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

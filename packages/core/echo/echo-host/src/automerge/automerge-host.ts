@@ -10,6 +10,7 @@ import {
   equals as headsEquals,
   isAutomerge,
   save,
+  stats,
 } from '@automerge/automerge';
 import {
   type AnyDocumentId,
@@ -27,7 +28,14 @@ import {
   initSubduction,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
+import {
+  type CommitId,
+  type MemorySigner,
+  type SedimentreeId,
+  SignedFragment,
+  SignedLooseCommit,
+  type Subduction,
+} from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
@@ -36,7 +44,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 import { DeferredTask, Event, asyncTimeout, scheduleTask } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -44,8 +52,10 @@ import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, countWork, defaultMap } from '@dxos/util';
 
+import { SLOW_WORK_MS } from '../util.ts';
 import {
   type CollectionState,
+  type CollectionStateDiff,
   CollectionSynchronizer,
   diffCollectionStateForPeer,
   subsetRemoteToLocal,
@@ -54,10 +64,23 @@ import { type DocumentLease, DocumentLeaseRegistry } from './document-lease.ts';
 import { type EchoDataMonitor } from './echo-data-monitor.ts';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter.ts';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator.ts';
+import { DocumentQuarantinedError } from './errors.ts';
 import { type HandleQueryState, getHandleState, isDocumentLoaded, isLoaded } from './handle-state.ts';
+import {
+  type DocumentSize,
+  OVERSIZED_DOCUMENT_CHANGES,
+  OVERSIZED_DOCUMENT_OPS,
+  QUARANTINE_MIN_OPS,
+  type QuarantineReason,
+  type QuarantineRecord,
+  countStoredOps,
+  isOutOfMemoryError,
+  oversizeLevel,
+} from './quarantine.ts';
 import { tryGetSpaceIdFromCollectionId } from './space-collection.ts';
 import { SqliteHeadsStore } from './sqlite-heads-store.ts';
 import { SqliteStorageAdapter, SUBDUCTION_KEY_FAMILIES, SUBDUCTION_PREFIX } from './sqlite-storage-adapter.ts';
+import { repairSelfCheckpointedFragments } from './subduction-migrations/0002_self_checkpointed_fragments.ts';
 import { runMigrations } from './subduction-migrations/index.ts';
 
 export type PeerIdProvider = () => string | undefined;
@@ -96,6 +119,8 @@ export type AutomergeHostProps = {
     evictionDelay?: number;
     /** How many released documents stay resident regardless of age. */
     minResidentDocuments?: number;
+    /** How many released documents may wait out the delay before the oldest are evicted at once. */
+    maxIdleDocuments?: number;
   };
 };
 
@@ -213,6 +238,8 @@ const REINDEX_LOAD_TIMEOUT = 10_000;
  */
 const EVICT_IDLE_DELAY = 30_000;
 
+const MAX_IDLE_DOCUMENTS = 50;
+
 /**
  * Abstracts over the AutomergeRepo.
  *
@@ -238,6 +265,21 @@ export class AutomergeHost extends Resource {
 
   private _storage!: SqliteStorageAdapter;
   private readonly _headsStore: SqliteHeadsStore;
+
+  /**
+   * Documents this host never loads, replicates or serves; see {@link quarantineDocument}. Held in memory only: the
+   * space directories' `retired` maps are the durable record, and re-quarantine their documents on every open.
+   */
+  readonly #quarantined = new Map<DocumentId, QuarantineRecord>();
+
+  /** Fired when a document is quarantined, so waits on it end and the space that links it can retire it. */
+  public readonly documentQuarantined = new Event<QuarantineRecord>();
+
+  /** The oversize level last reported per document, so a growing document warns once per doubling. */
+  readonly #oversizeReported = new Map<DocumentId, number>();
+
+  /** Fired for every document loaded from disk, with its size, so the space can retire one whose history bloated. */
+  public readonly documentLoaded = new Event<{ documentId: DocumentId } & DocumentSize>();
 
   private _syncTask: DeferredTask | undefined = undefined;
   /**
@@ -356,6 +398,7 @@ export class AutomergeHost extends Resource {
       evict: (documentId, isCancelled) => this._evictDocument(documentId, isCancelled),
       evictionDelay: residency?.evictionDelay ?? EVICT_IDLE_DELAY,
       minResidentDocuments: residency?.minResidentDocuments,
+      maxIdleDocuments: residency?.maxIdleDocuments ?? MAX_IDLE_DOCUMENTS,
     });
     this._runtime = runtime;
     this._useSubduction = useSubduction;
@@ -401,6 +444,10 @@ export class AutomergeHost extends Resource {
     // Tables must exist before the Repo constructor calls loadRange() on the storage adapter.
     await RuntimeProvider.runPromise(this._runtime)(this.migrate);
 
+    // Storage and Subduction each inflate a document independently, so the second must see the quarantine the
+    // first one's failure raised rather than spend another minute failing the same way.
+    const isLoadBlocked = (documentId: DocumentId) => this.#quarantined.has(documentId);
+
     // `Repo` unconditionally constructs a Subduction `SubductionSource` (with a fresh
     // `MemorySigner` when none is injected) regardless of whether we register any
     // `subductionAdapters`. That source's signer needs the Subduction WASM module
@@ -417,6 +464,7 @@ export class AutomergeHost extends Resource {
         shareConfig: this._shareConfig,
         subductionPolicy: this._subductionPolicy,
         storage: this._storage,
+        isLoadBlocked,
         network: [],
         signer: this._signer,
         subductionAdapters: [
@@ -477,7 +525,45 @@ export class AutomergeHost extends Resource {
         peerId: this._peerId as PeerId,
         shareConfig: this._shareConfig,
         storage: this._storage,
+        isLoadBlocked,
         network: [this._echoNetworkAdapter],
+      });
+    }
+
+    // A source that cannot apply a document only marks itself unavailable, so a load waiting on the document would
+    // wait forever while every retry fails the same way; out of memory is the failure that always repeats.
+    Event.wrap<{ documentId: DocumentId; error: unknown; source: string }>(this._repo, 'document-load-failed').on(
+      this._ctx,
+      ({ documentId, error, source }) => {
+        if (!isOutOfMemoryError(error)) {
+          log.warn('document load failed', { documentId, source, error });
+          return;
+        }
+        if (this.#quarantined.has(documentId)) {
+          return;
+        }
+        // Once the heap is full every load fails, so only a document big enough to be the cause is quarantined.
+        this.#countStoredOps(documentId)
+          .then((ops) => {
+            if (ops < QUARANTINE_MIN_OPS) {
+              log.warn('document ran out of memory but holds too few ops to be the cause', { documentId, ops, error });
+              return;
+            }
+            log.warn('quarantining a document that ran out of memory', { documentId, source, ops, error });
+            return this.quarantineDocument(documentId, { reason: 'load-failed', error });
+          })
+          .catch((err) => log.error('failed to quarantine document', { documentId, err }));
+      },
+    );
+
+    // Every load from disk, whoever asked for it (the indexer leases documents rather than calling `loadDoc`).
+    if (this._repo.storageSubsystem) {
+      Event.wrap<{ documentId: DocumentId; numOps: number; numChanges: number }>(
+        this._repo.storageSubsystem,
+        'document-loaded',
+      ).on(this._ctx, ({ documentId, numOps, numChanges }) => {
+        this.#reportOversizedDocument(documentId, { changes: numChanges, ops: numOps });
+        this.documentLoaded.emit({ documentId, changes: numChanges, ops: numOps });
       });
     }
 
@@ -617,15 +703,25 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records.
-   * Contained: a failed migration is logged and the host opens on the records as stored, since
-   * every migration is a repair of data the host can already read. Only stored records are
-   * migrated: a peer on `@automerge/automerge` 3.5 re-signs a fragment in the valid shape when it
-   * pushes it, so nothing arriving from an upgraded peer needs a rewrite.
+   * Runs the data migrations in `./subduction-migrations` over the stored Subduction records, then
+   * repairs the self-checkpointed fragments stored since the last open. Contained: a failed
+   * migration is logged and the host opens on the records as stored, since every migration is a
+   * repair of data the host can already read.
+   *
+   * The repair runs on every open, not once: a peer forwards a fragment with the signature it
+   * received it with and clients on `@automerge/automerge` < 3.5 still write the shape, so one
+   * kept as received would be uploaded to the next empty EDGE store and hide the document's head.
    */
   private async _runSubductionMigrations(): Promise<void> {
     try {
-      await runMigrations({ storage: this._storage, subduction: await this._repo.subduction });
+      const subduction = await this._repo.subduction;
+      await runMigrations({ storage: this._storage, subduction });
+      // TODO(mykola): Delete this every-open repair in the next release, once EDGE refuses the SDKs that write the old
+      //   fragment shape (`MIN_CLIENT_SDK_VERSION`) and repairs any that still reach it.
+      const repaired = await repairSelfCheckpointedFragments(subduction, this._storage);
+      if (repaired.rewritten + repaired.skipped + repaired.failed > 0) {
+        log.info('repaired self-checkpointed fragments stored since the last open', repaired);
+      }
     } catch (err) {
       log.error('subduction migrations failed; continuing on the stored records', { err });
     }
@@ -722,10 +818,14 @@ export class AutomergeHost extends Resource {
    * Leases a document, waiting until it is loaded. The lease is the only route to a `DocHandle`;
    * dispose it (`using`, or in the holder's teardown) so the document can be evicted.
    *
-   * Returns null when `fetchFromNetwork: false` and the document is not on disk.
+   * Returns null when `fetchFromNetwork: false` and the document is not on disk, and when the document is
+   * quarantined — including one quarantined while this call waits on it.
    */
   async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocumentLease<T> | null> {
     invariant(this.isOpen, 'AutomergeHost is not open');
+    if (this.isQuarantined(documentId)) {
+      return null;
+    }
     // Leased before the wait, so the document cannot be evicted between becoming ready and the
     // caller receiving it.
     const lease = this.acquireDoc<T>(documentId);
@@ -734,6 +834,11 @@ export class AutomergeHost extends Resource {
       const result = await this._loadLeasedDoc(ctx, lease, opts);
       settled = result !== null;
       return result;
+    } catch (err) {
+      if (err instanceof DocumentQuarantinedError) {
+        return null;
+      }
+      throw err;
     } finally {
       if (!settled) {
         lease[Symbol.dispose]();
@@ -754,7 +859,81 @@ export class AutomergeHost extends Resource {
       typeof documentId !== 'string' || !(documentId.includes('#') || documentId.includes('/')),
       'A lease cannot be taken on a heads-pinned or path-scoped URL.',
     );
-    return this._leases.acquire<T>(interpretAsDocumentId(documentId));
+    const id = interpretAsDocumentId(documentId);
+    // Leasing faults the document in, which is the load the quarantine exists to prevent.
+    if (this.#quarantined.has(id)) {
+      throw new DocumentQuarantinedError({ context: { documentId: id } });
+    }
+    return this._leases.acquire<T>(id);
+  }
+
+  /** Whether the host refuses to load the document; see {@link quarantineDocument}. */
+  isQuarantined(documentId: AnyDocumentId): boolean {
+    return this.#quarantined.has(interpretAsDocumentId(documentId));
+  }
+
+  /** Documents the host refuses to load, with why. */
+  get quarantinedDocuments(): ReadonlyMap<DocumentId, QuarantineRecord> {
+    return this.#quarantined;
+  }
+
+  /** A lower bound on a document's ops, read from its stored bytes since loading it is what ran out of memory. */
+  async #countStoredOps(documentId: DocumentId): Promise<number> {
+    // Settled apart so one failed read does not hide the ops in the others.
+    const recordsUnder = async (...prefixes: string[][]): Promise<Uint8Array[]> =>
+      (await Promise.allSettled(prefixes.map((prefix) => this._storage.loadRange(prefix))))
+        .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+        .flatMap(({ data }) => (data ? [data] : []));
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    // Either store may hold the whole document, so each is counted on its own rather than summed.
+    return Math.max(
+      await countStoredOps(await recordsUnder([documentId])),
+      await countStoredOps(
+        await recordsUnder(
+          [SUBDUCTION_PREFIX, 'blobs', sedimentreeId],
+          [SUBDUCTION_PREFIX, 'fragment-blobs', sedimentreeId],
+        ),
+      ),
+    );
+  }
+
+  /**
+   * Stops loading, replicating and serving a document for the life of this host: one that cannot be loaded would
+   * otherwise stall the start that reaches it. Waits on it resolve as unavailable. Its bytes stay on disk until
+   * {@link removeDocument}.
+   */
+  async quarantineDocument(
+    documentId: DocumentId,
+    { reason, error }: { reason: QuarantineReason; error?: unknown },
+  ): Promise<void> {
+    const existing = this.#quarantined.get(documentId);
+    if (existing) {
+      // Retirement is terminal, so it supersedes the load failure that led to it.
+      if (reason === 'retired') {
+        this.#quarantined.set(documentId, { ...existing, reason });
+      }
+      return;
+    }
+    const record: QuarantineRecord = {
+      documentId,
+      reason,
+      error: error === undefined ? undefined : String(error),
+      quarantinedAt: Date.now(),
+    };
+    this.#quarantined.set(documentId, record);
+
+    this._replicationLeases.get(documentId)?.[Symbol.dispose]();
+    this._replicationLeases.delete(documentId);
+    this._leases.forget(documentId);
+    this._documentsToSync.delete(documentId);
+    this._documentsToRequest.delete(documentId);
+    this._headsUpdates.delete(documentId);
+    // Detaches every source, so none retries the load.
+    await this._repo.removeFromCache(documentId);
+
+    // Debug level: every open re-applies the `retired` entries, and a load failure already warned where it was caught.
+    log('quarantined document', { documentId, reason });
+    this.documentQuarantined.emit(record);
   }
 
   /** Documents currently leased — what the host holds because something is using it. */
@@ -819,6 +998,7 @@ export class AutomergeHost extends Resource {
     if (lease.loaded) {
       return lease;
     }
+    const startedAt = performance.now();
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see {@link getHandleState}. The
     // query is read from the repo rather than through the lease, which does not hand it out.
     const progress = this._repo.findWithProgress<T>(lease.documentId);
@@ -875,6 +1055,11 @@ export class AutomergeHost extends Resource {
     if (getHandleState(this._repo, lease.documentId) !== 'ready' && !opts?.retried) {
       return await this._loadLeasedDoc(ctx, lease, { ...opts, retried: true });
     }
+    // A network load may legitimately wait on replication; a storage-only one should not.
+    const durationMs = performance.now() - startedAt;
+    if (opts?.fetchFromNetwork === false && durationMs >= SLOW_WORK_MS) {
+      log.warn('slow document load from storage', { documentId: lease.documentId, durationMs });
+    }
     return lease;
   }
 
@@ -893,8 +1078,18 @@ export class AutomergeHost extends Resource {
     if (peeked.state === 'failed') {
       return Promise.reject(peeked.error);
     }
+    if (this.#quarantined.has(progress.documentId)) {
+      return Promise.reject(new DocumentQuarantinedError({ context: { documentId: progress.documentId } }));
+    }
     return new Promise<DocHandle<T>>((resolve, reject) => {
-      const unsubscribe = progress.subscribe((state) => {
+      const unsubscribeQuarantine = this.documentQuarantined.on(({ documentId }) => {
+        // A failed load leaves the query `'unavailable'`, which this wait would otherwise sit through forever.
+        if (documentId === progress.documentId) {
+          unsubscribe();
+          reject(new DocumentQuarantinedError({ context: { documentId } }));
+        }
+      });
+      const unsubscribeProgress = progress.subscribe((state) => {
         if (state.state === 'ready' && isLoaded(state)) {
           unsubscribe();
           resolve(state.handle);
@@ -904,6 +1099,10 @@ export class AutomergeHost extends Resource {
         }
         // `'unavailable'` and `'loading'` are non-terminal — keep waiting.
       });
+      const unsubscribe = () => {
+        unsubscribeQuarantine();
+        unsubscribeProgress();
+      };
       signal?.addEventListener('abort', () => {
         unsubscribe();
         reject(signal.reason instanceof Error ? signal.reason : new Error('Wait for document aborted.'));
@@ -917,6 +1116,24 @@ export class AutomergeHost extends Resource {
 
     const chunks = await this._storage.loadRange([documentId]);
     return bufferToArray(Buffer.concat(chunks.map((c) => c.data!)));
+  }
+
+  /**
+   * The document's saved changes as storage holds them, without loading the document: its snapshot and
+   * incremental chunks, concatenated in the form `A.loadIncremental` reads. Undefined when storage holds
+   * none, or more than `limit` bytes.
+   */
+  async readStoredChanges(id: DocumentId, { limit }: { limit?: number } = {}): Promise<Uint8Array | undefined> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const chunks = await this._storage.loadRange([id]);
+    const changes = chunks.flatMap(({ key, data }) =>
+      (key[1] === 'snapshot' || key[1] === 'incremental') && data != null && data.length > 0 ? [data] : [],
+    );
+    const size = changes.reduce((sum, data) => sum + data.length, 0);
+    if (size === 0 || (limit !== undefined && size > limit)) {
+      return undefined;
+    }
+    return bufferToArray(Buffer.concat(changes));
   }
 
   /**
@@ -950,7 +1167,10 @@ export class AutomergeHost extends Resource {
     // listener; a throttled save already scheduled still runs, and the flush is what makes it a
     // no-op, since its heads then match the last save.
     if (this._repo.handles[documentId]) {
-      await this._repo.flush([documentId]);
+      // A quarantined document's handle holds at most a partial load, which must not be saved over its bytes.
+      if (!this.#quarantined.has(documentId)) {
+        await this._repo.flush([documentId]);
+      }
       await this._repo.removeFromCache(documentId);
     }
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
@@ -1161,7 +1381,12 @@ export class AutomergeHost extends Resource {
     authorizePut: async (_requestor, _author, sedimentreeId) => {
       // Intentionally permissive — see class-level comment above. Logged because this is the
       // only signal that a peer actually delivered changes for a document.
-      log.verbose('subduction authorizePut', { documentId: sedimentreeIdToDocumentId(sedimentreeId) });
+      const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+      log.verbose('subduction authorizePut', { documentId });
+      // Sticky, which is what a quarantine wants: the pushed bytes would only be loaded again.
+      if (this.#quarantined.has(documentId)) {
+        throw new DocumentQuarantinedError({ context: { documentId } });
+      }
     },
     filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {
       const allowed: SedimentreeId[] = [];
@@ -1196,6 +1421,9 @@ export class AutomergeHost extends Resource {
     const subductionPeerIdHex = subductionPeerId.toString();
     const repoPeerId = this._subductionPeerIdHexToRepoPeerId.get(subductionPeerIdHex);
     const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+    if (this.#quarantined.has(documentId)) {
+      return false;
+    }
     if (!repoPeerId) {
       // Default-allow on the unbound-peer race; logged because it bypasses the share policy.
       log.verbose('subduction share probe: peer not bound, allowing', { documentId, subductionPeerIdHex });
@@ -1247,6 +1475,8 @@ export class AutomergeHost extends Resource {
     }
 
     const heads = getHeads(document);
+    const { numChanges, numOps } = stats(document);
+    this.#reportOversizedDocument(documentId, { changes: numChanges, ops: numOps });
 
     // Persist heads to SQLite. Non-atomic with the chunk save but recoverable:
     // heads can be reconstructed from chunks via reIndexHeads on restart.
@@ -1256,6 +1486,25 @@ export class AutomergeHost extends Resource {
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
     this._onHeadsChangedTask.schedule();
     this.documentsSaved.emit();
+  }
+
+  /**
+   * Warns when a document passes {@link OVERSIZED_DOCUMENT_CHANGES} changes or {@link OVERSIZED_DOCUMENT_OPS} ops,
+   * and again at every doubling: a document that keeps growing eventually cannot be loaded at all.
+   */
+  #reportOversizedDocument(documentId: DocumentId, { changes, ops }: DocumentSize): void {
+    const level = oversizeLevel({ changes, ops });
+    if (level <= (this.#oversizeReported.get(documentId) ?? -1)) {
+      return;
+    }
+    this.#oversizeReported.set(documentId, level);
+    log.warn('oversized automerge document', {
+      documentId,
+      changes,
+      ops,
+      changesLimit: OVERSIZED_DOCUMENT_CHANGES,
+      opsLimit: OVERSIZED_DOCUMENT_OPS,
+    });
   }
 
   private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {
@@ -1279,7 +1528,7 @@ export class AutomergeHost extends Resource {
     // Read the spaceKey iff the document is already loaded; otherwise let the share policy
     // fall through to the `_getSpaceKeyByRootDocumentId` lookup or the
     // `isDocumentInRemoteCollection` check on the caller.
-    const handle = this._repo.getHandle(documentId as any);
+    const handle = this._repo.getHandle(documentId as DocumentId);
     if (handle && getHandleState(this._repo, documentId as DocumentId) === 'ready') {
       const doc = handle.doc();
       if (doc) {
@@ -1392,6 +1641,11 @@ export class AutomergeHost extends Resource {
     return result;
   }
 
+  /** The heads each document's saved changes reach, from the heads store, whatever is loaded and unsaved. */
+  async getStoredHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
+    return this._headsStore.getHeads(documentIds);
+  }
+
   /**
    * Iterate over all document heads stored on disk.
    */
@@ -1468,7 +1722,9 @@ export class AutomergeHost extends Resource {
   /**
    * Update the local collection state based on the locally stored document heads.
    */
-  async updateLocalCollectionState(collectionId: string, documentIds: DocumentId[]): Promise<void> {
+  async updateLocalCollectionState(collectionId: string, allDocumentIds: DocumentId[]): Promise<void> {
+    // Never advertised: a peer would replicate the document to us or ask us to serve it.
+    const documentIds = allDocumentIds.filter((documentId) => !this.#quarantined.has(documentId));
     const heads = await this.getHeads(documentIds);
     const documents: Record<DocumentId, Heads> = Object.fromEntries(
       heads.map((heads, index) => [documentIds[index], heads ?? []]),
@@ -1520,6 +1776,91 @@ export class AutomergeHost extends Resource {
     if (!changeIsPresentInDoc(doc, changeHash)) {
       return false;
     }
+    this._confirmChange(documentId, changeHash);
+    return true;
+  }
+
+  private async _confirmFromStorage(
+    documentIds: DocumentId[],
+    localState: CollectionState,
+    remoteState: CollectionState,
+  ): Promise<DocumentId[]> {
+    const unconfirmed: DocumentId[] = [];
+    for (const documentId of documentIds) {
+      const local = localState.documents[documentId] ?? [];
+      const beyond = (remoteState.documents[documentId] ?? []).filter(
+        (head) => !local.includes(head) && !this._hasLocalChange(documentId, head),
+      );
+      if (beyond.length === 0) {
+        continue;
+      }
+      const isStored = await this._storedHistoryCheck(documentId, local);
+      if (beyond.every(isStored)) {
+        for (const head of beyond) {
+          this._confirmChange(documentId, head);
+        }
+      } else {
+        unconfirmed.push(documentId);
+      }
+    }
+    return unconfirmed;
+  }
+
+  private async _storedHistoryCheck(
+    documentId: DocumentId,
+    heads: readonly string[],
+  ): Promise<(hash: string) => boolean> {
+    const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
+    const families = ['commits', 'fragments'] as const;
+    const records = await Promise.all(
+      families.map((family) => this._storage.loadRange([SUBDUCTION_PREFIX, family, sedimentreeId])),
+    );
+    const beneath = new Map<string, string[]>();
+    families.forEach((family, index) => {
+      for (const { key, data } of records[index]) {
+        if (key.length === 4 && data) {
+          try {
+            beneath.set(key[3], recordDependencies(family, data));
+          } catch (err) {
+            log.warn('unreadable subduction record', { documentId, family, err });
+          }
+        }
+      }
+    });
+
+    const known = new Map<string, boolean>(heads.map((head) => [head, true]));
+    return (hash) => {
+      const stack = [hash];
+      const visiting = new Set<string>();
+      while (stack.length > 0) {
+        const current = stack[stack.length - 1];
+        if (known.has(current)) {
+          stack.pop();
+          continue;
+        }
+        const dependencies = this._hasLocalChange(documentId, current) ? [] : beneath.get(current);
+        if (dependencies === undefined) {
+          known.set(current, false);
+          stack.pop();
+          continue;
+        }
+        const pending = dependencies.filter((dependency) => !known.has(dependency));
+        if (pending.length > 0 && !visiting.has(current)) {
+          visiting.add(current);
+          stack.push(...pending);
+          continue;
+        }
+        known.set(
+          current,
+          dependencies.every((dependency) => known.get(dependency) === true),
+        );
+        stack.pop();
+      }
+      return known.get(hash) === true;
+    };
+  }
+
+  private _confirmChange(documentId: DocumentId, changeHash: string): void {
     const confirmed = this._confirmedChanges.get(documentId) ?? new Set<string>();
     if (!confirmed.has(changeHash) && confirmed.size >= MAX_CONFIRMED_PER_DOCUMENT) {
       confirmed.clear();
@@ -1532,7 +1873,6 @@ export class AutomergeHost extends Resource {
       const [leastRecent] = this._confirmedChanges.keys();
       this._confirmedChanges.delete(leastRecent);
     }
-    return true;
   }
 
   private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
@@ -1585,60 +1925,42 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different, missingOnLocal, missingOnRemote } = diffCollectionStateForPeer(localState, remoteState, {
+    const diff = diffCollectionStateForPeer(localState, remoteState, {
       isEdgePeer: isEdgePeerId(peerId),
       hasLocalChange: (documentId, changeHash) => this._hasLocalChange(documentId, changeHash),
     });
+    const { different, missingOnLocal, missingOnRemote } = diff;
+    const advertised = this._useSubduction
+      ? await this._confirmFromStorage(diff.advertised, localState, remoteState)
+      : diff.advertised;
+    if (ctx.disposed) {
+      return;
+    }
 
     const syncKey = `${collectionId}:${peerId}`;
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       this._nonConvergingSyncPasses.delete(syncKey);
+      // An advertised document keeps its entry, so the same heads kick one sync round, not one per pass.
+      const kicked = new Set<string>(advertised);
       for (const [resyncKey, entry] of this._divergedResyncHeads) {
-        if (entry.collectionId === collectionId && entry.peerId === peerId) {
+        if (entry.collectionId === collectionId && entry.peerId === peerId && !kicked.has(entry.documentId)) {
           this._divergedResyncHeads.delete(resyncKey);
         }
       }
-      return;
-    }
-
-    // Both sides' heads, so a stuck document is diagnosable from a log bundle alone.
-    const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
-    this._nonConvergingSyncPasses.set(syncKey, passes);
-    const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
-    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
-      // Reported for the undelivered documents as well as the diverged ones: a pair stuck on a
-      // permanent `missingOnRemote` otherwise logs every detail field empty, which reads as "never
-      // got a handle" when the document is resident and the remote holds a headless fragment for it.
-      const stuck = [...different, ...missingOnRemote];
-      const context = {
-        collectionId,
-        peerId,
-        passes,
+    } else {
+      this._reportNonConvergence(collectionId, peerId, localState, remoteState, {
+        different,
         missingOnLocal,
         missingOnRemote,
-        different,
-        localHeads: Object.fromEntries(stuck.map((documentId) => [documentId, localState.documents[documentId]])),
-        remoteHeads: Object.fromEntries(stuck.map((documentId) => [documentId, remoteState.documents[documentId]])),
-        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
-        // searched for the stuck document's storage or policy activity.
-        sedimentreeIds: Object.fromEntries(
-          stuck.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
-        ),
-        handleStates: Object.fromEntries(
-          stuck.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
-        ),
-      };
-      // Two call sites rather than an aliased log function: `@dxos/log` injects call metadata at
-      // the call site, so an alias loses its file and line.
-      if (passes >= NON_CONVERGENCE_ERROR_THRESHOLD) {
-        log.error('collection sync not converging', context);
-      } else {
-        log.warn('collection sync not converging', context);
-      }
+      });
     }
 
-    const toReplicate = [...different, ...missingOnRemote, ...missingOnLocal];
-    const differentSet = new Set(different);
+    // An advertised document is in sync, but a sync round costs little and delivers the change if it is new.
+    // A mesh peer's diff is symmetric, so it can still offer a document this host quarantined.
+    const toReplicate = [...different, ...advertised, ...missingOnRemote, ...missingOnLocal].filter(
+      (documentId) => !this.#quarantined.has(documentId),
+    );
+    const differentSet = new Set([...different, ...advertised]);
 
     if (toReplicate.length === 0) {
       return;
@@ -1726,6 +2048,51 @@ export class AutomergeHost extends Resource {
     }
   }
 
+  /** Counts a pass that left the pair diverged, with both sides' heads so a stuck document is diagnosable from logs. */
+  private _reportNonConvergence(
+    collectionId: string,
+    peerId: PeerId,
+    localState: CollectionState,
+    remoteState: CollectionState,
+    { different, missingOnLocal, missingOnRemote }: Omit<CollectionStateDiff, 'advertised'>,
+  ): void {
+    const syncKey = `${collectionId}:${peerId}`;
+    const passes = (this._nonConvergingSyncPasses.get(syncKey) ?? 0) + 1;
+    this._nonConvergingSyncPasses.set(syncKey, passes);
+    const overThreshold = passes - NON_CONVERGENCE_WARN_THRESHOLD;
+    if (overThreshold >= 0 && overThreshold % NON_CONVERGENCE_WARN_INTERVAL === 0) {
+      // Reported for the undelivered documents as well as the diverged ones: a pair stuck on a
+      // permanent `missingOnRemote` otherwise logs every detail field empty, which reads as "never
+      // got a handle" when the document is resident and the remote holds a headless fragment for it.
+      const stuck = [...different, ...missingOnRemote];
+      const context = {
+        collectionId,
+        peerId,
+        passes,
+        missingOnLocal,
+        missingOnRemote,
+        different,
+        localHeads: Object.fromEntries(stuck.map((documentId) => [documentId, localState.documents[documentId]])),
+        remoteHeads: Object.fromEntries(stuck.map((documentId) => [documentId, remoteState.documents[documentId]])),
+        // Subduction addresses documents by sedimentree id, so without this a log bundle cannot be
+        // searched for the stuck document's storage or policy activity.
+        sedimentreeIds: Object.fromEntries(
+          stuck.map((documentId) => [documentId, documentIdToSedimentreeIdHex(documentId)]),
+        ),
+        handleStates: Object.fromEntries(
+          stuck.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+        ),
+      };
+      // Two call sites rather than an aliased log function: `@dxos/log` injects call metadata at
+      // the call site, so an alias loses its file and line.
+      if (passes >= NON_CONVERGENCE_ERROR_THRESHOLD) {
+        log.error('collection sync not converging', context);
+      } else {
+        log.warn('collection sync not converging', context);
+      }
+    }
+  }
+
   /**
    * Leases a document until its query settles, which both triggers replication and keeps the
    * document resident while its bytes are in flight — nothing else holds it until they land.
@@ -1735,7 +2102,7 @@ export class AutomergeHost extends Resource {
    * reports it whenever no source can serve the document *yet*), so it cannot be the release signal.
    */
   private _leaseUntilSettled(documentId: DocumentId): void {
-    if (this._replicationLeases.has(documentId)) {
+    if (this._replicationLeases.has(documentId) || this.#quarantined.has(documentId)) {
       return;
     }
     const lease = this.acquireDoc(documentId);
@@ -1777,7 +2144,7 @@ export class AutomergeHost extends Resource {
       if (!state) {
         continue;
       }
-      let newState: CollectionState | undefined;
+      let documents: Record<DocumentId, Heads> | undefined;
 
       for (const [documentId, heads] of docHeads) {
         const current = state.documents[documentId];
@@ -1794,14 +2161,12 @@ export class AutomergeHost extends Resource {
         if (headsEquals(current, heads)) {
           continue;
         }
-        if (!newState) {
-          newState = structuredClone(state);
-        }
-        newState.documents[documentId] = heads;
+        documents ??= { ...state.documents };
+        documents[documentId] = heads;
       }
 
-      if (newState) {
-        this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
+      if (documents) {
+        this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
         collectionsChanged.add(collectionId as CollectionId);
       }
     }
@@ -1846,6 +2211,35 @@ const waitForHeads = async (lease: DocumentLease<DatabaseDirectory>, heads: Head
     };
     lease.on('change', onChange);
   });
+};
+
+const recordDependencies = (family: 'commits' | 'fragments', data: Uint8Array): string[] => {
+  const toHex = (ids: CommitId[]) =>
+    ids.map((id) => {
+      try {
+        return id.toHexString();
+      } finally {
+        id.free();
+      }
+    });
+  if (family === 'commits') {
+    const signed = SignedLooseCommit.tryDecode(data);
+    const commit = signed.payload;
+    try {
+      return toHex(commit.parents);
+    } finally {
+      commit.free();
+      signed.free();
+    }
+  }
+  const signed = SignedFragment.tryDecode(data);
+  const fragment = signed.payload;
+  try {
+    return toHex(fragment.boundary);
+  } finally {
+    fragment.free();
+    signed.free();
+  }
 };
 
 /** A hex-encoded change hash, the only form `getChangeByHash` accepts. */

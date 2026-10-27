@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';

@@ -22,6 +22,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
+import type * as Tracer from 'effect/Tracer';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -32,9 +33,11 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { markWork } from '@dxos/util';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
 import { ProcessManagerService } from './process-manager-service.ts';
@@ -63,8 +66,6 @@ export {
   UUIDProcessIdGenerator,
 } from './process-id.ts';
 
-export { ProcessOperationInvoker };
-
 /**
  * Builds the in-memory loopback RPC client for a process's declared control surface.
  * The control plane is untyped at runtime (`RpcGroup`/`RpcClient` carry `any`; see design spec §4.4),
@@ -88,7 +89,7 @@ const FINISHED_PROCESS_RETENTION = 200;
  */
 const EMPTY_RPC_CLIENT: RpcClient.RpcClient<any> = Effect.runSync(
   // `RpcGroup`/`RpcClient` are invariant in their group; the empty group is widened to the untyped
-  // `any` surface so the resulting client matches `Process.Handle.rpc` (see design spec §4.4).
+  // `any` surface so the resulting client matches `Process.Process.rpc` (see design spec §4.4).
   makeLoopbackRpcClient(
     RpcGroup.make() as unknown as RpcGroup.RpcGroup<any>,
     Context.empty() as Context.Context<any>,
@@ -133,32 +134,32 @@ export interface Manager {
   spawn<I, O, Rpcs extends Rpc.Any = never>(
     definition: Operation.Durable<I, O, any, Rpcs>,
     options?: Process.SpawnOptions,
-  ): Effect.Effect<Process.Handle<I, O, Rpcs>>;
+  ): Effect.Effect<Process.Process<I, O, Rpcs>>;
 
   /**
    * Attach to an existing process.
    */
-  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Handle<I, O, Rpcs>>;
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Process<I, O, Rpcs>>;
 
   /**
    * Lists live processes and, when no live match exists, non-terminal processes
-   * persisted in durable storage. Dormant entries expose {@link Process.Handle.pid} and
-   * metadata but require {@link Process.Handle.hydrate} before inputs can be submitted.
+   * persisted in durable storage. Dormant entries expose {@link Process.Process.pid} and
+   * metadata but require {@link Process.Process.hydrate} before inputs can be submitted.
    */
-  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Handle.Any[]>;
+  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Any[]>;
 
   runAllProcessesToCompletion(): Effect.Effect<void>;
 
   /**
    * Suspends all live processes, clears in-memory handle state, and persists durable records to KV.
    * Mimics app teardown. Idempotent — safe to call multiple times before {@link startup}.
-   * Live processes must be rehydrated externally via {@link Process.Handle.hydrate} after {@link startup}.
+   * Live processes must be rehydrated externally via {@link Process.Process.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void>;
 
   /**
    * Marks the manager as ready after {@link shutdown}, mimicking a fresh boot from KV storage.
-   * Does not rehydrate processes — callers supply definitions via {@link Process.Handle.hydrate}.
+   * Does not rehydrate processes — callers supply definitions via {@link Process.Process.hydrate}.
    */
   startup(): Effect.Effect<void>;
 
@@ -199,6 +200,8 @@ export interface ImplOpts {
 export class Impl implements Manager {
   readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
+  /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
+  readonly #guards = new Map<Process.ID, Process.Guard>();
   readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -207,6 +210,7 @@ export class Impl implements Manager {
   readonly #runtimeName: Trace.RuntimeName | undefined;
   readonly #store: ProcessStore;
 
+  // Each entry still reaches its handle, so a late {@link attach} can read an exited process's result.
   readonly #finished: Process.Process[] = [];
   readonly #processTreeAtom: Atom.Writable<readonly Process.Process[]>;
   /**
@@ -233,6 +237,49 @@ export class Impl implements Manager {
 
   get processTreeAtom(): Atom.Atom<readonly Process.Process[]> {
     return this.#processTreeAtom;
+  }
+
+  /**
+   * Services a process spawns children through: a {@link Process.Manager} over this runtime whose spawns
+   * default to the process as their parent and inherit its origin, and an `Operation.Service` running
+   * each invocation as such a child.
+   */
+  #childServices(pid: Process.ID, origin: Database.Origin | undefined, tracer: Tracer.Tracer): Context.Context<never> {
+    const manager: Process.Manager = {
+      processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
+      processTreeAtom: this.#processTreeAtom,
+      list: (filter) => Process.listFromTree(Effect.sync(() => this.#registry.get(this.#processTreeAtom)))(filter),
+      subscribeToTraceMessages: (filter) => this.subscribeToTraceMessages(filter),
+      spawn: (definition, { location, ...options } = {}) =>
+        location?.kind === 'edge'
+          ? Effect.die(new Error('A process cannot spawn a remote process.'))
+          : this.#spawn(
+              definition,
+              {
+                origin,
+                ...options,
+                parentProcessId: 'parentProcessId' in options ? options.parentProcessId : pid,
+              },
+              // A detached child must not shed the guard of the process that spawned it.
+              this.#guards.get(pid),
+            ),
+      handles: ({ location, ...options } = {}) =>
+        location?.kind === 'edge'
+          ? Effect.die(new Error('A process cannot list remote processes.'))
+          : this.list(options),
+      attach: (childPid, { location } = {}) =>
+        location?.kind === 'edge'
+          ? Effect.die(new Error('A process cannot attach to a remote process.'))
+          : this.attach(childPid),
+    };
+    // The handler set is always present, so an operation process can look its handler up.
+    let services = Context.make(Process.ManagerService, manager).pipe(
+      Context.add(OperationHandlerSet.OperationHandlerProvider, this.operationHandlerSet),
+    );
+    if (this.#handlerSet) {
+      services = services.pipe(Context.add(Operation.Service, ProcessOperationInvoker.make({ manager, tracer })));
+    }
+    return services;
   }
 
   subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message> {
@@ -269,7 +316,7 @@ export class Impl implements Manager {
 
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
-      if (handle.parentId === parentPid && Impl.#isNonTerminal(handle)) {
+      if (handle.parentPid === parentPid && Impl.#isNonTerminal(handle)) {
         return true;
       }
     }
@@ -279,7 +326,7 @@ export class Impl implements Manager {
   #terminateChildren(parentPid: Process.ID): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
       const children = [...this.#handles.values()].filter(
-        (handle) => handle.parentId === parentPid && Impl.#isNonTerminal(handle),
+        (handle) => handle.parentPid === parentPid && Impl.#isNonTerminal(handle),
       );
       for (const child of children) {
         log('lifecycle: terminate child', { parentPid, childPid: child.pid });
@@ -303,6 +350,7 @@ export class Impl implements Manager {
       return;
     }
     this.#handles.delete(pid);
+    this.#guards.delete(pid);
     this.#finished.push(handle.snapshotProcessInfo());
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
       this.#finished.shift();
@@ -320,7 +368,7 @@ export class Impl implements Manager {
 
   /**
    * Suspends every live process handle and drops all in-memory manager state.
-   * Durable records remain in KV for external {@link Process.Handle.hydrate} after {@link startup}.
+   * Durable records remain in KV for external {@link Process.Process.hydrate} after {@link startup}.
    */
   shutdown(): Effect.Effect<void> {
     return this.#lifecycleSemaphore.withPermits(1)(
@@ -337,6 +385,7 @@ export class Impl implements Manager {
           }
         }
         this.#handles.clear();
+        this.#guards.clear();
         this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
@@ -362,7 +411,15 @@ export class Impl implements Manager {
   spawn<I, O, _Rpcs extends Rpc.Any>(
     definition: Operation.Durable<I, O, any, _Rpcs>,
     options?: Process.SpawnOptions,
-  ): Effect.Effect<Process.Handle<I, O, _Rpcs>> {
+  ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
+    return this.#spawn(definition, options, undefined);
+  }
+
+  #spawn<I, O, _Rpcs extends Rpc.Any>(
+    definition: Operation.Durable<I, O, any, _Rpcs>,
+    options: Process.SpawnOptions | undefined,
+    spawnerGuard: Process.Guard | undefined,
+  ): Effect.Effect<Process.Process<I, O, _Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const id = this.#idGenerator();
       log('lifecycle: spawn', {
@@ -386,6 +443,14 @@ export class Impl implements Manager {
         ...(parentHandle !== undefined ? parentHandle.environment : {}),
         ...options?.environment,
       };
+      const parentGuard =
+        options?.parentProcessId !== undefined ? this.#guards.get(options.parentProcessId) : undefined;
+      const guard = [...new Set([spawnerGuard, parentGuard, options?.guard])]
+        .filter((candidate): candidate is Process.Guard => candidate !== undefined)
+        .reduce<Process.Guard | undefined>(
+          (combined, next) => (combined === undefined ? next : Process.bothGuards(combined, next)),
+          undefined,
+        );
 
       const resolutionContext: LayerSpec.LayerContext = {
         space: environment.space,
@@ -431,6 +496,7 @@ export class Impl implements Manager {
       const cancellation = new AbortController();
       const origin = resolveOrigin(environment, options?.origin);
       let builtinCtx = originContext(origin).pipe(
+        Context.add(Process.EnvironmentService, environment),
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -452,25 +518,20 @@ export class Impl implements Manager {
         ),
       );
 
-      // Provide Operation.Service that spawns child processes with parentProcessId set.
-      if (this.#handlerSet) {
-        const childInvoker = ProcessOperationInvoker.make({
-          manager: this,
-          handlerSet: this.#handlerSet,
-          parentProcessId: id,
-          origin,
-          tracer,
-        });
-        builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
-        builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
+      if (guard !== undefined) {
+        builtinCtx = builtinCtx.pipe(Context.add(Process.GuardService, guard));
       }
+      builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
+        Process.EnvironmentService.key,
+        Process.GuardService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
-        ProcessOperationInvoker.Service.key,
+        Process.ManagerService.key,
+        OperationHandlerSet.OperationHandlerProvider.key,
         Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
@@ -483,26 +544,28 @@ export class Impl implements Manager {
           Effect.orDie,
         );
       }
+      markWork('process.services-resolved');
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
       const handler = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+      markWork('process.created');
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
           log('lifecycle: ended', { pid: handle.pid, state });
-          if (handle.parentId !== null) {
-            const parentHandle = this.#handles.get(handle.parentId);
+          if (handle.parentPid !== null) {
+            const parentHandle = this.#handles.get(handle.parentPid);
             if (parentHandle) {
-              log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
+              log('lifecycle: notify parent', { parentPid: handle.parentPid, childPid: handle.pid });
               yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
-            } else if (!this.#isFinished(handle.parentId)) {
+            } else if (!this.#isFinished(handle.parentPid)) {
               log.warn('lifecycle: parent missing for child exit', {
-                parentPid: handle.parentId,
+                parentPid: handle.parentPid,
                 childPid: handle.pid,
               });
             }
@@ -562,9 +625,15 @@ export class Impl implements Manager {
       );
       handleRef = handle;
       this.#handles.set(id, handle);
+      if (guard !== undefined) {
+        this.#guards.set(id, guard);
+      }
       this.#refreshProcessTree();
 
-      // Write initial durable record before running onSpawn.
+      // Write the initial durable record, spawn event included, before running onSpawn: one write
+      // rather than a put and a read-modify-write, since each is an IndexedDB round trip on the
+      // turn's critical path. The seq is passed to runOnSpawn so it's removed when the handler settles.
+      const spawnSeq = 1;
       yield* this.#store.putProcess({
         id,
         key: definition.key,
@@ -574,18 +643,17 @@ export class Impl implements Manager {
         ...(origin !== undefined ? { origin } : {}),
         state: Process.State.RUNNING,
         alarmDueAt: null,
-        events: [],
+        events: [{ _tag: 'spawn', seq: spawnSeq }],
       });
-
-      // Append spawn event; seq is passed to runOnSpawn so it's removed when the handler settles.
-      const spawnSeq = yield* this.#store.appendEvent(id, { _tag: 'spawn' });
+      markWork('process.persisted');
       yield* handle.runOnSpawn(spawnSeq);
+      markWork('process.started');
       log('lifecycle: started', { pid: id, key: definition.key });
 
       // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),
-      // while the public surface is the precise `Process.Handle<I, O, _Rpcs>`. `RpcClient` is invariant, so
+      // while the public surface is the precise `Process.Process<I, O, _Rpcs>`. `RpcClient` is invariant, so
       // bridging the two requires a cast here (see design spec §4.4).
-      return handle as unknown as Process.Handle<I, O, _Rpcs>;
+      return handle as unknown as Process.Process<I, O, _Rpcs>;
     }).pipe(Effect.withSpan('ProcessManager.spawn', { attributes: { [SpanAttributes.PROCESS.key]: definition.key } }));
   }
 
@@ -645,6 +713,7 @@ export class Impl implements Manager {
       const cancellation = new AbortController();
       const origin = resolveOrigin(environment, record.origin);
       let builtinCtx = originContext(origin).pipe(
+        Context.add(Process.EnvironmentService, environment),
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(Cancellation.Service, { signal: cancellation.signal }),
@@ -665,24 +734,17 @@ export class Impl implements Manager {
         ),
       );
 
-      if (this.#handlerSet) {
-        const childInvoker = ProcessOperationInvoker.make({
-          manager: this,
-          handlerSet: this.#handlerSet,
-          parentProcessId: id,
-          origin,
-          tracer,
-        });
-        builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
-        builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
-      }
+      builtinCtx = Context.merge(builtinCtx, this.#childServices(id, origin, tracer));
 
       const builtinTagKeys = new Set([
+        Process.EnvironmentService.key,
+        Process.GuardService.key,
         StorageService.key,
         Scope.Scope.key,
         Trace.TraceService.key,
         Operation.Service.key,
-        ProcessOperationInvoker.Service.key,
+        Process.ManagerService.key,
+        OperationHandlerSet.OperationHandlerProvider.key,
         Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
@@ -702,10 +764,10 @@ export class Impl implements Manager {
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
           log('lifecycle: ended', { pid: handle.pid, state });
-          if (handle.parentId !== null) {
-            const parentHandle = this.#handles.get(handle.parentId);
+          if (handle.parentPid !== null) {
+            const parentHandle = this.#handles.get(handle.parentPid);
             if (parentHandle) {
-              log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
+              log('lifecycle: notify parent', { parentPid: handle.parentPid, childPid: handle.pid });
               yield* parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
@@ -782,12 +844,12 @@ export class Impl implements Manager {
   #hydrateFromDefinition<I, O, Rpcs extends Rpc.Any = never>(
     id: Process.ID,
     definition: Operation.Durable<I, O, any, any>,
-  ): Effect.Effect<Process.Handle<I, O, Rpcs>> {
+  ): Effect.Effect<Process.Process<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const existing = this.#handles.get(id);
       if (existing) {
         log('lifecycle: hydrate skipped (already live)', { pid: id });
-        return existing as unknown as Process.Handle<I, O, Rpcs>;
+        return existing as unknown as Process.Process<I, O, Rpcs>;
       }
 
       const record = yield* this.#store.getProcess(id);
@@ -808,7 +870,7 @@ export class Impl implements Manager {
 
       log('lifecycle: hydrate', { pid: id, key: record.key });
       const handle = yield* this.#rehydrate(record, definition);
-      return handle as unknown as Process.Handle<I, O, Rpcs>;
+      return handle as unknown as Process.Process<I, O, Rpcs>;
     }).pipe(
       Effect.withSpan('ProcessManager.hydrate', {
         attributes: { [SpanAttributes.PROCESS.id]: id, [SpanAttributes.PROCESS.key]: definition.key },
@@ -850,21 +912,26 @@ export class Impl implements Manager {
     }).pipe(Effect.withSpan('ProcessManager.discardRecord'));
   }
 
-  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Handle<I, O, Rpcs>> {
+  attach<I, O, Rpcs extends Rpc.Any = never>(id: Process.ID): Effect.Effect<Process.Process<I, O, Rpcs>> {
     return Effect.gen({ self: this }, function* () {
       const handle = this.#handles.get(id);
-      if (!handle) {
-        log('lifecycle: attach failed (not found)', { pid: id });
-        return yield* Effect.die(new Error(`Process not found: ${id}`));
+      if (handle) {
+        log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
+        return handle as unknown as Process.Process<I, O, Rpcs>;
       }
-      log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
-      return handle as unknown as Process.Handle<I, O, Rpcs>;
+      const finished = this.#finished.find((process) => process.pid === id);
+      if (finished) {
+        log('lifecycle: attached', { key: finished.key, state: finished.state });
+        return finished;
+      }
+      log('lifecycle: attach failed (not found)', { pid: id });
+      return yield* Effect.die(new Error(`Process not found: ${id}`));
     });
   }
 
-  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Handle.Any[]> {
+  list(options?: Process.ListOptions): Effect.Effect<readonly Process.Any[]> {
     return Effect.gen({ self: this }, function* () {
-      const results: Process.Handle.Any[] = [];
+      const results: Process.Any[] = [];
       const seenIds = new Set<Process.ID>();
 
       for (const handle of this.#handles.values()) {
@@ -872,7 +939,7 @@ export class Impl implements Manager {
           !matchesListOptions(
             {
               key: handle.key,
-              parentId: handle.parentId,
+              parentId: handle.parentPid,
               state: handle.snapshotStatus().state,
               annotations: handle.params.annotations,
             },
@@ -933,33 +1000,39 @@ export class Impl implements Manager {
 
 /**
  * Read-only handle view of a persisted process that is not currently live.
- * Returned by {@link Impl.list} until {@link Process.Handle.hydrate} is called.
+ * Returned by {@link Impl.list} until {@link Process.Process.hydrate} is called.
  */
-class DormantHandle<I, O> implements Process.Handle<I, O, any> {
+class DormantHandle<I, O> implements Process.Process<I, O, any> {
   readonly pid: Process.ID;
-  readonly parentId: Process.ID | null;
+  readonly parentPid: Process.ID | null;
   readonly key: string;
   readonly params: Process.Params;
   readonly environment: Process.Environment;
+  readonly state: Process.State;
+  readonly error = null;
+  // A dormant record carries no run history; these read as a process that has not run yet.
+  readonly startedAt = 0;
+  readonly completedAt = Option.none<number>();
+  readonly metrics = { wallTime: 0, inputCount: 0, outputCount: 0 };
   readonly status: Process.Status;
   readonly statusAtom: Atom.Atom<Process.Status>;
   /** Carried on the persisted record, so a dormant handle still reports a pending alarm. */
   readonly alarmDueAt: number | null;
   // Dormant handles expose no live RPC surface; the empty client serves no requests. Stored untyped
-  // (`RpcClient<any>`) so the dormant handle is assignable to `Process.Handle.Any` (see design spec §4.4).
+  // (`RpcClient<any>`) so the dormant handle is assignable to `Process.Any` (see design spec §4.4).
   readonly rpc: RpcClient.RpcClient<any> = EMPTY_RPC_CLIENT;
-  readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Handle<I, O, any>>;
+  readonly #rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Process<I, O, any>>;
   readonly #discard: () => Effect.Effect<void>;
 
   constructor(
     record: PersistedProcess,
-    rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Handle<I, O, any>>,
+    rehydrate: (definition: Operation.Durable<I, O, any, any>) => Effect.Effect<Process.Process<I, O, any>>,
     discard: () => Effect.Effect<void>,
   ) {
     this.#rehydrate = rehydrate;
     this.#discard = discard;
     this.pid = record.id;
-    this.parentId = record.parentId;
+    this.parentPid = record.parentId;
     this.key = record.key;
     this.params = {
       name: record.params.name,
@@ -969,6 +1042,7 @@ class DormantHandle<I, O> implements Process.Handle<I, O, any> {
       space: record.environment.space as SpaceId | undefined,
       conversation: record.environment.conversation as URI.URI | undefined,
     };
+    this.state = record.state;
     this.status = {
       state: record.state,
       exit: Option.none(),
@@ -979,7 +1053,7 @@ class DormantHandle<I, O> implements Process.Handle<I, O, any> {
     this.alarmDueAt = record.alarmDueAt;
   }
 
-  hydrate = (definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Handle<I, O, any>> =>
+  hydrate = (definition: Operation.Durable<I, O, any, any>): Effect.Effect<Process.Process<I, O, any>> =>
     this.#rehydrate(definition);
 
   submitInput = (): Effect.Effect<void> => Effect.die(new Error('Process not hydrated'));

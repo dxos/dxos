@@ -4,13 +4,15 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space, isSpace } from '@dxos/react-client/echo';
-import { Field, Input, useTranslation } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -61,9 +63,9 @@ RenamePopover.displayName = 'RenamePopover';
  * Inline name field. Commits on Enter or when dismissed; Escape cancels.
  */
 const RenameField = ({ subject }: RenamePopoverProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const space = !isRenameCallback(subject) && isSpace(subject);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [name, setNameState] = useState(() => getName(subject));
 
   // Commit the latest value when the popover is dismissed (Enter, click-outside, or blur), unless cancelled.
@@ -112,7 +114,7 @@ const RenameField = ({ subject }: RenamePopoverProps) => {
     <div className='p-2'>
       <Field.Root>
         <Field.Label srOnly>{t(space ? 'space-name.label' : 'object-name.label')}</Field.Label>
-        <Input
+        <Input.Root
           autoFocus
           value={name}
           placeholder={t(space ? 'unnamed-space.label' : 'object.placeholder')}

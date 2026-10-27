@@ -31,6 +31,9 @@
       "path": "../../common/debug"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -58,6 +61,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
       "path": "../../core/echo/echo-doc"
     },
     {
@@ -65,6 +71,9 @@
     },
     {
       "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/app-graph"
     },
     {
       "path": "../../sdk/app-toolkit"
@@ -106,6 +115,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-plot"
+    },
+    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -113,6 +125,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-client"

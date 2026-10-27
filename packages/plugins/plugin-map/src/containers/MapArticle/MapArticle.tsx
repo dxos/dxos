@@ -4,11 +4,13 @@
 
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Flex, type FlexProps, Panel, useControlledState } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { type GeoControlProps, GlobeControl, MAP_MIN_ZOOM, MapControl } from '#components';
 import { MapCapabilities } from '#types';
@@ -104,7 +106,7 @@ const MapArticleInner = ({
   role: _role,
   ...props
 }: MapArticleInnerProps) => {
-  const [type, setType] = useControlledState(typeProp);
+  const [type, setType] = Hooks.useControlledState(typeProp);
   const [viewport, setViewport] = useState<{ center: LatLngLiteral; zoom: number }>({
     center: centerProp ?? DEFAULT_CENTER,
     zoom: zoomProp ?? DEFAULT_ZOOM,
@@ -119,7 +121,7 @@ const MapArticleInner = ({
     setViewport((prev) => ({ center: centerProp ?? prev.center, zoom: zoomProp ?? prev.zoom }));
   }, [centerProp, zoomProp]);
 
-  const { markers, lines, selection } = provider.useMarkers(subject, { attendableId });
+  const { markers, lines, tour, selection } = provider.useMarkers(subject, { attendableId });
 
   // Read the attention selection. The provider may override the context/mode (e.g. a view
   // highlights multiple rows by typename); default to single-select against the article.
@@ -168,6 +170,7 @@ const MapArticleInner = ({
       {...props}
       markers={markers}
       lines={lines}
+      tour={tour}
       selected={selected}
       onSelect={handleSelect}
       center={viewport.center}
@@ -178,6 +181,8 @@ const MapArticleInner = ({
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />;
+const Container = (props: Layout.FlexProps) => (
+  <Layout.Flex {...props} classNames='aspect-square w-full max-h-full min-h-0' />
+);
 
 MapArticle.displayName = 'MapArticle';

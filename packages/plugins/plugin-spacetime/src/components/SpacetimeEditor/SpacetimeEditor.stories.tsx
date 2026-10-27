@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

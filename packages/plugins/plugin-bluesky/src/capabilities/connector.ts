@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -75,7 +75,9 @@ const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
     Effect.asVoid,
     Effect.mapError(
       () =>
-        new ConnectionTestError({ message: 'Bluesky rejected the credential. Reauthenticate to continue syncing.' }),
+        new ConnectorError.ConnectionTestError({
+          message: 'Bluesky rejected the credential. Reauthenticate to continue syncing.',
+        }),
     ),
   );
 
@@ -93,6 +95,7 @@ export default Capability.makeModule(
         id: BLUESKY_PROVIDER_ID,
         source: BLUESKY_SOURCE,
         label: 'Bluesky',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.ATPROTO,
           scopes: [...BSKY_OAUTH_SCOPES],

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Annotation } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 import { resolveLayoutField } from './resolve-layout-field.ts';
 
@@ -23,6 +23,17 @@ const Journey = Schema.Struct({
 });
 
 describe('resolveLayoutField', () => {
+  test('reads the title of an annotated optional field', ({ expect }) => {
+    const Theme = Schema.Struct({
+      accent: Schema.optional(Schema.String.pipe(Schema.check(Schema.isPattern(/^#/)))).annotate({
+        title: 'Accent color',
+      }),
+      name: Schema.optional(Schema.Literals(['light', 'dark'])).annotate({ title: 'Theme' }),
+    });
+    expect(resolveLayoutField(Theme, 'accent')?.title).toBe('Accent color');
+    expect(resolveLayoutField(Theme, 'name')?.title).toBe('Theme');
+  });
+
   test('resolves a top-level scalar field', ({ expect }) => {
     const resolved = resolveLayoutField(Journey, 'number');
     expect(resolved).toBeDefined();

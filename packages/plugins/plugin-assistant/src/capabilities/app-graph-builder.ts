@@ -18,20 +18,23 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Sequence } from '@dxos/conductor';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
@@ -39,13 +42,41 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 import { currentChatRef } from '../util/current-chat.ts';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
-const computeOperationsToImport = [RunInstructions] as const;
+const computeOperationsToImport = [AgentOperation.RunInstructions] as const;
 
-/** Match ECHO objects that are NOT chats. */
+/** Match ECHO objects that are neither chats nor agents, whose own article is already a conversation. */
 const whenNonChatObject = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObject,
-  GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+  GraphNodeMatcher.whenNot(
+    GraphNodeMatcher.whenAny(
+      AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+      AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
+    ),
+  ),
 );
+
+/**
+ * Match the nodes whose surface renders a chat prompt: a chat, an agent (whose article is its chat), the
+ * assistant companion (which has no chat until one is provisioned) and a space's home.
+ */
+const whenPromptHost = GraphNodeMatcher.whenAny(
+  AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+  AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
+  (node: AppGraphNode.Node) =>
+    node.type === AppNode.PLANK_COMPANION_TYPE &&
+    GraphNode.segmentId(node.id) === Attention.linkedSegment(ASSISTANT_COMPANION_VARIANT)
+      ? Option.some(node)
+      : Option.none(),
+  GraphNodeMatcher.whenNodeType(SpaceSchema.SPACE_HOME_NODE_TYPE),
+);
+
+/** A prompt node under every node that hosts a chat prompt, where other plugins file prompt actions. */
+export const createPromptExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'prompt',
+    match: whenPromptHost,
+    connector: () => Effect.succeed([AppNode.makePrompt()]),
+  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -148,7 +179,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Don't show assistant companion when a chat is already the primary object.
+      // Don't show assistant companion when a chat (or an agent's chat) is already the primary object.
       AppGraphBuilder.createExtension({
         id: 'companionChat',
         relation: AppNode.companion,
@@ -189,6 +220,8 @@ export default Capability.makeModule(
             ];
           }).pipe(Effect.orDie),
       }),
+
+      createPromptExtension(),
 
       AppGraphBuilder.createExtension({
         id: 'invocations',

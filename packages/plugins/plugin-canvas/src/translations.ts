@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -12,7 +12,12 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Canvas',
         'variant.label': 'Canvas',
+        'lock-drawing.label': 'Read only',
+        'unlock-drawing.label': 'Edit drawing',
+        'newer-format.title': 'Read only',
+        'newer-format.message':
+          'A newer version of the Canvas plugin saved this drawing. Update the plugin to edit it.',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

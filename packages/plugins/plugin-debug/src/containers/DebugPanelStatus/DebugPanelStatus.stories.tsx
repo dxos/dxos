@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import {
   type DebugPortController,
   type DebugPortStartOptions,
@@ -57,7 +57,7 @@ const meta = {
   // and placement persist through the attention core plugin's view state; the drawer stub answers
   // the docked toggle in the deck's stead.
   decorators: [
-    withPluginManager({ plugins: [...corePlugins(), DebugPlugin.make(), StubToolsPlugin(), StubDrawerPlugin()] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), DebugPlugin.make(), StubToolsPlugin(), StubDrawerPlugin()] }),
     withTheme(),
   ],
   parameters: { translations },
@@ -78,6 +78,9 @@ const seedViewState = (state: DebugPanelViewState | undefined) => () => {
   }
 };
 
+// The button renders once the plugin manager has booted, which takes seconds on a cold story.
+const LOAD_TIMEOUT = { timeout: 10_000 };
+
 /** Docked by default: the button toggles the deck's drawer through the layout operation. */
 export const Default: Story = {
   args: { controller: createFakeController() },
@@ -89,7 +92,7 @@ export const Default: Story = {
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = await canvas.findByRole('button', { name: 'Show debug panel' });
+    const button = await canvas.findByRole('button', { name: 'Show debug panel' }, LOAD_TIMEOUT);
     await expect(getDrawerState()).toBe('closed');
     await userEvent.click(button);
     await waitFor(() => expect(getDrawerState()).toBe('open'));
@@ -105,7 +108,7 @@ export const Floating: Story = {
   loaders: [seedViewState({ mode: 'floating', open: [] })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: 'Show debug panel' }));
+    await userEvent.click(await canvas.findByRole('button', { name: 'Show debug panel' }, LOAD_TIMEOUT));
     // Portaled to the body, so the window is looked up on the document.
     const body = within(document.body);
     const dialog = await body.findByRole('dialog', { name: 'Debug' }, { timeout: 10_000 });

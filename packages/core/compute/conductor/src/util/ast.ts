@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 
 /**
  * @param schema

@@ -35,11 +35,11 @@ import {
   Objective,
   type Scene,
   Score,
+  SvgFile,
   View,
 } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { IMAGE_NOTE, type Judge, decisionModel, isJudge, seesImages } from './judges.ts';
 import { toPngs } from './render.tsx';
 
@@ -242,7 +242,7 @@ const load = (path: string, layering: MermaidEngine.Layering) =>
       content: Architecture.contentOf(Mermaid.parse(source)),
       questions: questionsOf(objects),
       objective: Score.overall(objective) ?? 0,
-      svg: toSvgFile(objects),
+      svg: SvgFile.toSvgFile(objects),
     };
     return diagram;
   });

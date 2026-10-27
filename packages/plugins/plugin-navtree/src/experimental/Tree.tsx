@@ -4,8 +4,9 @@
 
 import React, { type ComponentProps, type HTMLAttributes, type PropsWithChildren } from 'react';
 
-import { type ClassNameValue, Icon } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
+import { type ClassNameValue } from '@dxos/ui-types';
 
 import { visitNodes } from './visit-nodes.ts';
 
@@ -17,12 +18,12 @@ export const IconButton = ({
 }: {
   iconName: string;
   classNames?: ClassNameValue;
-  size?: ComponentProps<typeof Icon>['size'];
+  size?: ComponentProps<typeof Icon.Icon>['size'];
 } & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
   // TODO(burdon): Density aware.
   return (
     <div className={mx('flex w-6 h-6 items-center justify-center select-none', classNames)} onClick={onClick}>
-      <Icon icon={iconName} classNames='cursor-pointer' size={size} />
+      <Icon.Icon icon={iconName} classNames='cursor-pointer' size={size} />
     </div>
   );
 };

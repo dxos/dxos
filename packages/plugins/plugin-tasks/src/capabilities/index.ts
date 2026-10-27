@@ -11,9 +11,6 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 // Narrower than the `appGraphBuilder` family default: its nodes invoke
 // `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
@@ -38,6 +35,6 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

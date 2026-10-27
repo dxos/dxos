@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from '@effect/vitest';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { range } from '@dxos/util';
@@ -453,6 +453,46 @@ describe('Sync', () => {
       expect(await blockPositions(client, otherFeedId)).toEqual([2, 3, 4]);
       expect(await blockPositions(client, feedId)).toEqual([0, 1, 5, 6, 7]);
       expect(await placements(client)).toEqual(await placements(server));
+    });
+  });
+
+  describe('retention', () => {
+    // A pull that retention trims locally leaves no block at the cursor; read as a server rewind, that
+    // replayed the namespace on every pull and re-pulled what retention dropped, forever.
+    test('a client whose retention drops the block at its cursor does not replay', async () => {
+      await using builder = await new TestBuilder({ numPeers: 2, spaceId, logSql: LOG_SQL }).open();
+      const [server, client] = builder.peers;
+      const expired = Date.now() - 2 * 60 * 60 * 1000;
+      await server.append({
+        requestId: 'seed',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: generateTestBlocks(0, 5).map((data, sequence) => ({
+          feedId,
+          actorId: 'writer',
+          sequence,
+          prevActorId: null,
+          prevSequence: null,
+          position: null,
+          timestamp: expired,
+          data,
+        })),
+      });
+      await client.setFeedOptions({
+        spaceId,
+        feedId,
+        feedNamespace: WellKnownNamespaces.data,
+        options: { retention: { maxAge: 60 * 60 * 1000 } },
+      });
+
+      expect(await builder.pull(client)).toEqual({ done: false });
+      expect(await builder.pull(client)).toEqual({ done: true });
+      expect(await blockPositions(client)).toEqual([]);
+      expect(await client.getSyncState({ spaceId, feedNamespace: WellKnownNamespaces.data })).toEqual({
+        lastPulledPosition: 4,
+        serverToken: await server.getServerToken(spaceId),
+        blocksToPull: 0,
+      });
     });
   });
 

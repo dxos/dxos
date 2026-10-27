@@ -10,12 +10,14 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Entity, type Type } from '@dxos/echo';
+// eslint-disable-next-line @dxos/rules/import-as-namespace -- `GraphBuilder` is this file's own class.
 import * as Builder from '@dxos/graph/GraphBuilder';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Position, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { type FrameBudget, makeFrameBudget, scheduleTask, yieldOrContinue } from '#scheduler';
 

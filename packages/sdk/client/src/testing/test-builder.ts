@@ -6,7 +6,7 @@ import { type ExpectStatic } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Rpc } from '@dxos/client-protocol';
-import { ServiceStack } from '@dxos/client-services';
+import { type IdentityManager, ServiceStack } from '@dxos/client-services';
 import { ServiceContext } from '@dxos/client-services/testing';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
@@ -96,9 +96,14 @@ export class TestBuilder {
 
   /**
    * Create local services host.
-   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
+   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes;
+   *   inboxRelay: an inbox relay (e.g. `MemoryEdgeInbox`) shared with other clients in place of EDGE.
    */
-  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean; sqlitePath?: string }): LocalClientServices {
+  createLocalClientServices(options?: {
+    fastPeerPresenceUpdate?: boolean;
+    sqlitePath?: string;
+    inboxRelay?: IdentityManager.InboxRelay;
+  }): LocalClientServices {
     // When a sqlitePath is provided (options or builder or config.dataRoot), run FILE-backed SQLite; otherwise use MEMORY.
     const configDataRoot = this.config.get('runtime.client.storage.dataRoot');
     const sqlitePath =
@@ -114,6 +119,7 @@ export class TestBuilder {
         invitationConnectionDefaultProps: { teleport: { controlHeartbeatInterval: 200 } },
       },
       sqlitePath,
+      inboxRelay: options?.inboxRelay,
       ...this.networking,
     });
 

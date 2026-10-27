@@ -28,7 +28,7 @@ import {
   makeClientServicesRpc,
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { IdentityNotInitializedError, TimeoutError } from '@dxos/protocols';
 import { buf, fromPublicKey, toPublicKey } from '@dxos/protocols/buf';

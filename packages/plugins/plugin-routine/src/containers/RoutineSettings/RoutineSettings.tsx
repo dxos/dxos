@@ -4,10 +4,11 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
-import { Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
 import { meta } from '#meta';
 
@@ -19,8 +20,8 @@ import { meta } from '#meta';
  * The page is reached from space settings, so the space comes from context rather than surface data.
  */
 export const RoutineSettings = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const space = useActiveSpace();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const space = ToolkitHooks.useActiveSpace();
   const [properties, changeProperties] = useObject(space?.properties);
   const enabled = !(properties?.triggersDisabled ?? false);
 
@@ -40,7 +41,7 @@ export const RoutineSettings = () => {
         <Form.Content>
           <Form.FieldSet label={t('routine-verbose.label')} description={t('routine.description')}>
             <Form.Field label={t('runtime.label')} description={t('runtime.description')}>
-              <Switch checked={enabled} onCheckedChange={({ checked }) => handleToggle(checked)} />
+              <Input.Switch checked={enabled} onCheckedChange={({ checked }) => handleToggle(checked)} />
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

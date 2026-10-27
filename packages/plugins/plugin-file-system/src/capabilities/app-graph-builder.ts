@@ -21,7 +21,8 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Expando, Text } from '@dxos/schema';
-import { Position, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { FileSystemCapabilities, FileSystemOperation } from '#types';
@@ -217,10 +218,8 @@ export default Capability.makeModule(
               let onRearrange = workspaceRearrangeCache.get(workspace.id);
               if (!onRearrange && graph && spacesOrder) {
                 onRearrange = (nextOrder) => {
-                  AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
-                  Obj.update(spacesOrder, (spacesOrder: Record<string, unknown>) => {
-                    spacesOrder.order = nextOrder;
-                  });
+                  AppGraph.sortEdges(graph, GraphNode.RootId, AppGraphNode.child, nextOrder);
+                  SpaceSchema.setSpacesOrder(spacesOrder, nextOrder);
                 };
                 workspaceRearrangeCache.set(workspace.id, onRearrange);
               }

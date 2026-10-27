@@ -6,7 +6,7 @@
 import { type HierarchyNode, cluster, curveBundle, hierarchy, lineRadial, select } from 'd3';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type TreeNode } from '../types.ts';
@@ -22,7 +22,7 @@ export type BundleEdge = {
   kind?: string;
 };
 
-export type HierarchicalEdgeBundlingProps = ThemedClassName<{
+export type HierarchicalEdgeBundlingProps = Util.ThemedClassName<{
   /** Hierarchical data; leaves are the connectable entities. */
   data: TreeNode;
   /** Edges between leaves (by id). Bundled through the hierarchy. */
@@ -58,10 +58,12 @@ export const HierarchicalEdgeBundling = ({
   padding = 120,
   tension = 0.85,
   r = 4,
-  slots = defaultTreeLayoutSlots,
+  slots: slotsProp,
   onNodeHover,
 }: HierarchicalEdgeBundlingProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // A partial `slots` (e.g. only `nodeFill`) must extend the defaults, not drop their classes.
+  const slots = useMemo(() => ({ ...defaultTreeLayoutSlots, ...slotsProp }), [slotsProp]);
   const { setRef, width, height } = useContainerSize();
 
   const root = useMemo(() => buildBundleHierarchy(data, edges), [data, edges]);

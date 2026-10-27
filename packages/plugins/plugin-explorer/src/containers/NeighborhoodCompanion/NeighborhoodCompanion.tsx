@@ -5,8 +5,13 @@
 import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DxAnchorActivate, Panel, ToggleGroup, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type TreeNode } from '@dxos/react-ui-graph';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import { DxAnchorActivate } from '@dxos/ui-types';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { Visualization } from '#components';
@@ -27,7 +32,7 @@ export type NeighborhoodCompanionProps = {
  * with the active node at the centre. Depth (number of hops traversed) is adjustable in the toolbar.
  */
 export const NeighborhoodCompanion = ({ role = 'article', subject }: NeighborhoodCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [depth, setDepth] = useState<number>(DEFAULT_NEIGHBORHOOD_DEPTH);
   const model = useNeighborhoodModel(subject, depth);
 

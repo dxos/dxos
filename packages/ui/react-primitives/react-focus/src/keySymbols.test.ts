@@ -22,4 +22,8 @@ describe('keySymbols', () => {
     expect(keySymbols('Escape')).toEqual(['⎋']);
     expect(keySymbols('shift+Enter')).toEqual(['⇧', '⏎']);
   });
+
+  test('reads control as ctrl', () => {
+    expect(keySymbols('control+k')).toEqual(keySymbols('ctrl+k'));
+  });
 });

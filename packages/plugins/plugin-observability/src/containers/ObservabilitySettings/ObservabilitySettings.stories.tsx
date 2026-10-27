@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
@@ -39,7 +39,7 @@ const meta = {
   component: DefaultStory,
   tags: ['settings'],
   // The container routes edits through an operation, so it needs the invoker capability.
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ plugins: corePlugins() })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ plugins: CorePlugins.make() })],
   parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;
 

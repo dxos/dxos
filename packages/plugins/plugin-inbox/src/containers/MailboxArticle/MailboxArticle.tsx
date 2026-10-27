@@ -5,36 +5,22 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useMemo } from 'react';
 
-import {
-  useAtomCapability,
-  useAtomCapabilityState,
-  useCapabilities,
-  useOperationInvoker,
-  useOptionalCapability,
-} from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import {
-  type AppSurface,
-  useAppGraph,
-  useDetailNavigation,
-  useProgressMonitor,
-  useShowItem,
-} from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
-import { QueryBuilder, formatTag } from '@dxos/echo-query';
+import { formatTag } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import { type EditorController } from '@dxos/react-ui-editor';
 import {
   ActionToolbar,
   MenuBuilder,
@@ -43,6 +29,8 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -53,23 +41,21 @@ import {
   type MessageTagsFamily,
   isMessageGroup,
 } from '#components';
-import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
+import {
+  useFilterTagIds,
+  useInjectedMailboxActions,
+  useMailboxExtractorActions,
+  useQueryFilter,
+  useTagMap,
+} from '#hooks';
 import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../../constants.ts';
 import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
-import { messageMatchesQuery } from '../../util/index.ts';
+import { buildSearchSelection, getSearchText, messageMatchesQuery } from '../../util/index.ts';
 import { InitializeMailbox } from './InitializeMailbox.tsx';
-import {
-  buildMailboxSelection,
-  buildSystemTagSelection,
-  buildThreadSemiJoin,
-  getFilterTagUris,
-  getSearchText,
-} from './mailbox-search.ts';
-import { MailboxFilter } from './MailboxFilter.tsx';
+import { buildSystemTagSelection, buildThreadSemiJoin } from './mailbox-search.ts';
 
 /** Messages per page for the lazily-loaded message window. */
 const MAILBOX_PAGE_SIZE = 10;
@@ -96,32 +82,29 @@ export const MailboxArticle = ({
   systemTag,
   attendableId,
 }: MailboxArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const settings = useAtomCapability(InboxCapabilities.Settings);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const settings = Hooks.useAtomCapability(InboxCapabilities.Settings);
   const db = Obj.getDatabase(mailbox);
   // The mailbox view's graph node id: messages open as its children and it roots their level chain.
   const id = attendableId ?? (db ? getMailboxPath(db.spaceId, mailbox.id) : Obj.getURI(mailbox));
   const currentId = useSelection(id, 'single');
-  const showItem = useShowItem();
-  const runAction = useActionRunner();
+  const showItem = ToolkitHooks.useShowItem();
+  const runAction = GraphHooks.useActionRunner();
 
   // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
-  const syncProgress = useProgressMonitor(createSyncProgressKey(mailbox));
-  const scanProgress = useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
+  const syncProgress = ToolkitHooks.useProgressMonitor(createSyncProgressKey(mailbox));
+  const scanProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
   const progress = [syncProgress, scanProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
-  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
-
-  const filterEditorRef = useRef<EditorController>(null);
-  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
+  const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   // Menu state.
   const sortDescending = useAtomState(true);
 
-  const tagMap = useTags(db);
+  const tagMap = useTagMap(db);
   const feed = useResolveRef(mailbox.feed);
   const tagIndex = useResolveRef(mailbox.tags);
   // Per-message tag chips, as an atom family so each tile subscribes to only its own message's tags.
@@ -140,51 +123,27 @@ export const MailboxArticle = ({
   const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
 
   // Filter.
-  const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
-  const [filterText, setFilterText] = useState<string>(filterProp ?? '');
-  // Supplied by the query editor, which already parses the DSL to decorate it — deriving the filter
-  // here as well parsed every keystroke twice. `builder` remains for the seeds below, which are set
-  // programmatically and so produce no editor event.
-  const [filter, setFilter] = useState<Filter.Any | undefined>(() => builder.build(filterProp ?? '').filter);
+  const {
+    textRef: filterTextRef,
+    debouncedText: debouncedFilterText,
+    debouncedFilter,
+    applyText: applyFilterText,
+    editorRef: filterEditorRef,
+    element: filterElement,
+  } = useQueryFilter({ owner: mailbox, tags: tagMap, initialText: filterProp });
 
   // Whether messages are grouped into conversations (threads). On by default.
   const conversations = settings.conversations ?? true;
   const direction = sortDescending.value ? 'desc' : 'asc';
-
-  // The ECHO query (and the `searchQuery` that drives highlighting) is driven by a DEBOUNCED value so
-  // typing in the filter editor doesn't rebuild the paginated store and flash the list empty on every
-  // keystroke — the query's AST only changes once typing pauses. The editor itself, and the
-  // save-filter gating below, stay bound to the immediate `filterText`/`filter`. (`useDeferredValue`
-  // is insufficient here: it still commits every intermediate keystroke, just at a lower priority, so
-  // the query AST — and thus `usePagination`'s store — still changes on each keypress.)
-  const debouncedFilterText = useDebouncedValue(filterText, 300);
-  const debouncedFilter = useMemo(() => builder.build(debouncedFilterText).filter, [debouncedFilterText, builder]);
 
   // Order by message `created` (not feed insertion order): a backward/backfill sync appends out of
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
 
-  // Read reactively so a text search scoped to a tag's members (see `buildMailboxSelection`)
+  // Read reactively so a text search scoped to a tag's members (see `buildSearchSelection`)
   // re-runs when that tag's membership changes.
-  const filterTagUris = useMemo(() => getFilterTagUris(debouncedFilter), [debouncedFilter]);
-  const filterTagUrisKey = filterTagUris.join(',');
-  const filterTagIdsAtom = useMemo(
-    () =>
-      tagIndex && filterTagUris.length > 0
-        ? Atom.make((get) =>
-            filterTagUris.map((tagUri) => [tagUri, get(TagIndex.taggedIdsAtom(tagIndex, tagUri))] as const),
-          )
-        : EMPTY_TAG_IDS_ATOM,
-    // filterTagUris is a fresh array each render; key on its membership (filterTagUrisKey) instead.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tagIndex, filterTagUrisKey],
-  );
-  const filterTagIds = useAtomValue(filterTagIdsAtom);
-  const resolveTagIds = useCallback(
-    (tagUri: string) => filterTagIds.find(([uri]) => uri === tagUri)?.[1],
-    [filterTagIds],
-  );
+  const resolveTagIds = useFilterTagIds(tagIndex, debouncedFilter);
 
   // True while the filter box still shows its seeded text (`'#inbox'` etc.) unedited, so the tag-id
   // selection applies; editing away falls back to normal text/tag parsing (Drafts hides the box).
@@ -194,7 +153,7 @@ export const MailboxArticle = ({
     () =>
       isUnmodifiedSystemTagView
         ? buildSystemTagSelection(systemTagIds)
-        : buildMailboxSelection(debouncedFilterText, debouncedFilter, { resolveTagIds }),
+        : buildSearchSelection(Filter.type(Message.Message), debouncedFilterText, debouncedFilter, { resolveTagIds }),
     // systemTagIds is a fresh array each render; key on its membership (systemTagIdsKey) instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter, resolveTagIds],
@@ -275,26 +234,7 @@ export const MailboxArticle = ({
   // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
   const showEmptyState = !loading && messages.length === 0;
 
-  // Text set from here rather than typed reaches the editor imperatively — a controlled `value` would
-  // race fast typing — and raises no editor event, so the parse the editor normally hands back has to
-  // be done here too, or `filter` (which gates Save) keeps describing the previous text.
-  const applyFilterText = useCallback(
-    (text: string) => {
-      setFilterText(text);
-      setFilter(builder.build(text).filter);
-      filterEditorRef.current?.setText(text);
-    },
-    [builder],
-  );
-
-  // Read by `select-tag`, which appends to the current text from a handler that must not be rebuilt
-  // on every keystroke.
-  const filterTextRef = useRef(filterText);
-  filterTextRef.current = filterText;
-
-  const handleClear = useCallback(() => applyFilterText(filterProp ?? ''), [filterProp, applyFilterText]);
-
-  const openDetail = useDetailNavigation({
+  const openDetail = ToolkitHooks.useDetailNavigation({
     contextId: id,
     getPath: (messageId) => getFeedObjectPath(id, messageId),
   });
@@ -388,46 +328,20 @@ export const MailboxArticle = ({
           filterEditorRef.current?.focus();
           break;
         }
-
-        case 'save': {
-          void invokePromise(LayoutOperation.UpdatePopover, {
-            subject: POPOVER_SAVE_FILTER,
-            state: true,
-            variant: 'virtual',
-            anchor: filterSaveButtonRef.current,
-            props: { mailbox, filter: action.filter },
-          });
-          break;
-        }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate, applyFilterText],
-  );
-
-  const handleSaveFilter = useCallback(() => {
-    if (filter) {
-      handleAction({ type: 'save', filter: filterText });
-    }
-  }, [filter, filterText, handleAction]);
-
-  // The search box is a toolbar item (custom-rendered) so the connect group can sit to its right.
-  // Memoized so its reference (a menu-builder dep) only changes when the filter props do.
-  const filterElement = useMemo(
-    () => (
-      <MailboxFilter
-        db={db}
-        tags={tagMap}
-        value={filterText}
-        filter={filter}
-        onChange={setFilterText}
-        onFilterChange={setFilter}
-        onSave={handleSaveFilter}
-        onClear={handleClear}
-        editorRef={filterEditorRef}
-        saveButtonRef={filterSaveButtonRef}
-      />
-    ),
-    [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
+    [
+      db,
+      id,
+      mailbox,
+      messages,
+      invokePromise,
+      showItem,
+      handleNavigate,
+      applyFilterText,
+      filterTextRef,
+      filterEditorRef,
+    ],
   );
 
   const menuActions = useMailboxActions(mailbox, {
@@ -443,7 +357,7 @@ export const MailboxArticle = ({
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
       </Panel.Header>
       <Panel.Body>
-        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+        <Status.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -459,7 +373,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred>
+        </Status.Deferred>
       </Panel.Body>
       <Panel.Footer>
         <ProgressMeter
@@ -571,7 +485,6 @@ const useSystemTagUri = (
 };
 
 const EMPTY_IDS_ATOM = Atom.make((): readonly EntityId[] => []);
-const EMPTY_TAG_IDS_ATOM = Atom.make((): readonly (readonly [string, readonly EntityId[]])[] => []);
 
 /**
  * Reactive ids carrying `tagUri` in `tagIndex`. Feed/space messages have no `meta.tags` of their own —
@@ -599,22 +512,26 @@ const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
   { sortDescending, nodeId, filterElement, hideFilterEditor }: MailboxActionsOptions,
 ) => {
-  const { graph } = useAppGraph();
-  const invoker = useOperationInvoker();
-  const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const invoker = Hooks.useOperationInvoker();
+  const [settings, setSettings] = Hooks.useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   const handleCompose = useCallback(() => {
     const db = Obj.getDatabase(mailbox);
     invariant(db);
     // `nodeId` is this view's node, so the draft opens as a plank beside it rather than beside Drafts.
-    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox, contextId: nodeId });
+    void invoker.invokePromise(
+      InboxOperation.DraftEmailAndOpen,
+      { mailbox, contextId: nodeId },
+      { spaceId: db.spaceId },
+    );
   }, [invoker, mailbox, nodeId]);
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
   // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
-  const injectedActions = useCapabilities(InboxCapabilities.MailboxAction);
+  const extractors = Hooks.useCapabilities(InboxCapabilities.ObjectExtractor);
+  const injectedActions = Hooks.useCapabilities(InboxCapabilities.MailboxAction);
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
   const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];
@@ -703,23 +620,5 @@ const useMailboxActions = (
       mailboxExtractorActions,
       mailboxActions,
     ],
-  );
-};
-
-/**
- * Return map of tags;
- */
-// TODO(burdon): Factor out.
-// Tag registry keyed by the Tag object's URI — the id space used by meta.tags, the Mailbox tag
-// index, and the QueryBuilder's `tag:` filter.
-const useTags = (db: Database.Database | undefined): Tag.Map => {
-  const tags = useQuery(db, Filter.type(Tag.Tag));
-  return useMemo(
-    () =>
-      tags.reduce<Tag.Map>((acc, tag) => {
-        acc[Obj.getURI(tag).toString()] = tag;
-        return acc;
-      }, {}),
-    [tags],
   );
 };

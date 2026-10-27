@@ -15,7 +15,7 @@ import { getHostPlatform } from '@dxos/util';
 
 import { PasskeyError } from '#types';
 
-import { CreatePasskey } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
 /**
  * Best-effort name for a newly created passkey, so the list is not a column of identical dates.
@@ -34,7 +34,7 @@ const defaultPasskeyLabel = (): string => {
   return platform ? `Passkey on ${platform}` : 'Passkey';
 };
 
-const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.CreatePasskey> = ClientOperation.CreatePasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const identity = Option.getOrUndefined(yield* Identity.getSnapshot);

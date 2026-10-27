@@ -141,6 +141,8 @@ export const startRecorder = async (page, { dir, file, size, fps, crf, quality }
    */
   const cut = () => {
     const last = frames.at(-1);
+    // Deleted now rather than at `stop`: a long setup at 2x fills a sandbox's disk before the take begins.
+    frames.slice(0, -1).forEach(({ file }) => rmSync(file, { force: true }));
     frames.length = 0;
     started = Date.now();
     if (last) {

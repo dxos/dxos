@@ -12,7 +12,7 @@ import { callTool } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
 import { EffectDialect } from './dialect-effect.ts';

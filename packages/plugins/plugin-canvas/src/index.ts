@@ -3,5 +3,5 @@
 //
 
 export * as CanvasPlugin from './CanvasPlugin.ts';
-export * from '#meta';
+export * from './samples/index.ts';
 export * from '#types';

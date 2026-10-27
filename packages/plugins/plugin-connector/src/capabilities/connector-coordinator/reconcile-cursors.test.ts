@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
@@ -75,6 +75,7 @@ describe('reconcileCursors', () => {
   const makeConnector = (overrides: Partial<ConnectorSpec.ConnectorEntry> = {}): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
     ...overrides,
   });
@@ -166,7 +167,7 @@ describe('reconcileCursors', () => {
     const lastTick = '2026-04-01T00:00:00.000Z';
     const existing = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(obj),
         externalId: 'kept',
         label: 'Kept',
@@ -239,7 +240,7 @@ describe('reconcileCursors', () => {
     // A single-target connector (e.g. Gmail) creates a cursor with a target but no externalId;
     // reconciling remote-id selections must not delete it.
     const auto = db.add(Obj.make(Expando.Expando, { name: 'auto' }));
-    db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(auto) }));
+    db.add(Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(auto) }));
 
     const result = await reconcile(db, connection, makeConnector(), [{ externalId: 'new', name: 'New' }]);
     expect(result.added).toBe(1);

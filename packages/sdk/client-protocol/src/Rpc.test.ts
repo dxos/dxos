@@ -19,7 +19,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type LogConfig, type LogEntry, log } from '@dxos/log';
 
 import * as Rpc from './Rpc.ts';

@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as SqlClient from 'effect/sql/SqlClient';
 
 import { Context } from '@dxos/context';
@@ -13,7 +14,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { IndexEngine, type IndexingResult } from './index-engine.ts';
-import { type IndexCursor } from './index-tracker.ts';
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
 import { TestSqliteLayer as TestLayer } from './testing/index.ts';
 
@@ -142,6 +143,21 @@ describe('IndexEngine', () => {
     return { engine, metaIndex: new EntityMetaIndex(yield* SqlClient.SqlClient) };
   });
 
+  it.effect(
+    'counts pending migrations before migrating and reports each store applied',
+    Effect.fnUntraced(function* () {
+      const engine = new IndexEngine(yield* SqlClient.SqlClient);
+      const pending = yield* engine.pendingMigrations();
+      expect(pending).toBeGreaterThan(0);
+
+      const progress: number[] = [];
+      yield* engine.migrate({ onProgress: (applied) => progress.push(applied) });
+      expect(progress.at(-1)).toBe(pending);
+      expect(progress).toEqual([...progress].sort((a, b) => a - b));
+      expect(yield* engine.pendingMigrations()).toBe(0);
+    }, Effect.provide(TestLayer)),
+  );
+
   // `done` needs an empty batch, which writes arriving faster than passes never leave; `drained` is
   // what lets a caller waiting for its own writes settle anyway.
   it.effect(
@@ -174,6 +190,34 @@ describe('IndexEngine', () => {
       legacySource.push([makeObject('doc-4')]);
       const legacy = yield* engine.update(Context.default(), legacySource, { spaceId: null, limit: 2 });
       expect(legacy).toMatchObject({ done: false, drained: false });
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'an empty batch still moves the cursors of what it read, and the next goes past them',
+    Effect.fnUntraced(function* () {
+      const { engine } = yield* setup;
+      const reads: DataSourceCursor[][] = [];
+      const dataSource: IndexDataSource = {
+        sourceName: 'skipping-source',
+        getChangedObjects: (_ctx, cursors, opts) =>
+          Effect.sync(() => {
+            if (opts?.objects !== false) {
+              reads.push(cursors);
+            }
+            const read = cursors.some(({ resourceId, cursor }) => resourceId === 'root' && cursor === 'root@1');
+            return {
+              objects: [],
+              cursors: read ? [] : [{ spaceId: null, resourceId: 'root', cursor: 'root@1' }],
+              more: false,
+            };
+          }),
+      };
+      const first = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(first).toMatchObject({ done: false, drained: true });
+      const second = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(second).toMatchObject({ done: true, drained: true });
+      expect(reads.at(-1)).toMatchObject([{ resourceId: 'root', cursor: 'root@1' }]);
     }, Effect.provide(TestLayer)),
   );
 
@@ -651,6 +695,447 @@ describe('IndexEngine', () => {
 
         expect((yield* engine.updateSecondaryIndexes(Context.default())).updated).toBe(1);
         expect(yield* sql`SELECT rowid FROM ftsIndex`).toHaveLength(1);
+      }, Effect.provide(TestLayer)),
+    );
+  });
+
+  // Queries share the connection the index writes through, so each waits behind at most one transaction.
+  describe('bounded transactions', () => {
+    const MAX_OBJECTS = 2;
+
+    /** Documents of several objects each, presented in full until the index records their heads. */
+    class DocumentsDataSource implements IndexDataSource {
+      readonly sourceName = 'documents-source';
+      readonly #documents = new Map<string, { heads: string; objects: IndexerObject[] }>();
+
+      constructor(private readonly _spaceId: SpaceId) {}
+
+      add(documentId: string, count: number): void {
+        this.#documents.set(documentId, {
+          heads: `${documentId}@1`,
+          objects: Array.from({ length: count }, (_, position) => ({
+            spaceId: this._spaceId,
+            documentId,
+            queueId: null,
+            queueNamespace: null,
+            recordId: null,
+            createdAt: null,
+            updatedAt: Date.now(),
+            data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: `${documentId} ${position}` },
+          })),
+        });
+      }
+
+      getChangedObjects(
+        _ctx: Context,
+        cursors: DataSourceCursor[],
+      ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more: boolean }> {
+        return Effect.sync(() => {
+          const objects: IndexerObject[] = [];
+          const changed: DataSourceCursor[] = [];
+          for (const [documentId, { heads, objects: documentObjects }] of this.#documents) {
+            if (!cursors.some((cursor) => cursor.resourceId === documentId && cursor.cursor === heads)) {
+              objects.push(...documentObjects.map((object) => ({ ...object })));
+              changed.push({ spaceId: this._spaceId, resourceId: documentId, cursor: heads });
+            }
+          }
+          return { objects, cursors: changed, more: false };
+        });
+      }
+    }
+
+    const setupBounded = (yieldBetweenTransactions: () => Promise<void>) =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const engine = new IndexEngine(sql, {
+          transactionLimits: { maxObjects: MAX_OBJECTS },
+          yieldBetweenTransactions,
+        });
+        yield* engine.migrate();
+        const tracker = new IndexTracker(sql);
+        const indexedDocuments = tracker
+          .queryCursors({ indexName: 'objectSnapshot', sourceName: 'documents-source' })
+          .pipe(Effect.map((cursors) => cursors.map((cursor) => cursor.resourceId).toSorted()));
+        return { engine, metaIndex: new EntityMetaIndex(sql), indexedDocuments };
+      });
+
+    it.effect(
+      'writes a document larger than one transaction over several and marks it indexed with the last',
+      Effect.fnUntraced(function* () {
+        let yields = 0;
+        const { engine, metaIndex, indexedDocuments } = yield* setupBounded(async () => {
+          yields++;
+        });
+        const spaceId = SpaceId.random();
+        const source = new DocumentsDataSource(spaceId);
+        source.add('doc-1', 5);
+
+        const result = yield* engine.update(Context.default(), source, { spaceId: null });
+        expect(yields).toBe(2);
+        expect(result).toMatchObject({ updated: 10, drained: true });
+        expect(yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT })).toHaveLength(5);
+        expect(yield* indexedDocuments).toEqual(['doc-1']);
+        expect(yield* engine.update(Context.default(), source, { spaceId: null })).toMatchObject({ done: true });
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a pass closed between transactions marks only the documents it finished',
+      Effect.fnUntraced(function* () {
+        const ctx = new Context();
+        let yields = 0;
+        const { engine, metaIndex, indexedDocuments } = yield* setupBounded(async () => {
+          // After the second transaction: doc-1 is whole, doc-2 has two of its three objects.
+          if (++yields === 2) {
+            await ctx.dispose();
+          }
+        });
+        const spaceId = SpaceId.random();
+        const source = new DocumentsDataSource(spaceId);
+        source.add('doc-1', 2);
+        source.add('doc-2', 3);
+
+        expect(yield* engine.update(ctx, source, { spaceId: null })).toMatchObject({ done: false, drained: false });
+        expect(yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT })).toHaveLength(4);
+        expect(yield* indexedDocuments).toEqual(['doc-1']);
+
+        yield* engine.update(Context.default(), source, { spaceId: null });
+        expect(yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT })).toHaveLength(5);
+        expect(yield* indexedDocuments).toEqual(['doc-1', 'doc-2']);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a pass failing between transactions leaves the unfinished document to the next pass',
+      Effect.fnUntraced(function* () {
+        let fail = true;
+        const { engine, metaIndex, indexedDocuments } = yield* setupBounded(async () => {
+          if (fail) {
+            throw new Error('Injected failure between transactions.');
+          }
+        });
+        const spaceId = SpaceId.random();
+        const source = new DocumentsDataSource(spaceId);
+        source.add('doc-1', 5);
+
+        const exit = yield* engine.update(Context.default(), source, { spaceId: null }).pipe(Effect.exit);
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT })).toHaveLength(MAX_OBJECTS);
+        expect(yield* indexedDocuments).toEqual([]);
+
+        fail = false;
+        yield* engine.update(Context.default(), source, { spaceId: null });
+        expect(yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT })).toHaveLength(5);
+        expect(yield* indexedDocuments).toEqual(['doc-1']);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a secondary batch holds one transaction of objects, so its cursor advances with each',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setupBounded(async () => {});
+        const source = new DocumentsDataSource(SpaceId.random());
+        source.add('doc-1', 5);
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        const batches: number[] = [];
+        for (;;) {
+          const { updated, done } = yield* engine.updateSecondaryIndexes(Context.default());
+          if (done) {
+            break;
+          }
+          batches.push(updated);
+        }
+        expect(batches).toEqual([2, 2, 1]);
+      }, Effect.provide(TestLayer)),
+    );
+  });
+
+  describe('feeds', () => {
+    const FEED_TYPE = DXN.make('org.dxos.type.feed', '0.1.0');
+
+    /** Feed blocks pushed in order; one namespace cursor counts how many were read. */
+    class QueueMockDataSource implements IndexDataSource {
+      readonly sourceName = 'queue-mock-source';
+      readonly #blocks: IndexerObject[] = [];
+
+      push(objects: IndexerObject[]) {
+        this.#blocks.push(...objects);
+      }
+
+      getChangedObjects(
+        _ctx: Context,
+        cursors: DataSourceCursor[],
+        opts?: { objects?: boolean },
+      ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more: boolean }> {
+        return Effect.sync(() => {
+          if (opts?.objects === false) {
+            return { objects: [], cursors: [], more: false };
+          }
+          const read = Number(cursors.find((cursor) => cursor.resourceId === 'data')?.cursor ?? 0);
+          return {
+            objects: this.#blocks.slice(read),
+            cursors: [{ spaceId: null, resourceId: 'data', cursor: this.#blocks.length }],
+            more: false,
+          };
+        });
+      }
+    }
+
+    const makeItem = (
+      spaceId: SpaceId,
+      queueId: EntityId,
+      block: { insertionId: number | null; position?: number },
+      data: { id?: EntityId; title: string },
+    ): IndexerObject => ({
+      spaceId,
+      queueId,
+      queueNamespace: 'data',
+      documentId: null,
+      recordId: null,
+      queuePosition: block.position ?? null,
+      queueInsertionId: block.insertionId,
+      createdAt: null,
+      updatedAt: Date.now(),
+      data: { id: data.id ?? EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: data.title },
+    });
+
+    const feedRows = (engine: IndexEngine, spaceId: SpaceId, queueId: EntityId) =>
+      engine.queryAll({ spaceIds: [], queues: [{ spaceId, queueId }] });
+
+    it.effect(
+      'indexing a Feed object records its options intent, with the data namespace by default',
+      Effect.fnUntraced(function* () {
+        const { engine, metaIndex } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const dataSource = new MockIndexDataSource();
+        dataSource.push([
+          {
+            spaceId,
+            documentId: 'doc-feed',
+            queueId: null,
+            queueNamespace: null,
+            recordId: null,
+            createdAt: null,
+            updatedAt: Date.now(),
+            data: { id: feedId, [ATTR_TYPE]: FEED_TYPE, name: 'log', retention: { maxLength: 5 } },
+          },
+        ]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+        expect(yield* metaIndex.query({ spaceId, typeDXN: FEED_TYPE })).toHaveLength(1);
+        const { maxId, intents } = yield* engine.takeFeedOptionsIntents();
+        expect(intents).toEqual([
+          { kind: 'feed-options', spaceId, feedId, namespace: 'data', options: { retention: { maxLength: 5 } } },
+        ]);
+
+        yield* engine.clearFeedOptionsIntents(spaceId, feedId, maxId);
+        expect((yield* engine.takeFeedOptionsIntents()).intents).toEqual([]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'records the data namespace for a Feed object whose namespace is not a known one',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const dataSource = new MockIndexDataSource();
+        dataSource.push([
+          {
+            spaceId,
+            documentId: 'doc-feed',
+            queueId: null,
+            queueNamespace: null,
+            recordId: null,
+            createdAt: null,
+            updatedAt: Date.now(),
+            data: { id: feedId, [ATTR_TYPE]: FEED_TYPE, namespace: 'other', retention: { maxLength: 5 } },
+          },
+        ]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+        const { intents } = yield* engine.takeFeedOptionsIntents();
+        expect(intents).toEqual([
+          { kind: 'feed-options', spaceId, feedId, namespace: 'data', options: { retention: { maxLength: 5 } } },
+        ]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a queue bounded by updatedSince excludes its older rows before the window limit',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const queueId = EntityId.random();
+        const source = new QueueMockDataSource();
+        // Ascending ids put the expired rows first in natural order, where an unbounded page would take them.
+        const ids = Array.from({ length: 4 }, () => EntityId.random()).sort();
+        source.push(
+          ids.map((id, index) => ({
+            ...makeItem(spaceId, queueId, { insertionId: index + 1 }, { id, title: `item ${index}` }),
+            updatedAt: index < 2 ? 1_000 : 5_000,
+          })),
+        );
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        const rows = yield* engine.queryAll({
+          spaceIds: [],
+          queues: [{ spaceId, queueId, updatedSince: 2_000 }],
+          window: { kind: 'natural', direction: 'asc', limit: 2 },
+        });
+        expect(rows.map((row) => row.objectId)).toEqual(ids.slice(2));
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'drops invalid options fields and skips feed items and deleted Feed objects',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const documents = new MockIndexDataSource();
+        const makeFeed = (documentId: string, data: Record<string, unknown>): IndexerObject => ({
+          spaceId,
+          documentId,
+          queueId: null,
+          queueNamespace: null,
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: FEED_TYPE, ...data },
+        });
+        documents.push([
+          makeFeed('doc-1', {
+            id: feedId,
+            namespace: 'trace',
+            indexing: { enabled: false },
+            retention: { maxLength: -1 },
+          }),
+          makeFeed('doc-2', { '@deleted': true, 'retention': { maxLength: 3 } }),
+        ]);
+        yield* engine.update(Context.default(), documents, { spaceId: null });
+
+        const items = new QueueMockDataSource();
+        items.push([
+          {
+            ...makeItem(spaceId, EntityId.random(), { insertionId: 1 }, { title: 'nested' }),
+            data: { id: EntityId.random(), [ATTR_TYPE]: FEED_TYPE },
+          },
+        ]);
+        yield* engine.update(Context.default(), items, { spaceId: null });
+
+        const { intents } = yield* engine.takeFeedOptionsIntents();
+        expect(intents).toEqual([
+          { kind: 'feed-options', spaceId, feedId, namespace: 'trace', options: { indexing: { enabled: false } } },
+        ]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'deleteFeedObjects removes every index row of one feed and leaves other feeds',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedA = EntityId.random();
+        const feedB = EntityId.random();
+        const source = new QueueMockDataSource();
+        source.push([
+          makeItem(spaceId, feedA, { insertionId: 1 }, { title: 'hello one' }),
+          makeItem(spaceId, feedA, { insertionId: 2 }, { title: 'hello two' }),
+          makeItem(spaceId, feedB, { insertionId: 3 }, { title: 'hello three' }),
+        ]);
+        yield* engine.update(Context.default(), source, { spaceId: null });
+        yield* engine.updateSecondaryIndexes(Context.default());
+
+        expect(yield* engine.deleteFeedObjects({ spaceId, queueId: feedA })).toBe(2);
+        expect(yield* feedRows(engine, spaceId, feedA)).toEqual([]);
+        expect(yield* feedRows(engine, spaceId, feedB)).toHaveLength(1);
+
+        const sql = yield* SqlClient.SqlClient;
+        expect(yield* sql`SELECT recordId FROM objectSnapshot`).toHaveLength(1);
+        const text = yield* engine.queryText({
+          query: 'hello',
+          spaceId: [spaceId],
+          includeAllQueues: true,
+          queues: null,
+        });
+        expect(text.map((row) => row.queueId)).toEqual([feedB]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'purgeFeedBlocks removes a row only when its current block was trimmed',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const liveId = EntityId.random();
+        const source = new QueueMockDataSource();
+        source.push([
+          makeItem(spaceId, feedId, { insertionId: 1 }, { id: liveId, title: 'v1' }),
+          makeItem(spaceId, feedId, { insertionId: 2 }, { title: 'other' }),
+          makeItem(spaceId, feedId, { insertionId: 3 }, { id: liveId, title: 'v2' }),
+        ]);
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        // The live object's older block is gone, but its newer one still backs the row.
+        expect(
+          yield* engine.purgeFeedBlocks({
+            spaceId,
+            queueId: feedId,
+            blocks: [
+              { insertionId: 1, position: null },
+              { insertionId: 2, position: null },
+            ],
+          }),
+        ).toBe(1);
+        expect((yield* feedRows(engine, spaceId, feedId)).map((row) => row.objectId)).toEqual([liveId]);
+
+        expect(
+          yield* engine.purgeFeedBlocks({ spaceId, queueId: feedId, blocks: [{ insertionId: 3, position: null }] }),
+        ).toBe(1);
+        expect(yield* feedRows(engine, spaceId, feedId)).toEqual([]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'purgeFeedBlocks matches a row that predates queueInsertionId by its position',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const source = new QueueMockDataSource();
+        source.push([makeItem(spaceId, feedId, { insertionId: null, position: 7 }, { title: 'legacy' })]);
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        expect(
+          yield* engine.purgeFeedBlocks({ spaceId, queueId: feedId, blocks: [{ insertionId: 99, position: 8 }] }),
+        ).toBe(0);
+        expect(
+          yield* engine.purgeFeedBlocks({ spaceId, queueId: feedId, blocks: [{ insertionId: 99, position: 7 }] }),
+        ).toBe(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a seeded cursor is read by the next pass and deleted once it stands at the finished value',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const tracker = new IndexTracker(yield* SqlClient.SqlClient);
+        yield* engine.seedCursor({ sourceName: 'queue', spaceId, resourceId: 'backfill/data/feed', cursor: '' });
+        const seeded = yield* tracker.queryCursorsBySource({ sourceName: 'queue' });
+        expect([...seeded.keys()].sort()).toEqual([...IndexEngine.primaryIndexNames].sort());
+
+        const finish = { sourceName: 'queue', spaceId, resourceIds: ['backfill/data/feed'], cursor: 'done' };
+        yield* engine.deleteFinishedCursors(finish);
+        expect((yield* tracker.queryCursorsBySource({ sourceName: 'queue' })).size).toBe(2);
+
+        yield* engine.seedCursor({ sourceName: 'queue', spaceId, resourceId: 'backfill/data/feed', cursor: 'done' });
+        yield* engine.deleteFinishedCursors(finish);
+        expect((yield* tracker.queryCursorsBySource({ sourceName: 'queue' })).size).toBe(0);
       }, Effect.provide(TestLayer)),
     );
   });

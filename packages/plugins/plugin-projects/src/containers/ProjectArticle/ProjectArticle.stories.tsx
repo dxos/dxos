@@ -26,7 +26,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as GitHubPlugin from '@dxos/plugin-github/GitHubPlugin';
 import { FixtureLinkSourcePlugin } from '@dxos/plugin-github/testing';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
@@ -34,7 +34,7 @@ import { translations as routineTranslations } from '@dxos/plugin-routine/transl
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { translations as tasksTranslations } from '@dxos/plugin-tasks/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -279,7 +279,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         TasksPlugin.make(),
         // The plugin under test, for its own contributions rather than its surfaces: the `TaskAction`
         // module is what puts an action on a task row, and Assistant supplies the `CreateChat`

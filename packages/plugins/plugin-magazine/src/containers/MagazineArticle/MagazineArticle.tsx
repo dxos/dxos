@@ -5,17 +5,20 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type AppSurface, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
@@ -27,17 +30,17 @@ import { useToolbar } from './useToolbar.tsx';
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const invoker = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const invoker = Hooks.useOperationInvoker();
   const [magazine] = useObject(subject);
-  const curateProgress = useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
+  const curateProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
 
   // The toolbar owns the view-filter atom and the curate/clear handlers; the article reads `view` to
   // filter the visible posts.
   const { menu, viewAtom } = useToolbar({ magazine: subject });
   const view = useAtomValue(viewAtom);
 
-  const showItem = useShowItem();
+  const showItem = ToolkitHooks.useShowItem();
   const id = attendableId ?? Obj.getURI(magazine);
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(magazine);
@@ -84,9 +87,21 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         magazine: subject,
         current: currentId === post.id,
         onToggleStar: handleToggleStar,
-        onOpen: handleOpen,
       })),
-    [posts, currentId, handleOpen, handleToggleStar],
+    [posts, currentId, handleToggleStar],
+  );
+
+  // The masonry item is the tile's focusable unit, so it opens the post on click and on Enter.
+  const itemProps = useCallback(
+    (id: string) => ({
+      onActivate: () => {
+        const post = posts.find((post) => post.id === id);
+        if (post) {
+          void handleOpen(post);
+        }
+      },
+    }),
+    [posts, handleOpen],
   );
 
   return (
@@ -98,14 +113,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <Flex center classNames='h-full text-fg-subtle text-sm'>
+          <Layout.Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-magazine.message')}
-          </Flex>
+          </Layout.Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content padding>
               {/* TODO(burdon): Move items into Root. */}
-              <Masonry.Viewport classNames='py-2' items={tileItems} />
+              <Masonry.Viewport classNames='py-2' items={tileItems} itemProps={itemProps} />
             </Masonry.Content>
           </Masonry.Root>
         )}
@@ -123,7 +138,6 @@ type TileData = {
   magazine: Magazine.Magazine;
   current: boolean;
   onToggleStar?: (post: Subscription.Post, starred: boolean) => void;
-  onOpen?: (post: Subscription.Post) => void;
 };
 
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
@@ -132,13 +146,7 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   }
 
   return (
-    <MagazineTile
-      post={data.post}
-      magazine={data.magazine}
-      current={data.current}
-      onOpen={data.onOpen}
-      onToggleStar={data.onToggleStar}
-    />
+    <MagazineTile post={data.post} magazine={data.magazine} current={data.current} onToggleStar={data.onToggleStar} />
   );
 };
 

@@ -10,12 +10,12 @@ import { within } from 'storybook/test';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, DXN, Filter, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as Frame from '@dxos/plugin-studio/Frame';
 import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
@@ -23,7 +23,7 @@ import * as Storyboard from '@dxos/plugin-studio/Storyboard';
 import * as StudioCapabilities from '@dxos/plugin-studio/StudioCapabilities';
 import * as StudioOperation from '@dxos/plugin-studio/StudioOperation';
 import * as StudioSkill from '@dxos/plugin-studio/StudioSkill';
-import { STUDIO_TASK_TITLE, studioTemplate } from '@dxos/plugin-studio/templates';
+import * as Templates from '@dxos/plugin-studio/Templates';
 import { type Space } from '@dxos/react-client/echo';
 import { accessTokensFromEnv } from '@dxos/storybook-testing';
 
@@ -49,7 +49,7 @@ let storySpace: Space | undefined;
 const seedStudioProject = async ({ space }: { space: Space }) => {
   storySpace = space;
   const project = await EffectEx.runPromise(
-    studioTemplate
+    Templates.studioTemplate
       .scaffold({ name: 'Studio' })
       .pipe(Effect.provideService(Database.Service, Database.makeService(space.db))),
   );
@@ -274,7 +274,7 @@ export const TestStoryboardScripted: Story = {
   args: sharedArgs,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await submitPrompt(canvasElement, `Do the task: ${STUDIO_TASK_TITLE}`);
+    await submitPrompt(canvasElement, `Do the task: ${Templates.STUDIO_TASK_TITLE}`);
 
     const storyboard = await waitForStoryboard(async (storyboard, frames) => {
       if (storyboard.name !== 'How Studio works' || frames.length !== 3) {

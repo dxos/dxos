@@ -14,6 +14,13 @@ export const Settings = Schema.Struct({
       description: 'URL of the EDGE build service. Leave empty to use the default.',
     }),
   ),
+  repos: Schema.optional(
+    Schema.Array(Schema.String).annotate({
+      title: 'Local repositories',
+      description:
+        'Checkouts that synced specs resolve against: an absolute path (its GitHub remote names the repo), or `owner/repo=/abs/path`.',
+    }),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

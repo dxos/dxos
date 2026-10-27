@@ -7,10 +7,13 @@ import React, {
   type ComponentType,
   type CSSProperties,
   type JSX,
-  type MouseEvent,
   type PropsWithChildren,
   type Ref,
+  type RefObject,
+  createContext as createReactContext,
+  useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -19,7 +22,10 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea, ThemedClassName, composable, composableProps, useMergeRefs, usePx } from '@dxos/react-ui';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip.ts';
@@ -32,6 +38,25 @@ const REVEAL_SETTLE_MS = 80;
 
 /** Reveal the grid no later than this after mount, so churning content never hides it indefinitely. */
 const REVEAL_DEADLINE_MS = 1200;
+
+/** The element's content-box width, as the resize detector reports it: net of padding and scrollbar. */
+const getContentWidth = (element: HTMLElement): number => {
+  const style = getComputedStyle(element);
+  return element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+};
+
+const useContentWidth = (ref: RefObject<HTMLDivElement | null>): number => {
+  // Throttle width changes: each update recomputes the column count and the full tile layout,
+  // so coalesce rapid resizes (drag, ScrollArea reflow) into at most one relayout per interval.
+  const { width: observedWidth } = useResizeDetector({ targetRef: ref, refreshMode: 'throttle', refreshRate: 200 });
+  const [mountWidth, setMountWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (ref.current) {
+      setMountWidth(getContentWidth(ref.current));
+    }
+  }, [ref]);
+  return observedWidth ?? mountWidth;
+};
 
 //
 // Context
@@ -66,6 +91,15 @@ type MasonryContextValue = {
 const MASONRY_NAME = 'Masonry';
 
 const [MasonryProvider, useMasonryContext] = createContext<MasonryContextValue>(MASONRY_NAME);
+
+// A tile is laid out but hidden until the grid reveals it and its own height is measured; hidden content cannot take focus.
+const TileRevealedContext = createReactContext(true);
+
+/** Whether `Masonry.Content` pads the viewport inline, so the layout matches it top and bottom. */
+const GutterContext = createReactContext(false);
+
+/** Whether the enclosing Masonry tile is shown; true outside a Masonry. */
+export const useMasonryTileRevealed = () => useContext(TileRevealedContext);
 
 //
 // Root
@@ -108,27 +142,27 @@ MasonryRoot.displayName = 'Masonry.Root';
 // content box, so the gutter and the thumb are accounted for whatever is configured here.
 //
 
-type MasonryContentProps = ThemedClassName<
+type MasonryContentProps = Util.ThemedClassName<
   PropsWithChildren<
     Pick<ScrollAreaRootProps, 'scrollbars'> & {
-      /** Inline gutter equal to the grid gap, so the perimeter matches the inter-column gap. */
+      /** Gutter equal to the grid gap on every side, so the perimeter matches the inter-tile gap. */
       padding?: boolean;
     }
   >
 >;
 
-const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
+const MasonryContentInner = Util.composable<HTMLDivElement, MasonryContentProps>(
   ({ children, scrollbars, padding = true, ...props }, forwardedRef) => {
     const { gap } = useMasonryContext('Masonry.Content');
     const style: CSSProperties & Record<'--gutter', string> = { '--gutter': padding ? `${gap}rem` : '0px' };
     return (
       <ScrollArea.Root
         // `size-full`: the grid is a pane of its own and fills its host, as a Panel does, whatever the host's display.
-        {...composableProps(props, { classNames: 'size-full', style })}
+        {...Util.composableProps(props, { classNames: 'size-full', style })}
         scrollbars={scrollbars}
         ref={forwardedRef}
       >
-        {children}
+        <GutterContext.Provider value={padding}>{children}</GutterContext.Provider>
       </ScrollArea.Root>
     );
   },
@@ -151,7 +185,7 @@ const MasonryContent = MasonryContentInner as (
 // this layer separately from Content to control the tile grid.
 //
 
-type MasonryViewportProps<Item> = ThemedClassName<{
+type MasonryViewportProps<Item> = Util.ThemedClassName<{
   /** Items to render in the masonry grid. */
   items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
@@ -163,14 +197,11 @@ type MasonryViewportProps<Item> = ThemedClassName<{
    */
   cacheKey?: string;
   /**
-   * Ids of the currently-selected tiles. When `onSelect` is also provided the grid becomes
-   * selectable: selected tiles render an outline + `aria-selected`, and clicking a tile emits
-   * {@link onSelect}. Selection STATE (single/multi semantics) is owned by the consumer — pair this
-   * with `useListSelection` from `@dxos/react-ui-list`.
+   * Each tile's selection and activation, as `useListSelection`'s `bind(id).rowProps` gives them (`aria-selected`,
+   * click, and focus for a single-select grid whose selection follows the arrow keys), plus `onActivate`. A tile with
+   * `aria-selected` is an option of a listbox; without, a list item.
    */
-  selectedIds?: ReadonlySet<string>;
-  /** Emitted when a tile is clicked while selectable. The consumer toggles its own selection state. */
-  onSelect?: (id: string, event: MouseEvent) => void;
+  itemProps?: (id: string) => Focus.ItemBinding | undefined;
   /**
    * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
    * viewport) to render the grid in a plain full-width block instead of a nested scroll container —
@@ -182,38 +213,37 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   scroll?: boolean;
 }>;
 
-const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, cacheKey, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
+const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProps<any>>(
+  ({ items, getId, cacheKey, itemProps, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
-    const remInPx = usePx(1);
+    // Only a scrolling viewport inside a padded `Masonry.Content` has an inline gutter; otherwise the host owns the perimeter.
+    const perimeter = useContext(GutterContext) && scroll;
+    const remInPx = Hooks.usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
     // than deriving it from the root width, so the grid tracks the actual available
     // width for any ScrollArea density (thin/scrollbars/padding) without duplicating
     // the theme's gutter math.
     const viewportRef = useRef<HTMLDivElement | null>(null);
-    // Throttle width changes: each update recomputes the column count and the full tile layout,
-    // so coalesce rapid resizes (drag, ScrollArea reflow) into at most one relayout per interval.
-    const { width: contentWidth = 0 } = useResizeDetector({
-      targetRef: viewportRef,
-      refreshMode: 'throttle',
-      refreshRate: 200,
-    });
+    const contentWidth = useContentWidth(viewportRef);
     const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
     // The grid fills the measured content box; the layout caps columns at
     // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
-    const { rects, columnWidth, height, getTileRef, nodes, measured, knownIds } = useMasonryLayout({
-      ids,
-      columnCount,
-      containerWidth: contentWidth,
-      gapPx,
-      maxColumnWidthPx: maxColumnWidth * remInPx,
-      centered,
-      cacheKey,
-    });
+    const { rects, columnWidth, height, getTileRef, nodes, measured, cachedAtFirstLayout, knownIds } = useMasonryLayout(
+      {
+        ids,
+        columnCount,
+        containerWidth: contentWidth,
+        gapPx,
+        maxColumnWidthPx: maxColumnWidth * remInPx,
+        centered,
+        perimeter,
+        cacheKey,
+      },
+    );
     useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
 
     // Hide the grid until the layout stops changing, then fade in; latch on so later edits never
@@ -221,56 +251,47 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // poster reserves height a frame later), so the first pass stacks them bunched at the top and
     // only settles over the next few reflows. Debounce on `rects` identity — which changes on every
     // relayout — and reveal once it has been stable for a beat, with a hard deadline as a backstop.
-    //
-    // None of that applies when every tile's height was already known on the first pass (the height
-    // cache is warm from an earlier mount): the layout is final before paint, so waiting for it to
-    // settle would just be a delay. That is the common case after the first visit.
     const [revealed, setRevealed] = useState(false);
-    const firstPass = useRef(true);
     useEffect(() => {
-      if (revealed) {
+      if (revealed || contentWidth <= 0) {
         return;
       }
-      // Nothing has been laid out until the viewport reports a width, so this does not count as the
-      // first pass — consuming it here would forfeit the fast path on every mount.
-      if (contentWidth <= 0) {
+      if (cachedAtFirstLayout) {
+        setRevealed(true);
         return;
       }
       if (!measured) {
-        firstPass.current = false;
-        return;
-      }
-      if (firstPass.current) {
-        setRevealed(true);
         return;
       }
       const timer = setTimeout(() => setRevealed(true), REVEAL_SETTLE_MS);
       return () => clearTimeout(timer);
-    }, [revealed, measured, rects, contentWidth]);
+    }, [revealed, measured, cachedAtFirstLayout, rects, contentWidth]);
     useEffect(() => {
       const deadline = setTimeout(() => setRevealed(true), REVEAL_DEADLINE_MS);
       return () => clearTimeout(deadline);
     }, []);
 
-    // Arrow-key navigation across tiles. The `both` axis moves focus through the items as flat
-    // next/previous in DOM order on all four arrows; `tabbable` keeps each tile its own tab stop.
+    // Arrow-key navigation across tiles by position: the layout puts each item in the shortest column, so DOM order
+    // jumps about the screen. `tabbable` keeps each tile its own tab stop.
     const { ref: focusGroupRef, ...focusGroupProps } = useFocusGroup({
-      axis: 'both',
+      axis: 'grid',
       memorizeCurrent: true,
       tabbable: true,
       cyclic: true,
     });
-    const gridRef = useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
+    const gridRef = Hooks.useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
 
     // The viewport is the full-width scroll container, padded inline by `--gutter`
     // (the gap, set by Masonry.Content). The grid fills the content box and the layout centres capped columns,
     // so nothing overflows and left/right spacing matches the gap. The viewport always
     // renders so it can be measured; tiles render once a width is known.
+    const bounds = ids.map((id) => itemProps?.(id));
+    const selectableGrid = bounds.some((bound) => bound?.['aria-selected'] !== undefined);
     const grid = (
       <>
         {contentWidth > 0 && (
           <div
-            {...composableProps(props, {
+            {...Util.composableProps(props, {
               classNames: 'relative',
               style: {
                 width: `${contentWidth}px`,
@@ -283,14 +304,17 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
               },
             })}
             {...focusGroupProps}
-            role='list'
+            // A selectable grid is a listbox of options, the roles that carry `aria-selected`.
+            role={selectableGrid ? 'listbox' : 'list'}
             ref={gridRef}
           >
             {items.map((item, index) => {
               const id = ids[index];
               const rect = rects[index];
-              const selectable = !!onSelect;
-              const selected = selectedIds?.has(id) ?? false;
+              const bound = bounds[index];
+              // Activation alone does not make a tile selectable; only selection carries `aria-selected`.
+              const selectable = bound?.['aria-selected'] !== undefined;
+              const { 'aria-selected': selected = false, ...handlers } = Focus.bindItem(bound);
               // A tile with no height at all — never measured, nothing remembered — is positioned by
               // a guess. Painting that guess is what flashed a tile hundreds of pixels out of place
               // when the item set was swapped wholesale. A remembered height from another width is
@@ -298,33 +322,33 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
               // `visibility` rather than `display`, so the ResizeObserver can still measure it.
               const estimated = !knownIds.has(id);
               return (
-                <div
-                  key={id}
-                  // Let the tile clamp its card: a card's own min-width must not exceed
-                  // the column, or a narrow (single-column, mobile) container overflows
-                  // and shows a horizontal scrollbar.
-                  className={[
-                    '*:min-w-0!',
-                    selectable && 'cursor-pointer',
-                    selected && 'rounded-md ring-2 ring-inset ring-primary-500',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  ref={getTileRef(id)}
-                  role='listitem'
-                  aria-selected={selectable ? selected : undefined}
-                  onClick={onSelect ? (event) => onSelect(id, event) : undefined}
-                  style={{
-                    position: 'absolute',
-                    insetBlockStart: 0,
-                    insetInlineStart: 0,
-                    width: `${columnWidth}px`,
-                    transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
-                    visibility: estimated ? 'hidden' : undefined,
-                  }}
-                >
-                  <Tile index={index} data={item} selected={selected} />
-                </div>
+                // The tile is the collection's item: the shared focus ring marks it when current (by click or arrows),
+                // and the shared selected edge when selected — drawn on an overlay above an opaque tile (a card).
+                <Focus.Item key={id} asChild selected={selectable ? selected : undefined} data-focus-click>
+                  <div
+                    // Let the tile clamp its card: a card's own min-width must not exceed
+                    // the column, or a narrow (single-column, mobile) container overflows
+                    // and shows a horizontal scrollbar.
+                    className={['*:min-w-0! rounded-md', (selectable || bound?.onActivate) && 'cursor-pointer']
+                      .filter(Boolean)
+                      .join(' ')}
+                    ref={getTileRef(id)}
+                    role={selectable ? 'option' : 'listitem'}
+                    {...handlers}
+                    style={{
+                      position: 'absolute',
+                      insetBlockStart: 0,
+                      insetInlineStart: 0,
+                      width: `${columnWidth}px`,
+                      transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
+                      visibility: estimated ? 'hidden' : undefined,
+                    }}
+                  >
+                    <TileRevealedContext.Provider value={revealed && !estimated}>
+                      <Tile index={index} data={item} selected={selected} />
+                    </TileRevealedContext.Provider>
+                  </div>
+                </Focus.Item>
               );
             })}
           </div>
@@ -364,7 +388,7 @@ const useColumnCount = (
   maxColumnWidth: number,
   gap: number,
 ) => {
-  const remInPx = usePx(1);
+  const remInPx = Hooks.usePx(1);
   return useMemo(() => {
     if (columns != null) {
       return columns;

@@ -10,7 +10,7 @@ import { SpaceId } from '@dxos/keys';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Select } from '@dxos/react-ui';
+import * as Select from '@dxos/react-ui/Select';
 
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks/index.ts';
 

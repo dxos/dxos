@@ -6,9 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { Button, Toolbar } from '@dxos/react-ui';
-import { type WindowController } from '@dxos/react-ui-virtual';
+import { FOLLOW_WINDOW, type WindowController } from '@dxos/react-ui-virtual';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
 import { type FeedScenario, MessageWindow, createScenario } from '../testing/index.ts';
@@ -50,7 +51,7 @@ const DefaultStory = ({
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <Button
+        <Button.Root
           icon='ph--plus--regular'
           iconOnly
           label='Append'
@@ -65,7 +66,7 @@ const DefaultStory = ({
             ])
           }
         />
-        <Button
+        <Button.Root
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'
@@ -202,6 +203,7 @@ export const Tail: Story = {
       return !!last && Math.abs(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;
     };
 
+    await new Promise((resolve) => setTimeout(resolve, FOLLOW_WINDOW + 200));
     (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
     // Arrival is by correction rounds — the jump lands on estimates and the follow finishes the
     // journey against the rendered edge — so it is polled, not sampled.

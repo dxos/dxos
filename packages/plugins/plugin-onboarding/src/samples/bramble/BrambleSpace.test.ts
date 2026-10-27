@@ -4,10 +4,51 @@
 
 import { describe, test } from 'vitest';
 
+import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import type * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
 import * as BrambleSpace from './BrambleSpace.ts';
+import { Sheets } from './sheets.ts';
+import { REFERENCE } from './util.ts';
+
+/** Header cells (row 1 labels) missing the heading style, or over all-numeric values without end alignment. */
+const unstyledHeaders = (sheet: Sheet.Sheet): string[] => {
+  const ranges = sheet.ranges.map(({ range, key, value }) => ({
+    ...SheetUtil.rangeFromIndex(sheet, range),
+    key,
+    value,
+  }));
+  const covered = (key: string, value: string, { col, row }: { col: number; row: number }) =>
+    ranges.some(
+      (range) =>
+        range.key === key &&
+        range.value === value &&
+        col >= range.from.col &&
+        col <= range.to.col &&
+        row >= range.from.row &&
+        row <= range.to.row,
+    );
+  const cells = Object.entries(sheet.cells).map(([index, { value }]) => ({
+    ...SheetUtil.addressFromIndex(sheet, index),
+    value,
+  }));
+  return cells
+    .filter(({ row, value }) => row === 0 && typeof value === 'string' && !value.startsWith('='))
+    .flatMap((header) => {
+      const column = cells.filter(({ col, row }) => col === header.col && row > 0);
+      const numeric =
+        column.length > 0 && column.every(({ value }) => typeof value === 'number' || String(value).startsWith('='));
+      return [
+        ...(covered('style', 'header', header) ? [] : [`${sheet.name}: ${header.value} has no heading style`]),
+        ...(numeric && !covered('alignment', 'end', header)
+          ? [`${sheet.name}: ${header.value} is not end-aligned`]
+          : []),
+      ];
+    });
+};
 
 /** Asserts the built archive's shape, so an incompatible schema change fails here. */
 describe('Bramble template', () => {
@@ -19,7 +60,7 @@ describe('Bramble template', () => {
         .filter(([type]) => type.includes(typename))
         .reduce((total, [, count]) => total + count, 0);
 
-    expect(objectCount).toBe(128);
+    expect(objectCount).toBe(131);
 
     expect(countOf('type.organization')).toBe(6);
     expect(countOf('type.person')).toBe(9);
@@ -44,8 +85,20 @@ describe('Bramble template', () => {
     expect(countOf('type.milestone')).toBe(5);
     expect(countOf('type.document')).toBe(7);
     expect(countOf('type.drawing')).toBe(2);
-    expect(countOf('type.sheet')).toBe(2);
+    expect(countOf('type.sheet')).toBe(3);
+    expect(countOf('type.chart')).toBe(2);
     expect(countOf('type.collection')).toBe(4);
+  });
+
+  test('styles every sheet header and end-aligns its numeric columns', async ({ expect }) => {
+    const definition = SampleSpace.make({
+      space: { name: 'Bramble sheets' },
+      reference: REFERENCE,
+      partials: { sheets: Sheets },
+      build: (partials) => partials.sheets(),
+    });
+    const { result } = await EffectEx.runPromise(buildArchive(definition));
+    expect(Object.values(result).flatMap(unstyledHeaders)).toEqual([]);
   });
 
   test('shares documents between collections and projects', { timeout: 120_000 }, async ({ expect }) => {

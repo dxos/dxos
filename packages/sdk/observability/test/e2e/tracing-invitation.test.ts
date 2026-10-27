@@ -9,7 +9,7 @@ import { sleep } from '@dxos/async';
 import { Client, Config, DXOS_VERSION } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
 import { LocalClientServices } from '@dxos/client/local';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { MemoryTransportFactory } from '@dxos/network-manager';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';

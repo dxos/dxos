@@ -6,12 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Spec } from '@dxos/types';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
-import { CodeProject, Spec } from '#types';
+import { CodeProject } from '#types';
 
 import { isPluginSpecSubject } from '../plugin-spec.ts';
 
@@ -22,7 +23,7 @@ export default Capability.makeModule(() =>
         id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
         component: SpecArticle,
-        props: ({ role, data: { subject } }) => ({ role, content: subject.content }),
+        props: ({ role, data: { subject } }) => ({ role, content: subject.content, sourceKey: subject.sourceKey }),
       }),
       Surface.create({
         id: 'specArticle',

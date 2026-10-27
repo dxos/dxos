@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import { Connection, Cursor } from '@dxos/link';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
@@ -40,6 +40,9 @@ export const translations = [
         'account-mismatch.description':
           'This was not connected, because it already syncs a different account. To sync the account you just authorized, create a new item for it and connect that instead.',
         'close.label': 'Close',
+        'sync-routine-disabled.title': 'Sync is switched off',
+        'sync-routine-disabled.description': 'The routine that syncs this account is turned off. Turn it on to sync.',
+        'open-routines.label': 'Open routines',
         'sync-connection.label': 'Sync now',
         'no-connector.message': 'No service plugin is registered for this connection.',
         'connection-status.label': 'Status',
@@ -76,6 +79,13 @@ export const translations = [
         'select-none.label': 'Select none',
         'no-available-targets.message': 'No remote targets available.',
         'create-connection.service.placeholder': 'Search services…',
+        'connector-kind.app.label': 'Connect as Composer',
+        'connector-kind.custom.label': 'Use your own app or key',
+        'connector-kind.user.label': 'Connect as you',
+        'user-connection-shared.title': 'This connection acts as you',
+        'user-connection-shared.message': 'Everyone in this space can use it, and what they do shows up as you.',
+        'user-connection-shared-mcp.message':
+          'Everyone in this space can use it, and their agents can act as you on {{service}}, such as posting comments or creating issues.',
         'connect-service.label': 'Connect {{service}}',
         'continue.label': 'Continue',
         'custom-token-dialog.title': 'Add custom token',
@@ -104,4 +114,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

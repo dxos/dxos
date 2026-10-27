@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Panel, ScrollArea } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { type Message } from '@dxos/types';
 
 import { AttachmentViewer } from '#components';

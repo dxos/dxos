@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 
 import { TradingViewChart } from '#components';
 import { Ibkr } from '#types';

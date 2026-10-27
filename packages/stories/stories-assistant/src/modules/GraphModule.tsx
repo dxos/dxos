@@ -5,22 +5,25 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { ForceGraph } from '@dxos/plugin-explorer/components';
-import { useGraphModel } from '@dxos/plugin-explorer/hooks';
+import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
+import * as ExplorerHooks from '@dxos/plugin-explorer/Hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
-import { Button, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-query';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/index.ts';
 
 export const GraphModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -39,7 +42,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
     feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
   );
 
-  const model = useGraphModel(space.db, undefined, undefined, items);
+  const model = ExplorerHooks.useGraphModel(space.db, undefined, undefined, items);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -60,7 +63,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
         <SearchBar space={space} onSubmit={handleSubmit} />
       </Panel.Header>
       <Panel.Body classNames='relative min-h-0'>
-        <ForceGraph classNames='min-h-[50vh]' model={model} />
+        <ForceGraph.Root classNames='min-h-[50vh]' model={model} />
 
         {open && (
           <div
@@ -74,7 +77,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <Button
+          <Button.Root
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -89,33 +92,35 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
 
 type SearchBarProps = { space: Space } & Pick<ChatEditorProps, 'onSubmit'>;
 
-export const SearchBar = composable<HTMLDivElement, SearchBarProps>(({ space, onSubmit, ...props }, forwardedRef) => {
-  const { state: flushState, handleFlush } = useFlush(space);
-  const editorRef = useRef<EditorController>(null);
+export const SearchBar = Util.composable<HTMLDivElement, SearchBarProps>(
+  ({ space, onSubmit, ...props }, forwardedRef) => {
+    const { state: flushState, handleFlush } = useFlush(space);
+    const editorRef = useRef<EditorController>(null);
 
-  return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} ref={editorRef} />
-      <Button
-        icon='ph--magnifying-glass--regular'
-        iconOnly
-        label='Search'
-        onClick={() => onSubmit?.(editorRef.current?.getText() ?? '')}
-      />
-      <Button
-        disabled={flushState === 'flushing'}
-        icon={Match.value(flushState).pipe(
-          Match.when('idle', () => 'ph--floppy-disk--regular'),
-          Match.when('flushing', () => 'ph--spinner--regular'),
-          Match.when('flushed', () => 'ph--check--regular'),
-          Match.exhaustive,
-        )}
-        iconOnly
-        label='flush'
-        onClick={handleFlush}
-      />
-    </Toolbar.Root>
-  );
-});
+    return (
+      <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
+        <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} ref={editorRef} />
+        <Button.Root
+          icon='ph--magnifying-glass--regular'
+          iconOnly
+          label='Search'
+          onClick={() => onSubmit?.(editorRef.current?.getText() ?? '')}
+        />
+        <Button.Root
+          disabled={flushState === 'flushing'}
+          icon={Match.value(flushState).pipe(
+            Match.when('idle', () => 'ph--floppy-disk--regular'),
+            Match.when('flushing', () => 'ph--spinner--regular'),
+            Match.when('flushed', () => 'ph--check--regular'),
+            Match.exhaustive,
+          )}
+          iconOnly
+          label='flush'
+          onClick={handleFlush}
+        />
+      </Toolbar.Root>
+    );
+  },
+);
 
 SearchBar.displayName = 'SearchBar';

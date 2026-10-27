@@ -16,7 +16,6 @@ import { BaseError } from '@dxos/errors';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Text } from '@dxos/schema';
 
-import * as McpServer from '../McpServer.ts';
 import * as Operation from '../Operation.ts';
 import * as Template from './Template.ts';
 import * as Trigger from './Trigger.ts';
@@ -25,6 +24,11 @@ import * as Trigger from './Trigger.ts';
  * Skill schema defines the structure for AI assistant skills.
  * Skills contain instructions, tools, and artifacts that guide the AI's behavior.
  * Skills may use tools to create and read artifacts, which are managed by the assistant.
+ *
+ * Follows the Agent Skills spec (https://agentskills.io/specification) as closely as it can, so a skill
+ * means the same here as in any other harness. Add a field the spec lacks only with a strong reason,
+ * and say what it is. Credentials and MCP servers do not belong here: a server is a connection, which
+ * the space owns and each conversation can turn off.
  *
  * The registry `key` and `version` are stored in the object meta — access them via
  * `Obj.getMeta(skill).key` and `Obj.getMeta(skill).version`.
@@ -66,11 +70,6 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     agentCanEnable: Schema.optional(Schema.Boolean).annotate({
       description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
     }),
-
-    /**
-     * Array of MCP servers that the AI assistant can use when this skill is active.
-     */
-    mcpServers: Schema.optional(Schema.Array(McpServer.Spec)),
 
     /**
      * Hooks triggered automatically at certain points in the agent's lifecycle.
@@ -121,7 +120,16 @@ export const Hook = Schema.Struct({
    * Must match the function's input schema.
    */
   input: Trigger.InputTemplate.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Run in the background (end-request only): the request settles without waiting for the hook, and
+   * the agent process awaits it before it finishes. For work the user should not wait on, e.g.
+   * reviewing the turn that just ended.
+   */
+  async: Schema.optional(Schema.Boolean.annotate({ title: 'Run in background' })),
 });
+
+export type Hook = Schema.Schema.Type<typeof Hook>;
 
 /**
  * Create a new Skill.
@@ -231,6 +239,14 @@ export type Definition = {
  * TODO(wittjosiah): Should use Obj.getURI instead once it supports options to prefer meta key over EID.
  */
 export const registryURI = (key: DXN.Name<string>): URI.URI => (DXN.tryMake(`dxn:${key}`) ?? URI.make(key)) as URI.URI;
+
+/**
+ * The ref a session binds for a resolved skill: a skill in a database is bound as-is (it is
+ * space-authored or a fork carrying the user's edits), anything else by its registry URI, so a
+ * rebind never substitutes the pristine copy for the fork or vice versa.
+ */
+export const makeRef = (skill: Skill): Ref.Ref<Skill> =>
+  Obj.getDatabase(skill) !== undefined ? Ref.make(skill) : Ref.fromURI(registryURI(getKey(skill)));
 
 /**
  * Registry skill refs declared by an object's type via {@link SkillsAnnotation}.

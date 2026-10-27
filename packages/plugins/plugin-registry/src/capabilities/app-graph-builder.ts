@@ -15,7 +15,7 @@ import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
@@ -60,7 +60,7 @@ export default Capability.makeModule(
           Effect.succeed([
             {
               id: 'openRegistry',
-              data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
+              data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry, {}),
               properties: {
                 label: ['open-plugin-registry.label', { ns: meta.profile.key }],
                 icon: 'ph--squares-four--regular',

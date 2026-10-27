@@ -8,10 +8,11 @@ import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 
-import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import { withAuthorization } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 
 import { GoogleContacts } from '#apis';
 import { GoogleOperation } from '#types';
@@ -53,12 +54,12 @@ const handler: Operation.WithHandler<typeof GoogleOperation.GetGoogleContactGrou
         const target = connection.target;
         const db = target ? Obj.getDatabase(target) : undefined;
         if (!db) {
-          return yield* Effect.fail(new SyncDatabaseMissingError());
+          return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
         }
 
         return yield* Effect.gen(function* () {
           const connectionObj = yield* Database.load(connection);
-          const accessToken = yield* Database.load(connectionObj.accessToken);
+          const accessToken = yield* Database.load(Connection.getAccessToken(connectionObj));
           if (!accessToken.token) {
             return yield* Effect.fail(new AccessTokenNotPopulatedError());
           }

@@ -8,42 +8,51 @@ import * as Fiber from 'effect/Fiber';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Container, Empty, Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Status from '@dxos/react-ui/Status';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
-import { ObjectCard, ProjectPipeline } from '#components';
+import { ObjectGallery, ProjectPipeline } from '#components';
+import { ProjectFeatures } from '#containers';
 import { meta } from '#meta';
 import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
+import { useRefTargets } from '../../hooks/index.ts';
 import { getProjectChatPath } from '../../paths.ts';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
-type HeaderValues = Pick<Project.Project, 'name' | 'description'>;
+type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'repositories'>;
 
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
-  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description']),
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories']),
 );
 
 // The Context section edits only the instructions' standing context objects.
@@ -60,13 +69,13 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
   const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const { invokePromise } = invoker;
   const [project, updateProject] = useObject(subject);
   const db = Obj.getDatabase(subject);
@@ -82,11 +91,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const taskSet = useResolveRef(project.taskSet);
   // The project's scratch outline (created lazily by its chats).
   const outline = useResolveRef(project.outline);
+  const artifacts = useRefTargets(project.artifacts);
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
-  const settings = useAtomValue(useCapability(ProjectCapabilities.Settings));
+  const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -99,6 +109,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         </Tabs.Trigger>
         <Tabs.Trigger value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
+        </Tabs.Trigger>
+        <Tabs.Trigger value='features' data-testid='projectsPlugin.tab.features'>
+          {t('features.label')}
         </Tabs.Trigger>
       </Tabs.List>
     ),
@@ -158,7 +171,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // unparented chats, so that path names a node the deck cannot render.
   // The same navigation the task ledger's rows use, under the same context, so a lane picked in the
   // chart selects its row and opens the task where a row click would.
-  const openTask = useDetailNavigation({
+  const openTask = ToolkitHooks.useDetailNavigation({
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
   });
@@ -180,7 +193,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
-    () => ({ name: project.name, description: project.description }),
+    () => ({ name: project.name, description: project.description, repositories: project.repositories }),
     [subject],
   );
 
@@ -232,6 +245,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
       updateProject((project) => {
         project.name = values.name;
         project.description = values.description;
+        project.repositories = values.repositories && [...values.repositories];
       });
     },
     [updateProject],
@@ -257,18 +271,27 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               hidden for a frame, and the artifact gallery's masonry measures zero there and
               never recovers. The tablist still owns the switching. */}
           {tab === 'overview' && (
-            <Form.Root schema={HeaderValues} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+            <Form.Root
+              db={db}
+              schema={HeaderValues}
+              defaultValues={defaultValues}
+              onValuesChanged={handleValuesChanged}
+            >
               <Form.Viewport scroll>
                 <Form.Content>
                   <Form.Fields />
 
-                  {instructions && <InstructionsEditor db={db} instructions={instructions} />}
+                  {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
 
                   {/* Standing context (inputs bound into every project session) — deliberately a
                       separate labeled section from Artifacts (outputs the project owns). */}
                   {instructions && (
                     <Form.FieldSet label={t('context.label')}>
-                      <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                      <InstructionsEditor.InstructionsEditor
+                        db={db}
+                        instructions={instructions}
+                        fields={CONTEXT_FIELDS}
+                      />
                     </Form.FieldSet>
                   )}
 
@@ -292,15 +315,18 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   )}
 
                   <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
-                    <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                    <ObjectGallery objects={artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                   </Form.FieldSet>
+
+                  {/* Settings other plugins keep for this project, such as its folder on this device. */}
+                  <Surface.Surface type={ProjectView.Settings} data={{ project: subject }} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
           )}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
-          {tab === 'tasks' && !taskSet && <Empty>{t('no-task-set.message')}</Empty>}
+          {tab === 'tasks' && !taskSet && <Status.Empty>{t('no-task-set.message')}</Status.Empty>}
           {/* One splitter whether or not the chart is shown: collapsing to the ledger keeps the pane the
               section lays out in, so its add row stays below the list rather than past the panel. */}
           {tab === 'tasks' && taskSet && (
@@ -345,6 +371,12 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
             </Splitter.Root>
           )}
+
+          {tab === 'features' && (
+            <Suspense fallback={null}>
+              <ProjectFeatures project={subject} attendableId={attendableId} />
+            </Suspense>
+          )}
         </Panel.Body>
       </Panel.Root>
     </Tabs.Root>
@@ -355,11 +387,11 @@ ProjectArticle.displayName = 'ProjectArticle';
 
 /** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
 const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
-  <Container role='list' gap='sm' gutter='none'>
+  <Layout.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (
       <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
     ))}
-  </Container>
+  </Layout.Container>
 );
 
 /** One row, holding its own subscription so a rename re-renders just that row. */
@@ -370,11 +402,11 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
   }
 
   return (
-    <Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
-      <Icon icon='ph--flag--regular' valence='info' />
+    <Layout.Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
+      <Icon.Icon icon='ph--flag--regular' valence='info' />
       <span className='truncate'>{milestone.name}</span>
       {milestone.targetDate && <span className='text-fg-subtle shrink-0'>{milestone.targetDate}</span>}
-    </Flex>
+    </Layout.Flex>
   );
 };
 
@@ -453,7 +485,7 @@ const useToolbarActions = ({
   onDelegated,
   onTogglePipeline,
 }: ToolbarActionsProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
@@ -555,7 +587,7 @@ const useToolbarActions = ({
             group.action(
               'pipeline',
               {
-                label: ['pipeline.label', { ns: meta.profile.key }],
+                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: meta.profile.key }],
                 icon: 'ph--chart-bar-horizontal--regular',
                 testId: 'projectsPlugin.pipeline',
               },
@@ -594,52 +626,3 @@ const useToolbarActions = ({
     ],
   );
 };
-
-type ObjectTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
-
-type ObjectGalleryProps = {
-  refs: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
-  onOpen: (object: Obj.Unknown) => void;
-  onDelete: (object: Obj.Unknown) => void;
-};
-
-/**
- * A project's linked objects (its artifacts) as clickable cards. Unresolved refs are omitted until
- * their target loads.
- */
-const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
-  // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
-  // synchronously would leave the gallery permanently empty (the refs come off a snapshot of the
-  // project, which carries no resolver, so `.target` is undefined there even once loaded).
-  // `ref.atom` yields the live entity and tracks loading without tracking mutations — a rename
-  // re-renders just its card, since `ObjectCard` subscribes itself.
-  const objectsAtom = useMemo(
-    () => Atom.make((get) => refs.map((ref) => get(ref.atom)).filter((object): object is Obj.Unknown => !!object)),
-    [refs],
-  );
-  const objects = useAtomValue(objectsAtom);
-  const items = useMemo<ObjectTileData[]>(
-    () => objects.map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
-    [objects, onOpen, onDelete],
-  );
-
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    // No `Masonry.Content`: it renders a `ScrollArea.Root`, and `Form.Viewport` already scrolls this
-    // surface. Nested, the inner scroll root shrink-wrapped to its scrollbar gutter, so the
-    // viewport's `contentWidth > 0` gate suppressed every tile — the sections rendered their
-    // headings and nothing else.
-    <Masonry.Root Tile={ObjectTile} centered={false}>
-      <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} scroll={false} />
-    </Masonry.Root>
-  );
-};
-
-const ObjectTile = memo(({ data }: { data: ObjectTileData | undefined; index: number }) =>
-  data ? <ObjectCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
-);
-
-ObjectTile.displayName = 'ObjectTile';

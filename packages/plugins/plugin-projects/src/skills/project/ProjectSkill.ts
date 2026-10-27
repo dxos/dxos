@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
@@ -11,7 +13,7 @@ import * as RemoteSessionOperation from '@dxos/plugin-tasks/RemoteSessionOperati
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Text } from '@dxos/schema';
 
-import { ProjectOperation } from '#types';
+import { FeatureOperation, ProjectOperation } from '#types';
 
 // The workflow content lives beside this module as markdown so it can be edited as prose.
 import instructions from './project-skill.md?raw';
@@ -57,6 +59,14 @@ export const operations: readonly Operation.Definition.Any[] = [
   RemoteSessionOperation.RecordSession,
   ProjectOperation.ArtifactAdd,
   ProjectOperation.ArtifactList,
+  // Features are the goal states work moves; linking and showcasing are how the feature map shows that work.
+  FeatureOperation.Create,
+  FeatureOperation.Update,
+  FeatureOperation.AddDependency,
+  FeatureOperation.RemoveDependency,
+  FeatureOperation.LinkTask,
+  FeatureOperation.CreateShowcase,
+  FeatureOperation.GetFeatures,
 ];
 
 /**

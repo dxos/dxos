@@ -5,17 +5,25 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { TestLayer } from '@dxos/cli-util/testing';
 import { type Client, ClientService } from '@dxos/client';
-import { Filter, Obj } from '@dxos/echo';
+import { Annotation, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
 import { SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace, readSpacesOrder } from '../migrations/settings-space.ts';
-import { healDuplicateSettingsSpaces, resolveSettingsSpace, runSettingsSpaceHealing } from './settings-space.ts';
+import {
+  healDuplicateSettingsSpaces,
+  resolveAppSettings,
+  resolveSettingsSpace,
+  runSettingsSpaceHealing,
+} from './settings-space.ts';
 
 describe('resolveSettingsSpace', () => {
   it.effect('waits out identity genesis instead of racing it into a duplicate', () =>
@@ -83,6 +91,28 @@ describe('resolveSettingsSpace', () => {
       expect(AppSpace.getSettingsSpace(client)?.id).toBe(canonical.id);
       expect((yield* resolveSettingsSpace(client)).id).toBe(canonical.id);
       expect(AppSpace.getDefaultSpace(client)?.id).toBe(defaultSpace.id);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('resolveAppSettings', () => {
+  it.effect('names a fresh settings object when the named one is missing', () =>
+    Effect.gen(function* () {
+      const client = yield* ClientService;
+      yield* Effect.tryPromise(() => client.halo.createIdentity());
+      yield* Effect.tryPromise(() => client.addTypes([AppSettings.AppSettings]));
+      const space = yield* createSpace(client, {}, { tags: [AppSpace.SETTINGS_SPACE_TAG] });
+      const missing = space.db.add(AppSettings.make());
+      Obj.update(space.properties, (properties) => {
+        Annotation.set(properties, AppAnnotation.AppSettingsAnnotation, Ref.make(missing));
+      });
+      space.db.remove(missing);
+
+      const settings = yield* resolveAppSettings(space);
+
+      expect(settings.id).not.toBe(missing.id);
+      const named = Annotation.get(space.properties, AppAnnotation.AppSettingsAnnotation).pipe(Option.getOrThrow);
+      expect(yield* Database.load(named)).toBe(settings);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

@@ -4,23 +4,19 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { TogglePanel } from '@dxos/react-ui-components';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../translations.ts';
+import { PANEL_FRAME, WidgetPanel } from './WidgetPanel.tsx';
 
 export const SummaryWidget = ({ children }: WidgetProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
-    <TogglePanel.Root>
-      <TogglePanel.Content classNames='border border-separator-subtle rounded-md'>
-        <TogglePanel.Header classNames='text-sm dx-group-surface'>{t('summary.label')}</TogglePanel.Header>
-        <TogglePanel.Body>
-          <div className='p-1 text-sm text-fg-subtle'>{getXmlTextChild(children ?? [])}</div>
-        </TogglePanel.Body>
-      </TogglePanel.Content>
-    </TogglePanel.Root>
+    <WidgetPanel icon='ph--list-bullets--regular' label={t('summary.label')} testId='assistant.summary'>
+      <div className={mx(PANEL_FRAME, 'p-trim-sm text-sm text-fg-muted')}>{getXmlTextChild(children ?? [])}</div>
+    </WidgetPanel>
   );
 };

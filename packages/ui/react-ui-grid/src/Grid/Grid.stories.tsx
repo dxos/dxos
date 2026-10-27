@@ -5,12 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type MouseEvent, type RefObject, useCallback, useRef, useState } from 'react';
 
-import { defaultRowSize } from '@dxos/lit-grid';
-import { type DxGridPlaneCells } from '@dxos/lit-grid';
+import { type DxGridPlaneCells, defaultRowSize } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { Combobox, Menu, virtualAnchor } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
+import * as Combobox from '@dxos/react-ui/Combobox';
+import * as Menu from '@dxos/react-ui/Menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';
 
@@ -72,7 +73,11 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
       </Grid.Root>
 
       {/* Menu */}
-      <Menu.Root open={menuOpen} onOpenChange={({ open }) => setMenuOpen(open)} positioning={virtualAnchor(triggerRef)}>
+      <Menu.Root
+        open={menuOpen}
+        onOpenChange={({ open }) => setMenuOpen(open)}
+        positioning={VirtualAnchor.virtualAnchor(triggerRef)}
+      >
         <Menu.Content>
           <Menu.Item
             onClick={() => console.log('[Click on dropdown menu item]')}
@@ -89,7 +94,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
         onOpenChange={({ open }) => setPopoverOpen(open)}
         value={multiSelectValue}
         onValueChange={({ value }) => setMultiselectValue(value)}
-        positioning={virtualAnchor(triggerRef)}
+        positioning={VirtualAnchor.virtualAnchor(triggerRef)}
       >
         <Combobox.Content>
           <Combobox.Input placeholder='Search...' />

@@ -22,10 +22,13 @@ import * as Organization from './Organization.ts';
 import * as Outline from './Outline.ts';
 import * as Person from './Person.ts';
 import * as Pipeline from './Pipeline.ts';
+import * as ProfileOf from './ProfileOf.ts';
 import * as Provider from './Provider.ts';
 import * as PullRequest from './PullRequest.ts';
 import * as RemoteSession from './RemoteSession.ts';
 import * as Repo from './Repo.ts';
+import * as SpaceInvitationMessage from './SpaceInvitationMessage.ts';
+import * as Spec from './Spec.ts';
 import * as Task from './Task.ts';
 import * as TaskMigration from './TaskMigration.ts';
 import * as TaskSet from './TaskSet.ts';
@@ -71,10 +74,13 @@ export {
   Outline,
   Person,
   Pipeline,
+  ProfileOf,
   Provider,
   PullRequest,
   RemoteSession,
   Repo,
+  SpaceInvitationMessage,
+  Spec,
   Task,
   TaskMigration,
   TaskSet,

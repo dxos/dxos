@@ -1,5 +1,105 @@
 # @dxos/plugin-settings
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [94ec06d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/react-ui@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/util@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [44b7b80]
+- Updated dependencies [cb1e218]
+- Updated dependencies [68dc875]
+- Updated dependencies [ec9f207]
+- Updated dependencies [eb14798]
+- Updated dependencies [69a4a85]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [596728d]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+- Updated dependencies [49731e1]
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/graph@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

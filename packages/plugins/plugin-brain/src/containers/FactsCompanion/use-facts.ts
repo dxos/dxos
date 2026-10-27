@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useEffect, useState } from 'react';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
 
 import { type FactStoreRegistry } from '../../capabilities/fact-store.ts';

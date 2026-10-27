@@ -31,17 +31,21 @@ import { RequestImpl } from './core-db/ref-resolver-request.ts';
 import { getObjectCore, isEchoObject } from './echo-handler/index.ts';
 import { type DatabaseImpl } from './proxy-db/index.ts';
 import {
-  GraphQueryContext,
+  LocalQueryEngine,
   type QueryContext,
   QueryResultCache,
   QueryResultImpl,
-  type QuerySource,
-  RegistryQuerySource,
-  SpaceQuerySource,
+  type RemoteQuerySource,
 } from './query/index.ts';
 import { makeRegistry } from './registry/index.ts';
 
 const TRACE_REF_RESOLUTION = false;
+
+/**
+ * A space database's answer for one id: the live entity, and whether its index holds the id at all — a
+ * tombstone of a deleted or merged-away entity counts, so nothing is left for a feed scan to find.
+ */
+type DatabaseResolution = { readonly entity?: Entity.Unknown; readonly indexed: boolean };
 
 /**
  * Manages cross-space database interactions.
@@ -54,7 +58,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _registry: Registry.Registry;
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
-  private readonly _queryContexts = new Set<GraphQueryContext>();
+  private readonly _queryContexts = new Set<LocalQueryEngine>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
@@ -62,8 +66,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   // normalizes scope and delegates here.
   //
   // Replaced (not mutated) on every database registration change: each `QueryResultImpl` embeds
-  // a `GraphQueryContext` snapshot of the database set at creation time. Active (subscribed)
-  // results stay valid because `_registerDatabase` pushes new sources into `_queryContexts`.
+  // a `LocalQueryEngine` snapshot of the database set at creation time. Active (subscribed)
+  // results stay valid because `_registerDatabase` adds the new database to `_queryContexts`.
   // Idle (unsubscribed) cached results would not receive those updates and would miss newly
   // registered databases, so we discard them on every topology change.
   #queryResultCache = new QueryResultCache();
@@ -113,7 +117,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
 
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addDatabase(database);
     }
     this.#queryResultCache = new QueryResultCache();
   }
@@ -620,7 +624,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         // Mirrors `_resolveSync`: a cross-space target resolves in its own space's database when that
         // database is open here, and is missing otherwise.
         if (!EID.isLocal(parsedEchoUri) && echoSpaceId !== undefined && echoSpaceId !== context.space) {
-          const obj = await this._resolveDatabaseObjectAsync(echoSpaceId, echoUri, options);
+          const { entity: obj } = await this._resolveDatabaseObjectAsync(echoSpaceId, echoUri, options);
           status = obj ? 'resolved' : 'missing';
           return obj;
         }
@@ -645,10 +649,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // (1) Search space automerge docs first.
-        const obj = await this._resolveDatabaseObjectAsync(context.space, echoUri, options);
+        const { entity: obj, indexed } = await this._resolveDatabaseObjectAsync(context.space, echoUri, options);
         if (obj) {
           status = 'resolved';
           return obj;
+        }
+        // A tombstone means the object was deleted, not that the index has yet to see it, and the feed
+        // fallback below downloads every feed in the space whole to find nothing.
+        if (indexed) {
+          status = 'missing';
+          return undefined;
         }
 
         // (2) Search known feeds in this space for an item with this id.
@@ -736,10 +746,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     spaceId: SpaceId,
     objectId: EntityId,
     options?: Ref.LoadOptions,
-  ): Promise<Entity.Unknown | undefined> {
+  ): Promise<DatabaseResolution> {
     const db = this._databases.get(spaceId);
     if (!db) {
-      return undefined;
+      return { indexed: false };
     }
     const select = Query.select(Filter.id(objectId));
     const scoped = options?.deleted === 'include' ? select.options({ deleted: 'include' }) : select;
@@ -747,7 +757,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // A merged-away loser is a redirect, not a tombstone to hand back, so it follows the chain even
     // when the caller asked for deleted entities.
     if (obj && !(isEchoObject(obj) && getObjectCore(obj).getMergedInto() != null)) {
-      return obj;
+      return { entity: obj, indexed: true };
     }
     return await this._followMergeRedirectAsync(db, objectId);
   }
@@ -759,21 +769,23 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * never rewritten still reaches the winner. An entity that is merely deleted carries no
    * redirect and resolves to nothing, as before.
    */
-  private async _followMergeRedirectAsync(db: DatabaseImpl, objectId: EntityId): Promise<Entity.Unknown | undefined> {
+  private async _followMergeRedirectAsync(db: DatabaseImpl, objectId: EntityId): Promise<DatabaseResolution> {
     let current = objectId;
+    let indexed = false;
     for (;;) {
       const [tombstone] = await db
         .query(Query.select(Filter.id(current)).options({ deleted: 'include' }).from(db, { includeFeeds: true }))
         .run();
+      indexed ||= tombstone !== undefined;
       const next = tombstone && isEchoObject(tombstone) ? getObjectCore(tombstone).getMergedInto() : undefined;
       // An edge that fails to decrease the id ends the chain, so cycles and forward references
       // terminate without trusting the data.
       if (next === undefined || next >= current) {
-        return undefined;
+        return { indexed };
       }
       const [live] = await db.query(Query.select(Filter.id(next)).from(db, { includeFeeds: true })).run();
       if (live) {
-        return live;
+        return { entity: live, indexed };
       }
       current = next;
     }
@@ -797,7 +809,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (spaceId === undefined || objectId === undefined) {
       return undefined;
     }
-    const obj = await this._resolveDatabaseObjectAsync(spaceId, objectId);
+    const { entity: obj } = await this._resolveDatabaseObjectAsync(spaceId, objectId);
     return obj != null && Type.isType(obj) ? obj : undefined;
   }
 
@@ -820,7 +832,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   registerQuerySourceProvider(provider: QuerySourceProvider): void {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(provider.create());
+      context.addRemoteSource(provider.create());
     }
     this.#queryResultCache = new QueryResultCache();
   }
@@ -884,7 +896,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _createLiveObjectQueryContext(): QueryContext {
-    const context = new GraphQueryContext({
+    const context = new LocalQueryEngine({
+      registry: this._registry,
       onStart: () => {
         this._queryContexts.add(context);
       },
@@ -894,11 +907,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     });
 
     for (const database of this._databases.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addDatabase(database);
     }
-    context.addQuerySource(new RegistryQuerySource(this._registry));
     for (const provider of this._querySourceProviders) {
-      context.addQuerySource(provider.create());
+      context.addRemoteSource(provider.create());
     }
 
     return context;
@@ -906,7 +918,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  create(): QuerySource;
+  create(): RemoteQuerySource;
 }
 
 type ObjectDiagnostic = {

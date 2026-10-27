@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-testing",
-  "version": "0.12.0",
+  "version": "0.16.0",
   "description": "Plugin testing utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -58,9 +58,19 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./harness": {
-      "source": "./src/harness.ts",
-      "types": "./dist/types/src/harness.d.ts",
+    "./CorePlugins": {
+      "source": "./src/CorePlugins.ts",
+      "types": "./dist/types/src/CorePlugins.d.ts",
+      "import": "./dist/lib/ns/CorePlugins.mjs"
+    },
+    "./Corpus": {
+      "source": "./src/Corpus.ts",
+      "types": "./dist/types/src/Corpus.d.ts",
+      "import": "./dist/lib/ns/Corpus.mjs"
+    },
+    "./Harness": {
+      "source": "./src/Harness.ts",
+      "types": "./dist/types/src/Harness.d.ts",
       "import": "./dist/lib/harness.mjs"
     },
     "./package.json": "./package.json",
@@ -92,6 +102,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

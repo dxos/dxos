@@ -16,6 +16,7 @@ import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
 import * as AiService from '../AiService.ts';
+import * as AiTelemetry from '../AiTelemetry.ts';
 
 //
 // A deterministic, offline `LanguageModel` whose output is scripted rather than generated.
@@ -65,8 +66,16 @@ export type ScriptedTurn =
        * against well-nested Anthropic output.
        */
       readonly deferToolEnds?: boolean;
+      /**
+       * Close each call with a complete `tool-call` part after its params, as the Anthropic adapter does on
+       * `content_block_stop`. `LanguageModel` decodes that part against the toolkit, so a call naming a tool the
+       * toolkit lacks, or with parameters it rejects, fails the whole batch of parts it arrived in.
+       */
+      readonly emitToolCalls?: boolean;
       /** Held before the turn's first part, so a UI driven by the script sees a turn in flight. */
       readonly delay?: Duration.Input;
+      /** Held until it resolves, before the turn's first part, so a test can observe the state the turn changes. */
+      readonly gate?: () => Promise<void>;
     }
   | { readonly fail: AiError.AiError };
 
@@ -187,7 +196,7 @@ const encodeStreamTurn = (
   parts: readonly ScriptedPart[],
   turnIndex: number,
   reason: Response.FinishReason,
-  { deferToolEnds = false }: { deferToolEnds?: boolean } = {},
+  { deferToolEnds = false, emitToolCalls = false }: { deferToolEnds?: boolean; emitToolCalls?: boolean } = {},
 ): Response.StreamPartEncoded[] => {
   const out: Response.StreamPartEncoded[] = [responseMetadata(turnIndex)];
   const deferred: Response.StreamPartEncoded[] = [];
@@ -207,6 +216,9 @@ const encodeStreamTurn = (
       out.push({ type: 'tool-params-start', id, name: part.name });
       out.push({ type: 'tool-params-delta', id, delta: JSON.stringify(resolveInput(part)) });
       (deferToolEnds ? deferred : out).push({ type: 'tool-params-end', id });
+      if (emitToolCalls) {
+        (deferToolEnds ? deferred : out).push({ type: 'tool-call', id, name: part.name, params: resolveInput(part) });
+      }
     }
   });
   out.push(...deferred);
@@ -216,7 +228,7 @@ const encodeStreamTurn = (
 
 const annotate = (span: LanguageModel.ProviderOptions['span']): void =>
   Telemetry.addGenAIAnnotations(span, {
-    system: 'scripted',
+    provider: { name: 'scripted' },
     operation: { name: 'chat' },
     request: { model: 'scripted' },
   });
@@ -316,6 +328,9 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
           if (turn.delay !== undefined) {
             yield* Effect.sleep(turn.delay);
           }
+          if (turn.gate) {
+            yield* Effect.promise(turn.gate);
+          }
           return encodeTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts));
         }),
       streamText: (options) =>
@@ -329,9 +344,13 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
             if (turn.delay !== undefined) {
               yield* Effect.sleep(turn.delay);
             }
+            if (turn.gate) {
+              yield* Effect.promise(turn.gate);
+            }
             return Stream.fromIterable(
               encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts), {
                 deferToolEnds: turn.deferToolEnds,
+                emitToolCalls: turn.emitToolCalls,
               }),
             );
           }),
@@ -350,12 +369,12 @@ export const __testing = {
 
 /** A {@link LanguageModel.LanguageModel} layer backed by the scripted model. */
 export const layer = (script: Script): Layer.Layer<LanguageModel.LanguageModel> =>
-  Layer.effect(LanguageModel.LanguageModel, makeScriptedLanguageModel(script));
+  Layer.effect(LanguageModel.LanguageModel, Effect.map(makeScriptedLanguageModel(script), AiTelemetry.markRequests));
 
 // A single shared model memo per script: sessions in separate processes each call `languageModel()`,
 // and separate model instances would each start their script from turn zero.
 const sharedModel = (script: Script): AiService.LanguageModelResolver => {
-  const model = Effect.runSync(Effect.cached(makeScriptedLanguageModel(script)));
+  const model = Effect.runSync(Effect.cached(Effect.map(makeScriptedLanguageModel(script), AiTelemetry.markRequests)));
   return () => Layer.effect(LanguageModel.LanguageModel, model);
 };
 

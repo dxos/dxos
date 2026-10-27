@@ -14,12 +14,17 @@ import React, {
 } from 'react';
 
 import { keySymbols } from '@dxos/react-focus';
-import { Icon, Menu, type MenuOption, toLocalizedString, useTranslation, useVirtualAnchor } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type MenuItemChrome } from '@dxos/ui-types';
 import { resolveKeyBinding } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
+import { TOOLBAR_OVERFLOW_ID } from '../builder.ts';
 import { useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
@@ -46,12 +51,12 @@ const isCheckable = (item: MenuItem): item is MenuAction =>
 const useItemData = (
   id: string,
   properties: Pick<MenuItemChrome, 'label' | 'icon' | 'disabled' | 'keyBinding'>,
-): MenuOption => {
-  const { t } = useTranslation(translationKey);
+): Menu.Option => {
+  const { t } = Hooks.useTranslation(translationKey);
   const shortcut = resolveKeyBinding(properties.keyBinding);
   return {
     value: id,
-    label: toLocalizedString(properties.label, t),
+    label: Theme.toLocalizedString(properties.label, t),
     icon: properties.icon,
     shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
     disabled: properties.disabled,
@@ -155,7 +160,7 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
       >
         <ItemIcon menu={menu} action={group} />
         <Menu.ItemText />
-        <Icon icon='ph--caret-right--regular' />
+        <Icon.Icon icon='ph--caret-right--regular' />
       </Menu.TriggerItem>
       <Menu.Content>
         <ActionMenuItems menu={menu} group={group} />
@@ -163,6 +168,23 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
     </Menu.Sub>
   );
 };
+
+/** A toolbar's named group may be declared for others to extend and left empty; a menu then omits it. */
+const NamedGroupSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup<MenuItemChrome> }) => {
+  const items = useMenuItems(menu, group);
+  return items?.some(isMenuRow) ? <ActionSubMenu menu={menu} group={group} /> : null;
+};
+
+/**
+ * Whether an item renders as a menu row: a label belongs to a toolbar row (a menu has its own title), and a menu cannot
+ * host a control its contributor renders itself.
+ */
+const isMenuRow = (item: MenuItem): boolean =>
+  isMenuGroup(item) ||
+  (!isSeparator(item) &&
+    !item.properties?.hidden &&
+    item.properties?.variant !== 'text' &&
+    item.properties?.variant !== 'custom');
 
 type Segment = { kind: 'item'; item: MenuItem } | { kind: 'radio'; id: string; actions: MenuAction[] };
 
@@ -188,17 +210,38 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
     return <Menu.Separator />;
   }
   if (isMenuGroup(item)) {
+    // A toolbar's overflow items are already "more" in a menu, so they follow the other items rather than nest.
+    if (item.id === TOOLBAR_OVERFLOW_ID) {
+      return <OverflowSection menu={menu} group={item} />;
+    }
     // A graph group's properties are an open record, validated by the plugin that contributed them.
-    return <ActionSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />;
+    return item.properties.variant ? (
+      <ActionSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />
+    ) : (
+      <NamedGroupSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />
+    );
   }
   const action = item as MenuAction;
-  if (action.properties?.hidden) {
+  if (!isMenuRow(action)) {
     return null;
   }
   return isCheckable(action) ? (
     <ActionCheckboxItem menu={menu} action={action} group={group} />
   ) : (
     <ActionMenuItem menu={menu} action={action} group={group} />
+  );
+};
+
+const OverflowSection = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup }) => {
+  const items = useMenuItems(menu, group);
+  if (!items?.some(isMenuRow)) {
+    return null;
+  }
+  return (
+    <>
+      <Menu.Separator />
+      <ActionMenuItems menu={menu} group={group} />
+    </>
   );
 };
 
@@ -270,7 +313,43 @@ export type ActionMenuProps = Partial<MenuActions> & {
  * graph; groups become `Sub` menus, `checked` members radio or checkbox items. Without a `MenuActions` it is a menu of
  * the explicit `actions` alone.
  */
-export const ActionMenu = ({
+export const ActionMenu = (props: ActionMenuProps) => {
+  const { virtualRef, open, defaultOpen, onOpenChange, deferUntilOpen, children } = props;
+  const [built, setBuilt] = useState(false);
+  // Only a menu that owns its open state and renders its own trigger can wait for a click.
+  const deferred = !!deferUntilOpen && !virtualRef && open === undefined && defaultOpen === undefined;
+  const trigger = isValidElement<{
+    'onClick'?: (event: MouseEvent) => void;
+    'aria-haspopup'?: 'menu';
+    'aria-expanded'?: boolean;
+  }>(children)
+    ? children
+    : undefined;
+
+  const handleTriggerClick = useCallback(
+    (event: MouseEvent) => {
+      trigger?.props.onClick?.(event);
+      setBuilt(true);
+      onOpenChange?.(true);
+    },
+    [trigger, onOpenChange],
+  );
+
+  // Returned before the menu's hooks run, not just before its JSX: the menu's action graph and state machine are what
+  // a list of rows cannot afford per row, and a deferred menu builds neither until its trigger is first clicked.
+  if (deferred && !built && trigger) {
+    return cloneElement(trigger, {
+      'onClick': handleTriggerClick,
+      // The trigger announces itself as a menu button before the `Menu.Trigger` that would say so exists.
+      'aria-haspopup': 'menu',
+      'aria-expanded': false,
+    });
+  }
+
+  return <ActionMenuRoot {...props} deferred={deferred} />;
+};
+
+const ActionMenuRoot = ({
   items,
   contributions,
   onAction,
@@ -284,9 +363,9 @@ export const ActionMenu = ({
   open,
   defaultOpen,
   onOpenChange,
-  deferUntilOpen,
+  deferred,
   children,
-}: ActionMenuProps) => {
+}: ActionMenuProps & { deferred: boolean }) => {
   // Called unconditionally (hooks), used only when no source was spread in.
   const standalone = useMenuActions();
   const menu = useMemo<MenuActions>(
@@ -300,46 +379,10 @@ export const ActionMenu = ({
     [items, contributions, onAction, caller, iconSize, standalone],
   );
 
-  const [built, setBuilt] = useState(false);
-  // Only a menu that owns its open state and renders its own trigger can wait for a click.
-  const deferred = !!deferUntilOpen && !virtualRef && open === undefined && defaultOpen === undefined;
-  const trigger = isValidElement<{
-    'onClick'?: (event: MouseEvent) => void;
-    'aria-haspopup'?: 'menu';
-    'aria-expanded'?: boolean;
-  }>(children)
-    ? children
-    : undefined;
-
-  const handleOpenChange = useCallback(
-    (next: boolean) => {
-      onOpenChange?.(next);
-    },
-    [onOpenChange],
-  );
-
-  const handleTriggerClick = useCallback(
-    (event: MouseEvent) => {
-      trigger?.props.onClick?.(event);
-      setBuilt(true);
-      handleOpenChange(true);
-    },
-    [trigger, handleOpenChange],
-  );
-
   // Next's Content portals into a ref.
   const containerRef = useMemo(() => (container ? { current: container } : undefined), [container]);
 
-  const positioning = useVirtualAnchor(virtualRef);
-
-  if (deferred && !built && trigger) {
-    return cloneElement(trigger, {
-      'onClick': handleTriggerClick,
-      // The trigger announces itself as a menu button before the `Menu.Trigger` that would say so exists.
-      'aria-haspopup': 'menu',
-      'aria-expanded': false,
-    });
-  }
+  const positioning = VirtualAnchor.useVirtualAnchor(virtualRef);
 
   return (
     <Menu.Root
@@ -347,7 +390,7 @@ export const ActionMenu = ({
       // close always refocuses the trigger, which would pull focus back from whatever an outside click focused.
       open={deferred ? undefined : open}
       defaultOpen={deferred ? true : defaultOpen}
-      onOpenChange={({ open }) => handleOpenChange(open)}
+      onOpenChange={({ open }) => onOpenChange?.(open)}
       positioning={positioning}
     >
       {children && (
@@ -355,7 +398,8 @@ export const ActionMenu = ({
           {children}
         </Menu.Trigger>
       )}
-      <Menu.Content container={containerRef}>
+      {/* A menu opened at a point (a right-click) has no trigger for an arrow to point at. */}
+      <Menu.Content container={containerRef} arrow={virtualRef ? false : undefined}>
         <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
       </Menu.Content>
     </Menu.Root>

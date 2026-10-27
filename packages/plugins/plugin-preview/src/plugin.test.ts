@@ -5,10 +5,12 @@
 import { describe, test } from 'vitest';
 
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { PreviewPlugin } from '#plugin';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), PreviewPlugin()] });
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
@@ -16,7 +18,7 @@ describe('PreviewPlugin', () => {
   // Harness boot imports the client chunk on demand; vitest's transform makes that slow on
   // loaded runners, so the budget matches the other client-backed activation tests.
   test('modules activate on the expected events', { timeout: 30_000 }, async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), PreviewPlugin()],
     });
 

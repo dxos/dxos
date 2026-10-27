@@ -4,12 +4,16 @@
 
 import { afterAll, describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Blob, Collection, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -18,9 +22,9 @@ import { File } from '@dxos/types';
 
 import { Sandbox, SandboxOperation } from '#types';
 
-import { layerLocal } from '../services/layer.ts';
+import { layerLocal, layerRepository } from '../services/layer.ts';
 import { SandboxHandlers } from '../skills/functions/index.ts';
-import SandboxSkill from '../skills/sandbox-skill.ts';
+import * as SandboxSkill from '../skills/SandboxSkill.ts';
 import { canRunLocalSandboxes } from './probe.ts';
 
 const unavailable = !(await canRunLocalSandboxes());
@@ -37,7 +41,10 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: SandboxHandlers,
   types: [Sandbox.Sandbox, File.File, Blob.Blob, Collection.Collection, Skill.Skill, Feed.Feed],
   skills: [SandboxSkill.make()],
-  extraServices: layerLocal,
+  // Repositories stay on EDGE; that backend reads the client only when called, so an empty manager suffices.
+  extraServices: Layer.mergeAll(layerLocal, layerRepository).pipe(
+    Layer.provideMerge(Layer.sync(Capability.Service, () => CapabilityManager.make({ registry: AtomRegistry.make() }))),
+  ),
 });
 
 describe.skipIf(unavailable)('SandboxPlugin (local backend)', { timeout: 60_000 }, () => {

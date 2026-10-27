@@ -1,0 +1,36 @@
+layer: application
+language: typescript
+tags:
+  - ts-test
+tasks:
+  # The page links its client entry, `src/main.ts`, from `index.html`; every diagram on it is prerendered with
+  # `@dxos/drawing`'s own `render`.
+  build:
+    command: bash -c 'pnpm exec tsc --noEmit && pnpm exec vite build'
+    deps:
+      - ^:build
+    inputs:
+      - index.html
+      - vite.config.ts
+      - tsconfig.json
+      - diagrams/**/*
+      - public/**/*
+      - src/**/*
+    outputs:
+      - dist
+
+  # The page with the editor live-reloading, on Vite's dev server.
+  serve:
+    command: pnpm exec vite
+    deps:
+      - ^:build
+    preset: server
+
+  # Deploys `dist` to the `drawing-sh` Worker (drawing.sh); needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+  deploy:
+    command: pnpm exec wrangler deploy
+    deps:
+      - build
+    options:
+      cache: false
+      runInCI: false

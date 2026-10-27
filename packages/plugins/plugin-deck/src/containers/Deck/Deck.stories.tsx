@@ -8,32 +8,36 @@ import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { useConnections } from '@dxos/plugin-graph/hooks';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
-import { useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as UiDialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -41,7 +45,7 @@ import {
   decorateMarkdown,
   documentSlots,
 } from '@dxos/ui-editor';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
@@ -49,6 +53,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
+import { Dialog } from '../Overlays/index.ts';
 import { Deck } from './Deck.tsx';
 
 type StoryItem = { id: string; title: string; icon: string };
@@ -98,7 +103,7 @@ const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
  * the container because `Editor.View` renders its own div and drops unknown props.
  */
 const TestArticle = ({ title, content }: { title: string; content: string }) => {
-  const themeMode = useThemeMode();
+  const themeMode = UiHooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -132,7 +137,7 @@ const LAUNCHER_MESSAGES = Array.from({ length: 4 }, (_, index) => ({
 }));
 
 const TestLauncher = ({ launcherId }: { launcherId: string }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Selection state, so a click re-renders the launcher's own subtree the way the mailbox list does.
   const [selected, setSelected] = useState<string | undefined>(undefined);
 
@@ -155,18 +160,20 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
       onValueChange={handleOpen}
       items={LAUNCHER_MESSAGES.map((message) => ({ value: message.id, label: message.id }))}
     >
-      <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
-        {LAUNCHER_MESSAGES.map((message) => (
-          <Listbox.Item
-            key={message.id}
-            id={message.id}
-            classNames='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
-            data-testid='story.launcher.row'
-          >
-            {message.title}
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
+          {LAUNCHER_MESSAGES.map((message) => (
+            <Listbox.Item
+              key={message.id}
+              id={message.id}
+              classNames='rounded-sm border border-separator p-trim-md text-start hover:bg-hover-surface'
+              data-testid='story.launcher.row'
+            >
+              {message.title}
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };
@@ -175,7 +182,7 @@ const REVEAL_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-5`;
 
 /** Reveals a plank from outside the deck, and marks the button once the deck's effects have run. */
 const TestRevealControls = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const reveal = useCallback(
     async (button: HTMLButtonElement, focus?: boolean) => {
       delete button.dataset.revealed;
@@ -201,7 +208,7 @@ const TestRevealControls = () => {
 
 /** Opens one more plank beside the seeded ones. */
 const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const handleClick = useCallback(() => {
     if (targetId) {
       void invokePromise(LayoutOperation.Open, { subject: [targetId], disposition: 'add' });
@@ -285,6 +292,24 @@ const storyDeckState = Capability.makeModule(
   }),
 );
 
+const STORY_DIALOG = 'dxn:story:dialog';
+
+/** Opens the story dialog from a button, so focus starts outside it. */
+const DialogStory = () => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  return (
+    <>
+      <button
+        data-testid='story.dialog.open'
+        onClick={() => invokePromise(LayoutOperation.UpdateDialog, { subject: STORY_DIALOG, state: true })}
+      >
+        Open dialog
+      </button>
+      <Dialog />
+    </>
+  );
+};
+
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   // Shell state the Deck reads through the strict hooks on its first render, so it belongs on the
   // startup pass rather than the idle default these would otherwise normalize to.
@@ -331,6 +356,15 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               const title = subject?.title ?? String(data.attendableId);
               return <TestArticle title={title} content={contentFor(title)} />;
             },
+          }),
+          Surface.create({
+            id: 'storyDialog',
+            filter: AppSurface.component(AppSurface.Dialog, STORY_DIALOG),
+            component: () => (
+              <UiDialog.Content>
+                <input autoFocus data-testid='story.dialog.input' aria-label='Story dialog input' />
+              </UiDialog.Content>
+            ),
           }),
           Surface.create({
             id: 'storyArticleCompanion',
@@ -492,14 +526,14 @@ const DefaultStory = ({
   openNextControl = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: StoryArgs) => {
-  const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
+  const [settings, updateSettings] = Hooks.useAtomCapabilityState(DeckCapabilities.Settings);
 
   // The deck reads its experiments from settings, not from props, so the story writes them there.
   useEffect(() => {
     updateSettings((current) => ({ ...current, ...settingsOverrides }));
   }, [settingsOverrides, updateSettings]);
-  const pluginManager = usePluginManager();
-  const { graph } = useAppGraph();
+  const pluginManager = PluginManagerProvider.usePluginManager();
+  const { graph } = ToolkitHooks.useAppGraph();
   const { state, deck, updateState, updateEphemeral } = useDeckState();
 
   // Only root expands automatically at graph-capability startup, so this story owns expanding the
@@ -507,7 +541,7 @@ const DefaultStory = ({
   // resolves. The graph qualifies connector node ids with their parent path (e.g.
   // `root/default/story-item-1`), so the seeded `active` list holds the materialized ids.
   useState(() => AppGraph.expandSync(graph, STORY_WORKSPACE_ID, 'child'));
-  const workspaceChildren = useConnections(graph, STORY_WORKSPACE_ID, 'child');
+  const workspaceChildren = GraphHooks.useConnections(graph, STORY_WORKSPACE_ID, 'child');
   const items = useMemo(() => workspaceChildren.filter((node) => node.type === 'story-item'), [workspaceChildren]);
   const launcherNode = useMemo(
     () => workspaceChildren.find((node) => node.type === 'story-launcher'),
@@ -578,7 +612,7 @@ const meta = {
   decorators: [
     withMosaic(),
     withPluginManager({
-      plugins: [...corePlugins(), TestPlugin()],
+      plugins: [...CorePlugins.make(), TestPlugin()],
     }),
   ],
   parameters: {
@@ -939,5 +973,22 @@ export const TestCompanionFitsTheDeck: Story = {
 
     // 3. Wide again.
     await waitFor(() => expect(companionClose(canvasElement)).not.toBeNull());
+  },
+};
+
+/** Closing a dialog returns focus to where it was, even though a field in the content took focus when it opened. */
+export const DialogReturnsFocus: Story = {
+  render: () => <DialogStory />,
+  play: async () => {
+    const body = within(document.body);
+    const open = await body.findByTestId('story.dialog.open', undefined, { timeout: 10_000 });
+    await userEvent.click(open);
+    await waitFor(() => expect(document.activeElement).toBe(body.getByTestId('story.dialog.input')), {
+      timeout: 5_000,
+    });
+
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByTestId('story.dialog.input')).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(open));
   },
 };

@@ -6,14 +6,24 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
-import { Block, Card, Icon, Menu, ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { useLabel } from '@dxos/echo-react';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
-import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
@@ -22,26 +32,45 @@ import { meta } from '#meta';
 /**
  * Article view for collections.
  */
-export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
-  const { t } = useTranslation(meta.profile.key);
+export const CollectionArticle = ({
+  role,
+  subject,
+  attendableId,
+}: AppSurface.ObjectArticleProps<Collection.Collection>) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { items, handleSearch } = useCollectionItems(subject, attendableId);
 
   return (
-    <SearchPanel onSearch={handleSearch}>
-      <Mosaic.Container asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport>
-            <Mosaic.Stack
-              classNames='gap-1'
-              draggable={false}
-              items={items}
-              getId={(item) => item.id}
-              Tile={ObjectTile}
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root role={role}>
+        <Panel.Header>
+          <Toolbar.Root>
+            <SearchList.Input
+              classNames='grow'
+              aria-label={t('collection-filter.label')}
+              placeholder={t('collection-filter.placeholder')}
             />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Mosaic.Container>
-    </SearchPanel>
+          </Toolbar.Root>
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport asChild>
+              <Layout.Container padBlock>
+                <Mosaic.Container asChild>
+                  <Mosaic.Stack
+                    classNames='gap-2'
+                    draggable={false}
+                    items={items}
+                    getId={(item) => item.id}
+                    Tile={ObjectTile}
+                  />
+                </Mosaic.Container>
+              </Layout.Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -54,13 +83,14 @@ type ObjectItem = {
 };
 
 const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
+  const objectLabel = useLabel(item.object);
   const label =
-    Obj.getLabel(item.object) ??
-    toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
+    objectLabel ?? Theme.toLocalizedString(['object-name.placeholder', { ns: typename, defaultValue: item.id }], t);
+  // A bare glyph takes its hue's text colour; `fg` is for text on the hue's fill and reads near-black on a plain surface.
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
   const handleClick = useCallback(
@@ -72,9 +102,9 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   return (
     <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Block>
-          <Icon icon={item.icon} classNames={styles?.fg} />
-        </Block>
+        <Layout.Block>
+          <Icon.Icon icon={item.icon} classNames={styles?.text} />
+        </Layout.Block>
         <Card.Title>{label}</Card.Title>
         {archiveItem && (
           <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
@@ -87,7 +117,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
       </Card.Header>
       {archived && (
         <Card.Row>
-          <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+          <Tag.Tag classNames='justify-self-start'>{t('archived.label')}</Tag.Tag>
         </Card.Row>
       )}
     </Card.Root>

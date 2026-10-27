@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants.ts';
 import { createTypefullyConnectorEntry } from './connector.ts';
@@ -20,11 +20,11 @@ describe('Typefully connector', () => {
         const result = yield* entry.credentialForm.onSubmit({ values: { token: 'test-key' }, connector });
 
         expect(result.kind).toBe('complete');
-        expect(result.accessToken.token).toBe('test-key');
-        expect(result.accessToken.source).toBe(TYPEFULLY_SOURCE);
+        expect(result.accessToken?.token).toBe('test-key');
+        expect(result.accessToken?.source).toBe(TYPEFULLY_SOURCE);
         // Connection links back to the connector; source lives on the AccessToken, not the Connection.
         expect(result.connection.connectorId).toBe(TYPEFULLY_CONNECTOR_ID);
-        expect(result.connection.accessToken.target?.id).toBe(result.accessToken.id);
+        expect(result.connection.accessToken?.target?.id).toBe(result.accessToken?.id);
       }),
     ));
 

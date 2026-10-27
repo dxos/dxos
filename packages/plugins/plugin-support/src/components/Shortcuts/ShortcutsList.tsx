@@ -4,17 +4,21 @@
 
 import React, { Fragment } from 'react';
 
-import { keySymbols, useActiveHotkeys } from '@dxos/react-focus';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { useActiveHotkeys } from '@dxos/react-focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
+import { Key } from './Key.tsx';
+
 export const ShortcutsList = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // TODO(burdon): Get shortcuts from TextEditor.
   // A command registered without a label is shown by its shortcut rather than dropped.
-  const label = (binding: { label?: string; hotkey: string }) => toLocalizedString(binding.label ?? binding.hotkey, t);
+  const label = (binding: { label?: string; hotkey: string }) =>
+    Theme.toLocalizedString(binding.label ?? binding.hotkey, t);
   const bindings = [...useActiveHotkeys()].sort((a, b) =>
     label(a)?.toLowerCase().localeCompare(label(b)?.toLowerCase()),
   );
@@ -30,18 +34,5 @@ export const ShortcutsList = () => {
         </Fragment>
       ))}
     </dl>
-  );
-};
-
-// TODO(burdon): Use https://ark-ui.com/docs/utilities/hotkeys
-export const Key = ({ binding }: { binding: string }) => {
-  return (
-    <kbd role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
-      {keySymbols(binding).map((c, i) => (
-        <span key={i} className='flex size-6 justify-center items-center rounded-sm bg-input-surface text-fg'>
-          {c}
-        </span>
-      ))}
-    </kbd>
   );
 };

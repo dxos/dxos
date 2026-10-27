@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Schema from 'effect/Schema';
 
-import { TriggerStateNotFoundError } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { EntityId } from '@dxos/keys';
 
 export const TriggerState = Schema.Struct({
@@ -28,7 +28,7 @@ export interface TriggerState extends Schema.Schema.Type<typeof TriggerState> {}
 export class TriggerStateStore extends Context.Service<
   TriggerStateStore,
   {
-    getState(triggerId: EntityId): Effect.Effect<TriggerState, TriggerStateNotFoundError>;
+    getState(triggerId: EntityId): Effect.Effect<TriggerState, Trigger.TriggerStateNotFoundError>;
     saveState(state: TriggerState): Effect.Effect<void>;
   }
 >()('@dxos/functions/TriggerStateStore') {
@@ -46,7 +46,7 @@ export class TriggerStateStore extends Context.Service<
         getState: Effect.fn('TriggerStateStore.getState')(function* (triggerId: EntityId) {
           const valueOption = yield* schemaStore.get(triggerId).pipe(Effect.orDie);
           if (Option.isNone(valueOption)) {
-            return yield* Effect.fail(new TriggerStateNotFoundError());
+            return yield* Effect.fail(new Trigger.TriggerStateNotFoundError());
           }
           return valueOption.value;
         }),

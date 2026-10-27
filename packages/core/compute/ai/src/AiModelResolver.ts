@@ -34,7 +34,8 @@ export const buildAiService: Layer.Layer<AiService.AiService, never, AiModelReso
     const resolver = yield* AiModelResolver;
     return {
       metadata: resolver.metadata,
-      languageModel: (name, options) => Layer.merge(resolver.languageModel(name, options), telemetryLayer),
+      languageModel: (name, options) =>
+        Layer.merge(AiTelemetry.markRequestsLayer(resolver.languageModel(name, options)), telemetryLayer),
       decisionModel: resolver.decisionModel,
     } satisfies Context.Service.Shape<typeof AiService.AiService>;
   }),

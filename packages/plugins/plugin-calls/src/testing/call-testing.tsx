@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import { useLayoutEffect } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 
 import { CallsPlugin } from '#plugin';
@@ -31,15 +31,15 @@ const storyConfig = new Config({
  * Story decorator providing a live (but unconnected) `CallManager` via the real `CallsPlugin`.
  * Pair with `useSeedCallManager` to present deterministic participants without a swarm.
  */
-export const withCallManager = () =>
+export const withCallManager = ({ displayName }: { displayName?: string } = {}) =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         config: storyConfig,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            yield* initializeIdentity(client);
+            yield* initializeIdentity(client, { displayName });
           }),
       }),
       CallsPlugin(),
@@ -69,7 +69,7 @@ export const makeCallState = (self: UserState, users: UserState[], media?: Parti
 
 /** Seeds the contributed `CallManager` with deterministic state for the lifetime of the story. */
 export const useSeedCallManager = (state: GlobalState): CallManager => {
-  const callManager = useCapability(CallsCapabilities.Manager);
+  const callManager = Hooks.useCapability(CallsCapabilities.Manager);
   useLayoutEffect(() => {
     callManager._setState(state);
   }, [callManager, state]);

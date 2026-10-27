@@ -22,7 +22,7 @@ envelope (`ciCommitSha`, `ciBranch`, `ciRunId`, …), so the harness emits `wall
 
 | property        | example                                   | role                                                                                          |
 | --------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `ciFlow`        | `projects-tasks`                          | Which flow. One today.                                                                        |
+| `ciFlow`        | `projects-tasks`                          | Which flow: `projects-tasks`, or `assistant-chat` (scales `blank` / `busy`).                  |
 | `ciStage`       | `open-document`                           | **The scenario.** Every chart breaks down by this.                                            |
 | `ciStageIndex`  | `6`                                       | Order within the flow, for sorting a stacked bar.                                             |
 | `ciScale`       | `tasks=200,depth=2,projects=1,docs=3x400` | Fixture shape label.                                                                          |
@@ -36,6 +36,16 @@ envelope (`ciCommitSha`, `ciBranch`, `ciRunId`, …), so the harness emits `wall
 (the costed work counters that ran, e.g. `trace+react`; absent on rows from before it existed). A trend that mixes
 `vite preview` with `vite serve` moves ~2.5x on main-thread cost alone, which reads exactly like a
 regression. Filter on them rather than trusting them to be constant.
+
+### Every tile shows ONE scale
+
+Every `ci.perf-stage` tile on this dashboard pins
+`ciScale = 'tasks=200,depth=2,projects=1,docs=3x400'`, the `projects-tasks` flow. One nightly run
+publishes several flows and scales, and their iterations share `ciIteration` numbers, so a tile
+grouped by `(day, run, iteration)` without the pin sums unrelated flows into one "iteration". It did
+from 2026-10-03: `assistant-chat` runs five iterations per scale against `projects-tasks`' ten, so
+iterations 0-4 summed three flows (~105 s) and 5-9 one (~21 s), and every box split in two. Another
+scale needs its own tiles; never drop the pin to widen one.
 
 ### Measures
 
@@ -355,7 +365,9 @@ dashboard, **[ECHO benchmarks (nightly)](https://eu.posthog.com/project/126171/d
 - **`ci.perf-score`** is written once a night by `scripts/score-perf.ts` (and `bench-score` for
   ECHO), one row per metric, group and overall, each carrying the target and limit it was scored
   against. Scores run 0-1: 1 at or under target, 0.5 at the limit, floored at 0.01; the curve and the
-  geometric-mean roll-up are in `src/score/score.ts`.
+  geometric-mean roll-up are in `src/score/score.ts`. Work counters score as `<counter> > <stage>`
+  in a `work` group of the same suite; the counters-on pass scores its costed counts alone, as the
+  `composer-work` and `chat-work` suites (METRICS.md §"Scoring them").
 - **Budget-position tiles** plot `ln(value/target) / ln(limit/target)` per metric, so every metric
   shares one axis: 0 is the target, 1 the limit.
 

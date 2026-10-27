@@ -27,8 +27,8 @@ import {
 } from 'react-leaflet';
 
 import { createContext } from '@dxos/react-hooks';
-import { type ThemedClassName, ThemeProvider } from '@dxos/react-ui';
-import { composable, composableProps, defaultTx } from '@dxos/react-ui';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types.ts';
@@ -115,7 +115,7 @@ MapRoot.displayName = 'Map.Root';
 // Viewport
 //
 
-type MapViewportProps = ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
+type MapViewportProps = Util.ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
 
 /**
  * https://react-leaflet.js.org/docs/api-map
@@ -202,7 +202,7 @@ const MapPinchZoom = () => {
  * (Slot), so it reconciles an injected `className` via `composableProps`. Leaflet owns the underlying
  * container element, so the forwarded DOM ref can't be attached and is intentionally unused.
  */
-const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
+const MapViewport = Util.composable<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
   const {
     scrollWheelZoom = true,
     doubleClickZoom = true,
@@ -243,7 +243,7 @@ const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwar
 
   return (
     <MapContainer
-      {...composableProps(rest, {
+      {...Util.composableProps(rest, {
         // Frame classes (formerly on Map.Root): focusable grid container.
         classNames: 'dx-expand overflow-hidden group relative grid dx-focus-ring-inset bg-base-surface!',
       })}
@@ -389,10 +389,11 @@ const MapMarkers = ({ selected, markers, lines, onSelect }: MapMarkersProps) => 
                 iconUrl: 'https://media.dxos.network/marker-icon.png',
                 iconRetinaUrl: 'https://media.dxos.network/marker-icon-2x.png',
                 shadowUrl: 'https://media.dxos.network/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41],
+                // 60% of Leaflet's default pin, so dense clusters (a city's data centres) stay readable.
+                iconSize: [15, 25],
+                iconAnchor: [7.5, 25],
+                popupAnchor: [0.5, -20],
+                shadowSize: [25, 25],
               })
             }
           >
@@ -473,7 +474,7 @@ const CustomControl = ({
       rootRef.current = root;
       // Initial render — covers mount and any map/position remount; the effect below
       // handles subsequent children-only updates.
-      root.render(<ThemeProvider tx={defaultTx}>{children}</ThemeProvider>);
+      root.render(<Theme.Provider tx={Theme.defaultTx}>{children}</Theme.Provider>);
       return container;
     };
 
@@ -489,7 +490,7 @@ const CustomControl = ({
 
   // Re-render children into the persistent root whenever they change.
   useEffect(() => {
-    rootRef.current?.render(<ThemeProvider tx={defaultTx}>{children}</ThemeProvider>);
+    rootRef.current?.render(<Theme.Provider tx={Theme.defaultTx}>{children}</Theme.Provider>);
   }, [children]);
 
   return null;

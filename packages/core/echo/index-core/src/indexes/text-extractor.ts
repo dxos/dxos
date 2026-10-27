@@ -4,6 +4,7 @@
 
 import type { Obj } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
+import { isEncodedUint8Array } from '@dxos/util';
 
 /** Separator between extracted fragments; a trigram tokenizer never spans it. */
 const SEPARATOR = '\n';
@@ -30,7 +31,7 @@ export const extractIndexableText = (data: Obj.JSON): string => {
   const visit = (value: unknown): void => {
     // A reference is `{ '/': 'dxn:…' }` — an identifier, and its target's text is indexed under
     // the target's own row.
-    if (isEncodedReference(value)) {
+    if (isEncodedReference(value) || isEncodedUint8Array(value)) {
       return;
     }
     if (typeof value === 'string') {

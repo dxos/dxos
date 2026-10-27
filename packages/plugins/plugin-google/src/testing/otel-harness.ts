@@ -10,7 +10,7 @@ import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 
-import { layerOtel } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 
 /** Aggregated timings for all spans sharing a name. */
 export interface SpanStats {
@@ -38,7 +38,7 @@ export class OtelHarness {
    * tracer with one backed by the global OTEL provider (registered by {@link start}), so it must be
    * provided while the harness is started.
    */
-  readonly layer: Layer.Layer<Resource.Resource> = layerOtel(Effect.succeed({}));
+  readonly layer: Layer.Layer<Resource.Resource> = OtelTracer.layer(Effect.succeed({}));
 
   constructor(serviceName = 'inbox-sync-bench') {
     this.#sdk = new NodeSDK({

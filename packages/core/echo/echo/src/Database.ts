@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import type { CleanupFn } from '@dxos/async';
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId, type URI } from '@dxos/keys';
 

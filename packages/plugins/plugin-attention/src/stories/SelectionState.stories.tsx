@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { useThemeMode } from '@dxos/react-ui';
 import { ViewState, useManager, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   EditorSelectionStateSchema,
@@ -91,7 +91,7 @@ const ITEMS: StoryItem[] = [
 type ItemEditorProps = { item: StoryItem; editorStore: EditorStateStore };
 
 const ItemEditor = ({ item, editorStore }: ItemEditorProps) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
 
   const { parentRef } = useTextEditor(
     () => ({
@@ -131,20 +131,22 @@ const SelectionStateStory = () => {
         <div className='px-3 py-2 text-sm font-medium text-fg-subtle border-b border-separator'>Items</div>
         <OrderedList.Root<StoryItem> items={ITEMS} getId={(item) => item.id} getLabel={(item) => item.label}>
           {({ items: resolved }) => (
-            <OrderedList.Content>
-              {resolved.map((item) => (
-                <OrderedList.Item
-                  key={item.id}
-                  id={item.id}
-                  canDrag={false}
-                  highlightOnHover
-                  current={item.id === selectedId}
-                  onClick={() => single(item.id)}
-                >
-                  <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
-                </OrderedList.Item>
-              ))}
-            </OrderedList.Content>
+            <OrderedList.Viewport>
+              <OrderedList.Content>
+                {resolved.map((item) => (
+                  <OrderedList.Item
+                    key={item.id}
+                    id={item.id}
+                    canDrag={false}
+                    highlightOnHover
+                    current={item.id === selectedId}
+                    onClick={() => single(item.id)}
+                  >
+                    <OrderedList.ItemText>{item.label}</OrderedList.ItemText>
+                  </OrderedList.Item>
+                ))}
+              </OrderedList.Content>
+            </OrderedList.Viewport>
           )}
         </OrderedList.Root>
       </div>

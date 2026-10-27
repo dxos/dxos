@@ -8,7 +8,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { SpaceId } from '@dxos/keys';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker/index.ts';
@@ -159,6 +159,22 @@ export class IndexTracker {
         const sql = this.#sql;
         for (const chunk of chunkArray(query.resourceIds)) {
           yield* sql`DELETE FROM indexCursor WHERE spaceId = ${query.spaceId} AND ${sql.in('resourceId', chunk)}`;
+        }
+      }),
+  );
+
+  /** Delete one source's cursors on `resourceIds` that stand at `cursor`. */
+  deleteCursorsAt = Effect.fn('IndexTracker.deleteCursorsAt')(
+    (query: {
+      sourceName: string;
+      spaceId: SpaceId;
+      resourceIds: readonly string[];
+      cursor: string;
+    }): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        for (const chunk of chunkArray(query.resourceIds)) {
+          yield* sql`DELETE FROM indexCursor WHERE sourceName = ${query.sourceName} AND spaceId = ${query.spaceId} AND cursor = ${query.cursor} AND ${sql.in('resourceId', chunk)}`;
         }
       }),
   );

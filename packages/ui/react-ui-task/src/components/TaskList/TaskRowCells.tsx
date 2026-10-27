@@ -2,11 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Button, Checkbox, Field, Icon, Tooltip, useTranslation } from '@dxos/react-ui';
+import { useObject } from '@dxos/echo-react';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
@@ -45,13 +54,15 @@ export type TaskStatusControlProps = {
 };
 
 /** The status glyph, which is also the control that completes the task. */
+const useAgentWorking = (task: Task.Task): boolean =>
+  useAtomValue(useMemo(() => Atom.make((get) => Task.isAgentWorking(get(Obj.atom(task)))), [task]));
+
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
-  const { t } = useTranslation(translationKey);
-  const status = task.status ?? 'todo';
-  // Derived from the task rather than wired down from the list: a task an agent has taken and
-  // started is being worked right now whoever renders it, and the row is the only place that says
-  // so. A human-started task keeps the static glyph.
-  const working = active ?? Task.isAgentWorking(task);
+  const { t } = Hooks.useTranslation(translationKey);
+  const [storedStatus] = useObject(task, 'status');
+  const status = storedStatus ?? 'todo';
+  const agentWorking = useAgentWorking(task);
+  const working = active ?? agentWorking;
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
     : { icon: statusIcon(status), classNames: statusTextStyle(status) };
@@ -77,10 +88,10 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
     // own width and stops lining up with the editable list's.
     return (
-      <Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
-        <Icon icon={icon} classNames={iconClassNames} />
+      <Layout.Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
+        <Icon.Icon icon={icon} classNames={iconClassNames} />
         <span className='sr-only'>{t(`status-${status}.label`)}</span>
-      </Block>
+      </Layout.Block>
     );
   }
 
@@ -88,7 +99,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   // too, and a trigger above it would never receive it. The block still gives every control in the
   // row one rail-item square.
   const trigger = (
-    <Button
+    <Button.Root
       data-testid='taskList.item.status'
       // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
       // which the `Icon` root reads, so a colour set on the button is overridden at rest and
@@ -104,12 +115,12 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   );
 
   return (
-    <Block classNames={classNames}>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu deferUntilOpen actions={actions}>
         {trigger}
       </ActionMenu>
-    </Block>
+    </Layout.Block>
   );
 };
 
@@ -151,10 +162,10 @@ export const TaskMnemonic = ({ task, ordinal, classNames }: TaskMnemonicProps) =
       .catch(() => setCopied(false));
   };
 
-  const icon = <Icon icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'} />;
+  const icon = <Icon.Icon icon={copied ? 'ph--check--regular' : 'ph--clipboard--regular'} />;
   return (
     <Tooltip.Trigger asChild content={mnemonic}>
-      <Button
+      <Button.Root
         size='sm'
         compact
         // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
@@ -174,7 +185,7 @@ export const TaskMnemonic = ({ task, ordinal, classNames }: TaskMnemonicProps) =
             <span className='hidden group-hover:contents'>{icon}</span>
           </>
         )}
-      </Button>
+      </Button.Root>
     </Tooltip.Trigger>
   );
 };
@@ -194,13 +205,13 @@ export type TaskCheckboxProps = {
  * list that offers it keeps one row geometry and the trailing controls do not shift.
  */
 export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: TaskCheckboxProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
-    <Block aria-hidden={false} classNames={classNames}>
+    <Layout.Block aria-hidden={false} classNames={classNames}>
       <Field.Root>
-        <Checkbox
+        <Input.Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -209,7 +220,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           onClick={(event) => event.stopPropagation()}
         />
       </Field.Root>
-    </Block>
+    </Layout.Block>
   );
 };
 
@@ -224,9 +235,10 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
  */
 export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
+  const [estimate] = useObject(task, 'estimate');
   return (
     <TaskEstimatePicker
-      estimate={task.estimate}
+      estimate={estimate}
       onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
       testId='taskList.item.estimate'
       classNames={classNames}
@@ -244,14 +256,15 @@ export type TaskEstimatePickerProps = {
 
 /** The estimate label and its menu over a bare value, for a row's task or a draft that has none yet. */
 export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
-  const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
+  const { t } = Hooks.useTranslation(translationKey);
+  const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onChange) {
-    return <Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Block>;
+    return <Layout.Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
   }
 
   return (
-    <Block classNames={classNames}>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
@@ -264,16 +277,18 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
           )
         }
       >
-        <Button
+        <Button.Root
           variant='ghost'
+          iconOnly={estimate === undefined}
+          label={t('task-estimate.label')}
           data-testid={testId}
           classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
           onClick={(event: MouseEvent) => event.stopPropagation()}
         >
           {label}
-        </Button>
+        </Button.Root>
       </ActionMenu>
-    </Block>
+    </Layout.Block>
   );
 };
 
@@ -290,9 +305,10 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  */
 export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
+  const [priority] = useObject(task, 'priority');
   return (
     <TaskPriorityPicker
-      priority={task.priority ?? undefined}
+      priority={priority ?? undefined}
       onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
       testId='taskList.item.priority'
       classNames={classNames}
@@ -310,7 +326,7 @@ export type TaskPriorityPickerProps = {
 
 /** The priority glyph and its menu over a bare value, for a row's task or a draft that has none yet. */
 export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: TaskPriorityPickerProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const icon = priorityIcon(priority);
   const styles = priorityTextStyle(priority);
 
@@ -318,14 +334,14 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
-      <Block classNames={classNames}>
-        <Icon icon={icon} classNames={mx(styles)} />
-      </Block>
+      <Layout.Block classNames={classNames}>
+        <Icon.Icon icon={icon} classNames={mx(styles)} />
+      </Layout.Block>
     );
   }
 
   return (
-    <Block classNames={classNames}>
+    <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
@@ -341,7 +357,7 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
           )
         }
       >
-        <Button
+        <Button.Root
           variant='ghost'
           icon={icon}
           iconOnly
@@ -351,6 +367,6 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </Block>
+    </Layout.Block>
   );
 };

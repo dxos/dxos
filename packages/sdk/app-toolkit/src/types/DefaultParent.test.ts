@@ -13,7 +13,7 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Annotation, Collection, Database, DXN, Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import * as AppCapabilities from '../app-framework/AppCapabilities.ts';
 import * as DefaultParent from './DefaultParent.ts';

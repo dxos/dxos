@@ -13,11 +13,11 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -147,7 +147,7 @@ const DefaultStory = ({ title }: StoryArgs) => {
 const withPlugins = ({ files }: { files: boolean }) =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       TasksPlugin.make(),
       // Contributes the object menus the artifact cards show.
       SpacePlugin.make({}),

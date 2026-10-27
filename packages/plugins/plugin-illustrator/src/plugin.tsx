@@ -6,12 +6,14 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   AppGraphBuilder,
+  Commands,
   CommentConfig,
   CreateObject,
   Migrations,
   OperationHandler,
   PluginAsset,
   ReactSurface,
+  RefitState,
   Schema,
   SkillDefinition,
   SvgVariant,
@@ -21,12 +23,14 @@ import { meta } from '#meta';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(Commands),
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
   Plugin.addModule(Migrations),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(RefitState),
   Plugin.addModule(Schema),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(SvgVariant),

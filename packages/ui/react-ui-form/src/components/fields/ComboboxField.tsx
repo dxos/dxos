@@ -5,7 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { Combobox, type ComboboxOption } from '@dxos/react-ui';
+import * as Combobox from '@dxos/react-ui/Combobox';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -53,7 +53,7 @@ export const ComboboxField = ({
 
   const value = getValue() ?? '';
   const trimmed = query.trim();
-  const items = useMemo<ComboboxOption[]>(() => {
+  const items = useMemo<Combobox.Option[]>(() => {
     const loaded = (data ?? []).map((option) => ({ value: option.value, label: option.label ?? option.value }));
     const results =
       trimmed.length === 0

@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import * as AppCapabilities from '../app-framework/AppCapabilities.ts';
 import { TypeOptions } from '../echo/index.ts';

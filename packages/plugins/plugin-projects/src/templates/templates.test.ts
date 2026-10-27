@@ -9,13 +9,13 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Text } from '@dxos/schema';
 import { TaskSet } from '@dxos/types';
 
 import { ProjectCapabilities } from '#types';
 
-import { defaultTemplate, defaultTemplates, scaffoldProject } from './index.ts';
+import { defaultTemplate, defaultTemplates, featureSpec, scaffoldProject } from './index.ts';
 
 describe('project templates', () => {
   let builder: EchoTestBuilder;
@@ -75,5 +75,24 @@ describe('project templates', () => {
 
     const instructions = await project.instructions?.tryLoad();
     expect(instructions?.objects?.map((ref: Ref.Ref<Obj.Unknown>) => ref.target?.id)).toEqual([subject.id]);
+  });
+
+  test('feature spec template starts a project with the project skill and no features', async ({ expect }) => {
+    expect(defaultTemplates).toContain(featureSpec);
+    const db = await createDatabase();
+    const project = await EffectEx.runPromise(
+      featureSpec
+        .scaffold({ name: 'Sheet timeline' })
+        .pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
+    db.add(project);
+    await db.flush();
+
+    expect(project.name).toBe('Sheet timeline');
+    const instructions = await project.instructions?.tryLoad();
+    expect(instructions?.skills?.map((ref: Ref.Ref<Obj.Unknown>) => ref.uri)).toEqual([
+      expect.stringContaining('org.dxos.skill.project'),
+    ]);
+    expect(project.artifacts).toEqual([]);
   });
 });

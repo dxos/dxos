@@ -13,7 +13,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { Devtools } from '#types';
@@ -364,6 +364,26 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     properties: {
                       label: ['network.label', { ns: meta.profile.key }],
                       icon: 'ph--polygon--regular',
+                    },
+                  }),
+                ],
+              }),
+              AppGraphNode.make({
+                id: Devtools.nodeId(Devtools.Agent.id),
+                data: null,
+                type: Devtools.id,
+                properties: {
+                  label: ['agent.label', { ns: meta.profile.key }],
+                  icon: 'ph--robot--regular',
+                },
+                nodes: [
+                  AppGraphNode.make({
+                    id: Devtools.nodeId(Devtools.Agent.Halo),
+                    data: Devtools.Agent.Halo,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['halo.label', { ns: meta.profile.key }],
+                      icon: 'ph--identification-badge--regular',
                     },
                   }),
                 ],

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 import { MeetingCapabilities, Settings } from '#types';
@@ -16,7 +16,7 @@ import { MeetingCapabilities, Settings } from '#types';
 // `CallExtension`.
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings.Settings,
       defaultValue: () => ({}),

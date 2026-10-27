@@ -9,7 +9,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Combobox } from '@dxos/react-ui';
+import * as Combobox from '@dxos/react-ui/Combobox';
 
 export type PickerProps = {
   options: ReadonlyArray<string>;

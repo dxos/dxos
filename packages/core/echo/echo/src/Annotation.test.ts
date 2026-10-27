@@ -7,7 +7,7 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';

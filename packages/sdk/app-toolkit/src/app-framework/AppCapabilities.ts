@@ -10,10 +10,8 @@ import type * as Layer$ from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema$ from 'effect/Schema';
 
-import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
-import type { OpaqueToolkit } from '@dxos/ai';
+import type { OpaqueToolkit, AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
-import { BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
 import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
@@ -22,12 +20,13 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Obj, Type } from '@dxos/echo';
-import type * as Retention$ from '@dxos/graph/Retention';
+import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
+import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
-import type { AnchoredTo } from '@dxos/types';
-import type { Position } from '@dxos/util';
+import type { AnchoredTo, Message, Thread } from '@dxos/types';
+import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate$ from '../app/AppUpdate.ts';
@@ -162,12 +161,12 @@ export const AppGraph = Capability$.makeSingleton<AppGraph>()('org.dxos.app-fram
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
+export const AppGraphBuilder = Capability$.make<AppGraphBuilder$.BuilderExtensions>()(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 
 /** Nodes the graph must keep loaded, contributed by each plugin that knows what it is showing. */
-export type AppGraphRetention = Retention$.Retention<AppGraphNode$.RelationInput>;
+export type AppGraphRetention = Retention.Retention<AppGraphNode$.RelationInput>;
 
 /**
  * @category Capability
@@ -206,7 +205,7 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * contribution (plus the plugin set) into the settings space so they follow the identity across
  * devices, with per-key device overrides.
  *
- * Contributed once the settings space is open, so consumers must tolerate its absence.
+ * Absent without an identity. Until the settings space opens, `unsynced` is empty and the actions do nothing.
  */
 export type SettingsSync = {
   /** Settings prefixes this device writes locally rather than sharing. */
@@ -255,12 +254,21 @@ export const SkillDefinition = Capability$.make<Skill.Definition>()(
 );
 
 /**
+ * An MCP server a plugin ships, needing no credential. It is synced into the registry, where every
+ * chat lists it off until the chat or its agent turns it on; nothing is written to a space.
+ *
+ * @category Capability
+ */
+export const McpServer = Capability$.make<Connection.Builtin>()('org.dxos.app-framework.capability.mcpServer');
+
+/**
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
- * Contributors import the raw file (e.g. `import spec from '../PLUGIN.mdl?raw'`)
- * and contribute it via this capability from a dependency-mode module. Consumers
- * read all contributions with `Capability.getAll(AppCapabilities.PluginAsset)`.
+ * Contributors load the raw file (e.g. `() => import('../PLUGIN.mdl?raw')`) through
+ * `AppCapability.pluginAsset`, whose module is gated on `ActivationEvents.PluginAssetsRequested`.
+ * Consumers fire that event, then read all contributions with
+ * `Capability.getAll(AppCapabilities.PluginAsset)`.
  */
 export type PluginAsset = Readonly<{
   /** Owning plugin id (matches `Plugin.Meta.id`). */
@@ -296,8 +304,11 @@ export type SpaceTemplate = Readonly<{
   hue?: string;
   /** Omit from the create picker; reachable only by id. */
   hidden?: boolean;
-  /** Registers the content's types on the client, then writes it into the new space. */
-  apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
+  /** Registers the content's types on the client, then writes it into the space; `SpaceOperation.ApplyTemplate` runs it. */
+  apply: (options: {
+    readonly client: Client;
+    readonly space: Space;
+  }) => Effect$.Effect<void, Error, Operation.Service>;
 }>;
 
 /**
@@ -368,6 +379,25 @@ export type CommentConfig = Readonly<{
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
 
 /**
+ * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
+ * Contributed by the assistant, so the review plugin owns threads without depending on any AI stack.
+ */
+export type CommentAgentRunner = Readonly<{
+  run: (input: {
+    thread: Thread.Thread;
+    subject: Obj.Unknown;
+    message: Message.Message;
+  }) => Effect$.Effect<void, Error, Capability$.Service>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const CommentAgentRunner = Capability$.make<CommentAgentRunner>()(
+  'org.dxos.app-framework.capability.commentAgentRunner',
+);
+
+/**
  * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
  * type's `Annotation.UserType`; see `DefaultParent.resolve`, which asks the matching rules in `position`
  * order and takes the first parent one returns.
@@ -421,6 +451,20 @@ export type NavigationTargetResolver = (
 export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>()(
   'org.dxos.app-framework.capability.navigationTargetResolver',
 );
+
+/**
+ * Changes that exist only in this page, which leaving it would lose: consulted before the page or the
+ * app goes away.
+ * @category Capability
+ */
+export type UnsavedChanges = {
+  /** Synchronous, so a `beforeunload` handler can decide. */
+  has(): boolean;
+  /** Hands the changes on to where they are kept, resolving whether none is left. */
+  save(): Promise<boolean>;
+};
+
+export const UnsavedChanges = Capability$.make<UnsavedChanges>()('org.dxos.app-framework.capability.unsavedChanges');
 
 /**
  * What a {@link NavigationTargetLoader} was able to determine about a target.

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { type ContentMap, Mermaid, Uml, UmlGrid } from '@dxos/diagram';
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 

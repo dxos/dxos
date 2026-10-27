@@ -5,16 +5,21 @@
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -54,6 +59,15 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
   }
 };
 
+const floatingClassNames = (position: string) =>
+  mx(
+    'absolute z-10 opacity-0 pointer-events-none transition-opacity',
+    'group-hover/embed:opacity-100 group-hover/embed:pointer-events-auto',
+    // A tab onto the hidden open button reveals it; a click elsewhere in the embed does not.
+    'has-[:focus-visible]:opacity-100 has-[:focus-visible]:pointer-events-auto',
+    position,
+  );
+
 export type PreviewComponentProps = WidgetProps<
   {
     /** The widget id, for reporting the target's state back to the editor. */
@@ -90,11 +104,11 @@ export const PreviewComponent = ({
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
-  const invoker = useOptionalCapability(Capabilities.OperationInvoker);
+  const invoker = Hooks.useOptionalCapability(Capabilities.OperationInvoker);
   const invokePromise = invoker?.invokePromise;
 
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
@@ -108,9 +122,9 @@ export const PreviewComponent = ({
   const uri = useMemo(() => (eid ? URI.make(eid) : undefined), [eid]);
   const ref = useMemo(() => (uri && db ? db.makeRef<Obj.Unknown>(uri) : undefined), [uri, db]);
   const object = useResolveRef(ref);
-  // Tuple, not the snapshot itself: binding the array as `subject` made every surface filter's
-  // instanceOf check fail, so embeds rendered nothing.
-  const [subject] = useObject(object);
+  // Subscribes so the label, icon and deleted state re-render. Surfaces get the live object, not this
+  // snapshot: they bind accessors and write to their subject.
+  useObject(object);
 
   // `object` is undefined both while the target loads and when there is nothing to load; only a
   // settled load tells them apart, and a deleted object still resolves, so both count as missing.
@@ -150,8 +164,8 @@ export const PreviewComponent = ({
   // Tell the surface it is sized by its container (vs. intrinsic) so content (e.g. an image) can fit.
   const extrinsic = size !== 'min-content';
   const data = useMemo(
-    () => (subject && attendableId && available ? { subject, attendableId, extrinsic } : undefined),
-    [subject, attendableId, extrinsic, available],
+    () => (object && attendableId && available ? { subject: object, attendableId, extrinsic } : undefined),
+    [object, attendableId, extrinsic, available],
   );
   const mode = !data
     ? undefined
@@ -285,6 +299,8 @@ export const PreviewComponent = ({
   );
 
   // Shared by both previews: the container takes focus for the embed and hosts the attention id.
+  // Both frames reset `white-space`: the editor's `break-spaces` would otherwise reach the surface and
+  // lay out template whitespace as line breaks (a sheet's cell text drops out of its cell).
   const frameProps = {
     'tabIndex': 0,
     'data-testid': 'markdown.embed',
@@ -320,7 +336,7 @@ export const PreviewComponent = ({
   if (unresolved) {
     return (
       <span className='dx-tag dx-tag-inline gap-1 align-baseline' data-hue='red'>
-        <Icon icon='ph--warning--regular' size='md' />
+        <Icon.Icon icon='ph--warning--regular' size='md' />
         {t('object-not-found.label')}
       </span>
     );
@@ -334,7 +350,7 @@ export const PreviewComponent = ({
     if (mode === 'section') {
       return (
         <div
-          className='relative grid scroll-mt-16 outline-hidden'
+          className='group/embed relative grid scroll-mt-16 outline-hidden whitespace-normal'
           style={sizeStyle(size, 'vertical')}
           {...frameProps}
           {...resizeAttributes}
@@ -356,23 +372,28 @@ export const PreviewComponent = ({
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
-          <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
-            <span className='dx-tag dx-tag-inline flex gap-1' data-hue='neutral'>
-              {objectIcon && <Icon icon={objectIcon.icon} size='md' />}
+          {/* The tag and open button are inset at the bottom, shown only on hover, so they cover the surface only then. */}
+          <Layout.Flex
+            align='center'
+            justify='center'
+            gap='xs'
+            classNames={floatingClassNames('bottom-2 left-1/2 -translate-x-1/2')}
+          >
+            <span className='dx-tag dx-tag-inline flex items-center gap-1 pe-0' data-hue='neutral'>
+              {objectIcon && <Icon.Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
+              <Button.Root
+                size='md'
+                icon='ph--arrow-square-out--regular'
+                iconOnly
+                label='Open'
+                variant='ghost'
+                iconSize='md'
+                classNames='hover:bg-transparent'
+                onClick={handleOpen}
+              />
             </span>
-          </div>
-
-          <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-            <Button
-              size='sm'
-              icon='ph--arrow-square-out--regular'
-              iconOnly
-              label='Open'
-              variant='ghost'
-              onClick={handleOpen}
-            />
-          </div>
+          </Layout.Flex>
 
           <ResizeHandle
             side='block-end'
@@ -388,12 +409,12 @@ export const PreviewComponent = ({
     // Card preview.
     if (mode === 'card') {
       return (
-        <div className='outline-hidden' {...frameProps} ref={cardRef}>
+        <div className='outline-hidden whitespace-normal' {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
             <Card.Root grid classNames={hasAttention && 'border-focus-ring-subtle'}>
               <Card.Header>
-                <Block />
+                <Layout.Block />
                 <Card.Title>{objectLabel}</Card.Title>
               </Card.Header>
               <Card.Body>

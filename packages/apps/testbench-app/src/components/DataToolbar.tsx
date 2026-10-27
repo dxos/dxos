@@ -4,7 +4,13 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Button, Field, Icon, Input, Select, ToggleGroup, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Select from '@dxos/react-ui/Select';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
@@ -28,9 +34,9 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
 
   return (
     <Toolbar.Root>
-      <Button icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
+      <Button.Root icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
       <Field.Root>
-        <Input
+        <Input.Root
           classNames='max-w-16 text-right'
           value={count}
           onChange={(event) => setCount(safeParseInt(event.target.value) ?? count)}
@@ -52,7 +58,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       )}
       {onFilterChange && (
         <Field.Root>
-          <Input
+          <Input.Root
             placeholder='Filter objects...'
             value={filter ?? ''}
             onChange={(event) => setFilter(event.target.value)}
@@ -62,13 +68,13 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
           <ToggleGroup.Item value='table'>
-            <Icon icon='ph--table--regular' />
+            <Icon.Icon icon='ph--table--regular' />
           </ToggleGroup.Item>
           <ToggleGroup.Item value='list'>
-            <Icon icon='ph--list--regular' />
+            <Icon.Icon icon='ph--list--regular' />
           </ToggleGroup.Item>
           <ToggleGroup.Item value='debug'>
-            <Icon icon='ph--list-magnifying-glass--regular' />
+            <Icon.Icon icon='ph--list-magnifying-glass--regular' />
           </ToggleGroup.Item>
         </Toolbar.ToggleGroup>
       )}

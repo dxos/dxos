@@ -6,10 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraph from '@dxos/app-graph/AppGraph';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
+  AgentHaloArticle,
   AutomergeArticle,
   ConfigArticle,
   CredentialsArticle,
@@ -350,6 +351,12 @@ export default Capability.makeModule(
         filter: AppSurface.literal(DebugSurface.Page, Devtools.Mesh.Network),
         component: ActiveSpacePanel,
         props: ({ role }) => ({ role, Panel: NetworkArticle }),
+      }),
+      Surface.create({
+        id: 'agent.halo',
+        filter: AppSurface.literal(DebugSurface.Page, Devtools.Agent.Halo),
+        component: AgentHaloArticle,
+        props: ({ role }) => ({ role }),
       }),
       Surface.create({
         id: 'edge.dashboard',

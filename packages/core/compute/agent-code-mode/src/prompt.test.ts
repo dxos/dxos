@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Ref, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
 import { EffectDialect } from './dialect-effect.ts';

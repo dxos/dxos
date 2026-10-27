@@ -19,7 +19,8 @@ import {
 import { failUndefined } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-host';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import { type HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -53,7 +54,7 @@ import {
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
-import { deferFunction, isNode, isTauri } from '@dxos/util';
+import { deferFunction, isNode, isTauri, markMilestone } from '@dxos/util';
 
 import * as Auth from '../../Auth.ts';
 import * as IdentityContract from '../../contracts/identity.ts';
@@ -196,6 +197,7 @@ export class IdentityManager {
       this._identity = await this._constructIdentity(identityRecord);
       await this._identity.open(ctx);
       await this._identity.ready();
+      markMilestone('identity.ready');
       await this._anchorHaloOnRootDocument(this._ctx, this._identity);
       log.trace('dxos.halo.identity', {
         identityKey: identityRecord.identityKey,
@@ -300,6 +302,7 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
+    markMilestone('identity.ready');
     await this._anchorHaloOnRootDocument(this._ctx, this._identity);
     log.trace('dxos.halo.identity', {
       identityKey: identityRecord.identityKey,
@@ -382,6 +385,7 @@ export class IdentityManager {
 
     // Identity becomes ready after device chain is replicated. Wait for it before storing the record.
     await this._identity.ready();
+    markMilestone('identity.ready');
     await this._metadataStore.setIdentityRecord(identityRecord);
 
     log.trace('dxos.halo.identity', {

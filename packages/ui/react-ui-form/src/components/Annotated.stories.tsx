@@ -11,8 +11,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, Format, Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hues } from '@dxos/ui-types';
 
 import { AutofillAnnotation, HueAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../annotations.ts';
@@ -90,7 +93,7 @@ const DefaultStory = (_: PaneArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Layout.Container>
               <Form.Root
                 schema={AnnotatedSchema}
                 values={values}
@@ -100,17 +103,17 @@ const DefaultStory = (_: PaneArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography truncate data-testid='values'>
+        <Typography.Text truncate data-testid='values'>
           {JSON.stringify({ ...values, employer: undefined })}
-        </Typography>
-        <Typography truncate data-testid='organization'>
+        </Typography.Text>
+        <Typography.Text truncate data-testid='organization'>
           {organizationName}
-        </Typography>
+        </Typography.Text>
       </Panel.Footer>
     </Panel.Root>
   );

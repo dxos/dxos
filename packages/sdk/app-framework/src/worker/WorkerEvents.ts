@@ -8,7 +8,7 @@ import type * as RpcClient from 'effect/rpc/RpcClient';
 import type * as Scope from 'effect/Scope';
 
 import { type LayerStack } from '@dxos/compute-runtime';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 
 import * as ActivationEvent from '../core/activation-event.ts';
 

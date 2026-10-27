@@ -17,7 +17,7 @@ import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Client from '@dxos/worker-framework/Client';
 import * as Coordinator from '@dxos/worker-framework/Coordinator';
 

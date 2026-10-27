@@ -4,12 +4,12 @@
 
 import React from 'react';
 
-import { ThemedClassName } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { brandColors } from './brand-colors.ts';
 
-export const ComposerLogo = ({ classNames, size = 512 }: ThemedClassName<{ size?: number }>) => {
+export const ComposerLogo = ({ classNames, size = 512 }: Util.ThemedClassName<{ size?: number }>) => {
   const n = brandColors.length;
   const cx = size / 2;
   const cy = size / 2;

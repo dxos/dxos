@@ -10,7 +10,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { Transcriber } from '@dxos/pipeline-transcription';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription/capture';
@@ -127,6 +127,14 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
       this._registry.set(this._enabledAtom, !enabled);
       throw err;
     }
+  }
+
+  async flush(): Promise<void> {
+    if (!this.isOpen || !this.getEnabled()) {
+      return;
+    }
+
+    await this._transcriber?.flush();
   }
 
   @synchronized

@@ -5,8 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { ChatContextSkill, RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -14,17 +16,16 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { CrmSkill } from '@dxos/plugin-crm';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
+import * as CrmSkill from '@dxos/plugin-crm/CrmSkill';
 import * as InboxSkill from '@dxos/plugin-inbox/InboxSkill';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
-import { meta as automationMeta } from '@dxos/plugin-routine';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
-import { Cell } from '@dxos/storybook-testing';
-import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline } from '@dxos/types';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
+import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
@@ -32,7 +33,6 @@ import {
   ModuleContainer,
   ResearchInputQueue,
   addTestData,
-  addToRootCollection,
   createDecorators,
   createTestMailbox,
   loadMockInbox,
@@ -148,7 +148,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          runnable: Ref.make(Operation.serialize(RunInstructions)),
+          runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
           enabled: true,
           spec: Trigger.specFeed(feed),
           input: {
@@ -164,7 +164,7 @@ export const WithResearchQueue: Story = {
     layout: [
       [StoryRole.ResearchInput, StoryRole.ResearchOutput],
       [
-        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        { type: AppSurface.Article, data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` } },
         StoryRole.Invocations,
         StoryRole.Routine,
         StoryRole.Graph,
@@ -203,12 +203,11 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
-      const tagRef = Ref.make(tag);
       const tagUri = Obj.getURI(tag);
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [tagRef];
+          Obj.getMeta(person).tags = [tag];
         });
       });
 
@@ -232,7 +231,7 @@ export const WithProject: Story = {
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
         Obj.update(research, (research) => {
-          Obj.getMeta(research).tags = [tagRef];
+          Obj.getMeta(research).tags = [tag];
         });
       });
 
@@ -240,7 +239,7 @@ export const WithProject: Story = {
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         Obj.update(organization, (organization) => {
-          Obj.getMeta(organization).tags = [tagRef];
+          Obj.getMeta(organization).tags = [tag];
         });
       });
 
@@ -279,7 +278,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        runnable: Ref.make(Operation.serialize(RunInstructions)),
+        runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
         enabled: true,
         spec: Trigger.specSubscription(organizationsQuery),
         input: {
@@ -340,7 +339,10 @@ export const WithProject: Story = {
       return [
         [Cell.article(project)],
         [
-          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          {
+            type: AppSurface.Article,
+            data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` },
+          },
           StoryRole.Invocations,
         ],
       ];

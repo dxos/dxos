@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type PeerInfo, type SignalManager, type UnsubscribeCallback } from '@dxos/messaging';

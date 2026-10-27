@@ -5,16 +5,16 @@
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
+import * as Panel from '@dxos/react-ui/Panel';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {
@@ -86,6 +86,10 @@ export const MessageArticle = ({
     [subject, mailbox, conversation],
   );
 
+  // The thread query matches the subject itself, so an empty result means it has not resolved yet and
+  // `messages` is only the fallback.
+  const resolving = !!mailbox && !!subject.threadId && conversation.length === 0;
+
   // Contact extraction targets the conversation's space; any message resolves the same db.
   const db = Obj.getDatabase(messages[0]);
 
@@ -127,10 +131,11 @@ export const MessageArticle = ({
     messageIds,
     latestMessageId,
     threadId: subject.threadId,
+    resolving,
   });
 
   // Settings + view state.
-  const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
+  const settingsAtom = Hooks.useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
   const viewState = useManager();
   const viewModeAtom = useMemo(
     () => viewState.atom(messageViewModeAspect, attendableId ?? 'default'),
@@ -153,14 +158,14 @@ export const MessageArticle = ({
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only
   // `ConversationStack` — components must not call capability hooks (they throw without a PluginManager).
-  const invoker = useOperationInvoker();
-  const runtime = useProcessManagerRuntime();
-  const graph = useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
-  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const invoker = Hooks.useOperationInvoker();
+  const runtime = Hooks.useProcessManagerRuntime();
+  const graph = Hooks.useCapabilities(AppCapabilities.AppGraph)[0]?.graph;
+  const extractors = Hooks.useCapabilities(InboxCapabilities.ObjectExtractor);
   // No contributed generator means nothing to invoke, so the AI-reply affordance is omitted rather
   // than shown and failing.
-  const replyGenerator = useCapabilities(InboxCapabilities.ReplyGenerator)[0];
-  const sendOperations = useCapabilities(InboxCapabilities.MailSendOperation);
+  const replyGenerator = Hooks.useCapabilities(InboxCapabilities.ReplyGenerator)[0];
+  const sendOperations = Hooks.useCapabilities(InboxCapabilities.MailSendOperation);
   const getExtractActions = useCallback(
     (message: Mailbox.MessageLike) => buildExtractActions(message, extractors, invoker),
     [extractors, invoker],
@@ -168,7 +173,7 @@ export const MessageArticle = ({
 
   // Sender-scoped actions contributed by other plugins (plugin-crm's research). Resolved here and
   // bound per message so the component never touches a capability or an invoker.
-  const senderActionDefs = useCapabilities(InboxCapabilities.SenderAction);
+  const senderActionDefs = Hooks.useCapabilities(InboxCapabilities.SenderAction);
   const getSenderActions = useCallback(
     (message: Mailbox.MessageLike) => {
       const actor = message.sender;
@@ -262,16 +267,18 @@ export const MessageArticle = ({
           { mailbox: Ref.make(mailbox), message },
           { spaceId: db.spaceId },
         );
-        void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, {
-          db,
-          mode: 'reply',
-          message,
-          mailbox,
-          body: result?.data?.body,
-        });
+        void invoker.invokePromise(
+          InboxOperation.DraftEmailAndOpen,
+          { mode: 'reply', message, mailbox, body: result?.data?.body },
+          { spaceId: db.spaceId },
+        );
       } catch (err) {
         log.catch(err);
-        void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', message, mailbox });
+        void invoker.invokePromise(
+          InboxOperation.DraftEmailAndOpen,
+          { mode: 'reply', message, mailbox },
+          { spaceId: db.spaceId },
+        );
       }
     },
     [db, invoker, mailbox, replyGenerator],
@@ -367,6 +374,11 @@ type UseMessageExpansionProps = {
   latestMessageId?: string;
   /** Thread being viewed; a change means the user navigated to another conversation. */
   threadId?: string;
+  /**
+   * The thread has not loaded, so `messageIds` holds only the opened message. Nothing is expanded yet:
+   * the opened message need not be the latest, and expanding it would fold it again once the thread lands.
+   */
+  resolving?: boolean;
 };
 
 /**
@@ -375,7 +387,7 @@ type UseMessageExpansionProps = {
  * starts from the subject alone) without discarding the user's own toggles. The toolbar's
  * collapse-all/expand-all set an override for every message at once.
  */
-const useMessageExpansion = ({ messageIds, latestMessageId, threadId }: UseMessageExpansionProps) => {
+const useMessageExpansion = ({ messageIds, latestMessageId, threadId, resolving }: UseMessageExpansionProps) => {
   const [overrides, setOverrides] = useState<ReadonlyMap<string, boolean>>(() => new Map());
 
   // Navigating to another conversation opens it fresh, on its own latest message.
@@ -389,8 +401,11 @@ const useMessageExpansion = ({ messageIds, latestMessageId, threadId }: UseMessa
   // so neither the message header nor the thread toolbar offers a fold the user gains nothing from.
   const collapsible = messageIds.length > 1;
   const expanded = useMemo(
-    () => new Set(messageIds.filter((id) => (collapsible ? (overrides.get(id) ?? id === latestMessageId) : true))),
-    [messageIds, collapsible, overrides, latestMessageId],
+    () =>
+      resolving
+        ? new Set<string>()
+        : new Set(messageIds.filter((id) => (collapsible ? (overrides.get(id) ?? id === latestMessageId) : true))),
+    [messageIds, collapsible, overrides, latestMessageId, resolving],
   );
 
   const handleExpandedChange = useCallback(

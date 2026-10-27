@@ -5,8 +5,12 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { Banner, Button, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import { formatForDisplay } from '@dxos/schema';
 
 import { Ibkr } from '#types';
@@ -54,7 +58,7 @@ const formatFundamentalValue = (
 
 /** Read-only panel for SEC EDGAR fundamentals returned by {@link IbkrOperation.GetInstrumentFundamentals}. */
 export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: FundamentalsPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const fieldProvider = useCallback<FormFieldProvider>(
     ({ prop, fieldProps: { label, description, getValue, format, jsonPath } }) => {
@@ -99,13 +103,13 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
     <Form.Root layout='static' readonly schema={Ibkr.FundamentalsSnapshot} values={snapshot}>
       <Form.Content>
         <Form.FieldSet>
-          <div className='flex items-start justify-between gap-trim-md pb-form-section-gap'>
-            <div className='flex min-w-0 flex-col gap-0.5'>
+          <Layout.Flex align='start' justify='between' gap='md' classNames='pb-form-section-gap'>
+            <Layout.Flex column classNames='min-w-0 gap-0.5'>
               <h2 className='text-lg'>{t('fundamentals.heading')}</h2>
               {asOfDescription && <p className='text-fg-muted'>{asOfDescription}</p>}
-            </div>
+            </Layout.Flex>
             {onRefresh ? (
-              <Button
+              <Button.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -114,10 +118,10 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
                 disabled={loading}
               />
             ) : null}
-          </div>
+          </Layout.Flex>
 
           {loading ? (
-            <Progress indeterminate label={t('fundamentals.heading')} />
+            <Status.Progress indeterminate label={t('fundamentals.heading')} />
           ) : error ? (
             <Banner.Root valence='error'>
               <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>

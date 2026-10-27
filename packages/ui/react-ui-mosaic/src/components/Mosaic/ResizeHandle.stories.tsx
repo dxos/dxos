@@ -5,9 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Axis, ScrollArea } from '@dxos/react-ui';
 import { Dnd, type Size } from '@dxos/react-ui-dnd';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type Axis } from '@dxos/ui-types';
 
 import { Mosaic, type MosaicTileProps } from './Mosaic.ts';
 

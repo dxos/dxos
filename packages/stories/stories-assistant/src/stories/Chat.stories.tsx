@@ -6,16 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AiContext } from '@dxos/assistant';
-import {
-  DelegationSkill,
-  DelegationSkillOperations,
-  PlanningOperations,
-  PlanningSkill,
-  WebSearchSkill,
-} from '@dxos/assistant-toolkit';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
+import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Trace from '@dxos/compute/Trace';
@@ -33,6 +29,7 @@ import {
   ModuleContainer,
   config,
   createDecorators,
+  findPromptEditor,
   seedBlankSpace,
   seedBusySpace,
   storyParameters,
@@ -60,7 +57,7 @@ const captureSpace = async ({ space }: { space: Space }) => {
 };
 
 // Read directly rather than through the index, which lags objects seeded during activation.
-let storyChat: AssistantChat.Chat | undefined;
+let storyChat: Chat.Chat | undefined;
 
 /**
  * The URI of the checklist task titled `title`, resolved when the scripted turn is emitted:
@@ -69,7 +66,7 @@ let storyChat: AssistantChat.Chat | undefined;
  * as the string the model is shown, and the envelope form fails its decoding.
  */
 const checklistRef = (title: string): string => {
-  const task = storyChat && AssistantChat.resolveTasks(storyChat).find((task) => task.title === title);
+  const task = storyChat && Chat.resolveTasks(storyChat).find((task) => task.title === title);
   if (!task) {
     throw new Error(`No checklist task titled "${title}".`);
   }
@@ -77,7 +74,7 @@ const checklistRef = (title: string): string => {
 };
 
 /** Captures the chat the decorator created, so {@link checklistRef} can read its checklist. */
-const captureChat = async ({ chat }: { chat: AssistantChat.Chat }) => {
+const captureChat = async ({ chat }: { chat: Chat.Chat }) => {
   storyChat = chat;
 };
 
@@ -88,7 +85,7 @@ const readChecklist = async (): Promise<Outline.ChecklistItem[]> => {
     if (!storySpace) {
       return [];
     }
-    [chat] = await storySpace.db.query(Filter.type(AssistantChat.Chat)).run();
+    [chat] = await storySpace.db.query(Filter.type(Chat.Chat)).run();
   }
   if (!chat) {
     return [];
@@ -108,7 +105,7 @@ const seedProjectTask = async ({
   binder,
 }: {
   db: Database.Database;
-  chat: AssistantChat.Chat;
+  chat: Chat.Chat;
   binder: AiContext.Binder;
 }) => {
   storyChat = chat;
@@ -119,7 +116,7 @@ const seedProjectTask = async ({
   });
 
   // A named reviewer is what sends the finished task to `review` rather than `done`.
-  const task = AssistantChat.addTask(db, chat, POEM_TASK_TITLE, {
+  const task = Chat.addTask(db, chat, POEM_TASK_TITLE, {
     status: 'todo',
     reviewers: [{ name: 'Rich', role: 'user' }],
   });
@@ -174,11 +171,7 @@ const waitForCount = async (
 /** Types a prompt into the chat editor and submits it. */
 const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
   const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
+  const editor = await findPromptEditor(canvasElement, 30_000);
 
   await userEvent.click(editor);
   await userEvent.type(editor, text);
@@ -229,7 +222,7 @@ const EXECUTABLE_TASKS = [
   },
 ];
 
-const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: AssistantChat.Chat }) => {
+const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: Chat.Chat }) => {
   storyChat = chat;
   // `dependencies` are 1-based ordinals (the numbering the checklist and UI speak), so they can
   // only point at earlier entries.
@@ -239,7 +232,7 @@ const seedExecutableTasks = async ({ db, chat }: { db: Database.Database; chat: 
       .map((ordinal) => tasks[ordinal - 1])
       .filter((dep) => dep !== undefined)
       .map((dep) => Ref.make(dep));
-    tasks.push(AssistantChat.addTask(db, chat, title, dependsOn.length > 0 ? { dependsOn } : {}));
+    tasks.push(Chat.addTask(db, chat, title, dependsOn.length > 0 ? { dependsOn } : {}));
   }
 
   await db.flush();
@@ -351,7 +344,7 @@ export const WithTasks: Story = {
         { title: 'Update the price list', status: 'todo' },
       ];
       for (const { title, status } of seed) {
-        AssistantChat.addTask(db, chat, title, { status });
+        Chat.addTask(db, chat, title, { status });
       }
       await db.flush();
     },
@@ -461,12 +454,7 @@ export const TestDelegation: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    if (!editor) {
-      throw new Error('Chat editor not found.');
-    }
+    const editor = await findPromptEditor(canvasElement, 30_000);
 
     // Enter a prompt that delegates work to a sub-agent and submit it.
     await userEvent.click(editor);
@@ -502,7 +490,7 @@ export const TestPlanningScripted: Story = {
           {
             parts: [
               text('Here is the plan.'),
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), {
                 changes: [
                   { create: true, title: 'Source the beans', status: 'started' },
                   { create: true, title: 'Dial in the roast' },
@@ -513,7 +501,7 @@ export const TestPlanningScripted: Story = {
           },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: ['Source the beans', 'Dial in the roast', 'Print the labels'].map((title) => ({
                   task: checklistRef(title),
                   status: 'done',
@@ -544,6 +532,18 @@ export const TestPlanningScripted: Story = {
   },
 };
 
+// Released by the delegation play once it has seen the delegated item unchecked; a scripted sub-agent would
+// otherwise finish before the checklist could be read.
+let releaseSubAgent: () => void = () => {};
+let subAgentReleased = Promise.resolve();
+
+const holdSubAgent = async ({ space }: { space: Space }) => {
+  await captureSpace({ space });
+  subAgentReleased = new Promise((resolve) => {
+    releaseSubAgent = resolve;
+  });
+};
+
 /**
  * Deterministic end-to-end delegation over a scripted (offline) model — the storybook analog of
  * `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`, sharing the same routed turn
@@ -564,12 +564,15 @@ export const TestDelegationScripted: Story = {
       };
     },
     skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
-    onInit: captureSpace,
+    onInit: holdSubAgent,
     scripted: [
       {
         name: 'sub-agent',
         match: promptIncludes('non-interactive mode'),
-        turns: [{ parts: [toolCall('completeJob', { success: '3628800' })] }, { parts: [text('Done.')] }],
+        turns: [
+          { gate: () => subAgentReleased, parts: [toolCall('completeJob', { success: '3628800' })] },
+          { parts: [text('Done.')] },
+        ],
       },
       {
         name: 'chat-name',
@@ -583,7 +586,7 @@ export const TestDelegationScripted: Story = {
           {
             parts: [
               text('On it — delegating.'),
-              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTask), { title: TASK_TITLE }),
+              toolCall(Operation.toolName(DelegationSkill.Operations.DelegateTask), { title: TASK_TITLE }),
             ],
           },
           { parts: [text('Delegated. I will report back when it completes.')] },
@@ -597,11 +600,7 @@ export const TestDelegationScripted: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    if (!editor) {
-      throw new Error('Chat editor not found.');
-    }
+    const editor = await findPromptEditor(canvasElement, 30_000);
 
     await userEvent.click(editor);
     await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
@@ -613,6 +612,7 @@ export const TestDelegationScripted: Story = {
     // Delegation is the promotion moment: the durable task it creates is mirrored into the
     // conversation's checklist, unchecked while the sub-agent works.
     await waitForChecklist((items) => items.some(({ title, done }) => title === TASK_TITLE && !done));
+    releaseSubAgent();
 
     // The supervisor spawns the sub-agent after the turn and folds its result back.
     await canvas.findByText(/sub-agent completed/i, {}, { timeout: 60_000 });
@@ -642,7 +642,7 @@ export const TestTaskExecutionScripted: Story = {
           {
             parts: [
               text('Starting task 1.'),
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'started' }],
               })),
             ],
@@ -650,7 +650,7 @@ export const TestTaskExecutionScripted: Story = {
           { parts: [toolCall(Operation.toolName(Calculate), { expression: EXECUTABLE_TASKS[0].expression })] },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'done' }],
               })),
             ],
@@ -700,7 +700,7 @@ export const TestTaskDelegationScripted: Story = {
           {
             parts: [
               text('Delegating task 1.'),
-              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTasks), { tasks: [1] }),
+              toolCall(Operation.toolName(DelegationSkill.Operations.DelegateTasks), { tasks: [1] }),
             ],
           },
           { parts: [text('Task 1 delegated. I will report back when it completes.')] },
@@ -762,7 +762,7 @@ export const TestTaskDrainScripted: Story = {
           {
             parts: [
               text('Delegating all three tasks; they will run in dependency order.'),
-              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTasks), { tasks: [1, 2, 3] }),
+              toolCall(Operation.toolName(DelegationSkill.Operations.DelegateTasks), { tasks: [1, 2, 3] }),
             ],
           },
           { parts: [text('All three delegated; the sub-agents will report back as each completes.')] },
@@ -835,7 +835,7 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the opening prompt deliberately does not restate it.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'started' }],
               })),
             ],
@@ -853,7 +853,7 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the task attachment.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'done' }],
               })),
             ],

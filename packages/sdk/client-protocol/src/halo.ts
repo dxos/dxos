@@ -32,22 +32,30 @@ export type RecoverIdentityArgs =
   | { external: RecoverIdentityRequest_ExternalSignature };
 
 /**
- * User-to-user notices relayed through EDGE; today only space invitation notices.
+ * User-to-user messages relayed through EDGE in signed envelopes.
  */
 export interface HaloInbox {
   /**
-   * Pending notices whose signature, sender and recipient have been verified, oldest first.
+   * Pending messages whose signature, sender and recipient have been verified, oldest first.
    * Not filtered by contact book: callers decide which senders to show.
    */
-  get notices(): MulticastObservable<readonly InboxService.Notice[]>;
+  get messages(): MulticastObservable<readonly InboxService.InboxMessage[]>;
 
   /**
-   * Tells a known identity it has been admitted to a space.
-   * Resolves once the relay has accepted the notice, not once the recipient has received it.
+   * `account-required` while EDGE refuses this identity's inbox because it is not linked to an
+   * account; `messages` is then empty because nothing can be delivered, not because nothing was sent.
    */
-  send(request: InboxService.SendRequest): Promise<void>;
+  get status(): MulticastObservable<InboxService.Status>;
 
-  /** Marks notices handled for this identity, on all of its devices. */
+  /**
+   * Signs and sends a message to a known identity.
+   * Resolves once the relay has accepted it, not once the recipient has received it; rejects with
+   * `InboxPayloadTooLargeError` when the envelope exceeds what EDGE accepts, and with
+   * `InboxAccountRequiredError` when this identity is not linked to an account.
+   */
+  sendMessage(request: InboxService.SendMessageRequest): Promise<void>;
+
+  /** Marks messages handled for this identity, on all of its devices. */
   ack(ids: readonly string[]): Promise<void>;
 }
 

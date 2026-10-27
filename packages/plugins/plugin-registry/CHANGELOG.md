@@ -1,5 +1,232 @@
 # @dxos/plugin-registry
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-observability@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-markdown@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/cli-util@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 3d151fc: In `@dxos/react-ui-canvas`, the view has a fit mode: Fit frames the scene and keeps it framed, refitting once a resize settles and on opening another scene, until the viewer pans or zooms. `SceneView.Root` takes `initialDisplay` / `onDisplayChange` (`SceneDisplay`: snap, guides, fit) so a host can restore and persist those toggles, and a view opens in fit mode unless restored otherwise. A read-only view floats its panels. A link caption on a horizontal run is shortened with an ellipsis to fit between the run's ends, its full text as a tooltip. The camera readout shows only the zoom.
+
+  In `@dxos/plugin-canvas`, the plugin moves to the `beta` tier. A canvas's view is the viewer's own, kept in one view-state object per canvas: read-only, floating panels, grid, guides, fit and camera; the `dockPanels` setting is gone. The drawing menu now lists Read only and Dock/Float panels. A drawing's canvas record may set `readonly` as the default for viewers who have not chosen. A canvas in the section role (a document's embed) is read-only, shows the drawing without its palette or panels, and takes a 3:2 height. The DXOS Architecture space template seeds its drawings, read-only by default, from diagrams laid out ahead of time (`compiled.json`, kept current by a test), plus Composer, DXOS and EDGE documents that link and embed them.
+
+  In `@dxos/plugin-space`, the create-space dialog closes as soon as it is submitted (a failed create is a toast) and its template list aligns with its fields; the collection article is a panel with a Filter… toolbar over a scrolling column of objects, their icons in the hue's text colour; the delete-space dialog's actions sit in `Dialog.Footer`.
+
+  In `@dxos/react-ui`, a field in a toolbar no longer overflows it, and a dialog's action bar has the dialog gutter above as well as below.
+
+  In `@dxos/plugin-registry`, the load-plugin dialog's action sits in `Dialog.Footer`.
+
+- 008b18c: A read-only `SceneView` shows no floating panels: `SceneView.About` renders only as a dock section and takes no props. The view's background now sits on the element `SceneView.Root`'s `classNames` styles, so a host can replace it (e.g. `bg-transparent` for a card preview). A lattice scene no longer draws the snap grid while its lattice is on, since shapes land on its cells rather than the grid lines, and the cells are drawn fainter. The plugin registry's detail scrolls when it is longer than its panel, including in the deck's detail companion.
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-markdown@0.15.0
+  - @dxos/plugin-observability@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/cli-util@0.15.0
+  - @dxos/plugin-graph@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 1d3eea3: Plugin details in the registry open as a detail panel beside the list, and Cmd/Ctrl-click opens one in its own plank. In a flattened deck, a plank with no object above it (such as a registry plugin) shows the planks opened before it as breadcrumbs again.
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [4820c02]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-observability@0.14.0
+  - @dxos/cli-util@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-graph@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-ui-markdown@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [bbe9f18]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [44b7b80]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [fe08304]
+- Updated dependencies [ec9f207]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [eb14798]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [69a4a85]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [0347f09]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [596728d]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/compute@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/plugin-observability@0.13.0
+  - @dxos/cli-util@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-ui-markdown@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

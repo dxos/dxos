@@ -54,17 +54,16 @@ not know means the reporter changed, and a silent drop would show up as the suit
 
 ## What is published, and when
 
-**From `main`, or an explicit dispatch.** The publish step is gated on
-`github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'`: a PR run measures a
-branch and a fork PR has no project token at all, so neither publishes on its own. A
+**From the nightly, or an explicit dispatch.** The publish step is gated on
+`github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'`: a PR or merge-queue run
+would add a point per push or queued PR. A
 `workflow_dispatch` is a maintainer asking for this run's results — how the dashboard is seeded or
 backfilled off-schedule — and every row it publishes carries `ciBranch` and `ciTrigger`.
 
 **The nightly is the sample that matters.** `Check` runs on a `0 4 * * 1-5` schedule, where the
 affected resolver returns a full run and `DX_E2E_RUN_ID` is set — which forces the moon tasks to
-actually execute rather than replay a cache hit. A push to `main` is also a full run, but a cache
-replay restores no report, and `publish-results.mjs` then no-ops. So the series is one point per
-weekday night, and a mid-day point means someone dispatched a run.
+actually execute rather than replay a cache hit. So the series is one point per weekday night, and a
+mid-day point means someone dispatched a run.
 
 **The step is `always()`.** The report of a RED run is the entire point; gating on success would
 publish only the nights where nothing failed, and the failing-tests table would never fill.

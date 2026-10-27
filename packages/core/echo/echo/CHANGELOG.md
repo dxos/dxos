@@ -1,5 +1,230 @@
 # @dxos/echo
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/blob@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 419bf9a: The 50 object documents this client edited most recently stay loaded. Any other loaded object document that nothing changes for 30 seconds goes back to its stored changes, subscribed passive, and leaves memory. The object stays live, kept current by the host's JSON, and the next write or document read loads the document again. Only a document holding just that object, on the main branch, with no editor attached, is released. `constructDatabase` takes `documentRetention: { ttl, budget }` to set both.
+- ed8df23: Query rows on the `QueryService` wire (`query.proto`) carry the `heads`, `bytes`, `created_at` and `updated_at` a client needs to show an object without loading its document, and `document_json` is specified as the `objectStructureToJson` format. `@dxos/index-core` can store a document's bytes with its snapshot (`IndexerObject.bytes`, returned by `queryBackings`), `isBackable` and `backingJson` move to `@dxos/echo-protocol`, and the Cloudflare functions runtime no longer fetches documents for passive subscriptions.
+- 0f6457d: Query results are backed by the index's JSON copy of each object, with the object's Automerge document held as stored changes the tab has not loaded. Each held object's document is subscribed passive: the worker sends every change with the object's JSON, so the object stays current without loading. The first write or document read (cursors, history, version checkout) loads the stored changes synchronously and makes the first write at the heads the object was shown at. This is how every query loads its results; there is no switch back.
+
+  - The index keeps each object's meta and the heads its JSON was read at; existing databases re-index once to fill them. A row's document changes are read from storage when the row is sent, not copied into the index.
+  - A query names the objects the tab already holds, and the host sends their rows without JSON or document changes.
+  - `Uint8Array` values in an object's indexed JSON use the `{ '/': { bytes } }` form the feed serializer writes.
+
+- 94d4f85: Add `Order.annotation(annotation, direction, path?)`, which orders query results by an entity annotation's value (or a scalar inside a struct-valued annotation) with unannotated entities last, so queries can be paged by annotation with `.limit()`/`.skip()` and `usePagination`.
+- b6ae19d: Live queries reflect a local write before the writing call returns: subscribers are notified synchronously, once per `Obj.update` or `db.add`, and an index result never re-adds an object a local edit has disqualified. Adds `Query.characteristics()` and `completeness`/`sources` on `QueryResult`. Behaviour change: a subscriber that writes from its callback now does so after the triggering write has committed but before it returns, rather than on a later microtask. The inbox message header now reads its tag chips reactively from the tag index, which it had only seen through a late query notification.
+- 16bde33: Blobs written through the `edge` storage are now stored on the device first, in the client services database, and a write is confirmed as soon as it is stored there. When an EDGE URL is configured, the client services host replicates stored blobs to EDGE asynchronously and fills local misses from it; without one, clients store and read blobs locally, and the `edge` backend is the default storage either way. `createEdgeBlobBackend` now takes a `store` (`createMemoryBlobStore` from `@dxos/blob` for tests) and an optional `finalizeUpload` instead of a transport; replication lives in `createBlobReplicator` and `withReadThrough` in `@dxos/blob/hosted`.
+- 7b47951: On a cached, signed-out load, Composer reaches `startup:ready` about 2.1s sooner (3,022ms → 901ms median in a headless benchmark), mostly by no longer draining plugin activation messages one per 4ms timer. Its client is ready about 0.3s sooner on a reload because the dedicated worker now spawns at main start.
+
+  - `@dxos/app-framework`: the `useApp` listener and the plugin manager's failure supervisor drain activation messages without a yield per message; fibers are tracked with exit observers instead of a forked waiter each; the slow-module warning is one shared watcher instead of a sleeping fiber per module.
+  - `@dxos/echo`: `Obj.make` takes `{ skipValidation }` for props built from already-typed values.
+  - `@dxos/client`: `Client` opens its services alongside its proxy imports; `@dxos/client/lock-key` exports the leader lock key for code that runs before the client loads.
+  - `@dxos/app-framework`, `@dxos/app-toolkit`: plugin assets activate on a new `PluginAssetsRequested` event, and `AppCapability.pluginAsset` takes `content` as a loader (`() => import('…?raw')`) instead of a string. A plugin passing a string must switch to a loader.
+  - `@dxos/compute`: `Operation.serialize` forwards `Obj.make` options.
+  - `@dxos/observability`: the PostHog extension takes `sessionRecordingStart`, a promise that holds session recording back until it settles.
+  - `@dxos/plugin-routine`: operations are serialized into the registry after boot, without validation.
+  - `@dxos/plugin-markdown`, `@dxos/plugin-inbox`, `@dxos/plugin-google`, `@dxos/plugin-jmap`, `@dxos/plugin-transcription`: modules read only on demand (anchor, comment and tour contributions, mailbox processors, mail send, tour fragments) activate on their feature's start event instead of at idle.
+
+- 2b6a93a: Edits the client worker has not saved are no longer lost without warning. The new `EchoDatabase.hasUnsavedChanges()` reports changes still in flight, documents not yet created and unsent feed appends, and the save-state event counts them too. Composer shows "Error saving changes." while sends fail. The browser, the desktop app's tray Quit and window close, and the updater's relaunch save those changes first, or ask before leaving; on macOS, Cmd+Q and the Dock's Quit are not held yet. After a leader handover, a tab's ECHO client reconnects to the new worker and hands it every change the old worker had not taken. A worker whose SQLite connection stops answering for two minutes is replaced, and a worker shutdown no longer waits indefinitely on a teardown that hangs.
+
+  Breaking: `EchoDatabase` gains the required `hasUnsavedChanges()` method, and `SaveStateChangedEvent` gains the required `pendingCreations` and `failing` fields, so code that implements the interface or constructs the event must add them.
+
+### Patch Changes
+
+- 9b2a2c0: `Cursor.writeSnapshot` no longer rewrites a connector cursor's whole snapshot map on every call, and skips writes whose snapshot is unchanged. GitHub, Linear and Trello syncs had grown cursors to tens of millions of Automerge operations, enough to run Composer out of WASM memory.
+- 3aed53a: A document whose heads overlap a peer's counts as synced again, so collection sync stops reporting it as not converging. If the peer also advertises a change this replica lacks, one sync round is still run to fetch it.
+- Updated dependencies [d0728d8]
+- Updated dependencies [1e9c017]
+- Updated dependencies [ce8f092]
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/blob@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Minor Changes
+
+- 1eed6b1: Diagram connectors accept `tail=arrow`, so one connector can carry an arrowhead at both ends instead of drawing a two-way relationship as two arrows (`edge A -> B tail=arrow` in the diagram DSL). The layout engine now pulls apart connectors that would otherwise share a line, even when separating them adds a crossing.
+- eb5d14d: The MCP `runScript` tool now answers with the text the program printed instead of a JSON object. A failed program now returns an error result, and every answer ends with a trailer after `---` giving the number of calls the program made, the time spent in them, and the total time. `ScriptResult` gains `stats` (`calls`, `callMs`), counted by both the in-process and the isolate sandbox, and `McpServer.formatScriptAnswer` renders the answer.
+
+### Patch Changes
+
+- 6847fe2: Fragments in the pre-Automerge-3.5 shape that a client receives after its one-time migration are repaired on every open, so it no longer uploads fragments that hide a document's head from EDGE. The EDGE connect flow now sends the SDK version on `/auth` (`X-DXOS-Version`) as well as on the WebSocket, and EDGE's refusal of an outdated SDK surfaces as `EdgeClientTooOldError`, which is not retried.
+- Updated dependencies [1819960]
+  - @dxos/effect@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/blob@0.14.0
+
+## 0.13.0
+
+### Minor Changes
+
+- 32f32a0: `@dxos/ai` exposes the chat-completions language-model adapter at its own entry point,
+  `@dxos/ai/chat-completions`. The adapter depends on nothing but `effect` and is what speaks
+  Ollama's and LM Studio's dialects, but until now it was reachable only through the `resolvers`
+  barrel, which pulls in the DXN-keyed resolver machinery a consumer of the adapter alone has no use
+  for. No behaviour change for existing consumers of `@dxos/ai/resolvers`.
+
+  The subpath is kebab-case on purpose: `dxos-subpath-exports` engages as soon as a package declares
+  one PascalCase subpath, and it would then report every namespace in this package's unmigrated root
+  barrel — flagging the migration rather than a defect.
+
+- 3672aff: The project timeline (Gantt) draws its chart again beside the lane names, and its panel scrolls vertically with a thin scrollbar when the lanes outgrow it. An object card's title is one truncated line by default (pass `lines` to `ObjectCard.Header` to clamp to more), and the card popover is only as tall as its content rather than at least `--spacing-card-min-height`.
+- 2f95d25: The project timeline is two columns: lane names and the chart. A lane's token and tool counts move into a hover card over its name, and a new `Gantt.LegendToggle` beside the axis switch shows the counts in that column instead (`legend` / `onLegendChange` on `Gantt.Root`, persisted with the project view). The chart scrolls both ways in one area with the horizontal scrollbar at the panel's foot, and is keyboard-navigable: clicking a node focuses the chart, the arrow keys move between lanes and along the timeline, and Space toggles the node's card (Enter selects it). A parent task's bar no longer starts after its sub-tasks'. In a flat deck, a plank's breadcrumbs show its place in the tree (e.g. a session's project and Sessions branch) rather than the navigation history.
+
+  **Breaking:** `Gantt.Meta` is removed (its content is the legend's hover card and stats mode), and `Gantt.Chart`'s ref is now the `svg` element.
+
+- 7715216: UI layout primitives get simpler, typed APIs; heavy components move into their own packages; and the chat bounds what an agent can queue or spend on its own.
+
+  **Breaking:**
+
+  - `Grid`'s `cols` and `rows` take typed track tokens instead of raw CSS: `'fill'` (a flexible track that may shrink below its content), a number (a share of the free space, also shrinkable), `'min'`/`'max'`/`'auto'` (sized to the content), or a length such as `'18rem'` or `var(--…)`. A count is that many equal `fill` tracks, and `grow` now defaults to `false`.
+  - `Spinner` is now an interface (`SpinnerProps`, with an `ActivityState` of `'ready' | 'thinking' | 'alert' | 'error'`) with two implementations: `ShapeSpinner`, the morphing square (its states were `pulse`/`spin`/`flash`), and `PulseSpinner`, a dot matrix. Import spinners from the root of `@dxos/react-ui-components`, whose `./Spinner` subpath is removed.
+  - `QueryEditor`, `QueryForm` and `useQueryBuilder` move to the new `@dxos/react-ui-query` (translations at `@dxos/react-ui-query/translations`), and `Html` with its colour-scheme and email transforms moves to the new `@dxos/react-ui-html`, so `@dxos/react-ui-components` no longer carries CodeMirror, `@dxos/echo-query` or DOMPurify. `Matrix` moves to `@dxos/react-ui-experimental`.
+  - The `dx-fullscreen` utility is renamed `dx-cover` (`absolute inset-0`): it covers the nearest positioned ancestor, not the screen.
+  - `ScrollArea.Root` hides its overlay thumbs until the pointer is over the frame (`autoHide` defaults to `true`).
+
+  **Fixes and behaviour:**
+
+  - A popover whose content mounts after it opens (the chat thread outline's card) is positioned beside its anchor instead of the viewport's top-left corner.
+  - The chat prompt takes at most three prompts queued behind a running turn (`maxQueue`), on every submit path; queued prompts are small, right-aligned rows flush with the status chip.
+  - An agent may wake itself with alarms at most `Alarm.MAX_SELF_WAKES` (10) times in a row without a user prompt; each wake-up prompt states how many remain, a later alarm is dropped without a turn, and the chat status shows the count beside the next wake time.
+
+- 1737cad: `@dxos/react-ui` is rebuilt on Ark UI primitives styled by plain `dx-*` component CSS, and every UI package and plugin
+  renders on it; the former component APIs are removed.
+
+  - Components are exported flat by name (`Button`, `Toolbar`, `Card`, `Panel`, `Container`, `Field`, `Input`, `Combobox`,
+    `Menu`, `Tabs`, `Main`, `Splitter`, `Toast`, `Tour`, `Banner`, `Empty`, …) and sized by `data-size` scopes (`xs`–`xl`;
+    `Size` is that scale). `Container` lays out rails and subgrids, `ControlFrame` frames a control with adornments
+    (`Input copyable`, `variant='mono'`), and `useMainLandmark` declares the app's focus areas (Tab and Arrow Left/Right
+    move between them). `Combobox` adds a trigger mode, option descriptions, a create row and async results. `Label` is
+    no longer public (use `Field.Label`), and the flow helper is `Match` (`Match.Root`/`Match.Case`).
+  - `@dxos/react-ui-list` provides `Listbox`, `OrderedList` and `Tree` (virtual rows, drag and drop, disclosure
+    animation); `@dxos/react-ui-form` provides `Form` (`Root`, `Viewport`, `Content`, `Fields`, `Actions`, …),
+    `ObjectProperties`, `ObjectPicker`, `ViewEditor` and `RefEditor`; `@dxos/react-ui-menu` renders `ActionToolbar` and
+    `ActionMenu` on the new Toolbar and Menu; `@dxos/app-toolkit` adds the `ObjectCard` composite.
+  - `@dxos/ui-theme` renames the text tokens to `--color-fg`/`fg-muted`/`fg-subtle` (`text-fg`, `text-fg-muted`,
+    `text-fg-subtle`; Typography and Icon `tone='muted' | 'subtle'`) and `--color-subdued-separator` to
+    `--color-separator-subtle`, adds `--color-focus` for the keyboard focus ring, and derives the control fill from one
+    offset off its host surface in both themes.
+  - `@dxos/echo` adds `Annotation.ArrayPresentationAnnotation` (`ordered`, `display: 'tag' | 'title'`) for reference
+    arrays; `@dxos/effect` `SchemaEx.getProperties` keeps an annotated optional field's annotations; `@dxos/ui-editor`
+    markdown tables keep empty cells; `@dxos/plugin-markdown` marks `Document.description` as markdown, and the rename
+    popover shows an object's properties.
+
+  Breaking: the former `@dxos/react-ui` component APIs and the transitional `Next` namespace are gone; import components
+  from `@dxos/react-ui` by name and use the renamed theme tokens.
+
+- 3022878: The selection companion stacks the selected objects as plain cards in one scroll area with a small gutter, and its "No objects selected" banner sits in the same column, where the first card would. A form's nested object shows its label and disclosure above the bordered group of its fields rather than inside it. `Banner.Root` takes `inset` to override its own gutter, for a host that already pads it.
+
+  **Breaking:** `Instructions` no longer has a `description` field (nothing read it), and `Instructions.make` no longer accepts one.
+
+- a449958: Task lists, trees and the chat prompt are reworked on the react-ui components.
+
+  - Task list rows and the task editor place their cells by column name on one shared template, so the editor's fields, pickers and cancel sit in the rows' columns. The editor creates with an estimate and a priority, saves from an end adornment on its title field, and always takes the list's grid. `TaskList.Root` adds `flush`, `showAssignees` and `showMnemonics`; the leading column holds one reference button that shows the ordinal and copies the task's URI. `TaskProperties` and `TaskHistory` are top-level components, and the task's reference heads `TaskProperties`.
+  - **Breaking:** `Grid` no longer grows by default (pass `grow` to fill and clip its parent), matching `Flex`. `TaskEditor` and `TaskOrdinal` are removed (the task article renders a form over the `Task` schema, whose description is Markdown), `TaskMnemonic` is no longer exported, and `TaskList.Editor` drops `grid` and `showControls`.
+  - `Tree.Content` has no gutter by default and pads row ends (`rowInset`), so row highlights run edge to edge under an overlay thumb. A deferred `ActionMenu` keeps the focus an outside click moved; `ActionToolbar` takes a `start` slot.
+  - `Form.Root` takes `markdownExtensions`. Popup options sit in an equal inset, an empty `Select` opens no popup, `Select.Trigger` takes `fixed`, a splitter drag no longer dims its panes, and clickable tags keep their hue's text colour.
+  - Surface modules in plugin-client, plugin-preview and plugin-file declare every role they bind.
+
+### Patch Changes
+
+- 162fd6d: Reopening a profile no longer rewrites unchanged state to SQLite: hypercore feed files skip writes that leave their bytes as they are, the metadata record is saved only when something other than its timestamp changed, and a space restored with its saved root no longer re-saves its row.
+- aad3e41: - **Breadcrumbs:** separators take the links' muted colour rather than a fainter, half-transparent one, so the trail's structure reads at a glance. A plank header's trail is built from `Breadcrumb.Link` and `Breadcrumb.Current`, so a crumb keeps its size and place as you move down the hierarchy.
+  - **Unanchored comments:** every comments companion's toolbar has a **+** button that adds a comment on the whole object, not anchored to a span. For an object with no text to select (a drawing), the empty state points to it.
+  - **Chat widgets:** a system-generated turn (the lightning row) collapses to its first line behind a disclosure caret at its end, built from the same panel as the tool, summary and fallback widgets. Suggestion and select buttons share one button.
+  - **Background tool results:** a result recovered on a later turn renders in the tool panel as "Background result" (or a failed one), not as a raw `<result>` prompt.
+- bb2b672: `Card.Text` takes `lines`, and clamped text wraps inside a card row, which otherwise keeps its content to one line. A row of clamped text tops its icon against the first line. A GitHub card's description now shows up to three lines rather than one clipped line.
+- 1ef899b: Cut the SQLite writes an agent turn causes by about a third: an indexing pass writes each batch to its snapshot and reverse-reference indexes in one transaction instead of two, and trace messages reach their feed in batches rather than one transaction per message.
+- 469e7f7: The contact list lays each contact out from the list item's own parts. The avatar sits in the icon rail, the name beside it with the shared spaces under it, and the identity and its copy button at the row's end. Before, the avatar floated mid-row and the text was pushed to the right. A list item whose icon cell holds an avatar now keeps a gap between the avatar and its text, as an icon has.
+- 665261a: The Create Space dialog puts the icon and colour pickers side by side, and its Cancel and Create buttons end at the fields' edge rather than in the gutter. Across forms, a control narrower than its field (a picker button) now starts under its label instead of centring.
+- 2e96a73: The `syncPeer` span with EDGE now times a space's whole catch-up: it spans reconnects, ends `synced` or `closed` (never `disconnected`), and records how many connections diverged and dropped (`connections`, `disconnects`) during the catch-up.
+- 945092e: Layout and contrast fixes for the new `@dxos/react-ui` components:
+
+  - Forms in a dialog or popover now line up with the host's columns, and a form in a popover takes the popover's surface.
+  - Combobox and select triggers placed directly in a form span the form's content column.
+  - A panel no longer shifts its body under the header when focus scrolls it.
+  - List rows with a description keep their icon and actions on the title's line.
+  - A scrolling block in a settings row (such as the debug port log) spans the row instead of collapsing to zero width.
+  - The log list scrolls inside its panel, an expanded entry opens beneath its row, a clicked row is ringed as current, rows' checkboxes are optional (`Logger.List checkable`), and the drawer's focus ring is no longer hidden by its panes.
+  - Row hover and selection are lower-contrast, and a fieldset's collapse button is a ghost button.
+  - The `description` of Project, Task, TaskSet, Milestone, Organization, Issue, PullRequest, Event, Pipeline, Skill, Routine and Script is `Format.Text`, so forms edit it as multi-line text; `Format.Text` is also on the `Format` namespace from `@dxos/echo/Format`.
+  - The task set's add-task editor stays at the bottom, below the list.
+  - Popovers are unpadded by default (the call site sets the inset; Body and Header keep theirs); a popup's arrow no longer covers its first highlighted row; menu checkbox and radio rows show the action's icon with a trailing check; an inheriting Container whose parent is no grid lays out its own column.
+  - `Select.Trigger`'s `fit='options'` is now the boolean `fixed` (the trigger keeps its widest option's width); a selected tab takes the control fill.
+
+- c531b05: - **Settings lists scroll:** the Devices, Invitations and Recovery lists in user settings no longer swallow the mouse wheel; the form scrolls over them.
+  - **Prompt bubble width:** a chat prompt's bubble is sized by its own text, so it no longer resizes when the relative timestamp below it changes.
+- c7cc480: Indexing passes no longer read feeds that have nothing new: a caught-up feed is answered from memory instead of SQLite, and the two index legs of a pass share one read. Background passes started by trace-feed appends are coalesced to at most one per second, so an agent turn's trace writes no longer keep the database worker busy. `flush` and feed-scoped queries still see trace messages immediately.
+- 161f994: Layout fixes for board columns and dialog actions.
+
+  - **Board columns:** every column has the same underlined header, the uncategorized one included. `Board.Column.Header` takes an optional drag handle and keeps its space when there is none. A column's cards scroll in a gutter, so they clear the column's edges.
+  - **Dialog actions:** the object-create, import-pull-request and custom-token dialogs put their actions in `Dialog.Footer`, as every other dialog does, rather than in the scrolling body. An empty `Dialog.Footer` now collapses.
+
+- 246ee3c: Add `@dxos/plugin-agent`, an agent that talks to people through any channel, remembers them as ECHO objects, reads every conversation turn into facts, relays messages, and keeps one-time and ongoing ("keep me posted") watches whose updates it writes from the conversation's context. Every subpath of the package is a namespace: `AgentState` and `AgentKnowledge` (each with a `Root` container), one per skill (`ConversationSkill`, `GoalsSkill`, `InterviewSkill`, `ModesSkill`, `NoteTakerSkill`, `RelaySkill`), and one per type and operation set.
+
+  `@dxos/plugin-thread` channel backends can now open direct conversations (`openDirect`), post into threads (`threads.send`), run a connection (`connection.start`/`stop`/`status`), and return a send receipt. New operations `sendToChannel`, `openDirect`, `connectChannel`, `disconnectChannel` and `getChannelStatus` dispatch to them, and the handlers are published as the `ThreadOperationHandlerSet` subpath. The Discord and Slack plugins implement these backends.
+
+  An agent prompt can name its sender: `AgentProcess` accepts `{ prompt, sender?, properties? }` as well as a bare prompt (`AgentInput`, `makeInputMessage`), `AgentService.Session.submitPrompt` and the assistant's request and session take a `sender`, and the model sees a named sender as `[From: <name>]`. `useChatProcessor` and `AiChatProcessor` take a `sender`, and `ChatThread` takes a `userHue`.
+
+  `Agent.loadChat` no longer picks a chat bridged from an external conversation as the agent's primary chat, and finds chats with a child-of filter so it also works on EDGE. `Agent.makeInitialized` accepts a skill ref, and `Skill.makeRef` binds a database skill as-is and any other by registry URI.
+
+  The `ProfileOf` relation moves from `@dxos/plugin-crm` to `@dxos/types` with its typename unchanged, so existing profiles still resolve. `EdgeHttpClient.request` makes an authenticated call to any EDGE route. `pipeline-rdf` exports `DEFAULT_MODEL`. `FormInlineAnnotation` now survives the JSON-schema round trip. A plugin that declares two modules with the same id now fails when it is constructed instead of silently dropping one.
+
+- 8ebe8d6: A popup's arrow opens the focus ring under its base, so the ring outlines a focused menu and its arrow as one shape rather than closing the arrow off.
+- 6a7bed4: A ScrollArea contains overscroll only along the axis it scrolls, so a vertical two-finger swipe over a horizontally scrolling area (such as the project timeline's chart) scrolls the panel around it instead of being swallowed.
+- c2a300a: - **Shortcut caps:** the shortcuts panel draws modifier keys (⌘ ⌃ ⌥ ⇧ ⏎ ⌫ ⇥) as icons, so every cap's glyph is the same size, and shows letters in lower case. A `control` binding now renders as ⌃ rather than the word.
+- 17008f0: Mark the SDK, UI and plugin packages `"sideEffects": false` (or a precise list where a module registers a stylesheet, custom element, devtools formatter or diagnostic), so bundlers drop modules that are re-exported through a barrel but never used.
+- 4f8e566: Card layout cleanups. A grid `Card.Root` takes `gutter` (`rail`, `md` or `lg`) to widen its rails; stats cards use `lg`, so their rows sit further in at the same text size. `Card.Row` takes `end`, content centred in the end rail (unlike `trailing`, which reaches back into the content track); stats rows put their controls there, centred, and their units at its start, so values end on one edge. Every stats card header has one layout: the icon in the start rail, the title and optional info as a two-column grid, and the button or menu centred in an end rail that is kept even when empty, so the info ends at the same edge on every card. An icon-only button inside a `Block` no longer adds its own inset, which had pushed it off-centre in the cell. The Surfaces card shows a selected role's surfaces as JSON blocks again (a label row had clipped them to nothing), and the EDGE, Indexer and Sync cards show each space's name or id beside its copy button rather than a bare icon. `Card.Row` takes `span` — `full` across both rails, `end` on through the end rail — in place of hand-written grid-column overrides, and a markdown card's word count now spans the rails as its snippet does, so the two start at the same edge. A parent task's timeline lane carries every descendant's start and finish as nodes, read from the task tree, so its first node is where its sub-tasks' work began even when they are not on one checklist. The project timeline's horizontal scrollbar spans only the chart, not the sticky lane names, via a new `trackStart` on `ScrollArea.Root`. The debug port's session id is a disabled copyable input, as the Space ID is. A form's markdown field (e.g. a task's description) fills its frame and wraps long tokens such as an inline-code URL, so it no longer scrolls sideways with its scrollbar mid-field.
+- Updated dependencies [cb1e218]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/blob@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

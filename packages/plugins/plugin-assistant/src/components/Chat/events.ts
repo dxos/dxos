@@ -4,6 +4,8 @@
 
 import { type Obj } from '@dxos/echo';
 
+export type ChatDrawer = 'tasks' | 'context';
+
 /**
  * The main `ChatRoot` manages the `ChatContextValue` which contains an `event` property that subcomponents
  * can subscribe to and submit events. Unhandled events are passed to the external `onEvent` callback.
@@ -43,6 +45,18 @@ export type ChatEvent =
       type: 'rewind';
       id: string;
     }
+  /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
+  | {
+      type: 'remove-prompt';
+      id: string;
+    }
+  /** A person answered a request an agent raised (allow or refuse a tool call). */
+  | {
+      type: 'respond';
+      messageId: string;
+      requestId: string;
+      optionId: string;
+    }
   | {
       type: 'add';
       object: Obj.Unknown;
@@ -76,7 +90,8 @@ export type ChatEvent =
   | {
       type: 'thread-close';
     }
-  /** Show or hide the checklist beside the prompt. */
+  /** Open one of the drawers above the prompt, or close the one that is open. */
   | {
-      type: 'toggle-tasks';
+      type: 'set-drawer';
+      drawer?: ChatDrawer;
     };

@@ -10,7 +10,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -21,7 +21,7 @@ import { GitHubOperation } from '#types';
 import { GitHubPullRequestUnstoredError } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 import { GENERATE_PHASES, generateWalkthrough } from '../walkthrough/index.ts';
-import { githubToken } from './pull-request.ts';
+import { githubReadCredentials } from './pull-request.ts';
 
 /**
  * One-shot for now; a multi-turn agent that reads the repository is the obvious next step.
@@ -65,7 +65,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
         return yield* Effect.gen(function* () {
           report(label, 0);
           const { owner, repo, number } = pullRequest;
-          const credentials = Layer.succeed(GitHubApi.GitHubCredentials, { token: yield* githubToken() });
+          const credentials = yield* githubReadCredentials();
 
           report(`${label}: reading the pull request`, 1);
           const remote = yield* GitHubApi.fetchPullRequest(owner, repo, number).pipe(Effect.provide(credentials));
@@ -111,7 +111,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GenerateWalkthrough>
               if (Exit.isSuccess(exit)) {
                 return;
               }
-              const terminal = Cause.hasInterrupts(exit.cause) ? PROGRESS_STATUS_CANCELLED : PROGRESS_STATUS_FAILED;
+              const terminal = Cause.hasInterrupts(exit.cause) ? Progress.STATUS_CANCELLED : Progress.STATUS_FAILED;
               report(terminal, GENERATE_PHASES);
             }),
           ),

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { getNumericConstraints } from './numeric-constraints.ts';
 

@@ -9,14 +9,18 @@ import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { configPreset } from '@dxos/config';
 import { Database, Filter, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { SandboxPlugin } from '#plugin';
 import { Sandbox, SandboxOperation } from '#types';
+
+await Harness.preload({
+  plugins: [ClientPlugin.make({ config: configPreset({ sandbox: 'local' }) }), SandboxPlugin()],
+});
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (routes served at its root).
@@ -25,7 +29,7 @@ import { Sandbox, SandboxOperation } from '#types';
  */
 describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => {
   test('creates a sandbox and runs a shell command via operations', { timeout: 60_000 }, async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [
         ClientPlugin.make({
           config: configPreset({ sandbox: 'local' }),

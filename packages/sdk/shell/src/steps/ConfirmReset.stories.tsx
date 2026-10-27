@@ -23,7 +23,7 @@ const meta = {
 export default meta;
 
 export const ResetStorage = () => (
-  <StorybookDialog>
+  <StorybookDialog title='Reset device'>
     <ConfirmReset
       active
       mode='reset-storage'
@@ -34,7 +34,7 @@ export const ResetStorage = () => (
 );
 
 export const JoinNewIdentity = () => (
-  <StorybookDialog>
+  <StorybookDialog title='Reset device'>
     <ConfirmReset
       active
       mode='join-new-identity'
@@ -45,7 +45,7 @@ export const JoinNewIdentity = () => (
 );
 
 export const Recover = () => (
-  <StorybookDialog>
+  <StorybookDialog title='Reset device'>
     <ConfirmReset
       active
       mode='recover'
@@ -56,13 +56,13 @@ export const Recover = () => (
 );
 
 export const NoCancel = () => (
-  <StorybookDialog>
+  <StorybookDialog title='Reset device'>
     <ConfirmReset active mode='reset-storage' onConfirm={async () => console.log('confirm')} />
   </StorybookDialog>
 );
 
 export const Inactive = () => (
-  <StorybookDialog>
+  <StorybookDialog title='Reset device'>
     <ConfirmReset
       active={false}
       mode='reset-storage'

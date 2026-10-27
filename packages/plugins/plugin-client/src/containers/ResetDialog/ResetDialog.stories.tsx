@@ -5,9 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '#plugin';
@@ -29,7 +29,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ClientPlugin({})],
     }),
   ],
   parameters: {

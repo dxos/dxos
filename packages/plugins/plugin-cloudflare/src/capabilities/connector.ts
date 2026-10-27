@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -54,7 +54,7 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     Effect.asVoid,
     Effect.mapError(
       (error) =>
-        new ConnectionTestError({
+        new ConnectorError.ConnectionTestError({
           message: isCredentialRejection(error)
             ? 'Cloudflare rejected the credential. Reauthenticate to continue.'
             : 'Could not reach Cloudflare. Try again.',
@@ -69,6 +69,7 @@ export default Capability.makeModule(
         id: CLOUDFLARE_PROVIDER_ID,
         source: CLOUDFLARE_SOURCE,
         label: 'Cloudflare',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.CLOUDFLARE,
           scopes: CLOUDFLARE_OAUTH_SCOPES,

@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { QueryAST } from '@dxos/echo-protocol';
-import type { EscapedPropPath } from '@dxos/index-core';
+import type { EscapedPropPath, QueryAST } from '@dxos/echo-protocol';
 import type { EID, EntityId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
@@ -117,6 +116,9 @@ export namespace QueryPlan {
 
     /** Deleted state the scan filters to, folding in the plan's `FilterDeletedStep`. */
     deleted?: boolean;
+
+    /** Rows the scan drops ahead of the step's `limit`, folding in the plan's `SkipStep`s. */
+    skip?: number;
   };
 
   /**

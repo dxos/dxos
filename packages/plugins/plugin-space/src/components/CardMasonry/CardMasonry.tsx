@@ -6,10 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { createContext, useContext, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Block, Card, Icon } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { isNonNullable } from '@dxos/util';
 
 import { ObjectCard } from '../ObjectCard/index.ts';
@@ -79,14 +81,7 @@ export const CardMasonry = ({
           // Zoomed here rather than on the viewport: the viewport measures its own box, so only an
           // ancestor's zoom widens what it measures. In flow, nothing above depends on this height.
           <div className={zoom} data-testid='cardMasonry'>
-            <Masonry.Viewport
-              items={tiles}
-              getId={getTileId}
-              scroll={false}
-              // The section around the grid already spaces it, so the masonry's own top and bottom
-              // gap would double it.
-              classNames='-my-3'
-            />
+            <Masonry.Viewport items={tiles} getId={getTileId} scroll={false} />
           </div>
         ) : (
           <Masonry.Content classNames={zoom} data-testid='cardMasonry'>
@@ -116,9 +111,9 @@ const CardMasonryTile = ({ data: tile }: { data: Tile }) => {
 const PendingCard = ({ label }: { label: string }) => (
   <Card.Root data-testid='cardMasonry.pending' aria-busy='true'>
     <Card.Header>
-      <Block>
-        <Icon icon='ph--spinner-gap--regular' spin />
-      </Block>
+      <Layout.Block>
+        <Icon.Icon icon='ph--spinner-gap--regular' spin />
+      </Layout.Block>
       <Card.Title truncate tone='muted'>
         {label}
       </Card.Title>

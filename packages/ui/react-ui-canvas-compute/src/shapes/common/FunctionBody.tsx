@@ -3,15 +3,15 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { type JSX, useRef, useState } from 'react';
+import React, { type JSX, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
-import { getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { useComputeContext } from '../../hooks/compute-context.ts';
 import { Box, type BoxProps } from '../common/index.ts';
 import { type ComputeShape, getProperties } from '../defs.ts';
-import { bodyPadding } from './function-anchors.ts';
+import { rowHeight } from './ports.ts';
 
 const expandedHeight = 200;
 
@@ -32,23 +32,13 @@ export const FunctionBody = ({
   outputSchema = VoidOutput,
   ...props
 }: FunctionBodyProps) => {
-  // Opening grows the shape: through the host's `resize` when it offers one (the scene engine, where size
-  // is model state), else by stretching the editor's frame element as the canvas editor always did.
+  // Opening grows the shape through the host's `resize`, since its size is model state.
   const { resize } = useComputeContext();
-  const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
 
   const handleAction: BoxProps['onAction'] = (action) => {
     const opening = action === 'open';
-    if (resize) {
-      resize(shape.id, opening ? expandedHeight : -expandedHeight);
-    } else if (rootRef.current) {
-      const element = getParentShapeElement(rootRef.current, shape.id);
-      if (element) {
-        // The layout height is already in canvas units, whatever the zoom.
-        element.style.height = opening ? `${element.offsetHeight + expandedHeight}px` : '';
-      }
-    }
+    resize?.(shape.id, opening ? expandedHeight : -expandedHeight);
     setOpen(opening);
   };
 
@@ -59,7 +49,6 @@ export const FunctionBody = ({
 
   return (
     <Box
-      ref={rootRef}
       shape={shape}
       title={name}
       classNames='divide-y divide-separator-subtle'
@@ -67,28 +56,26 @@ export const FunctionBody = ({
       onAction={handleAction}
       {...props}
     >
-      <div
-        className={`grid grid-cols-${columnCount} items-center`}
-        style={{ paddingTop: bodyPadding, paddingBottom: bodyPadding }}
-      >
+      {/* Each column's rows are centred in the body, as the ports beside them are (`createFunctionPorts`). */}
+      <div className={mx(`grid grid-cols-${columnCount}`, !open && 'grow')}>
         {(inputs?.length ?? 0) > 0 && (
-          <div className='flex flex-col'>
+          <div className='flex flex-col justify-center'>
             {inputs?.map(({ name }) => (
-              <div key={name} className='px-2 truncate text-sm font-mono items-center' style={{ height: rowHeight }}>
-                {name}
+              <div key={name} className='flex items-center px-2 text-sm font-mono' style={{ height: rowHeight }}>
+                <span className='truncate'>{name}</span>
               </div>
             ))}
           </div>
         )}
         {(outputs?.length ?? 0) > 0 && (
-          <div className='flex flex-col'>
+          <div className='flex flex-col justify-center'>
             {outputs?.map(({ name }) => (
               <div
                 key={name}
-                className='px-2 truncate text-sm font-mono items-center text-right'
+                className='flex items-center justify-end px-2 text-sm font-mono'
                 style={{ height: rowHeight }}
               >
-                {name}
+                <span className='truncate'>{name}</span>
               </div>
             ))}
           </div>

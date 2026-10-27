@@ -9,10 +9,15 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { Block, Card, Focus, Icon, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, buildSnippet } from '@dxos/react-ui-search';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Actor, type Message, Person } from '@dxos/types';
 
 import { useVisibleTags } from '#hooks';
@@ -32,8 +37,7 @@ export type InboxStackAction =
   | { type: 'star'; messageId: string }
   | { type: 'archive'; messageId: string }
   | { type: 'ignore-sender'; messageId: string }
-  | { type: 'create-topic'; messageId: string }
-  | { type: 'save'; filter: string };
+  | { type: 'create-topic'; messageId: string };
 
 export type InboxStackActionHandler = (action: InboxStackAction) => void;
 
@@ -137,7 +141,7 @@ export type InboxStackProps = {
 /**
  * Card-based message stack component using mosaic layout.
  */
-export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
+export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
   (
     {
       items,
@@ -251,13 +255,6 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
       [onAction],
     );
 
-    const handleSelectionChange = useCallback(
-      (id: string, _selected: boolean) => {
-        onAction?.({ type: 'select', messageId: id });
-      },
-      [onAction],
-    );
-
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -270,18 +267,33 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
       [],
     );
 
+    // Click / Enter select the tile's message (a conversation's latest), as they make it current; the action handler
+    // resolves message ids, not conversation ids.
+    const itemProps = useCallback(
+      (tileId: string) => ({
+        'aria-selected': effectiveSelectedIds ? effectiveSelectedIds.has(tileId) : undefined,
+        'onActivate': () => {
+          const item = tileItems?.find((item) => getItemId(item) === tileId);
+          const messageId = item && ('message' in item ? item.message.id : item.messages[0]?.id);
+          if (messageId) {
+            onAction?.({ type: 'select', messageId });
+          }
+        },
+      }),
+      [effectiveSelectedIds, tileItems, getItemId, onAction],
+    );
+
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
           currentId={effectiveCurrentId}
           onCurrentChange={handleCurrentChange}
-          selectedIds={effectiveSelectedIds}
-          onSelectionChange={handleSelectionChange}
+          itemProps={itemProps}
         >
-          <ScrollArea.Root>
-            <ScrollArea.Viewport ref={setViewport}>
+          <ScrollArea.Root width='regular'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={StackTile}
                 items={tileItems}
@@ -289,18 +301,19 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                 getId={getItemId}
                 getScrollElement={() => viewport}
                 estimateSize={() => 150}
-                gap={4}
+                gap={8}
+                inset={false}
                 pagination={pagination}
               />
               {loading && (
-                <div role='status' className='grid place-items-center px-2 py-3'>
-                  <Icon
+                <Layout.Grid role='status' center classNames='px-2 py-3'>
+                  <Icon.Icon
                     icon='ph--spinner-gap--regular'
                     size='lg'
                     classNames='[animation:spin_1s_linear_infinite]'
                     tone='subtle'
                   />
-                </div>
+                </Layout.Grid>
               )}
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -318,14 +331,14 @@ InboxStack.displayName = 'InboxStack';
 
 type StackTileData = MessageTileData | ConversationTileData;
 
-type StackTileProps = Pick<MosaicTileProps<StackTileData>, 'data' | 'location' | 'current'>;
+type StackTileProps = Pick<MosaicTileProps<StackTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
 /** Dispatches on the entry kind: message entries render a message tile, groups a conversation tile. */
-const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current }, forwardedRef) =>
+const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current, binding }, forwardedRef) =>
   'message' in data ? (
-    <MessageTile ref={forwardedRef} data={data} location={location} current={current} />
+    <MessageTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
   ) : (
-    <ConversationTile ref={forwardedRef} data={data} location={location} current={current} />
+    <ConversationTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
   ),
 );
 
@@ -351,114 +364,117 @@ type MessageTileData = {
   onAction?: InboxStackActionHandler;
 };
 
-type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
+type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
-const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const {
-    message,
-    tagsAtom,
-    starredAtom,
-    inboxAtom,
-    enableArchive,
-    enableIgnoreSender,
-    enableCreateTopic,
-    searchQuery,
-    getContact,
-    onContactCreate,
-    onAction,
-  } = data;
-  const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
-  const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
-  const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
-  const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
-  const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
-  const messageTags = useVisibleTags(tags);
+const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(
+  ({ data, location, current, binding }, forwardedRef) => {
+    const {
+      message,
+      tagsAtom,
+      starredAtom,
+      inboxAtom,
+      enableArchive,
+      enableIgnoreSender,
+      enableCreateTopic,
+      searchQuery,
+      getContact,
+      onContactCreate,
+      onAction,
+    } = data;
+    const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
+    const { setCurrentId } = useMosaicContainer('MessageTile');
+    const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
+    const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+    const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
+    const messageTags = useVisibleTags(tags);
 
-  // Click / Enter commit both current and selection. Arrow keys only move
-  // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
-  // change), so they don't select.
-  const handleCurrentChange = useCallback(() => {
-    setCurrentId(message.id);
-    setSelected(message.id, true);
-  }, [message.id, setCurrentId, setSelected]);
+    // Click / Enter commit current; the container's `itemProps` selects. Arrow keys only move
+    // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
+    // change), so they don't select.
+    const handleCurrentChange = useCallback(() => {
+      setCurrentId(message.id);
+    }, [message.id, setCurrentId]);
 
-  const handleAvatarClick = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onAction?.({ type: 'select', messageId: message.id });
-    },
-    [message.id, onAction],
-  );
+    const handleAvatarClick = useCallback(
+      (event: MouseEvent) => {
+        event.stopPropagation();
+        onAction?.({ type: 'select', messageId: message.id });
+      },
+      [message.id, onAction],
+    );
 
-  const handleToggleStar = useCallback(
-    () => onAction?.({ type: 'star', messageId: message.id }),
-    [message.id, onAction],
-  );
+    const handleToggleStar = useCallback(
+      () => onAction?.({ type: 'star', messageId: message.id }),
+      [message.id, onAction],
+    );
 
-  const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
+    const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
 
-  const searchSnippet = useMemo(
-    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
-    [message, searchQuery],
-  );
+    const searchSnippet = useMemo(
+      () =>
+        searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined,
+      [message, searchQuery],
+    );
 
-  const menuItems = useMemo(
-    () =>
-      buildTileMenuItems({
-        messageId: message.id,
-        senderEmail: message.sender?.email,
-        inInbox,
-        enableArchive,
-        enableIgnoreSender,
-        enableCreateTopic,
-        onAction,
-      }),
-    [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id],
-  );
+    const menuItems = useMemo(
+      () =>
+        buildTileMenuItems({
+          messageId: message.id,
+          senderEmail: message.sender?.email,
+          inInbox,
+          enableArchive,
+          enableIgnoreSender,
+          enableCreateTopic,
+          onAction,
+        }),
+      [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id],
+    );
 
-  return (
-    <CardTile.Root
-      ref={forwardedRef}
-      id={message.id}
-      data={data}
-      location={location}
-      current={current}
-      onCurrentChange={handleCurrentChange}
-      data-testid='inbox.message.row'
-    >
-      <CardTile.Header
-        menu
-        menuItems={menuItems}
-        starred={starred}
-        onToggleStar={onAction ? handleToggleStar : undefined}
-        title={
-          <>
-            <span className='grow truncate font-medium'>{subject}</span>
-            <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{date}</span>
-          </>
-        }
-      />
-      <Card.Body>
-        <Row.Person
-          actor={message.sender}
-          role='from'
-          getContact={getContact}
-          onContactCreate={onContactCreate}
-          onClick={handleAvatarClick}
+    return (
+      <CardTile.Root
+        ref={forwardedRef}
+        id={message.id}
+        data={data}
+        location={location}
+        binding={binding}
+        current={current}
+        onCurrentChange={handleCurrentChange}
+        data-testid='inbox.message.row'
+      >
+        <CardTile.Header
+          menu
+          menuItems={menuItems}
+          starred={starred}
+          onToggleStar={onAction ? handleToggleStar : undefined}
+          title={
+            <>
+              <span className='grow truncate font-medium'>{subject}</span>
+              <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{date}</span>
+            </>
+          }
         />
-        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
-        {snippet && (
-          <Card.Row>
-            <Card.Text variant='muted'>
-              {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
-            </Card.Text>
-          </Card.Row>
-        )}
-        <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
-      </Card.Body>
-    </CardTile.Root>
-  );
-});
+        <Card.Body>
+          <Row.Person
+            actor={message.sender}
+            role='from'
+            getContact={getContact}
+            onContactCreate={onContactCreate}
+            onClick={handleAvatarClick}
+          />
+          {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
+          {snippet && (
+            <Card.Row>
+              <Card.Text variant='muted'>
+                {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
+              </Card.Text>
+            </Card.Row>
+          )}
+          <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
+        </Card.Body>
+      </CardTile.Root>
+    );
+  },
+);
 
 MessageTile.displayName = 'MessageTile';
 
@@ -484,10 +500,10 @@ type ConversationTileData = {
   onAction?: InboxStackActionHandler;
 };
 
-type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' | 'location' | 'current'>;
+type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
-  ({ data, location, current }, forwardedRef) => {
+  ({ data, location, current, binding }, forwardedRef) => {
     const {
       conversationId,
       messages,
@@ -508,7 +524,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
     const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
     const { subject } = getMessageProps(latest, new Date());
-    const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
+    const { setCurrentId } = useMosaicContainer('ConversationTile');
 
     // Click / Enter commit current + selection using the LATEST message's ID, not
     // the conversationId. The parent's action handler resolves `messageId` against the
@@ -517,8 +533,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     // when computing `effectiveCurrentId` so the tile still lights up.
     const handleCurrentChange = useCallback(() => {
       setCurrentId(latest.id);
-      setSelected(latest.id, true);
-    }, [latest.id, setCurrentId, setSelected]);
+    }, [latest.id, setCurrentId]);
 
     const handleConversationClick = useCallback(
       (event: MouseEvent) => {
@@ -530,10 +545,12 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
 
     const handleMessageClick = useCallback(
       (event: MouseEvent, messageId: string) => {
+        // Stopped so the tile does not also open the whole conversation; the tile's current/selected update is made here.
         event.stopPropagation();
+        handleCurrentChange();
         onAction?.({ type: 'current', messageId, newPlank: event.metaKey || event.ctrlKey });
       },
-      [onAction],
+      [handleCurrentChange, onAction],
     );
 
     const handleToggleStar = useCallback(
@@ -547,6 +564,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
         id={conversationId}
         data={data}
         location={location}
+        binding={binding}
         current={current}
         onCurrentChange={handleCurrentChange}
         onClick={handleConversationClick}
@@ -626,19 +644,21 @@ const ConversationMessageRow = ({
   );
 
   return (
-    <Card.Row classNames='items-start'>
-      <Block classNames='h-8 items-center'>
-        <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
-      </Block>
-      <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
-        <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
+    <Card.Row
+      classNames='items-start'
+      leading={<ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />}
+    >
+      {/* Text, not buttons: the tile is the stack's one focus stop, so the arrows move between tiles; a click still opens
+          this message. */}
+      <div className='flex flex-col cursor-pointer' onClick={(event) => onMessageClick(event, message.id)}>
+        <div className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>
           <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
-        </button>
+        </div>
         {snippet && (
-          <button type='button' className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
+          <div className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
-          </button>
+          </div>
         )}
       </div>
     </Card.Row>

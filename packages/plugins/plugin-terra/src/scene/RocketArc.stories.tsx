@@ -9,8 +9,8 @@ import { type Scene } from '@babylonjs/core/scene';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef } from 'react';
 
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

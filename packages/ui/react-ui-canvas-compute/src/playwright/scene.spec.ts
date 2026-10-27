@@ -7,9 +7,9 @@ import { type Page, expect, test } from '@playwright/test';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 const PORT = 9007;
-const TRANSFORM_URL = storybookUrl('ui-react-ui-canvas-compute-scene--transform', PORT);
-const LOGIC_URL = storybookUrl('ui-react-ui-canvas-compute-scene--logic', PORT);
-const TEMPLATE_URL = storybookUrl('ui-react-ui-canvas-compute-scene--template', PORT);
+const TRANSFORM_URL = storybookUrl('ui-react-ui-canvas-compute-circuits--transform', PORT);
+const LOGIC_URL = storybookUrl('ui-react-ui-canvas-compute-circuits--logic', PORT);
+const TEMPLATE_URL = storybookUrl('ui-react-ui-canvas-compute-circuits--template', PORT);
 
 /** The die a `random` shape draws; its icon name changes as it spins, so match the family. */
 const DICE = 'svg:has(use[href*="dice"])';
@@ -162,7 +162,7 @@ test.describe('compute scene logic', () => {
 
   test('toggling the switches propagates through the gates to the beacon', async () => {
     const beacon = page.locator(`[data-node-id] ${BEACON}`).first();
-    const lit = () => beacon.evaluate((node) => node.getAttribute('class')?.includes('opacity-100') ?? false);
+    const lit = () => beacon.evaluate((node) => node.getAttribute('class')?.includes('text-yellow-500') ?? false);
     expect(await lit()).toBe(false);
 
     // Two switches feed the AND, whose output feeds the OR, whose output lights the beacon — so the

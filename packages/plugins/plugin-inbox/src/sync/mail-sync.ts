@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
-import { type EntityNotFoundError } from '@dxos/echo/Error';
+import type * as EchoError from '@dxos/echo/Error';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
@@ -55,6 +55,14 @@ export type MailSyncSourceOptions = {
   readonly tagIndex: TagIndex.TagIndex;
   /** Called with each enumeration page/chunk's id count, to accumulate the retrieval total. */
   readonly onEnumerated: (count: number) => void;
+  /**
+   * Called with the provider's count, or estimate, of the messages a window holds, from the window's first
+   * query; a provider that sizes a window reports this in place of that window's `onEnumerated` counts. The
+   * backward window is the rest of the backfill, not just this run's share of it, so sizing it lets the
+   * meter's total cover every run of an `Operation.runAgain()` chain. Providers that cannot size a window
+   * leave it unused.
+   */
+  readonly onEstimate: (count: number) => void;
   /** Called once per item retrieved (full fetch), to advance progress. */
   readonly onRetrieved: () => void;
 };
@@ -237,6 +245,13 @@ type TagPushOutcome = {
 const NO_TAG_PUSH: TagPushOutcome = { nextHeads: undefined, pending: [] };
 
 /**
+ * Messages per {@link resolveForeignIds} query. Each match is returned in full (bodies included), so an
+ * unbounded id list — an additive reconcile over a whole mailbox — exceeds the 32 MiB RPC cap and the
+ * 128 MB isolate on EDGE.
+ */
+const RESOLVE_FOREIGN_IDS_CHUNK = 100;
+
+/**
  * Resolves message ids to provider foreign ids for messages the run did not already touch — a user
  * starring a message synced weeks ago. Bounded by the push diff, not the feed.
  */
@@ -246,14 +261,14 @@ const resolveForeignIds = Effect.fn('mail-sync.resolveForeignIds')(function* (
   messageIds: readonly string[],
 ) {
   const resolved = new Map<string, string>();
-  if (messageIds.length === 0) {
-    return resolved;
-  }
-  const messages = yield* Feed.query(feed, Query.select(Filter.id(...messageIds))).run;
-  for (const message of messages) {
-    for (const key of Obj.getMeta(message).keys) {
-      if (key.source === foreignKeySource) {
-        resolved.set(message.id, key.id);
+  for (let offset = 0; offset < messageIds.length; offset += RESOLVE_FOREIGN_IDS_CHUNK) {
+    const chunk = messageIds.slice(offset, offset + RESOLVE_FOREIGN_IDS_CHUNK);
+    const messages = yield* Feed.query(feed, Query.select(Filter.id(...chunk))).run;
+    for (const message of messages) {
+      for (const key of Obj.getMeta(message).keys) {
+        if (key.source === foreignKeySource) {
+          resolved.set(message.id, key.id);
+        }
       }
     }
   }
@@ -375,7 +390,7 @@ export const runMailSync = (
   options: RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  MailSyncError | EntityNotFoundError,
+  MailSyncError | EchoError.EntityNotFoundError,
   MailSyncProvider | Database.Service | Capability.Service | Operation.Service | Trace.TraceService
 > =>
   Effect.gen(function* () {
@@ -508,14 +523,23 @@ export const runMailSync = (
     };
     reportStatus({ current: 0 });
 
-    // Accumulate the retrieval total as each page/chunk's ids are enumerated (before any full fetch),
-    // so the meter renders a determinate bar. Enumeration runs ahead of the full fetch, so `total`
-    // leads `current`.
-    let totalToRetrieve = 0;
+    // The retrieval total: the ids each page/chunk enumerates (before any full fetch), plus the size of
+    // every window the provider could size up front. Both lead the fetch, so the meter is determinate and
+    // `total` leads `current`. A sized backward window is the whole remaining backfill, so the total spans
+    // the `runAgain` chain; each run re-sizes what is left, which corrects an estimate that was off.
+    let enumerated = 0;
+    let estimated = 0;
+    let retrieved = 0;
+    const reportTotal = () => reportStatus({ total: Math.max(progressCurrent, enumerated + estimated) });
     const addToTotal = (count: number) => {
-      totalToRetrieve += count;
-      reportStatus({ total: totalToRetrieve });
-      log('mail sync enumerated page', { provider: provider.name, page: count, totalToRetrieve });
+      enumerated += count;
+      reportTotal();
+      log('mail sync enumerated page', { provider: provider.name, page: count, enumerated });
+    };
+    const addEstimate = (count: number) => {
+      estimated += count;
+      reportTotal();
+      log('mail sync sized window', { provider: provider.name, window: count, estimated });
     };
 
     const threads = new Set<string>();
@@ -619,11 +643,9 @@ export const runMailSync = (
       filter: targetOptions.filter,
       tagIndex,
       onEnumerated: addToTotal,
-      // Advance at retrieval so `current` reaches `total`; counting after downstream dedup/decode
-      // drops would leave the bar short of 100%.
+      onEstimate: addEstimate,
       onRetrieved: () => {
-        progressCurrent += 1;
-        reportStatus({ current: progressCurrent });
+        retrieved += 1;
       },
     });
     const inserts = additions.pipe(
@@ -632,8 +654,17 @@ export const runMailSync = (
         (item) => item.foreignId,
         (item) => item.key,
       ),
+      // The meter advances here, on the messages the run keeps, not at retrieval: fetches run ahead of
+      // the cap, and a message fetched past it is fetched again, and would be counted again, by the next
+      // run of the chain. An estimate that was low is raised to the count rather than drawn past full.
       Cursor.boundStage<MailSyncItem>(maxMessages, () => {
         taken += 1;
+        progressCurrent = taken;
+        reportStatus(
+          progressTotal !== undefined && progressCurrent > progressTotal
+            ? { current: progressCurrent, total: progressCurrent }
+            : { current: progressCurrent },
+        );
       }),
       Stage.map('decode', (item: MailSyncItem) => item.process),
     );
@@ -674,6 +705,8 @@ export const runMailSync = (
                 )
               : undefined,
           dedupSeedTail: options.dedupSeedTail,
+          // The feed also holds the messages' attachment blobs, which carry no foreign keys.
+          dedupSeedType: Message.Message,
         }),
       ),
       Pipeline.abortWith(
@@ -682,7 +715,7 @@ export const runMailSync = (
         // emitted here or the meter's key stays suppressed for every later run.
         Effect.sync(() => {
           log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
-          reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+          reportStatus({ message: Progress.STATUS_CANCELLED });
         }),
       ),
       Effect.tapError((error) =>
@@ -690,7 +723,7 @@ export const runMailSync = (
           // Log the raw error; the meter shows only a short reason (the full exception — provider
           // errors, auth tokens — must not reach the UI).
           log.warn('mail sync failed', { provider: provider.name, error });
-          reportStatus({ message: PROGRESS_STATUS_FAILED });
+          reportStatus({ message: Progress.STATUS_FAILED });
         }),
       ),
     );
@@ -726,15 +759,16 @@ export const runMailSync = (
     );
 
     // Full funnel, each stage narrower than the last, so a zero result on a completed run can be
-    // attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0
-    // with `enumerated` > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
+    // attributed: `enumerated` + `estimated` 0 → empty windows / provider returned no ids; `taken` 0
+    // with either > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
     // `taken` > 0 → every candidate dropped in decode/map (no body, filtered sender, unmappable);
     // `newMessages` 0 with `processed` > 0 → commit dropped them (e.g. draft reconciliation).
     log.info('mail sync funnel', {
       provider: provider.name,
       mailbox: Obj.getURI(mailbox),
-      enumerated: totalToRetrieve,
-      retrieved: progressCurrent,
+      enumerated,
+      estimated,
+      retrieved,
       taken,
       processed,
       newMessages: stats.newMessages,
@@ -752,7 +786,7 @@ export const runMailSync = (
     // finishedAt = new Date(finishedMs).toISOString();
     // publishStats();
 
-    reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+    reportStatus({ message: Progress.STATUS_COMPLETE });
 
     // Fold the run's observed key extent so the window advances even if every scanned message was
     // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
@@ -772,17 +806,18 @@ export const runMailSync = (
       newMessages: stats.newMessages,
       action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
     });
-    if (!capped && tagPush.pending.length === 0) {
-      // Additions weren't truncated and every tag op settled, so this run's chunk fully drained: mark
-      // backfill done (the backward half reached the horizon) and advance the sync state LAST, only
-      // after the merged stream committed and the push returned. A crash/cap leaves it unadvanced, so
-      // the next run re-fetches the same chunk (additions dedup-drop, tag ops re-apply idempotently).
+    if (tagPush.pending.length === 0) {
+      // Heads advance on capped runs too: a backfill caps every run, and without a base each run's
+      // additive reconcile re-pushes — and loads in full — every message synced so far until the
+      // isolate OOMs. Heads ahead of the token only re-read a delta the base already holds (see
+      // TAG-SYNC.md for the one concurrent-edit case this does not cover).
       //
-      // The token and the tag heads go in ONE `Obj.update`. They describe the same position, and
-      // advancing the token without the heads leaves the next run diffing a fresh delta against a
-      // stale base — see `Cursor.writeSyncState`.
-      Cursor.completeBackfill(binding, horizon.getTime());
-      const nextToken = source.nextToken?.();
+      // The token and backfill mark advance LAST and only uncapped, after the merged stream committed
+      // and the push returned; a crash/cap leaves them, so the next run re-fetches the same chunk.
+      if (!capped) {
+        Cursor.completeBackfill(binding, horizon.getTime());
+      }
+      const nextToken = capped ? undefined : source.nextToken?.();
       if (nextToken !== undefined || tagPush.nextHeads !== undefined) {
         Cursor.writeSyncState(binding, { token: nextToken, tagHeads: tagPush.nextHeads });
       }

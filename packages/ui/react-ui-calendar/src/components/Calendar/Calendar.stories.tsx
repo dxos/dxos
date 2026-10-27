@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { addDays, addMinutes, format, startOfDay, startOfWeek } from 'date-fns';
 import React, { useMemo, useRef, useState } from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

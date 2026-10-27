@@ -5,16 +5,18 @@
 import { type Meta } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { ComputeGraphRegistry } from '@dxos/compute-hyperformula';
 import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -38,10 +40,10 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
+    withClientProvider({ types: [Sheet.Sheet, Sheet.Chart], createSpace: true }),
     withComputeGraphDecorator({ registry }),
     withPluginManager({
-      plugins: [...corePlugins()],
+      plugins: [...CorePlugins.make()],
       capabilities: [
         Capability.contribute(SheetCapabilities.ComputeGraphRegistry, registry),
         Capability.contribute(
@@ -76,7 +78,7 @@ export const Default = () => {
 
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
-      <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
+      <SheetArticle role={AppSurface.Article.role} subject={sheet} attendableId='test' ignoreAttention />
     </AttendableContainer>
   );
 };
@@ -92,11 +94,43 @@ export const Spec = () => {
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
       <div className='w-full grid grid-cols-[1fr_20rem]'>
-        <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
+        <SheetArticle role={AppSurface.Article.role} subject={sheet} attendableId='test' ignoreAttention />
         <div data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>
       </div>
     </AttendableContainer>
   );
+};
+
+/** On a slide: the used range only, scaled down to fit its box (never past 1:1), with no status bar. */
+export const Slide = {
+  render: () => {
+    const [space] = useSpaces();
+    const graph = useComputeGraph(space);
+    const sheet = useTestSheet(space, graph, { cells: createTestCells() });
+    if (!sheet || !space) {
+      return null;
+    }
+
+    return (
+      <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
+        <div className='relative flex' style={{ width: 480, height: 270 }} data-testid='slide'>
+          <SheetArticle role={AppSurface.Slide.role} subject={sheet} attendableId='test' ignoreAttention />
+        </div>
+      </AttendableContainer>
+    );
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const slide = await within(canvasElement).findByTestId('slide', undefined, { timeout: 10_000 });
+    await waitFor(
+      async () => {
+        const scale = Number(slide.querySelector('[data-fit-scale]')?.getAttribute('data-fit-scale'));
+        await expect(scale).toBeGreaterThan(0);
+        await expect(scale).toBeLessThan(1);
+      },
+      { timeout: 10_000 },
+    );
+    await expect(slide.querySelector('.dx-toolbar-surface')).toBeNull();
+  },
 };

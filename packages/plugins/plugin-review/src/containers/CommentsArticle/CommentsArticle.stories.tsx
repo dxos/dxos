@@ -5,26 +5,24 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
+import { expect, screen, userEvent, waitFor } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { toCursorRange } from '@dxos/echo-client';
-import { Doc } from '@dxos/echo-doc';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { qualifyId } from '@dxos/graph/GraphNode';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
@@ -32,11 +30,10 @@ import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
-import { type Space, useSpaces } from '@dxos/react-client/echo';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
@@ -44,73 +41,38 @@ import { isNonNullable } from '@dxos/util';
 
 import { ReviewPlugin, type ReviewPluginOptions } from '#plugin';
 import { translations } from '#translations';
-import { AgentIdentity, CommentCapabilities } from '#types';
+import { AgentIdentity, CommentCapabilities, Settings } from '#types';
 
 import { textOf } from '../../should-trigger-agent.ts';
-import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing/index.ts';
+import {
+  ReviewStoryLayout,
+  SAMPLE_CONTENT,
+  STORY_AGENT_NAME,
+  seedAgentSuggestions,
+  seedComments,
+} from '../../testing/index.ts';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
 
 /**
- * Seed anchored comment threads over known phrases so the editor renders the
- * highlighted ranges and the companion lists the threads (with snippets).
- */
-const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => {
-  const accessor = Doc.createAccessor(text, ['content']);
-  const content = text.content;
-  for (const phrase of SEED_PHRASES) {
-    const start = content.indexOf(phrase);
-    if (start < 0) {
-      continue;
-    }
-
-    const anchor = toCursorRange(accessor, start, start + phrase.length);
-    const thread = space.db.add(
-      Thread.make({
-        name: phrase,
-        status: 'active',
-        messages: [
-          Ref.make(
-            Obj.make(Message.Message, {
-              created: new Date().toISOString(),
-              sender: { role: 'user', name: 'Alice' },
-              blocks: [{ _tag: 'text', text: `Comment on “${phrase}”.` }],
-            }),
-          ),
-        ],
-      }),
-    );
-    space.db.add(
-      Relation.make(AnchoredTo.AnchoredTo, {
-        [Relation.Source]: thread,
-        [Relation.Target]: doc,
-        anchor,
-      }),
-    );
-  }
-};
-
-/**
- * Canned echo runner — never makes network calls. On each turn finds the
- * last non-assistant message and appends an assistant message that quotes it.
+ * Canned echo runner — never makes network calls. Appends an assistant message to the thread's feed
+ * quoting the message that triggered the turn.
  * Used by the WithMentionAgent / WithAutoAgent variants.
  */
-const StubAgentRunner: CommentCapabilities.AgentRunner = {
-  run: ({ thread }) =>
+const StubAgentRunner: AppCapabilities.CommentAgentRunner = {
+  run: ({ thread, message }) =>
     Effect.gen(function* () {
       const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
-      // User-authored messages have no role set; only assistant messages do.
-      const lastUser = [...thread.messages].reverse().find((ref) => ref.target?.sender.role !== 'assistant');
-      const echoText = textOf(lastUser?.target);
+      const db = Obj.getDatabase(thread);
+      invariant(db, 'thread not persisted');
+      const feed = yield* Effect.promise(() => thread.feed.load());
       const reply = Obj.make(Message.Message, {
         created: new Date().toISOString(),
         sender: { role: 'assistant', name: identity.name, identityDid: identity.identityDid },
-        blocks: [{ _tag: 'text', text: `(${identity.name}) you said: "${echoText}"` }],
+        blocks: [{ _tag: 'text', text: `(${identity.name}) you said: "${textOf(message)}"` }],
       });
-      Obj.update(thread, (thread) => {
-        (thread.messages as Ref.Ref<Message.Message>[]).push(Ref.make(reply));
-      });
+      yield* Effect.promise(() => db.appendToFeed(feed, [reply]));
     }),
 };
 
@@ -177,11 +139,11 @@ const StoryGraphPlugin = Plugin.define(
 
 type StoryArgs = {
   /**
-   * Sets the Markdown plugin's `commentAgentMode` setting so newly-created
+   * Sets the review plugin's `commentAgentMode` setting so newly-created
    * comment threads on the seeded doc are stamped with the matching agent
    * config by CommentOperation.Create.
    */
-  agentMode?: Markdown.Settings['commentAgentMode'];
+  agentMode?: Settings.Settings['commentAgentMode'];
   /** Seed three anchored comment threads over known phrases in the document. */
   seedComments?: boolean;
   /** Seed a suggestion branch authored by the story agent (deterministic; no LLM). */
@@ -189,10 +151,10 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ agentMode }: StoryArgs) => {
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
-  const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
+  const attendableId = doc && GraphNode.qualifyId(GraphNode.RootId, doc.id);
 
   // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
   useEffect(() => {
@@ -201,16 +163,13 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
     }
   }, [graph, attendableId]);
 
-  // Push the variant's `agentMode` into the markdown plugin settings so that
+  // Push the variant's `agentMode` into the review plugin settings so that
   // CommentOperation.Create stamps new threads with the matching agent config.
-  const markdownSettings = useCapability(MarkdownCapabilities.Settings);
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const reviewSettings = Hooks.useCapability(CommentCapabilities.Settings);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   useEffect(() => {
-    if (!markdownSettings) {
-      return;
-    }
-    registry.set(markdownSettings, { ...registry.get(markdownSettings), commentAgentMode: agentMode ?? 'off' });
-  }, [markdownSettings, registry, agentMode]);
+    registry.set(reviewSettings, { ...registry.get(reviewSettings), commentAgentMode: agentMode ?? 'off' });
+  }, [reviewSettings, registry, agentMode]);
 
   return <ReviewStoryLayout attendableId={attendableId} />;
 };
@@ -222,7 +181,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
@@ -234,7 +193,7 @@ const meta = {
 
               if (args.seedComments) {
                 const text = yield* Effect.promise(() => doc.content.load());
-                seedComments(defaultSpace, doc, text);
+                yield* Effect.promise(() => seedComments(defaultSpace, doc, text, SEED_PHRASES));
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }
 
@@ -357,5 +316,17 @@ export const WithCommentsAndSuggestions: Story = {
   args: {
     seedComments: true,
     seedAgentSuggestions: true,
+  },
+};
+
+/**
+ * The companion's toolbar adds a comment on the whole document, not anchored to a span, without selecting any text.
+ */
+export const TestUnanchoredComment: Story = {
+  play: async () => {
+    const button = await screen.findByTestId('comments.object-comment.add', undefined, { timeout: 30_000 });
+    await expect(screen.queryAllByTestId('thread.delete')).toHaveLength(0);
+    await userEvent.click(button);
+    await waitFor(() => expect(screen.getAllByTestId('thread.delete').length).toBeGreaterThan(0), { timeout: 10_000 });
   },
 };

@@ -5,8 +5,8 @@
 import React, { type FC, useState } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { ScrollArea } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-trace';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { useExecutionGraph } from './useExecutionGraph.ts';
 

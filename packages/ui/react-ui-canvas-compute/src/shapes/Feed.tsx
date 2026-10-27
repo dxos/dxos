@@ -5,15 +5,15 @@
 import React, { Fragment } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useComputeNodeState } from '../hooks/index.ts';
-import { Box } from './common/index.ts';
+import { Box, type ComputeNodeViewProps } from './common/index.ts';
 import { type FeedShape } from './feed-def.ts';
 
-export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
+export const FeedComponent = ({ node: shape }: ComputeNodeViewProps<FeedShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const items = runtime.outputs[DEFAULT_OUTPUT]?.type === 'executed' ? runtime.outputs[DEFAULT_OUTPUT].value : [];
 
@@ -30,7 +30,7 @@ export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   );
 };
 
-export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
+export const FeedItem = ({ classNames, item }: Util.ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
     return <div className={mx(classNames, 'whitespace-pre-wrap')}>{item}</div>;
   }

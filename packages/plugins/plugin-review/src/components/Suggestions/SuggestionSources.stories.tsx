@@ -10,8 +10,10 @@ import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';
 
@@ -106,12 +108,12 @@ const DefaultStory = ({ onResolved, swap }: StoryArgs) => {
       {swap && (
         <Panel.Header>
           <Toolbar.Root>
-            <Button
+            <Button.Root
               data-testid='swap-document'
               onClick={() => setActive((current) => (current + 1) % documents.length)}
             >
               Swap
-            </Button>
+            </Button.Root>
           </Toolbar.Root>
         </Panel.Header>
       )}

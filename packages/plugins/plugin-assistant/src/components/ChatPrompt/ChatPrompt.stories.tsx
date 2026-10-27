@@ -9,22 +9,22 @@ import React, { useContext, useEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
 import { Alarm, SessionStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
-import * as ChatType from '@dxos/assistant/Chat';
+import * as AssistantChat from '@dxos/assistant/Chat';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
 
-import { useChatProcessor, useChatServices, usePresets } from '#hooks';
+import { useChatModel, useChatServices, usePresets } from '#hooks';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
@@ -38,7 +38,7 @@ type StoryArgs = {
   /** Prompts already queued on the feed, as a submit-while-busy leaves them. */
   queued?: string[];
   /**
-   * Holds the processor `active` while leaving `streaming` false — a turn parked in a tool call.
+   * Holds the chat model `active` while leaving `streaming` false — a turn parked in a tool call.
    * This is the state the send/stop control has to get right, and no scripted model can hold it
    * still long enough to assert against.
    */
@@ -49,40 +49,37 @@ type StoryArgs = {
 
 const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
   const [space] = useSpaces();
-  const [chat] = useQuery(space?.db, Filter.type(ChatType.Chat));
-  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const [chat] = useQuery(space?.db, Filter.type(AssistantChat.Chat));
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const registry = useRegistry();
   const { preset, ...chatProps } = usePresets(settings, chat);
   const db = space?.db;
   const runtime = useChatServices({ id: db?.spaceId });
-  const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
+  const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
 
   // Drives the control's mode from the outside, so the assertion does not race a real turn. The
-  // processor reads its atoms from the ambient registry, which is what the story writes to.
-  // The same registry `useChatProcessor` hands the processor, so a write here is a write it sees.
+  // chat model reads its atoms from the ambient registry, which is what the story writes to.
+  // The same registry `useChatModel` hands the chat model, so a write here is a write it sees.
   const atomRegistry = useContext(RegistryContext);
   useEffect(() => {
-    if (running && processor) {
-      atomRegistry.set(processor.active, true);
+    if (running && chatModel) {
+      atomRegistry.set(chatModel.active, true);
     }
-  }, [running, processor, atomRegistry]);
+  }, [running, chatModel, atomRegistry]);
 
-  if (!chat || !db || !processor) {
+  if (!chat || !db || !chatModel) {
     return <Loading />;
   }
 
   return (
     <div className='flex justify-center p-4'>
       <div className='w-full max-w-document-width'>
-        <Chat.Root chat={chat} db={db} processor={processor}>
-          {/* Mounted here as every prompt host must: queued prompts are held out of the thread, so
-              without this part they are submitted and then invisible. */}
+        <Chat.Root chat={chat} db={db} chatModel={chatModel} defaultDrawer={initialTasksVisible ? 'tasks' : undefined}>
           <Chat.Status classNames='px-3 rounded-sm bg-group-surface' />
-          <Chat.Queue classNames='pb-1' />
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
               has no node, so the row shows only its own controls unless a plugin renders one. The
               checklist is the prompt's own disclosed region now, not a sibling the story places. */}
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} defaultTasksVisible={initialTasksVisible} />
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} />
         </Chat.Root>
       </div>
     </div>
@@ -97,9 +94,9 @@ const meta = {
     withLayout({ layout: 'column', classNames: 'flex flex-col justify-end w-[30rem]' }),
     withPluginManager<StoryArgs>(({ args: { tasks = [], queued = [], alarmInMinutes } }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [ChatType.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
+          types: [AssistantChat.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
           config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
@@ -107,9 +104,9 @@ const meta = {
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
               const feed = space.db.add(Feed.make());
-              const chat = space.db.add(ChatType.make({ name: 'Test', feed: Ref.make(feed) }));
+              const chat = space.db.add(AssistantChat.make({ name: 'Test', feed: Ref.make(feed) }));
               for (const { title, status } of tasks) {
-                ChatType.addTask(space.db, chat, title, { status });
+                AssistantChat.addTask(space.db, chat, title, { status });
               }
               // Queued input is feed state, so seeding it is exactly what a submit-while-busy does.
               const store = new SessionStore();
@@ -154,26 +151,6 @@ export const WithTasks: Story = {
       { title: 'Draft the plan', status: 'started' },
       { title: 'Verify and ship', status: 'todo' },
     ],
-  },
-};
-
-/** Prompts waiting on the agent, stacked above the composer. */
-export const Queued: Story = {
-  args: {
-    queued: ['Summarize the meeting notes', 'Then draft a follow-up email to the team'],
-  },
-};
-
-export const TestQueued: Story = {
-  args: {
-    queued: ['Waiting on the agent'],
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    // Generous: the story boots a client and a space before anything renders.
-    const items = await canvas.findAllByTestId('assistant.queued-message', {}, { timeout: 30_000 });
-    await expect(items).toHaveLength(1);
-    await expect(items[0]).toHaveTextContent('Waiting on the agent');
   },
 };
 
@@ -237,28 +214,32 @@ export const TestQueueFull: Story = {
   args: { running: true, queued: ['First', 'Second', 'Third'] },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    await waitFor(() => expect(canvas.getAllByTestId('assistant.queued-message')).toHaveLength(3), {
-      timeout: 30_000,
-    });
-
-    const editor = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
-    if (!editor) {
-      throw new Error('Prompt editor not rendered.');
-    }
+    const editor = await waitFor(
+      () => {
+        const editor = canvasElement.querySelector<HTMLElement>('[role="group"] .cm-content');
+        if (!editor) {
+          throw new Error('Prompt editor not rendered.');
+        }
+        return editor;
+      },
+      { timeout: 30_000 },
+    );
     await userEvent.click(editor);
     await userEvent.type(editor, 'a fourth');
 
-    // The one control stays Stop rather than turning into Send: the running turn can still be interrupted.
-    await expect(canvas.getByTestId('assistant.send')).toHaveAccessibleName('Stop processing');
+    // The one control stays Stop rather than turning into Send: the running turn can still be
+    // interrupted. Polled, since the queue is counted once the seeded entries come back from the feed.
+    await waitFor(() => expect(canvas.getByTestId('assistant.send')).toHaveAccessibleName('Stop processing'), {
+      timeout: 30_000,
+    });
     await userEvent.keyboard('{Enter}');
     await expect(editor).toHaveTextContent('a fourth');
-    await expect(canvas.getAllByTestId('assistant.queued-message')).toHaveLength(3);
   },
 };
 
 /**
  * The row's own controls, with nothing contributed to it. The microphone is deliberately absent:
- * it is not the prompt's, it is filed on the chat's graph node by plugin-transcription.
+ * it is not the prompt's, it is filed on the prompt's graph node by plugin-transcription.
  */
 export const TestBareRow: Story = {
   args: {},

@@ -4,16 +4,18 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { ExecutionGraph } from '@dxos/assistant/ExecutionGraph';
 import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-trace';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export const ExecutionGraphModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

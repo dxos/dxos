@@ -8,10 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
+import { mcpServerTypes } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -21,7 +23,7 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Message, Outline } from '@dxos/types';
 
-import { RunInstructions } from './definitions.ts';
+import * as AgentOperation from '../types/AgentOperation.ts';
 import defaultAgentPrompt from './run-instructions.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -45,7 +47,7 @@ describe('RunInstructions', () => {
         );
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(RunInstructions, {
+        const result = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
           chat: Ref.make(chat),
@@ -76,7 +78,7 @@ describe('RunInstructions', () => {
         );
         yield* Database.flush();
 
-        const result = yield* Operation.invoke(RunInstructions, {
+        const result = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
         });
@@ -107,7 +109,7 @@ describe('RunInstructions', () => {
         yield* Database.flush();
 
         // Models emit `null` rather than omitting a field, and the tool must accept that.
-        const exit = yield* Operation.invoke(RunInstructions, {
+        const exit = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
         }).pipe(Effect.exit);
@@ -139,7 +141,7 @@ describe('RunInstructions', () => {
         yield* Database.flush();
 
         // A placeholder in the unused branch must not lose the work the agent completed.
-        const result = yield* Operation.invoke(RunInstructions, {
+        const result = yield* Operation.invoke(AgentOperation.RunInstructions, {
           instructions: Ref.make(instructions),
           input: {},
         });
@@ -155,6 +157,13 @@ describe('RunInstructions', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  // The runtime registers declared types and provides declared services, so a run that reads the space's
+  // MCP connections without them finds none, or connects a keyed server without its key.
+  it('declares what reading the MCP connections needs', () => {
+    expect(AgentOperation.RunInstructions.types).toEqual(expect.arrayContaining([...mcpServerTypes]));
+    expect(AgentOperation.RunInstructions.services).toContain(Credential.CredentialsService);
+  });
 });
 
 // Scripting the `completeJob` call drives the whole operation without a live model, so what is

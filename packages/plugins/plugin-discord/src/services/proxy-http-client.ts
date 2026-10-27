@@ -17,7 +17,7 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
  * prefix because browsers refuse to let JS set `User-Agent` directly.
  */
 const USER_AGENT_OVERRIDE_HEADER = 'X-Cors-Proxy-User-Agent';
-const DISCORD_BOT_USER_AGENT = 'DiscordBot (https://dxos.org, 0.1.0)';
+export const DISCORD_BOT_USER_AGENT = 'DiscordBot (https://dxos.org, 0.1.0)';
 
 export interface EdgeProxyHttpClientOptions {
   /**

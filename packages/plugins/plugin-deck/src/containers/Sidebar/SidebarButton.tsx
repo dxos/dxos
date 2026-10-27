@@ -4,10 +4,12 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Button, type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -15,9 +17,9 @@ import { meta } from '#meta';
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
-}: ThemedClassName<Pick<ButtonProps, 'variant'>>) => {
+}: Util.ThemedClassName<Pick<Button.RootProps, 'variant'>>) => {
   const { updateState } = useDeckState();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const handleClick = useCallback(() => {
     updateState((state) => ({
@@ -27,7 +29,7 @@ export const ToggleSidebarButton = ({
   }, [updateState]);
 
   return (
-    <Button
+    <Button.Root
       variant={variant}
       icon='ph--sidebar--regular'
       iconOnly
@@ -41,14 +43,14 @@ export const ToggleSidebarButton = ({
 
 export const CloseSidebarButton = () => {
   const { updateState } = useDeckState();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const handleClick = useCallback(() => {
     updateState((state) => ({ ...state, sidebarState: 'collapsed' }));
   }, [updateState]);
 
   return (
-    <Button
+    <Button.Root
       variant='ghost'
       icon='ph--caret-line-left--regular'
       iconOnly
@@ -64,10 +66,10 @@ export const ToggleComplementarySidebarButton = ({
   inR0,
   classNames,
   current,
-}: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
-  const { invokePromise } = useOperationInvoker();
+}: Util.ThemedClassName<{ inR0?: boolean; current?: string }>) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { state, updateState } = useDeckState();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const companions = useDeckCompanions();
   const handleClick = useCallback(() => {
@@ -87,7 +89,7 @@ export const ToggleComplementarySidebarButton = ({
   );
 
   return (
-    <Button
+    <Button.Root
       variant='ghost'
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'
@@ -95,6 +97,7 @@ export const ToggleComplementarySidebarButton = ({
       label={label}
       tooltipSide={inR0 ? 'left' : undefined}
       onClick={handleClick}
+      data-testid='deck.toggleComplementarySidebar'
     />
   );
 };

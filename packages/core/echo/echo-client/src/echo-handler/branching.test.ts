@@ -5,13 +5,14 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing/index.ts';
 import { createBranch, deleteBranch, getBranches, getCurrentBranch, mergeBranch, switchBranch } from './branching.ts';
+import { getObjectCore } from './echo-object-utils.ts';
 import { getEditHistoryWithDiffs } from './edit-history.ts';
 
 /** Automerge frontier of an object, as the branching API's `fromHeads` wants it. */
@@ -330,6 +331,25 @@ describe('branching persistence', () => {
 
   afterEach(async () => {
     await builder.close();
+  });
+
+  test('an object a query backs by the index loads its document to branch', async () => {
+    await using peer = await builder.createPeer();
+    const db = await peer.createDatabase();
+    db.add(Obj.make(TestSchema.Expando, { title: 'main' }));
+    await db.flush({ secondaryIndexes: true });
+    await peer.reload();
+    const reloaded = await peer.openLastDatabase();
+    const object: any = await reloaded.query(Filter.type(TestSchema.Expando)).first();
+    expect(getObjectCore(object).snapshot).toBeDefined();
+
+    await createBranch(object, 'draft');
+    await switchBranch(object, 'draft');
+    Obj.update(object, (object: any) => {
+      object.title = 'draft';
+    });
+    await switchBranch(object, 'main');
+    expect(object.title).toBe('main');
   });
 
   test('the current branch survives a reload (device-local)', async () => {

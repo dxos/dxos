@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -15,7 +15,7 @@ export type DayAheadProps = {
 };
 
 export const DayAhead = ({ summary }: DayAheadProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Section title={t('day-ahead.title')}>
       {summary ? (

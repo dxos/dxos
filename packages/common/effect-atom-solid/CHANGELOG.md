@@ -1,5 +1,30 @@
 # @dxos/effect-atom-solid
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/effect@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/effect@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1819960]
+  - @dxos/effect@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/effect@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

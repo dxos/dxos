@@ -14,17 +14,21 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { ProjectsPlugin } from '#plugin';
 import { ProjectCapabilities } from '#types';
 
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+});
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ProjectsPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
       plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
@@ -45,7 +49,7 @@ describe('ProjectsPlugin', () => {
   });
 
   test('the project skill activates when the assistant starts', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
       plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
@@ -58,7 +62,7 @@ describe('ProjectsPlugin', () => {
 
   test('registers the project types with the client', async ({ expect }) => {
     // Without a registered `Project` type every project verb fails where it stores the object.
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
       plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
@@ -71,7 +75,7 @@ describe('ProjectsPlugin', () => {
   });
 
   test('the settings default to showing task descriptions', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
       plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],

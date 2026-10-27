@@ -44,6 +44,7 @@ import {
 } from './types.ts';
 import {
   cellSelected,
+  cellSelectionEdges,
   closestAction,
   closestCell,
   gap,
@@ -1225,7 +1226,7 @@ export class DxGrid extends LitElement {
         >
           ${[...Array(rows)].map((_, r) => {
             return [...Array(cols)].map((_, c) => {
-              return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection));
+              return this.renderCell(c, r, plane, selection);
             });
           })}
         </div>`
@@ -1259,7 +1260,7 @@ export class DxGrid extends LitElement {
             ${[...Array(rows)].map((_, r) => {
               return [...Array(visibleCols)].map((_, c0) => {
                 const c = this.visColMin + c0;
-                return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c0, r);
+                return this.renderCell(c, r, plane, selection, c0, r);
               });
             })}
           </div>
@@ -1294,7 +1295,7 @@ export class DxGrid extends LitElement {
             ${[...Array(visibleRows)].map((_, r0) => {
               return [...Array(cols)].map((_, c) => {
                 const r = this.visRowMin + r0;
-                return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c, r0);
+                return this.renderCell(c, r, plane, selection, c, r0);
               });
             })}
           </div>
@@ -1329,7 +1330,7 @@ export class DxGrid extends LitElement {
               return [...Array(visibleCols)].map((_, c0) => {
                 const c = c0 + this.visColMin;
                 const r = r0 + this.visRowMin;
-                return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
+                return this.renderCell(c, r, 'grid', selection, c0, r0);
               });
             })}
           </div>
@@ -1429,7 +1430,16 @@ export class DxGrid extends LitElement {
     return { deltaX, deltaY };
   }
 
-  private renderCell(col: number, row: number, plane: DxGridPlane, selected?: boolean, visCol = col, visRow = row) {
+  private renderCell(
+    col: number,
+    row: number,
+    plane: DxGridPlane,
+    selection?: DxGridSelectionProps,
+    visCol = col,
+    visRow = row,
+  ) {
+    const selected = selection ? cellSelected(col, row, plane, selection) : false;
+    const selectionEdge = selection ? cellSelectionEdges(col, row, plane, selection) : undefined;
     const cell = this.cell(col, row, plane);
     const active = this.cellActive(col, row, plane);
     const readonly = this.cellReadonly(col, row, plane);
@@ -1442,6 +1452,7 @@ export class DxGrid extends LitElement {
       role="gridcell"
       tabindex="0"
       aria-selected=${selected ? 'true' : nothing}
+      data-selection-edge=${selectionEdge ?? nothing}
       aria-readonly=${readonly ? 'true' : nothing}
       class=${cell?.className ?? nothing}
       data-refs=${cell?.dataRefs ?? nothing}
@@ -1452,7 +1463,14 @@ export class DxGrid extends LitElement {
       aria-colindex=${col}
       aria-rowindex=${row}
       data-testid=${`${plane}.${col}.${row}`}
-      style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
+      style=${styleMap({
+        'gridColumn': `${visCol + 1}`,
+        'gridRow': `${visRow + 1}`,
+        // Important: a cell's own colors outrank its classes' (e.g. a sheet header's important background). Dash-case,
+        // since an important value is set through `style.setProperty`, which takes CSS property names.
+        'background-color': cell?.background && `${cell.background} !important`,
+        'color': cell?.foreground && `${cell.foreground} !important`,
+      })}
     >
       <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>
       ${

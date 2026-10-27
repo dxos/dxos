@@ -5,21 +5,22 @@
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
+import { translations as chatTranslations } from '@dxos/react-ui-chat/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 
-export const translations: Resource[] = [
+export const translations: Theme.Resource[] = [
   ...assistantTranslations,
+  ...chatTranslations,
   ...componentsTranslations,
   ...formTranslations,
   ...taskTranslations,
@@ -69,12 +70,6 @@ export const translations: Resource[] = [
         'rename-object.label': 'Rename session',
         'delete-object.label': 'Delete session',
         'object-deleted.label': 'Session deleted',
-      },
-      [Type.getTypename(McpServer.McpServer)]: {
-        'typename.label': 'MCP Server',
-        'typename.label_zero': 'MCP Servers',
-        'typename.label_one': 'MCP Server',
-        'typename.label_other': 'MCP Servers',
       },
       [Type.getTypename(Agent.Agent)]: {
         'typename.label': 'Agent',
@@ -180,18 +175,30 @@ export const translations: Resource[] = [
         'plugin-url-prompt.button': 'Load plugin',
 
         'search.placeholder': 'Search...',
-        'prompt.placeholder': 'Enter question or command...',
-        'context-objects.button': 'Add to context',
-        'context-settings.button': 'Chat settings',
+        'prompt.placeholder': '/ for skills, @ for content',
+        'add-menu.button': 'Add',
+        'add-files.label': 'Add files or photos',
+        'add-object.menu': 'Add object…',
+        'add-object.title': 'Add object',
+        'commands-and-skills.label': 'Commands and skills',
+        'connectors.label': 'Connectors',
+        'connections-manage.label': 'Manage connections…',
+        'connectors-empty.label': 'No connectors with MCP servers',
+        'agent-picker.label': 'Agent',
+        'model-picker.models.label': 'Models',
+        'model-picker.environment.label': 'Agent runs on',
         'send.label': 'Send',
+        'prompt-options.label': 'Prompt options',
+        'prompt-controls.label': 'Prompt controls',
         'cancel-processing.button': 'Stop processing',
-        'show-tasks.button': 'Show tasks',
-        'hide-tasks.button': 'Hide tasks',
+        'tasks-drawer.label': 'Tasks',
+        'context-drawer.label': 'Context',
+        'details.context.title': 'Context',
+        'details.objects.label': 'Objects',
+        'details.skills.label': 'Skills',
+        'remove-skill.label': 'Remove skill',
 
-        'options.skills.title': 'Skills',
-        'options.mcp.title': 'MCP',
-        'options.chat-model.title': 'Models',
-        'options.environment.title': 'Environment',
+        'agent-locked.message': 'The agent is chosen before the first message. Start a new chat to use another.',
         'remove-object.label': 'Remove object',
 
         'chat-view.title': 'View',
@@ -199,26 +206,13 @@ export const translations: Resource[] = [
         'chat-view.summary.label': 'Summary',
         'chat-view.thinking.label': 'Thinking',
         'chat-view.debug.label': 'Debug',
-        'chat-environment.local.label': 'Local',
-        'chat-environment.remote.label': 'Remote (EDGE)',
-        'mcp-server-add.label': 'Add MCP server',
-        'mcp-server-remove.label': 'Remove MCP server',
-        'mcp-server-name.label': 'Server name',
-        'mcp-server-name.placeholder': 'Name',
-        'mcp-server-url.label': 'Server URL',
-        'mcp-server-url.placeholder': 'https://...',
-        'mcp-server-protocol.label': 'Protocol',
-        'mcp-server-api-key.label': 'API key',
-        'mcp-server-api-key.placeholder': 'API key (optional)',
-        'mcp-server-status.checking': 'Connecting…',
-        'mcp-server-status.connected_one': '{{count}} tool',
-        'mcp-server-status.connected_other': '{{count}} tools',
-        'mcp-server-status.unauthorized': 'Sign-in required',
-        'mcp-server-status.disabled': 'Disabled',
-        'mcp-server-sign-in.label': 'Sign in',
-        'mcp-server-retry.label': 'Retry connection',
+        'chat-environment.local.label': 'This device',
+        'chat-environment.edge.label': 'EDGE',
+        'attachments-cancel.label': 'Cancel attaching',
+        'attachments-failed.label': "Couldn't attach",
+        'attachments-pending.label': 'Attaching',
         'mcp-server-error.label': 'MCP server unavailable',
-        'mcp-server-error.unauthorized': 'Sign-in required — sign in from the MCP tab of the chat options.',
+        'mcp-server-error.unauthorized': 'Sign-in required — the connection needs signing in again.',
         'ai-service-error.label': 'AI service error',
         'view-usage.label': 'View usage',
 
@@ -246,7 +240,6 @@ export const translations: Resource[] = [
         'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
 
         'debug.button': 'Debug',
-        'online-switch.label': 'Online',
         'model-unavailable.label': '{{label}} (unavailable)',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',

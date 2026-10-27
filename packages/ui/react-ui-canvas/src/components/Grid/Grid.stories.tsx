@@ -5,12 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
-import { Button, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useViewport, useWheel } from '../../hooks/index.ts';
-import { type Camera, type Point } from '../../model/types.ts';
-import { panBy, screenToScene, zoomAt } from '../../utils/camera.ts';
+import { type Camera, type Point } from '../../model/index.ts';
+import { panBy, screenToScene, zoomAt } from '../../utils/index.ts';
 import { GridComponent, type GridProps } from './Grid.tsx';
 
 const ZOOM_STEP = 1.25;
@@ -92,21 +93,21 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
       {/* Pointer presses on the toolbar must not pan the grid underneath. */}
       <div className='absolute top-2 left-2 w-fit' onPointerDown={(event) => event.stopPropagation()}>
         <Toolbar.Root size='sm' classNames='gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'>
-          <Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--magnifying-glass-plus--regular'
             label='Zoom in'
             onClick={() => zoomBy(ZOOM_STEP)}
           />
-          <Button
+          <Button.Root
             variant='ghost'
             iconOnly
             icon='ph--magnifying-glass-minus--regular'
             label='Zoom out'
             onClick={() => zoomBy(1 / ZOOM_STEP)}
           />
-          <Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
+          <Button.Root variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
           <Toolbar.Separator variant='line' />
           <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
             {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}
@@ -119,7 +120,7 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
 };
 
 const meta: Meta<GridProps> = {
-  title: 'ui/react-ui-canvas/scene/Grid',
+  title: 'ui/react-ui-canvas/components/Grid',
   component: GridComponent,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],

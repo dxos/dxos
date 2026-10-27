@@ -1,0 +1,211 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Database, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { Bounds, Easing } from '@dxos/react-ui-canvas/headless';
+
+import * as Generator from './Generator.ts';
+
+/** JSON schema of a generator's parameters, with `x-binding` on those that name nodes or links. */
+const ParamsSchema = Schema.Record(Schema.String, Schema.Any).annotate({
+  description:
+    'JSON schema of the parameters ({ type: "object", properties }). A property with "x-binding": "node" or "link" holds node or link ids the runtime resolves to geometry at each step.',
+});
+
+const CompileErrors = Schema.Array(Schema.String).annotate({
+  description: 'Compile errors; the generator is saved but draws nothing until they are fixed.',
+});
+
+export const CreateGenerator = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.createGenerator'),
+    name: 'Create generator',
+    description:
+      'Saves a new generator (agent-written motion code) in the space and compiles it. Load the canvas generators skill for the contract first.',
+    icon: 'ph--sparkle--regular',
+  },
+  input: Schema.Struct({
+    name: Schema.String,
+    description: Schema.optional(Schema.String),
+    source: Schema.String.annotate({
+      description:
+        "One TypeScript module whose default export is defineGenerator({ ... }) from '@dxos/react-ui-canvas/motion'.",
+    }),
+    params: Schema.optional(ParamsSchema),
+  }),
+  output: Schema.Struct({
+    generator: Ref.Ref(Generator.Generator),
+    version: Schema.Number,
+    errors: Schema.optional(CompileErrors),
+  }),
+  services: [Database.Service],
+});
+
+export const UpdateGenerator = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.updateGenerator'),
+    name: 'Update generator',
+    description:
+      'Revises a generator: replaces its source, parameter schema or description, bumps its version and compiles it. Canvases showing it replay from the nearest earlier time.',
+    icon: 'ph--sparkle--regular',
+  },
+  input: Schema.Struct({
+    generator: Ref.Ref(Generator.Generator),
+    source: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String),
+    params: Schema.optional(ParamsSchema),
+  }),
+  output: Schema.Struct({
+    version: Schema.Number,
+    errors: Schema.optional(CompileErrors),
+  }),
+  services: [Database.Service],
+});
+
+export const InspectGenerator = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.inspectGenerator'),
+    name: 'Inspect generator',
+    description:
+      'Runs a generator headless and reports: compile errors, its mean step time against the budget, whether the same times give the same shapes when reached from different checkpoints, and an SVG contact sheet of the frames. Use it to judge motion without watching it.',
+    icon: 'ph--film-strip--regular',
+  },
+  input: Schema.Struct({
+    generator: Ref.Ref(Generator.Generator),
+    drawing: Schema.optional(
+      Ref.Ref(Drawing.Drawing).annotate({ description: 'A drawing with the generator placed; its scene is used.' }),
+    ),
+    node: Schema.optional(Schema.String.annotate({ description: 'The generator node in the drawing to run.' })),
+    params: Schema.optional(
+      Schema.Record(Schema.String, Schema.Any).annotate({ description: 'Parameters, when no drawing is given.' }),
+    ),
+    bounds: Schema.optional(Bounds.annotate({ description: 'The node frame, when no drawing is given.' })),
+    times: Schema.optional(
+      Schema.Array(Schema.Number).annotate({ description: 'Seconds to draw; 0 to 3 by half seconds by default.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    errors: Schema.optional(CompileErrors),
+    status: Schema.optional(Schema.String),
+    meanStepMs: Schema.optional(Schema.Number),
+    budgetMs: Schema.optional(Schema.Number),
+    deterministic: Schema.optional(Schema.Boolean),
+    mismatch: Schema.optional(Schema.Number),
+    frames: Schema.optional(Schema.Array(Schema.Struct({ t: Schema.Number, shapes: Schema.Number }))),
+    sheet: Schema.optional(Schema.String.annotate({ description: 'SVG contact sheet, one cell per time.' })),
+  }),
+  services: [Database.Service],
+});
+
+export const AddGenerator = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.addGenerator'),
+    name: 'Add generator',
+    description: 'Adds a generator node to a scene of a drawing, with its parameters (bindings name node or link ids).',
+    icon: 'ph--stamp--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing),
+    generator: Ref.Ref(Generator.Generator),
+    scene: Schema.optional(Schema.String.annotate({ description: 'Scene id; the root scene by default.' })),
+    bounds: Bounds.annotate({ description: 'The node frame in scene coordinates.' }),
+    params: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+    seed: Schema.optional(Schema.Number),
+    layer: Schema.optional(Schema.String.annotate({ description: 'The scene layer; the bottom one by default.' })),
+  }),
+  output: Schema.Struct({
+    node: Schema.String.annotate({ description: 'The new node id.' }),
+  }),
+  services: [Database.Service],
+});
+
+export const SetTimelineKey = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.setTimelineKey'),
+    name: 'Set timeline key',
+    description:
+      'Sets a keyframe on a scene timeline: a node property (center, size, style.opacity, or params.<name> of a generator), or the camera (x, y: the scene point at the view centre; zoom). Creates the timeline, and extends its duration to the key, as needed.',
+    icon: 'ph--diamond--regular',
+  },
+  input: Schema.Struct({
+    drawing: Ref.Ref(Drawing.Drawing),
+    scene: Schema.optional(Schema.String.annotate({ description: 'Scene id; the root scene by default.' })),
+    target: Schema.String.annotate({ description: 'A node id, or "camera".' }),
+    property: Schema.String.annotate({ description: 'A dot path into the node, e.g. "center" or "params.rate".' }),
+    t: Schema.Number.annotate({ description: 'Seconds.' }),
+    value: Schema.Any,
+    easing: Schema.optional(Easing.annotate({ description: 'Shapes the span that ends at this key.' })),
+    duration: Schema.optional(Schema.Number.annotate({ description: 'Sets the timeline length, in seconds.' })),
+  }),
+  output: Schema.Struct({
+    keys: Schema.Number.annotate({ description: 'Keys now on the track.' }),
+  }),
+  services: [Database.Service],
+});
+
+/** Each bound drawing's Automerge heads, keyed by its URI (the drawing's own under `''`). */
+const Heads = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({
+  description: "Each drawing's Automerge heads, keyed by its URI; the canvas's own drawing under the empty key.",
+});
+
+/** Leaf paths into the canvas's Views, as `[viewId, 'nodes', nodeId, 'center', 'x']`. */
+const Paths = Schema.Array(Schema.Array(Schema.String)).annotate({
+  description: "Leaf paths into the canvas's Views, e.g. [viewId, 'nodes', nodeId, 'center', 'x'].",
+});
+
+export const Apply = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.apply'),
+    name: 'Apply canvas intents',
+    description:
+      'Applies canvas intents (move, resize, link, create, delete, reorder, update, layout, layer, timeline, batch) to a View of a canvas, freehand; returns the heads before and after and the paths written, which undo patches back.',
+    icon: 'ph--pencil-simple--regular',
+  },
+  input: Schema.Struct({
+    canvas: Ref.Ref(Drawing.Canvas),
+    view: Schema.optional(Schema.String.annotate({ description: 'View id; the root View by default.' })),
+    intents: Schema.Array(Schema.Any).annotate({ description: "Intents of the canvas's `Intent` union." }),
+  }),
+  output: Schema.Struct({
+    canvas: Schema.String.annotate({ description: "The canvas object's id: the undo scope." }),
+    before: Heads,
+    after: Heads,
+    paths: Paths,
+  }),
+});
+
+export const Patch = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.applyPatch'),
+    name: 'Apply canvas patch',
+    description:
+      'Moves each path of a canvas from its value at `from` to its value at `to`, skipping a path someone has changed since; how canvas edits are undone and redone.',
+    icon: 'ph--arrow-u-up-left--regular',
+  },
+  input: Schema.Struct({
+    canvas: Ref.Ref(Drawing.Canvas),
+    from: Heads,
+    to: Heads,
+    paths: Paths,
+    context: Schema.optional(
+      Schema.Any.annotate({ description: 'The View path and selection the canvas returns to on undo and redo.' }),
+    ),
+    mergeKey: Schema.optional(
+      Schema.String.annotate({ description: 'Consecutive patches with one key fold into one undo step.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    canvas: Schema.String.annotate({ description: "The canvas object's id: the undo scope." }),
+    written: Schema.Number,
+    unchanged: Schema.Number,
+    skipped: Schema.Number.annotate({ description: 'Paths left alone because someone changed them since.' }),
+  }),
+});

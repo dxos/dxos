@@ -9,7 +9,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Key } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';

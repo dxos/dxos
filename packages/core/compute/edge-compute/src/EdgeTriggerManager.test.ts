@@ -3,6 +3,7 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -13,6 +14,7 @@ import { vi } from 'vitest';
 
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
 import * as Trigger from '@dxos/compute/Trigger';
+import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { SpaceId } from '@dxos/keys';
 import { EdgeCallFailedError } from '@dxos/protocols';
@@ -39,6 +41,18 @@ describe('EdgeTriggerManager', () => {
 
       expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
       expect(forceRun).toHaveBeenCalledTimes(3);
+    }),
+  );
+
+  it.effect('carries the fire event data to edge', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi.spyOn(edgeClient, 'forceRunCronTrigger').mockResolvedValue(undefined);
+
+      yield* Fiber.join(yield* forkInvoke(edgeClient, { data: { priority: 'binding' } }));
+
+      expect(forceRun.mock.calls[0][3]).toEqual({ data: { priority: 'binding' } });
     }),
   );
 
@@ -75,9 +89,96 @@ describe('EdgeTriggerManager', () => {
       expect(forceRun).toHaveBeenCalledTimes(6);
     }),
   );
+
+  it.effect('retries a disabled refusal while edge catches up with a re-enable', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi
+        .spyOn(edgeClient, 'forceRunCronTrigger')
+        .mockRejectedValueOnce(refusedError('Trigger disabled'))
+        .mockResolvedValue(undefined);
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('5 seconds');
+
+      expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
+      expect(forceRun).toHaveBeenCalledTimes(2);
+    }),
+  );
+
+  it.effect('reports a trigger edge still refuses as disabled once the backoff is spent', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi.spyOn(edgeClient, 'forceRunCronTrigger').mockRejectedValue(refusedError('Trigger disabled'));
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('120 seconds');
+
+      expect(yield* Effect.flip(Fiber.join(fiber))).toBeInstanceOf(Trigger.TriggerDisabledError);
+      expect(forceRun).toHaveBeenCalledTimes(6);
+    }),
+  );
+
+  it.effect('does not retry any other refusal', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi
+        .spyOn(edgeClient, 'forceRunCronTrigger')
+        .mockRejectedValue(refusedError('Trigger has no runnable'));
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('120 seconds');
+
+      const exit = yield* Effect.exit(Fiber.join(fiber));
+      expect(Exit.isFailure(exit) && Cause.hasDies(exit.cause)).toBe(true);
+      expect(forceRun).toHaveBeenCalledTimes(1);
+    }),
+  );
+
+  it.effect('resets a feed trigger on edge, retrying while it replicates', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const reset = vi
+        .spyOn(edgeClient, 'resetTrigger')
+        .mockRejectedValueOnce(notReplicatedError())
+        .mockResolvedValue({ reset: true });
+
+      const fiber = yield* forkReset(edgeClient);
+      yield* TestClock.adjust('5 seconds');
+
+      expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
+      expect(reset).toHaveBeenCalledTimes(2);
+    }),
+  );
+
+  it.effect('reports a reset edge refuses as not resettable, without retrying', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const reset = vi
+        .spyOn(edgeClient, 'resetTrigger')
+        .mockRejectedValue(refusedError('Trigger is not a feed trigger'));
+
+      const fiber = yield* forkReset(edgeClient);
+      yield* TestClock.adjust('120 seconds');
+
+      expect(yield* Effect.flip(Fiber.join(fiber))).toBeInstanceOf(Trigger.TriggerNotResettableError);
+      expect(reset).toHaveBeenCalledTimes(1);
+    }),
+  );
 });
 
-const notReplicatedError = () => new EdgeCallFailedError({ message: 'HTTP code 404: Not Found.' });
+/** A failure envelope as `EdgeHttpClient` decodes it off the wire. */
+const edgeFailure = (status: number, message: string) =>
+  EdgeCallFailedError.fromUnsuccessfulResponse(new Response(null, { status }), { success: false, message });
+
+const notReplicatedError = () => edgeFailure(404, 'Trigger not found');
+
+const refusedError = (message: string) => edgeFailure(409, message);
 
 const identityNotAssociatedError = () =>
   new EdgeCallFailedError({
@@ -89,11 +190,27 @@ const identityNotAssociatedError = () =>
  * Force-runs a trigger through a manager backed by `edgeClient`, on a forked fiber so the caller
  * can advance the `TestClock` across the retry backoff.
  */
-const forkInvoke = (edgeClient: EdgeHttpClient) =>
+const forkInvoke = (edgeClient: EdgeHttpClient, event: TriggerEvent.TriggerEvent = { tick: 0 }) =>
   Effect.gen(function* () {
     const manager = yield* RemoteTriggerManager.Service;
     const trigger = Trigger.make({ enabled: true, remote: true, spec: Trigger.specTimer('*/5 * * * *') });
-    yield* manager.invokeTrigger({ trigger, event: { tick: 0 } });
+    yield* manager.invokeTrigger({ trigger, event });
+  }).pipe(
+    Effect.provide(
+      Layer.provideMerge(
+        EdgeTriggerManager.fromEdgeClient(edgeClient, SPACE_ID),
+        Layer.succeed(Registry.AtomRegistry, Registry.make()),
+      ),
+    ),
+    Effect.forkChild,
+  );
+
+/** Resets a feed trigger through a manager backed by `edgeClient`, on a forked fiber (see {@link forkInvoke}). */
+const forkReset = (edgeClient: EdgeHttpClient) =>
+  Effect.gen(function* () {
+    const manager = yield* RemoteTriggerManager.Service;
+    const trigger = Trigger.make({ enabled: true, remote: true, spec: { kind: 'feed' } });
+    yield* manager.resetTrigger({ trigger });
   }).pipe(
     Effect.provide(
       Layer.provideMerge(

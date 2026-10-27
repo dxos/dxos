@@ -11,6 +11,7 @@ import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 
+import * as Server from '../mcp/Server.ts';
 import * as Store from '../Store.ts';
 import * as Agent from './Agent.ts';
 import * as Events from './Events.ts';
@@ -43,6 +44,8 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
       const index = yield* IndexStatus.IndexStatus;
       // Counted now so the UI's first `Info` skips the native store's one full scan; a failure resurfaces there.
       yield* store.stats().pipe(Effect.ignore, Effect.forkIn(scope));
+      // Built on the first `Describe`, so `describe` resolves a box's `ref` exactly as the MCP tool does.
+      const mcp = yield* Effect.cached(Server.handlers(store));
 
       /**
        * One turn at a time per project. The log serializes individual appends, not turns, so two
@@ -123,6 +126,22 @@ export const layer = (options: { readonly root: string; readonly model: Models.S
                   quads: stats.quads,
                   files: stats.files,
                   declarations,
+                }),
+            ),
+            Effect.mapError((cause) => failure(cause.message)),
+          ),
+
+        Describe: ({ target }: { target: string }) =>
+          mcp.pipe(
+            Effect.flatMap((handlers) => handlers.describe({ target, limit: 40 })),
+            Effect.map(
+              (described) =>
+                new Protocol.Entity({
+                  iri: described.iri,
+                  outgoing: described.outgoing,
+                  incomingCounts: described.incomingCounts,
+                  candidates: described.candidates.map((candidate) => candidate.iri),
+                  hint: 'hint' in described ? described.hint : undefined,
                 }),
             ),
             Effect.mapError((cause) => failure(cause.message)),

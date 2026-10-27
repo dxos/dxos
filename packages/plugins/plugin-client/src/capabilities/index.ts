@@ -46,6 +46,17 @@ export const HubHttpClient = Capability.lazyModule(
   },
   () => import('./hub-http-client.ts'),
 );
+export const BootGate = Capability.lazyModule(
+  'BootGate',
+  {
+    activatesOn: ActivationEvents.Startup,
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [Capabilities.BootGate],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./boot-gate.ts'),
+);
+
 export const Client = Capability.lazyModule(
   'Client',
   {
@@ -58,6 +69,7 @@ export const Client = Capability.lazyModule(
       Capabilities.Layer,
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
+      AppCapabilities.UnsavedChanges,
     ],
     environments: ['browser', 'node', 'tauri'],
   },
@@ -79,19 +91,18 @@ export const IdentityLifecycle = Capability.lazyModule(
   },
   () => import('./identity-lifecycle.ts'),
 );
-export const InboxMonitor = Capability.lazyModule(
-  'InboxMonitor',
-  {
-    requires: [ClientCapabilities.Client, Capabilities.OperationInvoker],
-    provides: [],
-    // Subscribes to `client.halo` and `client.spaces` (initialized-only).
-    activatesOn: ClientEvents.Initialized,
-  },
-  () => import('./inbox-monitor.ts'),
-);
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
+export const IndexProgress = Capability.lazyModule(
+  'IndexProgress',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./index-progress.ts'),
+);
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {
@@ -115,7 +126,12 @@ export const NavigationTargetLoader = Capability.lazyModule(
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const ReactContext = AppCapability.reactContext(() => import('./react-context.tsx'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.contactPicker', 'org.dxos.role.dialog'],
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.contactPicker',
+    'org.dxos.role.dialog',
+    'org.dxos.role.spaceInvitation',
+  ],
   props: ({
     shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
     invitationPath = '/',

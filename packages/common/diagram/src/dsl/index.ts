@@ -11,7 +11,7 @@ export {
   convert,
   detect,
 } from './convert.ts';
-export { compile } from './compile.ts';
+export { type CompileOptions, compile } from './compile.ts';
 export {
   type ParseResult,
   type Problem,

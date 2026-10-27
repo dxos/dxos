@@ -1,5 +1,192 @@
 # @dxos/plugin-atproto
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-syntax-highlighter@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/echo-panproto@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [629c159]
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-panproto@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-syntax-highlighter@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/ui-theme@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/plugin-connector@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/react-ui-syntax-highlighter@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/echo-panproto@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- b4c9775: Fix the PDS browser rendering an empty body. The collection and record lists had a content-sized width inside Panel and ScrollArea, which are inline-size containers, so the lists collapsed to 0px and nothing could be selected. The list pane now has a fixed width.
+- Updated dependencies [ecd099a]
+- Updated dependencies [d2a6aad]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [69a4a85]
+- Updated dependencies [c7cc480]
+- Updated dependencies [7d222fc]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [64f1a7a]
+- Updated dependencies [7715216]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [1737cad]
+- Updated dependencies [321c99f]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/plugin-connector@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/react-ui-syntax-highlighter@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/echo-panproto@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

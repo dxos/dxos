@@ -6,16 +6,11 @@ import React, { type ChangeEvent, useEffect, useState } from 'react';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
-import {
-  Field,
-  Input,
-  ScrollArea,
-  Switch,
-  Textarea,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import {
   DEFAULT_COMPOSER_URLS,
@@ -29,8 +24,8 @@ import { translationKey } from '../../translations.ts';
 
 export type OptionsProps = {};
 
-export const Options = composable<HTMLDivElement, OptionsProps>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
+export const Options = Util.composable<HTMLDivElement, OptionsProps>((props, forwardedRef) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);
   const [spaceId, setSpaceId] = useState<string | null>(null);
@@ -93,7 +88,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
   };
 
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+    <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
         <div className='grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden'>
           <a href='https://dxos.org/composer' target='_blank' rel='noreferrer'>
@@ -123,7 +118,10 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label>{t('settings.dev-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Switch checked={developerMode} onCheckedChange={({ checked }) => handleDeveloperModeChange(checked)} />
+                <Input.Switch
+                  checked={developerMode}
+                  onCheckedChange={({ checked }) => handleDeveloperModeChange(checked)}
+                />
               </div>
             </Field.Root>
           </div>
@@ -132,7 +130,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label>{t('settings.space-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
+                <Input.Switch checked={spaceMode} onCheckedChange={({ checked }) => handleSpaceModeChange(checked)} />
               </div>
             </Field.Root>
           </div>
@@ -141,7 +139,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label>{t('settings.space-id.label')}</Field.Label>
               <div className='text-end'>
-                <Input value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+                <Input.Root value={spaceId ?? ''} onChange={handleSpaceIdChange} />
               </div>
             </Field.Root>
           </div>
@@ -150,7 +148,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label classNames='self-start'>{t('settings.composer-urls.label')}</Field.Label>
               <div className='text-end'>
-                <Textarea
+                <Input.Textarea
                   rows={4}
                   placeholder={DEFAULT_COMPOSER_URLS.join('\n')}
                   value={composerUrls}

@@ -4,14 +4,14 @@
 
 import React, { forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 const diameter = 24;
 const connector = 0;
 // const connector = 4;
 
-export type NumericTabsProps = ThemedClassName<{
+export type NumericTabsProps = Util.ThemedClassName<{
   length: number;
   selected?: number;
   onSelect?: (index: number) => void;

@@ -5,11 +5,10 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useContext, useMemo, useRef } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { Card } from '@dxos/react-ui';
+import * as Hooks from '@dxos/plugin-search/Hooks';
 import {
   Table as TableComponent,
   type TableController,
@@ -19,6 +18,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
+import * as Card from '@dxos/react-ui/Card';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 export type TableCardProps = AppSurface.ObjectCardProps<Table.Table>;
@@ -32,7 +32,7 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const typeUri = getTypeURIFromQuery(view?.query?.ast);
   const schema = useType(db, typeUri);
   const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
-  const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+  const filteredObjects = Hooks.useGlobalFilteredObjects(queriedObjects);
 
   const features: Partial<TableFeatures> = useMemo(
     () => ({

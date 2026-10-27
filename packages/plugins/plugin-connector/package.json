@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-connector",
-  "version": "0.12.0",
+  "version": "0.16.0",
   "description": "Composer plugin for managing external service integrations (access tokens + sync targets).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -102,16 +102,6 @@
       "types": "./dist/types/src/Binding.d.ts",
       "import": "./dist/lib/Binding.mjs"
     },
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
-    "./ConnectorsSkill": {
-      "source": "./src/skills/ConnectorsSkill.ts",
-      "types": "./dist/types/src/skills/ConnectorsSkill.d.ts",
-      "import": "./dist/lib/ConnectorsSkill.mjs"
-    },
     "./ConnectorAnnotations": {
       "source": "./src/types/ConnectorAnnotations.ts",
       "types": "./dist/types/src/types/ConnectorAnnotations.d.ts",
@@ -126,6 +116,11 @@
       "source": "./src/types/ConnectorCoordination.ts",
       "types": "./dist/types/src/types/ConnectorCoordination.d.ts",
       "import": "./dist/lib/ConnectorCoordination.mjs"
+    },
+    "./ConnectorError": {
+      "source": "./src/ConnectorError.ts",
+      "types": "./dist/types/src/ConnectorError.d.ts",
+      "import": "./dist/lib/ns/ConnectorError.mjs"
     },
     "./ConnectorEvents": {
       "source": "./src/types/ConnectorEvents.ts",
@@ -146,6 +141,11 @@
       "source": "./src/types/ConnectorSpec.ts",
       "types": "./dist/types/src/types/ConnectorSpec.d.ts",
       "import": "./dist/lib/ConnectorSpec.mjs"
+    },
+    "./ConnectorsSkill": {
+      "source": "./src/skills/ConnectorsSkill.ts",
+      "types": "./dist/types/src/skills/ConnectorsSkill.d.ts",
+      "import": "./dist/lib/ConnectorsSkill.mjs"
     },
     "./package.json": "./package.json",
     "./SyncTemplate": {
@@ -203,6 +203,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
@@ -223,12 +224,14 @@
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/halo": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

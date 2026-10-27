@@ -495,6 +495,8 @@ export interface Module<Options = void> {
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
   readonly environments?: readonly Environment[];
+  /** Imports a lazy module's body without activating it; absent on inline modules. */
+  readonly load?: () => Promise<unknown>;
 }
 
 /**
@@ -577,6 +579,7 @@ export const lazyModule = <
     provides: spec.provides,
     activatesOn: spec.activatesOn,
     environments: spec.environments,
+    load: loader,
   });
 };
 
@@ -750,3 +753,5 @@ export const makeModule = <
 >(
   fn: (props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>,
 ): ((props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>) => fn;
+
+export { CapabilityNotFoundError as NotFoundError } from './errors.ts';

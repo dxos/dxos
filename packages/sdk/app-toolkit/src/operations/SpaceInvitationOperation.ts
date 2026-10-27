@@ -13,8 +13,8 @@ import { DXN } from '@dxos/keys';
 /**
  * Join a space the local identity has already been admitted to, by its key, then switch to it.
  *
- * Defined here rather than in plugin-space because plugin-client raises the invitation toast and
- * lists pending notices, and plugin-space depends on plugin-client; plugin-space handles it.
+ * Defined here rather than in plugin-space because plugin-client renders the invitation message's
+ * Join action, and plugin-space depends on plugin-client; plugin-space handles it.
  */
 export const JoinBySpaceKey = Operation.make({
   meta: {

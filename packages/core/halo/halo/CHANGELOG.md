@@ -1,5 +1,45 @@
 # @dxos/halo
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/link@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [0420f87]
+- Updated dependencies [45ab961]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+  - @dxos/protocols@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/keys@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/link@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/keys@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/link@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/keys@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

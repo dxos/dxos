@@ -3,8 +3,9 @@
 //
 
 import { createContext } from '@dxos/react-hooks';
-import { type AllowedAxis } from '@dxos/react-ui';
 import { type DndContainerHandler, type DndDraggingState, type DndLocation } from '@dxos/react-ui-dnd';
+import type * as Focus from '@dxos/react-ui/Focus';
+import { type AllowedAxis } from '@dxos/ui-types';
 
 // Kept out of `Container.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so the context and hook exported beside them force a full page reload on every edit.
@@ -30,10 +31,8 @@ export type MosaicContainerContextValue<TData = any, Location = DndLocation> = {
   /** Set the current item by ID. */
   setCurrentId: (id: string | undefined) => void;
 
-  /** IDs of selected (aria-selected) items. */
-  selectedIds?: ReadonlySet<string>;
-  /** Request to set or unset selection on an item by ID. */
-  setSelected: (id: string, selected: boolean) => void;
+  /** Each item's selection and activation (see `Mosaic.Container`'s `itemProps`). */
+  itemProps?: (id: string) => Focus.ItemBinding | undefined;
 
   /** Register a scroll-to-item callback (provided by Stack/VirtualStack). */
   registerScrollTo: (fn: ((id: string) => void) | undefined) => void;

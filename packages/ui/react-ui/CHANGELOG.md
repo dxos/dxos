@@ -1,5 +1,161 @@
 # @dxos/react-ui
 
+## 0.16.0
+
+### Patch Changes
+
+- dc7785a: Composer UI polish: board and calendar controls show translated labels; board cards truncate their titles and draw a light border; card posters cap at 200px; person cards show a 120px headshot with initials in the header; kanbans gain an optional description, which their card shows under the title; and stacked plot bars are supported. A virtual stack re-measures its tiles when a smooth scroll stops, so mailbox tiles no longer overlap; the companion pane stays open when switching planks; a flat plank's breadcrumb title keeps its size and place; L0 space avatars get a stable colour from their id; canvas inspectors float by default; and the calendar article gets the mailbox's filter box with saved views (`QueryEditor` takes `commandHint={false}` to drop its "Press '#' for commands" hint). Agents can enable the Drawing skill themselves.
+- 2f76f26: A tab, labelled button or other filled control at either end of a `Toolbar` now starts one gap in from the edge, in line with a list's icon column; plank and complementary headers start their leading control 4px in and the companion header 8px in; and a tab that shows its label only when selected keeps its icon in place as selection changes.
+- @dxos/async@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/i18n@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/lit-ui@0.16.0
+  - @dxos/react-error-boundary@0.16.0
+  - @dxos/react-focus@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 0d81167: Hand-built agent panels follow the form's layout, and the entity browser slots into its host.
+
+  - `@dxos/react-ui-components`: **Breaking:** `Section` is removed; build a labelled group with react-ui's `Fieldset.Root` and `Fieldset.Legend` (the form's label row) instead.
+  - `@dxos/plugin-agent`: the Activity panel lays out its groups in the form's frame (`Form.Viewport`, `Fieldset`). `AgentKnowledge.Browser` (`EntityBrowser`) is composable, its horizontal scroll frame the root, so a host's `Panel.Body asChild` slots onto it instead of nesting a second panel. Predicate cards title each predicate in kebab case, as the entity cards key it. The email channel's settings are a panel whose header toolbar reads "Email" with one connect/disconnect toggle, as Activity's, and the form scrolls beneath it.
+  - `@dxos/plugin-discord`: the Discord setup panel uses the same form frame and `Fieldset` groups. Its toolbar links to the hub console's Discord page for the EDGE environment the client is configured with.
+  - `@dxos/plugin-client`: recovery credentials show when each was issued to the minute on a 24-hour clock, and a revoked one is marked by its strikethrough alone.
+  - `@dxos/react-ui`: `Layout.Columns` lays out a horizontal run of columns sized to whole shares of the space (as many as fit at a minimum width, each an exact fraction), scrolling a column at a time and following the newest. `Status.Empty` reads at the label's size (`text-sm` by default), so every empty state is the same secondary text. Overlay scroll thumbs sit flush with the ends of their track, as they already did with its side. A tag in a start-aligned card row centres on the first line, as text does.
+
+- 1b33a84: `Listbox.Content` and `OrderedList.Content` no longer scroll themselves: wrap them in the new `Listbox.Viewport` / `OrderedList.Viewport` for a list that owns its scrolling, and leave them bare inside a host that scrolls. Breaking: the `scroll` prop is removed (drop `scroll={false}`; wrap lists that relied on the default in a `Viewport`). `Listbox.Root` gains `onHighlightChange`, rows laid out with Root `columns` centre their parts, card icons default one size step larger, and the GitHub pull request's checks list is compact, navigable with the arrow keys, and scrolls with its tab.
+- 25af912: Shell dialog errors, canvas inspectors and editing controls, and conductor circuits that run.
+
+  - HALO and join dialog steps (identity input, profile form, reset confirmation) show their validation message again: the field is marked invalid whenever a message is present, which the field's error text requires before it renders.
+  - **Breaking (`@dxos/react-ui-canvas`):** the canvas's properties, layers and about panels are now _inspectors_. `SceneView.Root`'s `panels` prop is renamed `inspectors` and `PanelMode` is renamed `InspectorMode`. `onInspectorsChange` adds a close button to the dock's toolbar (it floats the inspectors) and a dock / float item to each inspector's menu; `Properties`, `LayersPanel` and `About` take `onDockedChange` for it, and `useInspector` / `InspectorDef` let a host add its own inspector. Composer's "Dock panels" / "Float panels" drawing menu item is removed.
+  - `SceneView.Root` takes `onReadonlyChange`; given it, the palette's tools group gets a lock toggle below Pan, and going read-only drops a drawing tool back to select.
+  - The smart line leads the palette's link tools and is the link a port drag creates until another link tool is picked. The bottom camera and action bars use full-size icons, and the centred action bar keeps clear of the camera bar.
+  - Conductor circuits save and run: a board's layout elements are open records, so ECHO accepts edits (a dropped shape threw `Unknown property`); the circuit resolves every service its graph needs, so a switch lights its beacon; and the AND, OR and NOT gates draw in node coordinates, meeting their ports.
+  - The space-level operation handler provider is no longer pruned at startup: its layer spec required the `AtomRegistry` capability instead of the layer service, which also dropped every space spec built on it.
+
+- 60ef4ec: Popover, tooltip, menu and hover-card arrows show whole on every side: a popup is now its own stacking context, so its arrow paints over the popup's surface and ring instead of beneath them. A hover preview (a reference chip's card) stays open while the pointer is over it, so its menu can be reached: `Popover.Content` marks itself as popover content again. The shell's HALO dialogs (joining a space or identity, the identity and space panels, invitations, reset) are rebuilt on the react-ui Dialog's columns: each step is a `Dialog.Body` of content in the dialog's content column and a `Dialog.Footer` of actions on one line, so title, content and actions share one edge; the identity chooser is a keyboard-navigable `Listbox` of full-width, equal-height options. `Dialog.Body` takes a `gap` and an `align='center'`, and stands its content a gap clear of the Header and Footer; a dialog sizes to its active step rather than its tallest one. `PinInput` takes a `size`, and a `Container` takes an `xl` gap. Breaking: `@dxos/shell/react` no longer exports `ActionBar`, `Action`, `CloseButton`, `Heading`, `InputLabel`, `Label`, `TextInput` or `stepStyles`; use the react-ui Dialog, Field and Input primitives. A list row's focus ring paints over its parts (an overlay above the row, which is its own stacking context), so it encloses the whole row rather than hiding under a leading tile or trailing tag. The shell's device, member, invitation and contact lists share one `Listbox` row composition (leading icon or avatar, text, trailing controls) with arrow-key navigation; breaking: `DeviceList` takes `ShellDevice[]` (its heading and add button move to the identity panel), `IdentityListItem` drops `onClick` (the list picks via `onSelect`), and `InvitationListProps` drops `className`, and the unreachable `InvitationAccepted` step is removed. A space invitation card sits on its host card's columns, with a smaller avatar. `Syntax.Content` is unpadded, so the panel hosting it owns the frame. Canvas shortcut labels show a shifted digit as its key cap (`⇧0`, not `⇧)`).
+
+### Patch Changes
+
+- 3d151fc: In `@dxos/react-ui-canvas`, the view has a fit mode: Fit frames the scene and keeps it framed, refitting once a resize settles and on opening another scene, until the viewer pans or zooms. `SceneView.Root` takes `initialDisplay` / `onDisplayChange` (`SceneDisplay`: snap, guides, fit) so a host can restore and persist those toggles, and a view opens in fit mode unless restored otherwise. A read-only view floats its panels. A link caption on a horizontal run is shortened with an ellipsis to fit between the run's ends, its full text as a tooltip. The camera readout shows only the zoom.
+
+  In `@dxos/plugin-canvas`, the plugin moves to the `beta` tier. A canvas's view is the viewer's own, kept in one view-state object per canvas: read-only, floating panels, grid, guides, fit and camera; the `dockPanels` setting is gone. The drawing menu now lists Read only and Dock/Float panels. A drawing's canvas record may set `readonly` as the default for viewers who have not chosen. A canvas in the section role (a document's embed) is read-only, shows the drawing without its palette or panels, and takes a 3:2 height. The DXOS Architecture space template seeds its drawings, read-only by default, from diagrams laid out ahead of time (`compiled.json`, kept current by a test), plus Composer, DXOS and EDGE documents that link and embed them.
+
+  In `@dxos/plugin-space`, the create-space dialog closes as soon as it is submitted (a failed create is a toast) and its template list aligns with its fields; the collection article is a panel with a Filter… toolbar over a scrolling column of objects, their icons in the hue's text colour; the delete-space dialog's actions sit in `Dialog.Footer`.
+
+  In `@dxos/react-ui`, a field in a toolbar no longer overflows it, and a dialog's action bar has the dialog gutter above as well as below.
+
+  In `@dxos/plugin-registry`, the load-plugin dialog's action sits in `Dialog.Footer`.
+
+- ab27b41: Conductor circuits, the canvas, markdown links and mermaid diagrams.
+
+  - **Circuits:** deleting a linked node no longer crashes the plank, and a circuit left half-deleted by that crash opens again (a shape whose compute node is gone shows its type as a placeholder and can still be deleted). Adding a node no longer logs `No compute function for node type: switch` and resets the switches: the circuit keeps one graph controller instead of building one per edit.
+  - **Circuit look:** ports scale with the zoom (never under 3 screen px); a logic gate's body is three minor grid units tall with 2px lines; the beacon is round, a dim sun when off and a yellow duotone sun when on. A node definition can ask for an elliptical frame (`NodeDef.ellipse`).
+  - **Palette:** the link types share one flyout, whose face has no tooltip.
+  - **Markdown links:** an external link's arrow icon opens the link in a new tab (web URLs only); the hover tooltip that only repeated the URL is gone.
+  - **Mermaid:** a diagram renders as a block widget over its fenced source, so one that ends a document shows (it was hidden with the source) and the blank lines around it stay; the corner label skips leading `%%` comments.
+
+- 71fc002: `Slider` no longer fades while its thumb is dragged, and its track now spans the full width so it lines up with the label (thumbs are kept inside the track instead of an inset margin).
+- 55bdf55: The agent's fact graph can be browsed as entity cards, with Turtle and TriG highlighted in the editor.
+
+  - `@dxos/plugin-agent`: `EntityCard` shows one entity of the fact graph (its type, name, properties, and the properties pointing at it, with chips coloured by type), and `EntityBrowser` explores the graph as Finder-style columns, each with a filter, a close action and arrow-key navigation.
+  - `@dxos/pipeline-rdf`: `Predicate.label` writes a predicate or an inverse in one display form, lowercase kebab-case (`works-at`, `known-by`).
+  - `@dxos/ui-editor`: `turtle()` highlights RDF 1.1 Turtle and TriG (prefixes, IRIs, prefixed names, blank nodes, literals with language tags and datatypes, graph blocks).
+  - `@dxos/react-ui`: a chosen card in a keyboard stack (a `Focus.Item`) shows the current surface rather than the accent border, so the focus ring is the only edge it draws.
+
+- 8190cc5: Tags take half the gap as inline padding and no vertical inset, and task-list tags align with the title and space apart. The deck companion no longer opens beside planks that have nothing related (plugin registry, space and plugin settings); it returns when you go back to a document.
+- Updated dependencies [1e9c017]
+  - @dxos/async@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/react-error-boundary@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/lit-ui@0.15.0
+  - @dxos/i18n@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/react-focus@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- fd09131: `SceneView` docks its properties and layers panels by default: a column beside the canvas (which narrows rather than sitting under them) holding an accordion with one section per panel, any number open, the column scrolling them together. `SceneView.Root` takes `panels` (`PanelMode`: `'docked'` | `'floating'`) to float them back over the canvas instead; `Properties` and `LayersPanel` take `docked`. The layers toolbar's delete and merge actions move into a menu at its end. A new `SceneView.About` adds a dock-only section below the layers with the scene's object counts (`About` is the panel itself). In Composer, a canvas drawing's menu offers "Dock panels" / "Float panels", stored as the canvas setting `dockPanels`.
+
+  In `@dxos/react-ui`, `Toolbar` adds no gap or inline padding of its own (its items carry their own spacing, and a `ToggleGroup` in a toolbar drops its gap to match), and an `Accordion` item's icon and caret sit in `Block`s rather than custom padding, and list rows in a container with no gutter lose their rounded corners. In `@dxos/react-ui-form`, a `Form.Viewport` without `scroll` pads its block axis as the scrolling one does, so a form in a host that scrolls it still ends a gutter in.
+
+- 508be04: The scene shape is now a frame. Breaking: the built-in node type `scene` is renamed `frame` (palette name "Frame", shortcut F), with `PortalNode` → `FrameNode`, `isPortalNode` → `isFrameNode` and `PortalNodeView` → `FrameNodeView`; the node's `scene` field (its child scene id) is unchanged, and drawings saved with `type: 'scene'` are not migrated. A node type may define `hostOpen`, the host's own way to open a node of it: opening (double-click, Enter, the open control) calls it instead of drilling in, and auto-drill passes such a node by. A node type may also define `toolbar`, controls drawn above the node, flush with its right edge and at screen size, shown while the node is hovered or selected. The canvas clips rather than hides its overflow, so focusing an editor in a node no longer scrolls the canvas out from under the camera. A frame always draws its border, and one the host opens itself is never faded as the scene being zoomed into. A node's embedded content (marked `data-scene-overlay`) is live only while the node is active (`SceneViewAtoms.active`, `NodeViewProps.active`): a click on the node activates it, and selecting anything else or Escape deactivates it. Inactive, a press anywhere moves the node; active, a press on the content starts no move (so its controls receive their clicks), a double-click there does not open the node, and the wheel is the content's where it has something to scroll. Presses inside a portal the content opens (a menu) no longer reach the node.
+
+  In `@dxos/plugin-canvas`, a frame holds either its own nested scene or a referenced ECHO object: `CanvasSceneNode.drawing` is replaced by `CanvasFrameNode.object` (any object, picked in the properties panel) and `role` (`card`, `section` or `article`; unset is a card). A canvas drawing is embedded as a scene, as linked drawings were; any other object renders as its surface of that role, with a floating toolbar whose button opens the object in the app. Selecting the frame, or focusing within it, gives the object's surface attention, so its own toolbar acts. The object picker lists only user objects (those the navtree shows), not system objects such as space properties or canvases.
+
+  In `@dxos/react-ui-form`, the object picker's popup is as wide as its field rather than growing to its longest option.
+
+  In `@dxos/react-ui`, a `Card.Root` with `border={false}` also drops its corner radius, as its prop always described, so a card framed by its host shows no rounding of its own.
+
+- 347546a: Scenes have layers. `Scene.layers` holds ordered `Layer`s (a scene that names none has one, `DEFAULT_LAYER`), and every node and link is on one (`layer`); created, pasted and fixture-built elements name theirs, and adding a layer first pins elements that name none to the layer they are drawn on (`pinLayers`), so a new bottom layer never takes them. `@dxos/plugin-canvas` names the layers of a drawing saved before layers when it loads. Elements paint by layer, then by their own order, and a hidden layer is neither drawn nor hit. `SceneView.Layers` (`LayersPanel`) selects several layers at once, adds (at the end of the list), deletes, merges the selected layers into the top-most of them, shows or hides, reorders and renames them in place; new shapes go on the top-most selected layer, and the properties panel picks an element's layer. New intents `layer` and `removeLayer` carry the edits, so each is one undo step. `CellGrid` (with `createCellGridAtoms`, `toggleCell`, `ToggleMode` and its headers) is no longer exported from `@dxos/react-ui-canvas`: it moved into `@dxos/plugin-sequencer`, its only user.
+
+  In `@dxos/react-ui`, `Editable`'s pencil opens the field with one click whatever the activation gesture, the field shows a save button (a green check) while editing, and inside a list row the preview takes the row's hover and its presses, so the list keeps its arrow keys. `Listbox.Root` takes `selectionMode='extended'` (Cmd/Ctrl- or Shift-click adds to the selection), and `Listbox.Content` takes `padBlock` to pad the list above and below by its gutter. In `@dxos/react-ui-list`, `OrderedList.Root` takes `multiple`, so `value` and `onValueChange` carry an array of ids.
+
+- Updated dependencies [1819960]
+- Updated dependencies [b07f49f]
+  - @dxos/effect@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/i18n@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/lit-ui@0.14.0
+  - @dxos/react-error-boundary@0.14.0
+  - @dxos/react-focus@0.14.0
+  - @dxos/react-hooks@0.14.0
+  - @dxos/ui-types@0.14.0
+
+## 0.13.0
+
+### Minor Changes
+
+- 321c99f: Every `@dxos/react-ui` component family is now a namespace module with its own subpath. A compound family exports its parts: `import * as Dialog from '@dxos/react-ui/Dialog'` gives `Dialog.Root`, `Dialog.Content` and `Dialog.RootProps`. A single component keeps its own names: `<Icon.Icon>`, `Icon.IconProps`. Related components share a namespace: `Button` (`Button.Root`, `Button.Toggle`, `Button.Menu`, `Button.Group`), `Input` (`Input.Root`, `Input.Textarea`, `Input.Number`, `Input.Password`, `Input.Pin`, `Input.Date`, `Input.Slider`, `Input.Frame`, `Input.Checkbox`, `Input.Switch`), `Layout` (`Layout.Flex`, `Layout.Grid`, `Layout.Container`, `Layout.Block`, `Layout.Separator`), `Status` (`Status.Empty`, `Status.Skeleton`, `Status.Deferred`, `Status.Error`, `Status.Progress`, `Status.Steps`), `Typography` (`Typography.Text`, `Typography.Link`, `Typography.Timestamp`, `Typography.Crawl`) and `Media` (`Media.Image`, `Media.Player`). `ThemeProvider` is now `Theme.Provider`. General hooks live in `@dxos/react-ui/Hooks` (`Hooks.useTranslation`) and composition helpers in `@dxos/react-ui/Util`. The root exports namespaces only, so `import { Dialog } from '@dxos/react-ui'` still works, but flat names such as `ButtonProps` and `useTranslation` are gone, and so are the `@dxos/ui-types` re-exports (import those from `@dxos/ui-types`).
+
+  `AttentionGlyph` moves from `@dxos/react-ui` to `@dxos/react-ui-attention`.
+
+### Patch Changes
+
+- d2a6aad: `AlertDialog` closes only through its own controls, and `AlertDialog.Root` no longer takes `closeOnInteractOutside` or `closeOnEscape`.
+- 7d222fc: - **Inbox conversation:** each message tile is a grid card, so the sender's avatar and the detail rows' icons (recipients, attachments, tags) share one start rail and every text starts at the same edge; the disclosure caret sits after the sender's name and the open/close animates.
+  - **Card.Section:** merges a `className` from an `asChild` parent, so `Collapsible.Content asChild` keeps its height animation; a collapsible on a section keeps the section's subgrid.
+  - **Card.Row:** `align='start'` centres the leading icon and trailing cell on the row's first line, for a title over a snippet.
+- 1b37aa8: The `Loading` testing component no longer crashes under a production React build, where `captureOwnerStack` is not exported.
+- 49731e1: Long lists of rows with differing heights can now be windowed: `useVirtualRows`, `Listbox` and `Tree` accept `virtual='measured'`, which mounts only the rows in view and measures each as it mounts. The task list uses it, so a project with hundreds of tasks no longer renders every row, and checking a task re-renders only the rows in view.
+
+  `Obj.getSnapshot` no longer throws and catches two errors for every non-relation object it snapshots.
+
+- Updated dependencies [cb1e218]
+- Updated dependencies [e99ee70]
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-error-boundary@0.13.0
+  - @dxos/lit-ui@0.13.0
+  - @dxos/i18n@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

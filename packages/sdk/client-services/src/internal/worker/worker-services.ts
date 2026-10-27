@@ -12,7 +12,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { type LayerStack } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { type Config } from '@dxos/config';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';

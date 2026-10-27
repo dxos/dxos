@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// A standalone subpath, kept off the root barrel so the worker host's rpc and layer-stack graph stays out of the tab's boot.
+// @import-as-namespace
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -14,10 +14,11 @@ import * as Scope from 'effect/Scope';
 
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { RpcRouter } from '@dxos/rpc';
+import { markMilestone } from '@dxos/util';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import * as Capabilities from '../common/capabilities.ts';
@@ -64,8 +65,9 @@ const loadPlugin = (url: string): Effect.Effect<Plugin.Plugin, WorkerPluginLoadE
 export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onStart }: RunOptions): void =>
   Worker.run({
     storageLockKey,
-    createRuntime: ({ config: values, requestShutdown }) =>
+    createRuntime: ({ config: values, requestShutdown, reportStatus }) =>
       Effect.gen(function* () {
+        markMilestone('worker.started');
         const config = new Config(values ?? {});
         const hooks = Hook.makeController();
         const router = yield* RpcRouter.make;
@@ -100,6 +102,7 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
             router,
             requestShutdown: Effect.sync(requestShutdown),
             closeStack: Scope.close(stackScope, Exit.void),
+            reportStatus,
           },
           module: 'org.dxos.app-framework.worker.host',
         });
@@ -130,6 +133,7 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
         // Builds the eager specs — rpc registrations, lifecycle subscriptions — which nothing resolves.
         yield* stack.init().pipe(Effect.orDie, Scope.provide(stackScope));
         yield* Hook.emit(WorkerEvents.StackReady, { stack }).pipe(provideHooks);
+        markMilestone('worker.services-ready');
         if (onStart) {
           yield* onStart(stack).pipe(
             Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
@@ -164,6 +168,9 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
               systemProtocol,
               scope: yield* Effect.scope,
             }).pipe(provideHooks);
+            if (isOwner) {
+              markMilestone('worker.session-ready');
+            }
           }),
         };
       }),

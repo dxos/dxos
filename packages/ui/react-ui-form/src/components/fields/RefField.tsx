@@ -6,7 +6,8 @@ import React from 'react';
 
 import { Ref } from '@dxos/echo';
 import { URI } from '@dxos/keys';
-import { Typography, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps } from '#types';
@@ -31,12 +32,13 @@ export const RefField = ({
   presentation,
   getValue,
   onValueChange,
+  onBlur,
   createInitialValuePath,
   createFieldMap,
   createOptionIcon,
   ...props
 }: RefFieldProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { typename, options, createSchema, createLabel, create } = useRefCandidates({ ...props, refType: type });
   const selected = findRefOption(getValue(), options);
   if (!typename) {
@@ -44,9 +46,9 @@ export const RefField = ({
   }
   if (readonly || presentationFor(presentation).isStatic) {
     return (
-      <Typography truncate tone={selected ? 'default' : 'muted'}>
+      <Typography.Text truncate tone={selected ? 'default' : 'muted'}>
         {selected?.label ?? t('empty-readonly-ref-field.label')}
-      </Typography>
+      </Typography.Text>
     );
   }
 
@@ -66,10 +68,15 @@ export const RefField = ({
           const created = await create(values);
           if (created) {
             onValueChange(type, Ref.make(created));
+            onBlur();
           }
         })
       }
-      onSelect={(id) => onValueChange(type, id ? Ref.fromURI(URI.make(id)) : undefined)}
+      // A pick is the whole edit, so it commits as a select does; without the blur an auto-saving form never saves it.
+      onSelect={(id) => {
+        onValueChange(type, id ? Ref.fromURI(URI.make(id)) : undefined);
+        onBlur();
+      }}
     />
   );
 };

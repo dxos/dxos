@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -24,25 +24,27 @@ export type SearchResultListProps = {
  * title and best-match snippet, and its type as trailing metadata. Built on `Listbox` with no selection.
  */
 export const SearchResultList = ({ results, query, onSelect }: SearchResultListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Root items={results.map((result) => ({ value: result.id, label: result.label ?? '' }))}>
-      <Listbox.Content aria-label={t('search-result-list.label')}>
-        {results.map((result) => (
-          <Listbox.Item key={result.id} id={result.id} onClick={() => onSelect?.(result)}>
-            <Listbox.ItemIcon icon={result.icon} />
-            <Listbox.ItemText>
-              <Highlighted text={result.label ?? ''} query={query} />
-            </Listbox.ItemText>
-            {result.snippet && (
-              <Listbox.ItemDescription>
-                <Highlighted text={result.snippet} query={query} />
-              </Listbox.ItemDescription>
-            )}
-            {result.type && <span className='shrink-0 text-sm text-fg-muted'>{result.type}</span>}
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label={t('search-result-list.label')}>
+          {results.map((result) => (
+            <Listbox.Item key={result.id} id={result.id} onClick={() => onSelect?.(result)}>
+              <Listbox.ItemIcon icon={result.icon} />
+              <Listbox.ItemText>
+                <Highlighted text={result.label ?? ''} query={query} />
+              </Listbox.ItemText>
+              {result.snippet && (
+                <Listbox.ItemDescription>
+                  <Highlighted text={result.snippet} query={query} />
+                </Listbox.ItemDescription>
+              )}
+              {result.type && <span className='shrink-0 text-sm text-fg-muted'>{result.type}</span>}
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
       <Listbox.Empty>{t('search-result-list.empty.label')}</Listbox.Empty>
     </Listbox.Root>
   );

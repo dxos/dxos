@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { DescriptionAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 /** CEFR band, advisory only: it tunes how much help the reader shows, and gates no feature. */
 export const Level = Schema.Literals(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
@@ -35,8 +34,8 @@ export class Language extends Type.makeObject<Language>(DXN.make('org.dxos.type.
     level: Level.pipe(Schema.annotate({ title: 'Level', description: 'CEFR proficiency band.' }), Schema.optional),
     description: Schema.optional(Schema.String),
   }).pipe(
-    LabelAnnotation.set(['name']),
-    DescriptionAnnotation.set('description'),
+    Annotation.LabelAnnotation.set(['name']),
+    Annotation.DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--translate--regular', hue: 'teal' }),
     Annotation.UserType.set(),
   ),

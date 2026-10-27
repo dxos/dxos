@@ -12,11 +12,12 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, useThemeMode } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Listbox } from '@dxos/react-ui-list';
 import { createMenuAction } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   Cursor,
@@ -47,7 +48,7 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const registry = useContext(RegistryContext);
   const editorRef = useRef<EditorController>(null);
   const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);
@@ -193,27 +194,31 @@ const CommentsList = ({
         onValueChange={handleSelect}
         items={resolved.map(({ comment }) => ({ value: comment.id, label: comment.id }))}
       >
-        <Listbox.Content aria-label='Comments' classNames='p-1'>
-          {resolved.map(({ comment, range }) => (
-            <Listbox.Item key={comment.id} id={comment.id} classNames='flex items-center gap-2'>
-              <Listbox.ItemText classNames='grow'>
-                {(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
-              </Listbox.ItemText>
-              <Listbox.ItemDescription>{range ? `${range.from}–${range.to}` : comment.cursor}</Listbox.ItemDescription>
-              <Button
-                variant='ghost'
-                iconOnly
-                icon='ph--x--regular'
-                label='Delete comment'
-                onClick={(event) => {
-                  // Keep the row from selecting when the delete button is pressed.
-                  event.stopPropagation();
-                  handleDelete(comment.id);
-                }}
-              />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Comments' classNames='p-1'>
+            {resolved.map(({ comment, range }) => (
+              <Listbox.Item key={comment.id} id={comment.id} classNames='flex items-center gap-2'>
+                <Listbox.ItemText classNames='grow'>
+                  {(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
+                </Listbox.ItemText>
+                <Listbox.ItemDescription>
+                  {range ? `${range.from}–${range.to}` : comment.cursor}
+                </Listbox.ItemDescription>
+                <Button.Root
+                  variant='ghost'
+                  iconOnly
+                  icon='ph--x--regular'
+                  label='Delete comment'
+                  onClick={(event) => {
+                    // Keep the row from selecting when the delete button is pressed.
+                    event.stopPropagation();
+                    handleDelete(comment.id);
+                  }}
+                />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
       </Listbox.Root>
     </div>
   );

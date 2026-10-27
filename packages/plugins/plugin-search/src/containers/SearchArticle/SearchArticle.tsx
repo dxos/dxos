@@ -4,22 +4,26 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { SearchResultStack } from '#components';
-import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
+import { toSearchResults, useGlobalSearch } from '#hooks';
 
 export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   // TODO(burdon): Cross-space search — Milestone 2 (fan-out + merge).
   const [query, setQuery] = useState<string>();
   // Scope the FTS query to user-facing types so results match what the app can render.
-  const typeUris = useSearchableTypeUris(space);
-  const objects = useQuery(space.db, buildSearchQuery(query, typeUris));
+  const typeUris = ObjectCombobox.useListedTypeUris(space.db);
+  ObjectCombobox.useDrainedSearchIndex(space.db);
+  const objects = useQuery(space.db, ObjectCombobox.searchQuery(query, typeUris));
   const { setMatch } = useGlobalSearch();
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
@@ -43,7 +47,7 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
             <SearchList.Input
               placeholder='Search...'
               autoFocus={autoFocus}
-              end={<Icon icon='ph--magnifying-glass--regular' />}
+              end={<Icon.Icon icon='ph--magnifying-glass--regular' />}
             />
           </Toolbar.Root>
         </Panel.Header>

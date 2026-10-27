@@ -7,7 +7,11 @@ import { sendMessage } from 'webext-bridge/popup';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { Button, ErrorBoundary, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { getConfig } from '../../config.ts';
@@ -31,7 +35,7 @@ export const Sidepanel = () => (
 );
 
 const SidepanelContent = () => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { id: tabId, url: tabUrl } = useActiveTab();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [chatError, setChatError] = useState<Error | undefined>(undefined);
@@ -100,7 +104,7 @@ const SidepanelContent = () => {
       {/* App controls that are not chat-specific (clip, page actions, launch) live here, not inside Chat. */}
       <Panel.Header>
         <Toolbar.Root>
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--paperclip--regular'
             iconOnly
@@ -110,14 +114,14 @@ const SidepanelContent = () => {
           />
           {pageActions}
           <Toolbar.Separator />
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--gear--regular'
             iconOnly
             label={t('settings.button')}
             onClick={handleOpenSettings}
           />
-          <Button
+          <Button.Root
             variant='ghost'
             icon='ph--arrow-square-out--regular'
             iconOnly
@@ -130,14 +134,14 @@ const SidepanelContent = () => {
       <Panel.Body classNames={mx('grid grid-rows-[minmax(0,1fr)] min-h-0', thumbnailUrl && 'grid-cols-[auto_1fr]')}>
         {thumbnailUrl && <Thumbnail url={thumbnailUrl} />}
         {showChat && (
-          <ErrorBoundary
+          <Status.ErrorBoundary
             name='sidepanel/chat'
             fallbackRender={() => (
               <div className='grid place-items-center p-4 text-sm text-fg-muted'>{t('chat.error.label')}</div>
             )}
           >
             <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
-          </ErrorBoundary>
+          </Status.ErrorBoundary>
         )}
       </Panel.Body>
 

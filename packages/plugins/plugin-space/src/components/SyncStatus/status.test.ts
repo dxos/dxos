@@ -7,8 +7,12 @@ import { describe, expect, test } from 'vitest';
 import { type StatusInput, getStatus } from './status.ts';
 
 describe('getStatus', () => {
-  test('unsaved work takes precedence', () => {
-    expect(getStatus(createInput({ saved: false, offline: true, stalled: true }))).toBe('saving-locally');
+  test('a failed save takes precedence', () => {
+    expect(getStatus(createInput({ save: 'failing', offline: true, stalled: true }))).toBe('persistence-error');
+  });
+
+  test('unsaved work outranks replication', () => {
+    expect(getStatus(createInput({ save: 'saving', offline: true, stalled: true }))).toBe('saving-locally');
   });
 
   test('offline with nothing outstanding is persisted', () => {
@@ -41,7 +45,7 @@ describe('getStatus', () => {
 
 const createInput = (props: Partial<StatusInput> = {}): StatusInput => ({
   offline: false,
-  saved: true,
+  save: 'saved',
   stalled: false,
   needsToUpload: false,
   needsToDownload: false,

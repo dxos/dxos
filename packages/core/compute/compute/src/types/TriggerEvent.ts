@@ -25,7 +25,17 @@ export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
 
 export const FeedEvent = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
+  /**
+   * The first item of the batch (the only one unless the trigger sets `batchSize`).
+   */
   item: Schema.Any,
+  /**
+   * The batch, in feed order; `[item]` unless the trigger sets `batchSize`.
+   */
+  items: Schema.optional(Schema.Array(Schema.Any)),
+  /**
+   * Cursor of the batch's last item.
+   */
   cursor: Schema.String,
 });
 export type FeedEvent = Schema.Schema.Type<typeof FeedEvent>;

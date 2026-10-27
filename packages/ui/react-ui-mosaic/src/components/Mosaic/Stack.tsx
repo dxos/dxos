@@ -18,9 +18,11 @@ import React, {
 
 import { invariant } from '@dxos/invariant';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { type Axis, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { type GetId } from '@dxos/react-ui-dnd';
+import type * as Focus from '@dxos/react-ui/Focus';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
+import { type Axis } from '@dxos/ui-types';
 
 import { type VirtualizerPaginationController, useVirtualizerPagination, useVisibleItems } from '../../hooks/index.ts';
 import { useMosaicContainerContext } from './MosaicContainerContext.ts';
@@ -50,9 +52,20 @@ import { type MosaicTileProps } from './Tile.tsx';
 
 const MOSAIC_STACK_NAME = 'MosaicStack';
 
+/** Whether any item carries `aria-selected`: a stack with a selection is a listbox of options, the roles that carry it. */
+const useSelectable = <TData,>(
+  items: readonly TData[] | undefined,
+  getId: GetId<TData>,
+  itemProps: ((id: string) => Focus.ItemBinding | undefined) | undefined,
+) =>
+  useMemo(
+    () => !!itemProps && !!items?.some((item) => itemProps(getId(item))?.['aria-selected'] !== undefined),
+    [items, getId, itemProps],
+  );
+
 type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
-type MosaicStackProps<TData = any> = ThemedClassName<
+type MosaicStackProps<TData = any> = Util.ThemedClassName<
   {
     role?: string;
     orientation?: Axis;
@@ -72,7 +85,7 @@ type MosaicStackProps<TData = any> = ThemedClassName<
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
-const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
+const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
   (
     {
       orientation: orientationProp = 'vertical',
@@ -92,10 +105,11 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
       orientation = orientationProp,
       dragging,
       currentId,
-      selectedIds,
+      itemProps,
       registerScrollTo,
       setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_STACK_NAME);
+    const selectable = useSelectable(items, getId, itemProps);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
@@ -138,8 +152,8 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
     const composedRef = useComposedRefs(rootRef, forwardedRef);
     return (
       <div
-        {...composableProps(props, {
-          role: 'list',
+        {...Util.composableProps(props, {
+          role: selectable ? 'listbox' : 'list',
           classNames: [
             'flex',
             orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
@@ -157,7 +171,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
               location={index + 1}
               draggable={draggable}
               current={getId(item) === currentId}
-              selected={selectedIds?.has(getId(item))}
+              binding={itemProps?.(getId(item))}
               debug={debug}
             />
             {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
@@ -189,6 +203,8 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
     pagination?: VirtualizerPaginationController;
     /** Rows from either loaded edge at which the adjacent page is requested. @default 12. */
     paginationThreshold?: number;
+    /** Pads the first and last item by `gap`; `false` when the scroll viewport already pads its content. @default true. */
+    inset?: boolean;
   };
 
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
@@ -205,6 +221,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       gap,
       pagination,
       paginationThreshold,
+      inset = true,
       onChange,
       draggable = true,
       debug,
@@ -214,8 +231,9 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
   ) => {
     invariant(Tile);
     invariant(!pagination || !draggable, 'pagination requires draggable={false}');
-    const { id, dragging, currentId, selectedIds, registerScrollTo } =
+    const { id, dragging, currentId, itemProps, registerScrollTo } =
       useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
+    const selectable = useSelectable(items, getId, itemProps);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     // In draggable mode virtual indices alternate: even=placeholder, odd=tile.
     // Wrap estimateSize so placeholders get 0 (their actual negligible height) and
@@ -231,12 +249,19 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       pagination,
       threshold: paginationThreshold,
     });
+    const wasScrollingRef = useRef(false);
     const handleChange = useCallback(
-      (nextVirtualizer: Virtualizer<any, any>, sync: boolean) => {
+      (nextVirtualizer: Virtualizer<HTMLElement, HTMLDivElement>, sync: boolean) => {
+        const settled = wasScrollingRef.current && !nextVirtualizer.isScrolling;
+        wasScrollingRef.current = nextVirtualizer.isScrolling;
+        if (settled) {
+          remeasureMounted(nextVirtualizer, orientation);
+        }
+
         handlePaginationChange(nextVirtualizer);
         onChange?.(nextVirtualizer, sync);
       },
-      [handlePaginationChange, onChange],
+      [handlePaginationChange, onChange, orientation],
     );
 
     const virtualizer = useVirtualizer({
@@ -245,8 +270,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       estimateSize: wrappedEstimateSize,
       gap,
       // Inset by `gap` (inter-item spacing) plus any pagination spacer; see `useVirtualizerPagination`.
-      paddingStart: (gap ?? 0) + leadingSpace,
-      paddingEnd: gap,
+      paddingStart: (inset ? (gap ?? 0) : 0) + leadingSpace,
+      paddingEnd: inset ? gap : 0,
       // Key measurements by stable item ID so the size cache survives scrolling;
       // without this, measurements are indexed by position and are lost when items reorder.
       getItemKey: draggable
@@ -299,8 +324,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
 
     return (
       <div
-        {...composableProps(props, {
-          role: 'list',
+        {...Util.composableProps(props, {
+          role: selectable ? 'listbox' : 'list',
           classNames: [
             // shrink-0 is required: this div sets an explicit height via inline style (getTotalSize).
             // Without it, a parent flex container (e.g. ScrollArea.Viewport) would shrink this div
@@ -353,7 +378,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                   location={location}
                   draggable={draggable}
                   current={getId(data) === currentId}
-                  selected={selectedIds?.has(getId(data))}
+                  binding={itemProps?.(getId(data))}
                   debug={debug}
                 />
               ) : (
@@ -374,6 +399,24 @@ const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
 ) => ReactElement;
 
 (MosaicVirtualStack as any)[Symbol.for('dxos.composable')] = true;
+
+/**
+ * Re-measures every mounted item from the DOM.
+ * During a smooth scroll virtual-core discards ResizeObserver measurements of items outside a window
+ * around the scroll target and never replays them, so a tile that mounted or resized mid-scroll keeps
+ * its estimated size (overlapping or gapping its neighbours) until it next changes size.
+ */
+const remeasureMounted = (virtualizer: Virtualizer<HTMLElement, HTMLDivElement>, orientation: Axis) => {
+  virtualizer.elementsCache.forEach((element) => {
+    if (element.isConnected) {
+      const rect = element.getBoundingClientRect();
+      virtualizer.resizeItem(
+        virtualizer.indexFromElement(element),
+        Math.round(orientation === 'horizontal' ? rect.width : rect.height),
+      );
+    }
+  });
+};
 
 //
 // InternalPlaceholder

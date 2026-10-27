@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-ideogram",
-  "version": "0.12.0",
+  "version": "0.16.0",
   "private": true,
   "description": "Ideogram image-generation provider for Composer.",
   "homepage": "https://dxos.org",
@@ -40,6 +40,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./IdeogramEvents": {
+      "source": "./src/IdeogramEvents.ts",
+      "types": "./dist/types/src/IdeogramEvents.d.ts",
+      "import": "./dist/lib/ns/IdeogramEvents.mjs"
     },
     "./IdeogramPlugin": {
       "source": "./src/IdeogramPlugin.ts",

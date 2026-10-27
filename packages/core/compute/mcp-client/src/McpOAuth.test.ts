@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
 import * as McpOAuth from './McpOAuth.ts';

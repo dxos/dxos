@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { Format, JsonSchema } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 /**
  * Base schema.
@@ -159,12 +159,21 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
   //
 
   // TODO(wittjosiah): Doesn't align with getSimpleType where Tuples are treated as objects.
+  // A `[lng, lat, height?]` tuple: draft-07 `items` from older views, or the `prefixItems` Effect emits.
   [Format.TypeFormat.GeoPoint]: extend(Format.TypeFormat.GeoPoint, TypeEnum.Array, {
     // TODO(wittjosiah): If this is an array or tuple then it shows up in the form.
-    items: Schema.Any,
+    items: Schema.optional(Schema.Any),
+    prefixItems: Schema.optional(Schema.Any),
     minItems: Schema.Literal(2),
-    additionalItems: Schema.Literal(false),
-  }),
+    maxItems: Schema.optional(Schema.Literal(3)),
+    additionalItems: Schema.optional(Schema.Literal(false)),
+  }).pipe(
+    Schema.check(
+      Schema.makeFilter((property: object) =>
+        'items' in property || 'prefixItems' in property ? true : 'GeoPoint must be a tuple',
+      ),
+    ),
+  ),
 };
 
 /**
@@ -172,56 +181,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
  * This is the schema used by the ViewEditor's Form.
  * It is mapped to/from the View's Field AND Schema properties via the ViewProjection.
  */
-export const PropertySchema = Schema.Union([
-  formatToSchema[Format.TypeFormat.None],
-  formatToSchema[Format.TypeFormat.String],
-  formatToSchema[Format.TypeFormat.Number],
-  formatToSchema[Format.TypeFormat.Boolean],
-  formatToSchema[Format.TypeFormat.Ref],
-
-  //
-  // Strings
-  //
-
-  formatToSchema[Format.TypeFormat.DID],
-  formatToSchema[Format.TypeFormat.DXN],
-  formatToSchema[Format.TypeFormat.Email],
-  formatToSchema[Format.TypeFormat.Formula],
-  formatToSchema[Format.TypeFormat.Hostname],
-  formatToSchema[Format.TypeFormat.JSON],
-  formatToSchema[Format.TypeFormat.Key],
-  formatToSchema[Format.TypeFormat.Markdown],
-  formatToSchema[Format.TypeFormat.Password],
-  formatToSchema[Format.TypeFormat.Regex],
-  formatToSchema[Format.TypeFormat.URL],
-  formatToSchema[Format.TypeFormat.UUID],
-  formatToSchema[Format.TypeFormat.SingleSelect],
-  formatToSchema[Format.TypeFormat.MultiSelect],
-
-  //
-  // Numbers
-  //
-
-  formatToSchema[Format.TypeFormat.Currency],
-  formatToSchema[Format.TypeFormat.Integer],
-  formatToSchema[Format.TypeFormat.Percent],
-  formatToSchema[Format.TypeFormat.Timestamp],
-
-  //
-  // Dates
-  //
-
-  formatToSchema[Format.TypeFormat.DateTime],
-  formatToSchema[Format.TypeFormat.Date],
-  formatToSchema[Format.TypeFormat.Time],
-  formatToSchema[Format.TypeFormat.Duration],
-
-  //
-  // Objects
-  //
-
-  formatToSchema[Format.TypeFormat.GeoPoint],
-]);
+export const PropertySchema = Schema.Union(Object.values(formatToSchema));
 
 export interface PropertyType extends Types.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 

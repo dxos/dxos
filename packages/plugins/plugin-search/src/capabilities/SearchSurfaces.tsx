@@ -2,21 +2,30 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentProps } from 'react';
+import React, { type ComponentProps, useEffect } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { type Space } from '@dxos/react-client/echo';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import { type Space, useSpace } from '@dxos/react-client/echo';
 
 import { SearchArticle, SearchDialog } from '#containers';
 import { SearchContextProvider } from '#hooks';
 
 export type SearchDialogSurfaceProps = {
-  props: ComponentProps<typeof SearchDialog>;
+  props?: ComponentProps<typeof SearchDialog> & {
+    spaceId?: string;
+  };
 };
 
-/** Search is scoped to the active space, so each surface resolves it before mounting the provider. */
-export const SearchDialogSurface = ({ props }: SearchDialogSurfaceProps) => {
-  const space = useActiveSpace();
+export const SearchDialogSurface = ({ props: { spaceId, ...props } = {} }: SearchDialogSurfaceProps) => {
+  const activeSpace = Hooks.useActiveSpace();
+  const namedSpace = useSpace(spaceId);
+  const space = spaceId ? namedSpace : activeSpace;
+  // With no space the dialog never mounts to settle a picker's handle, so the caller would wait forever.
+  useEffect(() => {
+    if (!space) {
+      props.handle?.dismiss();
+    }
+  }, [space, props.handle]);
   if (!space) {
     return null;
   }
@@ -29,7 +38,7 @@ export const SearchDialogSurface = ({ props }: SearchDialogSurfaceProps) => {
 };
 
 export const SearchInputSurface = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

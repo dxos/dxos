@@ -7,7 +7,7 @@ import * as Redacted from 'effect/Redacted';
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
@@ -16,7 +16,7 @@ import { type OptionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { type GenerationService } from '#types';
 
-import { loadProviderOptions } from '../../hooks/index.ts';
+import { loadProviderOptions } from '../../hooks/provider-options-cache.ts';
 import { ArtifactRefField, isArtifactRefField } from './ArtifactRefField.tsx';
 import { FileUrlField, fileUrlOptions } from './FileUrlField.tsx';
 
@@ -32,7 +32,7 @@ export type ProviderOptionsFieldProps = FormFieldRendererProps & {
  * loader runs keyless, which a keyed provider answers with an error the field shows as empty.
  */
 export const ProviderOptionsField = ({ provider, field, ...props }: ProviderOptionsFieldProps) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   const [token] = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: provider.source }));
   const apiKey = token?.token;
 

@@ -1,5 +1,164 @@
 # @dxos/ui-editor
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/nlp@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/display-name@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/ui@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 3b03db7: An agent's brain on EDGE reads past a hundred facts, can be wiped, and shows its stored facts as highlighted TriG.
+
+  - `@dxos/pipeline-rdf`: queries bind graph ids in chunks, so a store in a Cloudflare Durable Object (at most 100 bound parameters per statement) no longer fails with `too many SQL variables` once it holds about fifty facts.
+  - `@dxos/plugin-agent`: `BrainService.reset` and the `ResetBrain` operation wipe an agent's facts, read cursors and queued events while keeping its watches; the knowledge panel's reset uses them, shows the brain loading or being wiped instead of an empty list, and lays out and highlights the raw TriG of each fact.
+  - `@dxos/ui-editor`: `highlightTurtle` highlights Turtle or TriG without mounting an editor.
+
+- 55bdf55: The agent's fact graph can be browsed as entity cards, with Turtle and TriG highlighted in the editor.
+
+  - `@dxos/plugin-agent`: `EntityCard` shows one entity of the fact graph (its type, name, properties, and the properties pointing at it, with chips coloured by type), and `EntityBrowser` explores the graph as Finder-style columns, each with a filter, a close action and arrow-key navigation.
+  - `@dxos/pipeline-rdf`: `Predicate.label` writes a predicate or an inverse in one display form, lowercase kebab-case (`works-at`, `known-by`).
+  - `@dxos/ui-editor`: `turtle()` highlights RDF 1.1 Turtle and TriG (prefixes, IRIs, prefixed names, blank nodes, literals with language tags and datatypes, graph blocks).
+  - `@dxos/react-ui`: a chosen card in a keyboard stack (a `Focus.Item`) shows the current surface rather than the accent border, so the focus ring is the only edge it draws.
+
+### Patch Changes
+
+- 098a536: `SampleSpace.phase` is replaced by `SampleSpace.partial`: the content one `CONTENT.md` spec describes, which may compose smaller partials and carries their schemas. `SampleSpace.make` takes `partials` instead of `phases`. The debug plugin adds a Fieldstone Labs space template, a software team run mostly by agents, built from four partials plus the DXOS architecture diagrams; `@dxos/plugin-canvas` now publishes and exports its architecture partial from `@dxos/plugin-canvas/Architecture`. A contact card shows the employer's name instead of only an icon, related events no longer swap recent and upcoming, a conversation's message header keeps its date and actions to the right with the subject at full width, an event's star sits beside its title, cards have a visible edge in light mode, a calendar card lists at most three attendees, a sheet embedded in a document renders instead of failing, and object links past a document's first screen render as links instead of raw markdown.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/nlp@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/display-name@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [b07f49f]
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/ui@0.14.0
+  - @dxos/nlp@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/display-name@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/ui-types@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- ab1bddf: Scrolling a markdown document does less work per frame: images are decorated as the parser reaches them instead of by re-scanning the whole document on every scroll, and the remembered scroll position is measured once per frame in the editor's own measure phase instead of forcing a layout on every scroll event.
+- 7a177b9: Pressing Enter on an empty second bullet in the markdown editor now ends the list. It used to insert a blank line that made the list loose, after which every Enter in that list added another blank line.
+- 3d05b7f: - **Remote cursor name:** a collaborator's name shows as a tooltip on hovering their caret, drawn outside the editor's scroller so it is never clipped; it sits above the caret like a flag, stays up for at least a second, hides when the peer moves, and hides the caret's dot while shown. The caret keeps the name as visually hidden text for assistive tech.
+  - **Banner:** a neutral (default) banner is transparent and bordered, with the host's text colour and a muted body; valence banners keep their own surfaces. The chat's plugin prompt is now a Banner.
+  - **Devices settings:** the logout section is headed "Danger Zone", with the full warning on the Log out field.
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8980a93]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/nlp@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/display-name@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

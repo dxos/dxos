@@ -7,7 +7,9 @@ import React, { useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import { Container, Panel, ScrollArea } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -28,7 +30,7 @@ const DefaultStory = (_: PaneArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Layout.Container>
               <Form.Root
                 variant='settings'
                 schema={SettingsSchema}
@@ -44,7 +46,7 @@ const DefaultStory = (_: PaneArgs) => {
                   </Form.FieldSet>
                 </Form.Content>
               </Form.Root>
-            </Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
@@ -121,11 +123,11 @@ export const Test: Story = {
     }
     await expect(geometry[0].control.right - geometry[0].label.left).toBeGreaterThan(100);
 
-    // 6. Rows are bordered cards one level above the pane; the switch is labelled by its row.
+    // 6. Rows are cards one level above the pane, edged by their shadow rather than a border; the switch is labelled by its row.
     const row = canvasElement.querySelector<HTMLElement>('[data-layout="row"]');
     invariant(row);
     await expect(row).toHaveAttribute('data-surface', '+1');
-    await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
+    await expect(getComputedStyle(row).borderTopWidth).toBe('0px');
     await expect(canvas.getByRole('switch', { name: 'Show toolbar' })).toBeChecked();
     await expect(canvas.getByRole('combobox', { name: 'Default view mode' })).toBeInTheDocument();
 

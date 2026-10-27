@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AnyEntity } from '@dxos/echo/Type';
+import type * as Type from '@dxos/echo/Type';
 import { EID, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
@@ -74,7 +74,7 @@ export class ServiceContainer {
     };
   }
 
-  async insertIntoQueue(queue: EID.EID, objects: AnyEntity[]): Promise<void> {
+  async insertIntoQueue(queue: EID.EID, objects: Type.AnyEntity[]): Promise<void> {
     const spaceId = EID.getSpaceId(queue);
     const queueId = EID.getEntityId(queue);
     if (!spaceId || !queueId) {

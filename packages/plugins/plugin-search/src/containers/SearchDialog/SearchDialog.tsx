@@ -2,37 +2,44 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-search';
-import { type SearchResult } from '@dxos/react-ui-search';
+import { SearchList, type SearchResult } from '@dxos/react-ui-search';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
+import { toSearchResults, useGlobalSearch } from '#hooks';
 import { meta } from '#meta';
+
+import { type SelectHandle } from '../../select-handle.ts';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
   pivotId?: string;
+  title?: string;
+  handle?: SelectHandle;
 }>;
 
-export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: SearchDialogProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { setMatch } = useGlobalSearch();
-  const layout = useLayout();
+  const layout = ToolkitHooks.useLayout();
   const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const [query, setQuery] = useState<string>();
 
   // Scope the FTS query to user-facing types so results match what the app can render.
-  const typeUris = useSearchableTypeUris(space);
-  const objects = useQuery(space?.db, buildSearchQuery(query, typeUris));
+  const typeUris = ObjectCombobox.useListedTypeUris(space?.db);
+  ObjectCombobox.useDrainedSearchIndex(space?.db);
+  const objects = useQuery(space?.db, ObjectCombobox.searchQuery(query, typeUris));
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 
@@ -44,9 +51,20 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
     [setMatch],
   );
 
+  useEffect(() => {
+    handle?.retain();
+    return () => handle?.dismiss();
+  }, [handle]);
+
   const handleSelect = useCallback(
     async (result: SearchResult) => {
       if (!result.object || !Obj.isObject(result.object)) {
+        return;
+      }
+
+      if (handle) {
+        handle.select(result.object);
+        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
         return;
       }
 
@@ -58,13 +76,13 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         disposition: 'add',
       });
     },
-    [pivotId, invokePromise],
+    [pivotId, invokePromise, handle],
   );
 
   return (
-    <Dialog.Content>
+    <Dialog.Content data-testid='search.dialog'>
       <Dialog.Header>
-        <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
+        <Dialog.Title>{title ?? t('search-dialog.title')}</Dialog.Title>
         <Dialog.CloseTrigger asChild>
           <SystemButton.Close />
         </Dialog.CloseTrigger>
@@ -72,18 +90,16 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
           <SearchList.Input
-            classNames='px-0'
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('search.placeholder')}
-            {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
           />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {query && allResults.length === 0 && <SearchList.Empty />}
             {allResults.map((result) => (
               <SearchList.Item
                 key={result.id}
-                classNames='flex gap-2 items-center'
                 icon={result.icon}
                 value={result.id}
                 label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}

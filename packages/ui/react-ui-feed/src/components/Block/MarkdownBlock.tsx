@@ -7,15 +7,17 @@ import { EditorView } from '@codemirror/view';
 import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { type ObjectLinkProps, type WidgetDef, type WidgetState, type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
+import { diffRange, syncChange } from './diff-range.ts';
 import { createBlockExtensions } from './extensions.ts';
 import { type HighlightRange, setHighlights } from './highlight.ts';
 import { useSelectionGroup } from './selection-group.ts';
 
-export type MarkdownBlockProps = ThemedClassName<{
+export type MarkdownBlockProps = Util.ThemedClassName<{
   text: string;
   /**
    * Drip appended text in per frame (the typewriter) instead of dispatching whole deltas. The
@@ -47,7 +49,7 @@ export type MarkdownBlockProps = ThemedClassName<{
 export const MarkdownBlock = memo(
   ({
     classNames,
-    text,
+    text: textProp,
     stream,
     editable = false,
     registry,
@@ -55,7 +57,10 @@ export const MarkdownBlock = memo(
     hits,
     onWidgetsChange,
   }: MarkdownBlockProps) => {
-    const themeMode = useThemeMode();
+    const themeMode = Hooks.useThemeMode();
+    // CodeMirror stores every line break as `\n`, so the cursors below measure the text the same way;
+    // a `\r\n` counted as two characters would put an append past the end of the document.
+    const text = useMemo(() => textProp.replace(/\r\n?/g, '\n'), [textProp]);
     const [view, setView] = useState<EditorView | null>(null);
     // React widgets render in portals into hosts the extension places in the document, so the item has
     // to own them: a widget's tree belongs to the React root that rendered the item, not to CodeMirror.
@@ -84,7 +89,18 @@ export const MarkdownBlock = memo(
     // The virtualizer measures each row as it mounts, so a row whose document does not exist yet
     // measures at chrome height and then grows, shifting every row below it. Constructing the view in
     // the layout phase gives the row its real height before the first paint, so it is measured once.
-    const initialTextRef = useRef(text);
+    // The document belongs to the model, not the view: a message whose text changes is reconciled
+    // rather than remounted, so the virtualizer's measurement for this row survives the update.
+    //
+    // Two cursors: `targetRef` is the model's latest text, `dispatchedRef` is what the document
+    // holds. Outside streaming they move together; while streaming, the drip below advances
+    // `dispatchedRef` a few characters per frame toward the target.
+    const targetRef = useRef(text);
+    const dispatchedRef = useRef(text);
+    const dripRaf = useRef(0);
+
+    const latestTextRef = useRef(text);
+    latestTextRef.current = text;
     useLayoutEffect(() => {
       const parent = rootRef.current;
       if (!parent) {
@@ -94,8 +110,11 @@ export const MarkdownBlock = memo(
       // Built detached and attached once: given a `parent`, the view writes its attributes on a live
       // element, and each write invalidates the document's style for every row that mounts.
       const instance = new EditorView({
-        state: EditorState.create({ doc: initialTextRef.current, extensions }),
+        state: EditorState.create({ doc: latestTextRef.current, extensions }),
       });
+      cancelAnimationFrame(dripRaf.current);
+      dripRaf.current = 0;
+      dispatchedRef.current = latestTextRef.current;
       parent.appendChild(instance.dom);
       const unregister = selectionGroupRef.current.register(instance);
       setView(instance);
@@ -107,34 +126,24 @@ export const MarkdownBlock = memo(
       };
     }, [extensions]);
 
-    // The document belongs to the model, not the view: a message whose text changes is reconciled
-    // rather than remounted, so the virtualizer's measurement for this row survives the update.
-    //
-    // Two cursors: `targetRef` is the model's latest text, `dispatchedRef` is what the document
-    // holds. Outside streaming they move together; while streaming, the drip below advances
-    // `dispatchedRef` a few characters per frame toward the target.
-    const targetRef = useRef(text);
-    const dispatchedRef = useRef(text);
-    const dripRaf = useRef(0);
-
     useEffect(() => {
       if (!view) {
         return;
       }
 
       targetRef.current = text;
-      initialTextRef.current = text;
       if (dispatchedRef.current === text) {
         return;
       }
 
-      // A non-append (a rewrite, a view-type switch, a rewind) lands atomically — dripping a
-      // replacement would show the reader a half-rewritten document.
+      // A non-append (a rewrite, a view-type switch, a status tag changing) lands atomically —
+      // dripping a replacement would show the reader a half-rewritten document — and replaces only
+      // the span that differs, so the decorations and widgets either side of it survive.
       if (!text.startsWith(dispatchedRef.current)) {
         cancelAnimationFrame(dripRaf.current);
         dripRaf.current = 0;
         dispatchedRef.current = text;
-        view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+        view.dispatch({ changes: diffRange(view.state.doc.toString(), text) });
         return;
       }
 
@@ -142,9 +151,8 @@ export const MarkdownBlock = memo(
         // The turn is over (or was never streaming): whatever is pending lands at once.
         cancelAnimationFrame(dripRaf.current);
         dripRaf.current = 0;
-        const from = dispatchedRef.current.length;
         dispatchedRef.current = text;
-        view.dispatch({ changes: { from, insert: text.slice(from) } });
+        view.dispatch({ changes: syncChange(view.state.doc, text) });
         return;
       }
 
@@ -182,9 +190,9 @@ export const MarkdownBlock = memo(
         }
 
         if (take > 0) {
-          const insert = backlog.slice(0, take);
-          dispatchedRef.current = dispatched + insert;
-          view.dispatch({ changes: { from: dispatched.length, insert } });
+          const next = dispatched + backlog.slice(0, take);
+          dispatchedRef.current = next;
+          view.dispatch({ changes: syncChange(view.state.doc, next) });
         }
 
         dripRaf.current = requestAnimationFrame(tick);

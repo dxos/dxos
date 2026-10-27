@@ -4,8 +4,10 @@
 
 import React from 'react';
 
-import { Switch } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 
+import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
 import { useFormContext } from '../../hooks/index.ts';
@@ -19,10 +21,12 @@ export const BooleanField = ({
   label,
   readonly,
   presentation,
+  indeterminate,
   getValue,
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<boolean>) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const { variant } = useFormContext('Form.BooleanField');
   const value = getValue();
   if (presentationFor(presentation).isStatic) {
@@ -30,8 +34,12 @@ export const BooleanField = ({
   }
 
   return (
-    <Switch
-      label={variant === 'settings' ? undefined : label}
+    <Input.Switch
+      // A switch has no third state: an indeterminate one is dimmed and says so, and the first press sets it.
+      indeterminate={indeterminate}
+      label={
+        variant === 'settings' ? undefined : indeterminate ? `${label} (${t('indeterminate.placeholder')})` : label
+      }
       disabled={!!readonly}
       checked={!!value}
       // A toggle is a commit: the switch never blurs, so it commits itself.

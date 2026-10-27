@@ -7,7 +7,6 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -16,6 +15,9 @@ import {
   useMenuActions,
 } from '@dxos/react-ui-menu';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import * as Util from '@dxos/react-ui/Util';
+
+import { meta } from '#meta';
 
 import { type EditorState, getSelectedObjectIds } from '../../tools/index.ts';
 import { type EditorActions, createEditorActions, createTemplateSelector } from './actions.ts';
@@ -28,7 +30,7 @@ export type SpacetimeToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'a
   editorActions: EditorActions;
 };
 
-export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps>(
+export const SpacetimeToolbar = Util.composable<HTMLDivElement, SpacetimeToolbarProps>(
   ({ attendableId, alwaysActive, editorStateAtom, editorActions, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const editorState = useAtomValue(editorStateAtom);
@@ -52,12 +54,9 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
         attendableId={attendableId}
         alwaysActive={alwaysActive}
         {...menuActions}
-        {...composableProps(props)}
+        {...Util.composableProps(props)}
         ref={forwardedRef}
-      >
-        {/* TODO(burdon): Extend builder to support custom components. */}
-        <HuePicker value={editorState.hue} onChange={(hue) => updateEditorState({ hue })} />
-      </ActionToolbar>
+      />
     );
   },
 );
@@ -83,6 +82,9 @@ const createToolbarActions = (
       .subgraph(createEditorActions(editorActions, selectionCount))
       .separator()
       .subgraph(createViewActions(editorState, update))
+      .custom('hue', { label: ['hue.label', { ns: meta.profile.key }] }, () => (
+        <HuePicker value={editorState.hue} onChange={(hue) => update({ hue })} />
+      ))
       .build(),
   );
 };

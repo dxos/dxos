@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { useQueryMetrics } from '../../../../hooks/index.ts';
 import { type ArticleProps } from '../../types.ts';

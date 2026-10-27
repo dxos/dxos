@@ -5,7 +5,8 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react';
 
-import { type VirtualMode, createContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Listbox from '@dxos/react-ui/Listbox';
 
 import { type TreeNode, type TreeWalk } from './tree-collection.ts';
 import { type TreeData } from './tree-data.ts';
@@ -14,7 +15,7 @@ import { type DropKind, type RowActivation } from './tree-model.ts';
 // Kept out of the component module: react-refresh only fast-refreshes a module whose exports are all components.
 
 /** `fixed` windows rows of one block each; `variable` mounts every row with `content-visibility: auto`. */
-export type TreeVirtual = VirtualMode;
+export type TreeVirtual = Listbox.VirtualMode;
 
 /** A disclosure in flight: the rows under `path` fade in (`open`) or conceal before the close commits. */
 export type TreeDisclosure = { value: string; path: string[]; open: boolean };
@@ -60,10 +61,10 @@ export type TreeContextValue = {
 };
 
 // Behaviour only (drop policy, walk), never size or level (Next decision 3).
-export const [TreeProvider, useTreeContext] = createContext<TreeContextValue>('Tree.Root');
+export const [TreeProvider, useTreeContext] = Hooks.createContext<TreeContextValue>('Tree.Root');
 
 export type TreeItemContextValue = {
   node: TreeNode;
 };
 
-export const [TreeItemProvider, useTreeItemContext] = createContext<TreeItemContextValue>('Tree.Item');
+export const [TreeItemProvider, useTreeItemContext] = Hooks.createContext<TreeItemContextValue>('Tree.Item');

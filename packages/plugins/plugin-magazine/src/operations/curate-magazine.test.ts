@@ -8,7 +8,7 @@ import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AgentHandlers } from '@dxos/assistant-toolkit';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Tag, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -53,7 +53,7 @@ const createScriptedSelection = () => {
 const scripted = createScriptedSelection();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: [MagazineOperationHandlerSet, AgentHandlers],
+  operationHandlers: [MagazineOperationHandlerSet, AgentOperationHandlerSet.handlers],
   types: [
     Feed.Feed,
     Subscription.Subscription,

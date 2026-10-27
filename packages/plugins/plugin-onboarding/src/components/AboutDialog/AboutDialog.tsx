@@ -6,7 +6,13 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Button, Dialog, Link, SystemButton, Trans, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '../../meta.ts';
 
@@ -38,7 +44,7 @@ const parseUrl = (url: string): URL | undefined => {
 };
 
 export const AboutDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 
@@ -67,34 +73,36 @@ export const AboutDialog = () => {
         </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
-        <div className='flex items-center text-fg-muted'>{t('version.label', { version: version ?? 'unknown' })}</div>
-        <div className='flex flex-col gap-3'>
+        <Layout.Flex align='center' classNames='text-fg-muted'>
+          {t('version.label', { version: version ?? 'unknown' })}
+        </Layout.Flex>
+        <Layout.Flex column gap='md'>
           {timestamp && (
-            <div className='flex items-center gap-1'>
-              <Link href={releaseUrl} variant='neutral'>
+            <Layout.Flex align='center' gap='xs'>
+              <Typography.Link href={releaseUrl} variant='neutral'>
                 {t('published.label', {
                   timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
-              </Link>
-            </div>
+              </Typography.Link>
+            </Layout.Flex>
           )}
-          {showEnv && <div className='flex items-center'>{t('environment.label', { environment: edgeEnv })}</div>}
+          {showEnv && <Layout.Flex align='center'>{t('environment.label', { environment: edgeEnv })}</Layout.Flex>}
           <p>
-            <Trans
+            <Theme.Trans
               {...{
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Link href='https://dxos.org' variant='neutral' />,
+                  dxos: <Typography.Link href='https://dxos.org' variant='neutral' />,
                 },
               }}
             />
           </p>
-        </div>
+        </Layout.Flex>
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button variant='primary'>{t('close.label')}</Button>
+          <Button.Root variant='primary'>{t('close.label')}</Button.Root>
         </Dialog.CloseTrigger>
       </Dialog.Footer>
     </Dialog.Content>

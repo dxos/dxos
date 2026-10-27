@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { type Merge } from '@dxos/util';
 
 import { type FieldContext } from '#types';

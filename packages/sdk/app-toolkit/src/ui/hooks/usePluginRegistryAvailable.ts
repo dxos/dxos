@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 
 import { SettingsOperation } from '../../operations/index.ts';
 
@@ -14,7 +14,7 @@ import { SettingsOperation } from '../../operations/index.ts';
  * dispatching an operation whose destination does not exist.
  */
 export const usePluginRegistryAvailable = (): boolean => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const enabled = useAtomValue(manager.enabled);
   return SettingsOperation.isPluginRegistryAvailable(enabled);
 };

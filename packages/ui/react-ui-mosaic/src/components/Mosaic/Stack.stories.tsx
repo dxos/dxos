@@ -8,9 +8,12 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Focus, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayMove } from '@dxos/util';
 
 import { useContainerDebug } from '../../hooks/index.ts';

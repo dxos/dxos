@@ -6,17 +6,17 @@ import { ark } from '@ark-ui/react/factory';
 import React, {
   Children,
   type ComponentPropsWithoutRef,
-  type ForwardRefExoticComponent,
   type ReactNode,
-  type RefAttributes,
-  forwardRef,
   isValidElement,
   useCallback,
   useMemo,
   useRef,
 } from 'react';
 
-import { Collapsible, DragHandle, type DragMoveDirection, DragPreview, Listbox } from '@dxos/react-ui';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Listbox from '@dxos/react-ui/Listbox';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import {
@@ -61,14 +61,17 @@ type OrderedListRootProps<T> = Pick<NextRootProps, 'columns' | 'virtual' | 'size
    */
   dragPreview?: 'clone' | ((item: T) => ReactNode);
   readonly?: boolean;
-  /**
-   * The selected row's id (controlled). Supplying it or `onValueChange` makes the list single-selection: a click, or
-   * Enter on the highlighted row, selects; otherwise nothing is selected and zag only navigates.
-   */
-  value?: string;
-  onValueChange?: (id: string) => void;
   children: (props: { items: readonly T[] }) => ReactNode;
-};
+} & OrderedListSelection;
+
+/**
+ * Selection (controlled). Supplying `value` or `onValueChange` makes the list selectable: a click, or Enter on the
+ * highlighted row, selects; otherwise nothing is selected and zag only navigates. With `multiple`, the selection is
+ * extended as a desktop list's is (Cmd/Ctrl adds a row, Shift a range) and its value is the ids.
+ */
+type OrderedListSelection =
+  | { multiple?: false; value?: string; onValueChange?: (id: string) => void }
+  | { multiple: true; value?: readonly string[]; onValueChange?: (ids: string[]) => void };
 
 const noop = () => {};
 
@@ -87,11 +90,10 @@ const OrderedListRoot = <T,>({
   virtual,
   size,
   loopFocus,
-  value,
-  onValueChange,
   children,
+  ...selection
 }: OrderedListRootProps<T>) => {
-  const selectable = value !== undefined || onValueChange !== undefined;
+  const selectable = selection.value !== undefined || selection.onValueChange !== undefined;
   const entries = useMemo(
     () => items.map((item, index) => ({ id: getId ? getId(item) : defaultId(item, index), item })),
     [items, getId],
@@ -107,9 +109,9 @@ const OrderedListRoot = <T,>({
       return 'clone' as const;
     }
     return ({ item }: Entry<T>, source: HTMLElement) => (
-      <DragPreview source={source}>
+      <DragHandle.DragPreview source={source}>
         {dragPreview ? dragPreview(item) : (getLabel?.(item) ?? itemText(source))}
-      </DragPreview>
+      </DragHandle.DragPreview>
     );
   }, [dragPreview, getLabel]);
 
@@ -126,7 +128,7 @@ const OrderedListRoot = <T,>({
   entriesRef.current = entries;
   const onMoveRef = useRef(onMove);
   onMoveRef.current = onMove;
-  const move = useCallback((id: string, direction: DragMoveDirection) => {
+  const move = useCallback((id: string, direction: DragHandle.DragMoveDirection) => {
     const from = entriesRef.current.findIndex((entry) => entry.id === id);
     const to = direction === 'up' ? from - 1 : from + 1;
     if (from < 0 || to < 0 || to >= entriesRef.current.length) {
@@ -139,9 +141,23 @@ const OrderedListRoot = <T,>({
     <OrderedListProvider reorder={controller} options={optionsById} readonly={readonly} move={move}>
       <Listbox.Root
         items={options}
-        selectionMode={selectable ? 'single' : 'none'}
-        value={selectable ? (value === undefined ? [] : [value]) : undefined}
-        onValueChange={([selected]) => selected !== undefined && onValueChange?.(selected)}
+        selectionMode={selectable ? (selection.multiple ? 'extended' : 'single') : 'none'}
+        value={
+          !selectable
+            ? undefined
+            : selection.multiple
+              ? [...(selection.value ?? [])]
+              : selection.value === undefined
+                ? []
+                : [selection.value]
+        }
+        onValueChange={(values) => {
+          if (selection.multiple) {
+            selection.onValueChange?.(values);
+          } else if (values[0] !== undefined) {
+            selection.onValueChange?.(values[0]);
+          }
+        }}
         columns={columns}
         virtual={virtual}
         size={size}
@@ -160,27 +176,27 @@ const OrderedListRoot = <T,>({
 type OrderedListContentProps = NextContentProps;
 
 /**
- * The listbox element, as `Listbox.Content`: its own thin ScrollArea by default (a drag near its edges
- * auto-scrolls it), or `scroll={false}` inside a host that scrolls.
+ * The listbox element, as `Listbox.Content`. Under an `OrderedList.Viewport` it is the scrolling element, so a drag near
+ * its edges auto-scrolls it; otherwise its host scrolls.
  */
-const OrderedListContent: ForwardRefExoticComponent<OrderedListContentProps & RefAttributes<HTMLDivElement>> =
-  forwardRef<HTMLDivElement, OrderedListContentProps>(({ scroll = true, ...props }, forwardedRef) => {
-    const autoScrollRef = useReorderAutoScroll();
-    const ref = useCallback(
-      (element: HTMLDivElement | null) => {
-        if (scroll) {
-          autoScrollRef(element);
-        }
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(element);
-        } else if (forwardedRef) {
-          forwardedRef.current = element;
-        }
-      },
-      [scroll, autoScrollRef, forwardedRef],
-    );
-    return <Listbox.Content {...props} scroll={scroll} ref={ref} />;
-  });
+const OrderedListContent = Util.composable<HTMLDivElement, OrderedListContentProps>((props, forwardedRef) => {
+  const inViewport = Listbox.useViewport();
+  const autoScrollRef = useReorderAutoScroll();
+  const ref = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (inViewport) {
+        autoScrollRef(element);
+      }
+      if (typeof forwardedRef === 'function') {
+        forwardedRef(element);
+      } else if (forwardedRef) {
+        forwardedRef.current = element;
+      }
+    },
+    [inViewport, autoScrollRef, forwardedRef],
+  );
+  return <Listbox.Content {...props} ref={ref} />;
+});
 
 OrderedListContent.displayName = 'OrderedList.Content';
 
@@ -302,7 +318,7 @@ const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps
     );
   }
 
-  return <DragHandle disabled={disabled} onMove={(direction) => move(id, direction)} ref={handleRef} />;
+  return <DragHandle.DragHandle disabled={disabled} onMove={(direction) => move(id, direction)} ref={handleRef} />;
 };
 
 OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
@@ -315,20 +331,23 @@ OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
  * @example
  *   <OrderedList.Root items={items} getLabel={(item) => item.label} onMove={move}>
  *     {({ items }) => (
- *       <OrderedList.Content>
- *         {items.map((item) => (
- *           <OrderedList.Item key={item.id} id={item.id}>
- *             <OrderedList.DragHandle />
- *             <OrderedList.ItemText />
- *           </OrderedList.Item>
- *         ))}
- *       </OrderedList.Content>
+ *       <OrderedList.Viewport>
+ *         <OrderedList.Content>
+ *           {items.map((item) => (
+ *             <OrderedList.Item key={item.id} id={item.id}>
+ *               <OrderedList.DragHandle />
+ *               <OrderedList.ItemText />
+ *             </OrderedList.Item>
+ *           ))}
+ *         </OrderedList.Content>
+ *       </OrderedList.Viewport>
  *     )}
  *   </OrderedList.Root>
  */
 export const OrderedList: {
   Root: typeof OrderedListRoot;
   Label: typeof Listbox.Label;
+  Viewport: typeof Listbox.Viewport;
   Content: typeof OrderedListContent;
   Empty: typeof Listbox.Empty;
   Item: typeof OrderedListItem;
@@ -340,6 +359,7 @@ export const OrderedList: {
 } = {
   Root: OrderedListRoot,
   Label: Listbox.Label,
+  Viewport: Listbox.Viewport,
   Content: OrderedListContent,
   Empty: Listbox.Empty,
   Item: OrderedListItem,

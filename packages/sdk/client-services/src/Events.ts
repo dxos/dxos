@@ -4,8 +4,9 @@
 
 // @import-as-namespace
 
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { type DataService } from '@dxos/protocols/rpc';
 
 import { type Identity } from './Identity.ts';
 
@@ -56,6 +57,12 @@ export const IdentityAvailable = Hook.make<{ identity: Identity }>()('client-ser
 /** The data space manager is open. */
 export const DataSpacesAvailable = Hook.make<{ identity: Identity }>()('client-services/DataSpacesAvailable');
 
+/**
+ * The ECHO index's status changed: index migrations running, a rebuild catching up, or idle. Emitted
+ * from the moment the host starts opening, before the stack is ready, so an embedder can show it.
+ */
+export const IndexStatus = Hook.make<DataService.IndexStatus>()('client-services/IndexStatus');
+
 /** The open sequence has completed, with or without an identity. */
 export const StackOpened = Hook.make<void>()('client-services/StackOpened');
 
@@ -70,6 +77,9 @@ export const WipingStorage = Hook.make<void>()('client-services/WipingStorage');
 
 /** Storage is wiped; the embedder typically reloads. */
 export const Reset = Hook.make<void>()('client-services/Reset');
+
+/** Storage stopped answering, so nothing more will be saved; the embedder replaces the process. */
+export const StorageStuck = Hook.make<void>()('client-services/StorageStuck');
 
 /** The local profile changed and should be broadcast to every open space. */
 export const ProfileUpdated = Hook.make<{ profile: ProfileDocument }>()('client-services/ProfileUpdated');

@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Query, Type, View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -20,6 +21,7 @@ import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory, createRelationFactory } from '@dxos/schema/testing';
 import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
+import { translations } from '#translations';
 import { Graph } from '#types';
 
 import { ExplorerArticle, type ExplorerArticleVariant } from './ExplorerArticle.tsx';
@@ -37,7 +39,9 @@ const DefaultStory = ({ variant }: StoryArgs) => {
     return <Loading data={{ space: !!space, graph: !!graph }} />;
   }
 
-  return <ExplorerArticle role='article' subject={graph as any} attendableId={graph.id} variant={variant} />;
+  return (
+    <ExplorerArticle role={AppSurface.Article.role} subject={graph as any} attendableId={graph.id} variant={variant} />
+  );
 };
 
 const meta: Meta<StoryArgs> = {
@@ -48,11 +52,12 @@ const meta: Meta<StoryArgs> = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [
             Graph.Graph,
+            HasConnection.HasConnection,
             HasRelationship.HasRelationship,
             Organization.Organization,
             Person.Person,
@@ -111,6 +116,7 @@ const meta: Meta<StoryArgs> = {
   ],
   parameters: {
     layout: 'fullscreen',
+    translations,
   },
 };
 

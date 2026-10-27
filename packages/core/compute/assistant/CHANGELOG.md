@@ -1,5 +1,200 @@
 # @dxos/assistant
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/mcp-client@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 6488905: Agents are managed under space settings (Settings → Agents), where they are added and deleted, and each agent has Discord and Email companions for connecting it to a Discord server or giving it an email address. Discord uses DXOS's Kai app of the EDGE Composer talks to, whose token EDGE holds, so a space no longer records a bot or its token. Breaking: `Agent` is no longer a user type, so agents no longer appear in the content tree, the create dialog or search, and an agent's channels belong to it and are deleted with it.
+
+### Patch Changes
+
+- Updated dependencies [5490cbc]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [460bbc3]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [ce8f092]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [e398906]
+- Updated dependencies [2b6a93a]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/mcp-client@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Minor Changes
+
+- f0fc12a: An agent's chats now run on EDGE (`Agent.chatLocation`) unless a chat sets `remote: false`, so every chat shares the agent's one brain. Facts the agent records are attributed to space members by identity DID, with the display name as an optional label (`attribution.agentLabel`), and watches resolve the person they name to that member's DID and match on it (someone who is no member is matched by name, as their words are attributed); a chat with a member no longer invents a placeholder "Me" person.
+- 3e98467: The space Home assistant prompt no longer adds a feed to the space on every visit: its chat is an in-memory draft until the user sends, when the chat, its feed and its bindings are written together. `AiContext.Binder` now opens over a feed that is not stored yet, holding bindings in memory until `flush()` writes them once the feed is stored, and `unbind` removes an object from the bound set immediately whichever URI form the ref uses.
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/echo-doc@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/mcp-client@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Minor Changes
+
+- 246ee3c: Add `@dxos/plugin-agent`, an agent that talks to people through any channel, remembers them as ECHO objects, reads every conversation turn into facts, relays messages, and keeps one-time and ongoing ("keep me posted") watches whose updates it writes from the conversation's context. Every subpath of the package is a namespace: `AgentState` and `AgentKnowledge` (each with a `Root` container), one per skill (`ConversationSkill`, `GoalsSkill`, `InterviewSkill`, `ModesSkill`, `NoteTakerSkill`, `RelaySkill`), and one per type and operation set.
+
+  `@dxos/plugin-thread` channel backends can now open direct conversations (`openDirect`), post into threads (`threads.send`), run a connection (`connection.start`/`stop`/`status`), and return a send receipt. New operations `sendToChannel`, `openDirect`, `connectChannel`, `disconnectChannel` and `getChannelStatus` dispatch to them, and the handlers are published as the `ThreadOperationHandlerSet` subpath. The Discord and Slack plugins implement these backends.
+
+  An agent prompt can name its sender: `AgentProcess` accepts `{ prompt, sender?, properties? }` as well as a bare prompt (`AgentInput`, `makeInputMessage`), `AgentService.Session.submitPrompt` and the assistant's request and session take a `sender`, and the model sees a named sender as `[From: <name>]`. `useChatProcessor` and `AiChatProcessor` take a `sender`, and `ChatThread` takes a `userHue`.
+
+  `Agent.loadChat` no longer picks a chat bridged from an external conversation as the agent's primary chat, and finds chats with a child-of filter so it also works on EDGE. `Agent.makeInitialized` accepts a skill ref, and `Skill.makeRef` binds a database skill as-is and any other by registry URI.
+
+  The `ProfileOf` relation moves from `@dxos/plugin-crm` to `@dxos/types` with its typename unchanged, so existing profiles still resolve. `EdgeHttpClient.request` makes an authenticated call to any EDGE route. `pipeline-rdf` exports `DEFAULT_MODEL`. `FormInlineAnnotation` now survives the JSON-schema round trip. A plugin that declares two modules with the same id now fails when it is constructed instead of silently dropping one.
+
+### Patch Changes
+
+- Updated dependencies [bbe9f18]
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [c6922ce]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1ef899b]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [32f32a0]
+- Updated dependencies [dc16fdd]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [68dc875]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [e99ee70]
+- Updated dependencies [161f994]
+- Updated dependencies [3e73e53]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [0ee5ecf]
+- Updated dependencies [596728d]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [a999417]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [dde8f43]
+- Updated dependencies [4f8e566]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [a449958]
+  - @dxos/compute@0.13.0
+  - @dxos/echo@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/compute-runtime@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/mcp-client@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

@@ -4,8 +4,12 @@
 
 import React, { useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Button, Panel, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -23,7 +27,7 @@ type ViewMode = 'info' | 'read';
  * (Info) and the inline content reader (Read). Private notes live in a separate markdown companion.
  */
 export const BookArticle = ({ subject, role }: BookArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [viewMode, setViewMode] = useState<ViewMode>('info');
   const readerRef = useRef<EpubReaderHandle>(null);
 
@@ -34,13 +38,13 @@ export const BookArticle = ({ subject, role }: BookArticleProps) => {
           {/* Paging controls for the reader — shown only in reading mode; no-op for PDF/no content. */}
           {viewMode === 'read' && (
             <>
-              <Button
+              <Button.Root
                 icon='ph--caret-left--regular'
                 iconOnly
                 label={t('previous-page.label')}
                 onClick={() => readerRef.current?.goLeft()}
               />
-              <Button
+              <Button.Root
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('next-page.label')}

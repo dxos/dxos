@@ -2,21 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
-import { Panel, type ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
-import { Message, type Thread } from '@dxos/types';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Util from '@dxos/react-ui/Util';
+import { Message, Thread } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useStatus } from '#hooks';
 
-export type ThreadArticleProps = ThemedClassName<
+export type ThreadArticleProps = Util.ThemedClassName<
   {
     thread: Thread.Thread;
     context?: Obj.Unknown;
@@ -24,11 +24,13 @@ export type ThreadArticleProps = ThemedClassName<
   } & Pick<ThreadContentProps, 'current'>
 >;
 
+const NO_FEED = Query.select(Filter.type(Message.Message));
+
 /**
- * Renders an AutoMerge {@link Thread} as a chat: appends new messages by pushing
- * onto `thread.messages`. Used for comment threads and the meeting in-call chat.
+ * Renders a {@link Thread} as a chat: appends new messages to the thread's feed. Used for comment threads and the
+ * meeting in-call chat.
  */
-export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
+export const ThreadArticle = Util.composable<HTMLDivElement, ThreadArticleProps>(
   ({ thread, context, autoFocus, current, ...props }, forwardedRef) => {
     // Members and presence are space-scoped; a thread outside a space has nothing to resolve against.
     const space = getSpace(thread);
@@ -37,32 +39,22 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     const members = useMembers(space?.id);
     const activity = useStatus(space, id);
 
-    const messages = useAtomValue(
-      useMemo(
-        () =>
-          Atom.make((get) =>
-            (get(Obj.atomProperty(thread, 'messages')) ?? []).flatMap((message) => {
-              const value = get(message.atom);
-              return value ? [value] : [];
-            }),
-          ),
-        [thread],
-      ),
-    );
+    const feed = useResolveRef(thread.feed);
+    const feedMessages = useQuery(feed ? space?.db : undefined, feed ? Thread.messagesQuery(feed) : NO_FEED);
+    const messages = useMemo(() => Thread.sortMessages(feedMessages), [feedMessages]);
 
     const handleSend = (text: string) => {
-      Obj.update(thread, (thread) => {
-        thread.messages.push(
-          Ref.make(
-            Obj.make(Message.Message, {
-              created: new Date().toISOString(),
-              sender: { identityDid: identity.did },
-              blocks: [{ _tag: 'text', text }],
-              properties: context ? { context: Ref.make(context) } : undefined,
-            }),
-          ),
-        );
-      });
+      if (!feed || !space) {
+        return false;
+      }
+      void space.db.appendToFeed(feed, [
+        Obj.make(Message.Message, {
+          created: new Date().toISOString(),
+          sender: { identityDid: identity.did },
+          blocks: [{ _tag: 'text', text }],
+          properties: context ? { context: Ref.make(context) } : undefined,
+        }),
+      ]);
       return true;
     };
 
@@ -75,7 +67,7 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
         <Panel.Header></Panel.Header>
         <Panel.Body asChild>
           <MessageThread
-            {...composableProps(props)}
+            {...Util.composableProps(props)}
             id={id}
             identity={identity}
             members={members}

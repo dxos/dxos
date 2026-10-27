@@ -12,7 +12,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { runAction } from '@dxos/plugin-graph';
+import * as GraphAction from '@dxos/plugin-graph/GraphAction';
 import { hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -52,7 +52,7 @@ export default Capability.makeModule(
           action: () => {
             const current = Option.getOrUndefined(AppGraph.getNode(graph, node.id));
             if (current && AppGraphNode.isAction(current)) {
-              void runAction(invoker, pluginContext, current, { parent: current, caller: KEY_BINDING });
+              void GraphAction.run(invoker, pluginContext, current, { parent: current, caller: KEY_BINDING });
             }
           },
           // Bindings came from graph actions, which fired everywhere; Ark excludes text fields

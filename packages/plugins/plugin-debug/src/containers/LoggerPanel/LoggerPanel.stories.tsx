@@ -7,9 +7,10 @@ import React from 'react';
 
 import { type CallMetadata, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -38,9 +39,9 @@ const emit = (file: string, level: 'info' | 'warn' | 'error') => {
 const Render = () => (
   <div className='grid grid-rows-[min-content_1fr] h-[24rem] w-[48rem] max-w-full'>
     <Toolbar.Root>
-      <Button onClick={() => emit(FILES[0], 'info')}>Info</Button>
-      <Button onClick={() => emit(FILES[1], 'warn')}>Warn</Button>
-      <Button onClick={() => emit(FILES[2], 'error')}>Error</Button>
+      <Button.Root onClick={() => emit(FILES[0], 'info')}>Info</Button.Root>
+      <Button.Root onClick={() => emit(FILES[1], 'warn')}>Warn</Button.Root>
+      <Button.Root onClick={() => emit(FILES[2], 'error')}>Error</Button.Root>
     </Toolbar.Root>
     <LoggerPanel />
   </div>

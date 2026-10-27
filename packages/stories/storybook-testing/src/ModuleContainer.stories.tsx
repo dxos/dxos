@@ -10,15 +10,16 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ModuleContainer } from './ModuleContainer.tsx';
 
@@ -30,7 +31,7 @@ const PanelC = Role.make<Record<string, any>>('org.dxos.storybook.storyModules.p
 
 /** Trivial surface component: shows its label and the active space it resolved. */
 const ExamplePanel = ({ label }: { label: string }) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   return (
     <Panel.Root>
       <Panel.Header>
@@ -84,7 +85,7 @@ const meta: Meta<typeof ModuleContainer> = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {

@@ -7,10 +7,16 @@ import React, { useCallback, useRef } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Block, Card, DateInput, Field, Icon, Input, Select, Switch, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -27,7 +33,7 @@ export type EventEditorProps = {
  * controlled inputs; mutations go through its update callback.
  */
 export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [data, update] = useObject(event);
 
   const allDay = !!data.allDay;
@@ -171,12 +177,6 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     [update, people],
   );
 
-  // Flex, NOT a nested grid: `Card.Row` places its grandchildren with `col-start-2` (so a control
-  // wrapped in an `Field.Root` still lands in the content column), which collapsed a nested grid's
-  // children into its second track and pushed the date fields to the right edge. Grid placement is
-  // inert on flex children, so the row's rule cannot reach into this layout.
-  const fieldClasses = 'flex items-center gap-2';
-
   // The trailing control of each date row (all-day switch, duration select) takes the SAME fixed
   // width, so the two rows' leading date fields end at the same x and the controls line up as a
   // column — which the nested grid used to provide.
@@ -186,7 +186,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     <>
       <Card.Row>
         <Field.Root>
-          <Input
+          <Input.Root
             placeholder={t('event-untitled.label')}
             value={data.title ?? ''}
             onChange={(ev) =>
@@ -200,43 +200,44 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       <Field.Root>
         <Card.Row>
-          <Block>
-            <Block>
-              <Icon icon='ph--calendar--regular' />
-            </Block>
-          </Block>
-          <div className={fieldClasses}>
+          <Layout.Block>
+            <Layout.Block>
+              <Icon.Icon icon='ph--calendar--regular' />
+            </Layout.Block>
+          </Layout.Block>
+          {/* Flex, NOT a nested grid: `Card.Row`'s grid placement would collapse a nested grid's children into one track. */}
+          <Layout.Flex align='center' gap='sm'>
             <div className='grow'>
               {allDay ? (
-                <DateInput type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
+                <Input.Date type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
               ) : (
-                <DateInput
+                <Input.Date
                   type='datetime-local'
                   value={toDateTimeInput(data.startDate)}
                   onValueChange={handleStartDateTimeChange}
                 />
               )}
             </div>
-            <Switch
+            <Input.Switch
               checked={allDay}
               onCheckedChange={({ checked }) => handleAllDayChange(checked)}
               label={t('event-all-day.label')}
             />
-          </div>
+          </Layout.Flex>
         </Card.Row>
       </Field.Root>
 
       {!allDay && (
         <Field.Root>
           <Card.Row>
-            <Block>
-              <Block>
-                <Icon icon='ph--calendar--regular' />
-              </Block>
-            </Block>
-            <div className={fieldClasses}>
+            <Layout.Block>
+              <Layout.Block>
+                <Icon.Icon icon='ph--calendar--regular' />
+              </Layout.Block>
+            </Layout.Block>
+            <Layout.Flex align='center' gap='sm'>
               <div className='grow'>
-                <DateInput
+                <Input.Date
                   type='datetime-local'
                   value={toDateTimeInput(data.endDate)}
                   onValueChange={handleEndDateTimeChange}
@@ -245,7 +246,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
               <div className={trailingClasses}>
                 <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
               </div>
-            </div>
+            </Layout.Flex>
           </Card.Row>
         </Field.Root>
       )}
@@ -263,9 +264,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {/* Always-blank row for adding the next attendee. */}
       <Card.Row classNames='items-center'>
-        <Block>
-          <Icon icon='ph--user-plus--regular' />
-        </Block>
+        <Layout.Block>
+          <Icon.Icon icon='ph--user-plus--regular' />
+        </Layout.Block>
         <RefEditor
           db={db}
           type={Person.Person}
@@ -290,7 +291,7 @@ type SelectDurationProps = {
 
 /** Duration preset picker. Empty string keeps the control controlled so it clears to the placeholder. */
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Select.Root
       value={[value ?? '']}

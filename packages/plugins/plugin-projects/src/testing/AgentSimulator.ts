@@ -8,7 +8,7 @@ import * as Duration from 'effect/Duration';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { PlanningOperations } from '@dxos/assistant-toolkit';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { Task } from '@dxos/types';
@@ -65,7 +65,7 @@ const PLAN_REMINDER_PROMPT = 'Reply with exactly one word';
 export const isFinished = (task: Task.Task): boolean => task.status === 'done' || task.status === 'review';
 
 const updateTasks = (changes: readonly { task: Task.Task; status: 'started' | 'done' }[]) =>
-  toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
+  toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), {
     // A bare URI: a ref parameter reaches a tool as the string the model is shown.
     changes: changes.map(({ task, status }) => ({ task: Obj.getURI(task).toString(), status })),
   });
@@ -175,7 +175,7 @@ export const withQuestion =
         delay: state.pace.think,
         parts: [
           text(`I need a decision before I can finish "${task.title}".`),
-          toolCall(Operation.toolName(PlanningOperations.AskQuestion), {
+          toolCall(Operation.toolName(PlanningSkill.Operations.AskQuestion), {
             task: task.title,
             question: question.question,
             ...(question.context ? { context: question.context } : {}),

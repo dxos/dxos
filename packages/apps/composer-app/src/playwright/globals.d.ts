@@ -14,10 +14,10 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 
 import type { ProfilerSnapshot } from '../util/profiler';
 
-// `globalThis.composer` itself is declared by `@dxos/app-framework`; a second `var composer` here
+// `globalThis.composer` itself is declared by `@dxos/app-framework/Devtools`; a second `var composer` here
 // would collide with it and resolve every member to `{}`. Merge the app-only hooks onto its
 // interface instead.
-declare module '@dxos/app-framework' {
+declare module '@dxos/app-framework/Devtools' {
   interface ComposerDevtools {
     profiler?: { snapshot?: () => ProfilerSnapshot };
     /** The plugin manager; readers narrow the module shape to what they use. */
@@ -83,6 +83,19 @@ declare global {
   var dxos:
     | {
         spaces?: () => DebugSpace[];
+        /** `scripts/memory/peer-lanes.ts` asks the worker's SQLite connection whether it still answers. */
+        client?: {
+          services?: {
+            services?: { DevtoolsHost?: { runSqliteQuery?: (request: { query: string }) => Promise<unknown> } };
+          };
+        };
+        /** `/recovery.html`'s helpers; the memory scenario imports a profile archive with them. */
+        recovery?: {
+          /** Opens a file picker and writes the chosen `.dxprofile` into OPFS. */
+          importSqlite?: () => Promise<{ byteLength: number; opfsFilename: string }>;
+          /** Downloads the profile as a `.dxprofile`. */
+          exportProfile?: () => Promise<{ byteLength: number; saved: boolean }>;
+        };
       }
     | undefined;
 

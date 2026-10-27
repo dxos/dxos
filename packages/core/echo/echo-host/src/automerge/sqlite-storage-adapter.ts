@@ -8,7 +8,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { type MaybePromise, countWork } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks/index.ts';

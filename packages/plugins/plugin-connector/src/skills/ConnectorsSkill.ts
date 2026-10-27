@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';

@@ -8,16 +8,18 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
-import { type InvocationSpan } from '@dxos/compute-runtime';
-import { TraceEvent } from '@dxos/compute-runtime';
+import { type InvocationSpan, TraceEvent } from '@dxos/compute-runtime';
 import { type Database, type Obj, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
 import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { Panel, Tabs, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -39,7 +41,7 @@ export type InvocationTraceContainerProps = {
   invocationSpans?: InvocationSpan[];
 };
 
-export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTraceContainerProps>(
+export const InvocationTraceContainer = Util.composable<HTMLDivElement, InvocationTraceContainerProps>(
   (
     {
       role,
@@ -170,7 +172,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     );
 
     return (
-      <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
+      <div {...Util.composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
         <Panel.Root role={role}>
           {showSpaceSelector && (
             <Panel.Header>

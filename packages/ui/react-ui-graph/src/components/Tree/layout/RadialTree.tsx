@@ -6,7 +6,7 @@
 import { cluster as d3Cluster, tree as d3Tree, linkRadial, select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type TreeNode } from '../types.ts';
@@ -16,7 +16,7 @@ import { useContainerSize } from './useContainerSize.ts';
 
 const TRANSITION_MS = 350;
 
-export type RadialTreeProps = ThemedClassName<{
+export type RadialTreeProps = Util.ThemedClassName<{
   data: TreeNode;
   label?: (d: TreeNode) => string;
   slots?: TreeLayoutSlots;
@@ -51,7 +51,7 @@ export const RadialTree = ({
   classNames,
   data,
   label = (d) => d.label ?? d.id,
-  slots = defaultTreeLayoutSlots,
+  slots: slotsProp,
   r = 4,
   padding = 80,
   initialCollapsed,
@@ -60,6 +60,8 @@ export const RadialTree = ({
   onNodeHover,
 }: RadialTreeProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // A partial `slots` (e.g. only `nodeFill`) must extend the defaults, not drop their classes.
+  const slots = useMemo(() => ({ ...defaultTreeLayoutSlots, ...slotsProp }), [slotsProp]);
   const { setRef, width, height } = useContainerSize();
 
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(initialCollapsed ?? []));

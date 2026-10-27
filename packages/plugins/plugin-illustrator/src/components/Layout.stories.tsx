@@ -11,8 +11,8 @@ import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Diagnostics, Dsl, Mermaid as MermaidDialect, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
 import { BASIC } from '@dxos/diagram/testing';
-import { useThemeMode } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions, listener, mermaidHighlightStyle } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -37,7 +37,7 @@ const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
 
 /** Theme-aware CodeMirror editor in the mermaid language mode. */
 const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue,
@@ -64,7 +64,7 @@ const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChan
  * Remounted on `generation` so a fresh layout replaces the buffer rather than merging into edits.
  */
 const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue,
@@ -84,7 +84,7 @@ const DslEditor = ({ initialValue, onChange }: { initialValue: string; onChange:
 
 /** Reference rendering through mermaid.js; `%% ref` lines are comments to it and are ignored. */
 const MermaidDiagram = ({ source }: { source: string }) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const id = useId().replace(/:/g, '');
   const [svg, setSvg] = useState<string>();
   const [error, setError] = useState<string>();
@@ -250,6 +250,8 @@ const meta = {
   title: 'plugins/plugin-illustrator/components/Layout',
   render: Bench,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  // A bench for looking at layouts, not a test: the large diagrams take 30–40 s each to lay out headless.
+  tags: ['!test'],
   parameters: { layout: 'fullscreen' },
   args: { lattice: 0, arrangement: 'auto', layering: 'auto', alignment: 'auto' },
   argTypes: {

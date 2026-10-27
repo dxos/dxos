@@ -6,12 +6,13 @@ import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Database, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { MessageArticle } from '@dxos/plugin-inbox/containers';
+import * as Containers from '@dxos/plugin-inbox/Containers';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -51,7 +52,7 @@ const useAnnotations = (db: Database.Database | undefined, mailbox: Mailbox.Mail
 
 /** The active space's mailbox, its feed messages, and the message selected in the mailbox cell. */
 const useMailboxSelection = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = useResolveRef(mailbox?.feed);
   const messages = useQuery(space?.db, feedQuery(feed));
@@ -130,7 +131,7 @@ export const SelectedMessageModule = ({ data }: { data?: { attendableId?: string
   }
 
   return (
-    <MessageArticle
+    <Containers.MessageArticle
       role='article'
       subject={selected}
       mailbox={mailbox}
@@ -160,7 +161,7 @@ export const AttachmentModule = ({ data }: { data?: { attendableId?: string } })
 
 /** The mailbox's one thread in created order, including drafts added at the space root. */
 const useThread = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = useResolveRef(mailbox?.feed);
   const messages = useQuery(
@@ -185,7 +186,9 @@ export const ThreadModule = () => {
     return <Placeholder label='Loading thread' />;
   }
 
-  return <MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={THREAD_CONTEXT_ID} />;
+  return (
+    <Containers.MessageArticle role='article' subject={subject} mailbox={mailbox} attendableId={THREAD_CONTEXT_ID} />
+  );
 };
 
 /** Plain projection of a message — the live proxy carries internals that add noise. */

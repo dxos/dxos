@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { TYPESAFE_CONNECTOR_ID, TYPESAFE_SOURCE } from '../constants.ts';
 import { createTypeSafeConnectorEntry } from './connector.ts';
@@ -22,11 +22,11 @@ describe('typesafe connector', () => {
 
         expect(result.kind).toBe('complete');
         // The source is what `CredentialsService` resolves the key by, so the layer finds it.
-        expect(result.accessToken.source).toBe(TYPESAFE_SOURCE);
+        expect(result.accessToken?.source).toBe(TYPESAFE_SOURCE);
         // Trimmed, so a pasted key with surrounding whitespace still authenticates.
-        expect(result.accessToken.token).toBe('ts-abc');
+        expect(result.accessToken?.token).toBe('ts-abc');
         expect(result.connection.connectorId).toBe(TYPESAFE_CONNECTOR_ID);
-        expect(result.connection.accessToken.target?.token).toBe('ts-abc');
+        expect(result.connection.accessToken?.target?.token).toBe('ts-abc');
       }),
     ));
 

@@ -15,11 +15,11 @@ import { withAuthorization } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Type } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -96,7 +96,7 @@ const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   }).pipe(
     Effect.mapError(
       (error) =>
-        new ConnectionTestError({
+        new ConnectorError.ConnectionTestError({
           message: isGoogleAuthRejection(error)
             ? 'Google rejected the credential. Reauthenticate to continue syncing.'
             : 'Could not verify the connection. Check your network and try again.',
@@ -129,6 +129,7 @@ export default Capability.makeModule(
         id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Gmail',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [...GMAIL_OAUTH_SCOPES],
@@ -141,9 +142,9 @@ export default Capability.makeModule(
           // (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: GoogleOperation.MaterializeGmailTarget,
           optionsSchema: SyncOptions.SyncOptions,
-          auto: MAIL_AUTO_SYNC,
-          trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote: MAIL_REMOTE_SYNC,
+          auto: MailSync.MAIL_AUTO_SYNC,
+          trigger: Trigger.specTimer(MailSync.MAIL_SYNC_CRON),
+          remote: MailSync.MAIL_REMOTE_SYNC,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,
@@ -152,6 +153,7 @@ export default Capability.makeModule(
         id: GOOGLE_CALENDAR_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Google Calendar',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [...GOOGLE_CALENDAR_OAUTH_SCOPES],
@@ -170,6 +172,7 @@ export default Capability.makeModule(
         id: GOOGLE_CONTACTS_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Google Contacts',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [...GOOGLE_CONTACTS_OAUTH_SCOPES],

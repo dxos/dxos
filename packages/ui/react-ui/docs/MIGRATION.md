@@ -571,7 +571,7 @@ Outcome: `react-popper`, `-dismissable-layer`, `-focus-scope`, `-focus-guards`, 
 
 - `Dialog.Overlay` is Ark's `Backdrop` with the content nested inside it, not a sibling `Positioner`:
   every consumer nests `Content` in `Overlay`, and the backdrop's own presence runs the exit animation.
-  `AlertDialog` is the same implementation with `role="alertdialog"` and outside clicks ignored.
+  `AlertDialog` is the same implementation with `role="alertdialog"`, closed only by its own controls.
 - The no-description acceptance holds: Zag adds `aria-describedby` only when a `Description` element is
   in the DOM, pinned by a play story.
 - Ark's `drawer` was evaluated for `Main`'s sidebars and not used, on the reading that it positions and

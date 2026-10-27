@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
@@ -25,6 +25,7 @@ import {
   SaveFilterPopover,
   SubscriptionsArticle,
 } from '#containers';
+import { type QueryFilterOwner } from '#hooks';
 import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants.ts';
@@ -103,7 +104,12 @@ export default Capability.makeModule(() =>
         id: 'calendar',
         filter: AppSurface.object(AppSurface.Article, Calendar.Calendar),
         component: CalendarArticle,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, properties } }) => ({
+          role,
+          subject,
+          attendableId,
+          filter: properties?.filter,
+        }),
       }),
       Surface.create({
         id: 'messageCard',
@@ -119,12 +125,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: POPOVER_SAVE_FILTER,
-        filter: AppSurface.component<{ mailbox: Mailbox.Mailbox; filter: string }>(
+        filter: AppSurface.component<{ owner: QueryFilterOwner; filter: string }>(
           AppSurface.Popover,
           POPOVER_SAVE_FILTER,
         ),
         component: SaveFilterPopover,
-        props: ({ data: { props } }) => ({ mailbox: props.mailbox, filter: props.filter }),
+        props: ({ data: { props } }) => ({ owner: props.owner, filter: props.filter }),
       }),
       Surface.create({
         id: 'mailboxProperties',

@@ -5,7 +5,7 @@
 import { assert, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 
 import * as PluginAssetCache from './plugin-asset-cache.ts';

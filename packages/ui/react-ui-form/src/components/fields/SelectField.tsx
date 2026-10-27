@@ -4,7 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Select, type SelectOption, Typography, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
@@ -31,15 +33,17 @@ export const SelectField = ({
   onValueChange,
   onBlur,
 }: SelectFieldProps) => {
-  const items = useMemo<SelectOption[]>(
+  const items = useMemo<Select.Option[]>(
     () => options.map(({ value, label, icon }) => ({ value: String(value), label: label ?? String(value), icon })),
     [options],
   );
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const value = getValue();
   if (presentationFor(presentation).isStatic) {
     return (
-      <Typography truncate>{options.find((option) => option.value === value)?.label ?? String(value ?? '')}</Typography>
+      <Typography.Text truncate>
+        {options.find((option) => option.value === value)?.label ?? String(value ?? '')}
+      </Typography.Text>
     );
   }
 
@@ -59,7 +63,7 @@ export const SelectField = ({
 };
 
 type SelectControlProps = {
-  items: SelectOption[];
+  items: Select.Option[];
   value?: string;
   placeholder?: string;
   readonly?: boolean;

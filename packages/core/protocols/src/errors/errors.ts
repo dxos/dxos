@@ -106,7 +106,7 @@ registerErrorMessageContext('TimeoutError', TimeoutError);
 // General protocol error.
 export class ProtocolError extends BaseError.extend('ProtocolError') {}
 
-registerErrorMessageContext(ProtocolError.name, ProtocolError);
+registerErrorMessageContext('ProtocolError', ProtocolError);
 
 // General connectivity errors.
 export class ConnectivityError extends BaseError.extend('ConnectivityError') {}
@@ -120,7 +120,7 @@ registerErrorMessageContext('RateLimitExceededError', RateLimitExceededError);
 // TODO(nf): Rename? the protocol isn't what's unknown...
 export class UnknownProtocolError extends BaseError.extend('UnknownProtocolError') {}
 
-registerError(UnknownProtocolError.name, (message, context) => new UnknownProtocolError({ message, context }));
+registerError('UnknownProtocolError', (message, context) => new UnknownProtocolError({ message, context }));
 
 export class InvalidStorageVersionError extends BaseError.extend(
   'InvalidStorageVersionError',
@@ -168,3 +168,23 @@ registerError('UnknownModelError', (_, context) => {
 export class AuthorizationError extends BaseError.extend('AuthorizationError') {}
 
 registerErrorMessageContext('AuthorizationError', AuthorizationError);
+
+/**
+ * An inbox message whose encoded envelope exceeds what EDGE accepts; large content belongs in the linked object.
+ */
+export class InboxPayloadTooLargeError extends BaseError.extend(
+  'InboxPayloadTooLargeError',
+  'The inbox message is too large to send.',
+) {}
+
+registerErrorMessageContext('InboxPayloadTooLargeError', InboxPayloadTooLargeError);
+
+/**
+ * EDGE relays inbox messages only for identities linked to an account, so neither sending nor receiving works without one.
+ */
+export class InboxAccountRequiredError extends BaseError.extend(
+  'InboxAccountRequiredError',
+  'Inbox messages need an account linked to this identity.',
+) {}
+
+registerErrorMessageContext('InboxAccountRequiredError', InboxAccountRequiredError);

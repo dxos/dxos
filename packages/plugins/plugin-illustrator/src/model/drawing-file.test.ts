@@ -5,17 +5,16 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { MermaidEngine, type Scene, SVG_SCHEMA } from '@dxos/diagram';
+import { MermaidEngine, type Scene, SVG_SCHEMA, SvgFile } from '@dxos/diagram';
 import { Database, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
 import { Drawing } from '#types';
 
-import { toSvgFile } from '../components/SceneSvgFile.tsx';
 import { SvgBuilder } from './builder.ts';
-import { fromDxSvg, importDxSvg, toDxSvg, toPayload } from './drawing-file.ts';
+import { fromDxSvg, importDxSvg, makeDrawing, toDxSvg, toPayload } from './drawing-file.ts';
 
 const SOURCE = 'flowchart TB\n  A[Client] --> B[Server]\n  B --> C[(Store)]';
 
@@ -39,7 +38,7 @@ describe('.dx.svg', () => {
     SvgBuilder.apply(canvas, commands);
     const drawing = Drawing.make({ name: 'Request path', canvas });
     const svg = toDxSvg(
-      toSvgFile(objectsOf(commands)),
+      SvgFile.toSvgFile(objectsOf(commands)),
       toPayload({ drawing, canvas, source: { language: 'mermaid', text: SOURCE } }),
     );
 
@@ -58,6 +57,8 @@ describe('.dx.svg', () => {
     expect(first.id).not.toBe(drawing.id);
     expect(second.id).not.toBe(first.id);
     expect(await db.query(Filter.type(Drawing.Drawing)).run()).toHaveLength(2);
+    // The drawing returned is the database's own, so an edit to it (a conversion re-pointing its canvas) persists.
+    expect(await db.query(Filter.id(first.id)).first()).toBe(first);
     expect(first.name).toBe('Request path');
     const imported = await first.canvas.load();
     invariant(imported, 'The imported drawing resolves its canvas.');
@@ -74,12 +75,32 @@ describe('.dx.svg', () => {
     );
   });
 
+  test('rendering the same diagram twice gives the same bytes, and the file still imports', async ({ expect }) => {
+    const render = async () => {
+      const commands = await MermaidEngine.compile(SOURCE);
+      const source = { language: 'mermaid' as const, text: SOURCE };
+      const { drawing, canvas } = makeDrawing({ name: 'Request path', commands, source });
+      return toDxSvg(SvgFile.toSvgFile(objectsOf(commands)), toPayload({ drawing, canvas, source }));
+    };
+    const [first, second] = [await render(), await render()];
+    expect(second).toBe(first);
+    expect(first).not.toContain('timestamp');
+
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const drawing = await EffectEx.runPromise(importDxSvg(first).pipe(Effect.provide(Database.layer(db))));
+    expect(drawing.name).toBe('Request path');
+    const canvas = await drawing.canvas.load();
+    invariant(canvas, 'The imported drawing resolves its canvas.');
+    expect(SvgBuilder.read(canvas).scene.objects.length).toBeGreaterThan(0);
+  });
+
   test('a payload whose root is not a drawing imports nothing', async ({ expect }) => {
     const commands = await MermaidEngine.compile(SOURCE);
     const canvas = Drawing.makeCanvas({ schema: SVG_SCHEMA });
     SvgBuilder.apply(canvas, commands);
     const drawing = Drawing.make({ name: 'Request path', canvas });
-    const svg = toDxSvg(toSvgFile(objectsOf(commands)), { ...toPayload({ drawing, canvas }), root: canvas.id });
+    const svg = toDxSvg(SvgFile.toSvgFile(objectsOf(commands)), { ...toPayload({ drawing, canvas }), root: canvas.id });
 
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);

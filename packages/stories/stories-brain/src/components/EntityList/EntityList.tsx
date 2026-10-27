@@ -4,12 +4,16 @@
 
 import React, { useRef } from 'react';
 
-import { Button, Empty, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { type EntityItem } from '../types.ts';
 
-export type EntityListProps = ThemedClassName<{
+export type EntityListProps = Util.ThemedClassName<{
   entities: EntityItem[];
   /** Selected entity id (the context); `undefined` means no context (show all). */
   selected?: string;
@@ -35,7 +39,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
       <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text classNames='grow'>Entities{entities.length > 0 ? ` (${entities.length})` : ''}</Toolbar.Text>
-          <Button
+          <Button.Root
             icon='ph--x--regular'
             iconOnly
             label='Clear'
@@ -46,7 +50,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
       </Panel.Header>
       <Panel.Body classNames='overflow-auto'>
         {entities.length === 0 ? (
-          <Empty>No entities.</Empty>
+          <Status.Empty>No entities.</Status.Empty>
         ) : (
           <Listbox.Root
             value={selected}

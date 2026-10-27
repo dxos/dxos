@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 /**
  * SQLite client layer for the ambient runtime: the CLI runs on Bun (`bun:sqlite`), the test
@@ -14,9 +15,9 @@ import type * as SqlClient from 'effect/sql/SqlClient';
 export const clientLayer = (
   filename: string,
   options?: { readonly readonly?: boolean },
-): Layer.Layer<SqlClient.SqlClient> =>
+): Layer.Layer<SqlClient.SqlClient, SqlError.SqlError> =>
   Layer.unwrap(
-    Effect.promise(async (): Promise<Layer.Layer<SqlClient.SqlClient>> => {
+    Effect.promise(async (): Promise<Layer.Layer<SqlClient.SqlClient, SqlError.SqlError>> => {
       if (typeof globalThis.Bun !== 'undefined') {
         const { SqliteClient } = await import('@effect/sql-sqlite-bun');
         return SqliteClient.layer({ filename, readonly: options?.readonly });

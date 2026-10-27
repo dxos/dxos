@@ -5,7 +5,7 @@
 import { type Attributes, type Context, SpanStatusCode } from '@opentelemetry/api';
 import type { ReadableSpan, Span, SpanProcessor } from '@opentelemetry/sdk-trace-base';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 
 /**
  * Tail sampling for spans arriving at the observability worker.
@@ -14,7 +14,7 @@ import { SpanAttributes } from '@dxos/effect';
  * cannot know that the span will fail, and it sees the span name before the provider has annotated
  * it. Both decisions are only available once the span has ended — which is what "tail" means. The
  * canonical implementation of this is the OpenTelemetry Collector's tail-sampling processor, which
- * buffers whole traces server-side; there is no collector between Composer and SigNoz, so the same
+ * buffers whole traces server-side; there is no collector between Composer and PostHog, so the same
  * decisions are made here instead, on the spans this realm produced.
  *
  * The rules are the canonical tail-sampling set — keep what errored, keep what was slow, sample the
@@ -30,6 +30,8 @@ import { SpanAttributes } from '@dxos/effect';
  * In order:
  * - a span that **errored** is kept, and its trace is promoted;
  * - a span slower than {@link DEFAULT_SLOW_MS} is kept, and its trace is promoted;
+ * - a span marked `dxos.sampling.keep` — a rare flow such as an invitation, which a dashboard counts
+ *   one by one and a 30% sample would mostly hide — is kept, and its trace is promoted;
  * - a span carrying `gen_ai.*` or `dxos.ai.kind` — a model call, or the turn and tool calls
  *   around it that the AI analytics sink reports — is kept, and its trace is promoted, so a model call is never a
  *   fraction of the calls that happened. This one is ours rather than canonical: the AI events are
@@ -109,6 +111,7 @@ export class TailSampler {
     return (
       span.status.code === SpanStatusCode.ERROR ||
       span.durationMs > this._slowMs ||
+      isKeepMarked(span.attributes) ||
       Object.keys(span.attributes).some(isAiAttribute)
     );
   }
@@ -135,6 +138,10 @@ const GEN_AI_PREFIX = 'gen_ai.';
 
 /** `gen_ai.*` marks a model call; `dxos.ai.kind` the turn around it and the tool calls inside it. */
 const isAiAttribute = (key: string): boolean => key.startsWith(GEN_AI_PREFIX) || key === SpanAttributes.AI.kind;
+
+/** Manual `@dxos/tracing` spans namespace their attributes under `ctx.`, so the marker arrives either way. */
+const isKeepMarked = (attributes: Attributes): boolean =>
+  attributes[SpanAttributes.SAMPLING.keep] === true || attributes[`ctx.${SpanAttributes.SAMPLING.keep}`] === true;
 
 /**
  * Deterministic per trace, so every span of a trace decides the same way. Reads the low 8 hex digits

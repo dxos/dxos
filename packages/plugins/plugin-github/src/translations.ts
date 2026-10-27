@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { PullRequest } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -72,6 +72,25 @@ export const translations = [
         'copy-link.label': 'Copy link to pull request',
         'copy-link-success.title': 'Link copied',
         'copy-link-error.title': 'Could not copy the link',
+        'pull-requests-sort.label': 'Sort',
+        'pull-requests-sort-relevance.label': 'Relevance',
+        'pull-requests-sort-updated.label': 'Updated',
+        'pull-requests-sort-created.label': 'Created',
+        'pull-requests-sort-number.label': 'Number',
+        'pull-requests-sort-title.label': 'Title',
+        'pull-requests-sort-asc.label': 'Ascending',
+        'pull-requests-sort-desc.label': 'Descending',
+        'pull-requests-group.label': 'Group',
+        'pull-requests-group-none.label': 'No grouping',
+        'pull-requests-group-repo.label': 'Repository',
+        'pull-requests-group-state.label': 'State',
+        'pull-requests-group-checks.label': 'Checks',
+        'pull-requests-group-author.label': 'Author',
+        'pull-requests-filter-clear.label': 'Clear filter',
+        'pull-requests-empty.message': 'No pull requests in this space yet.',
+        'pull-requests-no-match.message': 'No pull requests match the filter.',
+        'group-no-author.label': 'Unknown author',
+        'untitled-task.label': 'Untitled task',
         'ci-status.success.label': 'CI passing',
         'ci-status.failure.label': 'CI failing',
         'ci-status.pending.label': 'CI running',
@@ -122,4 +141,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

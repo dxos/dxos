@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { PullRequest } from '@dxos/types';
 
@@ -94,7 +94,7 @@ export const generateWalkthrough = <R = never>({
 
     // Regenerating against the same head cannot change the answer, so it is only work.
     if (existing && !force && remote.commit && !Walkthrough.isStale(existing, remote.commit)) {
-      report(PROGRESS_STATUS_COMPLETE, GENERATE_PHASES);
+      report(Progress.STATUS_COMPLETE, GENERATE_PHASES);
       return {
         walkthrough: existing,
         generated: false,
@@ -130,7 +130,7 @@ export const generateWalkthrough = <R = never>({
       total: filled.total,
     });
 
-    report(PROGRESS_STATUS_COMPLETE, GENERATE_PHASES);
+    report(Progress.STATUS_COMPLETE, GENERATE_PHASES);
     return {
       walkthrough,
       strategy: chaptered ? ('chaptered' as const) : ('one-shot' as const),

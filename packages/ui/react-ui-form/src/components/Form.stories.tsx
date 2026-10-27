@@ -6,7 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Container, Panel, type PanelRootProps, ScrollArea } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { NextJsonLayout, type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -16,7 +18,7 @@ import { SCALAR_VALUES, ScalarSchema, type ScalarValues } from './testing.ts';
 
 const fieldMap = { model: createSelectField({ options: ['opus', 'sonnet', 'haiku'] }) };
 
-type StoryArgs = PaneArgs & { size?: PanelRootProps['size'] };
+type StoryArgs = PaneArgs & { size?: Panel.RootProps['size'] };
 
 /**
  * Same contract as the current Form: schema, values, onValuesChanged, onSave/onCancel, fieldMap, test ids. The values
@@ -31,7 +33,7 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container>
+              <Layout.Container>
                 <Form.Root
                   schema={ScalarSchema}
                   values={values}
@@ -47,7 +49,7 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
                     <Form.Actions />
                   </Form.Content>
                 </Form.Root>
-              </Container>
+              </Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
@@ -82,6 +84,37 @@ export const DocumentWidth: Story = {
   ),
   play: async ({ canvasElement }) => {
     await expect(canvasElement.querySelector('[data-scope="panel"][data-width="document"]')).not.toBeNull();
+  },
+};
+
+const OVERRIDES = {
+  age: { indeterminate: true },
+  active: { indeterminate: true },
+  status: { indeterminate: true },
+  name: { label: 'Display name' },
+};
+
+/**
+ * `fieldOverrides`: per-field changes for this use of the form. Indeterminate fields (values several edited objects
+ * disagree on) read as unset with a "Mixed" placeholder, and a dimmed switch for a boolean, until edited.
+ */
+export const FieldOverrides: Story = {
+  render: () => (
+    <Form.Root
+      schema={ScalarSchema}
+      values={{ ...SCALAR_VALUES, active: true, status: 'active' }}
+      fieldOverrides={OVERRIDES}
+    >
+      <Form.Content>
+        <Form.Fields include={['name', 'age', 'active', 'status']} />
+      </Form.Content>
+    </Form.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByPlaceholderText('Mixed')).toBeInTheDocument();
+    await expect(await canvas.findByText('Display name')).toBeInTheDocument();
+    await expect(canvasElement.querySelector('[data-indeterminate]')).not.toBeNull();
   },
 };
 

@@ -15,6 +15,11 @@ import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
+import { reactCompilerOptions } from '../../../react-compiler.config.ts';
+import { withRetry } from './indexers.ts';
+import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
+import { specFilesPlugin } from './spec-files.ts';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -44,6 +49,7 @@ const extendedIconsDir = resolve(rootDir, 'packages/ui/ui-icons/assets');
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
 const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-tldraw/dist/assets');
+const identPublicDir = resolve(rootDir, 'tools/autocue/public');
 
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
@@ -58,6 +64,8 @@ export const modules = [
   'stories/*/src/**',
   'ui/*/src/**',
   'ui/react-primitives/*/src/**',
+  // autocue's on-screen UI lives under `tools/` beside the skill scripts that inject it.
+  '../tools/autocue/src/**',
 ];
 
 /**
@@ -168,6 +176,42 @@ const watchOptions = { ignored: watchIgnored, useFsEvents: false, usePolling: fa
  * watch on an inode change only on Linux, so on macOS the first such save is reported and every
  * later one is silently lost — the server keeps serving the stale transform until restarted.
  */
+/**
+ * Starts every story dark, since `preview.ts` defaults to the dark theme whatever the OS prefers: ThemePlugin's head
+ * script follows `prefers-color-scheme`, so on a light OS the first paint is near white until the theme decorator
+ * runs. Prepended to the head, so it holds from the first paint; an explicit light theme in the URL starts light, and
+ * the class goes once a light theme is applied.
+ */
+const darkBootPlugin = (): Plugin => ({
+  name: 'dxos:dark-boot',
+  transformIndexHtml: () => [
+    {
+      tag: 'style',
+      injectTo: 'head-prepend',
+      children: [
+        ':is(html.dx-boot-dark, html.dark), :is(html.dx-boot-dark, html.dark) body,',
+        ':is(html.dx-boot-dark, html.dark) :is(.sb-preparing-story, .sb-preparing-docs, .sb-previewBlock) {',
+        '  background: oklch(0.145 0 0) !important; color: oklch(0.985 0 0) !important; color-scheme: dark;',
+        '}',
+      ].join('\n'),
+    },
+    {
+      tag: 'script',
+      injectTo: 'head-prepend',
+      children: [
+        '(() => {',
+        '  if (/theme:light/.test(decodeURIComponent(location.search))) return;',
+        '  const root = document.documentElement;',
+        "  root.classList.add('dx-boot-dark');",
+        '  new MutationObserver((_, observer) => {',
+        "    if (root.classList.contains('light')) { root.classList.remove('dx-boot-dark'); observer.disconnect(); }",
+        "  }).observe(root, { attributes: true, attributeFilter: ['class'] });",
+        '})();',
+      ].join('\n'),
+    },
+  ],
+});
+
 const rearmWatchPlugin = (): Plugin => ({
   name: 'dxos:rearm-watch',
   apply: 'serve',
@@ -309,7 +353,12 @@ export const createConfig = ({
   // Per-package storybooks point `configDir` at their own `.storybook`, so the shared manager config
   // (theme, sidebar labels) is only picked up if it is registered as a manager entry here.
   managerEntries: [resolve(__dirname, './manager.tsx')],
-  staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-tldraw' }],
+  staticDirs: [
+    staticDir,
+    { from: sketchAssetsDir, to: '/assets/plugin-tldraw' },
+    // The ident's logo, sound and font, which Remotion's \`staticFile\` resolves from the root (autocue's ident story).
+    { from: identPublicDir, to: '/' },
+  ],
   // Suppress Storybook's own promotional UI: the "Learn what's new" release popup and the
   // "Get started" onboarding checklist (sidebar widget and menu guide page).
   core: {
@@ -321,7 +370,13 @@ export const createConfig = ({
     // Nothing here highlights, yet once armed (every story load resets it) the addon re-runs
     // `getComputedStyle` over every element in the preview on each DOM mutation of the story root.
     highlight: false,
+    // Marks stories whose files git reports changed; its `git` spawn fails here (EBADF) and logs an error on every start.
+    changeDetection: false,
   },
+  // A story file read mid-write (a checkout, a merge, a formatter) would otherwise fail every story until it changed again.
+  // Skipping applies to the dev server only: a build or a test run must still fail on a story that cannot be indexed.
+  experimental_indexers: async (existing = [], options) =>
+    existing.map((indexer) => withRetry(indexer, { skipOnFailure: options.configType === 'DEVELOPMENT' && !isVitest })),
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
@@ -426,7 +481,7 @@ export const createConfig = ({
         worker: {
           format: 'es',
           // A `?module-url` bundle is built as a worker entry, with its exports kept by this plugin.
-          plugins: () => [wasm(), ModuleUrlPlugin()],
+          plugins: () => [isPerfBundle && perfBundlePlugin(), wasm(), ModuleUrlPlugin()],
         },
         plugins: [
           //
@@ -463,8 +518,14 @@ export const createConfig = ({
 
           !isVitestRun && rearmWatchPlugin(),
 
+          // Ahead of `importSource`, which would otherwise resolve the automerge packages first.
+          isPerfBundle && perfBundlePlugin(),
+
           // `?module-url` imports: stories that hand module URLs to a worker to `import()`.
           ModuleUrlPlugin(),
+
+          // `?spec` imports: spec text a published page can replace without a rebuild.
+          specFilesPlugin({ rootDir }),
 
           importSource({
             // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,
@@ -494,8 +555,9 @@ export const createConfig = ({
           // https://www.npmjs.com/package/@vitejs/plugin-react
           // The oxc-based plugin (not SWC) keeps the React/JSX transform within rolldown's
           // pipeline, aligning with composer-app and composer-crx; this drops storybook-react as a
-          // consumer of `@vitejs/plugin-react-swc`.
-          react(),
+          // consumer of `@vitejs/plugin-react-swc`. `.jsx`/`.tsx` only, as in composer-app: over plain
+          // script modules it emits Fast Refresh registrations that throw in the client's SharedWorker.
+          react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/ }),
 
           // https://www.npmjs.com/package/vite-plugin-turbosnap
           turbosnap({
@@ -543,12 +605,17 @@ export const createConfig = ({
             contentPaths: content,
             // Keeps every `PxIcons` entry in the sprite so stories paint without a round trip.
             scanPaths: [resolve(rootDir, 'packages/ui/ui-icons/src/index.ts')],
-            // Only `px` is served: the Phosphor catalog is ~9,000 files, too many to hand to a story.
-            assets: [{ route: '/px-icons', dir: extendedIconsDir }],
+            // Phosphor is served but never copied (~9,000 files): a story module loaded after the
+            // iframe fetched the sprite misses its icons there, and the registry fetches them instead.
+            assets: [
+              { route: '/phosphor', dir: iconsDir, copy: false },
+              { route: '/px-icons', dir: extendedIconsDir },
+            ],
             spriteFile: 'icons.svg',
           }),
 
           ThemePlugin({}),
+          darkBootPlugin(),
         ],
       },
     ) as InlineConfig;

@@ -9,7 +9,7 @@ import { addressToA1Notation } from '@dxos/compute-hyperformula/types';
 import * as Operation from '@dxos/compute/Operation';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { EID, Filter, Key, Type, View } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { OperationInvoker } from '@dxos/operation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';

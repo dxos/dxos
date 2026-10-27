@@ -16,17 +16,21 @@ import {
   type ElementKind,
   GROUP_ATTRS,
   NODE_ATTRS,
+  NOTE_ATTRS,
   OBJECT_ATTRS,
   RELATION_WORDS,
   STATEMENT_KEYWORDS,
 } from '../dsl/vocabulary.ts';
+import { FRAGMENT_KINDS } from '../semantic.ts';
 
 /** What a semantic statement accepts after its id: attributes, plus relations or edge clauses. */
 const SEMANTIC: Record<string, { attrs: readonly AttrSpec[]; words: readonly string[] }> = {
   DiagramDecl: { attrs: DIAGRAM_ATTRS, words: [] },
-  GroupDecl: { attrs: GROUP_ATTRS, words: RELATION_WORDS },
+  GroupDecl: { attrs: GROUP_ATTRS, words: [...RELATION_WORDS, 'compact'] },
   NodeDecl: { attrs: NODE_ATTRS, words: RELATION_WORDS },
   EdgeDecl: { attrs: EDGE_ATTRS, words: ['via', 'bus'] },
+  NoteDecl: { attrs: NOTE_ATTRS, words: [] },
+  FragmentDecl: { attrs: [], words: [...FRAGMENT_KINDS, 'else'] },
 };
 
 const attributeOptions = (attrs: readonly AttrSpec[]) =>
@@ -76,9 +80,12 @@ const source = (context: CompletionContext): CompletionResult | null => {
 
   const ancestors = ancestorsOf(context, context.pos);
   // Inside a semantic statement the innermost one decides; a group's body holds nodes and edges.
-  const innermost = ancestors.find((name) => name in SEMANTIC || name === 'GroupBody');
+  const innermost = ancestors.find((name) => name in SEMANTIC || name === 'GroupBody' || name === 'FragmentBody');
   if (innermost === 'GroupBody') {
     return { from: word.from, options: ['node', 'edge'].map((label) => ({ label, type: 'keyword' })) };
+  }
+  if (innermost === 'FragmentBody') {
+    return { from: word.from, options: ['edge', 'note', 'fragment'].map((label) => ({ label, type: 'keyword' })) };
   }
   if (innermost) {
     const { attrs, words } = SEMANTIC[innermost];

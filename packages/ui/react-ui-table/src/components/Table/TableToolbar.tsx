@@ -6,11 +6,9 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useEffect, useMemo } from 'react';
 
-import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
   type ActionGraphNodes,
-  type ActionGraphProps,
   ActionToolbar,
   type ActionToolbarProps,
   type MenuAction,
@@ -19,6 +17,7 @@ import {
   createMenuItemGroup,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
@@ -37,13 +36,11 @@ const createTableToolbarActions = ({
   onAdd,
   onSave,
   onExport,
-  customActions,
 }: {
   stateAtom: Atom.Atom<TableToolbarState>;
   onAdd?: () => void;
   onSave?: () => void;
   onExport?: (format: TableExportFormat) => void;
-  customActions?: Atom.Atom<ActionGraphProps>;
 }) =>
   Atom.make((get) => {
     const nodes: ActionGraphNodes = [];
@@ -98,11 +95,6 @@ const createTableToolbarActions = ({
     const gap = createGapSeparator();
     nodes.push(...gap.nodes);
     edges.push(...gap.edges);
-    if (customActions) {
-      const custom = get(customActions);
-      nodes.push(...custom.nodes);
-      edges.push(...custom.edges);
-    }
 
     return {
       nodes,
@@ -110,15 +102,14 @@ const createTableToolbarActions = ({
     };
   });
 
-export type TableToolbarProps = Pick<ActionToolbarProps, 'attendableId'> &
+export type TableToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'customActions'> &
   TableToolbarState & {
     onAdd?: () => void;
     onSave?: () => void;
     onExport?: (format: TableExportFormat) => void;
-    customActions?: Atom.Atom<ActionGraphProps>;
   };
 
-export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
+export const TableToolbar = Util.composable<HTMLDivElement, TableToolbarProps>(
   ({ attendableId, viewDirty, onAdd, onSave, onExport, customActions, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
@@ -129,13 +120,19 @@ export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
     }, [registry, stateAtom, viewDirty]);
 
     const actionsCreator = useMemo(
-      () => createTableToolbarActions({ stateAtom, onAdd, onSave, onExport, customActions }),
-      [stateAtom, onAdd, onSave, onExport, customActions],
+      () => createTableToolbarActions({ stateAtom, onAdd, onSave, onExport }),
+      [stateAtom, onAdd, onSave, onExport],
     );
     const menuActions = useMenuActions(actionsCreator);
 
     return (
-      <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        customActions={customActions}
+        {...Util.composableProps(props)}
+        ref={forwardedRef}
+      />
     );
   },
 );

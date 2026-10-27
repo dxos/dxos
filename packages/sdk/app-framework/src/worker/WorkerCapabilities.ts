@@ -7,7 +7,7 @@
 import type * as Effect from 'effect/Effect';
 
 import { type Config } from '@dxos/config';
-import { type Hook } from '@dxos/effect';
+import type * as Hook from '@dxos/effect/Hook';
 import { type RpcRouter } from '@dxos/rpc';
 
 import * as Capability from '../core/capability.ts';
@@ -24,6 +24,8 @@ export interface HostService {
   readonly requestShutdown: Effect.Effect<void>;
   /** Tears down the layer stack ahead of the worker, as a reset does before wiping storage. */
   readonly closeStack: Effect.Effect<void>;
+  /** Sends a progress status to every connected tab, which extends the tab's connection timeout while startup runs. */
+  readonly reportStatus: (status: unknown) => void;
 }
 
 /** Contributed by the base worker before any plugin module activates. */

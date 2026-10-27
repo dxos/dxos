@@ -8,9 +8,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Appeal, Diagnostics, Dsl, type Scene, type Semantic, SemanticEngine, UmlGrid } from '@dxos/diagram';
 import { diagram as diagramLanguage } from '@dxos/diagram/extension';
-import { EffectEx } from '@dxos/effect';
-import { Grid, ScrollArea, useThemeMode } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -18,8 +20,10 @@ import { mx } from '@dxos/ui-theme';
 import { SceneSvg } from './SceneSvg.tsx';
 import appFramework from './testing/app-framework.dx?raw';
 import compute from './testing/compute.dx?raw';
+import dataflow from './testing/dataflow.dx?raw';
 import processSource from './testing/process.dx?raw';
 import relations from './testing/relations.dx?raw';
+import sequence from './testing/sequence.dx?raw';
 import stacked from './testing/stacked.dx?raw';
 
 //
@@ -95,7 +99,7 @@ const useCompiled = (source: string, strip: boolean): Compiled | undefined => {
 
 /** The semantic DSL in the diagram language mode; parse problems lint inline, layout ones show beside the drawing. */
 const SourceEditor = ({ initialValue, onChange }: { initialValue: string; onChange: (text: string) => void }) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       initialValue,
@@ -119,7 +123,7 @@ const Header = ({ children }: { children: string }) => (
 
 /** One rendering with its problems listed beneath it. */
 const Drawing = ({ title, compiled, testId }: { title: string; compiled?: Compiled; testId: string }) => (
-  <Grid rows={['min', 'fill', 'min']} classNames='min-h-0 gap-px bg-separator'>
+  <Layout.Grid rows={['min', 'fill', 'min']} classNames='min-h-0 gap-px bg-separator'>
     <Header>{compiled ? `${title} · ${compiled.ms} ms` : `${title} · compiling…`}</Header>
     <SceneSvg
       classNames='dx-attention-surface dx-base-surface min-h-0 min-w-0'
@@ -134,7 +138,7 @@ const Drawing = ({ title, compiled, testId }: { title: string; compiled?: Compil
         </div>
       ))}
     </div>
-  </Grid>
+  </Layout.Grid>
 );
 
 /** Metrics, overall appeal and every appeal rule, worst first. */
@@ -161,9 +165,9 @@ const Scores = ({ title, compiled }: { title: string; compiled?: Compiled }) => 
     ['area', `${metrics.width} × ${metrics.height}`],
   ];
   return (
-    <div className='p-3 space-y-3 text-xs' data-testid='constraints.scores'>
+    <div className='p-trim-md space-y-3 text-xs' data-testid='constraints.scores'>
       <div className='text-sm font-medium'>{title}</div>
-      <Grid cols={['fill', 'min']} gap='xs' classNames='font-mono'>
+      <Layout.Grid cols={['fill', 'min']} gap='xs' classNames='font-mono'>
         {rows.map(([label, value]) => (
           <React.Fragment key={label}>
             <span className='text-fg-muted'>{label}</span>
@@ -177,8 +181,8 @@ const Scores = ({ title, compiled }: { title: string; compiled?: Compiled }) => 
             </span>
           </React.Fragment>
         ))}
-      </Grid>
-      <Grid cols={['fill', 'min', 'min']} gap='xs'>
+      </Layout.Grid>
+      <Layout.Grid cols={['fill', 'min', 'min']} gap='xs'>
         <span className='text-fg-subtle'>rule</span>
         <span className='text-fg-subtle text-end'>weight</span>
         <span className='text-fg-subtle text-end'>score</span>
@@ -199,7 +203,7 @@ const Scores = ({ title, compiled }: { title: string; compiled?: Compiled }) => 
             </span>
           </React.Fragment>
         ))}
-      </Grid>
+      </Layout.Grid>
     </div>
   );
 };
@@ -217,25 +221,25 @@ const Bench = ({ source: initial, compare }: StoryArgs) => {
   const bare = useCompiled(compare ? source : '', true);
 
   return (
-    <Grid grow cols={['28rem', 'fill', '22rem']} classNames='gap-px bg-separator'>
-      <Grid rows={['min', 'fill']} classNames='min-h-0 gap-px bg-separator'>
+    <Layout.Grid grow cols={['28rem', 'fill', '22rem']} classNames='gap-px bg-separator'>
+      <Layout.Grid rows={['min', 'fill']} classNames='min-h-0 gap-px bg-separator'>
         <Header>Semantic DSL</Header>
         {/* Keyed on the fixture so switching stories replaces the buffer; edits otherwise persist. */}
         <div className='dx-base-surface min-h-0'>
           <SourceEditor key={initial} initialValue={initial} onChange={setSource} />
         </div>
-      </Grid>
-      <Grid rows={compare ? 2 : 1} classNames='min-h-0 gap-px bg-separator'>
+      </Layout.Grid>
+      <Layout.Grid rows={compare ? 2 : 1} classNames='min-h-0 gap-px bg-separator'>
         <Drawing title='With hints' compiled={hinted} testId='constraints.problems' />
         {compare && <Drawing title='No hints' compiled={bare} testId='constraints.bare-problems' />}
-      </Grid>
+      </Layout.Grid>
       <ScrollArea.Root orientation='vertical' classNames='dx-base-surface min-h-0'>
         <ScrollArea.Viewport>
           <Scores title='With hints' compiled={hinted} />
           {compare && <Scores title='No hints' compiled={bare} />}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Grid>
+    </Layout.Grid>
   );
 };
 
@@ -268,3 +272,9 @@ export const StackedBoxes: Story = { args: { source: stacked } };
 
 /** Every relationship word: extends, composes, owns, one-to-many, many-to-many, depends-on. */
 export const Relations: Story = { args: { source: relations } };
+
+/** `diagram kind=sequence`: participants as columns, messages as rows, with activations, notes and fragments. */
+export const Sequence: Story = { args: { source: sequence } };
+
+/** `diagram kind=dataflow`: processes, a store and external entities, laid out by the grid engine. */
+export const Dataflow: Story = { args: { source: dataflow } };

@@ -4,7 +4,8 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Factor out common tree with react-ui-list.
@@ -56,7 +57,7 @@ const sortNodes = (nodes: Iterable<Node>): Node[] => {
   return list;
 };
 
-export type FileTreeProps = ThemedClassName<{
+export type FileTreeProps = Util.ThemedClassName<{
   files: readonly FileEntry[];
   selectedPath?: string;
   onSelect?: (path: string) => void;
@@ -102,8 +103,8 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
           style={indent}
           onClick={() => setExpanded((current) => !current)}
         >
-          <Icon icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} size='xs' />
-          <Icon icon={expanded ? 'ph--folder-open--regular' : 'ph--folder--regular'} size='md' />
+          <Icon.Icon icon={expanded ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} size='xs' />
+          <Icon.Icon icon={expanded ? 'ph--folder-open--regular' : 'ph--folder--regular'} size='md' />
           <span className='truncate'>{node.name}</span>
         </button>
         {expanded && (
@@ -136,7 +137,7 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
         onClick={() => onSelect?.(node.path)}
       >
         <span className='inline-block w-3' aria-hidden />
-        <Icon icon='ph--file-code--regular' size='md' />
+        <Icon.Icon icon='ph--file-code--regular' size='md' />
         <span className='truncate'>{node.name}</span>
       </button>
     </li>

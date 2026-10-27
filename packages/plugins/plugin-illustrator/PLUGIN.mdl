@@ -4,11 +4,12 @@ name: IllustratorPlugin
 version: 0.1.0
 ---
 
-A headless diagramming host plugin for `DXOS` Composer. Owns the base `Sketch` ECHO type, the
-renderer-neutral scene DSL and dialect registry, and the agent-facing sketch skill/operations.
-Canvas renderers (e.g. plugin-tldraw, plugin-excalidraw) contribute a `SketchVariant` capability
-supplying their canvas schema, a builder that maps the scene DSL onto their records, and surface
-components; plugin-illustrator resolves the variant at runtime and delegates.
+A headless diagramming host plugin for `DXOS` Composer. Owns the `Drawing` ECHO type and the
+agent-facing drawing skill and operations; the scene model, the `.dx` DSL and its layout engines live
+in `@dxos/diagram`, whose [SPEC.mdl](../../common/diagram/SPEC.mdl) covers the stack as a whole.
+Canvas renderers (plugin-canvas, plugin-tldraw, plugin-excalidraw) contribute a `VariantProvider`
+capability supplying their canvas schema, a builder that maps the scene DSL onto their records, and
+surface components; plugin-illustrator resolves the variant at runtime and delegates.
 
 ## Extensions
 
@@ -23,15 +24,27 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
 ```mdl
-type Sketch
+type Drawing
   desc: Named handle around a renderer-specific canvas object.
   fields:
     name?: string
-    canvas: Ref<Unknown>   # reference to the renderer-specific canvas (e.g. Tldraw.Canvas)
+    canvas: Ref<Canvas>
+```
+
+```mdl
+type Canvas
+  desc: >
+    The renderer's records, opaque to ECHO. `schema` names the renderer format (e.g. `tldraw.com/2`)
+    and is how a drawing is matched to the variant that renders it.
+  fields:
+    schema?: string
+    content: Record<string, Any>
+    styles?: Record<string, Any>
 ```
 
 ## Capabilities
@@ -47,33 +60,63 @@ component VariantProvider
 ```mdl
 op create
   key: org.dxos.operation.illustrator.create
-  desc: Creates a Sketch with an empty canvas for the requested (or default) variant.
+  desc: Creates a Drawing with an empty canvas for the requested (or default) variant.
+
+op convert
+  key: org.dxos.operation.illustrator.convert
+  desc: Moves a sketch onto another variant by replaying its scene onto a fresh canvas of that variant
+        (e.g. a read-only SVG import into Excalidraw); the old canvas is removed. Fails on an unknown
+        or identical variant.
 
 op read
   key: org.dxos.operation.illustrator.read
-  desc: Returns the current scene of a sketch as world objects with object-local coordinates.
+  desc: Returns the current scene of a drawing as world objects with object-local coordinates.
 
 op edit
   key: org.dxos.operation.illustrator.edit
-  desc: Applies scene commands to a sketch via the variant's builder; returns the resulting scene.
+  desc: Applies scene commands to a drawing via the variant's builder; returns the resulting scene.
+
+op draw
+  key: org.dxos.operation.illustrator.draw
+  desc: Applies a `.dx` document: semantic statements of any diagram kind (structure, sequence,
+        data flow) are laid out by `@dxos/diagram`, scene statements pass through. Nothing is applied
+        while the document has an error; the result carries the problems and the layout report.
+
+op score
+  key: org.dxos.operation.illustrator.analyze
+  desc: Grades the drawing as laid out on one 0–1 scale, per layout constraint and cost term, with
+        the diagnostics behind them.
 
 op generate
   key: org.dxos.operation.illustrator.generate
-  desc: Replaces a sketch with a diagram compiled from mermaid source (flowchart or classDiagram);
-        the dialect owns the layout, so no coordinates are supplied.
+  desc: DEPRECATED, superseded by `draw`. Replaces a drawing with a diagram compiled from mermaid
+        source (flowchart or classDiagram); the dialect owns the layout, so no coordinates are
+        supplied.
 ```
+
+## Commands
+
+`dx drawing` (contributed through `AppCapability.commands`; React-free, so it loads in the CLI):
+
+| Command                         | Effect                                                                         |
+|---------------------------------|--------------------------------------------------------------------------------|
+| `render <file.dx> [-o] [--plain]` | Lays out a semantic-DSL file and writes a `.dx.svg` (or bare `.svg`); prints the layout report. |
+| `import <file.dx.svg>`          | Adds the drawing a `.dx.svg` carries to a space under fresh ids.               |
+| `list`                          | Lists the drawings in a space.                                                 |
+| `export <id> [-o]`              | Writes an SVG-variant drawing, edits included, back out to a `.dx.svg`.        |
 
 ## Dialects
 
 Higher-level diagram languages compile to scene commands (see `@dxos/diagram`, `packages/common/diagram/src/dialect.ts`); each
-dialect owns its layout, so its output lands as ordinary world objects that stay editable by id.
+dialect owns its layout, so its output lands as ordinary world objects that stay editable by id. The
+`.dx` DSL is the authoring language; the mermaid dialects below are deprecated and kept working.
 
 ```mdl
 component MermaidFlowchart
-  desc: Mermaid flowchart subset (nodes, subgraphs, directed edges) with a layered layout.
+  desc: DEPRECATED. Mermaid flowchart subset (nodes, subgraphs, directed edges) with a layered layout.
 
 component UmlClass
-  desc: Mermaid classDiagram subset (class blocks with members, stereotypes, generics, and the
+  desc: DEPRECATED. Mermaid classDiagram subset (class blocks with members, stereotypes, generics, and the
         standard relation arrows) with a layered layout — supertypes above subtypes. Each class
         compiles to a world object with title/attributes/methods compartments.
 
@@ -99,12 +142,9 @@ component SvgVariant
 
 ```mdl
 component DrawingSkill
-  desc: Free-form drawing via the scene DSL; the agent does the layout.
-
-component UmlSkill
-  desc: UML class diagrams from source code (bound documents or a fetched GitHub reference):
-        the agent extracts the class model, emits a mermaid classDiagram, and the generate
-        operation compiles and lays it out.
+  desc: Drawing via the `.dx` DSL. It teaches the semantic statements of each diagram kind
+        (structure, sequence, data flow) for anything that is a graph, and scene statements, where
+        the agent chooses the coordinates, for everything else.
 ```
 
 ## QA
@@ -116,8 +156,7 @@ invocable operation, an agent binding (`invoke`). Report failures by test and st
 test QA-1: Create, edit, and read back a drawing
   desc: |
     The scene-DSL round-trip through the SVG variant (owned by this plugin, so no renderer plugin
-    dependency is needed). Note: the source's runtime ECHO type is `Drawing`, not the `Sketch`
-    type documented above — this test uses the real name.
+    dependency is needed).
   actors: agent
   covers: []
   status: unverified
@@ -157,7 +196,7 @@ test QA-1: Create, edit, and read back a drawing
 
 ```mdl
 test QA-2: Generate a UML class diagram from mermaid source
-  desc: The UmlSkill path — replace a drawing's contents with a class diagram compiled from mermaid source, with layout owned by the dialect.
+  desc: The UML skill's path (the skill is plugin-uml's) — replace a drawing's contents with a class diagram compiled from mermaid source, with layout owned by the dialect.
   actors: agent
   covers: []
   status: unverified
@@ -193,4 +232,83 @@ test QA-2: Generate a UML class diagram from mermaid source
       do: Right-click "QA UML" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes if it was open
+```
+
+```mdl
+test QA-3: Render a diagram from the terminal and import it into a space
+  desc: |
+    The `dx drawing` commands: a semantic-DSL file is laid out headlessly into a `.dx.svg`, re-laid out after an
+    edit, and imported into a space as an editable drawing. Recorded as a terminal demo by
+    `autocue/dx-drawing.mjs`.
+  actors: human
+  covers: []
+  status: unverified
+  given:
+    - dx: the `dx` CLI runs from the checkout (`packages/devtools/cli/bin/dx`) with the illustrator plugin enabled
+    - an identity exists on the profile `dx` uses, with a space
+    - pipeline.dx: a `.dx` file in the working directory describing `dx drawing` itself: five boxes in two groups
+  steps:
+    - name: Show the diagram source
+      do: Run `cat pipeline.dx`.
+      expect: the DSL prints — nodes, groups and edges, with no coordinates
+    - name: Render it
+      do: Run `dx drawing render pipeline.dx`.
+      expect: |
+        the report prints nodes: 7 (the five boxes plus the two group frames), 0 crossings and the output path; `pipeline.dx.svg` is written and opens as
+        an image with the two groups laid out and every edge routed
+    - name: Edit and re-render
+      do: Append the ECHO space, EDGE and Composer nodes with their edges to `pipeline.dx`, then run `dx drawing render pipeline.dx` again.
+      expect: the layout re-flows; the report reads nodes: 10 (eight boxes, two frames) and still 0 crossings
+    - name: Import it into the space
+      do: Run `dx drawing import pipeline.dx.svg`.
+      expect: a Drawing named "pipeline" is added to the space and its id prints
+    - name: List the drawings
+      do: Run `dx drawing list`.
+      expect: '"pipeline" is listed with the id the import printed'
+
+test QA-4: Showcase clip
+  desc: |
+    The 10s showcase clip: Draw shapes on an SVG drawing. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: illustrator` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-illustrator enabled
+  steps:
+    - name: Create a drawing
+      do: Create a Drawing with the svg variant.
+      expect: an empty drawing opens
+    - name: Draw shapes
+      do: Pick shapes from the palette and drag them out.
+      expect: each shape appears
+```
+
+## Changelog
+
+```mdl
+decision D-1: Mermaid support is deprecated.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [generate, MermaidFlowchart, UmlClass]
+  source: https://claude.ai/code/session_01JCCokgAuSJrLXWRkjTSY3V
+```
+
+```mdl
+decision D-2: `generate` is marked deprecated and keeps working; `draw` is its replacement. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [generate, draw]
+  why: The UML skill still needs mermaid's classDiagram to show class members, which the DSL cannot yet.
+```
+
+```mdl
+decision D-3: The spec names the types and operations as the code does: `Drawing` with a `Canvas` ref, the `VariantProvider` capability, and the `draw` and `score` operations.
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Drawing, Canvas, VariantProvider, draw, score]
+  why: The code renamed `Sketch` to `Drawing` and added `draw` and `score`; the spec had not followed.
 ```

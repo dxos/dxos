@@ -4,7 +4,9 @@
 
 import React, { Children, type PropsWithChildren, type ReactNode, useState } from 'react';
 
-import { Collapsible, Fieldset, SystemButton } from '@dxos/react-ui';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+import * as Fieldset from '@dxos/react-ui/Fieldset';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useFormContext } from '../hooks/index.ts';
 
@@ -17,6 +19,9 @@ export type FormFieldSetProps = PropsWithChildren<{
   /** The legend ends with a disclosure button that folds the body. */
   'collapsible'?: boolean;
   'defaultOpen'?: boolean;
+  /** Controlled open state; with it, `onOpenChange` reports each toggle. */
+  'open'?: boolean;
+  'onOpenChange'?: (open: boolean) => void;
   /** Controls acting on the group, at the end of its legend row. */
   'actions'?: ReactNode;
   /** A nested object's group: its fields bordered and indented under the legend. Set by the dispatcher, never read from context. */
@@ -36,17 +41,28 @@ export const FormFieldSet = ({
   description,
   collapsible,
   defaultOpen = true,
+  open: openProp,
+  onOpenChange,
   actions,
   nested,
   'data-testid': testId,
 }: FormFieldSetProps) => {
   const { layout } = useFormContext(FORM_FIELDSET_NAME);
-  const [open, setOpen] = useState(defaultOpen);
+  const [openState, setOpenState] = useState(defaultOpen);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean) => {
+    setOpenState(next);
+    onOpenChange?.(next);
+  };
   const showLabel = layout !== 'inline' && !!label;
   const canCollapse = !!collapsible && showLabel && Children.toArray(children).length > 0;
   const helper = description && <Fieldset.HelperText>{description}</Fieldset.HelperText>;
   const legend = showLabel && (
-    <Fieldset.Legend size={nested ? undefined : 'md'} variant={nested ? undefined : 'section'}>
+    <Fieldset.Legend
+      size={nested ? undefined : 'md'}
+      variant={nested ? undefined : 'section'}
+      data-nested={nested ? '' : undefined}
+    >
       {label}
       {actions}
       {canCollapse && (

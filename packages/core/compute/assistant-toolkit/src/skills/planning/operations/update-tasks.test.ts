@@ -23,7 +23,7 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline, Task } from '@dxos/types';
 
-import PlanningSkill from '../skill.ts';
+import * as PlanningSkill from '../PlanningSkill.ts';
 import { type TaskChange, UpdateTasks } from './definitions.ts';
 import { PlanningHandlers } from './index.ts';
 

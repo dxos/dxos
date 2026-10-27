@@ -12,7 +12,6 @@ import React, {
   useState,
 } from 'react';
 
-import { Button, createContext, useTranslation } from '@dxos/react-ui';
 import {
   type FeedModel,
   MessageList,
@@ -20,13 +19,16 @@ import {
   type MessageRange,
   useMessageList,
 } from '@dxos/react-ui-feed';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import { type Actor } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
 import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
 import { translationKey } from '../../translations.ts';
 import { type ChatThreadEvent, type ChatView } from '../../types.ts';
-import { MessageChrome, MessageChromeProvider } from '../MessageChrome/index.ts';
+import { type MessageAuthor, MessageChrome, MessageChromeProvider, hasOtherAuthors } from '../MessageChrome/index.ts';
 
 //
 // Context
@@ -36,10 +38,11 @@ const CHAT_THREAD_NAME = 'ChatThread';
 
 type ChatThreadContextValue = {
   userHue?: string;
+  viewType?: ChatView;
   onEvent?: (event: ChatThreadEvent) => void;
 };
 
-const [ChatThreadProvider, useChatThreadContext] = createContext<ChatThreadContextValue>(CHAT_THREAD_NAME);
+const [ChatThreadProvider, useChatThreadContext] = Hooks.createContext<ChatThreadContextValue>(CHAT_THREAD_NAME);
 
 //
 // Controller
@@ -67,9 +70,15 @@ type ChatThreadRootProps = PropsWithChildren<
     objectImage?: WidgetDef<ObjectLinkProps>;
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
+    /** The reader's DID; prompts from anyone else turn on author avatars for the whole thread. */
+    userDid?: string;
+    /** Resolves a prompt's sender to the profile its avatar shows. */
+    getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
     tailLines?: number;
     debug?: boolean;
+    /** Offers rewind under each prompt; off for an agent that cannot forget a turn. */
+    rewind?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
     /** The visible index range, as the reader scrolls — what an outline rail tracks. */
     onRangeChange?: (range: MessageRange) => void;
@@ -83,6 +92,9 @@ type ChatThreadRootProps = PropsWithChildren<
  * streaming tail; reserve room to bring the last prompt to the top). Composes with the feed's own
  * parts: `MessageList.Nav`, `useMessageList`, and the rails all work inside it.
  */
+/** Debug's registry: identity-stable, since the feed caches its extensions per registry. */
+const DEBUG_REGISTRY: XmlWidgetRegistry = {};
+
 const ChatThreadRoot = ({
   children,
   model,
@@ -91,16 +103,20 @@ const ChatThreadRoot = ({
   objectImage,
   getObjectLabel,
   userHue,
+  userDid,
+  getAuthor,
   tailLines,
   debug,
+  rewind = true,
   onEvent,
   onRangeChange,
   controllerRef,
 }: ChatThreadRootProps) => {
   const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
-  // Debug shows the raw document: with no registry the tags stay visible as the text they are.
+  // Debug shows the raw document: an empty registry renders no widgets, so the tags stay visible as
+  // the text they are, but still highlighted as tags.
   const merged = useMemo(
-    () => (viewType === 'debug' ? undefined : registry ? { ...assistantRegistry, ...registry } : assistantRegistry),
+    () => (viewType === 'debug' ? DEBUG_REGISTRY : { ...assistantRegistry, ...registry }),
     [registry, viewType],
   );
   const handleRewind = useCallback((id: string) => onEvent?.({ type: 'rewind', id }), [onEvent]);
@@ -113,14 +129,23 @@ const ChatThreadRoot = ({
     return model.subscribe(() => setStreaming(!!model.streamingId));
   }, [model]);
 
+  const [showAuthors, setShowAuthors] = useState(() => hasOtherAuthors(model.messages, userDid));
+  useEffect(() => {
+    setShowAuthors(hasOtherAuthors(model.messages, userDid));
+    return model.subscribe(() => setShowAuthors(hasOtherAuthors(model.messages, userDid)));
+  }, [model, userDid]);
+
   return (
-    <ChatThreadProvider userHue={userHue} onEvent={onEvent}>
+    <ChatThreadProvider userHue={userHue} viewType={viewType} onEvent={onEvent}>
       <MessageChromeProvider
-        onRewind={onEvent ? handleRewind : undefined}
+        onRewind={onEvent && rewind ? handleRewind : undefined}
         streaming={streaming}
         showContext={viewType !== 'summary'}
         debug={debug}
         userHue={userHue}
+        userDid={userDid}
+        showAuthors={showAuthors}
+        getAuthor={getAuthor}
       >
         <MessageList.Root
           model={model}
@@ -158,16 +183,32 @@ type ChatThreadViewportProps = ComponentPropsWithoutRef<typeof MessageList.Viewp
  * events, which is what keeps the widgets renderable from the tag alone.
  */
 const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThreadViewportProps) => {
-  const { userHue, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
+  const { userHue, viewType, onEvent } = useChatThreadContext(CHAT_THREAD_VIEWPORT_NAME);
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
-      const action = (event.target as HTMLElement).closest<HTMLElement>('[data-action="submit"]');
-      const text = action?.getAttribute('data-value');
-      if (text) {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      const action = target.closest<HTMLElement>('[data-action]');
+      const value = action?.getAttribute('data-value');
+      const threadEvent = value ? toThreadEvent(action?.getAttribute('data-action'), value) : undefined;
+      if (threadEvent) {
         event.preventDefault();
         event.stopPropagation();
-        onEvent?.({ type: 'submit', text });
+        onEvent?.(threadEvent);
+        return;
+      }
+
+      const response = target.closest<HTMLElement>('[data-action="respond"]');
+      const messageId = response?.getAttribute('data-message');
+      const requestId = response?.getAttribute('data-request');
+      const optionId = response?.getAttribute('data-option');
+      if (messageId && requestId && optionId) {
+        event.preventDefault();
+        event.stopPropagation();
+        onEvent?.({ type: 'respond', messageId, requestId, optionId });
       }
     },
     [onEvent],
@@ -179,7 +220,12 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
           default, and a caller's classNames extend or override it. */}
       <MessageList.Viewport
         {...props}
-        classNames={['dx-grow', classNames]}
+        classNames={[
+          'dx-grow',
+          // Debug's raw tags and toolkit JSON are reference text, set smaller than the prose around them.
+          viewType === 'debug' && '[&_.cm-codeblock-line]:text-sm [&_.cm-xml-tag]:text-sm',
+          classNames,
+        ]}
         overlay={
           <>
             <ScrollToBottom />
@@ -195,6 +241,18 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
 
 ChatThreadViewport.displayName = CHAT_THREAD_VIEWPORT_NAME;
 
+/** A widget's `data-action` button as the event it stands for; the value is the text or the message id. */
+const toThreadEvent = (action: string | null | undefined, value: string): ChatThreadEvent | undefined => {
+  switch (action) {
+    case 'submit':
+      return { type: 'submit', text: value };
+    case 'remove':
+      return { type: 'remove-prompt', id: value };
+    default:
+      return undefined;
+  }
+};
+
 //
 // ScrollToBottom
 //
@@ -209,18 +267,18 @@ const CHAT_THREAD_SCROLL_TO_BOTTOM_NAME = 'ChatThread.ScrollToBottom';
  * invisible button out of the focus order and off the accessibility tree.
  */
 const ScrollToBottom = () => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { atEnd, following, scrollToBottom } = useMessageList(CHAT_THREAD_SCROLL_TO_BOTTOM_NAME);
   // Hidden while the list follows the tail itself: a streaming turn outruns the glide a frame at a
   // time, and `atEnd` alone would blink the button through every response.
   const hidden = atEnd || following;
 
   return (
-    <Button
+    <Button.Root
       variant='primary'
       icon='ph--arrow-line-down--regular'
       iconOnly
-      size='sm'
+      size='lg'
       label={t('scroll-to-bottom.label')}
       disabled={hidden}
       aria-hidden={hidden}

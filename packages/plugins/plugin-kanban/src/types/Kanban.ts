@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 // namespace import keeps the inferred types portable.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Annotation, DXN, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { ViewAnnotation } from '@dxos/schema';
 
 /**
@@ -24,13 +23,15 @@ const ArrangementColumnEntry = Schema.Struct({
 });
 
 /** Keyed by columnValue. */
-const ArrangementColumns = Schema.Record(Schema.String, ArrangementColumnEntry).pipe(FormInputAnnotation.set(false));
+const ArrangementColumns = Schema.Record(Schema.String, ArrangementColumnEntry).pipe(
+  Annotation.FormInputAnnotation.set(false),
+);
 
 /** Column order and per-column card ids. */
 export const Arrangement = Schema.Struct({
-  order: Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false)),
+  order: Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false)),
   columns: ArrangementColumns,
-}).pipe(FormInputAnnotation.set(false));
+}).pipe(Annotation.FormInputAnnotation.set(false));
 
 export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
@@ -44,18 +45,18 @@ export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
 /** View-variant: items come from running the View's query (the original behaviour). */
 export const KanbanViewSpec = Schema.Struct({
-  kind: Schema.Literal('view').pipe(FormInputAnnotation.set(false)),
-  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  kind: Schema.Literal('view').pipe(Annotation.FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(Annotation.FormInputAnnotation.set(false)),
 });
 export type KanbanViewSpec = Schema.Schema.Type<typeof KanbanViewSpec>;
 
 /** Items-variant: kanban owns its items as an explicit ref array (used by externally-synced kanbans). */
 export const KanbanItemsSpec = Schema.Struct({
-  kind: Schema.Literal('items').pipe(FormInputAnnotation.set(false)),
+  kind: Schema.Literal('items').pipe(Annotation.FormInputAnnotation.set(false)),
   /** Property path on each item that drives column membership (e.g. `'listName'`). */
   pivotField: Schema.String,
   /** Items owned directly by the kanban. */
-  items: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
+  items: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
 });
 export type KanbanItemsSpec = Schema.Schema.Type<typeof KanbanItemsSpec>;
 
@@ -66,11 +67,12 @@ export type KanbanSpec = Schema.Schema.Type<typeof KanbanSpec>;
 export class Kanban extends Type.makeObject<Kanban>(DXN.make('org.dxos.type.kanban', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.optional),
+    description: Schema.String.pipe(Schema.optional),
     arrangement: Arrangement,
     /** How this kanban sources its items. Discriminated by `spec.kind`. */
     spec: KanbanSpec,
   }).pipe(
-    LabelAnnotation.set(['name']),
+    Annotation.LabelAnnotation.set(['name']),
     ViewAnnotation.set(['spec', 'view']),
     Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'green' }),
     Annotation.UserType.set(),
@@ -88,6 +90,7 @@ export const isKanbanItems = (kanban: Kanban): kanban is KanbanItems => kanban.s
 
 type MakeViewProps = {
   name?: string;
+  description?: string;
   view: View.View;
   arrangement?: Arrangement;
 };
@@ -96,11 +99,12 @@ type MakeViewProps = {
  * Make a view-variant kanban (items sourced via the View's query).
  */
 export const make = (props: MakeViewProps): Kanban => {
-  const { name, view, arrangement } = props;
+  const { name, description, view, arrangement } = props;
   const order = arrangement?.order ?? [];
   const columns = arrangement?.columns ?? {};
   return Obj.make(Kanban, {
     name,
+    ...(description ? { description } : {}),
     arrangement: { order, columns },
     spec: { kind: 'view' as const, view: Ref.make(view) },
   });
@@ -108,6 +112,7 @@ export const make = (props: MakeViewProps): Kanban => {
 
 type MakeItemsProps = {
   name?: string;
+  description?: string;
   arrangement?: Arrangement;
   pivotField: string;
   items?: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
@@ -117,11 +122,12 @@ type MakeItemsProps = {
  * Make an items-variant kanban (items list owned by the kanban itself, e.g. populated by a sync integration).
  */
 export const makeItems = (props: MakeItemsProps): Kanban => {
-  const { name, arrangement, pivotField, items = [] } = props;
+  const { name, description, arrangement, pivotField, items = [] } = props;
   const order = arrangement?.order ?? [];
   const columns = arrangement?.columns ?? {};
   return Obj.make(Kanban, {
     name,
+    ...(description ? { description } : {}),
     arrangement: { order, columns },
     spec: { kind: 'items' as const, pivotField, items },
   });

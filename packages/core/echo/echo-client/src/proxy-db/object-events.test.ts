@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
 import { Database, Feed, Obj, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { type EventAttributes, TRACE_PROCESSOR } from '@dxos/tracing';
 

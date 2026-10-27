@@ -4,13 +4,15 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { type ThemedClassName, Tooltip, useTimeout } from '@dxos/react-ui';
 import { ShapeSpinner, type SpinnerProps } from '@dxos/react-ui-components';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 const ANIMATION_PERIOD = 3_000;
 
-export type ChatStatusIndicatorProps = ThemedClassName<
+export type ChatStatusIndicatorProps = Util.ThemedClassName<
   {
     // TODO(burdon): Preset (model) triggers reset.
     preset?: string;
@@ -22,7 +24,7 @@ export type ChatStatusIndicatorProps = ThemedClassName<
 export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...props }: ChatStatusIndicatorProps) => {
   const [init, setInit] = useState(false);
   useEffect(() => setInit(false), [preset]);
-  useTimeout(
+  Hooks.useTimeout(
     async () => {
       setInit(true);
     },

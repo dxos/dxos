@@ -3,7 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
 import { Drawing } from '#types';
@@ -29,7 +29,13 @@ export const translations = [
         'create-panel.variant.label': 'Select renderer',
         'create-panel.variant.placeholder': 'Search renderers...',
         'unsupported-variant.label': 'Unsupported drawing variant',
+        'edit-in-excalidraw.label': 'Edit in Excalidraw',
+        'edit-in-tldraw.label': 'Edit in tldraw',
+        'edit-in-canvas.label': 'Edit in Canvas',
+        'copy-as-excalidraw.label': 'Copy as Excalidraw',
+        'copy-as-tldraw.label': 'Copy as tldraw',
+        'copy-as-canvas.label': 'Copy as Canvas',
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

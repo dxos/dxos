@@ -5,11 +5,14 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { useOptionalAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { type AppSurface, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useQuery } from '@dxos/echo-react';
-import { SPACE_STATS_QUERY, toMetrics, toSpaceStats } from '@dxos/plugin-space/dashboard';
-import { Panel } from '@dxos/react-ui';
+import * as Dashboard from '@dxos/plugin-space/Dashboard';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { VirtualStreamDeck } from '#components';
 import * as Protocol from '#protocol';
@@ -31,14 +34,14 @@ const DEVICE = Protocol.streamDeckPlus;
  * the device accepts one client and the keys must stay live with this panel closed.
  */
 export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const enabled = useAtomValue(manager.enabled);
-  const monitors = useProgressMonitors();
-  const counts = useQuery(space.db, SPACE_STATS_QUERY);
-  const status = useOptionalAtomCapability(StreamDeckCapabilities.BridgeStatus);
+  const monitors = ToolkitHooks.useProgressMonitors();
+  const counts = useQuery(space.db, Dashboard.SPACE_STATS_QUERY);
+  const status = Hooks.useOptionalAtomCapability(StreamDeckCapabilities.BridgeStatus);
   const keys = useFavorites(space.db, DEVICE.keys);
   const dials = useMemo(
-    () => toMetrics(monitors, toSpaceStats(counts, enabled.length), DEVICE.dials),
+    () => Dashboard.toMetrics(monitors, Dashboard.toSpaceStats(counts, enabled.length), DEVICE.dials),
     [monitors, counts, enabled.length],
   );
   const frame = useFrame({ device: DEVICE, keys, dials });
@@ -46,7 +49,7 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
   return (
     <Panel.Root role={role}>
       <Panel.Body>
-        <div className='flex flex-col gap-2'>
+        <Layout.Flex column gap='sm'>
           <VirtualStreamDeck device={DEVICE} frame={frame} />
           <div className='text-xs text-fg-muted'>
             {status?.state === 'connected'
@@ -55,7 +58,7 @@ export const StreamDeckDashboard = ({ space, role }: StreamDeckDashboardProps) =
                 ? 'Device plugin version mismatch'
                 : 'No device connected'}
           </div>
-        </div>
+        </Layout.Flex>
       </Panel.Body>
     </Panel.Root>
   );

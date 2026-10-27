@@ -4,16 +4,18 @@
 
 import { describe, test } from 'vitest';
 
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { StatusBarPlugin } from '#plugin';
+
+await Harness.preload({ plugins: [StatusBarPlugin()] });
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('StatusBarPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [StatusBarPlugin()],
     });
 

@@ -14,15 +14,16 @@ import {
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
+  EscapedPropPath,
   PROPERTY_ID,
-  type QueryAST,
+  QueryAST,
   isEncodedReference,
+  referenceIndexKey,
 } from '@dxos/echo-protocol';
-import { EscapedPropPath, referenceIndexKey } from '@dxos/index-core';
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
-import type { ObjectCore } from '../core-db/index.ts';
+import type { DeletionMemo, ObjectCore } from '../core-db/index.ts';
 import { aggregateNeedsIndex } from './util.ts';
 
 export type WorkingSetItem = {
@@ -39,8 +40,8 @@ export type WorkingSetItem = {
 };
 
 const WorkingSetItem = Object.freeze({
-  isDeleted(item: WorkingSetItem): boolean {
-    return item.core.isDeleted();
+  isDeleted(item: WorkingSetItem, memo?: DeletionMemo): boolean {
+    return item.core.isDeleted(undefined, memo);
   },
 
   getProperty(item: WorkingSetItem, property: EntityPropPath): unknown {
@@ -92,7 +93,7 @@ const WorkingSetItem = Object.freeze({
 export type WorkingSetDataProvider = {
   spaceId: SpaceId;
   allCores(): ObjectCore[];
-  getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
+  getCoreById(id: EntityId): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
   areStrongDepsResolved(core: ObjectCore): boolean;
 };
@@ -104,6 +105,9 @@ export type WorkingSetDataProvider = {
  * Returns null when the plan requires index capabilities (TextSelector, TimestampSelector).
  */
 export class WorkingSetQueryExecutor {
+  /** Set for the duration of one {@link tryExecute}, which is synchronous, so no core changes under it. */
+  #deletionMemo: DeletionMemo | undefined = undefined;
+
   constructor(private readonly _provider: WorkingSetDataProvider) {}
 
   /**
@@ -111,7 +115,14 @@ export class WorkingSetQueryExecutor {
    * Returns null if the plan requires SQL index access.
    */
   tryExecute(plan: QueryPlan.Plan): WorkingSetItem[] | null {
-    return this._execPlan(plan, []);
+    // Items under one parent share its deletion walk; without the memo a scan costs items × depth.
+    const outer = this.#deletionMemo;
+    this.#deletionMemo = new Map();
+    try {
+      return this._execPlan(plan, []);
+    } finally {
+      this.#deletionMemo = outer;
+    }
   }
 
   private _execPlan(plan: QueryPlan.Plan, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -203,7 +214,7 @@ export class WorkingSetQueryExecutor {
         }
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
-            const core = this._provider.getCoreById(id, true);
+            const core = this._provider.getCoreById(id);
             // Resolved, not satisfied: an id selector names one object the caller already holds an
             // id for, so a dependency that is settled unreachable must still surface it. Requiring
             // satisfaction here left an object that `getObjectById` returns unloadable by its own
@@ -285,14 +296,37 @@ export class WorkingSetQueryExecutor {
 
     const maxDepth = filter.transitive ? MAX_DEPTH_FOR_CHILD_OF_TRACING : 1;
 
-    return ws.filter((item) => this._isChildOfAny(item, parentObjectIds, maxDepth));
+    // Siblings share their ancestors' verdicts; without the memo a transitive scan costs items × depth.
+    const memo: ChildOfMemo = new Map();
+    return ws.filter((item) => this._isChildOfAny(item, parentObjectIds, maxDepth, memo));
   }
 
-  private _isChildOfAny(item: WorkingSetItem, parentObjectIds: Set<EntityId>, remainingDepth: number): boolean {
+  private _isChildOfAny(
+    item: WorkingSetItem,
+    parentObjectIds: Set<EntityId>,
+    remainingDepth: number,
+    memo: ChildOfMemo,
+  ): boolean {
     if (remainingDepth <= 0) {
       return false;
     }
+    const cached = memo.get(item.objectId)?.[remainingDepth];
+    if (cached !== undefined) {
+      return cached;
+    }
+    const verdict = this.#computeIsChildOfAny(item, parentObjectIds, remainingDepth, memo);
+    const byDepth = memo.get(item.objectId) ?? [];
+    byDepth[remainingDepth] = verdict;
+    memo.set(item.objectId, byDepth);
+    return verdict;
+  }
 
+  #computeIsChildOfAny(
+    item: WorkingSetItem,
+    parentObjectIds: Set<EntityId>,
+    remainingDepth: number,
+    memo: ChildOfMemo,
+  ): boolean {
     const parentEid = WorkingSetItem.getParentEid(item);
     if (!parentEid) {
       return false;
@@ -313,12 +347,12 @@ export class WorkingSetQueryExecutor {
     if (!parentItem) {
       return false;
     }
-    return this._isChildOfAny(parentItem, parentObjectIds, remainingDepth - 1);
+    return this._isChildOfAny(parentItem, parentObjectIds, remainingDepth - 1, memo);
   }
 
   private _execFilterDeletedStep(step: QueryPlan.FilterDeletedStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
     const expected = step.mode === 'only-deleted';
-    return ws.filter((item) => WorkingSetItem.isDeleted(item) === expected);
+    return ws.filter((item) => WorkingSetItem.isDeleted(item, this.#deletionMemo) === expected);
   }
 
   private _execTraverseStep(step: QueryPlan.TraverseStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -557,6 +591,12 @@ export class WorkingSetQueryExecutor {
       case 'timestamp':
         // No timestamp index on client; treat as equal.
         return 0;
+      case 'annotation':
+        return QueryAST.compareAnnotationOrderValues(
+          QueryAST.getAnnotationOrderValue(itemA.structure.meta?.annotations, order),
+          QueryAST.getAnnotationOrderValue(itemB.structure.meta?.annotations, order),
+          order.direction,
+        );
       case 'property': {
         // On a grouped working set, a property order names a group field: prefer a stamped scalar
         // aggregate (max/min/count) when present, else the member/row property (which also covers a
@@ -569,7 +609,7 @@ export class WorkingSetQueryExecutor {
           itemB.aggregates && order.property in itemB.aggregates
             ? itemB.aggregates[order.property]
             : WorkingSetItem.getProperty(itemB, [order.property]);
-        const cmp = _compareValues(aVal, bVal);
+        const cmp = compareOrderValues(aVal, bVal);
         return order.direction === 'desc' ? -cmp : cmp;
       }
       default:
@@ -610,6 +650,9 @@ export class WorkingSetQueryExecutor {
 /** Matches the host executor and `DeletionResolver`, so a child resolves the same on both sides. */
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
 
+/** `childOf` verdicts by object id, indexed by the depth budget they were judged with. */
+type ChildOfMemo = Map<EntityId, boolean[]>;
+
 /** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
 const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 && ws[0].groupKey !== undefined;
 
@@ -617,7 +660,8 @@ const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 &&
 // working set already partitioned by AggregateStep (guarded by `_isGroupedWorkingSet`).
 const _serializeItemGroupKey = (item: WorkingSetItem): string => GroupBy.serializeGroupKey(item.groupKey!);
 
-const _compareValues = (valueA: unknown, valueB: unknown): number => {
+/** Orders two property values as the host's SQLite sort does: nulls last, code-unit strings, numeric numbers. */
+export const compareOrderValues = (valueA: unknown, valueB: unknown): number => {
   if (valueA == null && valueB == null) {
     return 0;
   }

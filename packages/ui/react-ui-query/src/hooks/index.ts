@@ -3,3 +3,4 @@
 //
 
 export * from './useQueryBuilder.ts';
+export * from './usePersistentQuery.ts';

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import * as Operation from '@dxos/compute/Operation';
@@ -21,6 +23,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object.ts'))),
   SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation.ts'))),
   SpaceOperation.AddType.pipe(Operation.lazyHandler(() => import('./add-type.ts'))),
+  SpaceOperation.ApplyTemplate.pipe(Operation.lazyHandler(() => import('./apply-template.ts'))),
   SpaceOperation.Close.pipe(Operation.lazyHandler(() => import('./close.ts'))),
   SpaceOperation.CollectGarbage.pipe(Operation.lazyHandler(() => import('./collect-garbage.ts'))),
   SpaceOperation.Create.pipe(Operation.lazyHandler(() => import('./create.ts'))),

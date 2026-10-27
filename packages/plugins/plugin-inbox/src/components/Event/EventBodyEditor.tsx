@@ -5,14 +5,14 @@
 import React, { useMemo } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Event as EventType } from '@dxos/types';
 import { automerge } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { Editor } from '../Editor/index.ts';
 
-export type EventBodyEditorProps = ThemedClassName<{
+export type EventBodyEditorProps = Util.ThemedClassName<{
   event: EventType.Event;
   /** Render markdown decorations; pass `false` for plain text. */
   markdown?: boolean;
@@ -30,7 +30,7 @@ export const EventBodyEditor = ({ event, markdown = true, classNames }: EventBod
       lineWrapping
       markdown={markdown}
       extensions={extensions}
-      classNames={mx('flex overflow-hidden p-3', classNames)}
+      classNames={mx('flex overflow-hidden p-trim-md', classNames)}
     />
   );
 };

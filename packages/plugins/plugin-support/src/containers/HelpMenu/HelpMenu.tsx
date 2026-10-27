@@ -5,27 +5,33 @@
 import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { useConfig } from '@dxos/react-client';
-import { Button, Flex, Menu, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Menu from '@dxos/react-ui/Menu';
 import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 
 import { ABOUT_DIALOG, SHORTCUTS_DIALOG } from '../../constants.ts';
 import { downloadUrl } from './download.ts';
+import { UpdateMenuItem } from './UpdateMenuItem.tsx';
 
-const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
+const DOCS_URL = 'https://dxos.org/docs/composer/introduction/';
 const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 
 export const HelpMenu = () => {
-  const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const config = useConfig();
+  const updateManager = Hooks.useOptionalCapability(AppCapabilities.UpdateManager);
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const releasedAt = timestamp ? new Date(timestamp) : undefined;
   const released = releasedAt && isValid(releasedAt) ? releasedAt : undefined;
@@ -48,7 +54,7 @@ export const HelpMenu = () => {
     <Menu.Root positioning={{ placement: 'left-end' }}>
       <Menu.Trigger asChild>
         <StatusBar.Item>
-          <Button variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
+          <Button.Root variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
       </Menu.Trigger>
       <Menu.Content>
@@ -99,7 +105,7 @@ export const HelpMenu = () => {
           onClick={openDialog(ABOUT_DIALOG)}
         />
         {version && (
-          <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
+          <Layout.Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
             <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
               {version}
             </a>
@@ -110,8 +116,9 @@ export const HelpMenu = () => {
                 })}
               </span>
             )}
-          </Flex>
+          </Layout.Flex>
         )}
+        {updateManager && <UpdateMenuItem manager={updateManager} />}
       </Menu.Content>
     </Menu.Root>
   );

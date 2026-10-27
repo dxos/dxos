@@ -53,4 +53,4 @@ To invite someone, select a space in the sidebar and use the **Share** button in
 
 ## Need help?
 
-Explore the [documentation](https://docs.dxos.org) to learn more, or join our [Discord](https://dxos.org/discord) to share feedback, report bugs, and ask questions.
+Explore the [documentation](https://dxos.org/docs/) to learn more, or join our [Discord](https://dxos.org/discord) to share feedback, report bugs, and ask questions.

@@ -4,7 +4,8 @@
 
 import React, { type ComponentProps, type ReactNode } from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
 
 export type ObjectArticleProps = {
   role?: ComponentProps<typeof Panel.Root>['role'];
@@ -23,9 +24,11 @@ export type ObjectArticleProps = {
 export const ObjectArticle = ({ role, toolbar, header, children }: ObjectArticleProps) => (
   <Panel.Root role={role} width='document'>
     <Panel.Header>{toolbar}</Panel.Header>
-    <Panel.Body classNames='grid grid-rows-[auto_1fr]'>
-      {header}
-      {children}
+    <Panel.Body asChild>
+      <Layout.Grid rows={['auto', 'fill']}>
+        {header}
+        {children}
+      </Layout.Grid>
     </Panel.Body>
   </Panel.Root>
 );

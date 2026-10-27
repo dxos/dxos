@@ -33,7 +33,7 @@ import { fileURLToPath } from 'node:url';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { Database, Feed, Tag } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -72,13 +72,13 @@ export type ImportResult = { imported: number; skipped: number };
 /**
  * Builds the Mailbox, then streams the mbox file, appending parsed messages in bounded batches.
  *
- * This is the one phase that appends to its feed eagerly rather than through `SampleSpace.Feeds`:
+ * This is the one partial that appends to its feed eagerly rather than through `SampleSpace.Feeds`:
  * queuing every message until the end of the build would hold a multi-GB mailbox in memory, which
  * is the whole thing the streaming import exists to avoid. It therefore owns the single flush that
  * gives the feed and tag index their DXNs.
  */
-const MboxMailbox = (options: Options): SampleSpace.Phase<ImportResult> =>
-  SampleSpace.phase('mailbox', {
+const MboxMailbox = (options: Options): SampleSpace.Partial<ImportResult> =>
+  SampleSpace.partial('mailbox', {
     schemas: [Feed.Feed, Message.Message, Mailbox.Mailbox, TagIndex.TagIndex, Tag.Tag],
     run: () =>
       Effect.gen(function* () {
@@ -130,11 +130,11 @@ const MboxMailbox = (options: Options): SampleSpace.Phase<ImportResult> =>
   });
 
 const mboxSpace = (options: Options) => {
-  const phases = { mailbox: MboxMailbox(options) };
-  return SampleSpace.make<typeof phases, ImportResult>({
+  const partials = { mailbox: MboxMailbox(options) };
+  return SampleSpace.make<typeof partials, ImportResult>({
     space: { name: `${basename(options.in)} (mbox)`, icon: 'ph--tray--regular', hue: 'rose' },
-    phases,
-    build: (phases) => phases.mailbox(),
+    partials,
+    build: (partials) => partials.mailbox(),
   });
 };
 

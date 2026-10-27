@@ -2,61 +2,98 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Typography from '@dxos/react-ui/Typography';
 
-import { CompoundButton, InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
 import { type JoinStepProps } from '../JoinPanelProps.ts';
 
 export type AdditionMethodChooserProps = JoinStepProps;
 
-export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps) => {
-  const disabled = !viewStateProps.active;
-  const { send } = viewStateProps;
+type AdditionMethod = 'createIdentity' | 'acceptHaloInvitation' | 'recoverIdentity';
 
-  const { t } = useTranslation(translationKey);
+const isAdditionMethod = (value: string): value is AdditionMethod =>
+  value === 'createIdentity' || value === 'acceptHaloInvitation' || value === 'recoverIdentity';
 
-  const sharedButtonProps = {
-    disabled,
-    after: <Icon icon='ph--caret-right--bold' size='md' />,
-    slots: { label: { className: 'text-sm' } },
-  };
+const TEST_IDS: Record<AdditionMethod, string> = {
+  createIdentity: 'identity-chooser.create-identity',
+  acceptHaloInvitation: 'identity-chooser.join-identity',
+  recoverIdentity: 'identity-chooser.recover-identity',
+};
+
+/** The ways to bring an identity to this device, as a list the arrow keys move through and Enter (or a click) picks. */
+export const AdditionMethodChooser = ({ active, send }: AdditionMethodChooserProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const items = useMemo(
+    () => [
+      {
+        value: 'createIdentity',
+        label: t('create-identity.label'),
+        description: t('create-identity.description'),
+        icon: 'ph--plus--regular',
+        disabled: !active,
+      },
+      {
+        value: 'acceptHaloInvitation',
+        label: t('join-identity.label'),
+        description: t('join-identity.description'),
+        icon: 'ph--qr-code--regular',
+        disabled: !active,
+      },
+      {
+        value: 'recoverIdentity',
+        label: t('recover-identity.label'),
+        description: t('recover-identity.description'),
+        icon: 'ph--textbox--regular',
+        disabled: !active,
+      },
+    ],
+    [t, active],
+  );
 
   return (
-    <>
-      <InputLabel>{t('addition-method-chooser.title')}</InputLabel>
-      <div className='flex flex-col gap-1 grow'>
-        <CompoundButton
-          {...sharedButtonProps}
-          description={t('create-identity.description')}
-          before={<Icon icon='ph--plus--regular' size='xl' />}
-          onClick={() => send({ type: 'createIdentity' })}
+    <Dialog.Body gap='md'>
+      <Typography.Text tone='muted'>{t('addition-method-chooser.title')}</Typography.Text>
+      {/* Held at no value, so every pick (even of the same option on a return to this step) reports a change. */}
+      {/* Large rows, for a wider icon cell and larger icons; the label stays at the dialog's text size. */}
+      <Listbox.Root
+        size='xl'
+        items={items}
+        value=''
+        onValueChange={(value) => isAdditionMethod(value) && send({ type: value })}
+      >
+        {/* Equal rows, so every option is as tall as the one whose description wraps. */}
+        <Listbox.Content
+          gap='sm'
+          aria-label={t('addition-method-chooser.title')}
+          classNames='auto-rows-fr'
           data-autofocus='choosingAuthMethod'
-          data-testid='identity-chooser.create-identity'
         >
-          {t('create-identity.label')}
-        </CompoundButton>
-        <CompoundButton
-          {...sharedButtonProps}
-          description={t('join-identity.description')}
-          before={<Icon icon='ph--qr-code--regular' size='xl' />}
-          onClick={() => send({ type: 'acceptHaloInvitation' })}
-          data-testid='identity-chooser.join-identity'
-        >
-          {t('join-identity.label')}
-        </CompoundButton>
-        <CompoundButton
-          {...sharedButtonProps}
-          description={t('recover-identity.description')}
-          before={<Icon icon='ph--textbox--regular' size='xl' />}
-          onClick={() => send({ type: 'recoverIdentity' })}
-          data-testid='identity-chooser.recover-identity'
-        >
-          {t('recover-identity.label')}
-        </CompoundButton>
-      </div>
-    </>
+          {items.map((item) => (
+            <Listbox.Item
+              key={item.value}
+              id={item.value}
+              highlightOnHover
+              // The text tracks sit in the middle of the row, so the icon and caret centre on the row itself.
+              classNames='content-center'
+              data-testid={isAdditionMethod(item.value) ? TEST_IDS[item.value] : undefined}
+            >
+              <Listbox.ItemIcon classNames='self-center'>
+                {item.icon && <Icon.Icon icon={item.icon} size='xl' />}
+              </Listbox.ItemIcon>
+              <Listbox.ItemText classNames='text-base' />
+              {/* A step smaller than the label, always two lines tall, so every option is the same height. */}
+              <Listbox.ItemDescription classNames='text-sm whitespace-normal line-clamp-2 min-h-[2lh]' />
+              <Icon.Icon icon='ph--caret-right--bold' size='xl' classNames='self-center me-3' />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
+    </Dialog.Body>
   );
 };

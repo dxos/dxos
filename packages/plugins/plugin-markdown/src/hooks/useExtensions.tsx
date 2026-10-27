@@ -9,12 +9,11 @@ import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { useResolveRef } from '@dxos/echo-react';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
-import { usePlatform } from '@dxos/react-ui';
 import { Selection, ViewState } from '@dxos/react-ui-attention/types';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
@@ -32,7 +31,6 @@ import {
   documentId,
   folding,
   formattingKeymap,
-  linkTooltip,
   listener,
   objectLinks,
   selectionState,
@@ -48,6 +46,7 @@ import { Markdown } from '#types';
 import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label.ts';
 import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent.tsx';
 import { setFallbackName } from '../util.tsx';
+import { type DocumentContent } from './useDocumentContent.ts';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 
@@ -56,6 +55,8 @@ export type ExtensionsOptions = {
   /** The editor's attendable id; embeds nest under it so the document stays an attention ancestor. */
   attendableId?: string;
   object?: DocumentType;
+  /** The object's content binding, from `useDocumentContent`. */
+  content: DocumentContent;
   settings?: Markdown.Settings;
   compact?: boolean;
   viewMode?: EditorViewMode;
@@ -86,6 +87,7 @@ export const useExtensions = ({
   id,
   attendableId,
   object,
+  content,
   settings,
   compact,
   viewMode,
@@ -95,13 +97,10 @@ export const useExtensions = ({
   setWidgets,
   onSelectLink,
 }: ExtensionsOptions): Extension[] => {
-  const platform = usePlatform();
+  const platform = Hooks.usePlatform();
   const space = getSpace(object);
 
-  // Get the content reference from Document objects.
-  const contentRef = Obj.instanceOf(Markdown.Document, object) ? (object as Markdown.Document).content : undefined;
-  const loadedContent = useResolveRef(contentRef);
-  const target = loadedContent ?? (Obj.instanceOf(Text.Text, object) ? object : undefined);
+  const target = content.target;
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
@@ -142,8 +141,8 @@ export const useExtensions = ({
     ],
   );
 
-  // The content ref exists but its target has not loaded: the editor has no persistence binding yet.
-  const contentPending = !!contentRef && !target;
+  // No persistence binding yet (loading, missing or deleted content).
+  const contentPending = content.status !== undefined;
 
   return useMemo<Extension[]>(
     () =>
@@ -194,7 +193,7 @@ const createBaseExtensions = ({
   viewState,
   setWidgets,
   platform,
-}: ExtensionsOptions & { space?: Space }): Extension[] => {
+}: Omit<ExtensionsOptions, 'content'> & { space?: Space }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
@@ -214,7 +213,6 @@ const createBaseExtensions = ({
           // TODO(wittjosiah): For internal links render the label of the object.
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
         }),
-        linkTooltip({ render: renderLinkTooltip }),
         widgetHost({ setWidgets }),
         objectLinks({
           link: {
@@ -301,9 +299,16 @@ const createRenderLink =
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const icon = Domino.of('span')
+    // An external link's icon is itself a link, since a click on the link text only places the caret in the editor;
+    // only a web URL, so document text cannot plant a `javascript:` href.
+    const href = isInternal ? undefined : safeUrl(url);
+    const web = href?.protocol === 'http:' || href?.protocol === 'https:';
+    const icon = Domino.of(web ? 'a' : 'span')
       .classNames('dx-link-accent ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
+    if (web) {
+      icon.attributes({ 'href': href.toString(), 'target': '_blank', 'rel': 'noreferrer', 'aria-label': 'Open link' });
+    }
 
     if (isInternal) {
       const pathname = new URL(url, window.location.origin).pathname;
@@ -328,15 +333,3 @@ const createRenderLink =
 
     el.appendChild(icon.root);
   };
-
-const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
-  el.appendChild(
-    Domino.of('a')
-      .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      // Not `dx-link-accent`: the tooltip sits on the inverse surface, where the accent link color has no
-      // contrast — inherit the tooltip's own `text-inverse-fg` instead.
-      .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
-      .text(safeUrl(url)?.toString() ?? url)
-      .append(Domino.svg('ph--arrow-square-out--regular')).root,
-  );
-};

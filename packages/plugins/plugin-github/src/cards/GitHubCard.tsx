@@ -4,8 +4,12 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card, Flex, Tag, type TagHue, useTranslation } from '@dxos/react-ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useObject } from '@dxos/echo-react';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -18,6 +22,8 @@ type Subject = Repo.Repo | Issue.Issue | PullRequest.PullRequest;
  */
 type Fields = {
   owner: string;
+  name?: string;
+  repo?: string;
   number?: number;
   state?: PullRequest.State;
   author?: string;
@@ -28,7 +34,7 @@ type Fields = {
   url?: string;
 };
 
-const stateHue: Record<PullRequest.State, TagHue> = {
+const stateHue: Record<PullRequest.State, Tag.TagHue> = {
   open: 'green',
   closed: 'red',
   merged: 'purple',
@@ -40,9 +46,10 @@ const stateHue: Record<PullRequest.State, TagHue> = {
  * the link out. Each row leads with an icon in the card's start rail, so the text lines up with the title.
  */
 export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { owner, number, state, author, additions, deletions, defaultBranch, description, url }: Fields = subject;
-  const name = 'name' in subject ? subject.name : subject.repo;
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const [object] = useObject(subject);
+  const { owner, name, repo, number, state, author, additions, deletions, defaultBranch, description, url }: Fields =
+    object;
 
   return (
     <Card.Body>
@@ -50,13 +57,13 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
         icon='ph--github-logo--regular'
         trailing={
           state ? (
-            <Tag hue={stateHue[state]}>{state}</Tag>
+            <Tag.Tag hue={stateHue[state]}>{state}</Tag.Tag>
           ) : defaultBranch ? (
-            <Tag hue='neutral'>{defaultBranch}</Tag>
+            <Tag.Tag hue='neutral'>{defaultBranch}</Tag.Tag>
           ) : undefined
         }
       >
-        <Card.Text variant='muted'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</Card.Text>
+        <Card.Text variant='muted'>{[`${owner}/${name ?? repo}`, number].filter(Boolean).join('#')}</Card.Text>
       </Card.Row>
       {author && (
         <Card.Row icon='ph--user--regular'>
@@ -65,10 +72,10 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       )}
       {(additions !== undefined || deletions !== undefined) && (
         <Card.Row icon='ph--plus-minus--regular'>
-          <Flex gap='sm' align='center'>
+          <Layout.Flex gap='sm' align='center'>
             {additions !== undefined && <span className='text-green-500'>+{additions}</span>}
             {deletions !== undefined && <span className='text-red-500'>−{deletions}</span>}
-          </Flex>
+          </Layout.Flex>
         </Card.Row>
       )}
       {description && (

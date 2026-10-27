@@ -5,6 +5,15 @@
 export * as AgentService from './AgentService.ts';
 // `AgentProcess` itself, not just its key: a remote host (EDGE) puts the definition in its own
 // process registry, so it has to be able to name it.
-export { AGENT_PROCESS_KEY, AgentProcess, type AgentProcessOptions } from './agent-process.ts';
+export {
+  AGENT_PROCESS_KEY,
+  AgentInput,
+  AgentProcess,
+  type AgentProcessDefinition,
+  type AgentProcessOptions,
+  makeInputMessage,
+} from './agent-process.ts';
 export { type Delegation, type DelegationStrategy } from './delegation-strategy.ts';
+export { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
+export { mcpServerTypes } from '../mcp-server-types.ts';
 export * from './turn-producer.ts';

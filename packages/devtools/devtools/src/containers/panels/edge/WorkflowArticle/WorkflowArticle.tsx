@@ -7,11 +7,12 @@ import React, { useMemo, useState } from 'react';
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
 import { Filter } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { EID } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { ControlledSelector, MasterDetailTable } from '../../../../components/index.ts';

@@ -19,7 +19,7 @@ import * as Predicate from 'effect/Predicate';
 import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';
-import { ContentBlock, type Message } from '@dxos/types';
+import { ContentBlock, Message } from '@dxos/types';
 import { bufferToArray, safeParseJson } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors.ts';
@@ -39,29 +39,45 @@ export type CacheControl = 'no-cache' | 'ephemeral';
  */
 export const preprocessPrompt: (
   messages: readonly Message.Message[],
-  opts?: { system?: string; cacheControl?: CacheControl },
+  opts?: {
+    system?: string;
+    cacheControl?: CacheControl;
+    /**
+     * Names of the tools the request offers. A call in history to any other tool is rewritten as text
+     * (see {@link retireUnofferedToolCalls}); absent, every call is kept as a call.
+     */
+    tools?: readonly string[];
+  },
 ) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
   messages,
-  { system, cacheControl = 'no-cache' } = {},
+  { system, cacheControl = 'no-cache', tools } = {},
 ) {
   return yield* Function.pipe(
     messages,
     applySummaryTrimming,
+    Effect.map(tools === undefined ? Function.identity : retireUnofferedToolCalls(new Set(tools))),
     Effect.map(groupAssistantMessages),
     Effect.flatMap(
       Effect.forEach(
         Effect.fnUntraced(function* (msg) {
           switch (msg.sender.role) {
-            case 'user':
+            case 'user': {
+              const content = yield* Function.pipe(
+                msg.blocks,
+                Effect.forEach(convertUserMessagePart),
+                Effect.map(Array.filter(Predicate.isNotUndefined)),
+              );
               return [
                 Prompt.makeMessage('user', {
-                  content: yield* Function.pipe(
-                    msg.blocks,
-                    Effect.forEach(convertUserMessagePart),
-                    Effect.map(Array.filter(Predicate.isNotUndefined)),
-                  ),
+                  // The prompt has no per-message author, so a named sender (e.g. a relayed chat
+                  // participant) is the only way the model can tell speakers apart.
+                  content:
+                    msg.sender.name && content.length > 0
+                      ? [Prompt.makePart('text', { text: formatSender(msg.sender) }), ...content]
+                      : content,
                 }),
               ];
+            }
             case 'assistant':
               return [
                 Prompt.makeMessage('assistant', {
@@ -92,6 +108,9 @@ export const preprocessPrompt: (
     Effect.map(setCacheControl(cacheControl)),
   );
 });
+
+/** Attribution line prepended to a user message whose sender is named. */
+const formatSender = (sender: Message.Message['sender']): string => `[From: ${sender.name}]`;
 
 /**
  * Fast regex-based token estimation.
@@ -800,6 +819,70 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
   }
   return Prompt.fromMessages(result);
 };
+
+/** Characters of a retired call's input or result kept in its text form; the head is what the model acts on. */
+const MAX_RETIRED_RESULT = 2_000;
+
+/**
+ * Rewrites history's calls to tools the request no longer offers — and their results — as plain text.
+ *
+ * The toolkit can change between turns of one conversation (a skill disabled, a switch to code mode),
+ * and a past call kept as a call reads to the model as a tool it may call again: it does, and the
+ * turn is spent being told the tool does not exist. As text the call still says what was done and
+ * what came back, without the invitation.
+ */
+const retireUnofferedToolCalls =
+  (offered: ReadonlySet<string>) =>
+  (messages: readonly Message.Message[]): readonly Message.Message[] => {
+    const retired = (block: ContentBlock.Any): boolean =>
+      (block._tag === 'toolCall' || block._tag === 'toolResult') && !block.providerExecuted && !offered.has(block.name);
+    return messages.flatMap((message) => {
+      if (!message.blocks.some(retired)) {
+        return [message];
+      }
+      if (message.sender.role !== 'tool') {
+        const blocks = message.blocks.map((block): ContentBlock.Any =>
+          block._tag === 'toolCall' && retired(block)
+            ? {
+                _tag: 'text',
+                text: `[Earlier call to \`${block.name}\`, which is not a tool you can call now. Input: ${capRetired(block.input || '{}')}]`,
+              }
+            : block,
+        );
+        return [Message.make({ sender: message.sender, blocks })];
+      }
+      // A tool message carries only results, so the retired ones move to a user message after it.
+      const kept = message.blocks.filter((block) => !retired(block));
+      const notes = message.blocks
+        .filter(ContentBlock.is('toolResult'))
+        .filter(retired)
+        .map((block): ContentBlock.Any => ({
+          _tag: 'text',
+          text: `[Result of the earlier \`${block.name}\` call: ${retiredResult(block)}]`,
+        }));
+      return [
+        ...(kept.length > 0 ? [Message.make({ sender: message.sender, blocks: kept })] : []),
+        Message.make({ sender: { role: 'user' }, blocks: notes }),
+      ];
+    });
+  };
+
+const retiredResult = (block: ContentBlock.ToolResult): string => {
+  const text =
+    block.error !== undefined
+      ? `failed: ${block.error}`
+      : typeof block.result === 'string'
+        ? block.result
+        : block.result === undefined
+          ? 'no result'
+          : 'a non-text result, not shown';
+  return capRetired(text);
+};
+
+const capRetired = (text: string): string =>
+  text.length > MAX_RETIRED_RESULT
+    ? `${text.slice(0, MAX_RETIRED_RESULT)}… [${text.length - MAX_RETIRED_RESULT} characters omitted]`
+    : text;
 
 /**
  * Groups consecutive assistant messages into a single message.

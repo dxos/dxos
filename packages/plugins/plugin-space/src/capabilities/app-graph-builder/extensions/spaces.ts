@@ -15,6 +15,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
@@ -25,7 +26,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
@@ -53,10 +54,18 @@ const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }
 
 const SPACE_OPEN_TIMEOUT = 60_000;
 
-const makeDeadlineAtom = () =>
+const makeStallDeadlineAtom = (clientAtom: Atom.Atom<readonly Client[]>) =>
   Atom.make((get) => {
-    const timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
-    get.addFinalizer(() => clearTimeout(timeout));
+    const client = get(clientAtom).at(0);
+    let timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
+    const subscription = client?.indexStatus.subscribe(() => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => get.setSelf(true), SPACE_OPEN_TIMEOUT);
+    });
+    get.addFinalizer(() => {
+      clearTimeout(timeout);
+      subscription?.unsubscribe();
+    });
     return false;
   });
 
@@ -70,7 +79,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
   const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
-  const openDeadlineFamily = Atom.family((_spaceId: string) => makeDeadlineAtom());
+  const openDeadlineFamily = Atom.family((_spaceId: string) => makeStallDeadlineAtom(clientAtom));
   const orderSettledAtom = Atom.make(false).pipe(Atom.keepAlive);
 
   return yield* Effect.all([
@@ -469,10 +478,8 @@ export const constructSpaceNode = ({
     onRearrange = spaceRearrangeCache.get(space.id);
     if (!onRearrange) {
       onRearrange = (nextOrder: string[]) => {
-        AppGraph.sortEdges(graph, GraphNode.RootId, 'outbound', nextOrder);
-        Obj.update(spacesOrder, (spacesOrder: any) => {
-          spacesOrder.order = nextOrder;
-        });
+        AppGraph.sortEdges(graph, GraphNode.RootId, AppGraphNode.child, nextOrder);
+        SpaceSchema.setSpacesOrder(spacesOrder, nextOrder);
       };
       spaceRearrangeCache.set(space.id, onRearrange);
     }

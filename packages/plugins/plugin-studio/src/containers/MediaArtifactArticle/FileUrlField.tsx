@@ -7,12 +7,14 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { log } from '@dxos/log';
-import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { type FormFieldRendererProps, FormFieldRow, TextField } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 import { GenerationService } from '#types';
@@ -43,9 +45,9 @@ export type FileUrlFieldProps = FormFieldRendererProps & { accept?: string };
  * can be handed a local image.
  */
 export const FileUrlField = ({ accept, ...props }: FileUrlFieldProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const space = useActiveSpace();
-  const [upload] = useCapabilities(AppCapabilities.FileUploader);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const space = ToolkitHooks.useActiveSpace();
+  const [upload] = Hooks.useCapabilities(AppCapabilities.FileUploader);
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -80,9 +82,9 @@ export const FileUrlField = ({ accept, ...props }: FileUrlFieldProps) => {
       presentation={props.presentation}
     >
       {/* The row's control slot holds one node: the input and its upload button side by side. */}
-      <Flex classNames='items-center gap-1'>
+      <Layout.Flex classNames='items-center gap-1'>
         <TextField {...props} />
-        <Button
+        <Button.Root
           variant='ghost'
           disabled={!!props.readonly || !upload || !space || uploading}
           icon={uploading ? 'ph--spinner-gap--regular' : 'ph--upload-simple--regular'}
@@ -91,7 +93,7 @@ export const FileUrlField = ({ accept, ...props }: FileUrlFieldProps) => {
           iconOnly
           onClick={() => inputRef.current?.click()}
         />
-      </Flex>
+      </Layout.Flex>
       <input
         ref={inputRef}
         type='file'

@@ -5,17 +5,19 @@
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
+import * as Schema from 'effect/Schema';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type Context as DxosContext, LifecycleState, Resource } from '@dxos/context';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { RepoClosedError } from '../errors.ts';
-import { type ChangeEvent, DocHandleProxy } from './doc-handle-proxy.ts';
+import { CLOSE_REASON_ATTRIBUTE, RepoClosedError } from '../errors.ts';
+import { type ChangeEvent, DocHandleProxy, type PassiveDocument } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
+import { sameHeads } from './heads.ts';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
@@ -49,6 +51,7 @@ const RESUBSCRIBE_MAX_DELAY_MS = 10_000;
 export class RepoProxy extends Resource {
   // TODO(mykola): Change to Map<string, DocHandleProxy<unknown>>.
   private _handles: Record<string, DocHandleProxy<any>> = {};
+  private readonly _passiveHandles = new Map<DocumentId, DocHandleProxy<any>>();
   private readonly _subscriptionId = PublicKey.random().toHex();
   /**
    * Cleanup for the active document-updates subscription (identified inside the DataService by
@@ -65,16 +68,25 @@ export class RepoProxy extends Resource {
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
 
-  /** Creations the host did not take; the handle stays unready until {@link flushCreations} lands one. */
+  /**
+   * Creations the host did not take; the handle stays unready until {@link flushCreations} lands one.
+   * An entry without `retry` was refused permanently: it is never requested again, and the next flush reports it.
+   */
   private readonly _failedCreations = new Map<
     string,
-    { handle: DocHandleProxy<any>; error: Error; retry: () => void }
+    { handle: DocHandleProxy<any>; error: Error; attempts: number; retry?: () => void }
   >();
 
   /**
    * Document ids that have pending updates.
    */
   private readonly _pendingUpdateIds = new Set<DocumentId>();
+
+  /**
+   * Documents in this generation's batch that the host has not acknowledged yet. With
+   * `_pendingUpdateIds`, every document whose changes exist only in this client.
+   */
+  private readonly _inFlightUpdateIds = new Set<DocumentId>();
 
   /**
    * Documents the host has taken a write for since a disk flush last took them: the only ones a disk
@@ -133,9 +145,21 @@ export class RepoProxy extends Resource {
   /** Delay of the pending resubscribe, so {@link flush} waits out the actual backoff step. */
   private _resubscribeDelay = 0;
 
+  /** Consecutive failed update batches, backing off the retry so a host that stays down is not hammered. */
+  private _sendRetryAttempts = 0;
+
+  /** Set while a retry is pending, so a burst of failed passes schedules one retry rather than many. */
+  private _sendRetryScheduled = false;
+
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
+
+  /**
+   * What stopped the proxy taking work, recorded once when it does: a close, whose error's stack is the call site,
+   * or the error that put it in the ERROR state. Carried by every later {@link RepoClosedError}.
+   */
+  #stoppedBy: { reason: string; error: Error } | undefined = undefined;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
   private _lastSaveStateKey = '';
@@ -155,8 +179,13 @@ export class RepoProxy extends Resource {
     return this._handles;
   }
 
+  get subscriptionId(): string {
+    return this._subscriptionId;
+  }
+
   /**
-   * Drops a cached handle nothing holds any more and unsubscribes the host from its document.
+   * Drops a cached handle nothing holds any more and unsubscribes the host from its document. A passive
+   * handle (stored changes nothing has loaded) never has an unsent change, so it always goes.
    *
    * This is the only way a proxied document leaves memory: handles are otherwise kept for the life
    * of the space, so a client's footprint tracked every document it had ever opened. A handle with
@@ -166,6 +195,10 @@ export class RepoProxy extends Resource {
    * @returns Whether the handle was released.
    */
   release(documentId: DocumentId): boolean {
+    if (this._passiveHandles.delete(documentId)) {
+      this.#unsubscribe(documentId);
+      return true;
+    }
     const handle = this._handles[documentId];
     if (!handle) {
       return false;
@@ -173,8 +206,7 @@ export class RepoProxy extends Resource {
     if (
       this._pendingUpdateIds.has(documentId) ||
       this._pendingCreations.has(handle._internalId) ||
-      // The pending-id sets are cleared at the start of a send, so they go quiet while a mutation is
-      // still in flight; the handle's own acknowledgement is what actually settles it.
+      // What the host has confirmed is what the handle's heads say; a handle still loading has confirmed nothing.
       !handle._isAcknowledged()
     ) {
       this._deferredReleaseIds.add(documentId);
@@ -193,16 +225,55 @@ export class RepoProxy extends Resource {
   }
 
   /**
+   * With `passive`, bytes the client already holds: the subscribed handle if there is one, else a
+   * passive one, which loads the bytes and subscribes from their heads when first used.
+   *
    * @throws {RepoClosedError} If the proxy is closing or closed — the document can never arrive, so
    * a caller whose work is abandonable should treat this as the client going away.
    */
-  find<T>(id: AnyDocumentId): DocHandleProxy<T> {
+  find<T>(id: AnyDocumentId, { passive }: { passive?: PassiveDocument } = {}): DocHandleProxy<T> {
     if (typeof id !== 'string') {
       throw new TypeError(`Invalid documentId ${id}`);
     }
 
     const documentId = toDocumentId(id);
+    if (passive) {
+      this.#requireOpen(documentId);
+      const held = this._handles[documentId] ?? this._passiveHandles.get(documentId);
+      const heldHeads = held?.passiveHeads;
+      if (held && heldHeads && !sameHeads(heldHeads, passive.heads)) {
+        held._setPassive(passive);
+        this.#subscribePassive(documentId);
+      }
+      return held ?? this._loadHandle<T>({ documentId, passive });
+    }
     return this._getOrLoadHandle<T>({ documentId });
+  }
+
+  /**
+   * Moves a loaded handle back to stored changes, subscribed passive, leaving its document for collection.
+   * Refused while the host has not taken the handle's last change, since the stored changes would not hold it.
+   * @returns Whether the handle went passive.
+   */
+  deactivate(documentId: DocumentId, passive: PassiveDocument): boolean {
+    const handle = this._handles[documentId];
+    if (
+      !handle ||
+      this._pendingUpdateIds.has(documentId) ||
+      this._pendingCreations.has(handle._internalId) ||
+      !handle._isAcknowledged()
+    ) {
+      return false;
+    }
+    // Every listener, as in `release`: the entity manager attaches its own again when the document loads.
+    handle.off('change');
+    handle._setPassive(passive);
+    delete this._handles[documentId];
+    this._passiveHandles.set(documentId, handle);
+    this._deferredReleaseIds.delete(documentId);
+    this.#watchActivation(handle, documentId);
+    this.#subscribePassive(documentId);
+    return true;
   }
 
   import<T>(dump: Uint8Array): DocHandleProxy<T> {
@@ -213,6 +284,20 @@ export class RepoProxy extends Resource {
 
   create<T>(initialValue?: T): DocHandleProxy<T> {
     return this._createHandle<T>({ initialValue });
+  }
+
+  /** Whether a change or a new document exists only in this client, so losing the page would lose it. */
+  hasUnsavedChanges(): boolean {
+    // A closed proxy has dropped its handles: whatever it never sent is already gone, and no save can bring it back.
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return false;
+    }
+    return (
+      this._pendingUpdateIds.size > 0 ||
+      this._inFlightUpdateIds.size > 0 ||
+      this._pendingCreations.size > 0 ||
+      this._failedCreations.size > 0
+    );
   }
 
   /**
@@ -262,9 +347,13 @@ export class RepoProxy extends Resource {
       const documentIds = [...this._unflushedIds];
       this._unflushedIds.clear();
       if (documentIds.length > 0) {
-        const saved = runServiceCall(this._runtime, this._dataService['DataService.flush']({ documentIds }), {
-          timeout: RPC_TIMEOUT,
-        }).catch((err) => {
+        const saved = runServiceCall(
+          this._runtime,
+          this._dataService,
+          'DataService.flush',
+          { documentIds },
+          { timeout: RPC_TIMEOUT },
+        ).catch((err) => {
           documentIds.forEach((documentId) => this._unflushedIds.add(documentId));
           throw err;
         });
@@ -286,14 +375,18 @@ export class RepoProxy extends Resource {
    */
   async flushCreations(): Promise<void> {
     for (let attempt = 1; ; attempt++) {
-      for (const [id, { retry }] of this._failedCreations) {
-        this._failedCreations.delete(id);
-        retry();
-      }
+      this._retryFailedCreations();
       await Promise.all([...this._pendingCreations.values()]);
       const failed = this._failedCreations.values().next().value;
       if (!failed || this._lifecycleState === LifecycleState.CLOSED) {
         return;
+      }
+      // Reported to one flush only, since a document that can never be created would fail every later one.
+      const rejected = [...this._failedCreations].find(([, { retry }]) => retry === undefined);
+      if (rejected) {
+        this._failedCreations.delete(rejected[0]);
+        this._emitSaveStateEvent();
+        throw rejected[1].error;
       }
       if (attempt >= FLUSH_ATTEMPTS) {
         throw failed.error;
@@ -302,9 +395,53 @@ export class RepoProxy extends Resource {
     }
   }
 
+  private _retryFailedCreations(): void {
+    for (const [id, { retry }] of this._failedCreations) {
+      if (retry === undefined) {
+        continue;
+      }
+      this._failedCreations.delete(id);
+      retry();
+    }
+  }
+
+  /** @param ctx A {@link CLOSE_REASON_ATTRIBUTE} on it names why the proxy is closing. */
+  override async close(ctx?: DxosContext): Promise<this> {
+    if (this.isOpen && !this.#stoppedBy) {
+      const given: string | undefined = ctx?.getAttribute(CLOSE_REASON_ATTRIBUTE);
+      const reason = given ?? 'closed';
+      this.#stoppedBy = { reason, error: new Error(`Repo proxy closed: ${reason}`) };
+      // A close with no reason is routine teardown, too frequent to log above debug.
+      if (given) {
+        log.info('repo proxy closing', { spaceId: this._spaceId, reason });
+      } else {
+        log('repo proxy closing', { spaceId: this._spaceId, reason });
+      }
+    }
+    return super.close(ctx);
+  }
+
+  protected override async _catch(err: Error): Promise<void> {
+    if (!this.#stoppedBy) {
+      this.#stoppedBy = { reason: 'error', error: err };
+      log.warn('repo proxy stopped by an error', { spaceId: this._spaceId, error: err });
+    }
+    return super._catch(err);
+  }
+
+  #closedError(documentId?: DocumentId): RepoClosedError {
+    return new RepoClosedError(
+      { spaceId: this._spaceId, documentId, closeReason: this.#stoppedBy?.reason },
+      { cause: this.#stoppedBy?.error },
+    );
+  }
+
   protected override async _open(): Promise<void> {
-    // A close during the resubscribe delay cancels the task that clears this flag.
+    this.#stoppedBy = undefined;
+    // A close during the resubscribe or retry delay cancels the task that clears these flags.
     this._isReconnecting = false;
+    this._sendRetryScheduled = false;
+    this._sendRetryAttempts = 0;
     this._sendUpdatesJob = this._createSendUpdatesJob();
     // TODO(dmaretskyi): Set proper space id.
     this._subscribe();
@@ -319,15 +456,20 @@ export class RepoProxy extends Resource {
       handle.off('change');
       // A load in flight can never complete now; `Trigger` already marks its own promise handled, since a close
       // may fail a load nobody is awaiting.
-      handle._failReady(new RepoClosedError({ spaceId: this._spaceId, documentId: handle.documentId }));
+      handle._failReady(this.#closedError(handle.documentId));
     }
 
     this._handles = {};
+    this._passiveHandles.clear();
     for (const { handle, error } of this._failedCreations.values()) {
       handle.off('change');
       handle._failReady(error);
     }
     this._failedCreations.clear();
+    this._pendingUpdateIds.clear();
+    this._inFlightUpdateIds.clear();
+    this._pendingCreations.clear();
+    this._emitSaveStateEvent();
     this._subscriptionCleanup?.();
     this._subscriptionCleanup = undefined;
   }
@@ -340,12 +482,15 @@ export class RepoProxy extends Resource {
     this._sendUpdatesJob?.forceTrigger();
   };
 
-  /** Registers or unregisters {@link _onPageHide} where a page exists; a worker or Node has no such event. */
+  /**
+   * workerd's global scope is an EventTarget too, and there the listener would hold this proxy, and its
+   * whole client, until close.
+   */
   private _pageEvents(method: 'addEventListener' | 'removeEventListener'): void {
-    const fn = Reflect.get(globalThis, method);
-    if (typeof fn === 'function') {
-      fn.call(globalThis, 'pagehide', this._onPageHide);
+    if (typeof globalThis.document === 'undefined') {
+      return;
     }
+    globalThis[method]('pagehide', this._onPageHide);
   }
 
   /**
@@ -367,7 +512,7 @@ export class RepoProxy extends Resource {
     this._isReconnecting = true;
 
     // Increment generation so old tasks know they're abandoned.
-    this._generation++;
+    this._abandonGeneration();
 
     // Abandon the old scheduler - don't wait for it since it may be blocked on dead RPC.
     // Create a fresh scheduler that will use the new data service.
@@ -379,6 +524,19 @@ export class RepoProxy extends Resource {
     // Hands the documents `_subscribe` re-queued to the fresh subscription, raising if they cannot
     // be registered — the caller resumes replication on the strength of this call returning.
     await this.flush();
+  }
+
+  /**
+   * Starts a new generation, handing back the documents the old one had in flight: they went to a
+   * subscription or host being replaced, which may never answer, and the replacement applies a
+   * duplicate idempotently.
+   */
+  private _abandonGeneration(): void {
+    this._generation++;
+    for (const documentId of this._inFlightUpdateIds) {
+      this._pendingUpdateIds.add(documentId);
+    }
+    this._inFlightUpdateIds.clear();
   }
 
   private _createSendUpdatesJob(): UpdateScheduler {
@@ -425,6 +583,10 @@ export class RepoProxy extends Resource {
         this._pendingAddIds.add(documentId);
       }
     }
+    for (const documentId of this._passiveHandles.keys()) {
+      this._pendingRemoveIds.delete(documentId);
+      this._pendingAddIds.add(documentId);
+    }
   }
 
   /**
@@ -442,7 +604,7 @@ export class RepoProxy extends Resource {
     // Keeps the scheduler idle until the replacement is in place.
     this._isReconnecting = true;
     // Abandons the batch racing the dead subscription, so it re-queues quietly instead of raising.
-    this._generation++;
+    this._abandonGeneration();
     const generation = this._generation;
     this._resubscribeDelay = Math.min(
       RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++,
@@ -480,6 +642,11 @@ export class RepoProxy extends Resource {
       this._deferredReleaseIds.delete(documentId);
       return cached;
     }
+    const passive = this._passiveHandles.get(documentId);
+    if (passive) {
+      passive._activate();
+      return passive;
+    }
     // If not, create a new handle, cache it, and return it.
     if (!documentId) {
       throw new Error(`Invalid documentId ${documentId}`);
@@ -497,49 +664,89 @@ export class RepoProxy extends Resource {
    */
   #requireOpen(documentId?: DocumentId): UpdateScheduler {
     if (!this.isOpen || !this._sendUpdatesJob) {
-      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
+      throw this.#closedError(documentId);
     }
     return this._sendUpdatesJob;
   }
 
   /** @throws {RepoClosedError} */
-  private _loadHandle<T>({ documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
-    const sendUpdatesJob = this.#requireOpen(documentId);
+  private _loadHandle<T>({
+    documentId,
+    passive,
+  }: {
+    documentId: DocumentId;
+    passive?: PassiveDocument;
+  }): DocHandleProxy<T> {
+    this.#requireOpen(documentId);
+    const handle: DocHandleProxy<T> = new DocHandleProxy<T>({
+      documentId,
+      passive,
+      onDelete: () => {
+        log('onDelete', { documentId });
+        handle.off('change', this.#onHandleChange);
+        this._pendingRemoveIds.add(documentId);
+        // Drop any pending update for this id; the handle is gone and `_sendUpdates`
+        // would otherwise see a missing handle for an id it's still trying to send.
+        this._pendingUpdateIds.delete(documentId);
+        this._pendingAddIds.delete(documentId);
+        this._sendUpdatesJob?.trigger();
+        delete this._handles[documentId];
+        this._passiveHandles.delete(documentId);
+      },
+    });
+    if (passive) {
+      this._passiveHandles.set(documentId, handle);
+      this.#watchActivation(handle, documentId);
+      this.#subscribePassive(documentId);
+    } else {
+      this.#subscribeHandle(handle, documentId);
+    }
+    return handle;
+  }
 
-    const onChange = ({ patchInfo }: ChangeEvent<T>) => {
-      if (patchInfo.source !== 'change') {
-        return;
+  /** Subscribes a passive handle as loaded once it loads, unless it was released meanwhile. */
+  #watchActivation(handle: DocHandleProxy<any>, documentId: DocumentId): void {
+    handle.once('activated', () => {
+      if (this._passiveHandles.get(documentId) === handle) {
+        this.#subscribeHandle(handle, documentId);
       }
-      log('onChange', { documentId });
-      this._pendingUpdateIds.add(documentId);
-      this._sendUpdatesJob?.trigger();
-      this._emitSaveStateEvent();
-    };
+    });
+  }
 
-    const cleanup = () => {
-      log('onDelete', { documentId });
-      handle.off('change', onChange);
-      this._pendingRemoveIds.add(documentId);
-      // Drop any pending update for this id; the handle is gone and `_sendUpdates`
-      // would otherwise see a missing handle for an id it's still trying to send.
-      this._pendingUpdateIds.delete(documentId);
-      this._sendUpdatesJob?.trigger();
-      delete this._handles[documentId];
-    };
+  #subscribePassive(documentId: DocumentId): void {
+    this._pendingRemoveIds.delete(documentId);
+    this._pendingAddIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
+  }
 
-    const handle = new DocHandleProxy<T>({ documentId, onDelete: cleanup });
-    handle.on('change', onChange);
+  #unsubscribe(documentId: DocumentId): void {
+    this._pendingAddIds.delete(documentId);
+    this._pendingRemoveIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
+  }
+
+  #subscribeHandle(handle: DocHandleProxy<any>, documentId: DocumentId): void {
+    handle.on('change', this.#onHandleChange);
     this._handles[documentId] = handle;
-
+    this._passiveHandles.delete(documentId);
     // A queued unsubscribe for this id would otherwise travel in the same batch as this subscribe,
     // leaving the host unsubscribed from a document someone is now waiting for.
     this._pendingRemoveIds.delete(documentId);
     this._deferredReleaseIds.delete(documentId);
     this._pendingAddIds.add(documentId);
-    sendUpdatesJob.trigger();
-
-    return handle;
+    this._sendUpdatesJob?.trigger();
   }
+
+  readonly #onHandleChange = ({ handle, patchInfo }: ChangeEvent<any>) => {
+    const documentId = handle.documentId;
+    if (patchInfo.source !== 'change' || !documentId) {
+      return;
+    }
+    log('onChange', { documentId });
+    this._pendingUpdateIds.add(documentId);
+    this._sendUpdatesJob?.trigger();
+    this._emitSaveStateEvent();
+  };
 
   /** @throws {RepoClosedError} */
   private _createHandle<T>({ initialValue }: { initialValue?: T }): DocHandleProxy<T> {
@@ -581,15 +788,17 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
     handle.on('change', onChange);
-    const request = () => {
+    const request = (attempt: number) => {
       const creation: Promise<void> = runServiceCall(
         this._runtime,
-        this._dataService['DataService.createDocument']({
+        this._dataService,
+        'DataService.createDocument',
+        {
           spaceId: this._spaceId,
-          // A doc's declared type is an interface without an index signature, which the Struct
-          // field's `Record` type does not accept; the value is a plain JSON object at runtime.
-          initialValue: initialValue as Record<string, unknown>,
-        }),
+          // Bytes of the handle's own doc, so the host takes its history rather than building a second copy
+          // of the initial state, and Automerge values (`RawString`, bytes) need no JSON encoding.
+          ...(initialValue === undefined ? {} : { initialDocument: A.save(handle.doc()) }),
+        },
         { timeout: RPC_TIMEOUT },
       )
         .then(
@@ -614,24 +823,41 @@ export class RepoProxy extends Resource {
               cleanup();
               return;
             }
-            if (!(err instanceof RpcClosedError)) {
-              log.catch(err);
-            }
             if (deleted) {
               return;
             }
-            this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
+            // A payload the transport cannot encode is refused identically on every attempt.
+            const permanent = Schema.isSchemaError(err);
+            if (attempt === 1 && !(err instanceof RpcClosedError)) {
+              log.catch(err);
+            } else {
+              log('document creation failed again', { attempt, err });
+            }
+            this._failedCreations.set(handle._internalId, {
+              handle,
+              error: err,
+              attempts: attempt,
+              retry: permanent ? undefined : () => request(attempt + 1),
+            });
+            if (permanent) {
+              handle._failReady(err);
+            } else {
+              this._scheduleSendRetry();
+            }
+            this._emitSaveStateEvent();
           },
         )
         .catch((err) => log.catch(err))
         .finally(() => {
           if (this._pendingCreations.get(handle._internalId) === creation) {
             this._pendingCreations.delete(handle._internalId);
+            this._emitSaveStateEvent();
           }
         });
       this._pendingCreations.set(handle._internalId, creation);
+      this._emitSaveStateEvent();
     };
-    request();
+    request(1);
 
     return handle;
   }
@@ -686,7 +912,19 @@ export class RepoProxy extends Resource {
     }
   }
 
-  #integrate({ documentId, mutation, requesting, unavailable }: DataService.DocumentUpdate, bulk: boolean): void {
+  #integrate(
+    { documentId, mutation, requesting, unavailable, passive }: DataService.DocumentUpdate,
+    bulk: boolean,
+  ): void {
+    const passiveHandle = this._passiveHandles.get(documentId as DocumentId);
+    if (passiveHandle) {
+      try {
+        passiveHandle._integratePassiveUpdate(mutation, passive);
+      } catch (err) {
+        log.catch(err, { documentId });
+      }
+      return;
+    }
     const handle = this._handles[documentId];
     if (!handle) {
       log.warn('Received update for unknown document', { documentId });
@@ -745,18 +983,28 @@ export class RepoProxy extends Resource {
     this._pendingAddIds.clear();
     this._pendingRemoveIds.clear();
     this._pendingUpdateIds.clear();
+    for (const documentId of updateIds) {
+      this._inFlightUpdateIds.add(documentId);
+    }
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
+      // Read from the handles now, so an add re-queued meanwhile carries what the handle holds.
+      const add = addIds.flatMap((id) => {
+        const handle = this._handles[id] ?? this._passiveHandles.get(id);
+        return handle ? [{ id, ...handle._subscription() }] : [];
+      });
       // A round trip a batch of plain mutations does not need, and one a hiding page cannot afford.
-      if (addIds.length > 0 || removeIds.length > 0) {
+      if (add.length > 0 || removeIds.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService['DataService.updateSubscription']({
+          this._dataService,
+          'DataService.updateSubscription',
+          {
             subscriptionId: this._subscriptionId,
-            addIds,
+            add,
             removeIds,
-          }),
+          },
           { timeout: RPC_TIMEOUT },
         );
       }
@@ -783,7 +1031,9 @@ export class RepoProxy extends Resource {
       if (updates.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
+          this._dataService,
+          'DataService.update',
+          { subscriptionId: this._subscriptionId, updates },
           { timeout: RPC_TIMEOUT },
         );
         updates.forEach(({ documentId }) => this._unflushedIds.add(documentId as DocumentId));
@@ -804,8 +1054,8 @@ export class RepoProxy extends Resource {
         }
       }
 
+      this._sendRetryAttempts = 0;
       this._releaseDeferred();
-      this._emitSaveStateEvent();
     } catch (err) {
       // A reconnect replaced the subscription under this task, so its failure is not raised below.
       const isAbandoned = generation !== this._generation;
@@ -815,34 +1065,89 @@ export class RepoProxy extends Resource {
       // Re-queued even for an abandoned task: nothing else re-sends a pending mutation. Adds are
       // restored only for handles still held — a released document's add would re-subscribe the
       // host to a document nothing owns.
-      addIds.filter((id) => this._handles[id]).forEach((id) => this._pendingAddIds.add(id));
-      removeIds.forEach((id) => this._pendingRemoveIds.add(id));
+      addIds
+        .filter((id) => this._handles[id] || this._passiveHandles.has(id))
+        .forEach((id) => this._pendingAddIds.add(id));
+      removeIds
+        .filter((id) => !this._handles[id] && !this._passiveHandles.has(id))
+        .forEach((id) => this._pendingRemoveIds.add(id));
       updateIds.forEach((id) => this._pendingUpdateIds.add(id));
 
-      // Don't raise errors if we're closing, reconnecting, abandoned, or if the RPC connection was closed.
-      // RpcClosedError and timeouts can happen during reconnection or shutdown before _close() is called.
+      // Closing, reconnecting, an abandoned pass and a closed RPC connection each have their own path
+      // that re-sends the batch; RpcClosedError and timeouts can happen before _close() is called.
       if (
         this._lifecycleState !== LifecycleState.CLOSED &&
         !this._isReconnecting &&
         !isAbandoned &&
         !(err instanceof RpcClosedError)
       ) {
-        this._ctx.raise(err as Error);
+        // Raised into the context instead, the failure would leave the proxy in its ERROR state, where
+        // every later create and find is refused as closed until the page reloads.
+        log.warn('failed to send document updates, retrying', {
+          spaceId: this._spaceId,
+          documents: updateIds.length,
+          attempt: this._sendRetryAttempts + 1,
+          error: err,
+        });
+        this._scheduleSendRetry();
       }
+    } finally {
+      // Settled either way: acknowledged, or re-queued into `_pendingUpdateIds` by the catch above.
+      // An abandoned pass's ids were handed back when its generation was.
+      if (generation === this._generation) {
+        for (const documentId of updateIds) {
+          this._inFlightUpdateIds.delete(documentId);
+        }
+      }
+      this._emitSaveStateEvent();
     }
   }
 
+  /** Re-runs the re-queued batch after a backoff, since nothing else triggers it if no further write comes. */
+  private _scheduleSendRetry(): void {
+    if (this._sendRetryScheduled) {
+      return;
+    }
+    this._sendRetryScheduled = true;
+    // A successful update pass resets `_sendRetryAttempts`, so a creation the host keeps refusing backs off on its own count.
+    const creationAttempts = Math.max(0, ...Array.from(this._failedCreations.values(), ({ attempts }) => attempts));
+    const delay = Math.min(
+      RESUBSCRIBE_DELAY_MS * 2 ** Math.max(this._sendRetryAttempts++, creationAttempts - 1),
+      RESUBSCRIBE_MAX_DELAY_MS,
+    );
+    scheduleTask(
+      this._ctx,
+      () => {
+        this._sendRetryScheduled = false;
+        this._retryFailedCreations();
+        this._sendUpdatesJob?.trigger();
+      },
+      delay,
+    );
+  }
+
   private _emitSaveStateEvent(): void {
-    const unsavedDocuments = Array.from(this._pendingUpdateIds);
-    const key = unsavedDocuments.join(',');
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return;
+    }
+    const unsavedDocuments = Array.from(new Set([...this._pendingUpdateIds, ...this._inFlightUpdateIds])).sort();
+    const pendingCreations = this._pendingCreations.size + this._failedCreations.size;
+    // Retries back off only after a send failed outright; a failed pass with no changes in it loses nothing.
+    const failing = (this._sendRetryAttempts > 0 && unsavedDocuments.length > 0) || this._failedCreations.size > 0;
+    const key = `${unsavedDocuments.join(',')}|${pendingCreations}|${failing}`;
     if (key === this._lastSaveStateKey) {
       return;
     }
     this._lastSaveStateKey = key;
-    this.saveStateChanged.emit({ unsavedDocuments });
+    this.saveStateChanged.emit({ unsavedDocuments, pendingCreations, failing });
   }
 }
 
 export type SaveStateChangedEvent = {
+  /** Documents with changes the host has not acknowledged. */
   unsavedDocuments: DocumentId[];
+  /** New documents the host has not created yet. */
+  pendingCreations: number;
+  /** Whether the last attempt to hand changes to the host failed. */
+  failing: boolean;
 };

@@ -6,7 +6,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { Match } from './Match.tsx';
+import * as Match from './Match.tsx';
 
 describe('Match', () => {
   afterEach(cleanup);

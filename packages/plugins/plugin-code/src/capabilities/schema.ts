@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { CodeProject, SourceFile, Spec } from '#types';
+import { Spec } from '@dxos/types';
+
+import { CodeProject, SourceFile } from '#types';
 
 /**
  * Schemas this plugin registers, loaded on demand: the capability activates at idle,

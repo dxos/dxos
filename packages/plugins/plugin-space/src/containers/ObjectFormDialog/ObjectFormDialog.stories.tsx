@@ -16,10 +16,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Annotation, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 
@@ -57,7 +57,10 @@ const makeBookmark = (props: Omit<Obj.MakeProps<typeof Bookmark>, 'visits'>): Bo
 
 const typename = Type.getTypename(Bookmark);
 
-const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
+/** Calls to the form-less entry's `createObject`; each starts synchronously on the pick. */
+let quickCreates = 0;
+
+const DefaultStory = ({ mode = 'live', selectType = false }: { mode?: 'draft' | 'live'; selectType?: boolean }) => {
   const [space] = useSpaces();
   const bookmarks = useQuery(space?.db, Filter.type(Bookmark));
   // What the operation would receive: `pending` until the dialog settles, then `ref` or `dismissed`.
@@ -80,7 +83,7 @@ const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
         <Dialog.Root defaultOpen>
           <ObjectFormDialog
             target={space.db}
-            typename={typename}
+            typename={selectType ? undefined : typename}
             mode={mode}
             defaults={{ name: 'Seeded' }}
             handle={handle}
@@ -122,9 +125,21 @@ const meta = {
               { spaceId: options.db.spaceId },
             ),
         }),
+        // An entry with no form: picking it from the type list creates straight away, as a document does.
+        Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
+          id: 'com.example.type.quickBookmark',
+          createObject: (props, options) => {
+            quickCreates++;
+            return Operation.invoke(
+              SpaceOperation.AddObject,
+              { object: makeBookmark(props), target: options.target },
+              { spaceId: options.db.spaceId },
+            );
+          },
+        }),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Bookmark, Visits],
@@ -219,6 +234,27 @@ export const LiveEnterConfirms: Story = {
   },
 };
 
+/** No type given: the dialog opens on the type picker. */
+export const SelectType: Story = {
+  args: { mode: 'draft', selectType: true },
+};
+
+/** A second pick while the dialog closes does not create again. */
+export const SelectTypeCreatesOnce: Story = {
+  args: { mode: 'draft', selectType: true },
+  play: async () => {
+    quickCreates = 0;
+    const body = within(document.body);
+    await userEvent.click(await body.findByTestId('create-object-form.schema-input', undefined, { timeout: 15_000 }));
+    await userEvent.keyboard('quick');
+    await userEvent.dblClick(await body.findByTestId('create-object-form.type.com.example.type.quickBookmark'));
+
+    // Both keys have been handled once the picker is gone, so the count is final.
+    await waitFor(() => expect(body.queryByTestId('create-object-form.schema-input')).toBeNull(), { timeout: 5_000 });
+    await expect(quickCreates).toBe(1);
+  },
+};
+
 /** A draft create: nothing exists until the form is submitted. */
 export const Draft: Story = {
   args: { mode: 'draft' },
@@ -241,6 +277,20 @@ export const DraftEnterCreates: Story = {
   },
 };
 
+/** The draft's Cancel and Create sit in the dialog's footer, as every dialog's actions do, not in its scrolling body. */
+export const DraftActionsInFooter: Story = {
+  args: { mode: 'draft' },
+  play: async () => {
+    const body = within(document.body);
+    const save = await body.findByTestId('save-button', undefined, { timeout: 15_000 });
+    const footer = save.closest<HTMLElement>('[data-scope="dialog"][data-part="footer"]');
+    await expect(footer).not.toBeNull();
+    await expect(footer?.contains(body.getByTestId('cancel-button'))).toBe(true);
+    // The footer keeps its bottom padding under the actions.
+    await expect(Number.parseFloat(getComputedStyle(footer ?? save).paddingBottom)).toBeGreaterThan(0);
+  },
+};
+
 /** With the required name blank, Enter creates nothing and leaves the dialog open. */
 export const DraftEnterInvalid: Story = {
   args: { mode: 'draft' },
@@ -260,8 +310,8 @@ export const DraftCreateButton: Story = {
   args: { mode: 'draft' },
   play: async () => {
     const body = within(document.body);
-    const form = await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
-    await userEvent.click(within(form).getByTestId('save-button'));
+    await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(body.getByTestId('save-button'));
 
     await waitFor(
       async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:1 settled:committed'),
@@ -275,8 +325,8 @@ export const DraftCancelButton: Story = {
   args: { mode: 'draft' },
   play: async () => {
     const body = within(document.body);
-    const form = await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
-    await userEvent.click(within(form).getByTestId('cancel-button'));
+    await body.findByTestId('create-object-form', undefined, { timeout: 15_000 });
+    await userEvent.click(body.getByTestId('cancel-button'));
 
     await waitFor(
       async () => expect(await body.findByTestId('counts')).toHaveTextContent('objects:0 settled:dismissed'),

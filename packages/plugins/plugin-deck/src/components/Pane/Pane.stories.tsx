@@ -5,9 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Pane, type PaneTab } from './Pane.tsx';
@@ -26,11 +27,11 @@ const MainPane = ({ id, label }: { id: string; label: string }) => {
     <Pane.Root tabIndex={0} classNames='flex-1' {...attentionAttrs}>
       <Pane.Toolbar>
         <Pane.Sigil attendableId={id}>
-          <Icon icon='ph--circle-dashed--regular' />
+          <Icon.Icon icon='ph--circle-dashed--regular' />
         </Pane.Sigil>
         <Pane.Title attendableId={id}>{label}</Pane.Title>
-        <Button iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
-        <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
+        <Button.Root iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
+        <Button.Root iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
       </Pane.Toolbar>
       <Pane.Content classNames='grid place-items-center text-fg-muted'>
         <span>{label} content</span>
@@ -49,11 +50,11 @@ const SplitStory = () => {
       <Pane.Root>
         <Pane.Toolbar>
           <Pane.Tabs tabs={TABS} value={tab} onValueChange={setTab} attendableId='plank-main' related />
-          <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
+          <Button.Root iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
         </Pane.Toolbar>
         <Pane.Content classNames='grid place-items-center text-fg-muted'>
           <span className='flex items-center gap-1'>
-            {activeTab && <Icon icon={activeTab.icon} />}
+            {activeTab && <Icon.Icon icon={activeTab.icon} />}
             {tab}
           </span>
         </Pane.Content>

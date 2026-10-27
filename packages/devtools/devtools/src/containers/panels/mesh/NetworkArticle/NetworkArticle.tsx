@@ -8,8 +8,9 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState } from '../../../../hooks/index.ts';

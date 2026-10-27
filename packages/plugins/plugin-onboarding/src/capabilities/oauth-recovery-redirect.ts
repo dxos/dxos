@@ -15,7 +15,7 @@ import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { buf } from '@dxos/protocols/buf';
 import { RecoverIdentityRequestSchema } from '@dxos/protocols/buf/dxos/client/services_pb';
 

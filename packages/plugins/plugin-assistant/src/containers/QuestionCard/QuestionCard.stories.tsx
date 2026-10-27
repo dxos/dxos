@@ -11,11 +11,13 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Block, Card, Icon } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Task } from '@dxos/types';
@@ -69,9 +71,9 @@ const DefaultStory = () => {
             <CardContainer role={role} icon='ph--question--regular'>
               <Card.Root border={false}>
                 <Card.Header>
-                  <Block>
-                    <Icon icon='ph--question--regular' />
-                  </Block>
+                  <Layout.Block>
+                    <Icon.Icon icon='ph--question--regular' />
+                  </Layout.Block>
                   <Card.Title>{task.title}</Card.Title>
                 </Card.Header>
                 <QuestionCard task={task} questionId={question.question.id} />
@@ -94,7 +96,7 @@ const meta = {
     // `useOperationInvoker`, which throws without PluginManagerContext.
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Task.Task],
           onClientInitialized: ({ client }) =>

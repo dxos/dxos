@@ -8,24 +8,24 @@ import { EID } from '@dxos/keys';
 import type * as AppCapabilities from './AppCapabilities.ts';
 
 /** Terminal status message — reducer calls `done()` then `remove()` on the keyed monitor. */
-export const PROGRESS_STATUS_COMPLETE = 'progress.complete';
+export const STATUS_COMPLETE = 'progress.complete';
 
 /** Terminal status message — reducer calls `fail()` and leaves the monitor visible. */
-export const PROGRESS_STATUS_FAILED = 'Sync failed';
+export const STATUS_FAILED = 'Sync failed';
 
 /** Terminal status message — reducer calls `note()` then `remove()`. */
-export const PROGRESS_STATUS_CANCELLED = 'Cancelled';
+export const STATUS_CANCELLED = 'Cancelled';
 
 /**
  * Reason shown when a run stops reporting. Deliberately not "failed": the run may well have finished
  * or still be going — what is known is that its progress stopped arriving, and saying more than that
  * would be inventing an outcome.
  */
-export const PROGRESS_STATUS_STALLED = 'Stopped reporting';
+export const STATUS_STALLED = 'Stopped reporting';
 
 /** A terminal status message ends a run — the reducer removes or fails the keyed monitor. */
 const isTerminalMessage = (message: string | undefined): boolean =>
-  message === PROGRESS_STATUS_COMPLETE || message === PROGRESS_STATUS_FAILED || message === PROGRESS_STATUS_CANCELLED;
+  message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_CANCELLED;
 
 type StatusPayload = Trace.PayloadType<typeof Trace.StatusUpdate>;
 type ProgressMonitor = ReturnType<AppCapabilities.ProgressRegistry['register']>;
@@ -64,10 +64,19 @@ type MonitorEntry = {
   ended?: boolean;
   /** Last phase index seen, so a change of phase can clear the count belonging to the old one. */
   phase?: number;
+  /** Count and total the meter shows, so a continuation's numbers can be placed after them. */
+  shown: { current?: number; total?: number };
+  /**
+   * What the chain had shown when a new pid took over, held until that pid's first count says whether
+   * it restarted from zero; see {@link applyCounts}.
+   */
+  handover?: { current?: number; total?: number };
+  /** Added to the count and total the current pid reports, once it turns out to count from zero. */
+  offset?: number;
 };
 
 /**
- * A cancelled key's tombstone (see {@link ProgressTraceSinkOptions.cancelScope}). `pid` scope
+ * A cancelled key's tombstone (see {@link TraceSinkOptions.cancelScope}). `pid` scope
  * releases when a different pid arrives (the next local run); `run` scope releases on the run's
  * terminal status (an edge chain spans many pids, so pid identity cannot bound it).
  */
@@ -92,7 +101,7 @@ const RUN_TOMBSTONE_TTL_MS = 60_000;
  */
 const DEFAULT_STALL_TIMEOUT_MS = 90_000;
 
-export type ProgressTraceSinkOptions = {
+export type TraceSinkOptions = {
   /** Cancels the process/trigger that emitted progress for a keyed monitor (wired from the process manager). */
   cancelProcess?: (target: CancelTarget) => void;
   /**
@@ -117,29 +126,24 @@ export type ProgressTraceSinkOptions = {
  * A getter lets the sink activate during SetupProcessManager (before
  * ProgressRegistry is contributed on Startup) without deadlocking.
  */
-export type ProgressRegistrySource =
-  | AppCapabilities.ProgressRegistry
-  | (() => AppCapabilities.ProgressRegistry | undefined);
+export type RegistrySource = AppCapabilities.ProgressRegistry | (() => AppCapabilities.ProgressRegistry | undefined);
 
 /**
  * Builds a {@link Trace.Sink} that projects ephemeral `status.update` events into a
  * {@link AppCapabilities.ProgressRegistry}. Intended as a parallel sink alongside feed
  * persistence — operations emit trace status; this adapter drives UI monitors.
  *
- * When {@link ProgressRegistrySource} is a getter that returns `undefined`, status
+ * When {@link RegistrySource} is a getter that returns `undefined`, status
  * updates are dropped until the registry becomes available.
  */
-export const createProgressTraceSink = (
-  progressRegistry: ProgressRegistrySource,
-  options: ProgressTraceSinkOptions = {},
-): Trace.Sink => {
+export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSinkOptions = {}): Trace.Sink => {
   const resolveRegistry = (): AppCapabilities.ProgressRegistry | undefined =>
     typeof progressRegistry === 'function' ? progressRegistry() : progressRegistry;
 
   const monitors = new Map<string, MonitorEntry>();
   // Keys the user cancelled, tombstoned so the dying run's tail (which keeps broadcasting until the
   // process/edge abort lands) cannot resurrect the removed monitor. Release is scoped so a genuinely
-  // later run still shows — see {@link ProgressTraceSinkOptions.cancelScope}.
+  // later run still shows — see {@link TraceSinkOptions.cancelScope}.
   const cancelled = new Map<string, Tombstone>();
 
   const stallTimeout = options.stallTimeout ?? DEFAULT_STALL_TIMEOUT_MS;
@@ -181,7 +185,7 @@ export const createProgressTraceSink = (
       // still be here. `ended` is what stops it from being mistaken for a live run.
       entry.stall = undefined;
       entry.ended = true;
-      entry.handle.fail(PROGRESS_STATUS_STALLED);
+      entry.handle.fail(STATUS_STALLED);
     }, stallTimeout);
   };
 
@@ -190,7 +194,7 @@ export const createProgressTraceSink = (
     if (!entry) {
       return;
     }
-    entry.handle.note(PROGRESS_STATUS_CANCELLED);
+    entry.handle.note(STATUS_CANCELLED);
     entry.handle.remove();
     dropMonitor(key);
   };
@@ -222,6 +226,9 @@ export const createProgressTraceSink = (
       // total this run already reported would go with it: the meter falls back to a sweep mid-run,
       // having counted moments earlier. Keep the handle and re-point the target instead. The stall
       // timer carries over untouched — a continuation is the same run, so its clock keeps running.
+      if (target.pid !== undefined && existing.target.pid !== undefined && target.pid !== existing.target.pid) {
+        existing.handover = { ...existing.shown };
+      }
       existing.target = target;
       return existing.handle;
     }
@@ -236,8 +243,49 @@ export const createProgressTraceSink = (
     // an edge trigger (trigger); the handler routes local vs edge by runtime.
     const onCancel = options.cancelProcess && (target.pid || target.trigger) ? makeOnCancel(key) : undefined;
     const handle = registry.register(key, { label, onCancel });
-    monitors.set(key, { handle, target });
+    monitors.set(key, { handle, target, shown: {} });
     return handle;
+  };
+
+  /**
+   * Applies an update's count and total, placed after the count earlier runs of the chain reached.
+   *
+   * A run that yields `Operation.runAgain()` continues under a new pid, and the meter is one meter for
+   * the whole chain. A continuation that keeps counting where the last one stopped needs nothing. One
+   * that restarts from zero (mail sync: each run counts the messages it fetches) would drag the bar back
+   * to the start, so the count the chain reached is added to its count and its total. The first count
+   * from the new pid tells the two apart. A run's total covers its own work and, when the producer can
+   * estimate it, the work left after it, so the offset makes it the chain's total.
+   *
+   * On a restart the old total stays until the new run reports its own, so the bar holds its place
+   * between runs. Unless the chain had reached it: a total that only covered the finished batch would
+   * read as complete, so it goes back to unknown instead.
+   */
+  const applyCounts = (entry: MonitorEntry, progress: { current?: number; total?: number }) => {
+    const { handover } = entry;
+    if (handover && progress.current !== undefined) {
+      entry.handover = undefined;
+      const reached = handover.current ?? 0;
+      if (progress.current < reached) {
+        entry.offset = reached;
+        if (handover.total === undefined || reached >= handover.total) {
+          entry.shown.total = undefined;
+          entry.handle.total(undefined);
+        }
+      } else {
+        entry.offset = undefined;
+      }
+    }
+
+    const offset = entry.offset ?? 0;
+    if (progress.total !== undefined) {
+      entry.shown.total = offset + progress.total;
+      entry.handle.total(entry.shown.total);
+    }
+    if (progress.current !== undefined) {
+      entry.shown.current = offset + progress.current;
+      entry.handle.set(entry.shown.current);
+    }
   };
 
   const applyStatusUpdate = (data: StatusPayload, target: CancelTarget) => {
@@ -275,11 +323,11 @@ export const createProgressTraceSink = (
 
     const handle = monitorFor(registry, key, data.message, target);
 
-    if (data.message === PROGRESS_STATUS_FAILED) {
+    if (data.message === STATUS_FAILED) {
       // Stays registered so the meter can show it, but the clock stops: a stall firing over a
       // reported failure would replace the producer's reason with a guess about silence.
       disarmStall(key);
-      handle.fail(PROGRESS_STATUS_FAILED);
+      handle.fail(STATUS_FAILED);
       const entry = monitors.get(key);
       if (entry) {
         entry.ended = true;
@@ -287,19 +335,21 @@ export const createProgressTraceSink = (
       return;
     }
 
-    if (data.message === PROGRESS_STATUS_CANCELLED) {
-      handle.note(PROGRESS_STATUS_CANCELLED);
+    if (data.message === STATUS_CANCELLED) {
+      handle.note(STATUS_CANCELLED);
       handle.remove();
       dropMonitor(key);
       return;
     }
 
-    if (data.message === PROGRESS_STATUS_COMPLETE) {
+    if (data.message === STATUS_COMPLETE) {
       handle.done();
       handle.remove();
       dropMonitor(key);
       return;
     }
+
+    const entry = monitors.get(key);
 
     // The plan first: a phase change resets the item count, so applying it after `set` would discard
     // the very total/current this update carries.
@@ -311,18 +361,18 @@ export const createProgressTraceSink = (
       // an explicit `undefined` and an absent one are the same bytes on the wire, so the phase change
       // is the only signal that survives. `plan` deliberately does not reset (it must not discard the
       // numbers THIS update carries), which is why the reset is here — before they are applied.
-      const entry = monitors.get(key);
       if (entry && data.progress.phase !== undefined && data.progress.phase !== entry.phase) {
         entry.phase = data.progress.phase;
+        // The chain offset is a count too, and it belongs to the phase that is ending.
+        entry.shown = {};
+        entry.offset = undefined;
+        entry.handover = undefined;
         handle.total(undefined);
         handle.set(0);
       }
     }
-    if (data.progress.total !== undefined) {
-      handle.total(data.progress.total);
-    }
-    if (data.progress.current !== undefined) {
-      handle.set(data.progress.current);
+    if (entry) {
+      applyCounts(entry, data.progress);
     }
     if (data.progress.estimate !== undefined) {
       handle.estimate(data.progress.estimate);

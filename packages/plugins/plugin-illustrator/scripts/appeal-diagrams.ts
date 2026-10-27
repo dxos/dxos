@@ -18,10 +18,9 @@ import * as Effect from 'effect/Effect';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
-import { Appeal, Architecture, Mermaid, MermaidEngine, Rules, type Scene, Score } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import { Appeal, Architecture, Mermaid, MermaidEngine, Rules, type Scene, Score, SvgFile } from '@dxos/diagram';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { decisionModel, isJudge } from './judges.ts';
 import { toPngs } from './render.tsx';
 
@@ -88,7 +87,7 @@ const program = Effect.gen(function* () {
         );
         let vision: Record<string, number> = {};
         if (judgeName && isJudge(judgeName)) {
-          const [image] = yield* Effect.promise(() => toPngs([toSvgFile(objects)]));
+          const [image] = yield* Effect.promise(() => toPngs([SvgFile.toSvgFile(objects)]));
           if (pngDir) {
             mkdirSync(pngDir, { recursive: true });
             writeFileSync(join(pngDir, `${nameOf(path)}@${variant}.png`), Buffer.from(String(image.data), 'base64'));

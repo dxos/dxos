@@ -6,6 +6,7 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'FunctionsAiError': 'src/FunctionsAiError.ts',
     'index': 'src/index.ts',
     'AgentIdentity': 'src/AgentIdentity.ts',
     'AgentService': 'src/AgentService.ts',
@@ -13,13 +14,14 @@ export default defineConfig({
     'Credential': 'src/Credential.ts',
     'Header': 'src/Header.ts',
     'LayerSpec': 'src/LayerSpec.ts',
-    'McpServer': 'src/McpServer.ts',
     'Operation': 'src/Operation.ts',
     'OperationHandlerSet': 'src/OperationHandlerSet.ts',
     'OperationRegistry': 'src/OperationRegistry.ts',
     'Process': 'src/Process.ts',
     'Runnable': 'src/Runnable.ts',
     'ServiceResolver': 'src/ServiceResolver.ts',
+    'ShellService': 'src/ShellService.ts',
+    'SqlService': 'src/SqlService.ts',
     'StorageService': 'src/StorageService.ts',
     'Trace': 'src/Trace.ts',
     'types/Instructions': 'src/types/Instructions.ts',

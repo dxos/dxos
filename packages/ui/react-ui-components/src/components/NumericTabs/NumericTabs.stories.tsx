@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { ScrollArea } from '@dxos/react-ui';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TogglePanel } from '../TogglePanel/index.ts';

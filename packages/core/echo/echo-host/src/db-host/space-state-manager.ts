@@ -17,7 +17,7 @@ import isEqual from 'fast-deep-equal';
 import { Event, UpdateScheduler } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -229,15 +229,20 @@ export class SpaceStateManager extends Resource {
       this._roots.delete(prevRootId);
     }
 
-    await this._saveSpace(spaceId, root.url);
-
-    // A space restored from storage is re-assigned the directory it was saved with, which retires nothing.
+    // A space restored from storage is re-assigned the directory it was saved with, which retires nothing
+    // and has nothing new to persist.
     let retiredRootId = prevRootId !== root.documentId ? prevRootId : undefined;
+    if (prevRootId !== root.documentId) {
+      await this._saveSpace(spaceId, root.url);
+    }
 
     const ctx = new Context();
 
     this._perSpaceContext.set(spaceId, ctx);
 
+    // Each check runs on every directory change, and decoding a url costs a base58check SHA-256; the
+    // ids of links seen by the previous check are reused, so the cache holds only the current links.
+    let linkedIds = new Map<AutomergeUrl, DocumentId>();
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,
       async () => {
@@ -247,11 +252,14 @@ export class SpaceStateManager extends Resource {
         const anchorIds = Object.values(this._spaceRootRefs.get(spaceId) ?? {})
           .filter((url): url is AutomergeUrl => typeof url === 'string')
           .map((url) => interpretAsDocumentId(url));
-        const documentIds = [
-          root.documentId,
-          ...anchorIds,
-          ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)),
-        ];
+        const documentIds = [root.documentId, ...anchorIds];
+        const nextLinkedIds = new Map<AutomergeUrl, DocumentId>();
+        for (const url of root.getAllLinkedDocuments()) {
+          const documentId = linkedIds.get(url) ?? interpretAsDocumentId(url);
+          nextLinkedIds.set(url, documentId);
+          documentIds.push(documentId);
+        }
+        linkedIds = nextLinkedIds;
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
           const event = new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, retiredRootId, documentIds);

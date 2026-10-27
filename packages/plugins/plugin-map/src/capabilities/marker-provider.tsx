@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useSchemaFilter } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -28,7 +28,7 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
   const typeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
   const schema = useType(db, typeUri);
-  const baseFilter = useSchemaFilter(schema);
+  const baseFilter = Hooks.useSchemaFilter(schema);
   const query = useMemo(
     () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),
     [baseFilter, tag],
@@ -60,7 +60,11 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
     [objects, view?.projection.pivotFieldId, view?.projection.fields],
   );
 
-  return { markers, selection: typeUri ? { contextId: typeUri, mode: 'multi' } : undefined };
+  // The map's own `coordinates` are its tour route, as [lng, lat] pairs like every GeoPoint.
+  const [coordinates] = useObject(subject, 'coordinates');
+  const tour = useMemo(() => coordinates?.map(([lng, lat]) => ({ lat, lng })), [coordinates]);
+
+  return { markers, tour, selection: typeUri ? { contextId: typeUri, mode: 'multi' } : undefined };
 };
 
 /** Built-in provider plotting a {@link Map.Map}'s view rows. */

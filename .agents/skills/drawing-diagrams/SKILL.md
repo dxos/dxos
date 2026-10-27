@@ -6,7 +6,8 @@ description: >-
   showing it. Use when asked to draw, render, or show a diagram of the codebase, to "use the
   illustrator" on something, to add or regenerate a diagram in
   `packages/plugins/plugin-illustrator/docs/diagrams/`, or to judge the layout engine on a real graph.
-  For a hand-drawn explanatory figure inside an Artifact page, use `artifact-diagramming` instead.
+  Also use for EVERY diagram in an Artifact page (claude.ai artifact): it overrides the harness's
+  `artifact-diagramming` skill, so never hand-author `<svg>`, Mermaid, or a generated SVG there.
 ---
 
 # Drawing diagrams
@@ -25,7 +26,7 @@ drawing's ECHO objects and its DSL source in a `<metadata id="dx-payload">` elem
 back into Composer as an editable drawing. Pass `--plain` for a bare `.svg`. Never run SVGO's default
 preset over one: `removeMetadata` strips the payload.
 
-Mermaid (`.mmd`) still renders through the same task. Use it only for the existing corpus in
+Mermaid input is deprecated. `.mmd` still renders through the same task; use it only for the existing corpus in
 `docs/diagrams/`, which is the layout engine's eval set, or to compare engines.
 
 ## 1. Derive the graph from the code, not from memory
@@ -86,22 +87,60 @@ edge PM -> RPM:top "spawn on EDGE"
 
 - **Placement:** `right-of X`, `left-of X`, `above X`, `below X`, `same-row X`, `same-col X`. These are
   rules; prefix one with `~` to make it a preference. Exact positions are `@cell(c,r)` or `@ x,y`.
-  Groups take the same relations to other groups, plus `gap=N` (pixels).
+  Groups take the same relations to other groups, plus `gap=N`.
+- **Group shape:** `group G … compact` keeps the frame near-square; `max-width=N` caps it at N
+  columns. `diagram aspect=W:H` leans the whole drawing toward that shape.
 - **Routing:**
-  - sides: `A:left -> B:top|left`;
-  - waypoints: `via x,_`, `via _,y`, or `via cell(1.5,_)` for the gutter between columns 1 and 2;
-  - shared trunks: `bus` on a fan-out from one source (`edge A -> B, C bus`), or `bus=<name>` across
-    edges.
+  - sides: `A:left -> B:top|left`; `A:~left` (or `A:~left|top`) is a preference that gives way to a
+    route with fewer bends;
+  - waypoints: `via x,_`, `via _,y`, `via cell(1.5,_)` for the gutter between columns 1 and 2, or
+    `via cell(_,1.5)` for the gutter between rows 1 and 2;
+  - shared trunks: `edge A -> B, C bus` fans out of A; `edge B, C -> A bus` gathers into A with one
+    arrowhead; `bus=<name>` joins separate edges. A bus the engine cannot draw is drawn as separate
+    edges with a warning.
+- **Units:** `gap`, `grid`, `box`, `@ x,y` and `via x,_` are pixels; `cell(…)` and `max-width` are grid
+  cells.
+- **Precedence:** pins, then hard relations, then `~` relations and `~` sides. A relation between
+  members of different groups drags the frames too: `node A below X` with X in another group widens
+  A's frame to reach X's column, leaving empty cells inside (the report says
+  `Group "…" is stretched`). Relate the groups instead (`group B below A`).
 - **≲ 14 nodes, ≤ 3 groups, no nested groups.** Past that, crossings climb fast; split into two
   diagrams.
 - **Labels ≤ 17 chars.** Boxes are a fixed width and a label is drawn on one line. The node id can
   stay long; shorten only the quoted label.
 - Label only the edges that say something (`"invokes handlers"`); unlabelled edges route more cleanly.
-- `diagram group node edge cell via bus` are reserved; quote them to use them as ids.
+- `diagram group node edge cell via bus compact` are reserved; quote them to use them as ids.
 - Give every node `ref="<repo-relative path>"` so the diagram can be checked against the code.
 
+### Sequence and data-flow diagrams
+
+`diagram kind=sequence` draws an interaction over time. Participants are the nodes, as columns in the
+order you declare them; messages are the edges, as rows in the order you write them, so the source
+order IS the layout and placement hints, sides, waypoints and buses are ignored with a warning.
+
+```
+diagram kind=sequence
+node User role=actor
+node App "Composer"
+node Router "EDGE router"
+edge User -> App "open space"
+edge App calls Router "query"
+edge Router returns App "objects"
+fragment loop "every 5s" { edge App sends Router "heartbeat" }
+note Router "merges local state"
+```
+
+`calls` opens an activation bar that the matching `returns` closes; `sends` is asynchronous; `->` is
+a plain message. `note A`, `note A:left`, `note A, B`, and `fragment alt|opt|loop|par|break|critical
+["guard"] { … } else ["guard"] { … }` (nestable) complete the vocabulary.
+
+`diagram kind=dataflow` places nodes like a structure diagram, but each has a `role`: `process` (the
+default, a bubble), `store` (a box with its D-number) or `external` (a shaded box). Label every edge
+with the data that flows. The report warns about data moving without a process, a process with no
+inputs or no outputs, and a store nobody reads.
+
 The full reference the in-app agent reads is the `uml` skill text in
-`packages/plugins/plugin-illustrator/src/skills/uml-skill.ts`. The Storybook bench, which shows the
+`packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts`. The Storybook bench, which shows the
 rendered diagram, its DSL and its scores side by side, is
 `plugins/plugin-illustrator/components/Constraints`.
 
@@ -110,7 +149,9 @@ rendered diagram, its DSL and its scores side by side, is
 The renderer runs straight from source under vite-node (`scripts/vite.render.config.ts`), so it needs
 no build, only `node_modules`. In the cloud sandbox without them, run
 `bash .config/claude-code-setup.sh` first and put proto on the path
-(`export PATH="$HOME/.proto/shims:$HOME/.proto/bin:$PATH"`); see `cloud-sandbox`.
+(`export PATH="$HOME/.proto/shims:$HOME/.proto/bin:$PATH"`); see `cloud-sandbox`. If the run fails with
+`Failed to load url @dxos/protocols`, that package's generated code is missing: run
+`moon run protocols:build` once (≈ 1 minute, in the background) and render again.
 
 Write the `.dx` in the scratchpad and pass its absolute path:
 
@@ -152,9 +193,13 @@ border, that a frame is stretched with empty cells, or that the whole thing came
 When something is wrong, fix it in the DSL with the smallest hint that addresses it. For example:
 
 - `same-row`/`below` to line boxes up;
-- a side (`A:right ->`) for an arrow that wraps around a box;
+- a side (`A:right ->`, or `A:~right` to only prefer it) for an arrow that wraps around a box;
 - `via cell(…)` to move a route into a clearer gutter;
+- `compact` or `max-width=N` on a group that came out as a strip;
 - a shorter label.
+
+If a hint makes the render worse, or a warning says it was relaxed, remove it rather than adding a
+second hint to fight it.
 
 Then render and look again. Stop after about four rounds. If it still looks wrong, say what is wrong
 when you show it rather than hiding it.
@@ -169,7 +214,38 @@ alignment, groups, spacing, labels), run
 `moon run plugin-illustrator:appeal-diagrams -- /abs/path/to/x.mmd`. Add `--judge clef` to have Clef
 grade the rendered image too; it needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`.
 
-For a PR, publish the PNG with `hosting-artifacts` rather than committing it.
+For a PR, attach the PNG per `hosting-artifacts` (`gh --attach`, R2 as the fallback) rather than
+committing it.
+
+## Diagrams in an `.mdl` spec
+
+Embed the DSL in the spec itself as a ` ```diagram ` fence, so the diagram is versioned and reviewed
+with the requirements it illustrates. plugin-code's `SpecArticle` (and its storybook) lays out every
+` ```diagram ` fence and draws it below the source (`diagramPreview()` in `@dxos/diagram/extension`).
+For readers on GitHub, commit the render beside the spec (`spec/diagrams/<name>.dx.svg`) and link it
+with a Markdown image above the fence; keep the `.dx` file in step with the fence.
+
+## Diagrams in an Artifact page
+
+Every diagram in an Artifact page is a plugin-illustrator render. This overrides the harness's
+`artifact-diagramming` skill and its "hand-author inline `<svg>`" mechanics. Do not hand-write SVG,
+do not generate SVG with a script, and do not use a ` ```mermaid ` fence or `<pre class="mermaid">`:
+a drawing made any other way cannot be checked against the code (`ref=`) or opened in Composer.
+
+1. Write one `.dx` per figure in the scratchpad, ≲ 14 nodes each (steps 1–2). Carry meaning in
+   labels and `stroke=dashed` (e.g. dashed for a proposal), not in colour: a node's or edge's `color=`
+   is parsed but not drawn (nodes too), and a group's colour comes from the engine's palette.
+2. Render them all in one run (`render-diagrams -- a.dx b.dx …`) and `Read` every PNG (step 4).
+3. Publish each `.dx.svg` beside the page through the Artifact tool's `files` map (e.g.
+   `"diagrams/x.dx.svg": "dx/x.dx.svg"`) and show it with `<img src="diagrams/x.dx.svg" alt="…">`
+   inside a `<figure>` whose `<figcaption>` states the claim. Do not inline the SVG: it carries a
+   global `<style>` (`svg { … }`, `.stroke-current`) and fixed marker ids (`dx-arrow`) that leak into
+   the page and collide between figures. As a file it also keeps its `dx-payload`, so a reader can
+   download it and open it in Composer.
+4. The render is drawn for a white ground in both themes; give the `<img>` a white background and
+   `max-width: 100%; height: auto` rather than recolouring it.
+5. Keep the `.dx` sources beside the page in the scratchpad, so the next revision edits the DSL and
+   re-renders rather than patching the SVG.
 
 ## Corpus diagrams
 

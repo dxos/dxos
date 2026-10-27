@@ -4,7 +4,8 @@
 
 import React, { useRef } from 'react';
 
-import { Dialog, useId } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { IdentityPanel, type IdentityPanelProps } from '../../panels/index.ts';
 
@@ -16,7 +17,7 @@ export interface IdentityDialogProps
 }
 
 export const IdentityDialog = (props: IdentityDialogProps) => {
-  const titleId = useId('identityDialog__title', props.title);
+  const titleId = Hooks.useId('identityDialog__title', props.title);
   const contentRef = useRef<HTMLDivElement>(null);
   return (
     <Dialog.Root
@@ -26,15 +27,13 @@ export const IdentityDialog = (props: IdentityDialogProps) => {
       initialFocusEl={() => contentRef.current}
     >
       <Dialog.Content aria-labelledby={titleId} ref={contentRef}>
-        <Dialog.Body>
-          <IdentityPanel
-            {...{
-              ...props,
-              titleId,
-              doneActionParent: <Dialog.CloseTrigger asChild />,
-            }}
-          />
-        </Dialog.Body>
+        <IdentityPanel
+          {...{
+            ...props,
+            titleId,
+            doneActionParent: <Dialog.CloseTrigger asChild />,
+          }}
+        />
       </Dialog.Content>
     </Dialog.Root>
   );

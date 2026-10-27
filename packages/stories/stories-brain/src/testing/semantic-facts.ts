@@ -30,9 +30,9 @@ export const SAMPLE_FACTS: RDF.Fact[] = [
   {
     id: 'f1',
     assertion: {
-      subject: { entity: 'alice' },
+      subject: { kind: 'entity', entity: 'alice' },
       predicate: 'travelsTo',
-      object: { entity: 'paris' },
+      object: { kind: 'entity', entity: 'paris' },
       validFrom: '2026-06-12',
       quote: "I think I'm probably going to Paris next week",
     },
@@ -45,9 +45,9 @@ export const SAMPLE_FACTS: RDF.Fact[] = [
   {
     id: 'f2',
     assertion: {
-      subject: { entity: 'alice' },
+      subject: { kind: 'entity', entity: 'alice' },
       predicate: 'travelsTo',
-      object: { entity: 'rome' },
+      object: { kind: 'entity', entity: 'rome' },
       quote: "Alice told me she's definitely going to Rome, not Paris.",
     },
     factuality: { value: 'CT+', polarity: '+', confidence: 0.95 },
@@ -59,9 +59,9 @@ export const SAMPLE_FACTS: RDF.Fact[] = [
   {
     id: 'f3',
     assertion: {
-      subject: { entity: 'q3-board-meeting' },
+      subject: { kind: 'entity', entity: 'q3-board-meeting' },
       predicate: 'scheduledFor',
-      object: { literal: '2026-07-15' },
+      object: { kind: 'literal', literal: '2026-07-15' },
       quote: 'The Q3 board meeting is confirmed for July 15 in London.',
     },
     factuality: { value: 'CT+', polarity: '+' },
@@ -73,9 +73,9 @@ export const SAMPLE_FACTS: RDF.Fact[] = [
   {
     id: 'f4',
     assertion: {
-      subject: { entity: 'q3-board-meeting' },
+      subject: { kind: 'entity', entity: 'q3-board-meeting' },
       predicate: 'locatedIn',
-      object: { entity: 'london' },
+      object: { kind: 'entity', entity: 'london' },
     },
     factuality: { value: 'CT+', polarity: '+' },
     attribution: { agent: 'carol', source: 'dxn:gmail:msg-3', generatedAtTime: '2026-06-08T11:00:00.000Z' },

@@ -7,7 +7,6 @@ import { EditorView, keymap } from '@codemirror/view';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { debounce } from '@dxos/async';
 import { isTruthy } from '@dxos/util';
 
 import { singleValueFacet } from '../../util/index.ts';
@@ -49,6 +48,12 @@ const stateRestoreAnnotation = 'org.dxos.cm.state-restore';
 
 /** Window after a restore during which scroll events are not recorded. */
 const RESTORE_SUPPRESS_MS = 500;
+
+/** Delay before a recorded state is written to the store. */
+const RECORD_DELAY_MS = 1_000;
+
+/** Dedupes the recorder's measure requests: CodeMirror keeps one request per key until its measure phase runs. */
+const recordKey = {};
 
 /**
  * Builds the transaction that puts a recorded state back: applies the selection, anchors
@@ -102,31 +107,58 @@ export const restoreEditorState = (view: EditorView, state: EditorSelectionState
  * Track scrolling and selection state to be restored when switching to document.
  */
 export const selectionState = ({ getState, setState }: Partial<EditorStateStore> = {}): Extension => {
-  const setStateDebounced = debounce(setState!, 1_000);
+  // Debounced by hand so a restore can cancel a write queued before it: the binding's content fill at
+  // mount records the top-of-document position, which would otherwise overwrite the stored state.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const cancelPending = () => {
+    clearTimeout(timer);
+    timer = undefined;
+  };
 
   // A restore dispatches its own scroll, which would immediately record a position measured
   // before the document has finished laying out; ignore scroll events for a beat afterwards.
   let suppressUntil = 0;
 
-  const record = (view: EditorView) => {
-    const id = view.state.facet(documentId);
-    if (!id || !setState || performance.now() < suppressUntil) {
-      return;
-    }
-
-    // `posAtCoords` takes client coordinates, so measure from the scroller's own rect rather
-    // than from `scrollTop` (which only coincides when the scroller sits at the top of the window).
-    const { top, left } = view.scrollDOM.getBoundingClientRect();
-    const pos = view.posAtCoords({ x: left + 1, y: top + 1 });
-    if (pos !== null) {
+  // Read in CodeMirror's own measure phase, once per frame however many scroll events and updates arrive: reading
+  // the coordinates straight from each event forced a synchronous layout per event while scrolling.
+  const measure = {
+    key: recordKey,
+    read: (view: EditorView): EditorSelectionState | undefined => {
+      // `posAtCoords` takes client coordinates, so measure from the scroller's own rect rather
+      // than from `scrollTop` (which only coincides when the scroller sits at the top of the window).
+      const { top, left } = view.scrollDOM.getBoundingClientRect();
+      const pos = view.posAtCoords({ x: left + 1, y: top + 1 });
+      if (pos === null) {
+        return undefined;
+      }
       const { anchor, head } = view.state.selection.main;
       // Measure against the position's own visual row (`coordsAtPos`), not its line block: with
       // line wrapping the top of the viewport is often a continuation row, and a block-relative
       // offset would then overshoot the restore by every wrapped row above it.
       const coords = view.coordsAtPos(pos);
       const scrollOffset = coords ? Math.round(top - coords.top) : 0;
-      setStateDebounced(id, { scrollTo: pos, scrollOffset, selection: { anchor, head } });
+      return { scrollTo: pos, scrollOffset, selection: { anchor, head } };
+    },
+    write: (state: EditorSelectionState | undefined, view: EditorView) => {
+      // CodeMirror reads measure requests before applying a pending scroll target, so a request queued
+      // before a restore measures the pre-restore viewport.
+      if (performance.now() < suppressUntil) {
+        return;
+      }
+      const id = view.state.facet(documentId);
+      if (state && id && setState) {
+        cancelPending();
+        timer = setTimeout(() => setState(id, state), RECORD_DELAY_MS);
+      }
+    },
+  };
+
+  const record = (view: EditorView) => {
+    const id = view.state.facet(documentId);
+    if (!id || !setState || performance.now() < suppressUntil) {
+      return;
     }
+    view.requestMeasure(measure);
   };
 
   return [
@@ -138,6 +170,7 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
     EditorView.updateListener.of(({ view, transactions }) => {
       if (transactions.some((tr) => tr.isUserEvent(stateRestoreAnnotation))) {
         suppressUntil = performance.now() + RESTORE_SUPPRESS_MS;
+        cancelPending();
         return;
       }
 

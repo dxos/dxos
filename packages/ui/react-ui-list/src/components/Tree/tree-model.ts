@@ -4,11 +4,11 @@
 
 import type * as Atom from 'effect/reactivity/Atom';
 
-import { type Label } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export type TreeItemDataProps = {
   id: string;
-  label: Label;
+  label: Theme.Label;
   parentOf?: string[];
   /** Pass-through of the node's disposition; the tree uses this to branch render mode (e.g. `'group'` → section header). */
   disposition?: string;

@@ -6,11 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Filter, Obj, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Person } from '@dxos/types';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -28,9 +31,9 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
 
   const footer = (
     <Panel.Footer>
-      <Typography truncate data-testid='object'>
-        {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.target?.label) })}
-      </Typography>
+      <Typography.Text truncate data-testid='object'>
+        {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.label) })}
+      </Typography.Text>
     </Panel.Footer>
   );
   return component === 'properties' ? (
@@ -43,9 +46,9 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Layout.Container>
               <ObjectForm object={person} type={Person.Person} />
-            </Container>
+            </Layout.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
@@ -75,7 +78,7 @@ const meta = {
           }),
         );
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [Ref.make(tag)];
+          Obj.getMeta(person).tags = [tag];
         });
       },
     }),

@@ -18,7 +18,7 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -31,6 +31,8 @@ import {
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
+  EditorToolbarMenu as NaturalEditorToolbarMenu,
+  type EditorToolbarMenuProps as NaturalEditorToolbarMenuProps,
   type EditorToolbarProps as NaturalEditorToolbarProps,
 } from '../EditorToolbar/index.ts';
 import { type EditorController, noopController } from './controller.ts';
@@ -106,7 +108,7 @@ EditorRoot.displayName = 'Editor.Root';
 
 const EDITOR_CONTENT_NAME = 'Editor.Content';
 
-type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type EditorContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 /**
  * Content component that wraps the toolbar and editor view area.
@@ -166,6 +168,30 @@ const EditorToolbar = (props: EditorToolbarProps) => {
 EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 //
+// ToolbarMenu
+//
+
+const EDITOR_TOOLBAR_MENU_NAME = 'Editor.ToolbarMenu';
+
+type EditorToolbarMenuProps = Omit<NaturalEditorToolbarMenuProps, 'getView' | 'state'>;
+
+/**
+ * The toolbar's actions as a menu opened from its trigger (the child), for where a toolbar does not fit.
+ * Connects to the editor view through context, as `Editor.Toolbar` does.
+ */
+const EditorToolbarMenu = (props: EditorToolbarMenuProps) => {
+  const { controller, state } = useEditorContext(EDITOR_TOOLBAR_MENU_NAME);
+  const getView = useCallback(() => {
+    invariant(controller?.view);
+    return controller?.view;
+  }, [controller]);
+
+  return <NaturalEditorToolbarMenu {...props} getView={getView} state={state} />;
+};
+
+EditorToolbarMenu.displayName = EDITOR_TOOLBAR_MENU_NAME;
+
+//
 // Blocks
 //
 
@@ -212,7 +238,7 @@ const countExtensions = (extension: Extension | undefined): number =>
       ? extension.reduce((sum, child) => sum + countExtensions(child), 0)
       : 1;
 
-type EditorDiagnosticsProps = ThemedClassName<{}>;
+type EditorDiagnosticsProps = Util.ThemedClassName<{}>;
 
 /**
  * Developer panel showing live editor state read from the CodeMirror `EditorState` (document size,
@@ -292,6 +318,7 @@ EditorDiagnostics.displayName = EDITOR_DIAGNOSTICS_NAME;
 export const Editor = {
   Root: EditorRoot,
   Toolbar: EditorToolbar,
+  ToolbarMenu: EditorToolbarMenu,
   Content: EditorContent,
   View: EditorView,
   Blocks: EditorBlocks,
@@ -302,6 +329,7 @@ export type {
   EditorContentProps,
   EditorController,
   EditorRootProps,
+  EditorToolbarMenuProps,
   EditorToolbarProps,
   EditorToolbarState,
   EditorViewProps,

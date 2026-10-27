@@ -9,7 +9,10 @@ import { createRoot } from 'react-dom/client';
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import { AppContextRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
-import { Button, Dialog, ThemeProvider, defaultTx, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { translationKey, translations } from '../../translations.ts';
@@ -32,31 +35,31 @@ export const runShell = async (config: Config = new Config()) => {
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+        <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
           <ClientProvider config={config} services={services} noBanner>
             <AgentHostingProvider>
               <Shell runtime={runtime} />
             </AgentHostingProvider>
           </ClientProvider>
-        </ThemeProvider>
+        </Theme.Provider>
       </StrictMode>,
     );
   } catch {
     // If shell's client fails to initialize, ensure that the shell is still closeable.
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+        <Theme.Provider tx={Theme.defaultTx} resourceExtensions={translations}>
           <Fallback
             onClose={() => runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }))}
           />
-        </ThemeProvider>
+        </Theme.Provider>
       </StrictMode>,
     );
   }
 };
 
 const Fallback = ({ onClose }: { onClose?: () => void }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <Dialog.Root modal open onOpenChange={() => onClose?.()}>
@@ -64,9 +67,9 @@ const Fallback = ({ onClose }: { onClose?: () => void }) => {
         <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
         <Dialog.Footer>
           <Dialog.CloseTrigger asChild onClick={() => onClose?.()}>
-            <Button variant='primary' classNames='w-full'>
+            <Button.Root variant='primary' classNames='w-full'>
               {t('close.label')}
-            </Button>
+            </Button.Root>
           </Dialog.CloseTrigger>
         </Dialog.Footer>
       </Dialog.Content>

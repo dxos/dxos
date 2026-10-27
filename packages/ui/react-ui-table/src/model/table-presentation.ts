@@ -7,7 +7,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { cellClassesForFieldType } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,

@@ -19,15 +19,11 @@ import React, {
 } from 'react';
 
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
-import {
-  Button,
-  HoverCard,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as HoverCard from '@dxos/react-ui/HoverCard';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Hue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -275,7 +271,7 @@ const [GanttProvider, useGanttContext] = createContext<GanttContextValue>('Gantt
 // Root
 //
 
-type GanttRootProps = ThemedClassName<GanttData & { children?: ReactNode }>;
+type GanttRootProps = Util.ThemedClassName<GanttData & { children?: ReactNode }>;
 
 /**
  * Gantt view of lanes on a shared axis. The root resolves the rows and the axis and fills its host;
@@ -286,7 +282,7 @@ type GanttRootProps = ThemedClassName<GanttData & { children?: ReactNode }>;
  * vertically, the legend stays put while the drawing scrolls horizontally, and the horizontal bar is
  * at the foot of the host rather than under the last lane.
  */
-const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
+const GanttRoot = Util.composable<HTMLDivElement, GanttRootProps>(
   (
     {
       groups = [],
@@ -358,7 +354,7 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
         setLegendWidth={setLegendWidth}
       >
         <ScrollArea.Root
-          {...composableProps(props, { classNames: 'dx-expand text-xs font-mono' })}
+          {...Util.composableProps(props, { classNames: 'dx-expand text-xs font-mono' })}
           orientation='all'
           trackStart={legendWidth}
           ref={forwardedRef}
@@ -379,7 +375,7 @@ GanttRoot.displayName = 'Gantt.Root';
 // Legend
 //
 
-type GanttLegendProps = ThemedClassName<PropsWithChildren>;
+type GanttLegendProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * The lane names, one per row, indented by depth; each row is the lane's keyboard path. Children go
@@ -388,7 +384,7 @@ type GanttLegendProps = ThemedClassName<PropsWithChildren>;
  * The column shows each lane's title or its stats (`legend` on the root), and whichever it is not
  * showing is in a hover card over the row, so neither costs a column of its own.
  */
-const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
+const GanttLegend = Util.composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
   const { rows, legend, onLaneSelect, setLegendWidth } = useGanttContext('Gantt.Legend');
   const legendRef = useRef<HTMLDivElement>(null);
   const ref = useComposedRefs(forwardedRef, legendRef);
@@ -407,7 +403,7 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ..
 
   return (
     <div
-      {...composableProps(props, {
+      {...Util.composableProps(props, {
         // Sticky and opaque: the drawing scrolls horizontally beneath it. Sized against the scroll
         // frame (`cqw`) rather than its parent, whose width is the drawing's.
         classNames:
@@ -507,7 +503,7 @@ type GanttAxisToggleProps = {};
  * event. Renders nothing unless the root was given `onAxisChange`, since the axis is the host's state.
  */
 const GanttAxisToggle = (_: GanttAxisToggleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { axis = 'unit', onAxisChange } = useGanttContext('Gantt.AxisToggle');
   if (!onAxisChange) {
     return null;
@@ -515,7 +511,7 @@ const GanttAxisToggle = (_: GanttAxisToggleProps) => {
 
   // The icon names the axis in use; the label names the one a click switches to.
   return (
-    <Button
+    <Button.Root
       variant='ghost'
       size='sm'
       iconSize='xs'
@@ -538,12 +534,12 @@ type GanttLegendToggleProps = {};
 
 /** Switches the legend's column between the lanes' titles and their stats. */
 const GanttLegendToggle = (_: GanttLegendToggleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { legend, setLegend } = useGanttContext('Gantt.LegendToggle');
 
   // As the axis toggle: the icon names what is shown, the label what a click shows instead.
   return (
-    <Button
+    <Button.Root
       variant='ghost'
       size='sm'
       iconSize='xs'
@@ -562,7 +558,7 @@ GanttLegendToggle.displayName = 'Gantt.LegendToggle';
 // Chart
 //
 
-type GanttChartProps = ThemedClassName<{}>;
+type GanttChartProps = Util.ThemedClassName<{}>;
 
 /** One drawn stretch of a lane: where its bar runs, and the nodes threaded through it. */
 type Stretch = {
@@ -603,7 +599,7 @@ const GanttChart = forwardRef<SVGSVGElement, GanttChartProps>(({ classNames }, f
     onMarkerSelect,
     viewport,
   } = useGanttContext('Gantt.Chart');
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const ref = useComposedRefs(forwardedRef, svgRef);
   const nodeIdPrefix = useId();

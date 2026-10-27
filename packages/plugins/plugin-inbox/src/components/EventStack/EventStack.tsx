@@ -4,9 +4,13 @@
 
 import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, Focus, ScrollArea, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { CardTile } from '@dxos/react-ui-card';
 import { Mosaic, type MosaicScrollController, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -37,7 +41,7 @@ export type EventStackProps = {
   onAction?: EventStackActionHandler;
 };
 
-export const EventStack = composable<HTMLDivElement, EventStackProps>(
+export const EventStack = Util.composable<HTMLDivElement, EventStackProps>(
   ({ events = [], currentId, selectedIds, starredIds, controllerRef, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(
@@ -54,11 +58,13 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
       [onAction],
     );
 
-    const handleSelectionChange = useCallback(
-      (id: string, _selected: boolean) => {
-        onAction?.({ type: 'select', eventId: id });
-      },
-      [onAction],
+    // Click / Enter select the event, as they make it current.
+    const itemProps = useCallback(
+      (id: string) => ({
+        'aria-selected': selectedIds ? selectedIds.has(id) : undefined,
+        'onActivate': () => onAction?.({ type: 'select', eventId: id }),
+      }),
+      [selectedIds, onAction],
     );
 
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
@@ -69,18 +75,17 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
           controllerRef={controllerRef}
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
-          selectedIds={selectedIds}
-          onSelectionChange={handleSelectionChange}
+          itemProps={itemProps}
         >
-          <ScrollArea.Root>
-            <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
+          <ScrollArea.Root width='regular'>
+            <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}
                 items={items}
@@ -88,7 +93,8 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
                 getId={(item) => item.event.id}
                 getScrollElement={() => viewport}
                 estimateSize={() => 100}
-                gap={4}
+                gap={8}
+                inset={false}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -110,18 +116,17 @@ type EventTileData = {
   onAction?: EventStackActionHandler;
 };
 
-type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' | 'current'>;
+type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
-const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
+const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current, binding }, forwardedRef) => {
   const { event, starred, onAction } = data;
-  const { t } = useTranslation(meta.profile.key);
-  const { setCurrentId, setSelected } = useMosaicContainer('EventTile');
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { setCurrentId } = useMosaicContainer('EventTile');
 
-  // Click / Enter commit both current and selection. Arrow keys only move focus.
+  // Click / Enter commit current; the container's `itemProps` selects. Arrow keys only move focus.
   const handleCurrentChange = useCallback(() => {
     setCurrentId(event.id);
-    setSelected(event.id, true);
-  }, [event.id, setCurrentId, setSelected]);
+  }, [event.id, setCurrentId]);
 
   const handleToggleStar = useCallback(() => onAction?.({ type: 'star', eventId: event.id }), [onAction, event.id]);
 
@@ -132,6 +137,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
       data={data}
       location={location}
       current={current}
+      binding={binding}
       onCurrentChange={handleCurrentChange}
     >
       <CardTile.Header
@@ -140,7 +146,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
         title={<span className='grow truncate font-medium'>{event.title ?? t('event-untitled.label')}</span>}
       />
       <Card.Body>
-        <EventDetails event={event} title={false} maxAttendees={8} />
+        <EventDetails event={event} title={false} description maxAttendees={3} />
       </Card.Body>
     </CardTile.Root>
   );

@@ -4,7 +4,11 @@
 
 import React, { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
-import { Button, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 
@@ -90,7 +94,7 @@ const Root = ({ repo = DEFAULT_REPO, limit = DEFAULT_LIMIT, children }: GithubCo
 };
 
 const Header = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { repo, pulls, unavailable } = useComponentContext();
   return (
     <header className='flex items-center justify-between gap-1 px-4 py-3 dx-modal-surface border-b border-separator-subtle'>
@@ -113,41 +117,20 @@ const Header = () => {
   );
 };
 
-const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-  ['year', 60 * 60 * 24 * 365],
-  ['month', 60 * 60 * 24 * 30],
-  ['week', 60 * 60 * 24 * 7],
-  ['day', 60 * 60 * 24],
-  ['hour', 60 * 60],
-  ['minute', 60],
-];
-
-const formatRelative = (iso: string): string => {
-  const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
-  const diffSeconds = (Date.parse(iso) - Date.now()) / 1000;
-  const absDiff = Math.abs(diffSeconds);
-  for (const [unit, secondsInUnit] of RELATIVE_UNITS) {
-    if (absDiff >= secondsInUnit) {
-      return formatter.format(Math.round(diffSeconds / secondsInUnit), unit);
-    }
-  }
-  return formatter.format(Math.round(diffSeconds), 'second');
-};
-
 const PullRow = ({ pull }: { pull: GithubPullRequest }) => (
   <li>
-    <Flex asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>
+    <Layout.Flex asChild align='start' gap='sm' classNames='px-trim-sm py-trim-xs rounded-sm hover:bg-hover-surface'>
       <a href={pull.html_url} target='_blank' rel='noopener noreferrer'>
         <img src={pull.user.avatar_url} alt='' className='size-6 rounded-full shrink-0' />
-        <Flex column classNames='min-w-0 flex-1'>
+        <Layout.Flex column classNames='min-w-0 flex-1'>
           {/* `leading-6` gives the title the avatar's line box, so the two align on their own. */}
           <span className='text-sm leading-6 truncate'>{pull.title}</span>
           <span className='text-xs text-fg-muted truncate'>
-            #{pull.number} · {pull.user.login} · {pull.merged_at ? formatRelative(pull.merged_at) : ''}
+            #{pull.number} · {pull.user.login} · {pull.merged_at ? Typography.formatRelative(pull.merged_at) : ''}
           </span>
-        </Flex>
+        </Layout.Flex>
       </a>
-    </Flex>
+    </Layout.Flex>
   </li>
 );
 
@@ -167,10 +150,10 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { repo } = useComponentContext();
   return (
-    <Button
+    <Button.Root
       icon='ph--github-logo--regular'
       label={t('view-on-github.button')}
       variant='primary'

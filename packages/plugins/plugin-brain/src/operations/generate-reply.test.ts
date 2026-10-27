@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { Database, Obj } from '@dxos/echo';
 import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
@@ -30,9 +30,9 @@ const makeMessage = (sender: string, subject: string, text: string, created: str
 const ALICE_FACT: RDF.Fact = {
   id: 'f-alice-1',
   assertion: {
-    subject: { entity: 'alice', label: 'Alice' },
+    subject: { kind: 'entity', entity: 'alice', label: 'Alice' },
     predicate: 'works-at',
-    object: { entity: 'acme', label: 'Acme' },
+    object: { kind: 'entity', entity: 'acme', label: 'Acme' },
   },
   factuality: { value: 'CT+', polarity: '+', confidence: 0.95, nature: 'epistemic' },
   attribution: { source: 'dxn:echo:@:m-1', generatedAtTime: '2026-07-01T00:00:00.000Z' },
@@ -107,7 +107,8 @@ describe('generateReply', () => {
     expect(ai.prompts[0]).toContain('Can you send the Q2 numbers?');
     expect(ai.prompts[0]).toContain('Working on it.');
     expect(ai.prompts[0]).not.toContain('Lunch?');
-    expect(ai.prompts[0]).toContain('works-at');
+    // `works-at` is the seeded `schema:worksFor`, read back under its label.
+    expect(ai.prompts[0]).toContain('works for');
   });
 
   test('drafts without facts when the store is empty', async ({ expect }) => {

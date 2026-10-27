@@ -1,5 +1,77 @@
 # @dxos/echo-query
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/node-std@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 5162e12: `matchesFilter` now matches `#tag` terms for objects stored in a database. A stored tag is a local reference (`echo:///<id>`) while a tag map is keyed by the absolute uri, so the two never compared equal; tags are now compared by entity id, as the query engine does. The devtools Objects panel also fixes several issues: the edit history is read only while its pane is open (it replays every change), inline blob bytes show as `<N bytes>` instead of one row per byte, opened property rows survive edits, a blob referenced through a not-yet-loaded ref is previewed, and closing one occurrence of an entity in the tree no longer empties its other open occurrences.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [16bde33]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/node-std@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [162fd6d]
+- Updated dependencies [aad3e41]
+- Updated dependencies [bb2b672]
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [469e7f7]
+- Updated dependencies [665261a]
+- Updated dependencies [2e96a73]
+- Updated dependencies [945092e]
+- Updated dependencies [c531b05]
+- Updated dependencies [3672aff]
+- Updated dependencies [2f95d25]
+- Updated dependencies [c7cc480]
+- Updated dependencies [161f994]
+- Updated dependencies [246ee3c]
+- Updated dependencies [8ebe8d6]
+- Updated dependencies [7715216]
+- Updated dependencies [1737cad]
+- Updated dependencies [6a7bed4]
+- Updated dependencies [3022878]
+- Updated dependencies [c2a300a]
+- Updated dependencies [17008f0]
+- Updated dependencies [4f8e566]
+- Updated dependencies [a449958]
+  - @dxos/echo@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

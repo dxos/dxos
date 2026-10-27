@@ -7,7 +7,7 @@ import * as Queue from 'effect/Queue';
 import { type RefObject } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import {
   crawlerLineEffect,
   navigateNextEffect,

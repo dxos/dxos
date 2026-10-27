@@ -13,7 +13,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Database } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, SpaceId } from '@dxos/keys';
 import { McpToolkit } from '@dxos/mcp-client';
 import { McpServer } from '@dxos/mcp-server';

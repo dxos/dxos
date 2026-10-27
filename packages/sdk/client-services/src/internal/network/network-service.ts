@@ -9,7 +9,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context } from '@dxos/context';
 import { type EdgeConnection, EdgeConnectionService } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { type SignalManager, SignalManagerService, type UnsubscribeCallback } from '@dxos/messaging';
 import { type SwarmNetworkManager, SwarmNetworkManagerService } from '@dxos/network-manager';

@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
@@ -13,7 +14,7 @@ import * as PubSub from 'effect/PubSub';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
-import { Performance } from '@dxos/effect';
+import * as Performance from '@dxos/effect/Performance';
 import { log } from '@dxos/log';
 
 import { Capabilities } from '../../common/index.ts';
@@ -69,7 +70,16 @@ export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
  * as a typed requirement (`R = Plugin.Service`) rather than holding a manager reference — the
  * manager satisfies it once at its public boundary.
  */
+const SLOW_MODULE_WARNING = Duration.seconds(10);
+const SLOW_MODULE_CHECK_INTERVAL = Duration.seconds(1);
+
+type InFlightActivation = { moduleId: string; started: number; warned: boolean };
+
 export class ModuleLoader {
+  // One watcher fiber for every in-flight activation rather than a sleeping fiber per module: a boot
+  // activates hundreds of modules, and each fiber's fork and timer cost main-thread time.
+  readonly #inFlight = new Set<InFlightActivation>();
+  #watchingSlow = false;
   readonly #memo = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   readonly #semaphores = new Map<Plugin.PluginModule['id'], Semaphore.Semaphore>();
   readonly #scopes = new Map<string, Scope.Closeable>();
@@ -389,13 +399,8 @@ export class ModuleLoader {
     }).pipe(
       Effect.tapCause(() => Scope.close(scope, Exit.void)),
       Effect.withSpan('ModuleLoader.load', { attributes: { 'dx.module.id': module.id } }),
-      together(
-        Effect.sleep(Duration.seconds(10)).pipe(
-          Effect.andThen(
-            Effect.sync(() => log.warn(`module is taking a long time to activate`, { module: module.id })),
-          ),
-        ),
-      ),
+      (activation) =>
+        Effect.flatMap(this.#watchSlow(module.id), (settled) => activation.pipe(Effect.ensuring(settled))),
       Performance.addTrackEntry({
         name: module.id,
         devtools: {
@@ -540,6 +545,37 @@ export class ModuleLoader {
       });
       return normalizedError;
     });
+  }
+
+  /** Registers an in-flight activation for the slow-module warning; the returned effect deregisters it. */
+  #watchSlow(moduleId: string): Effect.Effect<Effect.Effect<void>> {
+    return Effect.gen({ self: this }, function* () {
+      const activation: InFlightActivation = { moduleId, started: yield* Clock.currentTimeMillis, warned: false };
+      this.#inFlight.add(activation);
+      if (!this.#watchingSlow) {
+        this.#watchingSlow = true;
+        yield* this.#state.fibers.trackForked(yield* Effect.forkDetach(this.#slowWatcher()));
+      }
+      return Effect.sync(() => void this.#inFlight.delete(activation));
+    });
+  }
+
+  #slowWatcher(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      for (;;) {
+        yield* Effect.sleep(SLOW_MODULE_CHECK_INTERVAL);
+        if (this.#inFlight.size === 0) {
+          return;
+        }
+        const now = yield* Clock.currentTimeMillis;
+        for (const activation of this.#inFlight) {
+          if (!activation.warned && now - activation.started >= Duration.toMillis(SLOW_MODULE_WARNING)) {
+            activation.warned = true;
+            log.warn('module is taking a long time to activate', { module: activation.moduleId });
+          }
+        }
+      }
+    }).pipe(Effect.ensuring(Effect.sync(() => (this.#watchingSlow = false))));
   }
 }
 

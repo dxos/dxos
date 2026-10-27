@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { JsonView } from '../../../../components/index.ts';
 import { EdgeSelector, VaultSelector } from '../../../../containers/index.ts';

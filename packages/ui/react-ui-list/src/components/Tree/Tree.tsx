@@ -22,6 +22,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, {
   type ComponentPropsWithoutRef,
   type CSSProperties,
@@ -30,9 +31,12 @@ import React, {
   type MouseEvent,
   type PointerEvent,
   type ReactNode,
+  type Ref,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -40,24 +44,17 @@ import React, {
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import {
-  Block,
-  DragPreview,
-  Empty,
-  type Gutter,
-  Icon,
-  type IconHue,
-  ScrollArea,
-  type Size,
-  Tag,
-  Typography,
-  VirtualSpacer,
-  composable,
-  composableProps,
-  toLocalizedString,
-  useTranslation,
-  useVirtualRows,
-} from '@dxos/react-ui';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Listbox from '@dxos/react-ui/Listbox';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Theme from '@dxos/react-ui/Theme';
+import * as Typography from '@dxos/react-ui/Typography';
+import * as Util from '@dxos/react-ui/Util';
 import { hues } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
@@ -91,7 +88,25 @@ export type TreeSelectEvent<T extends { id: string } = any> = {
   path: string[];
   /** The state the row is taken to: in `multiple` mode a meta-click reports the toggled state. */
   current: boolean;
+  /**
+   * A shift-click in `multiple` mode: every selectable row from the anchor (the last row activated without shift) to
+   * this one, in row order and both ends included; with `meta` too, the consumer adds it to the selection.
+   */
+  range?: { item: T; path: string[] }[];
 } & SelectModifiers;
+
+export type TreeRevealOptions = {
+  /** Move focus to the row (the default); off, the row is only scrolled into view and made the tabstop. */
+  focus?: boolean;
+};
+
+export type TreeRootHandle = {
+  /**
+   * Opens the row's ancestors (through `onOpenChange`) and scrolls the row into view, mounting it first when windowed.
+   * `path` is the row's full path, as `onSelect` reports it.
+   */
+  reveal: (path: string[], options?: TreeRevealOptions) => void;
+};
 
 /** The disclosure (half a block), icon, label and trailing tracks every row lays out on. */
 const DEFAULT_COLUMNS = 'var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) auto';
@@ -108,9 +123,13 @@ const modifiersOf = (event: { altKey: boolean; shiftKey: boolean; metaKey: boole
   meta: event.metaKey || event.ctrlKey,
 });
 
-/** Whether an event started on a real control inside a row, which keeps its own activation. */
+/**
+ * Whether an event started on a real control inside a row, which keeps its own activation. The disclosure counts: it
+ * is the machine's branch trigger, a `div` with the button role, so a row's own click handling must leave it be.
+ */
 const isInnerControl = (target: EventTarget | null) =>
-  target instanceof Element && !!target.closest('button, input, textarea, [contenteditable="true"]');
+  target instanceof Element &&
+  !!target.closest('button, input, textarea, [contenteditable="true"], [data-part="branch-trigger"]');
 
 //
 // Root
@@ -127,7 +146,7 @@ type TreeRootProps<T extends { id: string } = any> = {
    * the drag scope, so trees mounted under one root (a tree per workspace tab) accept each other's rows.
    */
   path?: string[];
-  size?: Size;
+  size?: Util.Size;
   /**
    * Each row's grid template; the default is disclosure, icon, label and trailing tracks. A template that keeps
    * `Tree.ItemIndicator` starts with its `var(--dx-half-block-size)` track.
@@ -136,13 +155,16 @@ type TreeRootProps<T extends { id: string } = any> = {
   /**
    * Let a row grow past one block for cells placed on further grid lines (a description under the label): the first
    * line stays one block and later lines size to their content. A fixed window assumes one block per row, so pair it
-   * with `virtual='variable'` or none.
+   * with `virtual='measured'`, `'variable'` or none.
    */
   multiline?: boolean;
   selectionMode?: 'single' | 'multiple';
   /** Move selection with the roving tabstop, for a list whose selection only highlights a row. */
   selectionFollowsFocus?: boolean;
-  /** `fixed` windows the rows (each one block tall); `variable` skips painting rows out of view. */
+  /**
+   * `fixed` windows the rows (each one block tall); `measured` windows rows of any height, measuring each as it mounts;
+   * `variable` mounts every row and skips painting those out of view.
+   */
   virtual?: TreeVirtual;
   draggable?: boolean;
   /**
@@ -179,6 +201,7 @@ type TreeRootProps<T extends { id: string } = any> = {
    */
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
   onDrop?: (event: TreeDropEvent<T>) => void;
+  ref?: Ref<TreeRootHandle>;
   children?: ReactNode;
 };
 
@@ -215,9 +238,10 @@ const TreeRoot = <T extends { id: string }>({
   onItemHover,
   onKeyDown,
   onDrop,
+  ref,
   children,
 }: TreeRootProps<T>) => {
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const rootPath = useMemo(() => (path ? [...path, id] : [id]), [path, id]);
   const treeId = rootPath[0];
   const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, rootPath), [model, rootId, rootPath]);
@@ -225,7 +249,7 @@ const TreeRoot = <T extends { id: string }>({
   const walkRef = useRef<TreeWalk<T>>(walk);
   walkRef.current = walk;
   const collection = useMemo(
-    () => createCollection(walk.root, (node) => toLocalizedString(node.props.label, t)),
+    () => createCollection(walk.root, (node) => Theme.toLocalizedString(node.props.label, t)),
     [walk.root, t],
   );
   const scrollToIndexRef = useRef<((index: number) => void) | null>(null);
@@ -345,6 +369,24 @@ const TreeRoot = <T extends { id: string }>({
     [canSelect],
   );
 
+  // Where a shift-click's range starts: the last row activated without shift.
+  const anchorRef = useRef<string | null>(null);
+
+  /** The selectable rows from the anchor to `node` in row order, or just `node` with no anchor on screen. */
+  const rangeTo = useCallback(
+    (node: TreeNode<T>) => {
+      const { rows, rowIndex } = walkRef.current;
+      const from = anchorRef.current === null ? undefined : rowIndex.get(anchorRef.current);
+      const to = rowIndex.get(node.value);
+      const span =
+        from === undefined || to === undefined ? [node] : rows.slice(Math.min(from, to), Math.max(from, to) + 1);
+      return span.flatMap((row) =>
+        row.item && !row.disabled && allowsSelect(row) ? [{ item: row.item, path: row.path }] : [],
+      );
+    },
+    [allowsSelect],
+  );
+
   const selectNode = useCallback(
     (node: TreeNode<T>, activation: RowActivation) => {
       if (node.disabled || node.group || !node.item) {
@@ -353,10 +395,14 @@ const TreeRoot = <T extends { id: string }>({
       if (node.branch && (activation.option || !allowsSelect(node))) {
         toggleOpen(node);
       } else if (allowsSelect(node)) {
-        onSelect?.({ item: node.item, path: node.path, ...activation });
+        const range = activation.shift && selectionMode === 'multiple' ? rangeTo(node) : undefined;
+        if (!range) {
+          anchorRef.current = node.value;
+        }
+        onSelect?.({ item: node.item, path: node.path, ...activation, ...(range && { range }) });
       }
     },
-    [allowsSelect, onSelect, toggleOpen],
+    [allowsSelect, onSelect, toggleOpen, selectionMode, rangeTo],
   );
 
   const handleSelectionChange = useCallback(
@@ -384,7 +430,13 @@ const TreeRoot = <T extends { id: string }>({
    * A row awaiting DOM focus, with its id as well as its value: a drop that reparents the row changes its path, so the
    * value captured when the drag started may no longer match anything.
    */
-  const pendingFocusRef = useRef<{ id: string; value: string; revealed?: boolean } | null>(null);
+  const pendingFocusRef = useRef<{
+    id: string;
+    value: string;
+    revealed?: boolean;
+    /** How `reveal` asked for the row: `focus` takes focus wherever it is, `scroll` only brings the row into view. */
+    reveal?: 'focus' | 'scroll';
+  } | null>(null);
 
   const focusNode = useCallback((nodeId: string, value: string) => {
     pendingFocusRef.current = { id: nodeId, value };
@@ -393,13 +445,23 @@ const TreeRoot = <T extends { id: string }>({
   }, []);
 
   const claimFocus = useCallback((value: string, row: HTMLElement) => {
-    if (pendingFocusRef.current?.value !== value) {
+    const pending = pendingFocusRef.current;
+    if (pending?.value !== value) {
       return;
     }
     pendingFocusRef.current = null;
+    if (pending.reveal === 'scroll') {
+      row.scrollIntoView({ block: 'nearest' });
+      return;
+    }
     // Only while focus is still where the drag or key left it: the reader may have clicked elsewhere meanwhile.
     const active = document.activeElement;
-    if (!active || active === document.body || (rootRef.current?.contains(active) ?? false)) {
+    if (
+      pending.reveal === 'focus' ||
+      !active ||
+      active === document.body ||
+      (rootRef.current?.contains(active) ?? false)
+    ) {
       row.focus();
     }
   }, []);
@@ -473,11 +535,48 @@ const TreeRoot = <T extends { id: string }>({
     [],
   );
 
+  const registry = useContext(RegistryContext);
+  useImperativeHandle(
+    ref,
+    () => ({
+      reveal: (path, { focus = true } = {}) => {
+        const id = path.at(-1);
+        if (
+          id === undefined ||
+          path.length <= rootPath.length ||
+          rootPath.some((part, index) => path[index] !== part)
+        ) {
+          return;
+        }
+        // Every ancestor below the root; a group header is always open.
+        for (let end = rootPath.length + 1; end < path.length; end++) {
+          const ancestor = path.slice(0, end);
+          if (
+            registry.get(model.itemProps(ancestor)).disposition === 'group' ||
+            registry.get(model.itemOpen(ancestor))
+          ) {
+            continue;
+          }
+          const item = registry.get(model.item(ancestor[ancestor.length - 1]));
+          item && onOpenChangeRef.current?.({ item, path: ancestor, open: true });
+        }
+        const value = Path.create(...path);
+        pendingFocusRef.current = { id, value, reveal: focus ? 'focus' : 'scroll' };
+        focusedValueRef.current = value;
+        setFocusedValue(value);
+      },
+    }),
+    [registry, model, rootPath],
+  );
+
   //
   // Keyboard
   //
 
-  /** Runs before the machine's handler: Enter re-reports a selected row (zag emits nothing) and Space toggles. */
+  /**
+   * Runs before the machine's handler: Enter re-reports a selected row (zag emits nothing), Space toggles, and ⌘↑ / ⌘↓
+   * jump to the parent and to the parent's next sibling.
+   */
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(event);
@@ -488,6 +587,18 @@ const TreeRoot = <T extends { id: string }>({
         // A consumer's restructuring key remounts the row under its new parent, and the unmount drops DOM focus.
         const node = value ? walk.byValue.get(value) : undefined;
         node && focusNode(node.id, node.value);
+        return;
+      }
+      if (
+        (event.key === 'ArrowUp' || event.key === 'ArrowDown') &&
+        (event.metaKey || event.ctrlKey) &&
+        !isInnerControl(event.target)
+      ) {
+        const focused = value ?? focusedValueRef.current;
+        const node = focused ? walk.byValue.get(focused) : undefined;
+        const next = node && (event.key === 'ArrowUp' ? parentRow(walk, node) : rowAfterParent(walk, node));
+        event.preventDefault();
+        next && focusNode(next.id, next.value);
         return;
       }
       if ((event.key !== 'Enter' && event.key !== ' ') || isInnerControl(event.target)) {
@@ -612,7 +723,7 @@ const TreeRoot = <T extends { id: string }>({
         onExpandedChange={handleExpandedChange}
         onSelectionChange={handleSelectionChange}
         onFocusChange={handleFocusChange}
-        scrollToIndexFn={virtual === 'fixed' ? scrollToNode : undefined}
+        scrollToIndexFn={Listbox.isWindowed(virtual) ? scrollToNode : undefined}
         data-size={size}
         data-multiline={multiline ? '' : undefined}
         className='dx-tree'
@@ -659,6 +770,30 @@ const dropEvent = (walk: TreeWalk, source: TreeData, data: Record<string | symbo
   return { instruction, source, target: data, item: data.item };
 };
 
+/** The row of `node`'s parent, past any group header (a section is not a row the keyboard stops on). */
+const parentRow = <T extends { id: string }>(walk: TreeWalk<T>, node: TreeNode<T>): TreeNode<T> | undefined => {
+  for (let end = node.path.length - 1; end > walk.root.path.length; end--) {
+    const parent = walk.byValue.get(Path.create(...node.path.slice(0, end)));
+    if (parent) {
+      return parent;
+    }
+  }
+  return undefined;
+};
+
+/**
+ * The first row after the subtree of `node`'s parent (its next sibling, else the nearest ancestor's), or after `node`'s
+ * own subtree at the top level.
+ */
+const rowAfterParent = <T extends { id: string }>(walk: TreeWalk<T>, node: TreeNode<T>): TreeNode<T> | undefined => {
+  const from = parentRow(walk, node) ?? node;
+  const index = walk.rowIndex.get(from.value);
+  if (index === undefined) {
+    return undefined;
+  }
+  return walk.rows.slice(index + 1).find((row) => !row.group && row.depth <= from.depth);
+};
+
 /** The disclosure duration the tree's CSS resolves (the theme token, 0 under reduced motion), in milliseconds. */
 const disclosureDuration = (element: HTMLElement): number => {
   const value = getComputedStyle(element).getPropertyValue('--dx-tree-disclosure-duration').trim();
@@ -701,10 +836,10 @@ TreeLabel.displayName = 'Tree.Label';
  * Ark's `tree` element carrying Container attributes, so the ScrollArea viewport slot merges onto it and the tree
  * element itself scrolls (part-naming rules 1 and 2).
  */
-const TreeContentElement = composable<HTMLDivElement, { gutter?: Gutter; rowInset?: boolean }>(
+const TreeContentElement = Util.composable<HTMLDivElement, { gutter?: Layout.Gutter; rowInset?: boolean }>(
   ({ children, gutter = 'none', rowInset = true, ...props }, forwardedRef) => {
     const { onTreeKeyDown, onTreePointerDownCapture } = useTreeContext('Tree.Content');
-    const { className, ...rest } = composableProps(props, { classNames: 'dx-container dx-tree-content' });
+    const { className, ...rest } = Util.composableProps(props, { classNames: 'dx-container dx-tree-content' });
     return (
       <TreeView.Tree
         {...rest}
@@ -735,37 +870,47 @@ type TreeContentProps = {
    * The scroll area's own gutter; none by default, so a row's highlight runs to the pane's edges and the overlay thumb
    * floats over the rows rather than beside them.
    */
-  gutter?: Gutter;
+  gutter?: Layout.Gutter;
   /**
    * Pad each row's ends by the space an icon has inside its block, so the disclosure and a trailing count sit as far
    * from the row's edges as its icon sits from its cell; on by default. Off for rows whose edge cells are blocks.
    */
   rowInset?: boolean;
+  /**
+   * Whether the rows scroll in a scroll area of their own; on by default. Off, they lay out at full height for an
+   * outer container to scroll (an inspector panel), which a scroll area of its own would trap the wheel from; a
+   * windowed tree (`virtual`) needs its own.
+   */
+  scroll?: boolean;
 };
 
 const renderDefaultRow = (node: TreeNode) => <TreeItem node={node} />;
 
-/** The rows a fixed window measures its pitch from: an animating row is mid-way between zero and one block. */
-const SETTLED_ROWS = ':is([data-tree-row], [data-tree-group]):not([data-disclosure])';
+/** One element per mounted row (a group header included), in row order. */
+const ROWS = ':is([data-tree-row], [data-tree-group])';
+
+/** The rows a window measures: an animating row is mid-way between zero and its height. */
+const SETTLED_ROWS = `${ROWS}:not([data-disclosure])`;
 
 /**
  * The tree element as the viewport of a thin ScrollArea. Rows are rendered flat in visible (pre-order) order, never
  * nested in `BranchContent`: zag navigates the collection rather than the DOM, so the flat list serves both the whole
  * tree and a window of it, and `aria-level`/`aria-expanded` carry the hierarchy.
  */
-const TreeContent = ({ children, gutter, rowInset }: TreeContentProps) => {
+const TreeContent = ({ children, gutter, rowInset, scroll = true }: TreeContentProps) => {
   const { treeId, walk, virtual, scrollToIndexRef, focusedValue, draggable, dropAtEnd } =
     useTreeContext('Tree.Content');
   const renderRow = typeof children === 'function' ? children : renderDefaultRow;
   const trailing = typeof children === 'function' ? null : children;
   const { rows } = walk;
-  const windowed = virtual === 'fixed';
+  const windowed = Listbox.isWindowed(virtual);
   const focused = windowed && focusedValue ? walk.rowIndex.get(focusedValue) : undefined;
-  const windowing = useVirtualRows({
+  const windowing = Listbox.useVirtualRows({
     mode: virtual,
     count: rows.length,
     pinned: focused,
     measure: SETTLED_ROWS,
+    rows: ROWS,
   });
 
   useEffect(() => {
@@ -782,24 +927,28 @@ const TreeContent = ({ children, gutter, rowInset }: TreeContentProps) => {
   const content: ReactNode[] = [];
   let next = 0;
   for (const span of windowing.spans) {
-    content.push(<VirtualSpacer key={`gap-${next}`} height={windowing.spacer(span.first - next)} />);
+    content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(next, span.first)} />);
     for (let index = span.first; index <= span.last; index++) {
       const node = rows[index];
       content.push(<Fragment key={node.value}>{renderRow(node)}</Fragment>);
     }
     next = span.last + 1;
   }
-  content.push(<VirtualSpacer key={`gap-${next}`} height={windowing.spacer(rows.length - next)} />);
+  content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(next, rows.length)} />);
 
+  const element = (
+    <TreeContentElement gutter={gutter} rowInset={rowInset} ref={windowing.listRef}>
+      {content}
+      {draggable && dropAtEnd && <TreeEndDropTarget treeId={treeId} root={walk.root} />}
+      {trailing}
+    </TreeContentElement>
+  );
+  if (!scroll && !windowed) {
+    return element;
+  }
   return (
     <ScrollArea.Root>
-      <ScrollArea.Viewport asChild>
-        <TreeContentElement gutter={gutter} rowInset={rowInset} ref={windowing.listRef}>
-          {content}
-          {draggable && dropAtEnd && <TreeEndDropTarget treeId={treeId} root={walk.root} />}
-          {trailing}
-        </TreeContentElement>
-      </ScrollArea.Viewport>
+      <ScrollArea.Viewport asChild>{element}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 };
@@ -905,13 +1054,13 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
     disclosures,
     claimFocus,
   } = useTreeContext('Tree.Item');
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState>({ instruction: null, kind: 'move', dragging: false });
   const { id, value, path, item, depth, branch, open, last, current, props } = node;
   const canDrag = draggable && props.draggable !== false;
   const canBeTarget = draggable && props.droppable !== false;
-  const label = toLocalizedString(props.label, t);
+  const label = Theme.toLocalizedString(props.label, t);
   // `expanded` drops the reorder-below zone, because below an open branch and its first child are the same place;
   // `last-in-group` offers the `reparent` bands that move a row out to a shallower level.
   const mode: ItemMode = branch && open && !dropBelowExpanded ? 'expanded' : last ? 'last-in-group' : 'standard';
@@ -972,9 +1121,9 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
                     const root = createRoot(container);
                     flushSync(() =>
                       root.render(
-                        <DragPreview source={source.element}>
+                        <DragHandle.DragPreview source={source.element}>
                           {renderDragPreview ? renderDragPreview(node) : <span className='truncate'>{label}</span>}
-                        </DragPreview>,
+                        </DragHandle.DragPreview>,
                       ),
                     );
                     // The preview's own root has no icon registry; the row's icon is already resolved, so it is copied.
@@ -1060,17 +1209,19 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
     [current, node, selectNode],
   );
 
-  // In `multiple` mode a plain click selects the row alone and a meta-click toggles it, which the machine's own
-  // multiple selection (click adds) does not.
+  // In `multiple` mode a plain click selects the row alone, a meta-click toggles it and a shift-click reports the range
+  // from the anchor, which the machine's own multiple selection (click adds) does not.
   const handleClickCapture = useCallback(
     (event: MouseEvent) => {
-      if (selectionMode !== 'multiple' || event.shiftKey || event.altKey || isInnerControl(event.target)) {
+      if (selectionMode !== 'multiple' || event.altKey || isInnerControl(event.target)) {
         return;
       }
       event.stopPropagation();
       event.preventDefault();
       const meta = event.metaKey || event.ctrlKey;
-      selectNode(node, { option: false, shift: false, meta, current: meta ? !current : true });
+      // A shift-click selects the range (the row with it), so it never toggles the row alone.
+      const shift = event.shiftKey;
+      selectNode(node, { option: false, shift, meta, current: meta && !shift ? !current : true });
     },
     [selectionMode, node, current, selectNode],
   );
@@ -1196,11 +1347,11 @@ type TreeItemGroupLabelProps = {
 /** The group's label (`itemProps.label`, translated). */
 const TreeItemGroupLabel = ({ children }: TreeItemGroupLabelProps) => {
   const { node } = useTreeItemContext('Tree.ItemGroupLabel');
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   return (
-    <Typography truncate classNames='dx-tree-group-label'>
-      {children ?? toLocalizedString(node.props.label, t)}
-    </Typography>
+    <Typography.Text truncate classNames='dx-tree-group-label'>
+      {children ?? Theme.toLocalizedString(node.props.label, t)}
+    </Typography.Text>
   );
 };
 
@@ -1223,15 +1374,15 @@ type TreeItemIndicatorProps = {
 const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Block classNames='dx-tree-item-indicator'>
+    <Layout.Block classNames='dx-tree-item-indicator'>
       {node.branch && (
         <TreeView.BranchTrigger className='dx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
           <TreeView.BranchIndicator className='dx-tree-branch-indicator'>
-            <Icon icon={icon} />
+            <Icon.Icon icon={icon} />
           </TreeView.BranchIndicator>
         </TreeView.BranchTrigger>
       )}
-    </Block>
+    </Layout.Block>
   );
 };
 
@@ -1241,7 +1392,7 @@ TreeItemIndicator.displayName = 'Tree.ItemIndicator';
 // ItemIcon
 //
 
-type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Icon>> & {
+type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Icon.Icon>> & {
   /** Replaces the Icon in the cell, for a glyph that carries its own state (a tooltip, an animation, a per-state hue). */
   children?: ReactNode;
 };
@@ -1249,7 +1400,7 @@ type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Icon>> & {
 const ICON_HUES: readonly string[] = ['neutral', 'success', 'info', 'warning', 'error', ...hues];
 
 /** Narrows the model's free-form `iconHue` to a hue the Icon can draw. */
-const isIconHue = (value: string | undefined): value is IconHue => !!value && ICON_HUES.includes(value);
+const isIconHue = (value: string | undefined): value is Icon.IconHue => !!value && ICON_HUES.includes(value);
 
 /**
  * The icon cell: one block holding the row's icon (`itemProps.icon`, hued by `itemProps.iconHue`), or `children` in
@@ -1261,9 +1412,10 @@ const TreeItemIcon = ({ icon, hue, children, ...props }: TreeItemIconProps) => {
   const glyph = icon ?? node.props.icon;
   const iconHue = node.props.iconHue;
   return (
-    <Block classNames='dx-tree-item-icon'>
-      {children ?? (glyph && <Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
-    </Block>
+    <Layout.Block classNames='dx-tree-item-icon'>
+      {children ??
+        (glyph && <Icon.Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
+    </Layout.Block>
   );
 };
 
@@ -1282,11 +1434,11 @@ type TreeItemTextProps = {
 /** The row's label (`itemProps.label`, translated), truncated to one line. */
 const TreeItemText = ({ children, 'data-testid': testId }: TreeItemTextProps) => {
   const { node } = useTreeItemContext('Tree.ItemText');
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   return (
-    <Typography truncate classNames='dx-tree-item-text' data-testid={testId}>
-      {children ?? toLocalizedString(node.props.label, t)}
-    </Typography>
+    <Typography.Text truncate classNames='dx-tree-item-text' data-testid={testId}>
+      {children ?? Theme.toLocalizedString(node.props.label, t)}
+    </Typography.Text>
   );
 };
 
@@ -1305,16 +1457,16 @@ const TreeItemCount = () => {
   const { count, modifiedCount } = node.props;
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='dx-tree-item-count'>
+      <Tag.Tag hue='rose' classNames='dx-tree-item-count'>
         {modifiedCount}
-      </Tag>
+      </Tag.Tag>
     );
   }
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='dx-tree-item-count'>
+      <Tag.Tag hue='neutral' classNames='dx-tree-item-count'>
         {count}
-      </Tag>
+      </Tag.Tag>
     );
   }
   // Holds the count's track even when empty, so the cells after it (actions, item end) keep their own columns.
@@ -1357,7 +1509,7 @@ type TreeEmptyProps = {
 /** `Empty` (its text the children or the translated "No items"), rendered only while the root has no children. */
 const TreeEmpty = forwardRef<HTMLDivElement, TreeEmptyProps>((props, forwardedRef) => {
   const { walk } = useTreeContext('Tree.Empty');
-  return walk.rows.length === 0 ? <Empty {...props} ref={forwardedRef} /> : null;
+  return walk.rows.length === 0 ? <Status.Empty {...props} ref={forwardedRef} /> : null;
 });
 
 TreeEmpty.displayName = 'Tree.Empty';

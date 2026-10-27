@@ -26,7 +26,7 @@ declare type GraphNode = {
 
 declare type GraphEdge = { from: string; to: string; kind?: string };
 
-/** One box of a `display.diagram`. */
+/** One box of a `display.diagram` graph. */
 declare type DiagramNode = {
   /** Any string — a package name, a path; edges and `group` refer to boxes by it. */
   id: string;
@@ -34,30 +34,38 @@ declare type DiagramNode = {
   label?: string;
   /** The id of the group the box sits in. */
   group?: string;
-  /** The repository-relative path the box depicts; the user sees it when they click the box. */
+  /**
+   * What the box depicts, which the user sees when they click it: an IRI from a query row (the
+   * index then shows that resource's facts), or a repository-relative path.
+   */
   ref?: string;
 };
 
 /**
- * `from` depends on, calls or owns `to`. `kind` changes the arrow: `creates` is dashed, `inheritance`
- * and `implements` point from the subtype at its base (hollow triangle), and `hasMany` and `contains`
- * point from the owner. An edge naming an undeclared id declares that box.
+ * `from` relates to `to`. `relation` names what the edge means and the arrow follows from it; the
+ * `from` end is the child, the whole, the owner or the "one" side: `extends`, `implements`,
+ * `composes`, `owns`, `one-to-many`, `many-to-many`, `depends-on`. Absent is a plain arrow.
  */
 declare type DiagramEdge = {
   from: string;
   to: string;
   /** Label only the edges that say something; unlabelled edges route more cleanly. */
   label?: string;
-  kind?: 'reference' | 'creates' | 'inheritance' | 'implements' | 'hasMany' | 'contains';
+  relation?: 'extends' | 'implements' | 'composes' | 'owns' | 'one-to-many' | 'many-to-many' | 'depends-on';
 };
 
 /** A framed, tinted cluster of boxes. Groups do not nest. */
 declare type DiagramGroup = { id: string; label?: string };
 
-/** A diagram as data: the illustrator lays it out (ELK, routed connectors) and draws exactly this. */
-declare type DiagramSpec = {
-  /** Flow direction (default `TB`). */
-  direction?: 'TB' | 'LR';
+/** A diagram as data, for one built from query rows; it is written out as the diagram DSL. */
+declare type DiagramGraph = {
+  /** The way arrows read (default `down`). */
+  flow?: 'down' | 'up' | 'right' | 'left';
+  /**
+   * Drop every unlabelled, untyped edge a longer path already implies. Pass it for dependency and
+   * import graphs, where most edges are transitive and drawing them all makes a wall of lines.
+   */
+  reduce?: boolean;
   nodes: DiagramNode[];
   edges?: DiagramEdge[];
   groups?: DiagramGroup[];
@@ -100,12 +108,16 @@ declare const display: {
   /** Markdown (GFM), rendered without raw HTML; a diagram goes in its own `diagram` call. */
   markdown(content: string, title?: string): Promise<void>;
   /**
-   * A boxes-and-arrows diagram, laid out and drawn by the illustrator. Build the spec from query rows —
-   * ids can be any string, so no escaping. Keep it to ≲ 14 boxes and ≤ 3 groups; past that, split it.
-   * A Mermaid flowchart string (`flowchart LR`, `Id[Label]`, flat `subgraph`, `-->`, `-->|label|`) is
-   * accepted too and reduced to the same spec. Rejects (the call throws) anything with no boxes.
+   * A boxes-and-arrows diagram, laid out and drawn by the illustrator's semantic engine. Pass the
+   * diagram DSL (see `DIAGRAM DSL` in your instructions) — statements naming boxes, edges and
+   * groups, plus only the placement you care about — or a `DiagramGraph` built from query rows,
+   * which is written out as the same DSL. Put an IRI from the query in each box's `ref` so the
+   * user can click through to it. Rejects (the call throws, with the line and column) source that
+   * does not read, has no boxes, or names an index IRI with no facts. Resolves to the edges between
+   * two IRI boxes that no triple links directly — check those; an edge may still be right if it
+   * summarises a longer path.
    */
-  diagram(diagram: DiagramSpec | string, title?: string): Promise<void>;
+  diagram(diagram: string | DiagramGraph, title?: string): Promise<{ unbacked: string[] }>;
   /** An array of uniform objects, rendered as a table. */
   table(rows: readonly Record<string, unknown>[], title?: string): Promise<void>;
   /** Any value, rendered as pretty JSON. */

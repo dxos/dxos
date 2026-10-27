@@ -1,5 +1,112 @@
 # @dxos/plugin-native
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/plugin-assistant@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/react-ui@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/plugin-assistant@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/log@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 2e6b92a: The Composer help menu can check for updates and, once one is downloaded, offers "Restart to update"; the desktop update toast and settings button now use the same "Restart to update" wording.
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [0e28f43]
+- Updated dependencies [a1e64db]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [4820c02]
+  - @dxos/app-framework@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/plugin-assistant@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [d2a6aad]
+- Updated dependencies [44b7b80]
+- Updated dependencies [c6922ce]
+- Updated dependencies [cef0fed]
+- Updated dependencies [cb1e218]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [5a27d5c]
+- Updated dependencies [ec9f207]
+- Updated dependencies [eb14798]
+- Updated dependencies [69a4a85]
+- Updated dependencies [7d222fc]
+- Updated dependencies [e99ee70]
+- Updated dependencies [ff92c50]
+- Updated dependencies [3e73e53]
+- Updated dependencies [9ab98cd]
+- Updated dependencies [8fc641a]
+- Updated dependencies [38e2ddb]
+- Updated dependencies [1894fc1]
+- Updated dependencies [246ee3c]
+- Updated dependencies [0347f09]
+- Updated dependencies [596728d]
+- Updated dependencies [1b37aa8]
+- Updated dependencies [321c99f]
+- Updated dependencies [6ea9d4d]
+- Updated dependencies [49731e1]
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/plugin-assistant@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

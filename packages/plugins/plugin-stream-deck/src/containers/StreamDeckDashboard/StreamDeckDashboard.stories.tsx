@@ -8,10 +8,10 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Annotation, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Tag, Type } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FAVORITE_TAG } from '@dxos/plugin-space/dashboard';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as Dashboard from '@dxos/plugin-space/Dashboard';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
@@ -29,10 +29,9 @@ class StoryItem extends Type.makeObject<StoryItem>(DXN.make('org.dxos.type.test.
 ) {}
 
 const seed = async (space: Space) => {
-  const tag = await Tag.findOrCreate(space.db, { label: FAVORITE_TAG });
-  const tagRef = Ref.make(tag);
+  const tag = await Tag.findOrCreate(space.db, { label: Dashboard.FAVORITE_TAG });
   for (const name of ['Inbox', 'Roadmap', 'Weekly team notes', 'Contacts']) {
-    space.db.add(Obj.make(StoryItem, { name, [Obj.Meta]: { tags: [tagRef] } }));
+    space.db.add(Obj.make(StoryItem, { name, [Obj.Meta]: { tags: [tag] } }));
   }
   space.db.add(Obj.make(StoryItem, { name: 'Not a favorite' }));
   await space.db.flush({ indexes: true });
@@ -50,7 +49,7 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [StoryItem, Tag.Tag],
           onClientInitialized: ({ client }) =>

@@ -6,7 +6,12 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Button, Checkbox, Panel, SystemButton, Toolbar, useFileDownload } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -39,7 +44,7 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
     await handleRefresh();
   };
 
-  const fileDownload = useFileDownload();
+  const fileDownload = Hooks.useFileDownload();
   const handleDownload = async () => {
     fileDownload(
       new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),
@@ -57,15 +62,15 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
-          <Checkbox
+          <Input.Checkbox
             checked={recording}
             onCheckedChange={({ checked: recording }) => handleSetRecording(!!recording)}
             label='Record metrics'
           />
           <div className='grow' />
-          <Button onClick={handleRefresh}>Run Diagnostics</Button>
-          <Button icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
-          <Button onClick={handleResetMetrics}>Reset metrics</Button>
+          <Button.Root onClick={handleRefresh}>Run Diagnostics</Button.Root>
+          <Button.Root icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
+          <Button.Root onClick={handleResetMetrics}>Reset metrics</Button.Root>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

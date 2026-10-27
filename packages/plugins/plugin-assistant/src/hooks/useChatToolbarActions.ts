@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { AssistantOperation } from '#types';
+import { Assistant, AssistantCapabilities, AssistantOperation } from '#types';
 
 import { useChatContext } from '../components/Chat/context.ts';
 
@@ -35,8 +35,9 @@ export type ChatToolbarActionsProps = {
 };
 
 export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolbarActionsProps) => {
-  const { invoke } = useOperationInvoker();
+  const { invoke } = Hooks.useOperationInvoker();
   const { db } = useChatContext('useChatToolbarActions');
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
 
   // Stable references in deps avoid circular reference issues.
   return useMenuBuilder(
@@ -99,6 +100,39 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
             }).pipe(EffectEx.runAndForwardErrors),
         );
 
+      if (chat) {
+        const viewType = get(Obj.atomProperty(chat, 'viewType')) ?? settings.chatView;
+        builder.group(
+          'view',
+          {
+            label: ['chat-view.title', { ns: meta.profile.key }],
+            icon: 'ph--eye--regular',
+            iconOnly: true,
+            variant: 'dropdownMenu',
+            applyActive: true,
+            selectCardinality: 'single',
+            value: viewType,
+          },
+          (group) => {
+            for (const view of Assistant.ChatViews) {
+              group.action(
+                view,
+                {
+                  label: [`chat-view.${view}.label`, { ns: meta.profile.key }],
+                  checked: viewType === view,
+                  testId: `assistant.view.${view}`,
+                },
+                () => {
+                  Obj.update(chat, (chat) => {
+                    chat.viewType = view;
+                  });
+                },
+              );
+            }
+          },
+        );
+      }
+
       if (chats.length > 0) {
         builder.separator().group(
           'chats',
@@ -141,6 +175,14 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
 
       return builder.build();
     },
-    [db?.spaceId, companionTo?.id, chat?.id, invoke, switcher?.chats.map(({ id }) => id).join(), switcher?.onSelect],
+    [
+      db?.spaceId,
+      companionTo?.id,
+      chat?.id,
+      invoke,
+      settings.chatView,
+      switcher?.chats.map(({ id }) => id).join(),
+      switcher?.onSelect,
+    ],
   );
 };

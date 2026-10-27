@@ -23,7 +23,7 @@ import {
   EdgeHttpClientService,
   createStubEdgeIdentity,
 } from '@dxos/edge-client';
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import {
   HypercoreFactoryLayer,
   HypercoreFactoryService,
@@ -41,6 +41,7 @@ import {
 import { SwarmNetworkManagerService, createIceProvider, createRtcTransportFactory } from '@dxos/network-manager';
 import { FeedProtocol } from '@dxos/protocols';
 import {
+  BlobStoreService,
   ContactsService,
   DataService,
   DevicesService,
@@ -54,6 +55,7 @@ import {
   NetworkService,
   QueryService,
   SpacesService,
+  SqlService,
   SystemService,
 } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
@@ -65,6 +67,14 @@ import * as SpacesContract from '../../contracts/spaces.ts';
 import * as Readiness from '../../Readiness.ts';
 import * as SqliteStorage from '../../SqliteStorage.ts';
 import { EdgeAgentManagerLayer, EdgeAgentManagerService, EdgeAgentServiceLayer } from '../agents/index.ts';
+import {
+  BlobReplicationLayer,
+  BlobReplicationNoopLayer,
+  BlobReplicationService,
+  BlobStoreServiceLayer,
+  LocalBlobStoreLayer,
+  LocalBlobStoreService,
+} from '../blobs/index.ts';
 import { DevicesServiceLayer } from '../devices/index.ts';
 import { DevtoolsHostLayer, DevtoolsHostService } from '../devtools/index.ts';
 import {
@@ -91,6 +101,8 @@ import { NetworkServiceLayer } from '../network/index.ts';
 import { valueEncoding } from '../pipeline/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
+import { SqlServiceLayer } from '../sql/index.ts';
+import { storageWatchdogLayer } from '../storage/index.ts';
 import { SystemServiceLayer } from '../system/index.ts';
 import { TransportFactoryService } from './client-platform.ts';
 import {
@@ -279,6 +291,11 @@ export const StorageMigrationSpec = LayerSpec.make(
   () => storageMigrationLayer,
 );
 
+export const StorageWatchdogSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient, Hook.Controller], provides: [], eager: true },
+  () => storageWatchdogLayer(),
+);
+
 export const StorageLifecycleSpec = LayerSpec.make(
   {
     affinity: 'application',
@@ -410,7 +427,7 @@ export const EchoHostSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
       affinity: 'application',
-      requires: [IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
+      requires: [Hook.Controller, IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
     () =>
@@ -583,6 +600,7 @@ export const IdentityServiceSpec = LayerSpec.make(
       KeyringApiService,
       SpacesContract.ManagerService,
       SqlClient.SqlClient,
+      EchoHostService,
     ],
     provides: [IdentityService.Tag],
   },
@@ -614,18 +632,18 @@ export const ContactsServiceRegistrationSpec = LayerSpec.make(
 );
 
 // The edge tags are required only when configured, so the service is built after them rather than
-// finding them absent; without them it still serves an empty inbox.
+// finding them absent; without them (and without a test relay) it still serves an empty inbox.
 export const InboxServiceSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
       affinity: 'application',
       requires: [
         IdentityContract.ManagerService,
-        ...(options.edgeAvailable ? [EdgeHttpClientService, EdgeConnectionService] : []),
+        ...(options.edgeAvailable && !options.inboxRelay ? [EdgeHttpClientService, EdgeConnectionService] : []),
       ],
       provides: [InboxService.Tag],
     },
-    () => InboxServiceLayer,
+    () => InboxServiceLayer({ relay: options.inboxRelay }),
   );
 
 export const InboxServiceRegistrationSpec = LayerSpec.make(
@@ -778,6 +796,51 @@ export const DevtoolsHostSpec = LayerSpec.make(
   () => DevtoolsHostLayer,
 );
 
+export const SqlServiceSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [SqlService.Tag] },
+  () => SqlServiceLayer,
+);
+
+export const SqlServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(SqlService.Rpcs, SqlService.Tag),
+);
+
+export const LocalBlobStoreSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient], provides: [LocalBlobStoreService] },
+  () => LocalBlobStoreLayer,
+);
+
+/** Replicates with the edge only when one is configured; without it, blobs live on this device alone. */
+export const BlobReplicationSpec = (options: ServiceStackServices) =>
+  options.edgeAvailable
+    ? LayerSpec.make(
+        {
+          affinity: 'application',
+          requires: [LocalBlobStoreService, EdgeHttpClientService, Hook.Controller],
+          provides: [BlobReplicationService],
+        },
+        () => BlobReplicationLayer,
+      )
+    : LayerSpec.make(
+        { affinity: 'application', requires: [LocalBlobStoreService], provides: [BlobReplicationService] },
+        () => BlobReplicationNoopLayer,
+      );
+
+export const BlobStoreServiceSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [LocalBlobStoreService, BlobReplicationService],
+    provides: [BlobStoreService.Tag],
+  },
+  () => BlobStoreServiceLayer,
+);
+
+export const BlobStoreServiceRegistrationSpec = LayerSpec.make(
+  { affinity: 'application', requires: [BlobStoreService.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
+  () => RegisterService(BlobStoreService.Rpcs, BlobStoreService.Tag),
+);
+
 export const DevtoolsHostRegistrationSpec = LayerSpec.make(
   { affinity: 'application', requires: [DevtoolsHost.Tag, RpcRouter.RpcRouter], provides: [], eager: true },
   () => RegisterService(DevtoolsHost.Rpcs, DevtoolsHost.Tag),
@@ -799,6 +862,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   HypercoreStoreSpec,
   StorageMigrationSpec,
   StorageLifecycleSpec,
+  StorageWatchdogSpec,
 
   StackReadinessSpec,
   SwarmNetworkManagerSpec(options),
@@ -849,6 +913,12 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   FeedServiceRegistrationSpec,
   LoggingServiceSpec,
   LoggingServiceRegistrationSpec,
+  SqlServiceSpec,
+  SqlServiceRegistrationSpec,
+  LocalBlobStoreSpec,
+  BlobReplicationSpec(options),
+  BlobStoreServiceSpec,
+  BlobStoreServiceRegistrationSpec,
   DevtoolsHostSpec,
   DevtoolsHostRegistrationSpec,
 ];

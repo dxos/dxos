@@ -7,7 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { type Attached, type Cdp, detachAll, refreshTargets } from './cdp.ts';
+import { type Attached, type Cdp, type TargetFilter, detachAll, refreshTargets } from './cdp.ts';
 import { type CallCounter, startCallCounting } from './collectors/calls.ts';
 import {
   EMPTY_THREAD,
@@ -20,8 +20,10 @@ import {
   readThreadMetrics,
 } from './collectors/cpu.ts';
 import { type DataReading, diffData, readData } from './collectors/data.ts';
-import { diffDisk, readDisk } from './collectors/disk.ts';
+import { EMPTY_DISK, diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
+import { requestLatency } from './collectors/latency.ts';
+import { readMarks } from './collectors/marks.ts';
 import { readDomCounters, readHeap, readProcessFootprint, sumAppFootprint, sumHeapUsed } from './collectors/memory.ts';
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
@@ -74,6 +76,8 @@ export type RunnerOptions = {
    */
   snapshotStages?: ReadonlySet<string>;
   snapshotDir?: string;
+  /** Off, a snapshot holds only the allocator dumps; see {@link takeMemorySnapshot}. */
+  heapSnapshots?: boolean;
   /**
    * The costed work counters to run (`parseCounters(process.env.DX_PERF_COUNTERS)`); defaults to
    * {@link DEFAULT_COUNTERS}. The React counter also needs `installReactProbe` before navigation.
@@ -81,6 +85,13 @@ export type RunnerOptions = {
   counters?: CounterSet;
   /** Where the per-stage call and React breakdowns are written; defaults to a directory under the OS temp dir. */
   counterDir?: string;
+  /** The targets each boundary attaches to; defaults to every measured realm. */
+  include?: TargetFilter;
+  /**
+   * The last stage to run; later stages skip their body and record no row. Defaults to
+   * `DX_PERF_UNTIL`, which `pnpm perf --until` sets. Work a flow does between stages still runs.
+   */
+  until?: string;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -112,9 +123,13 @@ export class StageRunner {
   readonly #counters: CounterSet;
   readonly #counterDir: string;
   readonly #calls: CallCounter | undefined;
+  readonly #until: string | undefined;
+  #past = false;
+  #throttled = false;
 
   constructor(options: RunnerOptions) {
     this.#options = options;
+    this.#until = options.until ?? (process.env.DX_PERF_UNTIL || undefined);
     this.#counters = options.counters ?? DEFAULT_COUNTERS;
     this.#counterDir = options.counterDir ?? path.join(tmpdir(), 'dxos-perf-counters');
     this.#calls = this.#counters.calls ? startCallCounting(this.#counterDir) : undefined;
@@ -133,8 +148,13 @@ export class StageRunner {
     this.#fixtureSize = size;
   }
 
-  /** Adopts an already-attached set, so the caller can start the profiler before the first stage. */
+  /**
+   * Adopts an already-attached set, so the caller can start the profiler before the first stage.
+   * Sessions it replaces are closed: one left attached to a worker outlives the runner's view of it.
+   */
   adopt(targets: Attached[]): void {
+    const adopted = new Set(targets);
+    detachAll(this.#targets.filter((target) => !adopted.has(target)));
     this.#targets = targets;
   }
 
@@ -160,6 +180,17 @@ export class StageRunner {
       .catch(() => undefined);
   }
 
+  /** Applies `comparability.cpuThrottle` through the page's session, once. */
+  async #throttle(): Promise<void> {
+    const { page, comparability } = this.#options;
+    if (this.#throttled || !comparability.cpuThrottle) {
+      return;
+    }
+    this.#throttled = true;
+    const session = await page.context().newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate: comparability.cpuThrottle });
+  }
+
   /** One PNG per stage, for a reviewer who wants to see what the numbers describe. */
   async #screenshot(id: string): Promise<string | undefined> {
     const { screenshotDir, page } = this.#options;
@@ -181,11 +212,35 @@ export class StageRunner {
       .catch(() => undefined);
   }
 
-  /** Runs one stage, bracketing `body` with the boundary reads. */
-  async stage(id: string, body: () => Promise<void>): Promise<StageRow> {
+  /**
+   * Runs one stage, bracketing `body` with the boundary reads; nothing once past {@link RunnerOptions.until}.
+   *
+   * @param restartsApp The stage reloads the app, which starts every realm's counters over under the
+   *   same names; its opening readings are dropped, so each realm's closing reading is the stage's whole.
+   */
+  async stage(
+    id: string,
+    body: () => Promise<void>,
+    { restartsApp = false }: { restartsApp?: boolean } = {},
+  ): Promise<StageRow | undefined> {
+    if (this.#past) {
+      return undefined;
+    }
+    this.#past = id === this.#until;
     const { page, browserCdp, debugPort, network, mode } = this.#options;
+    await this.#throttle();
 
-    this.#targets = await refreshTargets(debugPort, this.#targets);
+    this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
+    if (restartsApp) {
+      // A debugger session left on the shared coordinator across the restart keeps the new page's
+      // worker from ever connecting, so workers are detached here and attached afresh at the close.
+      this.#targets = this.#targets.filter((target) => {
+        if (target.kind !== 'page') {
+          target.cdp.close();
+        }
+        return target.kind === 'page';
+      });
+    }
     const pageTarget = this.#targets.find((target) => target.kind === 'page');
     // A worker that appeared since the last boundary has no probe yet; the call is idempotent.
     await Promise.all(this.#targets.map(installWorkerProbe));
@@ -228,6 +283,15 @@ export class StageRunner {
     }
 
     await this.#mark(id, 'end');
+    if (restartsApp) {
+      Object.assign(before, {
+        thread: { ...EMPTY_THREAD },
+        threadByRealm: [],
+        disk: { ...EMPTY_DISK },
+        rpc: [],
+        data: [],
+      });
+    }
     const wallMs = Date.now() - before.at;
     const cpu = diffProcessCpu(before.cpu, await readProcessCpu(browserCdp));
     const thread = pageTarget
@@ -242,7 +306,7 @@ export class StageRunner {
     // Refreshed before the per-realm readings: a stage can BRING a realm into existence — `boot` is
     // where the shared worker running ECHO first appears — and a set captured only at the opening
     // boundary would report that stage's heap as the page's alone.
-    this.#targets = await refreshTargets(debugPort, this.#targets);
+    this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
 
     // AFTER the refresh, unlike the readings above, and the difference is load-bearing. SQLite runs
     // in the dedicated worker, and `boot` is the stage that creates it: read against the opening
@@ -258,6 +322,8 @@ export class StageRunner {
     const rpcCallsByMethod = diffRpcByMethod(before.rpc, rpcAfter);
     // After the refresh, like RPC: the worker `boot` creates holds the database and automerge.
     const data = diffData(before.data, await readData(this.#targets));
+    // After the refresh, like data: a mark is an instant, so the stage owns every one taken since it opened.
+    const latency = requestLatency(await readMarks(this.#targets, before.at));
     const closingPage = this.#targets.find((target) => target.kind === 'page');
     const reactAfter = this.#counters.react ? await readReact(closingPage) : undefined;
     const react = reactAfter
@@ -308,6 +374,7 @@ export class StageRunner {
           dir: path.join(snapshotDir, id),
           preGc,
           preGcHeap,
+          heapSnapshots: this.#options.heapSnapshots,
         })
       : undefined;
 
@@ -350,6 +417,7 @@ export class StageRunner {
       ...(calls ? { jsCalls: calls.calls } : {}),
       ...(react ? { react: react.counters } : {}),
       data,
+      ...(latency ? { latency } : {}),
       responsiveness: {
         ...responsiveness,
         ...(stills ? { stillFrameMaxMs: stills.maxMs, stillFrameCount: stills.count } : {}),

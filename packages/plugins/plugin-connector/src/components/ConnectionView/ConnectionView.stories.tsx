@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
@@ -98,7 +98,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>
@@ -121,7 +121,7 @@ const meta = {
               const roadmap = space.db.add(Obj.make(Expando.Expando, { name: 'Product Roadmap' }));
               const roadmapCursor = space.db.add(
                 Cursor.makeExternal({
-                  source: connection.accessToken,
+                  source: Connection.getAccessToken(connection),
                   target: Ref.make(roadmap),
                   externalId: 'board-1',
                   label: 'Product Roadmap',
@@ -136,7 +136,7 @@ const meta = {
               const engineering = space.db.add(Obj.make(Expando.Expando, { name: 'Engineering' }));
               const engineeringCursor = space.db.add(
                 Cursor.makeExternal({
-                  source: connection.accessToken,
+                  source: Connection.getAccessToken(connection),
                   target: Ref.make(engineering),
                   externalId: 'board-2',
                   label: 'Engineering',
@@ -150,7 +150,7 @@ const meta = {
               const orphaned = space.db.add(Obj.make(Expando.Expando, { name: 'Deleted Board' }));
               space.db.add(
                 Cursor.makeExternal({
-                  source: connection.accessToken,
+                  source: Connection.getAccessToken(connection),
                   target: Ref.make(orphaned),
                   externalId: 'board-3',
                   label: 'Deleted Board',

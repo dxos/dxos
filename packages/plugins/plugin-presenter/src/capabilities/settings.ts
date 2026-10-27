@@ -1,29 +1,29 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
-import { PresenterCapabilities, Settings } from '#types';
+import { PresenterCapabilities, PresenterSettings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
-      schema: Settings.Settings,
-      defaultValue: () => ({}),
+      schema: PresenterSettings.Settings,
+      defaultValue: PresenterSettings.defaults,
     });
 
     return [
       Capability.contribute(PresenterCapabilities.Settings, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
-        schema: Settings.Settings,
+        schema: PresenterSettings.Settings,
         atom: settingsAtom,
       }),
     ];

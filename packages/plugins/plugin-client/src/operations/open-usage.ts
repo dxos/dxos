@@ -10,9 +10,9 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { Account } from '#types';
 
-import { OpenUsage } from './definitions.ts';
+import * as ClientOperation from '../types/ClientOperation.ts';
 
-const handler: Operation.WithHandler<typeof OpenUsage> = OpenUsage.pipe(
+const handler: Operation.WithHandler<typeof ClientOperation.OpenUsage> = ClientOperation.OpenUsage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });

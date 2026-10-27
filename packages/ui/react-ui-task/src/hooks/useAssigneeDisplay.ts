@@ -3,7 +3,7 @@
 //
 
 import { useObject } from '@dxos/echo-react';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Actor } from '@dxos/types';
 
 import { translationKey } from '#translations';
@@ -15,7 +15,7 @@ import { type AssigneeDisplay, PERSON_ICON, getAssigneeDisplay } from '../util/a
  * list's pill and the properties row so the two cannot name the same assignee differently.
  */
 export const useAssigneeDisplay = (assignee?: Actor.Actor): AssigneeDisplay => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [contact] = useObject(assignee?.contact);
   const [subject] = useObject(assignee?.subject);
   if (!assignee) {

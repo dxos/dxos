@@ -5,9 +5,14 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Button, Card, DragHandle, Focus, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { type KanbanCardProps, useKanbanBoard } from '#components';
 import { meta } from '#meta';
@@ -19,7 +24,7 @@ const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
  */
 export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug, draggable }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const { onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
@@ -51,19 +56,19 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         <Focus.Item asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Header>
-              <DragHandle ref={dragHandleRef} />
+              <DragHandle.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Block rail='end'>
+              <Layout.Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Button
+                  <Button.Root
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Block>
+              </Layout.Block>
             </Card.Header>
             <Card.Body>
               <Card.Row>

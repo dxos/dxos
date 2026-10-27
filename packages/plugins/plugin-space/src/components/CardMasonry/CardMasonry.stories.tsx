@@ -9,16 +9,17 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
+import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -31,13 +32,50 @@ import { CardMasonry } from './CardMasonry.tsx';
 
 const OWNER_TITLE = 'Ship the launch';
 
-/** A task and the three objects it produced, linked the way `Task.addArtifact` links them. */
+const GENERATED_COUNT = 30;
+
+const TASK_STATUSES: Task.Status[] = ['todo', 'started', 'review', 'done', 'blocked'];
+
+/** A varied mix of the three types, so the grid shows reflow across card heights and long labels. */
+const createGeneratedArtifacts = (db: Database.Database): Obj.Unknown[] =>
+  Array.from({ length: GENERATED_COUNT }, (_, index): Obj.Unknown => {
+    switch (index % 3) {
+      case 0:
+        return db.add(
+          Obj.make(Organization.Organization, {
+            name: random.company.name(),
+            ...(index % 2 === 0 ? { description: random.lorem.paragraph({ min: 1, max: 4 }) } : {}),
+          }),
+        );
+      case 1:
+        return db.add(
+          Obj.make(Person.Person, {
+            fullName: random.person.fullName(),
+            ...(index % 4 === 1 ? { jobTitle: random.person.jobTitle() } : {}),
+          }),
+        );
+      default:
+        return db.add(
+          Obj.make(Task.Task, {
+            title: random.lorem.sentence({ min: 3, max: 14 }),
+            status: TASK_STATUSES[index % TASK_STATUSES.length],
+          }),
+        );
+    }
+  });
+
+/**
+ * A task and the objects it produced, linked the way `Task.addArtifact` links them: three named
+ * objects the play functions look for, then a generated set.
+ */
 const createObjects = (db: Database.Database): void => {
+  random.seed(1);
   const task = db.add(Obj.make(Task.Task, { title: OWNER_TITLE, status: 'started' }));
   const artifacts = [
     db.add(Obj.make(Organization.Organization, { name: 'Acme' })),
     db.add(Obj.make(Person.Person, { fullName: 'Alice Ashe' })),
     db.add(Obj.make(Task.Task, { title: 'Send the contract', status: 'todo' })),
+    ...createGeneratedArtifacts(db),
   ];
   for (const artifact of artifacts) {
     Task.addArtifact(task, artifact);
@@ -64,7 +102,7 @@ const withPlugins = (extraPlugins: Plugin.Plugin[] = []) =>
   withPluginManager({
     capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ...extraPlugins,
       StorybookPlugin.make({}),
       // Contributes the `CardContent` surfaces the cards' bodies render through; without it a card

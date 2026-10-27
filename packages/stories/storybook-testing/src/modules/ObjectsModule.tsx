@@ -4,11 +4,15 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Field, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /** `Select` values must be non-empty strings, so "no type filter" needs a sentinel. */
 const ALL_TYPES = '__all__';
@@ -20,7 +24,7 @@ const ALL_TYPES = '__all__';
  * space.
  */
 export const ObjectsModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -76,7 +80,7 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
             </Select.Content>
           </Select.Root>
           <Field.Root>
-            <Input
+            <Input.Root
               classNames='grow'
               placeholder='Filter objects…'
               value={text}
@@ -87,16 +91,18 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
       </Panel.Header>
       <Panel.Body>
         <Listbox.Root items={filtered.map((object) => ({ value: object.id, label: object.id }))}>
-          <Listbox.Content aria-label='Objects'>
-            {filtered.map((object) => (
-              <Listbox.Item key={object.id} id={object.id}>
-                <div className='flex flex-col gap-0.5 overflow-hidden'>
-                  <div className='truncate'>{Obj.getLabel(object) ?? object.id}</div>
-                  <div className='text-xs text-fg-muted truncate'>{Obj.getTypename(object) ?? 'unknown'}</div>
-                </div>
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
+          <Listbox.Viewport>
+            <Listbox.Content aria-label='Objects'>
+              {filtered.map((object) => (
+                <Listbox.Item key={object.id} id={object.id}>
+                  <div className='flex flex-col gap-0.5 overflow-hidden'>
+                    <div className='truncate'>{Obj.getLabel(object) ?? object.id}</div>
+                    <div className='text-xs text-fg-muted truncate'>{Obj.getTypename(object) ?? 'unknown'}</div>
+                  </div>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Viewport>
         </Listbox.Root>
       </Panel.Body>
       <Panel.Footer>

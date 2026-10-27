@@ -45,7 +45,8 @@ import {
   type EdgeHttpClient,
   EdgeHttpClientService,
 } from '@dxos/edge-client';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import { type HypercoreStore, HypercoreStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
@@ -83,7 +84,7 @@ import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, deferFunction, forEachAsync, markMilestone } from '@dxos/util';
 
 import * as Auth from '../../Auth.ts';
 import * as IdentityContract from '../../contracts/identity.ts';
@@ -295,6 +296,7 @@ export class DataSpaceManager extends Resource {
     log('open');
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    markMilestone('spaces.opening', `${this._metadataStore.spaces.length} spaces`);
     const spacesToActivate: DataSpace[] = [];
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
@@ -325,6 +327,7 @@ export class DataSpaceManager extends Resource {
       });
     }
 
+    markMilestone('spaces.loaded');
     this.updated.emit();
   }
 

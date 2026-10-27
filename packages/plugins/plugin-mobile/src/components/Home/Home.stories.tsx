@@ -15,11 +15,11 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DeckStoryPlugin } from '@dxos/plugin-deck/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout } from '@dxos/react-ui/testing';
 
@@ -82,7 +82,7 @@ const HomeStoryPlugin = Plugin.define({
 
 /** Expands root synchronously before `Home` mounts, so its first commit already sees the fixture. */
 const useExpandRoot = () => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   useState(() => AppGraph.expandSync(graph, GraphNode.RootId, 'child'));
 };
 
@@ -121,7 +121,7 @@ const meta = {
   render: () => <HomeStoryRoot />,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager({ plugins: [...corePlugins(), DeckStoryPlugin(), HomeStoryPlugin()] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), DeckStoryPlugin(), HomeStoryPlugin()] }),
   ],
   parameters: {
     layout: 'fullscreen',

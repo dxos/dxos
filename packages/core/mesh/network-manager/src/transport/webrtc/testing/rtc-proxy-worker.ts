@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Scope from 'effect/Scope';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { RTCService } from '@dxos/protocols/rpc';
 

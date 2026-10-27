@@ -8,30 +8,30 @@ import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Query } from '@dxos/echo';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { DXN } from '@dxos/keys';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { DXN, EID, EntityId } from '@dxos/keys';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
 import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -74,10 +74,12 @@ type StoryArgs = {
   objects?: boolean;
   /** Delete the sketch after the document embeds it, so its embed points at nothing. */
   deleted?: boolean;
+  /** Leave the document without a content binding: its Text deleted, or never present. */
+  contentState?: 'deleted' | 'missing';
 };
 
 const DefaultStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [space] = useSpaces();
   const docs = useQuery(space?.db, Query.type(Markdown.Document));
   const doc = docs.find((candidate) => candidate.name !== EMBEDDED_NOTES);
@@ -85,7 +87,7 @@ const DefaultStory = () => {
   const data = useMemo(() => ({ subject: doc, attendableId: id ?? 'story' }), [doc, id]);
   const attentionAttrs = useAttentionAttributes(id);
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (space) {
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
     }
@@ -102,11 +104,11 @@ const meta = {
   title: 'plugins/plugin-markdown/containers/MarkdownArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(
-      ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false } }) => ({
+      ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false, contentState } }) => ({
         plugins: [
-          ...corePlugins(),
+          ...CorePlugins.make(),
           StorybookPlugin.make({}),
           MarkdownExtensionsPlugin(),
           IllustratorPlugin.make(),
@@ -158,7 +160,14 @@ const meta = {
                   yield* Effect.promise(() => defaultSpace.db.flush());
                 }
 
-                defaultSpace.db.add(
+                if (contentState === 'missing') {
+                  const contentUri = EID.make({ spaceId: defaultSpace.id, entityId: EntityId.random() });
+                  defaultSpace.db.add(Obj.make(Markdown.Document, { name: title, content: Ref.fromURI(contentUri) }));
+                  yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+                  return;
+                }
+
+                const doc = defaultSpace.db.add(
                   Markdown.make({
                     name: title,
                     content: [
@@ -177,6 +186,12 @@ const meta = {
                 );
 
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+
+                if (contentState === 'deleted') {
+                  const text = yield* Effect.promise(() => doc.content.load());
+                  defaultSpace.db.remove(text);
+                  yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+                }
 
                 // Removed only once the document references it, the way a user deletes an embedded object.
                 if (deleted) {
@@ -298,5 +313,36 @@ export const EmbedFocus: Story = {
     } finally {
       document.removeEventListener('keydown', onKeyDown);
     }
+  },
+};
+
+/** The document's Text was deleted: a message stands in for the editor. */
+export const ContentDeleted: Story = {
+  args: {
+    title: 'Testing with deleted content',
+    content: 'Hello, world!',
+    contentState: 'deleted',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = await canvas.findByTestId('markdown.content-status', {}, { timeout: 15_000 });
+    await expect(status).toHaveAttribute('data-status', 'deleted');
+    await expect(canvasElement.querySelector('.cm-content')).toBeNull();
+  },
+};
+
+/** The document's content ref points at a Text this device does not have. */
+export const ContentMissing: Story = {
+  args: {
+    title: 'Testing with missing content',
+    contentState: 'missing',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(
+      async () => expect(canvas.getByTestId('markdown.content-status')).toHaveAttribute('data-status', 'missing'),
+      { timeout: 15_000 },
+    );
+    await expect(canvasElement.querySelector('.cm-content')).toBeNull();
   },
 };

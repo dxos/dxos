@@ -37,6 +37,24 @@ export const Create = Operation.make({
   }),
 });
 
+/**
+ * Writes a space template's content into a space. Invoked with the space's id, so the template runs in
+ * that space's process.
+ */
+export const ApplyTemplate = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.applyTemplate'),
+    name: 'Apply Space Template',
+    description: "Write a space template's content into a space.",
+  },
+  services: [Capability.Service, Plugin.Service],
+  input: Schema.Struct({
+    template: Schema.String,
+    space: SpaceSchema,
+  }),
+  output: Schema.Void,
+});
+
 export const Join = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.join'),
@@ -110,6 +128,13 @@ export const Share = Operation.make({
   output: Schema.instanceOf(CancellableInvitationObservable),
 });
 
+/**
+ * Why an admitted member was not sent an invitation message: `account-required` when EDGE relays
+ * inbox messages only for identities linked to an account and this one is not.
+ */
+export const NoticeFailureReason = Schema.Literals(['account-required', 'send-failed']);
+export type NoticeFailureReason = Schema.Schema.Type<typeof NoticeFailureReason>;
+
 export const AddMembers = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.addMembers'),
@@ -127,6 +152,8 @@ export const AddMembers = Operation.make({
     joinUrl: Schema.String,
     admitted: Schema.Array(Schema.String),
     failed: Schema.Array(Schema.Struct({ key: Schema.String, error: Schema.String })),
+    /** Admitted, but not told: they can still join from the space link. */
+    notNotified: Schema.Array(Schema.Struct({ key: Schema.String, reason: NoticeFailureReason })),
   }),
 });
 
@@ -516,13 +543,20 @@ export const AddType = Operation.make({
     // Typed as a record so the tool parameter advertises `type: object`, forcing the model to emit
     // the JSON Schema as an object rather than a JSON-encoded string.
     jsonSchema: Schema.optional(Schema.Record(Schema.String, Schema.Any)).annotate({
-      description: 'JSON Schema (draft-07) describing the fields of the new type.',
+      description:
+        'JSON Schema (draft-07) describing the fields of the new type; `id` is added when left out. ' +
+        'For a relation type, set `entityKind: "relation"` and name the ends as ' +
+        '`relationSource: { $ref: "dxn:<typename>" }` and `relationTarget`, as `queryTypes` reports them.',
     }),
     name: Schema.optional(Schema.String).annotate({ description: 'Display name for the type.' }),
     typename: Schema.optional(Schema.String).annotate({
       description: 'Typename in reverse-domain form (e.g. com.example.type.project); required with `jsonSchema`.',
     }),
-    version: Schema.optional(Schema.String),
+    version: Schema.optional(Schema.String).annotate({
+      description:
+        'Semver of the type (default 0.1.0). Adding a typename at a version the space already holds ' +
+        'returns the stored type unchanged; pass a new version to store a revised definition.',
+    }),
     show: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Struct({

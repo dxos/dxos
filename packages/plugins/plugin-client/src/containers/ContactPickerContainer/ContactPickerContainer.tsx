@@ -4,12 +4,18 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
+import { SpaceMember_Role, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Container, Field, Flex, Input, Select, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as Select from '@dxos/react-ui/Select';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -27,9 +33,10 @@ const roleLabel: Record<AdmitRole, string> = {
 export type ContactPickerContainerProps = AppSurface.ContactPickerData;
 
 export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const contacts = useContacts();
   const members = useMembers(space.key);
+  const spaces = useSpaces();
   const identity = useIdentity();
   const [selected, setSelected] = useState<string>();
   const [role, setRole] = useState<AdmitRole>(SpaceMember_Role.EDITOR);
@@ -44,6 +51,11 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
     [members],
   );
   const selfKey = toPublicKey(identity?.identityKey);
+  // An agent is added like any contact, but EDGE serves it only in the spaces its admins put it in, so only the agents
+  // you administer are offered.
+  // TODO(mykola): Consider having EDGE accept an agent's regular inbox invitation, checking who signed its admission,
+  //  instead of the separate `POST /compute/brain/:agent/spaces` call its admin's client makes.
+  const agentKeys = selfKey ? AppSpace.agentsNotAdministeredBy(spaces, selfKey).map((key) => key.toHex()) : [];
   const selfRole = members.find(
     (member) => selfKey && toPublicKey(member.identity?.identityKey)?.equals(selfKey),
   )?.role;
@@ -72,11 +84,11 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   }
 
   return (
-    <Container gap='md' role='group' gutter='none'>
-      <Flex align='center' gap='sm'>
+    <Layout.Container gap='md' role='group' gutter='none'>
+      <Layout.Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
-          excludeKeys={memberKeys}
+          excludeKeys={[...memberKeys, ...agentKeys]}
           value={selected}
           onChange={(key) => {
             setSelected(key);
@@ -105,16 +117,16 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           onClick={handleAdd}
           data-testid='contactPicker.add'
         />
-      </Flex>
+      </Layout.Flex>
       {joinUrl && (
-        <Flex gap='sm'>
+        <Layout.Flex gap='sm'>
           <Field.Root readOnly>
-            <Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+            <Input.Root readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
           </Field.Root>
           <SystemButton.Clipboard value={joinUrl} />
-        </Flex>
+        </Layout.Flex>
       )}
-    </Container>
+    </Layout.Container>
   );
 };
 

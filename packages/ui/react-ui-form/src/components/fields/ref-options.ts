@@ -7,8 +7,9 @@ import { useCallback, useMemo } from 'react';
 import { type Database, DXN, Entity, Filter, Obj, Query, Scope, Tag, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
-import { type SchemaAST, SchemaEx } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { hues } from '@dxos/ui-types';
 
 import { type CreateOptions, type RefFieldDataProps } from '#types';
@@ -66,7 +67,7 @@ export const useRefCandidates = (options: RefCandidatesOptions) => {
     onCreate,
     resolveCreateEntry,
   } = options;
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const typename = useMemo(
     () => SchemaEx.findAnnotation<ReferenceAnnotationValue>(refType, ReferenceAnnotationId)?.typename,
     [refType],

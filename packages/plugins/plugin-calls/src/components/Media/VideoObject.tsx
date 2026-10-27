@@ -4,11 +4,11 @@
 
 import React, { type JSX, forwardRef, memo, useEffect, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 export type VideoObjectProps = Omit<JSX.IntrinsicElements['video'], 'className' | 'ref'> &
-  ThemedClassName<{
+  Util.ThemedClassName<{
     videoStream?: MediaStream;
     flip?: boolean;
     // TODO(burdon): If screenshare then contain.
@@ -23,6 +23,8 @@ export const VideoObject = memo(
       const video = internalRef.current;
       if (video && videoStream) {
         video.srcObject = videoStream;
+        // Call audio plays through `AudioStream`; an unmuted element is held back by the browser's autoplay policy.
+        video.muted = true;
         video.setAttribute('autoplay', 'true');
         video.setAttribute('playsinline', 'true');
       }

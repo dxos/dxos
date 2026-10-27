@@ -3,14 +3,15 @@
 //
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { EditorState } from '@codemirror/state';
+import { forceParsing, syntaxTree } from '@codemirror/language';
+import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
 import { focus } from '../../state/focus.ts';
 import { image } from './image.ts';
 
-const createView = (doc: string, extensions: any[]) => {
+const createView = (doc: string, extensions: Extension[]) => {
   const parent = document.createElement('div');
   return new EditorView({
     state: EditorState.create({
@@ -23,6 +24,21 @@ const createView = (doc: string, extensions: any[]) => {
 
 const countImageElements = (view: EditorView): number => view.dom.querySelectorAll('img.cm-image').length;
 
+/** Block widgets (the image extension's only kind) in the decoration sets, including those outside the rendered viewport. */
+const countImageDecorations = (view: EditorView): number =>
+  view.state
+    .facet(EditorView.decorations)
+    .map((source) => (typeof source === 'function' ? source(view) : source))
+    .reduce((count, set) => {
+      let images = 0;
+      set.between(0, view.state.doc.length, (_from, _to, decoration) => {
+        if (decoration.spec.block) {
+          images++;
+        }
+      });
+      return count + images;
+    }, 0);
+
 describe('image extension', () => {
   test('renders <img> for an http image link by default', ({ expect }) => {
     const view = createView('![](http://example.com/x.png)', [image(), EditorView.editable.of(false)]);
@@ -34,6 +50,19 @@ describe('image extension', () => {
     const skip = ({ url }: { name: 'Image'; url: string }) => /^https?:\/\//.test(url);
     const view = createView('![alt](http://example.com/x.png)', [image({ skip }), EditorView.editable.of(false)]);
     expect(countImageElements(view)).toBe(0);
+    view.destroy();
+  });
+
+  test('renders an image the parser reaches after the editor opened, without a viewport change', ({ expect }) => {
+    // Long enough that the initial parse stops well short of the image at the end.
+    const doc = `${Array.from({ length: 20_000 }, (_, line) => `Line ${line} with *some* **markdown**.`).join('\n\n')}\n\n![](http://example.com/end.png)`;
+    const view = createView(doc, [image(), EditorView.editable.of(false)]);
+    expect(syntaxTree(view.state).length).toBeLessThan(doc.length);
+    expect(countImageDecorations(view)).toBe(0);
+
+    forceParsing(view, doc.length, 10_000);
+    expect(syntaxTree(view.state).length).toBe(doc.length);
+    expect(countImageDecorations(view)).toBe(1);
     view.destroy();
   });
 

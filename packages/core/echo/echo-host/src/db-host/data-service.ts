@@ -8,7 +8,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,7 +17,11 @@ import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
+import { type IndexStatusTracker } from './index-status.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
+
+/** Space sync-state recomputations per second; the scheduler still runs a trailing pass, so the last state lands. */
+const SYNC_STATE_MAX_FREQ = 2;
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
@@ -28,6 +32,7 @@ export type DataServiceProps = {
     spaceId: SpaceId,
     options: DataService.RunGarbageCollectionRequest,
   ) => Promise<DataService.GarbageCollectionReport>;
+  indexStatus: IndexStatusTracker;
 };
 
 /**
@@ -50,6 +55,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
+  private readonly '_indexStatus': IndexStatusTracker;
   private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   private readonly '_runGarbageCollection': (
@@ -63,6 +69,7 @@ export class DataServiceImpl implements DataService.Handlers {
     this._updateIndexes = params.updateIndexes;
     this._getSpaceStats = params.getSpaceStats;
     this._runGarbageCollection = params.runGarbageCollection;
+    this._indexStatus = params.indexStatus;
   }
 
   ['DataService.subscribe'](
@@ -111,10 +118,13 @@ export class DataServiceImpl implements DataService.Handlers {
         const synchronizer = this._subscriptions.get(request.subscriptionId);
         invariant(synchronizer, 'Subscription not found');
 
-        if (request.addIds?.length) {
-          await synchronizer.addDocuments(request.addIds as DocumentId[]);
+        if (request.add?.length) {
+          await synchronizer.addDocuments(
+            request.add.map(({ id, heads, passive }) => ({ documentId: id as DocumentId, heads, passive })),
+          );
           // The subscription now holds each document, so the creation lease has nothing left to guard.
-          for (const documentId of request.addIds as DocumentId[]) {
+          for (const { id } of request.add) {
+            const documentId = id as DocumentId;
             this._pendingCreations.get(documentId)?.[Symbol.dispose]();
             this._pendingCreations.delete(documentId);
           }
@@ -132,7 +142,14 @@ export class DataServiceImpl implements DataService.Handlers {
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
-        const created = await this._automergeHost.createDoc(request.initialValue);
+        if (request.initialValue && !request.initialDocument) {
+          log.warn('document created from deprecated `initialValue`; send `initialDocument` bytes', {
+            spaceId: request.spaceId,
+          });
+        }
+        const created = request.initialDocument
+          ? await this._automergeHost.createDoc(request.initialDocument, { preserveHistory: true })
+          : await this._automergeHost.createDoc(request.initialValue);
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
       },
@@ -235,6 +252,11 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
+  /** Whether any of the given subscriptions holds the document, passive or loaded. */
+  'holds'(subscriptionIds: readonly string[], documentId: DocumentId): boolean {
+    return subscriptionIds.some((subscriptionId) => this._subscriptions.get(subscriptionId)?.holds(documentId));
+  }
+
   /**
    * Test affordance: pause/resume flushing of document updates on every
    * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
@@ -243,6 +265,24 @@ export class DataServiceImpl implements DataService.Handlers {
     for (const synchronizer of this._subscriptions.values()) {
       synchronizer.setSendUpdatesPaused(paused);
     }
+  }
+
+  ['DataService.subscribeIndexStatus'](): EffectStream.Stream<DataService.IndexStatus, Error> {
+    return EffectEx.streamFromEmitter<DataService.IndexStatus, Error>((emit) => {
+      const ctx = Context.default();
+      this._indexStatus.updated.on(ctx, (status) => void emit.single(status));
+      void emit.single(this._indexStatus.current);
+      return Effect.promise(() => ctx.dispose());
+    });
+  }
+
+  ['DataService.subscribeIndexActivity'](): EffectStream.Stream<DataService.IndexActivity, Error> {
+    return EffectEx.streamFromEmitter<DataService.IndexActivity, Error>((emit) => {
+      const ctx = Context.default();
+      this._indexStatus.activityUpdated.on(ctx, (activity) => void emit.single(activity));
+      void emit.single(this._indexStatus.activity);
+      return Effect.promise(() => ctx.dispose());
+    });
   }
 
   ['DataService.subscribeSpaceSyncState'](
@@ -269,11 +309,17 @@ export class DataServiceImpl implements DataService.Handlers {
         }
       });
 
-      const scheduler = new UpdateScheduler(ctx, async () => {
-        const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
+      // Every local save fires `collectionStateUpdated`, and each run diffs every document against every
+      // peer, so an unthrottled stream re-diffs the whole space per keystroke for a status indicator.
+      const scheduler = new UpdateScheduler(
+        ctx,
+        async () => {
+          const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
 
-        void emit.single({ peers: state.peers });
-      });
+          void emit.single({ peers: state.peers });
+        },
+        { maxFrequency: SYNC_STATE_MAX_FREQ },
+      );
 
       this._automergeHost.collectionStateUpdated.on(ctx, (e) => {
         if (e.collectionId === collectionId) {

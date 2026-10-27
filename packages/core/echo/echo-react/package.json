@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-react",
-  "version": "0.12.0",
+  "version": "0.16.0",
   "description": "React integration for ECHO.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,6 +33,7 @@
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

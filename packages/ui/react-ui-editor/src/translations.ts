@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as Theme from '@dxos/react-ui/Theme';
 
 export const translationKey = '@dxos/react-ui-editor';
 
@@ -12,6 +12,7 @@ export const translations = [
       [translationKey]: {
         'comment.label': 'Create comment',
         'image.label': 'Insert image',
+        'insert.label': 'Insert',
         'search.label': 'Search',
 
         'block.label': 'Block',
@@ -26,6 +27,7 @@ export const translations = [
         'formatting.code.label': 'Code',
         'formatting.link.label': 'Link',
 
+        'list.label': 'List',
         'list.bullet.label': 'Bullet list',
         'list.ordered.label': 'Numbered list',
         'list.task.label': 'Task list',
@@ -42,4 +44,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies Theme.Resource[];

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-osrm",
-  "version": "0.12.0",
+  "version": "0.16.0",
   "private": true,
   "description": "OSRM (OpenStreetMap) driving-route provider for Composer.",
   "homepage": "https://dxos.org",
@@ -40,6 +40,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./OsrmEvents": {
+      "source": "./src/OsrmEvents.ts",
+      "types": "./dist/types/src/OsrmEvents.d.ts",
+      "import": "./dist/lib/ns/OsrmEvents.mjs"
     },
     "./OsrmPlugin": {
       "source": "./src/OsrmPlugin.ts",

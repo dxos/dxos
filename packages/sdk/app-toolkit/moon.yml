@@ -7,25 +7,6 @@ tags:
   - pack
   - storybook
 tasks:
-  check-module-structure:
-    # Verify headless entrypoints resolve under workerd conditions, then fail when the
-    # root export pulls in React (Composer UI lives only behind `./ui`).
-    script: |
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js \
-        --export . \
-        --to "{react,react-dom}" \
-        --conditions workerd,worker \
-        --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - package.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
   test:
     inputs:
       - .storybook/*

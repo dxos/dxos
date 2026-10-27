@@ -47,6 +47,9 @@
       "path": "../../core/compute/assistant-toolkit"
     },
     {
+      "path": "../../core/compute/brain"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {

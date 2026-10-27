@@ -6,4 +6,5 @@ export * from './focus.ts';
 export * from './hotkeys.ts';
 export * from './keySymbols.ts';
 export * from './modality.ts';
+export * from './spatial.ts';
 export * from './useFocusGroup.ts';

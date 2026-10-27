@@ -3,23 +3,26 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { EffectEx, SchemaAST } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { messageOf } from '@dxos/errors';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -93,7 +96,7 @@ export const wrapFunctionHandler = (
         serviceTags.includes(Database.Service.key) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
-        throw new FunctionError({
+        throw new Operation.FunctionError({
           message: 'Services not provided: dataService, queryService',
         });
       }
@@ -129,23 +132,22 @@ export const wrapFunctionHandler = (
               errors: 'all',
             })(dataWithDecodedRefs);
           } catch (error: any) {
-            throw new InvalidOperationInputError({
+            throw new Operation.InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
           }
         }
 
-        let result: any = await func.handler(dataWithDecodedRefs);
-
-        if (Effect.isEffect(result)) {
-          result = await EffectEx.runAndForwardErrors(
-            (result as Effect.Effect<unknown, unknown, EdgeFunctionServices>).pipe(
-              Effect.orDie,
-              Effect.provide(funcContext.createLayer()),
-            ),
-          );
-        }
+        const returned: any = await func.handler(dataWithDecodedRefs);
+        const exit: Exit.Exit<unknown> = Effect.isEffect(returned)
+          ? await Effect.runPromiseExit(
+              (returned as Effect.Effect<unknown, unknown, EdgeFunctionServices>).pipe(
+                Effect.orDie,
+                Effect.provide(funcContext.createLayer()),
+              ),
+            )
+          : Exit.succeed(returned);
 
         // Flush in-memory ECHO writes before the function scope closes.
         // Writes performed by `db.add` / `db.remove` are buffered in the in-memory
@@ -154,16 +156,23 @@ export const wrapFunctionHandler = (
         // `await using` above) calls `db.close()` but does NOT flush, so mutations
         // performed by handlers that declare `Database.Service` (e.g. `object-create`,
         // `object-update`, `relation-create`) would be silently dropped before reaching
-        // the edge `AutomergeReplicator`. Flushing here closes that hole.
-        if (serviceTags.includes(Database.Service.key) && funcContext.db) {
+        // the edge `AutomergeReplicator`. A `runAgain` exit is a checkpoint the next
+        // run continues from, so its writes are kept too.
+        if (
+          (Exit.isSuccess(exit) || isRunAgainExit(exit)) &&
+          serviceTags.includes(Database.Service.key) &&
+          funcContext.db
+        ) {
           await funcContext.db.flush({ disk: true, indexes: false });
         }
+
+        const result = EffectEx.unwrapExit(exit);
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
             Schema.decodeUnknownSync(Schema.toType(func.output), { onExcessProperty: 'error' })(result);
           } catch (error: any) {
-            throw new InvalidOperationOutputError({
+            throw new Operation.InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
@@ -178,6 +187,12 @@ export const wrapFunctionHandler = (
     },
   };
 };
+
+/** Whether every reason in `exit` is the {@link Operation.runAgain} defect: the run stopped at a checkpoint, not on an error. */
+const isRunAgainExit = (exit: Exit.Exit<unknown>): boolean =>
+  Exit.isFailure(exit) &&
+  exit.cause.reasons.length > 0 &&
+  exit.cause.reasons.every((reason) => Cause.isDieReason(reason) && Process.RunAgainError.is(reason.defect));
 
 /**
  * Container for services and context for a function.
@@ -235,7 +250,7 @@ export class FunctionContext extends Resource {
           // whose message says only that a promise rejected, and the reason (a root document the
           // data plane cannot produce) is the whole diagnosis for the caller.
           catch: (error) =>
-            new FunctionError({
+            new Operation.FunctionError({
               message: `Space ${this.context.spaceId} failed to open: ${messageOf(error) ?? 'unknown error'}`,
               cause: error,
             }),
@@ -244,7 +259,7 @@ export class FunctionContext extends Resource {
             duration: SPACE_OPEN_TIMEOUT,
             orElse: () =>
               Effect.fail(
-                new FunctionError({
+                new Operation.FunctionError({
                   message: `Space ${this.context.spaceId} did not open within ${Duration.toMillis(SPACE_OPEN_TIMEOUT)}ms: its root document is not available on this data plane.`,
                 }),
               ),
@@ -460,6 +475,10 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   }),
 } as Operation.OperationService);
 
+/** The wire form of a reference, `{ '/': <uri> }`. */
+const isEncodedReference = (value: unknown): value is Parameters<typeof refFromEncodedReference>[0] =>
+  typeof value === 'object' && value !== null && '/' in value && typeof value['/'] === 'string';
+
 const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseImpl): unknown => {
   if (value == null) {
     return value;
@@ -471,9 +490,9 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       return value;
     }
 
-    if (typeof value === 'object' && value !== null && typeof (value as any)['/'] === 'string') {
+    if (isEncodedReference(value)) {
       const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
-      return refFromEncodedReference(value as any, resolver);
+      return refFromEncodedReference(value, resolver);
     }
 
     return value;
@@ -520,6 +539,15 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       );
       if (candidates.length === 1) {
         return decodeRefsFromSchema(candidates[0], value, db);
+      }
+
+      // An envelope can only be meant for a `Ref` branch, so `Obj | Ref` (an operation taking a live
+      // object in-process or a reference over the wire) decodes it there rather than rejecting it.
+      if (isEncodedReference(value)) {
+        const refBranch = candidates.find((type) => Ref.isRefType(SchemaAST.encodedBoundAST(type)));
+        if (refBranch) {
+          return decodeRefsFromSchema(refBranch, value, db);
+        }
       }
 
       // For other unions we can't safely pick a branch without validating.

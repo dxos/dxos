@@ -27,6 +27,11 @@ export type BootChunkingOptions = {
    * facade chunk and degrades the HTML to ordered `<script>` tags with no preload list.
    */
   appSourcePattern?: RegExp;
+  /**
+   * Modules kept out of the boot set although the parse graph reaches them: code a barrel exposes
+   * that only lazy surfaces use, which would otherwise ship with every boot.
+   */
+  exclude?: RegExp;
   /** Sink for the per-build size/timing line and the disabled-grouping warning. */
   log?: { info: (message: string) => void; warn: (message: string) => void };
 };
@@ -114,6 +119,9 @@ export const computeBootPartition = (ctx: ModuleGraph, options: BootChunkingOpti
     }
   }
   for (const moduleId of visited) {
+    if (options.exclude?.test(moduleId)) {
+      continue;
+    }
     if (toBootModuleId(moduleId, appSourcePattern) !== null) {
       bootModules.add(moduleId);
     }
