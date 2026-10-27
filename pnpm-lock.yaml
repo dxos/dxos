@@ -13206,6 +13206,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../common/permission
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
@@ -15785,6 +15788,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox

@@ -14,6 +14,7 @@ import {
   StockfishSpace,
   TidepoolSpace,
   TimelineSpace,
+  TriageSpace,
   WeatherSpace,
   WorkerSpace,
 } from '../samples/index.ts';
@@ -30,4 +31,5 @@ export default [
   DemoSpace.makeTemplate(),
   PresenterSpace.makeTemplate(),
   TimelineSpace.makeTemplate(),
+  TriageSpace.makeTemplate(),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;
