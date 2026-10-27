@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useMemo } from 'react';
 
@@ -19,7 +21,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature } from '#types';
+import { Feature, Spec } from '#types';
 
 import {
   FeatureCard,
@@ -84,8 +86,22 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
-  // Filing needs somewhere to file into: the project the feature belongs to, and its task set.
-  const project = useResolveRef(snapshot?.project);
+  // Filing needs somewhere to file into: the project tracking the feature's spec, and its task set. Read through each
+  // spec's atom up the chain, so a project assigned while the article is open shows the filing input.
+  const projectAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        for (const spec of Spec.getAncestry(Spec.getContainer(subject))) {
+          const { project } = get(Obj.atom(spec));
+          if (project) {
+            return project;
+          }
+        }
+        return undefined;
+      }),
+    [subject],
+  );
+  const project = useResolveRef(useAtomValue(projectAtom));
   const canFileTask = !!project?.taskSet;
   const handleEnter = (action: (value: string) => void) => (event: KeyboardEvent<HTMLInputElement>) => {
     const input = event.currentTarget;

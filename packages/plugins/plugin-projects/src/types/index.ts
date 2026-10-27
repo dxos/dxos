@@ -15,3 +15,4 @@ export * as ProjectsEvents from './ProjectsEvents.ts';
 export * as ProjectView from './ProjectView.ts';
 export * as Settings from './Settings.ts';
 export * as Showcase from './Showcase.ts';
+export * as Spec from './Spec.ts';
