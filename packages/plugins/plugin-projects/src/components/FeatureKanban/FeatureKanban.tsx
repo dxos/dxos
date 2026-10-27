@@ -147,7 +147,7 @@ const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<Feature
  * The Kanban view of one level of a project's features: a column per status, each feature's card in its status column.
  * Dragging a card to another column sets the feature's status; double-clicking one zooms into its subfeatures.
  */
-// Composable, so a host's slot (the Features tab's `Panel.Body asChild`) styles the board itself.
+// Composable, so a host's slot (the spec map's `Panel.Body asChild`) styles the board itself.
 export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>(
   ({ features, onZoom, onChange, selectedId: selectedIdProp, defaultSelectedId, onSelect, ...props }, forwardedRef) => {
     const [selectedIdState, setSelectedIdState] = useState<string | undefined>(defaultSelectedId);

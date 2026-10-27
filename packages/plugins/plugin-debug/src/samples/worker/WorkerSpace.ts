@@ -26,8 +26,8 @@ const partials = {
 
 /**
  * The smallest thing that still builds and deploys: one Cloudflare Worker returning a greeting and the time, seeded
- * as a plan for the agent to finish. The space holds a partial spec (`SPEC.mdl`: the endpoint written, the deploy,
- * its check and the claim only named), the project's feature map with one feature per spec block, and three tasks:
+ * as a plan for the agent to finish. The space holds a spec whose document is partial (`SPEC.mdl`: the endpoint
+ * written, the deploy, its check and the claim only named), with one feature per spec block, and three tasks:
  * complete the spec, draw it, and plan the implementation as tasks. The agent then works its own tasks until the
  * Worker answers, so a reader watches the spec, the diagram and the task list fill in before any code runs.
  *
@@ -49,11 +49,11 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
       Effect.gen(function* () {
         const tasks = yield* partials.tasks();
         const project = yield* partials.project({ tasks });
-        yield* partials.spec();
-        yield* partials.features({ tasks, project });
+        const spec = yield* partials.spec();
+        yield* partials.features({ tasks, project, spec });
 
         // No root collection: the root holds collections only, and this space seeds no documents —
-        // the project, its tasks and features, and the spec its features open surface through their own containers.
+        // the project, its tasks, and the spec with its features and document surface through their own containers.
       }),
   });
 

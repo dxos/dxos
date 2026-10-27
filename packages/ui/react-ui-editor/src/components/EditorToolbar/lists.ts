@@ -26,7 +26,7 @@ export const addLists =
       'list',
       {
         label: ['list.label', { ns: translationKey }],
-        placement: { collapse: 1 },
+        placement: { collapse: 2 },
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
