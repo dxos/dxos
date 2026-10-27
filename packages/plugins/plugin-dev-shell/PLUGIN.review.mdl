@@ -1,0 +1,67 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-dev-shell/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: DevShellPlugin
+
+Both operations are declared with the spec's keys, inputs and outputs, and their handlers forward to the
+Vite harness route through `Shell`. The handlers are exercised end to end against a real harness host in
+`operations.test.ts`, and the harness itself (timeouts, clipping, all-or-nothing edits, root scoping) has
+thorough tests under `vite-plugin/`. QA-1's operation steps are what `operations.test.ts` runs, though
+against a test host rather than Composer's dev server. QA-2 is walked only by an autocue demo flow; the
+template's scaffold has a unit test. Of 4 items: 2 done, 0 untested, 2 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict bash: Runs a script through the harness route and returns the spec's output, with a killed process reported as -1.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/types/DevShellOperation.ts#Bash, github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/bash.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/operations.test.ts, github:dxos/dxos/packages/plugins/plugin-dev-shell/src/vite-plugin/shell-middleware.test.ts]
+  walkthrough:
+    - The operation declares the script, cwd and timeout input and the run result. github:dxos/dxos/packages/plugins/plugin-dev-shell/src/types/DevShellOperation.ts#Bash
+    - The handler calls the harness through Shell and maps a null exit code to -1. github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/bash.ts
+    - The Vite middleware validates the request and runs the script under the root. github:dxos/dxos/packages/plugins/plugin-dev-shell/src/vite-plugin/shell-middleware.ts
+```
+
+```mdl
+verdict edits: Applies a batch of exact find/replace edits all-or-nothing and reports failures as data.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/types/DevShellOperation.ts#Edits, github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/edits.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/operations.test.ts, github:dxos/dxos/packages/plugins/plugin-dev-shell/src/vite-plugin/apply-edits.test.ts]
+  walkthrough:
+    - The operation declares the edit batch and the applied/files/error result. github:dxos/dxos/packages/plugins/plugin-dev-shell/src/types/DevShellOperation.ts#Edits
+    - The handler forwards the batch to the harness through Shell. github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/edits.ts
+    - The harness program applies every edit in memory and writes only when all match. github:dxos/dxos/packages/plugins/plugin-dev-shell/src/vite-plugin/apply-edits-program.ts
+```
+
+```mdl
+verdict QA-1: The bash and edits steps run against a real harness host in a node test, not through Composer's dev server.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/bash.ts, github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/edits.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/operations/operations.test.ts]
+  note: |
+    `operations.test.ts` runs `echo` through the Bash handler and applies an edit to a seeded file through
+    the Edits handler, against `startHost` from `vite-plugin/testing.ts`. Nothing runs the test in a Composer
+    served by `vite dev`, or through the assistant as the `do` lines describe.
+```
+
+```mdl
+verdict QA-2: The template's scaffold is unit-tested, and an autocue demo flow walks the rest; no test asserts the steps.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/templates/composer-plugin.ts#composerPlugin]
+  tests: [github:dxos/dxos/packages/plugins/plugin-dev-shell/src/templates/composer-plugin.test.ts, github:dxos/dxos/packages/plugins/plugin-dev-shell/autocue/composer-plugin.mjs]
+  note: |
+    `composer-plugin.test.ts` checks that one add persists the parent task over four subtasks (the first two
+    steps' data). `autocue/composer-plugin.mjs` drives the whole flow for a recorded demo, but it is a
+    recording against a live model and EDGE preview, not a test run in CI with pass/fail checks.
+```
