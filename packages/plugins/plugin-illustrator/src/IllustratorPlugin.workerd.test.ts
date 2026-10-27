@@ -23,7 +23,6 @@ describe('IllustratorPlugin in workerd', () => {
     expect(typenames).toContain(Type.getTypename(Drawing.Canvas));
   });
 
-  // The draw operation's layout engine, which is what a headless host runs that the browser used to.
   test('lays out a semantic diagram', async ({ expect }) => {
     const { commands, problems } = await EffectEx.runPromise(
       Dsl.compile('node api "API"\nnode db "Database" right-of api\nedge api -> db "reads"'),
@@ -32,7 +31,6 @@ describe('IllustratorPlugin in workerd', () => {
     expect(commands.length).toBeGreaterThan(0);
   });
 
-  // The drawing operations resolve their variant through this module, which a browser build pairs with React surfaces.
   test('loads the SVG variant without its surfaces', async ({ expect }) => {
     const module = await import('#svg-variant');
     expect(module.default).toBeDefined();

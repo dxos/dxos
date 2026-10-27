@@ -20,7 +20,6 @@ describe('PresenterPlugin in workerd', () => {
     expect(typenames).toContain(Type.getTypename(Presentation.Presentation));
   });
 
-  // Handlers load on first call, so activating the plugin does not show that they load here at all.
   test("loads the handlers behind the skill's tools", async ({ expect }) => {
     const modules = await Promise.all([
       import('./operations/add-section.ts'),

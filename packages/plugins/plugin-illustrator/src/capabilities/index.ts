@@ -45,8 +45,6 @@ export const RefitState = Capability.lazyModule(
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
-// Read by the drawing surfaces and by the drawing skill's operations; a headless entry (`#svg-variant`)
-// leaves out the React article/card components.
 export const SvgVariant = Capability.lazyModule(
   'IllustratorSvgVariant',
   {

@@ -36,8 +36,6 @@ export const makeAgent = ({
 }: MakeAgentProps): Effect.Effect<Agent.Agent, never, Database.Service> =>
   Effect.gen(function* () {
     // Bound by registry URI so the agent follows the compiled skills until `customizeSkill` forks one.
-    // The base skills only: a mode adds more (see `switchMode`), and SkillManager lets the agent enable
-    // others partway through a conversation.
     const agent = yield* Agent.makeInitialized(
       {
         name,

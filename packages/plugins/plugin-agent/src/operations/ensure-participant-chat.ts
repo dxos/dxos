@@ -13,8 +13,9 @@ import { Message, Person } from '@dxos/types';
 
 import { AgentOperation, ChatParticipant, Mode } from '#types';
 
-import { loadAgentBindings } from './ensure-channel-chat.ts';
+import { loadAgentObjects } from './ensure-channel-chat.ts';
 import { AgentOperationError } from './errors.ts';
+import { sessionSkills } from './modes.ts';
 
 /** Loaded on demand: the context runtime is heavy and only needed when a chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
@@ -85,7 +86,8 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   }
 
   // Read before the new chat exists: the primary chat's objects carry the agent's working context.
-  const bindings = yield* loadAgentBindings(agent);
+  const agentObjects = yield* loadAgentObjects(agent);
+  const skills = yield* sessionSkills(agent);
 
   const primary = yield* Agent.loadChat(agent);
   const location = remote ?? primary?.remote;
@@ -114,9 +116,9 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   const AiContext = yield* Effect.promise(aiContextRuntime);
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
   // The agent itself is in context, so the model can name it when a tool asks for "the agent you run as".
-  const agentBound = bindings.objects.some((ref) => ref.uri === Obj.getURI(agent));
-  const objects = [...bindings.objects, ...(agentBound ? [] : [Ref.make<Obj.Unknown>(agent)]), Ref.make(chat)];
-  yield* Effect.promise(() => binder.bind({ skills: bindings.skills, objects }));
+  const agentBound = agentObjects.some((ref) => ref.uri === Obj.getURI(agent));
+  const objects = [...agentObjects, ...(agentBound ? [] : [Ref.make<Obj.Unknown>(agent)]), Ref.make(chat)];
+  yield* Effect.promise(() => binder.bind({ skills, objects }));
   return chat;
 }, Effect.scoped);
 
