@@ -27,6 +27,9 @@
       "path": "../../packages/core/echo/echo"
     },
     {
+      "path": "../../packages/core/echo/echo-client"
+    },
+    {
       "path": "../../packages/core/protocols"
     },
     {
