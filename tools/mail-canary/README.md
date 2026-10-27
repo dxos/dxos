@@ -64,8 +64,8 @@ node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resu
   and nothing is newer than 31 days. Every command refuses a grant for any account but
   `GMAIL_ACCOUNT` (default `test@braneframe.com`).
 
-**Import before step 03:** the sync takes mail imported into a syncing space as new mail, by id and with
-no date check, so the pool would arrive as one burst instead of through the dated backfill.
+**Import before step 03, never while the canary space exists:** the sync takes mail imported into a
+syncing space as new mail, by id and with no date check, so it would pull the whole pool in.
 
 ### 03 Create the canary identity and space
 
@@ -79,9 +79,9 @@ MAIL_CANARY_RECOVERY_PHRASE=$(op read op://eng-dev/network.dxos.mail-canary/RECO
 prints its id (variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase (secret
 `MAIL_CANARY_RECOVERY_PHRASE`) once; keep both in `eng-dev/network.dxos.mail-canary` (`SPACE_ID`,
 `RECOVERY_PHRASE`). Then, in Composer on preview, sign in as the test account, open
-"Mail canary" and add a Gmail connection with **Sync back days** set to 410, so the backfill also
-syncs the pool (dated 365 days ending 40 days back; about 100 messages per 10-minute run, so most of a
-day); the CLI cannot bind a mailbox yet.
+"Mail canary" and add a Gmail connection with the defaults; the CLI cannot bind a mailbox yet. Keep
+**Sync back days** at 30 or below: the pool is archived and dated 40+ days back so that it never syncs,
+and only each run's fresh inbox copies do.
 `verify` signs in fresh with the recovery phrase, as the nightly does, and checks the space has a mailbox, a
 trace feed and one enabled remote sync trigger. It needs WebSockets to EDGE, which the cloud sandbox's proxy
 blocks: run it on a laptop.

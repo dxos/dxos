@@ -12,7 +12,7 @@
 // The grant comes from GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN, else the .secrets
 // file, else (with a 1Password service account, as in the cloud sandbox) the references in gmail.env.tpl.
 // Run it before step 03: a space that already syncs takes imported mail as new, by id with no date
-// check, so the pool would arrive as one burst instead of through the dated backfill.
+// check, so it would pull the whole pool in.
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
