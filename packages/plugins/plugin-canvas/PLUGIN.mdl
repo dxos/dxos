@@ -12,8 +12,119 @@ per scene, node and link; a frame holds a child scene that opens in place and ca
 
 | Term   | URI                        |
 |--------|----------------------------|
+| `feat` | `org.dxos.mdl.feat@1.0`    |
 | `test` | `org.dxos.mdl.test@1.0`    |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Features
+
+The features form a tree: a dotted id names a part of the feature before the dot (`F-3.1` is part of
+`F-3`), and the leaves carry the requirements.
+
+```mdl
+feat F-1: Scene graph
+  A drawing is a scene graph: a root scene of typed nodes and links, where a frame holds a child scene.
+  Its parts are how the graph is stored and how it is versioned.
+```
+
+```mdl
+feat F-1.1: Storage
+  req F-1.1.1: A canvas drawing is an illustrator Drawing whose schema is `dxos.org/scene/<revision>`, contributed as the illustrator's Canvas variant.
+  req F-1.1.2: The scene graph is stored in ECHO as one record per scene, node and link, so peers edit different nodes without conflict.
+```
+
+```mdl
+feat F-1.2: Revisions
+  req F-1.2.1: A drawing of an earlier scene revision is migrated to the current one when its space opens.
+  req F-1.2.2:
+    when: a drawing was saved by a newer revision of the plugin
+    then: it opens read-only with a notice to update the plugin
+```
+
+```mdl
+feat F-2: Drawing
+  Drawing on the canvas by hand: shapes from the palette, links between them, and their properties.
+  Checked by [QA-1] and [QA-2].
+```
+
+```mdl
+feat F-2.1: Shapes
+  req F-2.1.1: The palette's tools draw rectangles, ellipses and frames; a double-click on a shape edits its label.
+  req F-2.1.2: Shapes can be selected, moved and resized; About counts the drawing's nodes and scenes.
+```
+
+```mdl
+feat F-2.2: Links
+  req F-2.2.1: The Smart line tool draws a link attached to both of its ends.
+  req F-2.2.2:
+    when: a linked shape moves
+    then: its links follow it
+```
+
+```mdl
+feat F-2.3: Properties
+  req F-2.3.1: The Properties panel shows and edits the selected shape's label and style.
+  req F-2.3.2: A drawing toggles between read only and editable; a read-only drawing selects but does not change.
+  req F-2.3.3: Every edit is undoable: it is applied as a patch whose before and after heads undo and redo it.
+```
+
+```mdl
+feat F-3: Nesting
+  A frame holds a child scene, so one drawing describes a system at several depths. Checked by [QA-1],
+  [QA-2] and [QA-3].
+```
+
+```mdl
+feat F-3.1: Drill in
+  req F-3.1.1:
+    when: user clicks a frame's open control
+    then: the canvas opens the frame's child scene in place and the Up control is enabled
+  req F-3.1.2: Up returns to the parent scene; the breadcrumb names each scene on the path.
+```
+
+```mdl
+feat F-3.2: Live contents
+  req F-3.2.1:
+    when: "Show contents" is on for a frame
+    then: the frame draws its child scene live inside it
+  req F-3.2.2: A drawing embedded in a document renders read-only in place.
+```
+
+```mdl
+feat F-4: Generators
+  Agent-written motion code that draws an animated node, run on a timeline. The canvas generators skill
+  gives an agent the contract.
+```
+
+```mdl
+feat F-4.1: Authoring
+  req F-4.1.1: An agent creates and revises a generator as one TypeScript module whose default export is `defineGenerator`; it is compiled on save and draws nothing while it has compile errors.
+  req F-4.1.2: An agent places a generator in a scene as a node, with parameters that may bind node or link ids.
+  req F-4.1.3: An agent inspects a generator headless: its compile errors, its step time against the budget, and an SVG contact sheet of its frames.
+```
+
+```mdl
+feat F-4.2: Timeline
+  req F-4.2.1: A timeline key sets a node property (its center, size, opacity or a generator parameter) or the camera at a time, and extends the timeline to it.
+  req F-4.2.2:
+    when: a generator is revised
+    then: canvases showing it replay from the nearest earlier time
+```
+
+```mdl
+feat F-5: Interchange
+  Drawings that start from somewhere else: another drawing variant, or a space template.
+```
+
+```mdl
+feat F-5.1: tldraw copy
+  req F-5.1.1: "Copy as Canvas" converts a tldraw drawing into a new canvas drawing filed beside it, leaving the tldraw drawing unchanged. Checked by [QA-5].
+```
+
+```mdl
+feat F-5.2: Architecture template
+  req F-5.2.1: The "DXOS Architecture" space template creates reading guides with embedded drawings, nested several scenes deep, while the plugin is enabled. Checked by [QA-3].
+```
 
 ## QA
 
@@ -185,4 +296,15 @@ decision D-2: plugin-canvas registers the hybrid conversion as an illustrator `C
   why: The illustrator's Convert operation already resolves variants and files the result, so a per-pair converter reuses it rather than duplicating it.
   rejected:
     - A separate plugin-canvas import operation, which would offer a second, conflicting menu action.
+```
+
+```mdl
+decision D-3: The plugin's features are a tree: F-1 to F-5 name its areas, each split into sub-features with dotted ids (F-3.1 is part of F-3) that carry the requirements, each stating behaviour the plugin has today.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1, F-2, F-3, F-4, F-5]
+  why: The spec had QA tests but no features, so its feature map was empty; dotted ids let the spec viewer draw the tree parent above child.
+  rejected:
+    - One flat list of features, which loses the depth the plugin is about.
 ```

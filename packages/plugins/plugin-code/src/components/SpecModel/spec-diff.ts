@@ -2,9 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parseMdlBlocks } from '@dxos/deus/extension';
-
-import { type DefinitionGraphModel } from './spec-model.ts';
+import { type DefinitionGraphModel, parseSpecBlocks } from './spec-model.ts';
 
 /** How a definition or an arrow differs from the base version of its spec. */
 export type ChangeKind = 'added' | 'removed' | 'changed';
@@ -20,7 +18,7 @@ export type DefinitionDiffModel = DefinitionGraphModel & {
 /** Each block's text with whitespace runs folded, so re-wrapping a paragraph does not count as a change. */
 const blockTexts = (text: string): Map<string, string> =>
   new Map(
-    parseMdlBlocks(text)
+    parseSpecBlocks(text)
       .filter(({ id }) => id)
       .map(({ type, id, title, body }) => [id, `${type} ${title ?? ''}\n${body}`.replace(/\s+/g, ' ').trim()]),
   );

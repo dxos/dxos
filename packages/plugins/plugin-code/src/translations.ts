@@ -127,6 +127,8 @@ export const translations = [
         'definition-graph.change.removed.count': '−{{count}} removed',
         'definition-graph.uses.label_one': 'Uses {{count}}',
         'definition-graph.uses.label_other': 'Uses {{count}}',
+        'definition-graph.requirements.label_one': '{{count}} req',
+        'definition-graph.requirements.label_other': '{{count}} reqs',
         'definition-graph.used-by.label_one': 'Used by {{count}}',
         'definition-graph.used-by.label_other': 'Used by {{count}}',
         'data-model.stored.typename.label': 'Stored · typename',

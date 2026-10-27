@@ -9,6 +9,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
+import { meta } from '#meta';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
@@ -52,6 +53,12 @@ export const CanvasSettings = AppCapability.settings(() => import('./settings.ts
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.tsx'), {
   roles: ['org.dxos.role.objectProperties'],
+});
+export const PluginAsset = AppCapability.pluginAsset({
+  pluginId: meta.profile.key,
+  path: 'PLUGIN.mdl',
+  content: () => import('../../PLUGIN.mdl?raw'),
+  mimeType: 'application/x-mdl',
 });
 export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const Translations = AppCapability.translations(translations);
