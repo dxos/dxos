@@ -5,6 +5,7 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Obj } from '@dxos/echo';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { createContext } from '@dxos/react-hooks';
@@ -38,6 +39,8 @@ type VisualizationContextValue = {
   /** Types (see {@link getTypeKey}) whose nodes are filtered out of the graph. */
   hiddenTypes: ReadonlySet<string>;
   onToggleType: (type: string, visible: boolean) => void;
+  /** Show only `type` among `types`; when it is already the only one shown, show them all. */
+  onSoloType: (type: string, types: readonly string[]) => void;
 };
 
 /** Filter key for a node: its object's typename, or the node's own type for synthetic nodes. */
@@ -46,18 +49,34 @@ const getTypeKey = (node: SpaceGraphNode): string => {
   return object ? (Obj.getTypename(object) ?? '(untyped)') : (node.type ?? '(other)');
 };
 
-/** The model's current graph, re-read whenever the model changes. */
+/**
+ * Whether a node is shown at all: objects of system types (space properties, views, indexes) are left out,
+ * using the same user-type rule as the navigator and object pickers. Synthetic nodes have no object and stay.
+ */
+const isListedNode = (node: SpaceGraphNode): boolean => {
+  const object = node.data?.object;
+  return !object || TypeOptions.isUserObject(object);
+};
+
+/** The model's current graph without system-type objects, re-read whenever the model changes. */
 const useModelGraph = (model: SpaceGraphModel) => {
   const [graph, setGraph] = useState(() => model.graph);
   useEffect(() => {
     setGraph(model.graph);
     return model.subscribe((_, graph) => setGraph(graph));
   }, [model]);
-  return graph;
+  return useMemo(() => {
+    const nodes = graph.nodes.filter(isListedNode);
+    if (nodes.length === graph.nodes.length) {
+      return graph;
+    }
+    const ids = new Set(nodes.map((node) => node.id));
+    return { nodes, edges: graph.edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)) };
+  }, [graph]);
 };
 
 /**
- * The model with hidden types removed (and every edge touching them). A derived model rather than a
+ * The model with system types and hidden types removed (and every edge touching them). A derived model rather than a
  * query filter, so the toggles compose with the host's own filter on the source model.
  */
 const useFilteredModel = (
@@ -66,7 +85,7 @@ const useFilteredModel = (
 ): GraphModel.GraphModel<SpaceGraphNode, SpaceGraphEdge> | SpaceGraphModel => {
   const graph = useModelGraph(model);
   return useMemo(() => {
-    if (hiddenTypes.size === 0) {
+    if (hiddenTypes.size === 0 && graph === model.graph) {
       return model;
     }
 
@@ -118,6 +137,13 @@ const VisualizationRoot = Util.slottable<
     });
   }, []);
 
+  const handleSoloType = useCallback((type: string, types: readonly string[]) => {
+    setHiddenTypes((current) => {
+      const solo = types.every((other) => (other === type) !== current.has(other));
+      return solo ? new Set() : new Set(types.filter((other) => other !== type));
+    });
+  }, []);
+
   return (
     <VisualizationProvider
       model={model}
@@ -125,6 +151,7 @@ const VisualizationRoot = Util.slottable<
       focus={focus}
       hiddenTypes={hiddenTypes}
       onToggleType={handleToggleType}
+      onSoloType={handleSoloType}
     >
       <ark.div asChild={asChild} {...rest} className={className} onClick={onSurfaceClick} ref={forwardedRef}>
         {children}
@@ -278,11 +305,12 @@ VisualizationGraph.displayName = 'Visualization.Graph';
 export type VisualizationTypeFilterProps = Util.ThemedClassName<{}>;
 
 /**
- * Inset panel listing the model's object types, each with a toggle that hides or shows its nodes.
+ * Inset panel listing the model's object types; clicking a row hides or shows its nodes, and
+ * cmd-clicking one shows only that type.
  * Positioned over the graph inside `Visualization.Root`.
  */
 const VisualizationTypeFilter = ({ classNames }: VisualizationTypeFilterProps) => {
-  const { model, hiddenTypes, onToggleType } = useVisualizationContext('Visualization.TypeFilter');
+  const { model, hiddenTypes, onToggleType, onSoloType } = useVisualizationContext('Visualization.TypeFilter');
   const graph = useModelGraph(model);
   const types = useMemo(() => {
     const byType = new Map<string, { type: string; label: string; fill: string; count: number }>();
@@ -327,7 +355,15 @@ const VisualizationTypeFilter = ({ classNames }: VisualizationTypeFilterProps) =
               'hover:bg-hover-surface dx-focus-ring',
               !visible && 'text-description',
             )}
-            onClick={() => onToggleType(type, !visible)}
+            // Cmd-click (ctrl-click off macOS) shows only this type.
+            onClick={(event) =>
+              event.metaKey || event.ctrlKey
+                ? onSoloType(
+                    type,
+                    types.map(({ type }) => type),
+                  )
+                : onToggleType(type, !visible)
+            }
           >
             {/* Off reads as neutral rather than the type's color. */}
             <span
