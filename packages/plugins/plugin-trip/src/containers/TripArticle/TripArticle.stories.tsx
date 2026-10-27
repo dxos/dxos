@@ -197,7 +197,7 @@ const baseDecorators = (
           }),
       }),
       StorybookPlugin.make({}),
-      TripPlugin(),
+      TripPlugin.make(),
       MapPlugin.make(),
       RoutingStoryPlugin(routingService),
       PreviewPlugin.make(),

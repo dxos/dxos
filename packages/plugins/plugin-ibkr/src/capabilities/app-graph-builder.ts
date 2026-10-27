@@ -14,8 +14,9 @@ import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 
-import { meta } from '#meta';
 import { Ibkr } from '#types';
+
+import { IbkrNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -52,7 +53,7 @@ export default Capability.makeModule(
         return Effect.succeed([
           AppNode.makeCompanion({
             variant: 'report',
-            label: ['report.companion.label', { ns: meta.profile.key }],
+            label: ['report.companion.label', { ns: IbkrNamespace.key }],
             icon: 'ph--file-text--regular',
             data: report ?? 'report',
           }),

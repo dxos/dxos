@@ -13,8 +13,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 import { formatForDisplay } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { Ibkr } from '#types';
+
+import { IbkrNamespace } from '../../namespace.ts';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;
@@ -57,7 +58,7 @@ const formatFundamentalValue = (
 
 /** Read-only panel for SEC EDGAR fundamentals returned by {@link IbkrOperation.GetInstrumentFundamentals}. */
 export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: FundamentalsPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(IbkrNamespace.key);
 
   const fieldProvider = useCallback<FormFieldProvider>(
     ({ prop, fieldProps: { label, description, getValue, format, jsonPath } }) => {

@@ -26,8 +26,7 @@ import * as Popover from '@dxos/react-ui/Popover';
 import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { DeckNamespace } from '../../namespace.ts';
 import { Pane } from '../Pane/index.ts';
 import { PlankLoading } from './PlankLoading.tsx';
 
@@ -113,7 +112,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(DeckNamespace.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
     // Each plank is a focus area of the shell; its companion follows it.
     const landmark = Main.useMainLandmark(1, onKeyDown);
@@ -121,7 +120,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
     const label = Theme.toLocalizedString(
-      node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
+      node.properties?.label ?? (pending ? (['pending.heading', { ns: DeckNamespace.key }] as const) : ''),
       t,
     );
     const data = useMemo<AppSurface.ArticleData>(
@@ -137,7 +136,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     );
 
     // Anchor the sigil's popover only when this plank's menu is the active popover target.
-    const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = popoverAnchorId === `${DeckNamespace.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
       <Pane.Root
@@ -146,7 +145,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
         classNames={classNames}
         {...attentionAttrs}
         // Right-clicking anywhere in the plank (its heading or its content) lists its node's actions.
-        {...(node.data === undefined ? {} : AppNode.contextMenuProps(node.id, meta.profile.key))}
+        {...(node.data === undefined ? {} : AppNode.contextMenuProps(node.id, DeckNamespace.key))}
         data-testid='deck.plank'
       >
         {!headless && (

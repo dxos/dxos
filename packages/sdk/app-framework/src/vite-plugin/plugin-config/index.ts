@@ -7,6 +7,7 @@ import {
   type RunnableDevEnvironment,
   type Plugin as VitePlugin,
   createRunnableDevEnvironment,
+  defaultServerConditions,
   resolveConfig,
 } from 'vite';
 
@@ -151,7 +152,14 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
           root,
           logLevel: 'error',
           plugins: [moduleRefPlugin()],
-          environments: { dxconfig: { consumer: 'server', dev: { moduleRunnerTransform: true } } },
+          environments: {
+            dxconfig: {
+              consumer: 'server',
+              dev: { moduleRunnerTransform: true },
+              // Workspace packages resolve to source, so evaluating a config never reads a stale or unbuilt `dist`.
+              resolve: { conditions: ['source', ...defaultServerConditions] },
+            },
+          },
         },
         'serve',
       );

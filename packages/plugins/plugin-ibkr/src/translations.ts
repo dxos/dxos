@@ -4,8 +4,9 @@
 
 import { Type } from '@dxos/echo';
 
-import { meta } from '#meta';
 import { Ibkr } from '#types';
+
+import { IbkrNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -43,7 +44,7 @@ export const translations = [
         'delete-object.label': 'Delete lot',
         'object-deleted.label': 'Lot deleted',
       },
-      [meta.profile.key]: {
+      [IbkrNamespace.key]: {
         'plugin.name': 'Interactive Brokers',
         'portfolio-toolbar.menu': 'Portfolio toolbar',
         'sync.label': 'Sync',

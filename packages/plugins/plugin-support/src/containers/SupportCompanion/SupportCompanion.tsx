@@ -29,8 +29,9 @@ import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useTours } from '#hooks';
-import { meta } from '#meta';
 import { HelpOperation } from '#types';
+
+import { SupportNamespace } from '../../namespace.ts';
 
 // The surface registration constrains incoming data to
 // `AppSurface.ArticleProps<'help', {}, Obj.Any>` (companion node with
@@ -45,7 +46,7 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const { invokePromise } = Hooks.useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));

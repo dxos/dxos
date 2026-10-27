@@ -11,8 +11,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { Ibkr } from '#types';
+
+import { IbkrNamespace } from '../../namespace.ts';
 
 export type ReportSectionsProps = {
   positions: readonly Ibkr.Position[];
@@ -37,7 +38,7 @@ type Section = {
  */
 export const ReportSections = Util.composable<HTMLDivElement, ReportSectionsProps>(
   ({ positions, trades, cash, openLots, closedLots, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(IbkrNamespace.key);
 
     const sections = useMemo<Section[]>(() => {
       const all: (Section | false)[] = [

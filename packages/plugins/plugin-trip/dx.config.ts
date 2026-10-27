@@ -15,7 +15,6 @@ import * as MapEvents from '@dxos/plugin-map/MapEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-
 import { TripNamespace } from './src/namespace.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.

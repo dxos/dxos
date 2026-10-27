@@ -48,10 +48,10 @@ import {
   useQueryFilter,
   useTagMap,
 } from '#hooks';
-import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
+import { InboxNamespace } from '../../namespace.ts';
 import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
 import { buildSearchSelection, getSearchText, messageMatchesQuery } from '../../util/index.ts';
 import { InitializeMailbox } from './InitializeMailbox.tsx';
@@ -540,13 +540,13 @@ const useMailboxActions = (
     (get) => {
       // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.
       const builder = MenuBuilder.make()
-        .root({ label: ['mailbox-toolbar.title', { ns: meta.profile.key }] })
+        .root({ label: ['mailbox-toolbar.title', { ns: InboxNamespace.key }] })
         .action(
           'sortAscending',
           {
             type: 'sortDescending',
             icon: sortDescending.value ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-            label: ['mailbox-toolbar-sort.menu', { ns: meta.profile.key }],
+            label: ['mailbox-toolbar-sort.menu', { ns: InboxNamespace.key }],
           },
           () => sortDescending.set((value) => !value),
         )
@@ -555,7 +555,7 @@ const useMailboxActions = (
           {
             type: 'loadRemoteImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
-            label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
+            label: ['message-toolbar-load-images.menu', { ns: InboxNamespace.key }],
             checked: loadRemoteImages,
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
@@ -565,7 +565,7 @@ const useMailboxActions = (
             return builder.group(
               'extract',
               {
-                label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
+                label: ['mailbox-toolbar-extract.menu', { ns: InboxNamespace.key }],
                 icon: 'ph--magic-wand--regular',
                 iconOnly: true,
                 variant: 'dropdownMenu',
@@ -583,7 +583,7 @@ const useMailboxActions = (
           {
             type: 'composeEmail',
             icon: 'ph--pen--regular',
-            label: ['compose-email.label', { ns: meta.profile.key }],
+            label: ['compose-email.label', { ns: InboxNamespace.key }],
           },
           handleCompose,
         );
@@ -596,7 +596,7 @@ const useMailboxActions = (
           'filter',
           {
             variant: 'custom',
-            label: ['mailbox-toolbar.title', { ns: meta.profile.key }],
+            label: ['mailbox-toolbar.title', { ns: InboxNamespace.key }],
             render: () => filterElement,
           },
           () => {},

@@ -21,10 +21,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
 import hero from '../assets/hero.webp?url';
 import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
+import { OnboardingNamespace } from './namespace.ts';
 import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';
 
 export type OnboardingManagerProps = {
@@ -251,13 +250,13 @@ export class OnboardingManager {
 
     await this._invokePromise(LayoutOperation.AddToast, {
       id: 'passkey-setup-toast',
-      title: ['passkey-setup-toast.title', { ns: meta.profile.key }],
-      description: ['passkey-setup-toast.description', { ns: meta.profile.key }],
+      title: ['passkey-setup-toast.title', { ns: OnboardingNamespace.key }],
+      description: ['passkey-setup-toast.description', { ns: OnboardingNamespace.key }],
       duration: Infinity,
       icon: 'ph--key--regular',
       closeLabel: ['close.label', { ns: osTranslations }],
-      actionLabel: ['passkey-setup-toast-action.label', { ns: meta.profile.key }],
-      actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.profile.key }],
+      actionLabel: ['passkey-setup-toast-action.label', { ns: OnboardingNamespace.key }],
+      actionAlt: ['passkey-setup-toast-action.alt', { ns: OnboardingNamespace.key }],
       onAction: async () => {
         await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });
         await this._invokePromise(LayoutOperation.Open, {
@@ -402,8 +401,8 @@ export class OnboardingManager {
     const id = reason === 'invalid-token' ? 'login-link-expired-toast' : 'login-failed-toast';
     await this._invokePromise(LayoutOperation.AddToast, {
       id,
-      title: [`${id}.title`, { ns: meta.profile.key }],
-      description: [`${id}.description`, { ns: meta.profile.key }],
+      title: [`${id}.title`, { ns: OnboardingNamespace.key }],
+      description: [`${id}.description`, { ns: OnboardingNamespace.key }],
       icon: 'ph--warning--regular',
       closeLabel: ['close.label', { ns: osTranslations }],
     });

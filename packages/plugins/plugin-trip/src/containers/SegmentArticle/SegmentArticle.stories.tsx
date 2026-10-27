@@ -75,7 +75,7 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
-        TripPlugin(),
+        TripPlugin.make(),
         PreviewPlugin.make(),
       ],
     })),

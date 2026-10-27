@@ -8,12 +8,11 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../namespace.ts';
 import type * as SettingsModule from './Settings.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${CodeNamespace.key}.capability.settings`,
 );
 
 /**
@@ -63,7 +62,7 @@ export type BuildRunState = Readonly<Record<string, ProjectBuildState | undefine
  * (later) read/write build status without going through the editor.
  */
 export const BuildRun = Capability.makeSingleton<Atom.Writable<BuildRunState>>()(
-  `${meta.profile.key}.capability.buildRun`,
+  `${CodeNamespace.key}.capability.buildRun`,
 );
 
 /** A local checkout that synced specs resolve against. */
@@ -90,4 +89,4 @@ export const SpecSync = Capability.makeSingleton<{
   readonly state: Atom.Writable<SpecSyncState>;
   /** Runs a pass now instead of waiting for the next tick. */
   readonly syncNow: () => void;
-}>()(`${meta.profile.key}.capability.specSync`);
+}>()(`${CodeNamespace.key}.capability.specSync`);

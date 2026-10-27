@@ -32,8 +32,7 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { OnboardingNamespace } from '../../../namespace.ts';
 import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared.ts';
 import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types.ts';
 
@@ -99,7 +98,7 @@ export const Welcome = ({
   onCreateAccountWithOAuth,
   onJoinWaitlist,
 }: WelcomeScreenProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(OnboardingNamespace.key);
 
   // Default primary login method: prefer passkey when supported, then email, then the Atmosphere form.
   const defaultLoginPrimary: LoginMethod =
@@ -640,7 +639,7 @@ const LoginTab = ({
   onRecoverIdentity,
   onRecoverWithOAuth,
 }: LoginTabProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(OnboardingNamespace.key);
   const atmosphereRef = useRef<HTMLInputElement>(null);
   const [atmosphereHandle, setAtmosphereHandle] = useState('');
   const pendingPrimaryFocus = useRef<LoginMethod | null>(null);

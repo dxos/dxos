@@ -21,10 +21,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
-import { meta } from '#meta';
 import { Ibkr, IbkrOperation } from '#types';
 
 import { IBKR_CONNECTOR_ID } from '../../constants.ts';
+import { IbkrNamespace } from '../../namespace.ts';
 import { parseCash, parsePositions, parseTrades } from '../../services/index.ts';
 import { PortfolioImportAction } from './PortfolioImportAction.tsx';
 
@@ -38,7 +38,7 @@ export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio
  * Clicking a report opens it in the complementary plank via the app-graph-builder companion node.
  */
 export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IbkrNamespace.key);
   const showItem = ToolkitHooks.useShowItem();
 
   // `useObject` re-renders when the Portfolio's feed ref resolves, so the query below picks up the feed.
@@ -101,12 +101,12 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     (get) => {
       // `MenuBuilder` mutates in place, so the conditional sync action is added without reassignment.
       const builder = MenuBuilder.make()
-        .root({ label: ['portfolio-toolbar.menu', { ns: meta.profile.key }] })
+        .root({ label: ['portfolio-toolbar.menu', { ns: IbkrNamespace.key }] })
         .action(
           'import',
           {
             variant: 'custom',
-            label: ['import.label', { ns: meta.profile.key }],
+            label: ['import.label', { ns: IbkrNamespace.key }],
             render: () => <PortfolioImportAction subject={subject} />,
           },
           () => {},
@@ -116,7 +116,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
         builder.action(
           'sync',
           {
-            label: ['sync.label', { ns: meta.profile.key }],
+            label: ['sync.label', { ns: IbkrNamespace.key }],
             icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
             variant: 'primary',
             iconOnly: false,

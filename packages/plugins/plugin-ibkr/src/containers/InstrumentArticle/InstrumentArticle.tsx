@@ -15,16 +15,16 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
-import { meta } from '#meta';
 import { Ibkr, IbkrOperation } from '#types';
 
+import { IbkrNamespace } from '../../namespace.ts';
 import { resolveTradingViewSymbol } from '../../services/index.ts';
 
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrument>;
 
 /** Article surface for an Instrument: static header, TradingView chart, SEC EDGAR fundamentals via op. */
 export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IbkrNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [instrument] = useObject(subject);
   const tradingViewSymbol = useMemo(() => resolveTradingViewSymbol(instrument), [instrument]);
