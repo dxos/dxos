@@ -157,6 +157,9 @@ class MenuBuilderImpl implements MenuBuilder {
 /** Id of the overflow menu (⋮) every toolbar ends with; contributors add to it with {@link MenuBuilder.extend}. */
 export const TOOLBAR_OVERFLOW_ID = 'toolbar-overflow';
 
+/** Test id of that menu's trigger, so anything reaching a collapsed action can open it. */
+export const TOOLBAR_OVERFLOW_TESTID = 'toolbar.overflow';
+
 /** The overflow group a toolbar uses when its owner declares none, so contributors can still add to it. */
 export const defaultOverflowGroup = createMenuItemGroup(TOOLBAR_OVERFLOW_ID, overflowMenuProperties);
 

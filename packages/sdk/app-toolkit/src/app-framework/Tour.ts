@@ -6,6 +6,7 @@
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Obj, Type } from '@dxos/echo';
+import { TOOLBAR_OVERFLOW_TESTID } from '@dxos/react-ui-menu';
 import type * as Tour from '@dxos/react-ui/Tour';
 import * as Position from '@dxos/util/Position';
 
@@ -27,6 +28,29 @@ export type Step = {
   placement?: Tour.StepPlacement;
   /** Runs before the step shows and may bring the target into being (open a sidebar); awaited. */
   before?: (capabilities: CapabilityManager.CapabilityManager) => void | Promise<void>;
+};
+
+/**
+ * A step pointing at a toolbar control, which a narrow toolbar may have folded into its overflow (⋮)
+ * menu. The control keeps its test id there, so the step only has to open the menu to reach it —
+ * which also keeps the tour independent of how the toolbar ranks its controls for collapse.
+ */
+export const toolbarStep = (testId: string, step: Omit<Step, 'target' | 'before'>): Step => {
+  const target = `[data-testid="${testId}"]`;
+  return {
+    ...step,
+    target,
+    before: () => {
+      const overflow = document.querySelector<HTMLElement>(`[data-testid="${TOOLBAR_OVERFLOW_TESTID}"]`);
+      const element = document.querySelector(target);
+      if (!element) {
+        overflow?.click();
+      } else if (!element.closest('[role="menu"]') && overflow?.getAttribute('aria-expanded') === 'true') {
+        // The control is in the row, so a menu an earlier step opened only covers it.
+        overflow.click();
+      }
+    },
+  };
 };
 
 /**

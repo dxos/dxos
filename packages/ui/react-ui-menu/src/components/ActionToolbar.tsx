@@ -37,7 +37,7 @@ import {
 
 import { translationKey } from '#translations';
 
-import { TOOLBAR_OVERFLOW_ID, defaultOverflowGroup } from '../builder.ts';
+import { TOOLBAR_OVERFLOW_ID, TOOLBAR_OVERFLOW_TESTID, defaultOverflowGroup } from '../builder.ts';
 import { type ActionGraphProps, useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
@@ -422,7 +422,7 @@ const OverflowMenuTrigger = ({ menu, actions, testId }: ItemProps<{ actions: Men
   return (
     <ActionMenu {...menu} actions={actions}>
       <Button.Root
-        data-testid={testId ?? 'toolbar.overflow'}
+        data-testid={testId ?? TOOLBAR_OVERFLOW_TESTID}
         icon='ph--dots-three-vertical--regular'
         iconOnly
         variant='ghost'

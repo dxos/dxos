@@ -52,4 +52,25 @@ test.describe('Tour tests', () => {
     await Support.startGlobal(host.page);
     await Support.walk(host.page, GLOBAL_TOUR);
   });
+
+  // The toolbar folds controls out of the row as the plank narrows, and which one goes depends on a pixel
+  // budget no tour can see; the tour has to reach a step's target wherever the toolbar has put it.
+  test('a document tour reaches a control the toolbar has folded away', { tag: ['@QA-9'] }, async ({ browserName }) => {
+    test.fixme(browserName === 'webkit', 'TODO(wittjosiah): Flaky in WebKit CI; fix and re-enable.');
+    test.slow();
+
+    await host.createSpace();
+    await host.createObject({ type: 'Document' });
+
+    await expect(host.page.getByTestId('deck.companion')).toBeVisible();
+
+    // The contributed controls have to be in the row to be waited for, so narrow the plank only once they are.
+    await Support.awaitFragments(host.page);
+    await host.page.setViewportSize({ width: 1200, height: 800 });
+    // The premise: at this width the row no longer holds view mode, which the 'Modes' step points at.
+    await expect(host.page.getByTestId('editor.toolbar.viewMode')).toBeHidden();
+
+    await Support.startFromCompanion(host.page);
+    await Support.walk(host.page, DOCUMENT_TOUR);
+  });
 });

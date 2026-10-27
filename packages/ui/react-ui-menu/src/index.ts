@@ -13,6 +13,12 @@ export {
   executeMenuAction,
   fallbackIcon,
 } from './util.ts';
-export { type ActionGroupBuilder, type ActionGroupBuilderFn, MenuBuilder, TOOLBAR_OVERFLOW_ID } from './builder.ts';
+export {
+  type ActionGroupBuilder,
+  type ActionGroupBuilderFn,
+  MenuBuilder,
+  TOOLBAR_OVERFLOW_ID,
+  TOOLBAR_OVERFLOW_TESTID,
+} from './builder.ts';
 export { PROMPT_DISPOSITION, TOOLBAR_DISPOSITION, isPromptAction, isToolbarAction } from './toolbar.ts';
 export { applyPresentation } from './presentation.ts';
