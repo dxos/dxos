@@ -164,13 +164,18 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
     }
   };
   const checkRendered = () => {
-    const preview = document.querySelector('[data-testid="markdown.preview"]');
-    mark('firstLook', !!preview && preview.textContent.includes(text));
-    // The live article, not the first look, which renders with the same editor.
-    const root = [...document.querySelectorAll('[data-testid="composer.markdownRoot"]')].find(
-      (element) => !element.closest('[data-testid="markdown.preview"]'),
+    const roots = [...document.querySelectorAll('[data-testid="composer.markdownRoot"]')];
+    const holdsText = (root) => root.textContent.includes(text);
+    // The first look is the thin client's read-only article, inside the plank's stand-in.
+    mark(
+      'firstLook',
+      roots.some((root) => root.closest('[data-testid="space.sharePreview"]') && holdsText(root)),
     );
-    mark('rendered', !!root && root.textContent.includes(text));
+    // The live article, from the full client, outside the stand-in.
+    mark(
+      'rendered',
+      roots.some((root) => !root.closest('[data-testid="space.sharePreview"]') && holdsText(root)),
+    );
   };
   const tick = () => {
     const client = globalThis.dxos?.client;
@@ -229,10 +234,17 @@ const decodeSharePayload = async (link) => {
   return JSON.parse(await new Response(stream).text());
 };
 
+/** Base64 of the bytes an `exec-query` row carries, which its JSON writes as an index-keyed object. */
+const rowBytesToBase64 = (bytes) => {
+  const array = Uint8Array.from(Array.isArray(bytes) ? bytes : Object.values(bytes));
+  return btoa(Array.from(array, (byte) => String.fromCharCode(byte)).join(''));
+};
+
 /**
  * Answers Bob's first-look read as EDGE's `shared-objects` route would, for a bundle pointed at an EDGE that does not
- * serve it yet: from the same EDGE's query endpoint, so the answer still costs one EDGE round trip for the same
- * objects. It checks neither the signature nor the scope, which EDGE's own tests cover.
+ * serve it yet: from the same EDGE's query endpoint, whose rows carry the document bytes the index backs each object
+ * with, so the answer still costs one EDGE round trip for the same documents. It checks neither the signature nor the
+ * scope, which EDGE's own tests cover, and it serves only documents small enough for the index to back.
  */
 const serveSharedObjects = async (context, link) => {
   const { spaceId, objects } = await decodeSharePayload(link);
@@ -252,17 +264,14 @@ const serveSharedObjects = async (context, link) => {
       postData: JSON.stringify({ query: JSON.stringify(query) }),
     });
     const { data } = await response.json();
+    const rows = data.results.filter(({ documentId, bytes }) => documentId && bytes);
     await route.fulfill({
       headers: { 'access-control-allow-origin': '*' },
       json: {
         success: true,
         data: {
-          objects: data.results.map(({ id, documentId, documentJson, heads }) => ({
-            id,
-            documentId,
-            objectJson: documentJson,
-            heads: heads ?? [],
-          })),
+          objects: rows.map(({ id, documentId, heads }) => ({ id, documentId, heads: heads ?? [] })),
+          documents: rows.map(({ documentId, bytes }) => ({ documentId, data: rowBytesToBase64(bytes) })),
         },
       },
     });

@@ -226,16 +226,25 @@ export type ReadSharedObjectsRequest = {
 export type SharedObject = {
   id: string;
   /** The Automerge document holding the object. */
-  documentId?: string;
-  /** The object as the index read it, in the format `Obj.toJSON` writes. */
-  objectJson: string;
-  /** Heads of the document the index read `objectJson` at; empty when the index did not record them. */
+  documentId: string;
+  /** Heads of that document as the index read it; empty when the index did not record them. */
   heads: string[];
 };
 
-/** Shared objects EDGE has indexed; one it has not indexed yet, or a feed object, is missing rather than an error. */
+/** A document holding shared objects and no others, so a reader can load it without seeing anything outside the scope. */
+export type SharedDocument = {
+  documentId: string;
+  /** Base64 of the document's Automerge bytes, which `Automerge.loadIncremental` applies to an empty document. */
+  data: string;
+};
+
+/**
+ * Shared objects EDGE has indexed, and the documents that hold them. An object not indexed yet, a feed object, or one
+ * whose document also holds objects outside the scope is missing rather than an error.
+ */
 export type ReadSharedObjectsResponseBody = {
   objects: SharedObject[];
+  documents: SharedDocument[];
 };
 
 /**

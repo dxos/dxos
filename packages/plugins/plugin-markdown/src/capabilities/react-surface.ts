@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { EditableMarkdownCard, MarkdownCard, MarkdownPreview, MarkdownSettings } from '#containers';
+import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#containers';
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
@@ -30,10 +30,12 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Tabpanel, Markdown.Document, (data) => !data.variant),
         ),
         component: MarkdownContainer,
-        props: ({ role, ref, data: { subject, attendableId } }) => ({
-          id: Obj.getURI(subject),
-          attendableId,
-          subject,
+        props: ({ role, ref, data }) => ({
+          id: Obj.getURI(data.subject),
+          attendableId: data.attendableId,
+          subject: data.subject,
+          // Only the article role carries it; a section or tab panel is always editable.
+          readonly: 'readonly' in data && data.readonly === true,
           role,
           ref,
         }),
@@ -48,22 +50,15 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Tabpanel, Text.Text),
         ),
         component: MarkdownContainer,
-        props: ({ role, ref, data: { subject, attendableId } }) => ({
-          id: Obj.getURI(subject),
-          attendableId,
-          subject,
+        props: ({ role, ref, data }) => ({
+          id: Obj.getURI(data.subject),
+          attendableId: data.attendableId,
+          subject: data.subject,
+          // Only the article role carries it; a section or tab panel is always editable.
+          readonly: 'readonly' in data && data.readonly === true,
           role,
           ref,
         }),
-      }),
-      Surface.create({
-        id: 'surface.objectPreview',
-        filter: Surface.makeFilter(
-          AppSurface.ObjectPreview,
-          (data) => Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
-        ),
-        component: MarkdownPreview,
-        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'surface.pluginSettings',

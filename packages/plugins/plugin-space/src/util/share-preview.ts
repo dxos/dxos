@@ -5,27 +5,33 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
+import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { Context } from '@dxos/context';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { StaticRefResolver } from '@dxos/echo/internal';
-import { EID, type SpaceId } from '@dxos/keys';
-import { type SharedObject, getSharedObjectsChallenge } from '@dxos/protocols';
+import { PublicKey, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { getSharedObjectsChallenge } from '@dxos/protocols';
 import { type Invitation } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { SpaceOperationError } from '../operations/errors.ts';
+import type { ThinClient, ThinClientOptions } from './thin-client.ts';
 
-/** A share link's first look: the shared object as EDGE's index last read it, decoded but not live. */
+/**
+ * A share link's first look: the shared object, live in a read-only {@link ThinClient} served from the documents EDGE
+ * handed over, until the space is joined and the full client's object replaces it.
+ */
 export type SharePreview = {
   subject: Obj.Unknown;
+  client: ThinClient;
 };
 
 /**
- * A first look's title and icon. It is decoded with no schema, so they come from the type with its typename among
- * `types`, the types the enabled plugins contribute.
+ * A first look's title and icon. A type the thin client was not given has no schema there, so they come from the
+ * type with its typename among `types`, the types the enabled plugins contribute.
  */
 export const getSharePreviewHeading = (
   subject: Obj.Unknown,
@@ -61,30 +67,34 @@ export const sharePreviewKeyOfNode = (nodeId: string): string | undefined => {
 const READ_RETRIES = 4;
 
 /**
- * Reads the objects the link's invitation shares from EDGE, proving possession of the invitation's guest key. Needs
- * no identity or client, so it runs while the app is still starting.
+ * Reads the documents the link's invitation shares from EDGE, proving possession of the invitation's guest key, and
+ * opens the shared object from them in a {@link ThinClient}. Needs no identity or full client, so it runs while the
+ * app is still starting.
  */
 export const readSharePreview = ({
   edgeUrl,
   spaceId,
   objectId,
   invitation,
+  types,
 }: {
   edgeUrl: string;
   spaceId: SpaceId;
   objectId: string;
   invitation: Invitation;
+  types: readonly Type.AnyEntity[];
 }): Effect.Effect<SharePreview | undefined, SpaceOperationError> =>
   Effect.gen(function* () {
     const secretKey = invitation.guestKeypair?.privateKey?.data;
     const publicKey = invitation.guestKeypair?.publicKey?.data;
-    if (!secretKey || !publicKey) {
+    const spaceKey = invitation.spaceKey?.data;
+    if (!secretKey || !publicKey || !spaceKey) {
       return undefined;
     }
 
     const issuedAt = Date.now();
     const challenge = getSharedObjectsChallenge({ spaceId, invitationId: invitation.invitationId, issuedAt });
-    const { objects } = yield* Effect.tryPromise({
+    const { objects, documents } = yield* Effect.tryPromise({
       try: async () => {
         const { EdgeHttpClient } = await import('@dxos/edge-client');
         return new EdgeHttpClient(edgeUrl).readSharedObjects(
@@ -101,32 +111,64 @@ export const readSharePreview = ({
       catch: (cause) => new SpaceOperationError({ message: 'The shared object could not be read from EDGE.', cause }),
     });
 
-    return yield* decodeSharedObjects(spaceId, objectId, objects);
+    return yield* openSharePreview({
+      spaceId,
+      spaceKey: PublicKey.from(spaceKey),
+      objectId,
+      objects,
+      documents,
+      types,
+    });
   });
 
-/** Decodes the shared object, resolving its references to the other objects of the scope. */
-export const decodeSharedObjects = (
-  spaceId: SpaceId,
-  objectId: string,
-  objects: readonly SharedObject[],
-): Effect.Effect<SharePreview | undefined, SpaceOperationError> =>
-  Effect.gen(function* () {
-    const resolver = new StaticRefResolver();
-    const decoded = yield* Effect.forEach(objects, (object) =>
-      Effect.tryPromise({
-        try: () =>
-          Obj.fromJSON(JSON.parse(object.objectJson), {
-            refResolver: resolver,
-            uri: EID.make({ spaceId, entityId: object.id }),
-          }),
-        catch: (cause) => new SpaceOperationError({ message: 'A shared object could not be decoded.', cause }),
-      }),
-    );
-    // Added once all are decoded: a reference resolves on read, so its target need not exist when it is decoded.
-    decoded.forEach((object) => resolver.addObject(object));
-    const subject = decoded.find((object) => object.id === objectId);
-    return subject && { subject };
+/** Opens the shared object in a {@link ThinClient}; `undefined` when EDGE handed over no document for it. */
+const openSharePreview = ({
+  objectId,
+  ...options
+}: ThinClientOptions & { objectId: string }): Effect.Effect<SharePreview | undefined, SpaceOperationError> =>
+  Effect.tryPromise({
+    try: async () => {
+      // Loaded on demand: the thin client brings Automerge and the functions' handlers, which boot never needs.
+      const { ThinClient } = await import('./thin-client.ts');
+      const client = new ThinClient(options);
+      await client.open();
+      const subject = await client.load(objectId);
+      if (!subject) {
+        await client.close();
+        return undefined;
+      }
+      return { subject, client };
+    },
+    catch: (cause) => new SpaceOperationError({ message: 'The shared object could not be opened.', cause }),
   });
+
+/** How many stand-ins show each first look, so the last one gone closes its client. */
+const shown = new Map<string, number>();
+
+/**
+ * Marks the first look under `key` as on screen; the returned function marks it gone. When no stand-in shows it any
+ * more, its plank has the full client's object, so the first look is dropped and its thin client closed.
+ */
+export const retainSharePreview = (registry: AtomRegistry.AtomRegistry, key: string): (() => void) => {
+  shown.set(key, (shown.get(key) ?? 0) + 1);
+  return () => {
+    shown.set(key, (shown.get(key) ?? 1) - 1);
+    // Deferred, since a remount (React's development double-mount, or the plank moving to its canonical id) releases
+    // before it retains again.
+    queueMicrotask(() => {
+      if ((shown.get(key) ?? 0) > 0) {
+        return;
+      }
+      shown.delete(key);
+      const preview = registry.get(sharePreviewsAtom)[key];
+      if (!preview) {
+        return;
+      }
+      registry.update(sharePreviewsAtom, ({ [key]: _released, ...rest }) => rest);
+      void preview.client.close().catch((error) => log.warn('share link thin client not closed', { error }));
+    });
+  };
+};
 
 /**
  * Signs SHA-256 of `message` with an invitation's guest key, a libsodium Ed25519 secret key (the 32-byte seed followed

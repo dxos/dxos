@@ -165,9 +165,9 @@ const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Ser
   });
 
 /**
- * Puts the shared object, as EDGE read it, in the plank its path names, until the space is joined and the object
- * itself replaces it. A link only members can open has no invitation to read with, and a failed read only costs the
- * first look, so neither is reported.
+ * Puts the shared object, live in a thin client served from the documents EDGE hands over, in the plank its path
+ * names, until the space is joined and the full client's object replaces it. A link only members can open has no
+ * invitation to read with, and a failed read only costs the first look, so neither is reported.
  */
 const showFirstLook = (
   client: Client,
@@ -186,7 +186,9 @@ const showFirstLook = (
     if (!url) {
       return;
     }
-    const preview = yield* readSharePreview({ edgeUrl: url, spaceId, objectId: target.objectId, invitation });
+    // The types the enabled plugins have contributed so far, so the thin client decodes the objects with their schema.
+    const types = (yield* Capability.getAll(AppCapabilities.Schema)).flat();
+    const preview = yield* readSharePreview({ edgeUrl: url, spaceId, objectId: target.objectId, invitation, types });
     if (!preview) {
       return;
     }

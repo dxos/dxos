@@ -206,6 +206,9 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -224,6 +227,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/extractor": "workspace:*",
+    "@dxos/functions-runtime-cloudflare": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",

@@ -8,14 +8,14 @@ Share one Composer object as you share a document in Google Docs. Each object ha
 
 A browser with no identity gets an identity immediately. A guest that is not a member joins the space in the background. The guest replicates only the shared object and the objects that it needs, not the full space.
 
-While the guest joins, the plank of the object shows a read-only **first look** of the object. EDGE serves the first look in one HTTP request, before the guest has an identity. When the space opens, the live object replaces the first look in the same plank.
+While the guest joins, the plank of the object shows a read-only **first look** of the object. EDGE gives the documents of the first look in one HTTP request, before the guest has an identity. A **thin client** in the browser serves them. When the space opens, the article of the full client replaces the first look in the same plank.
 
 The feature has four parts:
 
-- plugin-space (`org.dxos.plugin.space`, [F-2] there) owns the dialog, the link and the link handler.
+- plugin-space (`org.dxos.plugin.space`, [F-2] there) owns the dialog, the link, the link handler and the thin client.
 - The client SDK sends the scope through the join.
 - The ECHO host enforces the scope, and it answers queries before the index reads the documents.
-- The db-service of EDGE serves the first look.
+- The db-service of EDGE serves the documents of the first look.
 
 ## Extensions
 
@@ -36,11 +36,11 @@ This document uses the extension dialects that follow. The Appendix defines each
 
 The inviter writes a delegated invitation and its scope to the control feed of the space. The `SpaceStateMachine` of EDGE reads that feed. Then the share-link handler of the guest does these three steps at the same time:
 
-1. It asks EDGE for the first look, and it signs the request with the guest key of the invitation.
+1. It asks EDGE for the documents of the first look, and it signs the request with the guest key of the invitation. A thin client opens the documents.
 2. It opens the plank.
 3. It starts the join. The join redeems the invitation at EDGE and gives the scope to the ECHO host of the guest.
 
-![The share dialog of the inviter calls the ShareObject op. The op delegates an invitation and its scope to the SpaceStateMachine of EDGE. The share-link handler of the guest reads the first look from the shared-objects route of EDGE. The route gets the grant from the state machine and the objects from the Indexer. The handler shows the first look in the plank. It joins through the join route and gives the sync scope to its scope guard.](diagrams/share-flow.dx.svg)
+![The share dialog of the inviter calls the ShareObject op. The op delegates an invitation and its scope to the SpaceStateMachine of EDGE. The share-link handler of the guest reads the documents from the shared-objects route of EDGE. The route gets the grant from the state machine, and the documents from the Indexer or the Subduction replicator. The thin client shows the article in the plank. It joins through the join route and gives the sync scope to its scope guard.](diagrams/share-flow.dx.svg)
 
 ```diagram
 diagram flow=right
@@ -53,10 +53,12 @@ group cloud "EDGE db-service" {
   node SSM "SpaceStateMachine" ref="edge:packages/services/db-service/src/worker/space/space-state-machine.ts"
   node Route "shared-objects route" ref="edge:packages/services/db-service/src/worker/api-handler/shared-objects.ts"
   node Indexer "Indexer" ref="edge:packages/services/db-service/src/worker/indexer/indexer.ts"
+  node Replicator "Subduction replicator" ref="edge:packages/services/db-service/src/worker/subduction/subduction-automerge-replicator.ts"
   node Join "join route" ref="edge:packages/services/db-service/src/worker/api-handler/invitation.ts"
 }
 group guest "Guest browser" {
   node Handler "Share link handler" ref="packages/plugins/plugin-space/src/capabilities/navigation-handler/share-link-handler.ts"
+  node Thin "Thin client" ref="packages/plugins/plugin-space/src/util/thin-client.ts"
   node Plank "Plank first look" ref="packages/plugins/plugin-space/src/containers/SharePreviewArticle/SharePreviewArticle.tsx"
   node Client "Space join" ref="packages/sdk/client/src/echo/space-list.ts"
   node Guard "Scope guard" ref="packages/core/echo/echo-host/src/db-host/space-state-manager.ts"
@@ -67,7 +69,9 @@ edge Protocol -> SSM "invitation, scope"
 edge Handler -> Route "signed read"
 edge Route -> SSM "grant"
 edge Route -> Indexer "readObjects"
-edge Handler -> Plank "first look"
+edge Route -> Replicator "large documents"
+edge Handler -> Thin "documents"
+edge Thin -> Plank "read-only article"
 edge Handler -> Client "join"
 edge Client -> Join "redeem"
 edge Client -> Guard "syncScope"
@@ -77,7 +81,7 @@ edge Client -> Guard "syncScope"
 
 The steps of the inviter run one time, when the user clicks **Copy link**. On the guest, the first look and the join start at the same time. Usually, the first look arrives while the join continues.
 
-![The share dialog calls the ShareObject op, and the op sends the invitation and its DelegatedInvitationScope to the SpaceStateMachine of EDGE. On the guest, two sequences run at the same time. In the first sequence, the handler reads the shared objects from the route and gives the first look to the plank. The route gets a grant from the state machine and reads the Indexer. In the second sequence, the handler joins with the sync scope, and the join redeems the invitation and gives the scope to the scope guard. Then the live object replaces the first look.](diagrams/open-sequence.dx.svg)
+![The share dialog calls the ShareObject op, and the op sends the invitation and its DelegatedInvitationScope to the SpaceStateMachine of EDGE. On the guest, two sequences run at the same time. In the first sequence, the handler reads the shared documents from the route, and the thin client gives the article to the plank. The route gets a grant from the state machine and reads the Indexer. In the second sequence, the handler joins with the sync scope, and the join redeems the invitation and gives the scope to the scope guard. Then the live object replaces the first look.](diagrams/open-sequence.dx.svg)
 
 ```diagram
 diagram kind=sequence
@@ -87,6 +91,7 @@ node SSM "EDGE SpaceStateMachine"
 node Handler "Share link handler"
 node Route "EDGE shared-objects route"
 node Indexer "EDGE Indexer"
+node Thin "Thin client"
 node Plank "Plank"
 node Client "Space join"
 node Guard "Scope guard"
@@ -97,14 +102,15 @@ fragment par "first look" {
   edge Handler calls Route "readSharedObjects, signed with the guest key"
   edge Route calls SSM "grant"
   edge Route calls Indexer "readObjects"
-  edge Route returns Handler "SharedObject[]"
-  edge Handler sends Plank "first look"
+  edge Route returns Handler "objects and documents"
+  edge Handler calls Thin "open the documents"
+  edge Thin sends Plank "read-only article"
 } else "join" {
   edge Handler calls Client "join with syncScope"
   edge Client calls SSM "redeem the invitation"
   edge Client sends Guard "syncScope"
 }
-edge Client sends Plank "live object replaces the first look"
+edge Client sends Plank "full client article replaces the first look"
 ```
 
 ### Queries before the index reads a document
@@ -176,12 +182,19 @@ type ReadSharedObjectsRequest
 
 ```mdl
 type SharedObject
-  desc: One object of a first look, as the index of EDGE read it last. EDGE serves only database objects that Automerge documents hold. EDGE does not serve feed objects.
+  desc: One object of a first look, and the document that holds it. EDGE serves only database objects that Automerge documents hold. EDGE does not serve feed objects.
   fields:
     id: ObjectId
     documentId: string
-    objectJson: string              # the JSON of the object, in the format that `Obj.toJSON` writes
-    heads: string[]
+    heads: string[]                 # the heads of the document when the index read it, or empty
+```
+
+```mdl
+type SharedDocument
+  desc: A document that holds only shared objects, with its Automerge bytes. The thin client loads it into an empty document.
+  fields:
+    documentId: string
+    data: string                    # base64 of the Automerge bytes
 ```
 
 ## Services
@@ -190,7 +203,7 @@ type SharedObject
 service SharedObjectsRoute
   desc: The route `POST /spaces/:spaceId/shared-objects` of the EDGE db-service. Clients call it under `/db`. The route has no authentication. The request proves that the caller has the guest key of the invitation.
   ops:
-    readSharedObjects(spaceId: SpaceId, request: ReadSharedObjectsRequest) → { objects: SharedObject[] }
+    readSharedObjects(spaceId: SpaceId, request: ReadSharedObjectsRequest) → { objects: SharedObject[], documents: SharedDocument[] }
   errors:
     401: the signature is more than 5 minutes from the clock of EDGE, or the guest key of the invitation does not verify it
     403: the invitation is cancelled, expired or spent, its authentication is not `KNOWN_PUBLIC_KEY`, or it shares no objects
@@ -201,7 +214,15 @@ service SharedObjectsRoute
 service EdgeHttpClient
   desc: The EDGE HTTP client of the client SDK. It gets an operation that reads the first look.
   ops:
-    readSharedObjects(spaceId: SpaceId, request: ReadSharedObjectsRequest) → { objects: SharedObject[] }
+    readSharedObjects(spaceId: SpaceId, request: ReadSharedObjectsRequest) → { objects: SharedObject[], documents: SharedDocument[] }
+```
+
+```mdl
+service ThinClient
+  desc: A read-only ECHO client in the browser for one space. It has no worker, index, storage or identity. It runs the `DataService` and `QueryService` handlers of EDGE functions (`ServiceContainer`) on the documents that EDGE gave, not on the service bindings of EDGE. Its space root links only the shared objects.
+  ops:
+    load(objectId: ObjectId) → Obj | undefined
+  note: A query finds no objects, and a write fails. When a view needs more, we add a service to the thin client.
 ```
 
 ```mdl
@@ -290,21 +311,23 @@ feat F-4: First look
 
   req F-4.1:
     when: the user opens a share link that holds an invitation
-    then: the app reads the objects of the scope from EDGE through EdgeHttpClient.readSharedObjects, before the guest has an identity. It signs with the guest key of the invitation through WebCrypto. If the read fails, it tries again a maximum of 4 times.
+    then: the app reads the objects of the scope and their documents from EDGE through EdgeHttpClient.readSharedObjects, before the guest has an identity. It signs with the guest key of the invitation through WebCrypto. If the read fails, it tries again a maximum of 4 times.
 
-  req F-4.2: The pending plank of the object asks the `PendingArticle` surface role for a stand-in. For a share link, plugin-space gives the decoded first look through the `ObjectPreview` role.
+  req F-4.2: The app opens the documents in a ThinClient and loads the shared object from it. The space key comes from the invitation, and the types come from the enabled plugins.
 
   req F-4.3: The key of a first look is its space id and its object id. Thus the plank finds the first look with the `<type>+<id>` id of the URL. It also finds the first look after it moves to the canonical node id of the object.
 
-  req F-4.4: Markdown shows a first look as read-only text, with the layout of its article: the toolbar row (inert) and the fold gutter. Thus the text does not move when the article replaces it. A type without a preview shows the name of the object.
+  req F-4.4: The pending plank of the object asks the `PendingArticle` surface role for a stand-in. For a share link, plugin-space shows the `Article` surface of the object from the thin client, with `readonly` set in the article data. Markdown shows a read-only article for it.
 
-  req F-4.5: References in a first look resolve only to the other objects of that first look.
+  req F-4.5: References in a first look resolve only to the other objects of that first look. The space root of the thin client links only those objects.
 
-  req F-4.6: When the space opens and its article renders, the live object replaces the first look in the same plank. Until then, the plank keeps the first look on top of the article. Thus the plank is not empty at any time between the two, and the plank and the first look do not mount again.
+  req F-4.6: When the space opens and its article renders, the article of the full client replaces the first look in the same plank. Until then, the plank keeps the first look on top of the article. Thus the plank is not empty at any time between the two, and the plank and the first look do not mount again.
 
   req F-4.7: If the read fails, the guest loses only the first look. The join and the live object do not change.
 
-  req F-4.8: While the plank waits, its heading shows the title and the icon of the first look (`AppSurface.usePendingHeading`), not a temporary title. Thus the heading does not change when the live object arrives.
+  req F-4.8: While the plank waits, its heading shows the title and the icon of the first look (`AppSurface.usePendingHeading`), not a temporary title. The title and the icon come from the type of the object. Thus the heading does not change when the live object arrives.
+
+  req F-4.9: When no stand-in shows a first look, the app removes the first look and closes its thin client.
 ```
 
 ```mdl
@@ -314,7 +337,9 @@ feat F-5: The shared-objects route
 
   req F-5.2: The invitation processor of EDGE records the issuer of each invitation. It stores each DelegatedInvitationScope with the `invitation-scope` storage key. A scope applies only when its issuer is the issuer of the invitation.
 
-  req F-5.3: The route answers with only the objects of the scope, as SharedObject rows. One `Indexer.readObjects` call reads these rows from the index. Thus the route makes one call to the state machine and one call to the indexer. It reads only objects that Automerge documents hold, and it does not serve a feed object of the scope.
+  req F-5.3: The route answers with the objects of the scope and the documents that hold them. One `Indexer.readObjects` call gives the document of each object, and the bytes of each document that holds only one small object. The route reads each other document from the Subduction replicator. It does not serve a feed object of the scope.
+
+  req F-5.5: The route serves a document from the replicator only when all the objects in it are in the scope and it has no links. It does not serve the object of a document that it does not serve.
 
   req F-5.4: An EDGE version from before DelegatedInvitationScope keeps that credential without a change, and it answers the route with 404. Thus you can deploy EDGE and the client in the two possible sequences.
 ```
@@ -378,7 +403,7 @@ scenario T-5: A signature from the browser verifies against the sodium key
 
 ## Measured
 
-We did five runs with new browsers for each row, headless, against EDGE preview. Preview does not have the route at this time. Thus the browser answered the route from the query endpoint of preview, with one EDGE round trip for the same objects.
+We did these runs before the thin client, when the first look was JSON from the index. We did five runs with new browsers for each row, headless, against EDGE preview. Preview does not have the route at this time. Thus the browser answered the route from the query endpoint of preview, with one EDGE round trip for the same objects.
 
 | Time from the link to    | Range       | Median |
 |--------------------------|-------------|--------|
@@ -393,7 +418,7 @@ The first look arrives 0.5–0.9 s after Composer starts. Thus the boot time cha
 The scope limits the data that the client of the guest stores. The scope is not access control.
 
 - **EDGE does not guard documents.** EDGE admits the guest as a full member. The Subduction replicator of EDGE serves each document of the space to each member, and its collection replies list each document id. A modified client, or the same identity on a different device, can get the full space.
-- **The first look is the only EDGE read that the scope limits.** The route serves only the objects that the credential of the inviter names.
+- **The first look is the only EDGE read that the scope limits.** The route serves only the objects that the credential of the inviter names. It serves only the documents that hold no other objects.
 - **The link is a bearer secret.** Its query string holds the guest keypair of the invitation. The query string goes to the Composer Worker and its logs. The link is valid while the invitation is valid. The link stays valid when the user closes the dialog.
 - **Viewer is not enforced.** The member credential records the role, but no check examines the role when a member writes. The dialog shows this information when the user selects Viewer.
 
@@ -401,9 +426,9 @@ The scope limits the data that the client of the guest stores. The scope is not 
 
 - EDGE enforcement: a list of permitted documents for each member, from the DelegatedInvitationScope. The Subduction replicator uses the list in its fetch authorization and its collection replies.
 - Peers: mesh replication can examine the same scope before it advertises a document.
-- The scope is fixed when the user makes the link. It does not contain a child that a user adds after the link, the rows that a view selects, or the comment threads that a relation attaches.
+- The scope is fixed when the user makes the link. It does not contain a child that a user adds after it. It also does not contain the rows that a view selects or the comment threads that a relation attaches.
 - Feed objects: the scope walk, the scope guard and the route operate only on objects that Automerge documents hold. Thus no client replicates or serves a feed object that a shared object references.
-- An in-memory client for the guest, without Automerge, an indexer or a worker. It can replace the first look, the scope guard and the queries before the index reads the documents. It can serve only a Viewer link, unless it can change to the full client when the guest edits.
+- Services for the thin client: queries, writes and feeds. With them, the thin client can show more views, and the guest can edit before the join completes.
 - Move the `share` parameter from the query string into the URL fragment.
 - Revocation: when the inviter cancels the invitation, no new guest can join. But a guest that joined before stays in the space.
 
@@ -584,3 +609,46 @@ decision D-18: When the deck navigates, a plank the URL names that has not resol
   rejected:
     - Render the article's live toolbar in the first look — its actions would edit text that the article then discards.
 ```
+
+```mdl
+decision D-19: A share link shows its object from a thin client that EDGE's services serve: only the services that the document view needs, not full service parity. The full client replaces it when the document is ready to serve, and the thin client gets more services when a view needs them.
+  date: 2026-10-27
+  by: user:mykola-vrmchk
+  affects: [F-4, service:ThinClient]
+  source: https://claude.ai/artifact/4qLbpKSE5rEdXqYb7ARv3W
+```
+
+```mdl
+decision D-20: The thin client is an EchoClient in the browser that runs the functions' `ServiceContainer` handlers over the documents EDGE hands over, under a space root it makes that links only the shared objects. The stand-in renders the object's own `Article` from it with `readonly` set, the plank's stand-in hand-over does the swap, and the client closes once no stand-in shows it. Fills in [D-19].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-4.2, F-4.4, F-4.5, F-4.9, service:ThinClient]
+  why: EDGE functions already read a space this way, through `DataService` and `QueryService` handlers over EDGE's data service, which user:mykola-vrmchk pointed to; only the data source differs. Rendering the real article from a live object replaces the separate markdown preview of [D-18], and the swap needs nothing from the app-wide client.
+  rejected:
+    - A thin ClientServicesProvider behind the app's Client — a Client keeps one provider for its life, and about 200 modules hold the Client, so the swap would mean a second Client instance.
+    - EDGE's own space root — it links every document of the space, which the guest is not shared.
+```
+
+```mdl
+decision D-21: The route serves the scope's documents as Automerge bytes, not each object's JSON: a document the index backs alone comes from the index, and any other comes from the Subduction replicator only when every object in it is in the scope and it has no links. Fills in [D-19].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [type:SharedDocument, type:SharedObject, F-5.3, F-5.5]
+  supersedes: D-4
+  why: The thin client loads documents, not JSON, and the index already holds the bytes of each document that backs a single small object. A document that also holds an object outside the scope would show that object, so it is left out.
+  rejected:
+    - Serve every scoped object's document from the replicator — the index has most of them already, and a replicator read is a second Durable Object hop.
+```
+
+```mdl
+decision D-22: A shared object carries its document id and heads, with no JSON, and the route serves only objects stored in Automerge documents; feed objects stay out of scope.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [type:SharedObject, F-5.3]
+  supersedes: D-14
+  why: The document holds the object, so a copy of its JSON would only send it twice. A feed object has no document, and the scope guard works by document.
+```
+

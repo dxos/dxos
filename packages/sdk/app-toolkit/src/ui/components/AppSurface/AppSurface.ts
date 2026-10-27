@@ -271,6 +271,11 @@ export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = 
    * intrinsic content, so the surface can fit its content to the box instead of sizing to it.
    */
   extrinsic?: boolean;
+  /**
+   * Set when the subject cannot take edits, such as an object a share link's thin client serves before the guest has
+   * joined; a surface that can render read-only should, and one that cannot is free to ignore it.
+   */
+  readonly?: boolean;
 } & (unknown extends CompanionTo ? { companionTo?: CompanionTo } : { companionTo: CompanionTo }) &
   Props;
 
@@ -414,17 +419,6 @@ export const usePendingHeading = (heading: PendingHeading | undefined): void => 
     setHeading?.(label === undefined ? undefined : { label, icon });
     return () => setHeading?.(undefined);
   }, [setHeading, label, icon]);
-};
-
-/**
- * Role token for a read-only rendering of an object that is not a live ECHO object: decoded with `Obj.fromJSON` from
- * data read elsewhere (e.g. from EDGE before its space is joined), so nothing written to it is kept.
- */
-export const ObjectPreview: Role.Role<ObjectPreviewData> = Role.make('org.dxos.role.objectPreview');
-
-export type ObjectPreviewData<Subject = unknown> = {
-  attendableId: string;
-  subject: Subject;
 };
 
 /** Roles whose data contract requires a string `attendableId`. */

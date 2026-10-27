@@ -68,6 +68,9 @@
       "path": "../../core/compute/extractor-lib"
     },
     {
+      "path": "../../core/compute/functions-runtime-cloudflare"
+    },
+    {
       "path": "../../core/compute/progress"
     },
     {

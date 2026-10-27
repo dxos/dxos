@@ -16,14 +16,17 @@ import { Markdown, MarkdownCapabilities } from '#types';
 
 import { editorViewModeAspect } from './editor-view-state.ts';
 
-export type MarkdownContainerProps = AppSurface.ObjectArticleProps<Markdown.Document | Text.Text, { id: string }>;
+export type MarkdownContainerProps = AppSurface.ObjectArticleProps<
+  Markdown.Document | Text.Text,
+  { id: string; readonly?: boolean }
+>;
 
 /**
  * Resolves the editor's ambient state (attention, settings, per-document view mode) for both the
  * document and plain-text surfaces, so neither surface's `props` mapper has to.
  */
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
-  ({ id, attendableId, subject, role }, forwardedRef) => {
+  ({ id, attendableId, subject, readonly, role }, forwardedRef) => {
     const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);
     const settings = Hooks.useAtomCapability(MarkdownCapabilities.Settings);
     const editorState = Hooks.useCapability(MarkdownCapabilities.EditorState);
@@ -32,7 +35,9 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     // `defaultViewMode` setting when the user has picked a mode for this document.
     const perDocumentViewMode = useViewState(editorViewModeAspect, id);
     const { set: setViewMode } = useViewStateActions(editorViewModeAspect, id);
-    const viewMode: EditorViewMode = perDocumentViewMode ?? settings?.defaultViewMode ?? 'source';
+    const viewMode: EditorViewMode = readonly
+      ? 'readonly'
+      : (perDocumentViewMode ?? settings?.defaultViewMode ?? 'source');
     const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
       (mode) => setViewMode(mode),
       [setViewMode],

@@ -27,7 +27,6 @@ import {
   InlineSyncStatus,
   JoinDialog,
   ObjectFormDialog,
-  ObjectPreviewFallback,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -111,13 +110,6 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.PendingArticle),
         component: SharePreviewArticle,
         props: ({ data: { attendableId, nodeId } }) => ({ attendableId, nodeId }),
-      }),
-      Surface.create({
-        id: 'objectPreviewFallback',
-        position: Position.last,
-        filter: Surface.makeFilter(AppSurface.ObjectPreview),
-        component: ObjectPreviewFallback,
-        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'recordArticle',
