@@ -445,6 +445,39 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(finalIds).toHaveLength(dataset.emails.length);
   });
 
+  test('a run out of time requests Operation.runAgain(), and repeated runs sync the whole mailbox', async ({
+    expect,
+  }) => {
+    const now = new Date();
+    const dataset = generateJmapDataset({ count: 5, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
+    const { db, mailbox, connection } = await seed();
+
+    // A zero budget is spent as soon as one message is taken, so every run stops after exactly one.
+    const runOnce = () =>
+      EffectEx.runPromise(
+        Effect.exit(runJmapSync({ connection: Ref.make(connection), timeBudgetMs: 0 })).pipe(
+          Effect.provide(jmapSyncTestServices(db, dataset)),
+        ),
+      );
+
+    const first = await runOnce();
+    expect(Exit.isFailure(first) && Process.RunAgainError.is(Cause.squash(first.cause))).toBe(true);
+    expect(await syncedIdsOf(db, mailbox)).toHaveLength(1);
+
+    let runs = 1;
+    let exit: Exit.Exit<unknown, unknown> = first;
+    while (Exit.isFailure(exit) && runs < 20) {
+      expect(Process.RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+      exit = await runOnce();
+      runs += 1;
+    }
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    const finalIds = await syncedIdsOf(db, mailbox);
+    expect(new Set(finalIds).size).toBe(finalIds.length);
+    expect(finalIds).toHaveLength(dataset.emails.length);
+  });
+
   test(
     'the newest message is not re-committed across backfill runs once it ages out of the dedup seed — ' +
       'regression: the forward high-boundary re-fetch duplicated it every run',

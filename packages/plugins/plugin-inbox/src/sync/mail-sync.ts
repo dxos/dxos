@@ -3,6 +3,7 @@
 //
 
 import { format } from 'date-fns';
+import * as Clock from 'effect/Clock';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
@@ -44,6 +45,13 @@ import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, t
 // dependent URI form would silently hide the meter. See `InboxOperation.createProgressKey`.
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) =>
   Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + '#sync';
+
+/**
+ * Wall-clock time a run spends taking new messages before it stops and requests `Operation.runAgain()`.
+ * EDGE kills an invocation at 60s, and a killed run never saves its position, so the next run re-fetches
+ * the same messages; the remaining ~20s covers what runs after the cutoff (commit, tag push, flush).
+ */
+export const MAIL_SYNC_TIME_BUDGET_MS = 40_000;
 
 /** Options the harness passes to a provider's {@link MailSyncSource.buildSource} for one run. */
 export type MailSyncSourceOptions = {
@@ -376,6 +384,8 @@ export type RunMailSyncOptions = {
   readonly binding: Ref.Ref<Cursor.Cursor>;
   /** Candidate messages this run considers before requesting `Operation.runAgain()`. */
   readonly maxMessages?: number;
+  /** Wall-clock budget for taking messages; defaults to {@link MAIL_SYNC_TIME_BUDGET_MS}. */
+  readonly timeBudgetMs?: number;
   /** Reference "now" for window/horizon resolution (pinned by tests); defaults to `new Date()`. */
   readonly now?: Date;
   /** Overrides the dedup-set seed bound (see `Cursor.layer`). Test-only. */
@@ -397,6 +407,8 @@ export const runMailSync = (
     const provider = yield* MailSyncProvider;
     const now = options.now ?? new Date();
     const maxMessages = options.maxMessages ?? provider.config.maxItemsPerRun ?? Number.POSITIVE_INFINITY;
+    const timeBudgetMs = options.timeBudgetMs ?? MAIL_SYNC_TIME_BUDGET_MS;
+    const startedMs = yield* Clock.currentTimeMillis;
 
     log.info('mail sync starting', {
       provider: provider.name,
@@ -550,6 +562,7 @@ export const runMailSync = (
     // cap gauge) → `processed` (post-decode/map) → `stats.newMessages` (committed). `extent` is the
     // observed key range, folded into the cursor at run end so a run that commits nothing still advances.
     let taken = 0;
+    let outOfTime = false;
     let processed = 0;
     let attachmentCount = 0;
     const extent: Cursor.Extent = { maxKey: 0, minKey: 0 };
@@ -653,6 +666,15 @@ export const runMailSync = (
         'dedup',
         (item) => item.foreignId,
         (item) => item.key,
+      ),
+      // At least one message per run, so a chain of runs always progresses however slow each one is.
+      Stream.takeWhileEffect(() =>
+        Clock.currentTimeMillis.pipe(
+          Effect.map((nowMs) => {
+            outOfTime = taken > 0 && nowMs - startedMs >= timeBudgetMs;
+            return !outOfTime;
+          }),
+        ),
       ),
       // The meter advances here, on the messages the run keeps, not at retrieval: fetches run ahead of
       // the cap, and a message fetched past it is fetched again, and would be counted again, by the next
@@ -792,7 +814,8 @@ export const runMailSync = (
     // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
     Cursor.extendRange(binding, extent);
 
-    const capped = taken >= maxMessages;
+    // Running out of time is a cap like any other: state stays put and the next run resumes the window.
+    const capped = taken >= maxMessages || outOfTime;
     // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
     // and more remain. Both signals mean "re-run", but only `!capped` advances state.
     const hasMoreDelta = source.hasMoreDelta?.() ?? false;
@@ -802,6 +825,7 @@ export const runMailSync = (
       taken,
       maxMessages,
       capped,
+      outOfTime,
       hasMoreDelta,
       newMessages: stats.newMessages,
       action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
