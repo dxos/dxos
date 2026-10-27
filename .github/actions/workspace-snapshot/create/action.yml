@@ -90,9 +90,10 @@ runs:
           sudo rm -rf "$bundle" "$HOME/.cache/ms-playwright"
         fi
 
-    # One image, five trees, gathered under one root by bind mounts: the workspace, proto's toolchain,
-    # moon's home and the two Playwright trees. zstd level 3 keeps reads cheap; heavier levels move the cost
-    # into every job's reads.
+    # Two files, each a squashfs of trees gathered under one root by bind mounts: `workspace.sqfs` holds the
+    # workspace, proto's toolchain and moon's home, which every job mounts; `playwright.sqfs` holds the
+    # browsers and their apt bundle, which only browser jobs fetch. zstd level 3 keeps reads cheap; heavier
+    # levels move the cost into every job's reads.
     - name: Build image
       id: image
       shell: bash
@@ -102,21 +103,25 @@ runs:
         mkdir -p "$HOME/.moon"
         sudo mkdir -p /mnt/snapshot
         sudo chown "$(id -u):$(id -g)" /mnt/snapshot
-        staged=()
-        for pair in "ws:$GITHUB_WORKSPACE" "proto:$HOME/.proto" "moon:$HOME/.moon" \
-          "playwright:$HOME/.cache/ms-playwright" "playwright-apt:$HOME/.cache/playwright-offline"; do
-          name=${pair%%:*}; source=${pair#*:}
-          [ -d "$source" ] || continue
-          sudo mkdir -p "/mnt/stage/$name"
-          sudo mount --bind "$source" "/mnt/stage/$name"
-          staged+=("/mnt/stage/$name")
-        done
-        SECONDS=0
-        mksquashfs /mnt/stage /mnt/snapshot/workspace.sqfs -comp zstd -Xcompression-level 3 -noappend -no-progress -quiet
-        for target in "${staged[@]}"; do sudo umount "$target"; done
-        size=$(stat -c %s /mnt/snapshot/workspace.sqfs)
-        echo "squashfs: ${SECONDS}s, $((size / 1000000)) MB"
-        echo "size=$size" >> "$GITHUB_OUTPUT"
+        squash() {
+          local file=$1; shift
+          local root="/mnt/stage/${file%.sqfs}" staged=()
+          for pair in "$@"; do
+            local name=${pair%%:*} source=${pair#*:}
+            [ -d "$source" ] || continue
+            sudo mkdir -p "$root/$name"
+            sudo mount --bind "$source" "$root/$name"
+            staged+=("$root/$name")
+          done
+          [ "${#staged[@]}" -gt 0 ] || return 0
+          SECONDS=0
+          mksquashfs "$root" "/mnt/snapshot/$file" -comp zstd -Xcompression-level 3 -noappend -no-progress -quiet
+          for target in "${staged[@]}"; do sudo umount "$target"; done
+          echo "$file: ${SECONDS}s, $(($(stat -c %s "/mnt/snapshot/$file") / 1000000)) MB"
+        }
+        squash workspace.sqfs "ws:$GITHUB_WORKSPACE" "proto:$HOME/.proto" "moon:$HOME/.moon"
+        squash playwright.sqfs "playwright:$HOME/.cache/ms-playwright" "playwright-apt:$HOME/.cache/playwright-offline"
+        echo "size=$(stat -c %s /mnt/snapshot/workspace.sqfs)" >> "$GITHUB_OUTPUT"
 
     - name: Push
       shell: bash
@@ -132,6 +137,8 @@ runs:
         echo "$PASSWORD" | oras login ghcr.io -u "$USERNAME" --password-stdin
         cd /mnt/snapshot
         read -ra tags <<< "$TAGS"
-        oras push --no-tty "$REPOSITORY:${tags[0]}" workspace.sqfs:application/octet-stream >/dev/null
+        files=(workspace.sqfs:application/octet-stream)
+        [ -f playwright.sqfs ] && files+=(playwright.sqfs:application/octet-stream)
+        oras push --no-tty "$REPOSITORY:${tags[0]}" "${files[@]}" >/dev/null
         for tag in "${tags[@]:1}"; do oras tag "$REPOSITORY:${tags[0]}" "$tag" >/dev/null; done
         echo "pushed $REPOSITORY:{${TAGS// /,}}"
