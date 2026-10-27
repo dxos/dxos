@@ -45,11 +45,16 @@ wrap the app in \`<Theme.Provider tx={Theme.defaultTx} themeMode='dark'>\`. Each
 
 Deploy with the Cloudflare connection's token when this space has one, so later deploys update the same URL. \
 Without one, \`wrangler deploy --temporary\` mints a temporary account (wrangler 4.102 or later); its claim URL is a \
-bearer credential, so give it to me directly and file it nowhere. A deploy that exited zero is not evidence: fetch \
+bearer credential, so give it to me directly and file it nowhere. Wrangler keeps that account in the sandbox's \
+home for about an hour, so redeploy from the same sandbox to keep the URL. A deploy that exited zero is not evidence: fetch \
 the URL and \`/api/forecast\` and check the bodies.
 
-When I change a feature's card or its spec block, update the spec's requirements to match, change the code, \
-redeploy to the same URL and set the feature back to operational once the live page shows it.`;
+Commit the code to a repository attached to the sandbox before you finish, so a later change starts from it rather \
+than from nothing. Work only the tasks you are given and stop when each is in review; the page needs no tests, no \
+README and no extra artifacts.
+
+When I change a feature's card or its spec block, I file a task for it: add the change to the spec's requirements, \
+change the code in the same repository, redeploy to the same URL, check it, and set the feature back to operational.`;
 
 /**
  * The work-stream. It adopts the task set the tasks partial built (`Project.make` would otherwise create its own
