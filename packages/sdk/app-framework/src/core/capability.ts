@@ -11,7 +11,7 @@ import type * as Scope from 'effect/Scope';
 
 import type { DXN } from '@dxos/keys';
 
-import * as WorkerEvents from '../worker/WorkerEvents.ts';
+import { Startup as WorkerStartup } from '../worker/startup.ts';
 import type * as ActivationEvent from './activation-event.ts';
 import type * as CapabilityManager from './capability-manager.ts';
 import { CapabilityNotFoundError } from './errors.ts';
@@ -623,7 +623,7 @@ export const inlineModule = <
 
 /**
  * Helper to define a module that runs only in the plugin worker (`@dxos/app-framework/PluginWorker`):
- * a {@link lazyModule} activating on {@link WorkerEvents.Startup}, under the `plugin-worker` condition
+ * a {@link lazyModule} activating on `WorkerEvents.Startup`, under the `plugin-worker` condition
  * alone. The condition is what keeps it out of the page: `dx-plugin gen` leaves it out of every other
  * slice of the plugin's `#capabilities`, and only a worker realm resolves that one (see
  * `@dxos/vite-plugin-module-url`'s `workerConditions`).
@@ -641,7 +641,7 @@ export const workerModule = <
   spec: Omit<ModuleSpec<Provides, Requires, Props, Options>, 'activatesOn' | 'environments'>,
   loader: LoadModule<Props, Requires, Provides>,
 ): Module<Options> =>
-  lazyModule(name, { ...spec, activatesOn: WorkerEvents.Startup, environments: ['plugin-worker'] }, loader);
+  lazyModule(name, { ...spec, activatesOn: WorkerStartup, environments: ['plugin-worker'] }, loader);
 
 /**
  * Options accepted by makers built with {@link moduleMaker}.

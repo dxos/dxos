@@ -28,7 +28,7 @@ const loadDevUrlModule = async (base: string | undefined, file: string): Promise
 };
 
 const fixtureDir = resolve(import.meta.dirname, '../test/fixture');
-const conditionsDir = resolve(import.meta.dirname, '../test/conditions');
+const conditionsDir = resolve(import.meta.dirname, '../test/__fixtures__/conditions');
 const WORKER_CONDITIONS = { workerConditions: ['plugin-worker'] };
 const sharedDir = resolve(import.meta.dirname, '../test/shared');
 

@@ -10,14 +10,7 @@ import type * as Scope from 'effect/Scope';
 import { type LayerStack } from '@dxos/compute-runtime';
 import * as Hook from '@dxos/effect/Hook';
 
-import * as ActivationEvent from '../core/activation-event.ts';
-
-/**
- * Fired once when the worker starts, before the layer stack is built: worker plugin modules
- * activate on it, so every `Capabilities.LayerSpec` they contribute is in place when the base
- * collects them.
- */
-export const Startup = ActivationEvent.make('org.dxos.app-framework.event.workerStartup');
+export { Startup } from './startup.ts';
 
 /**
  * The layer stack has been built and its eager specs initialized. Serial, and awaited before the

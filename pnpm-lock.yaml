@@ -26956,8 +26956,6 @@ importers:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
 
-  tools/vite-plugin-module-url/test/conditions: {}
-
   tools/vite-plugin-shutdown:
     devDependencies:
       vite:
