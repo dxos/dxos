@@ -28,9 +28,6 @@ important:
 - **The host does not check the branch of an update.** The client refuses an update that moves an item
   to a different branch [F-1.3]. A block from another client or from sync is not checked.
 
-- **A removal has no branch.** `Feed.remove` appends a tombstone that continues the root branch, so a
-  removed branch item moves to the root branch in the index, as a deleted row.
-
 - **A walk reads its whole path.** A page costs the path, not the page, and the walk gives each item
   at its latest block until [Q-6] is answered.
 
