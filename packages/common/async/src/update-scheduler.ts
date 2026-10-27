@@ -105,7 +105,7 @@ export class UpdateScheduler {
             // Cloudflare Workers refuse timers outside a request (a FinalizationRegistry callback); no
             // `runBlocking` waits on this run, as one would have skipped the delay, so freeing the slot
             // hands the work to the next trigger.
-            log.warn('update left for the next trigger: throttle timer refused', { err });
+            log.verbose('update left for the next trigger: throttle timer refused', { err });
             this._scheduled = false;
             return;
           }

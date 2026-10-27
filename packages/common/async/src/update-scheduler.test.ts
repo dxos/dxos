@@ -235,6 +235,7 @@ describe('update-scheduler', () => {
     scheduler.trigger();
     await new Promise((resolve) => setImmediate(resolve)); // Let the runner reach its throttle.
     expect(refused.mock.results[0]?.type).toBe('throw');
+    expect(scheduler.scheduled).toBe(false);
     refused.mockRestore();
 
     await asyncTimeout(scheduler.runBlocking(), 1_000);
