@@ -8,7 +8,7 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature, Showcase } from '#types';
+import { Feature, Showcase, Spec } from '#types';
 
 export const translations = [
   {
@@ -32,6 +32,17 @@ export const translations = [
         'rename-object.label': 'Rename repository',
         'delete-object.label': 'Delete repository',
         'object-deleted.label': 'Repository deleted',
+      },
+      [Type.getTypename(Spec.Spec)]: {
+        'typename.label': 'Spec',
+        'typename.label_zero': 'Specs',
+        'typename.label_one': 'Spec',
+        'typename.label_other': 'Specs',
+        'object-name.placeholder': 'New spec',
+        'add-object.label': 'Add spec',
+        'rename-object.label': 'Rename spec',
+        'delete-object.label': 'Delete spec',
+        'object-deleted.label': 'Spec deleted',
       },
       [Type.getTypename(Feature.Feature)]: {
         'typename.label': 'Feature',
@@ -64,7 +75,6 @@ export const translations = [
         'views.label': 'Views',
         'overview.label': 'Overview',
         'tasks.label': 'Tasks',
-        'features.label': 'Features',
         'view.label': 'View',
         'show-pipeline.label': 'Show pipeline',
         'hide-pipeline.label': 'Hide pipeline',
@@ -123,7 +133,7 @@ export const translations = [
         'feature-edit-error.title': 'Edit not applied',
         'feature-article.add-dependency.label': 'Add dependency',
         'feature-article.link-task.label': 'Link task',
-        'feature-article.file-task.placeholder': "File a task in this feature's project…",
+        'feature-article.file-task.placeholder': "File a task in this spec's project…",
         'feature-article.set-key.placeholder': 'Set a key to cite this feature in code, e.g. org.example.features.sync',
         'feature-map.add-feature.label': 'Add an existing feature',
         'feature-map.new-feature.label': 'New feature',
@@ -138,6 +148,8 @@ export const translations = [
         'feature-article.open.label': 'Open in a plank',
         'feature-article.add-subfeature.placeholder': 'Add a subfeature…',
         'feature-card.dependents.title': 'Needed by',
+        'feature-card.external.label_one': 'Needs {{count}} feature on another spec',
+        'feature-card.external.label_other': 'Needs {{count}} features on other specs',
         'requirement-editor.add.label': 'Add requirement',
         'requirement-editor.text.label': 'Requirement',
         'requirement-editor.remove.label': 'Remove requirement',

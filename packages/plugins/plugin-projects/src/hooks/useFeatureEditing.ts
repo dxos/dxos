@@ -7,13 +7,12 @@ import { useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Operation from '@dxos/compute/Operation';
-import type * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature, FeatureOperation } from '#types';
+import { Feature, FeatureOperation, Spec } from '#types';
 
 export type FeatureEditing = {
   /** Writes the given fields of the feature. */
@@ -21,24 +20,22 @@ export type FeatureEditing = {
   addDependency: (featureId: string, dependsOnId: string) => void;
   removeDependency: (featureId: string, dependsOnId: string) => void;
   linkTask: (taskId: string, featureId: string) => void;
-  /** Files a new task into the feature's project and links it to the feature; resolves to whether it was filed. */
+  /** Files a new task into the project tracking the feature's spec and links it; resolves to whether it was filed. */
   fileTask: (featureId: string, title: string) => Promise<boolean>;
-  /** Moves the feature onto the project; requires a project, a no-op without one. */
-  addToProject: (featureId: string) => void;
-  /** Takes the feature off its project; the feature itself is kept. */
-  removeFromProject: (featureId: string) => void;
-  /** Creates a planned feature under `parentId`, else on the project when there is one; resolves to its id. */
+  /** Deletes the feature, with the spec that breaks it down. */
+  removeFeature: (featureId: string) => void;
+  /** Creates a planned feature under `parentId`, else on the map's spec; resolves to its id. */
   createFeature: (name: string, parentId?: string) => Promise<string | undefined>;
-  /** Makes the feature a subfeature of `parentId`. */
-  setParent: (featureId: string, parentId: string) => void;
+  /** Moves the feature under `parentId`, else onto the map's spec. */
+  moveFeature: (featureId: string, parentId?: string) => void;
 };
 
 /**
- * Edits for a project's feature board, each through the `FeatureOperation` verb an agent would use, so a person and an
- * agent get the same rules. A refused edit (a dependency that would close a cycle) is shown as a toast carrying the
+ * Edits for a spec's feature map, each through the `FeatureOperation` verb an agent would use, so a person and an agent
+ * get the same rules. A refused edit (a dependency that would close a cycle) is shown as a toast carrying the
  * operation's own message, which names the features involved.
  */
-export const useFeatureEditing = (db: Database.Database | undefined, project?: Project.Project): FeatureEditing => {
+export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec.Spec): FeatureEditing => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
   return useMemo(() => {
@@ -71,7 +68,7 @@ export const useFeatureEditing = (db: Database.Database | undefined, project?: P
       return data;
     };
 
-    const projectRef = project ? Ref.make(project) : undefined;
+    const specRef = spec ? Ref.make(spec) : undefined;
 
     return {
       update: (featureId, changes) =>
@@ -91,7 +88,7 @@ export const useFeatureEditing = (db: Database.Database | undefined, project?: P
         ),
       fileTask: async (featureId, title) => {
         const [feature] = db ? await db.query(Filter.id(featureId)).run() : [];
-        const project = Feature.instanceOf(feature) ? await feature.project?.load() : undefined;
+        const project = Feature.instanceOf(feature) ? await Spec.findProject(feature)?.tryLoad() : undefined;
         if (!project?.taskSet) {
           return false;
         }
@@ -106,23 +103,36 @@ export const useFeatureEditing = (db: Database.Database | undefined, project?: P
         await run(FeatureOperation.LinkTask, { task, feature: featureRefValue });
         return true;
       },
-      addToProject: (featureId) =>
-        void featureRef(featureId).then(
-          (feature) => feature && projectRef && run(FeatureOperation.Update, { feature, project: projectRef }),
-        ),
-      removeFromProject: (featureId) =>
-        void featureRef(featureId).then(
-          (feature) => feature && run(FeatureOperation.Update, { feature, project: null }),
-        ),
+      removeFeature: (featureId) =>
+        void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Delete, { feature })),
       createFeature: async (name, parentId) => {
         const parent = parentId ? await featureRef(parentId) : undefined;
-        const result = await run(FeatureOperation.Create, parent ? { name, parent } : { name, project: projectRef });
+        const result = await run(FeatureOperation.Create, parent ? { name, parent } : { name, spec: specRef });
         return result?.feature.id;
       },
-      setParent: (featureId, parentId) =>
-        void Promise.all([featureRef(featureId), featureRef(parentId)]).then(
-          ([feature, parent]) => feature && parent && run(FeatureOperation.Update, { feature, parent }),
-        ),
+      moveFeature: (featureId, parentId) =>
+        void (async () => {
+          const [feature, parent] = await Promise.all([
+            featureRef(featureId),
+            parentId ? featureRef(parentId) : undefined,
+          ]);
+          // A parent that does not resolve moves nothing, rather than falling back to the map's own spec.
+          if (!feature || (parentId && !parent)) {
+            return;
+          }
+          // A parent without a breakdown gets one: `CreateSpec` returns the one it has, else makes it.
+          let target = specRef;
+          if (parent) {
+            const created = await run(FeatureOperation.CreateSpec, {
+              name: parent.target?.name ?? '',
+              feature: parent,
+            });
+            target = created ? await refOf(created.spec.id, Spec.instanceOf) : undefined;
+          }
+          if (target) {
+            await run(FeatureOperation.Update, { feature, spec: target });
+          }
+        })(),
     };
-  }, [db, project, invokePromise]);
+  }, [db, spec, invokePromise]);
 };

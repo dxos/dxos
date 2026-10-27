@@ -13,7 +13,7 @@ import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
 // `Repo` is referenced in the emitted .d.ts of the spec-file operations (via the FileMapping schemas);
 // importing it lets TypeScript name it (TS2883).
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Repo, Spec } from '@dxos/types';
+import { Repo, SpecDocument } from '@dxos/types';
 
 import * as CodeProject from './CodeProject.ts';
 
@@ -25,7 +25,7 @@ export const VerifySpec = Operation.make({
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec).annotate({ description: 'The Spec to verify.' }),
+    spec: Ref.Ref(SpecDocument.SpecDocument).annotate({ description: 'The Spec to verify.' }),
   }),
   output: Schema.Struct({
     ok: Schema.Boolean,
@@ -281,7 +281,7 @@ export const ImportSpec = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec),
+    spec: Ref.Ref(SpecDocument.SpecDocument),
     created: Schema.Boolean,
   }),
   services: [Database.Service, Capability.Service],

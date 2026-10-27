@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Text } from '@dxos/schema';
-import { Repo, Spec } from '@dxos/types';
+import { Repo, SpecDocument } from '@dxos/types';
 
 import exportSpecFile from './export-spec-file.ts';
 import importSpecFile from './import-spec-file.ts';
@@ -31,7 +31,7 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
 
   test('a remote change merges with a local edit made since the last sync', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Repo.Repo, Spec.Spec, Text.Text]);
+    graph.registry.add([Repo.Repo, SpecDocument.SpecDocument, Text.Text]);
     const repo = db.add(Repo.make({ owner: 'dxos', name: 'composer' }));
     const run = <A, E>(effect: Effect.Effect<A, E, Database.Service>) =>
       effect.pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
@@ -44,7 +44,7 @@ describe('Spec file mapping (plugin-github spec/FILE-SYNC.mdl F-6)', () => {
       }),
     );
     const spec = await run(Database.load(created.object));
-    expect(Obj.instanceOf(Spec.Spec, spec) && spec.name).toBe('plugin-code/PLUGIN.mdl');
+    expect(Obj.instanceOf(SpecDocument.SpecDocument, spec) && spec.name).toBe('plugin-code/PLUGIN.mdl');
     const { text } = await run(loadSpecText(created.object));
     expect(text.content).toBe(SPEC);
 

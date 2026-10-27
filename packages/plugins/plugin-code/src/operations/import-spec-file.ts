@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import * as TextMerge from '@dxos/plugin-github/TextMerge';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { CodeOperation } from '#types';
 
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecFile> = Code
   Operation.withHandler(
     Effect.fn(function* ({ path, content, base, object, heads }) {
       if (!object || !heads || base === undefined) {
-        const spec = yield* Database.add(Spec.make({ name: specName(path), content }));
+        const spec = yield* Database.add(SpecDocument.make({ name: specName(path), content }));
         const { text } = yield* loadSpecText(Ref.make(spec));
         return { object: Ref.make(spec), heads: TextMerge.currentHeads(text) };
       }
