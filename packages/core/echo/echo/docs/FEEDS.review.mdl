@@ -295,9 +295,16 @@ verdict Feed: The two proposed members do not exist.
 ```
 
 ```mdl
-verdict Scope: Scope.feed takes branches, but it has no time range.
+verdict Scope: Scope.feed takes branches, but it has no walk.
   status: partial
   evidence: [github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
   tests: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.test.ts]
-  note: It has no `after` or `before` options.
+  note: It has no `walk` option.
+```
+
+```mdl
+verdict Filter: Filter.feedCursor takes only EDGE positions.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#feedCursor]
+  note: It has `begin` and `end`, but no `positions` field and no local cursor.
 ```

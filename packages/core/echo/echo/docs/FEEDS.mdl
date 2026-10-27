@@ -39,6 +39,7 @@ This document uses these extension dialects.
 | `module`   | `org.dxos.mdl.module@1.0`   |
 | `table`    | `org.dxos.mdl.table@1.0`    |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+| `question` | `org.dxos.mdl.question@1.0` |
 
 ## Principle
 
@@ -175,8 +176,13 @@ merge and close are a follow-up [D-2]. These points are agreed for that follow-u
   merge. A reader sees the merge message when it iterates the parent [D-3].
 - A merge folds in one branch at a time, and the merge sits on the main line [D-4].
 
-Out of scope with merges [D-50]: does a reader of the main line see branch messages and merge messages,
-but not always close messages? Rich thinks so, and he will write this part out.
+```mdl
+question Q-5: Does a reader of the main line see branch messages and merge messages, but not always close messages?
+  to: user:richburdon
+  status: moot
+  decisions: [D-50]
+  note: Out of scope with merges [D-50]. Rich thinks so, and he will write this part out.
+```
 
 ## What exists
 
@@ -341,9 +347,8 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
 3. **Index by branch.** The indexer stores the branch id in a column on feed items (an `echo-sqlite`
    migration). The indexer obeys the index mode of the feed: all branches or the main branch [F-2.1],
    [D-17]. A read of a branch that the index does not hold comes from the feed store [D-25]. A scope with
-   no branch filter reads only the main branch, and `'all'` reads all branches [D-24]. `Scope.feed` (below) pushes the
-   branch filter and the time filter into SQL, thus `limit` applies after them. Newest first is an
-   `orderBy`.
+   no branch filter reads only the main branch, and `'all'` reads all branches [D-24]. `Scope.feed` (below)
+   pushes the branch filter into SQL, thus `limit` applies after it. Newest first is an `orderBy`.
 
 4. **Heads.** The index keeps the head of each `(feed, branch)` as a position and a local cursor.
    `Feed.heads` (below) gives the branches whose heads moved. Triggers use it. Reducers use it to decide
@@ -370,7 +375,9 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
    into `@meta`. `threadMerge`, `threadWait` and the turn semantics stay as trajectory events. Reducers
    read one branch and its ancestors. They do not filter the full feed.
 
-10. **Cursors.** A cursor is `(branch, pos)`. A cursor can contain branch points [D-7].
+10. **Walks.** A walk is a query that reads the path from the root branch to a target branch, forward or
+    backward, from a local cursor (below). The cursor holds the branch that the walk is on and the last
+    block that the walk gave [D-7], [D-57].
 
 ### API
 
@@ -414,8 +421,8 @@ module Feed
     IndexingOptions: { enabled: boolean, mode?: 'all' | 'main' }                  # mode absent is 'main' [D-10].
     branches: Record<BranchId, { removed?, retention?, name? }>                   # not built; only branch policy, never membership or heads.
     heads: (feed, { since?: LocalCursor }) => { branch: BranchId, head: LocalCursor }[]  # not built; reads table:branches [D-45].
-    walk: (feed, { branch?, from?, direction?, forks?, filter?, limit? }) => Effect<{ items, cursor: LocalCursor, done }>  # not built; F-5.
-    getLocalCursor: (item, { branch? }) => LocalCursor | undefined                # not built; resumes a walk at this item.
+    walk: (feed, filter, { branch?, begin?, forks?, order?: 'asc' | 'desc', limit? }) => QueryResult  # a wrapper of the core walk query [D-58].
+    getLocalCursor: (item) => LocalCursor | undefined                             # the walk resumes after this item.
 ```
 
 ```mdl
@@ -423,19 +430,25 @@ type LocalCursor
   desc: |
     The position of a walk, as an opaque branded string [D-46]. It is local to one device, because it
     uses the local order of blocks, which never changes under a reader [F-2.4]. Another device cannot
-    use it.
+    use it. The query gives the direction and the target branch, thus the cursor does not hold them
+    [D-56], [D-57].
   fields:
-    direction: forward | backward
-    target: BranchId | null      # forward only: the branch that the walk ends on; null is the root branch
-    branch: BranchId | null      # the branch that the walk is on now
-    insertionId: number          # the local order of the last block that the walk gave
+    branch: BranchId | null      # the branch that the walk is on; null is the root branch
+    block: BlockId               # the last block that the walk gave; the store finds its local order
 ```
 
 ```mdl
 module Scope
-  desc: The feed scope with a branch filter.
+  desc: The feed scope with a branch filter or a walk.
   api:
-    feed: (uri, { branches?: (BranchId | null)[] | 'all', after?, before? })  # pushes the branch filter into SQL, thus `limit` applies after it. `after` and `before` are not built.
+    feed: (uri, { branches?: (BranchId | null)[] | 'all', walk?: { branch?: BranchId | null, forks?: boolean } })  # `branches` pushes the branch filter into SQL, thus `limit` applies after it; `walk` reads the path to `branch` [D-57].
+```
+
+```mdl
+module Filter
+  desc: The feed cursor filter, with the order its positions use.
+  api:
+    feedCursor: ({ begin?: Cursor | LocalCursor, end?: Cursor, positions?: 'local' | 'edge' }) => Filter  # `begin` and `end` exclude the item that they name; `positions` defaults to `local` in a walk scope and to `edge` elsewhere [D-55], [D-61].
 ```
 
 How the API reads in use:
@@ -465,42 +478,75 @@ const program = Effect.gen(function* () {
 });
 ```
 
-A walk goes through the branch tree in `table:branches`, segment by segment [D-47]:
+A walk is a query [D-57]. The scope names the target branch, `Filter.feedCursor` gives the start, and
+`Order.natural` gives the direction [D-56]. A walk accepts only the natural order. The natural order of
+a walk scope is the walk order. `Feed.walk` is a wrapper of this query [D-58].
 
-- **Forward to target T.** The walk finds the path from the root branch to T with the recursive query
-  below. For each branch on the path, it gives the blocks of that branch in local order. It stops at
-  the fork point of the next branch on the path. On T it gives all blocks.
+The walk goes through the branch tree in `table:branches`, segment by segment [D-47]:
 
-- **Backward from item P.** The walk gives the blocks of the branch of P, in reverse local order, from P
+- **Forward (`Order.natural('asc')`).** The walk finds the path from the root branch to the target
+  branch with the recursive query below. For each branch on the path, it gives the blocks of that branch
+  in local order. It stops at the fork point of the next branch on the path. On the target branch it
+  gives all blocks. With a cursor, it starts after the block of the cursor.
+
+- **Backward (`Order.natural('desc')`).** The walk starts at the block of the cursor, or at the head of
+  the target branch when there is no cursor. It gives the blocks of that branch in reverse local order,
   to the base of the branch. Then it goes to the fork point in the parent branch and continues there,
-  until it gets to the base of the root branch.
+  until it gets to the base of the root branch. With no `branch` in the scope, the target is the branch
+  of the cursor.
 
 - **Fork points.** With `forks: true`, after each block, the walk also gives the base items of the
   branches that fork at that block [D-48]. It does not give their continuations.
+
+- **Next page.** `Feed.getLocalCursor` of the last item of a page gives the cursor of the next page
+  [D-59].
 
 ```ts
 const program = Effect.gen(function* () {
   // Walk forward from the root base to the branch, 50 items at a time, with the forks met on the way.
   let cursor: Feed.LocalCursor | undefined;
-  let done = false;
-  while (!done) {
-    const page = yield* Feed.walk(feed, { branch, from: cursor, forks: true, limit: 50 });
-    for (const item of page.items) {
+  while (true) {
+    const page = yield* Database.query(
+      Query.select(Filter.and(Filter.type(Message), Filter.feedCursor({ begin: cursor, positions: 'local' })))
+        .from(Scope.feed(feedUri, { walk: { branch, forks: true } }))
+        .orderBy(Order.natural('asc'))
+        .limit(50),
+    ).run;
+    const last = page.at(-1);
+    if (last === undefined) {
+      break;
+    }
+    for (const item of page) {
       if (Feed.isFork(item) && Feed.getBranch(item) !== branch) {
         // Another branch starts at the item before this one.
       }
     }
-    cursor = page.cursor;
-    done = page.done;
+    cursor = Feed.getLocalCursor(last);
   }
 
-  // Walk backward from b2 to the root base: b2, b1, a1.
-  const back = yield* Feed.walk(feed, { from: Feed.getLocalCursor(b2), direction: 'backward' });
+  // Walk backward from b2 to the root base. The cursor excludes b2: b1, a1.
+  const back = yield* Database.query(
+    Query.select(Filter.feedCursor({ begin: Feed.getLocalCursor(b2), positions: 'local' }))
+      .from(Scope.feed(feedUri, { walk: {} }))
+      .orderBy(Order.natural('desc')),
+  ).run;
+
+  // The same reads with the wrapper.
+  const next = yield* Feed.walk(feed, Filter.type(Message), { branch, begin: cursor, forks: true, limit: 50 }).run;
+  const back2 = yield* Feed.walk(feed, Filter.everything(), { begin: Feed.getLocalCursor(b2), order: 'desc' }).run;
 });
 ```
 
-Open: an update of an item appends a new block. Does a walk give the item at the place of its first
-block or of its latest block?
+```mdl
+question Q-6: An update of an item appends a new block. Does a walk give the item at the place of its first block or of its latest block?
+  to: user:dmaretskyi
+  status: open
+  affects: [F-5.1, F-5.2]
+  options:
+    - The latest block. The walk gives each item one time, with its latest content, and the cursor of the item is a block on the walk. An item that changes after a cursor comes again on a later page.
+    - The first block. The walk keeps the order in which the items started, but the content of the item is from a later block than the cursor.
+  note: Until you answer, the code gives the latest block [D-60].
+```
 
 ### Storage
 
@@ -624,27 +670,47 @@ table objectMeta: The latest version of one object of a space, or of one item of
   new: queueBranch, idx_object_index_queueBranch
 ```
 
-## Questions for Dima
+## Questions
 
 The trajectory is a separate design, thus this spec does not ask about it [D-52].
 
-1. Chat feeds have indexing off because no code read them through the index. With a branch column and
-   push-down, do you want an index for chat feeds again? Or do you want no index for chat feeds, and an
-   index only for comment branches and channel branches?
+```mdl
+question Q-1: Chat feeds have indexing off because no code read them through the index. With a branch column and push-down, do you want an index for chat feeds again? Or do you want no index for chat feeds, and an index only for comment branches and channel branches?
+  to: user:dmaretskyi
+  status: answered
+  answer: |
+    The index of a feed holds all branches or only the main branch, and the default is the main
+    branch [F-2.1]. Dima thinks about no index for trajectory feeds, because a reducer builds the state
+    of the conversation.
+  decisions: [D-10, D-11]
+```
 
-   Answer: the index of a feed holds all branches or only the main branch, and the default is the main
-   branch [F-2.1]. Dima thinks about no index for trajectory feeds, because a reducer builds the state of
-   the conversation.
-2. Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an
-   acceptable wire change? The reasons are different: a lineage edge on blocks mixed races with forks,
-   but a branch id does not.
+```mdl
+question Q-2: Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an acceptable wire change? The reasons are different: a lineage edge on blocks mixed races with forks, but a branch id does not.
+  to: user:dmaretskyi
+  status: answered
+  answer: |
+    The fork flag is part of the sync protocol and is not encrypted, and the branch is inferred
+    [D-51]. How the protocol carries the flag is open.
+  decisions: [D-51]
+```
 
-   Answer: the fork flag is part of the sync protocol and is not encrypted, and the branch is inferred
-   [D-51]. How the protocol carries the flag is open.
-3. Is merge a concept of the feed layer, or does merge stay a trajectory event?
+```mdl
+question Q-3: Is merge a concept of the feed layer, or does merge stay a trajectory event?
+  to: user:dmaretskyi
+  status: answered
+  answer: |
+    The core does nothing with a merge [D-3]. Merges and branch cancel are out of scope of this
+    design [D-50].
+  decisions: [D-3, D-50]
+```
 
-   Answer: the core does nothing with a merge [D-3]. Merges and branch cancel are out of scope of this
-   design [D-50].
+```mdl
+question Q-4: How does the sync protocol carry the fork flag?
+  to: user:dmaretskyi
+  status: open
+  affects: [F-1.2, F-2.3]
+```
 
 ## Changelog
 
@@ -1078,6 +1144,63 @@ decision D-54: An update of a base item appends a block without the fork flag, w
   why: With the branch inferred from the chain, a fork flag on the update would start a second branch.
 ```
 
+```mdl
+decision D-55: `Filter.feedCursor` keeps an explicit field that names the order of its positions, `positions: 'local' | 'edge'`, in place of `order`, because the field does not order the items. Fills in [D-43].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-56: The direction of a walk comes from `Order.natural('asc' | 'desc')`, thus one query form does the forward walk and the backward walk; a walk accepts only the natural order, and the natural order of a walk scope is the walk order. Fills in [D-40] and [D-46].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  why: The query API already has a direction; a second direction option could disagree with it.
+```
+
+```mdl
+decision D-57: A walk is a core query: `Scope.feed(uri, { walk: { branch, forks } })` names the target and the fork points, `Filter.feedCursor({ after })` gives the start, `orderBy` gives the direction and `limit` the page. The local cursor holds only the branch and the block. Fills in [D-43] and [D-46].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.3, F-5.5]
+```
+
+```mdl
+decision D-58: `Feed.walk` stays as a convenience wrapper of the walk query; the docs and the tests show the core query form first.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-59: The cursor of the next page is `Feed.getLocalCursor` of the last item of a page, read from the block id and the branch that the store stamps on the item. Fills in [D-57].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  why: A query result holds only items, thus the cursor must come from an item.
+```
+
+```mdl
+decision D-60: Until [Q-6] is answered, a walk gives each item one time, at the place of its latest block on the path, with the content of that block. Fills in [D-57].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  why: Then the block of the cursor is the block of the item, and the index also keeps the latest block of each item.
+```
+
+```mdl
+decision D-61: The start of a walk is the existing exclusive field `begin` of `Filter.feedCursor`, not a new field `after`, and `positions` is `local` by default in a walk scope. Fills in [D-55] and [D-57].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5]
+  why: `begin` already excludes the item that it names, and a second name for the same bound needs a rename of every caller or a shim.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
@@ -1118,5 +1241,21 @@ ext table
     unique?: ProseList          # other unique keys, as column lists
     indexes?: ProseList         # `name(columns): why a query needs it`
     new?: Prose                 # `table`, or the columns this spec adds
+  inline-prose: true
+```
+
+```mdl
+ext question
+  uri: org.dxos.mdl.question@1.0
+  desc: |
+    A design question about the spec. The identifier is `Q-<n>`; the inline prose is the question.
+  fields:
+    to?: UserRef                # user:<handle> — the person who must answer
+    status: open | answered | moot
+    answer?: Prose              # the answer in spec terms; required when status is answered
+    decisions?: RefList         # the changelog decisions that record the answer, e.g. [D-51]
+    affects?: RefList           # block ids the question is about, e.g. [F-1.2]
+    options?: ProseList         # suggested answers
+    note?: Prose                # why the question is moot, or who works on it
   inline-prose: true
 ```
