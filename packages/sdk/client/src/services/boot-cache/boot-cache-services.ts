@@ -3,7 +3,6 @@
 //
 
 import * as Context from 'effect/Context';
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
@@ -16,6 +15,7 @@ import {
   makeServicesFromRpc,
 } from '@dxos/client-protocol';
 import { type ExportWorkingSetOptions, type WorkingSetRow } from '@dxos/echo-client';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { markMilestone } from '@dxos/util';
 
@@ -35,7 +35,10 @@ const INITIAL_STREAMS = ['InvitationsService.queryInvitations'];
 const INITIAL_LIMIT = 64;
 
 /** The wrapped services failed to open, so a call that waited for them cannot run. */
-export class ServicesUnavailableError extends Data.TaggedError('ServicesUnavailableError')<{ cause: unknown }> {}
+export class ServicesUnavailableError extends BaseError.extend(
+  'ServicesUnavailableError',
+  'The client services failed to open.',
+) {}
 
 export const DEFAULT_BOOT_CACHE_MAX_BYTES = 16 * 1024 * 1024;
 
@@ -94,8 +97,8 @@ export class BootCacheServices implements ClientServicesProvider {
   constructor(provider: ClientServicesProvider, { maxBytes = DEFAULT_BOOT_CACHE_MAX_BYTES }: BootCacheOptions = {}) {
     this.#provider = provider;
     this.#maxBytes = maxBytes;
-    // Rejections reach every deferred call; this keeps one nobody is waiting on from being reported.
-    this.#providerOpened.promise.catch(() => {});
+    // Every deferred call receives the rejection too; this records it when no call is waiting.
+    this.#providerOpened.promise.catch((error) => log.warn('client services failed to open', { error }));
     const resolve = Effect.tryPromise({
       try: () => this.#providerOpened.promise,
       catch: (cause) => new ServicesUnavailableError({ cause }),

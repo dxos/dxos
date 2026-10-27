@@ -3,6 +3,7 @@
 //
 
 import { type WorkingSetRow } from '@dxos/echo-client';
+import { log } from '@dxos/log';
 
 const DATABASE = 'dxos-boot-cache';
 const VERSION = 1;
@@ -104,7 +105,7 @@ export class BootCacheStore {
   }
 
   close(): void {
-    void this.#db?.then((db) => db.close()).catch(() => {});
+    void this.#db?.then((db) => db.close()).catch((error) => log.warn('boot cache store not closed', { error }));
     this.#db = undefined;
   }
 
