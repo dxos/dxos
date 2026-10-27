@@ -805,7 +805,7 @@ test QA-3: A sync that runs out of time continues until the mailbox is synced
   status: unverified
   given:
     - the `stories-inbox/MailboxSyncChain` story is open, with an empty mailbox bound to a mock JMAP
-      account of 120 messages, a 4s budget and 120ms per message
+      account of 120 messages, a 4s budget and 350ms per message
   steps:
     - name: Start the sync
       do: In the Sync runs panel, click Sync.

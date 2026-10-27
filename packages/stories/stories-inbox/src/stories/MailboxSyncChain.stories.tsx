@@ -71,7 +71,7 @@ export const Default: Story = {
   args: {
     count: 120,
     budgetMs: 4_000,
-    latencyMs: 120,
+    latencyMs: 350,
     columns: '3fr_2fr',
   },
   play: async ({ canvasElement }) => {
