@@ -312,24 +312,26 @@ Move the thread fields of the trajectory out of the payload, into the feed layer
 these fields, and each ECHO object can be in a branch. Trajectory keeps its event vocabulary and its
 reducers. ECHO gives it indexing, partial sync and a policy for each branch.
 
-1. **Branch membership on the item.** Each item states its branch in a `feed` section of its `@meta`,
-   not in foreign keys [D-29]. Each item has a fork flag [D-30]:
-   - **`fork: true`**: the item is the base of a new branch. The predecessor of its block is the fork
+1. **Branch membership on the block.** Each block has a fork flag, which is part of the sync protocol
+   and is not encrypted [D-51]. The branch is not stored. It is inferred from the fork flag and the
+   predecessor of the block [D-51], [D-53]:
+   - **Fork flag set**: the block is the base of a new branch. The predecessor of the block is the fork
      point in the parent branch [D-28]. The branch id is the block id (`<sequence>@<actorId>`) of this
      base block [D-27].
-   - **`branch`**: the item continues this branch. The predecessor of its block is the head of that
-     branch, as the writer sees it [D-35].
-   - **Neither field**: the item continues the root branch. The first item that a writer appends to a
-     feed is the base of the root branch [D-31], [D-34].
+   - **Fork flag not set**: the block continues the branch of its predecessor. The predecessor is the
+     head of that branch, as the writer sees it [D-30], [D-35].
+   - **No predecessor**: the first block of a feed is the base of the root branch [D-31].
 
    The writer sets the predecessor of each block, thus a branch can fork at an earlier item [D-28]. Two
    writers that continue the same branch at the same time give two blocks with the same predecessor.
-   This is a race, not a fork, because neither block has the fork flag [D-35]. `Feed.readBranch` gives
-   the view of one branch: the items of its ancestors up to each fork point, then its own items [D-23].
+   This is a race, not a fork, because neither block has the fork flag [D-35]. An update of a base item
+   appends a block without the fork flag, thus the item stays on its branch [D-54]. `Feed.readBranch`
+   gives the view of one branch: the items of its ancestors up to each fork point, then its own items
+   [D-23].
 
-   Each item states its membership, as with the lineage of soft fork. Thus the system never
-   misattributes a writer that did not see a fork. The truth replicates with the blocks that it
-   describes. There are no new ECHO objects.
+   The fork flag and the predecessor travel in clear with the block that they describe. Thus EDGE can
+   infer the branch of a block without decrypting it, and the system never misattributes a writer that
+   did not see a fork. There are no new ECHO objects.
 
 2. **Branch policy on the `Feed` object.** `Feed.branches` (below) extends the feed options of #14199.
    It holds only policy. It never holds membership or heads. Thus the order problem of soft-fork.md does
@@ -347,9 +349,10 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
    `Feed.heads` (below) gives the branches whose heads moved. Triggers use it. Reducers use it to decide
    what to fold again.
 
-5. **Partial sync.** EDGE must select blocks by branch, and it must not decrypt them. Thus the branch id
-   is on the block and also in `@meta`. This is the only wire change, and it is the main cost of the
-   proposal. Until this change is in the code, sync stays per feed, and requirement [F-2.3] is not met.
+5. **Partial sync.** EDGE must select blocks by branch, and it must not decrypt them. The fork flag in
+   clear on the block, with the predecessor, lets EDGE infer the branch of each block [D-51]. The fork
+   flag is the only wire change. How the sync protocol carries it is open. Until this change is in the
+   code, sync stays per feed, and requirement [F-2.3] is not met.
 
 6. **Rewind is a branch.** A rewind to item X opens a branch, with a fork at the predecessor of X. It
    also sets the old branch to `removed`. `PARENT_KEY` and `rewindFrom` continue to work for old feeds.
@@ -383,17 +386,16 @@ type BranchId
 ```mdl
 type FeedItemMeta
   desc: |
-    The `feed` section of the `@meta` of a feed item [D-29]. A base block has `fork: true` and, after its
-    first write, `branch` set to its own block id [D-37]. A continuation of a branch that is not the
-    root has only `branch`. A root item has no `feed` section [D-34].
+    The `feed` section of the `@meta` of a feed item that the decoder stamps when it reads a block, as it
+    stamps the position. The payload does not store it [D-53]. `fork` copies the fork flag of the block.
+    `branch` is the inferred branch: the block id of the block for a base block, else the branch of its
+    predecessor [D-51].
 
-    The fork flag tells the same fact as "`branch` is the block id of the first block of this item".
-    The flag is necessary data, because on the first write of a base item its block id does not exist
-    yet, thus `branch` cannot hold it. An update of the base item appends a new block with a new block
-    id, and `branch` keeps the id of the first block [D-44].
+    The fork flag tells the same fact as "`branch` is the block id of this block" [D-44]. The flag is
+    necessary data, because the writer sets it before the block id exists.
   fields:
-    fork?: true          # the item is the base of a new branch; its predecessor is the fork point
-    branch?: BranchId    # the branch that the item continues, or (with fork) the branch that it starts
+    fork?: true          # the block is the base of a new branch; its predecessor is the fork point
+    branch?: BranchId    # the inferred branch; absent for the root branch [D-36]
 ```
 
 ```mdl
@@ -530,16 +532,17 @@ table blocks: One block (one version of one item) of a feed, in local append ord
     actorId: TEXT NOT NULL
     prevSequence?: INTEGER                            # the predecessor block: the head of the item's branch, or the fork point of a base block [D-28]
     prevActorId?: TEXT                                # NULL for the first block of the feed
+    fork: INTEGER NOT NULL DEFAULT 0                  # 1 on the base block of a branch; replicated in clear, part of the sync protocol [D-51]
     timestamp: INTEGER NOT NULL                       # append time, ms since epoch
     data: BLOB NOT NULL                               # the encoded item, with its @meta.feed; ciphertext when sealed
     encryptionKeyId?: TEXT
     iv?: BLOB
-    branch?: TEXT                                     # local copy of the item's branch id, not replicated; NULL = root [D-38]
+    branch?: TEXT                                     # the inferred branch id, kept on insert, not replicated; NULL = root [D-38], [D-53]
   key: insertionId
   indexes:
     - idx_blocks_feedPrivateId_timestamp(feedPrivateId, timestamp): retention by age without a scan
     - idx_blocks_feedPrivateId_branch(feedPrivateId, branch, insertionId): the head of one branch without a scan [D-38]
-  new: branch, idx_blocks_feedPrivateId_branch
+  new: fork, branch, idx_blocks_feedPrivateId_branch
 ```
 
 ```mdl
@@ -623,33 +626,25 @@ table objectMeta: The latest version of one object of a space, or of one item of
 
 ## Questions for Dima
 
-1. Did you put the thread ids in the payload deliberately, because then ECHO does not change? Or, if we
-   move the thread ids to `@meta`, do the reducers lose something that they need?
+The trajectory is a separate design, thus this spec does not ask about it [D-52].
 
-   Partly answered: the branch of an item is in `@meta.feed` [D-29]. Open: do the trajectory reducers
-   need the thread ids in the payload?
-2. Chat feeds have indexing off because no code read them through the index. With a branch column and
+1. Chat feeds have indexing off because no code read them through the index. With a branch column and
    push-down, do you want an index for chat feeds again? Or do you want no index for chat feeds, and an
    index only for comment branches and channel branches?
 
    Answer: the index of a feed holds all branches or only the main branch, and the default is the main
    branch [F-2.1]. Dima thinks about no index for trajectory feeds, because a reducer builds the state of
    the conversation.
-3. Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an
+2. Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an
    acceptable wire change? The reasons are different: a lineage edge on blocks mixed races with forks,
    but a branch id does not.
 
-   Still open, in a new form. The predecessor is on the block [D-28]. But the fork flag and the branch
-   are in the encrypted payload [D-29]. For partial sync, EDGE must tell a fork from a race and name a
-   branch, and it cannot decrypt. Is a fork flag or a branch id in clear on the block acceptable?
-4. Is merge a concept of the feed layer, or does merge stay a trajectory event?
+   Answer: the fork flag is part of the sync protocol and is not encrypted, and the branch is inferred
+   [D-51]. How the protocol carries the flag is open.
+3. Is merge a concept of the feed layer, or does merge stay a trajectory event?
 
    Answer: the core does nothing with a merge [D-3]. Merges and branch cancel are out of scope of this
    design [D-50].
-5. Can a `Message` be directly in a trajectory feed? Or must an event always wrap the content? Comments
-   and channels need `Message` objects that other code reads, edits and indexes.
-
-   Still open.
 
 ## Changelog
 
@@ -1048,6 +1043,39 @@ decision D-50: Merges and branch cancel are out of scope of this design.
   date: 2026-10-27
   by: user:dmaretskyi
   affects: [F-1.4]
+```
+
+```mdl
+decision D-51: The fork flag is part of the sync protocol and is not encrypted; the branch of a block is not stored, because it can be inferred from the fork flag and the predecessor.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.2, F-2.3]
+  supersedes: D-29
+```
+
+```mdl
+decision D-52: The trajectory is a separate design; its thread ids, and whether a `Message` can be in a trajectory feed, are outside this spec.
+  date: 2026-10-27
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-53: The decoder stamps the fork flag and the inferred branch into `@meta.feed` when it reads a block, and the feed store infers the branch of each block on insert (a base block gets its own block id, any other block the branch of its predecessor) and keeps it in `blocks.branch`. Fills in [D-51].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-2.1, F-2.2]
+  why: The index, the walk and `Feed.getBranch` then read the branch without a walk up the predecessor chain.
+```
+
+```mdl
+decision D-54: An update of a base item appends a block without the fork flag, whose predecessor is the head of the branch of the item, thus the item stays on its branch. Fills in [D-51].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  supersedes: D-37
+  why: With the branch inferred from the chain, a fork flag on the update would start a second branch.
 ```
 
 ## Appendix: Extension Definitions
