@@ -123,8 +123,8 @@ export const findMode = (modes: readonly Mode.Mode[], name: string): Mode.Mode |
   modes.find((mode) => mode.name.trim().toLowerCase() === name.trim().toLowerCase());
 
 /**
- * Puts the chat in `mode`: unbinds the skills of every other mode (never the base skills), binds the
- * mode's skills (the agent's customized copies where they exist), and records the mode on the chat.
+ * Puts the chat in `mode`: unbinds the skills of every other mode (never one a new conversation starts with),
+ * binds the mode's skills (the agent's customized copies where they exist), and records the mode on the chat.
  */
 export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat, name: string) {
   const modes = yield* ensureModes(agent);
@@ -138,7 +138,7 @@ export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, c
   }
 
   const wanted = new Set(mode.skills.map(skillKeyOf).filter((key) => key !== undefined));
-  const base = new Set(BASE_SKILL_KEYS);
+  const base = new Set((yield* sessionSkills(agent)).map(skillKeyOf).filter((key) => key !== undefined));
   const modeKeys = new Set(
     modes.flatMap((mode) => mode.skills.map(skillKeyOf)).filter((key) => key !== undefined && !base.has(key)),
   );
@@ -155,7 +155,7 @@ export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, c
 
   const boundKeys = new Set(binder.getSkills().map((skill) => Obj.getMeta(skill).key));
   const toBind = yield* Effect.forEach(
-    [...base, ...wanted].filter((key) => !boundKeys.has(key)),
+    [...wanted].filter((key) => !boundKeys.has(key)),
     (key) => skillRef(agent, key),
   );
   if (toBind.length > 0) {

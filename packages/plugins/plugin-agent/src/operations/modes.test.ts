@@ -162,6 +162,42 @@ describe('Modes', () => {
   );
 
   it.effect(
+    'keeps a skill removed from the instructions out of a conversation across mode switches',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const instructions = yield* Database.load(agent.instructions);
+        Obj.update(instructions, (instructions) => {
+          instructions.skills = instructions.skills.filter(({ uri }) => uri !== Skill.registryURI(RelaySkill.key));
+        });
+        const person = yield* Database.add(Person.make({ fullName: 'Ada' }));
+        yield* Database.flush();
+        const { chat: chatRef } = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
+          agent: agentRef,
+          person: Ref.make(person),
+        });
+        const chat = yield* Database.load(chatRef);
+        yield* Database.flush();
+
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: chatRef, mode: 'Note-taker' });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, chat)).not.toContain(RelaySkill.key);
+
+        // Relay is now only the Relay mode's skill, so leaving that mode unbinds it.
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: chatRef, mode: 'Relay' });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, chat)).toContain(RelaySkill.key);
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: chatRef, mode: Mode.DEFAULT });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, chat)).not.toContain(RelaySkill.key);
+      },
+      Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'records notes as facts stated by the agent about their subject',
     Effect.fnUntraced(
       function* ({ expect }) {
