@@ -14,10 +14,10 @@ export type WorkingSetRow = {
   heads: string[];
   /** The document's stored changes, as `Automerge.save` or the host's stored chunks. */
   bytes: Uint8Array;
-  /** Set with {@link documentJson} for a document that holds exactly one object. */
+  /** Set with {@link objectJson} for a document that holds exactly one object. */
   objectId?: string;
   /** The object in the ECHO JSON object format, read at {@link heads}. */
-  documentJson?: string;
+  objectJson?: string;
   createdAt?: number;
   updatedAt?: number;
 };

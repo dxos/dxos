@@ -46,7 +46,7 @@ describe('working set seed', () => {
     expect(rows[0].documentId).toBe(db.rootUrl?.replace('automerge:', ''));
     const objectRows = rows.filter((row) => row.objectId !== undefined);
     expect(objectRows.map((row) => row.objectId).sort()).toEqual(tasks.map((task) => task.id).sort());
-    expect(objectRows.every((row) => row.documentJson !== undefined && row.bytes.length > 0)).toBe(true);
+    expect(objectRows.every((row) => row.objectJson !== undefined && row.bytes.length > 0)).toBe(true);
 
     const host = Promise.withResolvers<void>();
     const { client, database: seeded } = await openWithHeldHost(scope, peer, db, host.promise);

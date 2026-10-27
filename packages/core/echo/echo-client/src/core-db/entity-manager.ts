@@ -660,7 +660,7 @@ export class EntityManager implements IDatabaseBinding {
     const structure = core.snapshot ? core.snapshot.root.objects[core.id] : this.#soleObjectStructure(core.id, handle);
     if (structure) {
       row.objectId = core.id;
-      row.documentJson = JSON.stringify(objectStructureToJson(core.id as EntityId, structure));
+      row.objectJson = JSON.stringify(objectStructureToJson(core.id as EntityId, structure));
       row.createdAt = structure.system?.createdAt;
       row.updatedAt = core.getUpdatedAt();
     }
@@ -694,8 +694,8 @@ export class EntityManager implements IDatabaseBinding {
 
   /** Shows each object row from its JSON, as an index row is, once the space root routes objects to documents. */
   placeSeededObjects(rows: readonly WorkingSetRow[]): void {
-    for (const { objectId, documentJson, documentId, heads, bytes, createdAt, updatedAt } of rows) {
-      if (objectId === undefined || documentJson === undefined) {
+    for (const { objectId, objectJson, documentId, heads, bytes, createdAt, updatedAt } of rows) {
+      if (objectId === undefined || objectJson === undefined) {
         continue;
       }
       this.placeIndexRow(EntityId.make(objectId), documentId, () =>
@@ -704,7 +704,7 @@ export class EntityManager implements IDatabaseBinding {
           spaceId: this._spaceId,
           documentId,
           rank: 0,
-          documentJson,
+          documentJson: objectJson,
           heads,
           bytes,
           createdAt,
