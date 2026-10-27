@@ -1,0 +1,11 @@
+{
+  "name": "module-url-conditions-fixture",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#realm": {
+      "plugin-worker": "./realm.worker.ts",
+      "default": "./realm.page.ts"
+    }
+  }
+}

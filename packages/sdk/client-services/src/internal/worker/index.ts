@@ -3,3 +3,4 @@
 //
 
 export * from './worker-runtime.ts';
+export * from './worker-services.ts';

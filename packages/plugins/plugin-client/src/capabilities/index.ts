@@ -5,6 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as WorkerCapabilities from '@dxos/app-framework/WorkerCapabilities';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
@@ -186,3 +187,9 @@ export const TraceProgress = Capability.lazyModule(
   () => import('./trace-progress.ts'),
 );
 export const Translations = AppCapability.translations(translations);
+// The client services, hosted by the dedicated worker for every tab.
+export const WorkerServices = Capability.workerModule(
+  'WorkerServices',
+  { requires: [WorkerCapabilities.Host], provides: [Capabilities.LayerSpec] },
+  () => import('./worker-services.ts'),
+);

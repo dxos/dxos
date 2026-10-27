@@ -30,9 +30,11 @@
     "src"
   ],
   "devDependencies": {
+    "rolldown": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
+    "rolldown": "catalog:",
     "vite": "catalog:"
   }
 }

@@ -26,6 +26,7 @@ import {
   SpaceReplicationProgress,
   TraceProgress,
   Translations,
+  WorkerServices,
 } from '#capabilities';
 import { meta } from '#meta';
 import { ClientOptions } from '#types';
@@ -59,6 +60,11 @@ export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(met
     Plugin.addModule(TraceProgress),
   )
   // `pipe` has overloads only up to 20 arguments, and this plugin has more modules than that.
-  .pipe(Plugin.addModule(Translations), Plugin.make);
+  .pipe(
+    Plugin.addModule(Translations),
+    // Served from the dedicated worker; see the module definition.
+    Plugin.addModule(WorkerServices),
+    Plugin.make,
+  );
 
 export default ClientPlugin;

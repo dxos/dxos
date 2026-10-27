@@ -17,12 +17,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
+        "plugin-worker": "./src/capabilities/gen/plugin-worker.ts",
         "tauri": "./src/capabilities/gen/tauri.ts",
         "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
+      "plugin-worker": "./dist/lib/capabilities.plugin-worker.mjs",
       "tauri": "./dist/lib/capabilities.tauri.mjs",
       "browser": "./dist/lib/capabilities.browser.mjs"
     },
@@ -202,6 +204,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -209,6 +212,7 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/shell": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "yaml": "catalog:"

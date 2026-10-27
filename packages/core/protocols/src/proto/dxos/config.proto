@@ -231,6 +231,10 @@ message Runtime {
     /// suspected regression is bisected against the pre-compiler path. `DX_ECHO_QUERY_EXECUTOR`
     /// overrides it when unset.
     optional QueryExecutor query_executor = 18 [ (env_var) = "DX_ECHO_QUERY_EXECUTOR" ];
+
+    /// URLs of the plugin modules the dedicated services worker loads; each module's default export
+    /// is a plugin factory. Set by the app at runtime (the URLs come from its build), not by env.
+    repeated string worker_plugins = 19;
   }
 
   message App {
