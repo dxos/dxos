@@ -20,12 +20,14 @@ import { MailboxModule } from './MailboxModule.tsx';
 import { MessageModule } from './MessageModule.tsx';
 import { StatsModule } from './StatsModule.tsx';
 import { SwarmTraceModule } from './SwarmTraceModule.tsx';
+import { SyncRunsModule } from './SyncRunsModule.tsx';
 import { SyncStateModule } from './SyncStateModule.tsx';
 import { TopicsModule } from './TopicsModule.tsx';
 import { TraceModule } from './TraceModule.tsx';
 import { TriggersModule } from './TriggersModule.tsx';
 
 export { THREAD_CONTEXT_ID } from './MailboxArticleModules.tsx';
+export type { SyncRunsConfig } from './SyncRunsModule.tsx';
 
 /**
  * Role tokens for the story columns. Each module is contributed as a dedicated surface
@@ -44,6 +46,7 @@ export const StoryRole = {
   SelectedMessageJson: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.selectedMessageJson'),
   Stats: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.stats'),
   SwarmTrace: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.swarmTrace'),
+  SyncRuns: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.syncRuns'),
   SyncState: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.syncState'),
   Thread: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.thread'),
   ThreadJson: Role.make<Record<string, unknown>>('org.dxos.storybook.inbox.threadJson'),
@@ -108,6 +111,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'inbox.swarmTrace',
     filter: Surface.makeFilter(StoryRole.SwarmTrace),
     component: SwarmTraceModule,
+  }),
+  Surface.create({
+    id: 'inbox.syncRuns',
+    filter: Surface.makeFilter(StoryRole.SyncRuns),
+    component: SyncRunsModule,
   }),
   Surface.create({
     id: 'inbox.syncState',

@@ -54,6 +54,26 @@ same project name. Tracking: [DX-1076](https://linear.app/dxos/issue/DX-1076) (p
       `this`. Bounded (fixed ids overwrite) so it pins only the most recent instance — a constant,
       not a leak — but it is untidy and it makes real leaks harder to spot.
 
+## Deadline and overlapping runs (dxos/dxos#14243)
+
+Every EDGE mail sync run was killed at the 60s invocation deadline before it saved its position.
+
+- [x] **Time budget per run** — dxos/dxos#14245: `runMailSync` stops taking messages after 40s and
+      continues through `Operation.runAgain()`.
+- [x] **One run per trigger on EDGE** — the force-run endpoint, the cron tick and timer continuations
+      skip a trigger that has an invocation in flight; a force-run answers 409 `Trigger already
+  running`, which `EdgeTriggerManager` counts as met (the client retries every other failure, so a
+      lost response used to start a second run).
+- [x] **Demo** — `stories-inbox/MailboxSyncChain` (the `SyncRuns` module) runs the chain against a
+      slowed mock JMAP account; `stories-inbox/autocue/mail-sync-chain.mjs` records it (QA-3).
+- [ ] **Land #14245, then the follow-up PRs**, publish `pkg.pr.new`, bump edge's `@dxos/*` pin, deploy
+      to preview, and verify on the spaces named in #14243 (no `InvocationDeadlineError`, each run ends
+      in `runAgain`, the message count rises every run).
+- [ ] **Deadline from the runtime** — the 40s constant assumes a 60s limit; the operation should be
+      given its deadline (`InvocationDeadlineError` already carries `deadlineMs`).
+- [ ] **No sync meter for EDGE runs** — the client never receives `status.update` from EDGE through the
+      swarm (`TraceProgress` / `RemoteTraceMonitor` in plugin-client).
+
 ## Traps (paid for already)
 
 - **An unformatted `Error` retains the receiver of every frame it captured**; reading `.stack`
