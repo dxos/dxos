@@ -404,7 +404,7 @@ feature plugin-illustrator: IllustratorPlugin
 ```mdl
 feature plugin-inbox: InboxPlugin
   status: in-progress
-  specs: [packages/plugins/plugin-inbox/PLUGIN.mdl]
+  specs: [packages/plugins/plugin-inbox/PLUGIN.mdl, packages/plugins/plugin-inbox/docs/TRIAGE.mdl]
   note: Seeded from its review of 2026-10-27: 26 done, 17 untested, 7 partial, 2 diverged, 6 missing.
 ```
 
@@ -413,13 +413,6 @@ feature plugin-kanban: KanbanPlugin
   status: in-progress
   specs: [packages/plugins/plugin-kanban/PLUGIN.mdl]
   note: Seeded from its review of 2026-10-27: 15 done, 14 untested, 8 partial, 5 missing.
-```
-
-```mdl
-feature plugin-labeler: LabelerPlugin
-  status: in-progress
-  specs: [packages/plugins/plugin-labeler/PLUGIN.mdl]
-  note: Seeded from its review of 2026-10-27: 7 done, 6 untested, 1 partial.
 ```
 
 ```mdl
@@ -945,4 +938,12 @@ decision D-4: plugin-zen.sleep-fade moves to operational.
   why: The code (commit 859c2f38) fades a timed Dream over its last 30 s, and the re-run review judges F-6.1, F-6.2 and F-6.3 done, each held by a unit test. It is marked operational ahead of its dependency plugin-zen, which stays in-progress: the fade does not rely on the untested parts of that spec.
   rejected:
     - Keep in-progress until plugin-zen is operational — the status would contradict the reviews of the items it cites.
+```
+
+```mdl
+decision D-5: plugin-labeler is merged into plugin-inbox; its spec moves to plugin-inbox/docs/TRIAGE.mdl under the plugin-inbox feature, and the plugin-labeler feature is removed.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [plugin-inbox, plugin-labeler]
+  why: Triage only ever acts on a mailbox, and as a separate opt-in plugin it was off wherever inbox was on.
 ```

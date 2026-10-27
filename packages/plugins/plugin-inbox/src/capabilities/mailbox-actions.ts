@@ -6,11 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
-import { LabelerOperation } from '#types';
+import { InboxCapabilities, InboxOperation } from '#types';
 
-/** The mailbox toolbar entry that triages the whole inbox: labels, priorities and tasks. */
+/** plugin-inbox's own mailbox toolbar actions: triage labels, prioritises and extracts tasks from the whole inbox. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(InboxCapabilities.MailboxAction, {
@@ -18,7 +17,7 @@ export default Capability.makeModule(
       label: 'Triage inbox',
       icon: 'ph--magic-wand--regular',
       createInvocation: (mailbox) => ({
-        operation: LabelerOperation.LabelMailbox,
+        operation: InboxOperation.TriageMailbox,
         input: { mailbox: Ref.make(mailbox) },
       }),
     });

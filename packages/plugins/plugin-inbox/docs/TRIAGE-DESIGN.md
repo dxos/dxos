@@ -1,4 +1,7 @@
-# plugin-labeler — design
+# Inbox triage — design
+
+Triage started as plugin-labeler and now lives in plugin-inbox (`src/operations/triage/`); the spec is
+[`TRIAGE.mdl`](./TRIAGE.mdl).
 
 ## Why
 
