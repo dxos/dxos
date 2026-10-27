@@ -31,8 +31,16 @@ export const TaskRow = ({ subject: task }: TaskRowProps) => {
   );
   const tasks = useMemo(() => [task], [task]);
 
+  // Ungrouped: one row needs no status heading, and its own status control already says it.
   return (
-    <TaskList.Root tasks={tasks} flush showAssignees getTaskActions={getTaskActions} onTaskUpdate={handleUpdate}>
+    <TaskList.Root
+      tasks={tasks}
+      flush
+      groupByStatus={false}
+      showAssignees
+      getTaskActions={getTaskActions}
+      onTaskUpdate={handleUpdate}
+    >
       <TaskList.Content />
     </TaskList.Root>
   );
