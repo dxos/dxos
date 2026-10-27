@@ -6,9 +6,11 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
+import { ChannelTriageModule, type ChannelTriageModuleProps } from './ChannelTriageModule.tsx';
 import { MailboxModule } from './MailboxModule.tsx';
 import { ProjectModule, type ProjectModuleProps } from './ProjectModule.tsx';
 
+export * from './ChannelTriageModule.tsx';
 export * from './MailboxModule.tsx';
 export * from './ProjectModule.tsx';
 
@@ -23,6 +25,7 @@ export const StoryRole = {
 
   Project: Role.make<ProjectModuleProps>('org.dxos.storybook.role.project'),
   Mailbox: Role.make<Record<string, never>>('org.dxos.storybook.role.mailbox'),
+  ChannelTriage: Role.make<ChannelTriageModuleProps>('org.dxos.storybook.role.channelTriage'),
 };
 
 /** React surfaces for this package's panels, keyed by `StoryRole` tokens, plus the generic ones. */
@@ -33,6 +36,12 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.project',
     filter: Surface.makeFilter(StoryRole.Project),
     component: ProjectModule,
+  }),
+
+  Surface.create({
+    id: 'role.channelTriage',
+    filter: Surface.makeFilter(StoryRole.ChannelTriage),
+    component: ChannelTriageModule,
   }),
 
   Surface.create({

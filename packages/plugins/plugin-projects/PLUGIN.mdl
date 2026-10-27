@@ -20,6 +20,7 @@ template, which builds with the dev shell of a vite server.
 | Term   | URI                     |
 |--------|-------------------------|
 | `test` | `org.dxos.mdl.test@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
 
@@ -216,4 +217,53 @@ test QA-5: Showcase clip
     - name: Send it to the agent
       do: Tick the first task and click Send to agent.
       expect: the Gantt panel opens
+```
+
+```mdl
+test QA-6: Triage a Discord channel into a project
+  desc: |
+    The DXOS Discord #general channel, replayed from a recording, is triaged into a project as each message
+    arrives (`TriageMessages`). A question becomes a "Reply to" task carrying a drafted reply for a person to
+    review before anything is posted; the work a message asks for becomes a task; greetings and chatter file
+    nothing. The story scripts the model, so it runs offline and the same way every time.
+  actors: human
+  status: unverified        # driven by stories-projects/autocue/discord-triage.mjs
+  given:
+    - the `stories-projects/DiscordTriage` story is open, with an empty "DXOS Community" project and the eight
+      recorded #general messages ready to replay
+  steps:
+    - name: Replay the channel
+      do: Click Replay channel.
+      expect: the first message appears and reads "Triaging…"
+    - name: Watch a question become a reply to review
+      do: Wait for Tim's message about videos to be triaged.
+      expect: |
+        it reads "Reply drafted · 2 tasks", and the project lists "Reply to Tim: …", "Docs: Record five-minute videos on
+        building with Composer" and "Follow up: Ask Tim what he is building and suggest a starting point"
+    - name: Watch chatter file nothing
+      do: Wait for the channel to finish.
+      expect: |
+        the greetings read "No action", the totals read "2 replies drafted · 4 tasks", and the project also lists
+        "Docs: Write a guide to customizing storage"
+```
+
+## Changelog
+
+```mdl
+decision D-1: DXOS Discord channels sync into a feed; a feed trigger or the crawler scans each message, answers the questions asked there, and extracts tasks from them into a project.
+  date: 2026-10-27
+  by: user:dmytro@braneframe.com
+  affects: [QA-6]
+  source: https://claude.ai/code/session_01LepGAX1iF7eFSMXnwgNPvM
+```
+
+```mdl
+decision D-2: An answer is drafted and filed as a "Reply to" task for a person to review, never posted to the channel by triage. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmytro@braneframe.com
+  affects: [QA-6]
+  why: A reply posted in a public channel cannot be taken back, and the model may answer wrongly.
+  rejected:
+    - Post replies directly: a wrong answer reaches the community before anyone sees it.
 ```
