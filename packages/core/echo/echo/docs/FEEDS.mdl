@@ -714,9 +714,11 @@ question Q-3: Is merge a concept of the feed layer, or does merge stay a traject
 ```mdl
 question Q-4: How does the sync protocol carry the fork flag?
   to: user:dmaretskyi
-  status: open
+  status: answered
+  answer: |
+    As an optional `fork` field of `FeedProtocol.Block`. EDGE keeps it once it updates `@dxos/feed`.
+  decisions: [D-65, D-68]
   affects: [F-1.2, F-2.3]
-  note: The code carries it as an optional `fork` field of `FeedProtocol.Block`, which EDGE keeps once it updates `@dxos/feed` [D-65].
 ```
 
 ## Changelog
@@ -1251,6 +1253,18 @@ decision D-66: The append response gives the predecessor of each block it wrote,
   for: user:dmaretskyi
   affects: [F-5.3]
   why: The client ignores the echo of its own block, so without this a walk could not resume after an item this device wrote; in `@meta.keys` the stamp would notify subscribers a second time for each write.
+```
+
+```mdl
+decision D-67: Approve [D-61].
+  date: 2026-10-27
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-68: Approve [D-65].
+  date: 2026-10-27
+  by: user:dmaretskyi
 ```
 
 ## Appendix: Extension Definitions
