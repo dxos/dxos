@@ -44,7 +44,8 @@ const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';
 const taskRow = (title) => `${TASK_ROW}:has([data-testid="taskList.item.title"]:text-is("${title}"))`;
 
 const PROJECT_NODE = `[data-testid="deck.sidebar"] [data-testid="spacePlugin.object"]:has(:text-is("${PROJECT}")) >> nth=0`;
-const CARD = `[data-testid="feature-card"]:has-text("${FEATURE}")`;
+const NODE = `[data-testid="feature-canvas-node"]:has-text("${FEATURE}") >> nth=0`;
+const COMPANION = '[data-testid="feature-companion"]';
 
 /** Where the take's own space id is kept in the page, so a replay that reuses the page still finds it. */
 const TAKE_SPACE = '__rideCheckSpace';
@@ -145,6 +146,55 @@ const openProjectTab = async (demo, page, tab) => {
   await closeCompanion(page);
   await demo.click({ selector: `${selector} >> nth=0`, label: tab[0].toUpperCase() + tab.slice(1) });
 };
+
+/** Selects the feature on its project's map, which opens it in the plank's feature companion. */
+const openFeature = async (demo, page) => {
+  await openProjectTab(demo, page, 'features');
+  await page.locator(NODE).waitFor({ state: 'visible', timeout: 15_000 });
+  await demo.click({ selector: NODE, label: FEATURE });
+  // The selection outlives a closed companion, so a card already selected needs the companion reopened.
+  if (!(await visible(page.locator(COMPANION), 3_000))) {
+    await demo.click({ selector: '[data-testid="plankHeading.companion"] >> nth=0', label: 'Companion' });
+  }
+  await page.locator(COMPANION).first().waitFor({ state: 'visible', timeout: 15_000 });
+};
+
+/** Zooms the map into the selected feature's subfeatures, holds, and zooms back out. */
+const showSubfeatures = async (demo, page, hold) => {
+  await demo.click({
+    selector: `${COMPANION} [data-testid="feature-companion.zoom"]`,
+    label: 'Show subfeatures on the map',
+  });
+  await page.locator('[data-testid="feature-map.trail"]').first().waitFor({ state: 'visible', timeout: 10_000 });
+  await page.waitForTimeout(hold);
+  await demo.click({ selector: '[data-testid="feature-map.zoom-out"]', label: 'All features' });
+};
+
+/**
+ * Sets the feature's subfeatures operational once the feature itself is, off camera, for a run where the agent shipped
+ * the feature but left a part of it planned; returns how many it moved.
+ */
+const settleSubfeatures = (page) =>
+  page.evaluate(
+    async ({ key, name }) => {
+      const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+      const features = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.feature'))).run();
+      const root = features.find((feature) => feature.name === name && !feature.parent);
+      if (root?.status !== 'operational') {
+        return 0;
+      }
+      const stale = features.filter(
+        (feature) => feature.parent?.target?.id === root.id && feature.status !== 'operational',
+      );
+      for (const feature of stale) {
+        dxos.Obj.update(feature, (feature) => {
+          feature.status = 'operational';
+        });
+      }
+      return stale.length;
+    },
+    { key: TAKE_SPACE, name: FEATURE },
+  );
 
 const delegate = async (demo, page, titles) => {
   await openProjectTab(demo, page, 'tasks');
@@ -297,18 +347,22 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Four features, all planned', subtitle: 'One per card on the page' });
       await openProjectTab(demo, page, 'features');
-      await page.locator(CARD).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.locator(NODE).waitFor({ state: 'visible', timeout: 15_000 });
       await page.waitForTimeout(BEAT * 2);
+      await demo.caption({ value: 'Requirements from the spec, and two subfeatures', subtitle: FEATURE });
+      await openFeature(demo, page);
+      await page.waitForTimeout(BEAT * 2);
+      await showSubfeatures(demo, page, BEAT * 2);
+      await page.waitForTimeout(BEAT);
     },
   },
   {
     name: 'Open the spec',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Each feature cites its block in the spec' });
-      await demo.click({ selector: `${CARD} [data-testid="feature-card.menu"] button >> nth=0`, label: FEATURE });
-      await demo.click({ selector: '[data-testid="feature-card.open"] >> nth=0', label: 'Open' });
-      await demo.click({ selector: '[data-testid="feature-card.spec"] >> nth=0', label: 'Spec' });
+      await demo.click({ selector: `${COMPANION} [data-testid="feature-card.spec"] >> nth=0`, label: 'Spec' });
       await page.getByTestId('spec-article.spec').first().waitFor({ state: 'visible', timeout: 30_000 });
+      await closeCompanion(page);
       await page.waitForTimeout(BEAT * 3);
     },
   },
@@ -335,6 +389,7 @@ export const steps = [
         subtitle: 'In a sandbox, fast-forwarded',
       });
       await waitFor(demo, page, ({ tasks }) => TASKS.every((title) => FINISHED.includes(tasks[title])), 75, 'the plan');
+      await settleSubfeatures(page);
       await page.waitForTimeout(BEAT);
     },
   },
@@ -343,8 +398,13 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Deployed: every feature operational' });
       await openProjectTab(demo, page, 'features');
-      await page.locator(CARD).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await page.waitForTimeout(BEAT * 3);
+      await page.locator(NODE).waitFor({ state: 'visible', timeout: 15_000 });
+      await page.waitForTimeout(BEAT * 2);
+      await demo.caption({ value: 'Its subfeatures too', subtitle: FEATURE });
+      await openFeature(demo, page);
+      await page.waitForTimeout(BEAT * 2);
+      await showSubfeatures(demo, page, BEAT * 2);
+      await page.waitForTimeout(BEAT);
     },
   },
   {
@@ -367,31 +427,17 @@ export const steps = [
     name: 'Add the gust rule to the card and file it',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Change the feature', subtitle: `${FEATURE}: ${SUBFEATURE}` });
-      await openProjectTab(demo, page, 'features');
-      await demo.click({ selector: `${CARD} [data-testid="feature-card.menu"] button >> nth=0`, label: FEATURE });
-      await demo.click({ selector: '[data-testid="feature-card.open"] >> nth=0', label: 'Open' });
-      const editor = '[data-testid="deck.plank"] [data-testid="subfeature-editor"]';
-      await page.locator(editor).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await demo.click({
-        selector: `${editor} [data-testid="subfeature-editor.add"] >> nth=0`,
-        label: 'Add subfeature',
-      });
-      await page
-        .locator(`${editor} [data-testid="subfeature-editor.2.name"]`)
-        .first()
-        .waitFor({ state: 'visible', timeout: 5_000 });
-      await page.keyboard.type(SUBFEATURE, { delay: 40 });
-      await page.keyboard.press('Enter');
+      await openFeature(demo, page);
+      const add = `${COMPANION} [data-testid="feature-article.add-subfeature"]`;
+      await page.locator(add).first().scrollIntoViewIfNeeded();
+      await demo.type({ selector: add, value: SUBFEATURE, delay: 40, label: 'Add a subfeature' });
+      await demo.press({ selector: add, key: 'Enter' });
       await page.waitForTimeout(BEAT);
-      // A task filed from the feature's article is linked to it, so the agent knows which card it moves.
-      const file = page
-        .locator('[data-testid="deck.plank"]')
-        .getByPlaceholder(/File a task/i)
-        .first();
-      await file.scrollIntoViewIfNeeded();
-      await file.click();
-      await page.keyboard.type(SHIP, { delay: 40 });
-      await page.keyboard.press('Enter');
+      // A task filed from the feature is linked to it, so the agent knows which card it moves.
+      const file = `${COMPANION} [data-testid="feature-article.file-task"]`;
+      await page.locator(file).first().scrollIntoViewIfNeeded();
+      await demo.type({ selector: file, value: SHIP, delay: 40, label: 'File a task' });
+      await demo.press({ selector: file, key: 'Enter' });
       await page.waitForFunction(
         async ({ key, title }) => {
           const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
@@ -425,20 +471,21 @@ export const steps = [
         45,
         'the gust rule',
       );
+      await settleSubfeatures(page);
       await page.waitForTimeout(BEAT);
     },
   },
   {
     name: 'The spec carries the new rule',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Shipped: the spec carries the rule, the card is operational again' });
-      await openProjectTab(demo, page, 'features');
-      await page.locator(CARD).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await page.waitForTimeout(BEAT * 3);
-      await demo.click({ selector: `${CARD} [data-testid="feature-card.menu"] button >> nth=0`, label: FEATURE });
-      await demo.click({ selector: '[data-testid="feature-card.open"] >> nth=0', label: 'Open' });
-      await demo.click({ selector: '[data-testid="feature-card.spec"] >> nth=0', label: 'Spec' });
+      await demo.caption({ value: 'Shipped: the card is operational again, gust rule included' });
+      await openFeature(demo, page);
+      await page.waitForTimeout(BEAT * 2);
+      await showSubfeatures(demo, page, BEAT * 2);
+      await demo.caption({ value: 'The spec carries the new rule' });
+      await demo.click({ selector: `${COMPANION} [data-testid="feature-card.spec"] >> nth=0`, label: 'Spec' });
       await page.getByTestId('spec-article.spec').first().waitFor({ state: 'visible', timeout: 30_000 });
+      await closeCompanion(page);
       await page.waitForTimeout(BEAT * 4);
     },
   },

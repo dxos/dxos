@@ -32,7 +32,7 @@ export const ARCHITECTURE: TaskSeed = {
 export const BUILD: TaskSeed = {
   title: 'Build and deploy the Worker',
   description:
-    'Build the page the spec describes with DXOS UI and deploy it as one Worker, following the recipe in the project instructions. This task already implements every feature on the map; set each feature to operational once the live page shows it.',
+    'Build the page the spec describes with DXOS UI and deploy it as one Worker, following the recipe in the project instructions. This task already implements every feature on the map; set each feature, and each of its subfeatures, to operational once the live page shows it.',
   estimate: 's',
 };
 
