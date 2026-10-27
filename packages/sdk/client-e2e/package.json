@@ -37,6 +37,7 @@
   "devDependencies": {
     "@dxos/compute": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/fixtures": "workspace:*",
     "@dxos/network-manager": "workspace:*"
   }
 }

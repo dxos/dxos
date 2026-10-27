@@ -20831,6 +20831,9 @@ importers:
       '@dxos/feed-store':
         specifier: workspace:*
         version: link:../../common/feed-store
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/network-manager':
         specifier: workspace:*
         version: link:../../core/mesh/network-manager
