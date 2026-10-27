@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Game } from '#types';
+
+import { GameNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete game',
         'object-deleted.label': 'Game deleted',
       },
-      [meta.profile.key]: {
+      [GameNamespace.key]: {
         'plugin.name': 'Game',
         'create-panel.variant.label': 'Select variant',
         'create-panel.variant.placeholder': 'Search variants...',

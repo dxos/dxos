@@ -124,6 +124,9 @@ export const moduleBodyAttributePlugin = (): VitePlugin => ({
   },
 });
 
+/** Query parameter on a library entry for `dx.config.ts` that limits it to one runtime's modules. */
+export const LIBRARY_ENV_PARAM = 'dx-env';
+
 export type PluginConfigPluginOptions = {
   /** Restricts the plugin to one command, e.g. `'build'` for a library whose tests import the config. */
   apply?: 'build' | 'serve';
@@ -185,9 +188,13 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
             ? 'workerd'
             : 'node';
 
-      // A library's dist serves every runtime and is re-bundled downstream: keep every module with its
-      // environments, and load each body through a static import a downstream bundler can follow.
+      // A library's dist is re-bundled downstream, so each body loads through an import a bundler can
+      // follow. The default entry keeps every module with its environments; a `?dx-env=` entry keeps
+      // one runtime's modules, so a headless bundle never reaches a browser-only body.
       const library = this.environment.mode === 'build' && Boolean(this.environment.config.build.lib);
+      const libraryEnv = library ? new URLSearchParams(id.split('?')[1] ?? '').get(LIBRARY_ENV_PARAM) : null;
+      const keep = (environments?: readonly string[]) =>
+        !environments || (library ? !libraryEnv || environments.includes(libraryEnv) : environments.includes(target));
       const loaders: string[] = [];
       const chunkRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.
@@ -208,7 +215,7 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
       };
       const modules: Plugin.ManifestModule[] = [];
       for (const module of config.modules) {
-        if (!module || (!library && module.environments && !module.environments.includes(target))) {
+        if (!module || !keep(module.environments)) {
           continue;
         }
         // Both tags are `Symbol.for` keys, so they match the copy of the framework the config loaded.

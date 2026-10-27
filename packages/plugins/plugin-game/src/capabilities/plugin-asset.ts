@@ -7,14 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { meta } from '#meta';
-
 import content from '../../PLUGIN.mdl?raw';
+import { GameNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.PluginAsset, {
-      pluginId: meta.profile.key,
+      pluginId: GameNamespace.key,
       path: 'PLUGIN.mdl',
       content,
       mimeType: 'application/x-mdl',

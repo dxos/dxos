@@ -39,8 +39,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { meta } from '#meta';
-
+import { MarkdownNamespace } from '../../namespace.ts';
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
 export type MarkdownEditorContentProps = Util.ThemedClassName<{
@@ -87,7 +86,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(MarkdownNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const registry = useContext(RegistryContext);
 

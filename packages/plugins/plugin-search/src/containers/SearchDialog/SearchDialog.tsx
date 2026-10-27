@@ -18,8 +18,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { toSearchResults, useGlobalSearch } from '#hooks';
-import { meta } from '#meta';
 
+import { SearchNamespace } from '../../namespace.ts';
 import { type SelectHandle } from '../../select-handle.ts';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
@@ -29,7 +29,7 @@ export type SearchDialogProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: SearchDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SearchNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { setMatch } = useGlobalSearch();
   const layout = ToolkitHooks.useLayout();

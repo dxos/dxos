@@ -16,7 +16,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 import { Domino } from '@dxos/ui';
 
-import { meta } from '#meta';
+import { MarkdownNamespace } from '../namespace.ts';
 
 export type UseEditorMenuOptionsProps = {
   editorView?: EditorView;
@@ -29,7 +29,7 @@ export const useEditorMenuOptions = ({
   slashCommandGroups,
   onLinkQuery,
 }: UseEditorMenuOptionsProps): UseEditorMenuProps => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(MarkdownNamespace.key);
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     ({ text, trigger }) => {

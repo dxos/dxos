@@ -1200,6 +1200,8 @@ const conditionalSubpathEntries = (cwd: string): Record<string, string> => {
  * the built target: a `Plugin.config` plugin declares its modules there, so the build adds that one
  * entry and {@link dxConfigPlugin} emits each module body from it.
  */
+const DX_CONFIG_ENVIRONMENTS = ['workerd', 'node', 'tauri', 'browser'] as const;
+
 const dxConfigEntries = (cwd: string): Record<string, string> => {
   const pkgPath = join(cwd, 'package.json');
   if (!existsSync(join(cwd, 'dx.config.ts')) || !existsSync(pkgPath)) {
@@ -1207,10 +1209,20 @@ const dxConfigEntries = (cwd: string): Record<string, string> => {
   }
   const { exports, imports } = JSON.parse(readFileSync(pkgPath, 'utf8'));
   const entries: Record<string, string> = {};
+  const entryName = (built: string) => path.posix.basename(built).replace(/\.mjs$/, '');
   for (const target of [...Object.values<any>(exports ?? {}), ...Object.values<any>(imports ?? {})]) {
-    const built = target?.import ?? target?.default;
-    if (target?.source === './dx.config.ts' && typeof built === 'string') {
-      entries[path.posix.basename(built).replace(/\.mjs$/, '')] = 'dx.config.ts';
+    if (target?.source !== './dx.config.ts') {
+      continue;
+    }
+    const built = target.import ?? target.default;
+    if (typeof built === 'string') {
+      entries[entryName(built)] = 'dx.config.ts';
+    }
+    // A runtime condition gets an entry holding only that runtime's modules (see `pluginConfigPlugin`).
+    for (const env of DX_CONFIG_ENVIRONMENTS) {
+      if (typeof target[env] === 'string') {
+        entries[entryName(target[env])] = `dx.config.ts?dx-env=${env}`;
+      }
     }
   }
   return entries;
@@ -1279,7 +1291,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
   // Per-condition subpaths are added to whatever the package declares, so a package gaining its
   // first condition needs no edit here.
   const barrelEntries = { ...conditionalSubpathEntries(process.cwd()), ...dxConfigEntries(process.cwd()) };
-  const hasDxConfigEntry = Object.values(barrelEntries).includes('dx.config.ts');
+  const hasDxConfigEntry = Object.values(barrelEntries).some((entry) => entry.startsWith('dx.config.ts'));
   // Derived first so an explicitly configured entry always wins.
   const resolvedEntry =
     Object.keys(barrelEntries).length > 0
