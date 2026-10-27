@@ -308,7 +308,7 @@ const WhistlePanel = ({
       </Panel.Root>
 
       <Panel.Root classNames='w-80 dx-base-surface'>
-        <Panel.Body classNames='flex flex-col gap-4 p-3 overflow-y-auto'>
+        <Panel.Body classNames='flex flex-col gap-4 p-trim-md overflow-y-auto'>
           <Input.Switch label='Low latency' checked={fast} onCheckedChange={({ checked }) => setFast(checked)} />
           <p className='text-sm text-description'>
             A pass every {fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS} ms of new audio.{' '}

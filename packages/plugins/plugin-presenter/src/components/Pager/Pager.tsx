@@ -25,7 +25,7 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
   const atEnd = count === 0 || index >= count - 1;
 
   return (
-    <Layout.Flex align='center' classNames='text-neutral-500 select-none'>
+    <Layout.Flex align='center' classNames='text-description select-none'>
       <Button.Root
         icon='ph--caret-double-left--regular'
         iconSize='xl'
@@ -84,7 +84,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   // widen the pager; one text node, so the label still reads (and is found) as `9 / 10`.
   const width = `${String(count).length * 2 + 3}ch`;
   return (
-    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl tabular-nums select-none'>
+    <Layout.Flex align='center' classNames='text-description text-2xl tabular-nums select-none'>
       <div className='text-end' style={{ minWidth: width }}>
         {count === 0 ? 0 : index + 1} / {count}
       </div>
@@ -106,7 +106,7 @@ export const ExitButton = ({ onExit }: ExitButtonProps) => (
     iconOnly
     showTooltip={false}
     variant='ghost'
-    classNames='p-0 text-neutral-500'
+    classNames='p-0 text-description'
     onClick={onExit}
   />
 );

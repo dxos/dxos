@@ -10,7 +10,7 @@ import { EncodedReference, type EntityStructure, QueryAST } from '@dxos/echo-pro
 import { DXN, type EntityId } from '@dxos/keys';
 import { getDeep } from '@dxos/util';
 
-import { type ObjectCore } from '../core-db/index.ts';
+import { type DeletionMemo, type ObjectCore } from '../core-db/index.ts';
 import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
 import { type ManifestPlan } from './manifest-merge.ts';
 import { type CoreLookup, type PathPlan, checkPaths, pathPlanOf } from './path-revalidation.ts';
@@ -153,12 +153,14 @@ export type RemoteVerdict = 'drop' | 'verified' | 'trusted';
 /**
  * Judges a remote entry by what is loaded here: a loaded object must still match, every derivation of a traversal
  * hit is re-walked, and an object held at exactly the version the remote evaluated is confirmed without either.
+ * Entries judged in one synchronous pass share `memo`, so siblings walk their common ancestors' deletion once.
  */
 export const judgeRemoteEntry = (
   plan: MergePlan,
   entry: SourceEntry,
   lookup: CoreLookup,
   feedLocalWrite?: (id: string) => Entity.Unknown | undefined,
+  memo?: DeletionMemo,
 ): RemoteVerdict => {
   if (!isEchoObject(entry.result)) {
     // A feed object with a write the index has not seen is ahead of the answer, so the local state decides.
@@ -183,7 +185,7 @@ export const judgeRemoteEntry = (
   if (entry.version?.kind === 'automerge' && heldAtVersion(core, entry.version)) {
     return 'verified';
   }
-  const verdict = evaluateCore(plan, core);
+  const verdict = evaluateCore(plan, core, memo);
   return verdict === undefined ? 'trusted' : verdict ? 'verified' : 'drop';
 };
 
@@ -218,14 +220,14 @@ const aggregatesOf = (query: QueryAST.Query): readonly QueryAST.GroupAggregate[]
 };
 
 /** A loaded core's local verdict, or undefined when local cannot evaluate it (no body or no database). */
-export const evaluateCore = (plan: MergePlan, core: ObjectCore): boolean | undefined => {
+export const evaluateCore = (plan: MergePlan, core: ObjectCore, memo?: DeletionMemo): boolean | undefined => {
   const structure = core.getObjectStructure();
   const spaceId = core.entityManager?.spaceId;
   if (!plan.revalidate || structure === undefined || spaceId === undefined) {
     return undefined;
   }
   const { filter, deleted } = plan.revalidate;
-  const deletedMatches = deleted === 'include' || (deleted === 'only') === core.isDeleted();
+  const deletedMatches = deleted === 'include' || (deleted === 'only') === core.isDeleted(undefined, memo);
   return deletedMatches && filterMatchDoc(filter, { id: core.id, doc: structure, spaceId });
 };
 

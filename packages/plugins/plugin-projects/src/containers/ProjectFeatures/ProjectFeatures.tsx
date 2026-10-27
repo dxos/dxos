@@ -13,8 +13,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { FeatureBoard, FeatureKanban } from '#components';
+import { EMPTY_FEATURE_FILTER, FeatureBoard, FeatureBoardFilter, type FeatureFilter, FeatureKanban } from '#components';
 import { meta } from '#meta';
 import { Feature, FeatureMapView } from '#types';
 
@@ -59,69 +60,69 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
   // The card whose name field is open: a feature created from the toolbar is named in place on the map.
   const [editingId, setEditingId] = useState<string>();
   const handleNew = useCallback(() => void editing.createFeature('').then((id) => id && setEditingId(id)), [editing]);
+  // The cards' filter lives in the toolbar, so it is held here and handed to the board.
+  const [filter, setFilter] = useState<FeatureFilter>(EMPTY_FEATURE_FILTER);
 
-  const menu = useMenuBuilder(
-    (): ActionGraphProps =>
-      MenuBuilder.make()
-        .group(
-          'mode',
-          {
-            label: ['feature-map.mode.label', { ns: meta.profile.key }],
-            variant: 'toggleGroup',
-            selectCardinality: 'single',
-            value: mode,
-          },
-          (group) =>
-            MODES.forEach(({ mode, icon }) =>
-              group.action(
-                mode,
-                {
-                  label: [`feature-map.mode.${mode}.label`, { ns: meta.profile.key }],
-                  icon,
-                  testId: `projectsPlugin.featureMap.${mode}`,
-                },
-                () => updateView((prev) => ({ ...prev, mode })),
-              ),
+  const menu = useMenuBuilder((): ActionGraphProps => {
+    return MenuBuilder.make()
+      .group(
+        'mode',
+        {
+          label: ['feature-map.mode.label', { ns: meta.profile.key }],
+          variant: 'toggleGroup',
+          selectCardinality: 'single',
+          value: mode,
+        },
+        (group) =>
+          MODES.forEach(({ mode, icon }) =>
+            group.action(
+              mode,
+              {
+                label: [`feature-map.mode.${mode}.label`, { ns: meta.profile.key }],
+                icon,
+                testId: `projectsPlugin.featureMap.${mode}`,
+              },
+              () => updateView((prev) => ({ ...prev, mode })),
             ),
-        )
-        .separator('gap')
-        .action(
-          'new-feature',
-          {
-            label: ['feature-map.new-feature.label', { ns: meta.profile.key }],
-            icon: 'ph--plus--regular',
-            testId: 'feature-map.new-feature',
-          },
-          handleNew,
-        )
-        .action(
-          'add-feature',
-          {
-            variant: 'custom',
-            label: ['feature-map.add-feature.label', { ns: meta.profile.key }],
-            render: () => (
-              <ObjectAddPicker
-                db={db}
-                filter={Filter.type(Feature.Feature)}
-                exclude={ids}
-                onSelect={editing.addToProject}
-                onCreate={editing.createFeature}
-                trigger={
-                  <Button.Root
-                    icon='ph--list-plus--regular'
-                    iconOnly
-                    label={t('feature-map.add-feature.label')}
-                    data-testid='feature-map.add-feature'
-                  />
-                }
-              />
-            ),
-          },
-          () => {},
-        )
-        .build(),
-    [mode, updateView, db, ids, editing, handleNew, t],
-  );
+          ),
+      )
+      .separator('gap')
+      .action(
+        'new-feature',
+        {
+          label: ['feature-map.new-feature.label', { ns: meta.profile.key }],
+          icon: 'ph--plus--regular',
+          testId: 'feature-map.new-feature',
+        },
+        handleNew,
+      )
+      .action(
+        'add-feature',
+        {
+          variant: 'custom',
+          label: ['feature-map.add-feature.label', { ns: meta.profile.key }],
+          render: () => (
+            <ObjectAddPicker
+              db={db}
+              filter={Filter.type(Feature.Feature)}
+              exclude={ids}
+              onSelect={editing.addToProject}
+              onCreate={editing.createFeature}
+              trigger={
+                <Button.Root
+                  icon='ph--list-plus--regular'
+                  iconOnly
+                  label={t('feature-map.add-feature.label')}
+                  data-testid='feature-map.add-feature'
+                />
+              }
+            />
+          ),
+        },
+        () => {},
+      )
+      .build();
+  }, [mode, updateView, db, ids, editing, handleNew, t]);
 
   // Only the features whose box moved are written, so a drag touches one object rather than the whole project.
   const handlePositionsChange = useCallback(
@@ -141,6 +142,12 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
     <Panel.Root>
       <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
+        {/* The cards' filter is a second row: the field takes the width, and the five status toggles sit at its end. */}
+        {mode === 'cards' && (
+          <Toolbar.Root>
+            <FeatureBoardFilter features={features} value={filter} onValueChange={setFilter} />
+          </Toolbar.Root>
+        )}
       </Panel.Header>
       <Panel.Body asChild>
         {mode === 'canvas' ? (
@@ -172,6 +179,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
             <ScrollArea.Viewport>
               <FeatureBoard
                 features={features}
+                filter={filter}
                 onOpen={handleOpen}
                 onRemove={editing.removeFromProject}
                 onChange={editing.update}

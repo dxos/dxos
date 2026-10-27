@@ -739,6 +739,32 @@ describe('Spaces', () => {
     expect(feed.blocks.length).toBe(2);
   });
 
+  test('import space archive keeps feed messages', { timeout: 10_000 }, async ({ expect }) => {
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    await Promise.all([client1, client2].map(registerTypes));
+
+    const space = await client1.spaces.create();
+    const feedObj = space.db.add(Feed.make({}));
+    await space.db.flush();
+    await space.db.appendToFeed(feedObj, [
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-2' }),
+    ]);
+    const archive = await space.internal.export();
+
+    const importedSpace = await client2.spaces.import(archive);
+    const importedFeed = await importedSpace.db.query(Filter.id(feedObj.id)).first();
+    const feedUri = Feed.getFeedUri(importedFeed);
+    invariant(feedUri, 'feed URI missing');
+    await expect
+      .poll(async () =>
+        (await importedSpace.db.query(Query.select(Filter.everything()).from(Scope.feed(feedUri))).run())
+          .map((item) => item.name)
+          .sort(),
+      )
+      .toEqual(['queue-item-1', 'queue-item-2']);
+  });
+
   test('import space archive', { timeout: 3_000, retry: 1 }, async () => {
     const [client1, client2] = await createInitializedClients(2, {
       storage: true,

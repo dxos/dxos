@@ -7,7 +7,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { PullRequest } from '@dxos/types';
@@ -20,7 +20,7 @@ import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
 import { type GitHubAccess, githubAccess } from './pull-request.ts';
 import { ensureRefreshTrigger } from './refresh.ts';
-import { ensureRepo, findRepo } from './repo.ts';
+import { ensureRepo, findRepo, toRepoDescriptor } from './repo.ts';
 
 /**
  * Statuses that may report the token's reach rather than the repository's absence, and so are worth
@@ -145,7 +145,14 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
         Effect.catchDefect((defect) => Effect.sync(() => log.warn('refresh trigger setup failed', { defect }))),
       );
 
-      const filed = pull.base?.repo ? yield* ensureRepo(pull.base.repo).pipe(Effect.orDie) : undefined;
+      const filed = pull.base?.repo
+        ? yield* ensureRepo(toRepoDescriptor(pull.base.repo)).pipe(Effect.orDie)
+        : undefined;
+      if (filed) {
+        Obj.update(object, (object) => {
+          object.repository = Ref.make(filed);
+        });
+      }
       return { pullRequest: Ref.make(object), ...(filed && { repo: Ref.make(filed) }), imported: true };
     }, Effect.provide(FetchHttpClient.layer)),
   ),

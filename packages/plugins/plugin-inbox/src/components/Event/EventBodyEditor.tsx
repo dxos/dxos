@@ -30,7 +30,7 @@ export const EventBodyEditor = ({ event, markdown = true, classNames }: EventBod
       lineWrapping
       markdown={markdown}
       extensions={extensions}
-      classNames={mx('flex overflow-hidden p-3', classNames)}
+      classNames={mx('flex overflow-hidden p-trim-md', classNames)}
     />
   );
 };

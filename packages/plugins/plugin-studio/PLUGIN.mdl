@@ -19,8 +19,8 @@ the cross-cutting ontology and the generic authoring UI; concrete media
   primary output — the user picks a `cover`) vs. `derived` (downstream products
   such as a video transcript/summary or an image caption).
 - **Rendering is a Surface, keyed by `contentType`.** Studio ships defaults
-  (`image/*` → `<img>`, `video/*` → embeddable player); any plugin overrides via
-  a higher-priority (`Position.first`) surface.
+  (`image/*` → `<img>`, `video/*` → embeddable player, `audio/*` → `<audio>`); any
+  plugin overrides via a higher-priority (`Position.first`) surface.
 - **Generation is kind-specific.** A provider contributes a `GenerationService`
   for a `kind` with its own **`requestSchema`** (Effect Schema) describing that
   medium's request config; studio renders the request form from the schema (a
@@ -42,6 +42,7 @@ the cross-cutting ontology and the generic authoring UI; concrete media
 | `component` | `org.dxos.mdl.component@1.0` |
 | `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -135,7 +136,7 @@ type GenerationService                # StudioCapabilities.GenerationService (ar
 surface VariantRenderer               # role org.dxos.plugin.studio.role.variantRenderer, filtered by contentType
   desc: >
     Renders a variant's content. Studio ships defaults (image/* → <img>,
-    video/* → embeddable player / <video>); a plugin overrides for a contentType
+    video/* → embeddable player / <video>, audio/* → <audio>); a plugin overrides for a contentType
     via Position.first.
   data: { variant: { contentType?, url?, content?, generation? }, contentType }
 
@@ -201,7 +202,7 @@ component LightboxArticle
 component MediaArtifactCard              # CardContent surface for a MediaArtifact
   desc: Cover-variant thumbnail; lets Artifacts compose into collections/boards laid out by the host.
 
-component ImageVariant / VideoVariant   # default VariantRenderer surfaces (image/*, video/*), overridable
+component ImageVariant / VideoVariant / AudioVariant   # default VariantRenderer surfaces (image/*, video/*, audio/*), overridable
 ```
 
 ## Media kinds
@@ -237,7 +238,7 @@ feat F-1: Author + generate
   req F-1.4: When the provider needs a credential and none is connected, the toolbar shows the ConnectorAuth surface.
 
 feat F-2: Variants + rendering
-  req F-2.1: Variants render via the VariantRenderer surface matching their contentType; studio provides image/* and video/* defaults.
+  req F-2.1: Variants render via the VariantRenderer surface matching their contentType; studio provides image/*, video/* and audio/* defaults.
   req F-2.2: A plugin may override a contentType renderer via a Position.first surface.
   req F-2.3: Uploaded files are appended as Variants with content=Ref<File> and no generation.
 
@@ -292,7 +293,7 @@ Both depend on `@dxos/plugin-studio/types` and resolve their credential via
 
 ## Roadmap (out of scope this milestone)
 
-- **`kind:'audio'`**: an `audio/*` default `VariantRenderer` + an audio provider.
+- **`kind:'audio'`**: an audio provider (the `audio/*` default `VariantRenderer` ships).
 - **Graduate** `MediaArtifact`/`Variant`/`Generation` to `@dxos/types` (namespace
   re-export; no call-site changes).
 - **Materialize** ephemeral generated URLs into `File`s for permanence.
@@ -385,4 +386,33 @@ test QA-1: Create an image MediaArtifact and generate a variant
           target: $given.collection
         }
       expect: the row leaves the navtree and its plank closes if it was open
+```
+
+## Changelog
+
+```mdl
+decision D-1: Studio renders `audio/*` variants with a default `AudioVariant` (`<audio>`) and exports the `VariantRenderer` role as `StudioSurface`, so plugin-recorder can store voice-over takes as variants and play them in its own article.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [VariantRenderer, AudioVariant]
+  why: The user asked that a recorded take be a studio MediaArtifact; it then needs a player wherever it is listed.
+```
+
+```mdl
+decision D-2: The `VariantRenderer` role is not exported as `StudioSurface`; plugin-recorder plays its takes with its own player. Revises the export half of [D-1]; its audio renderer stands.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [VariantRenderer]
+  why: Nothing uses the export any more; a public API with no caller is dead weight to maintain.
+```
+
+```mdl
+decision D-3: The `VariantRenderer` surface and [F-2.1] list the `audio/*` default from [D-1] next to the image and video defaults.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [VariantRenderer, F-2.1]
+  why: D-1 added the audio renderer, but the surface and requirement still named only image and video.
 ```

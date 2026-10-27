@@ -91,6 +91,7 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
             <FeatureCard.Tags />
             <FeatureCard.SubfeatureCount />
             <FeatureCard.TaskCount />
+            <FeatureCard.TestCount />
             <FeatureCard.ShowcaseLead />
           </FeatureCard.Body>
         </FeatureCard.Root>
