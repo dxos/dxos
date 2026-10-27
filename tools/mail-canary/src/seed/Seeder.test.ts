@@ -84,6 +84,21 @@ describe('makeSeedCopy', () => {
     expect(copy.endsWith('\r\n\r\nHere is our forecast.\r\nDate: this line is body text, not a header.')).toBe(true);
   });
 
+  test('handles the CRLF headers Gmail prepends to a message imported with LF', ({ expect }) => {
+    const pooled = [
+      'Delivered-To: test@braneframe.com',
+      'Received: from 901269299575',
+      '\tby gmailapi.google.com;',
+      '\tMon, 26 Oct 2026 20:41:10 +0000',
+    ].join('\r\n');
+    const original = 'Date: Sat, 23 May 2026 09:56:40 +0000\nFrom: jeff.dasovich@enron.com\nSubject: Re:\n\nok.\n';
+    const copy = makeSeedCopy(`${pooled}\r\n${original}`, { poolId: 'id', now: NOW, nonce: 'n' });
+    expect(readHeader(copy, 'From')).toBe('jeff.dasovich@enron.com');
+    expect(readHeader(copy, 'Subject')).toBe('Re:');
+    expect(readHeader(copy, 'Date')).toBe('Mon, 26 Oct 2026 06:00:00 +0000');
+    expect(copy.endsWith('\n\nok.\n')).toBe(true);
+  });
+
   test('keeps LF line endings when the message uses them', ({ expect }) => {
     const copy = makeSeedCopy(POOL_MESSAGE.replaceAll('\r\n', '\n'), { poolId: 'id', now: NOW, nonce: 'n' });
     expect(copy.includes('\r')).toBe(false);

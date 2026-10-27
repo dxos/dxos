@@ -15,7 +15,7 @@ export const readHeader = (message: string, name: string): string | undefined =>
 
 /**
  * Drops the named headers (every occurrence, folded lines included) and puts `add` first, leaving the
- * other headers, the line endings and the body byte for byte.
+ * other headers and the body byte for byte; headers are rejoined with the head's line ending.
  */
 export const rewriteHeaders = (
   message: string,
@@ -29,13 +29,16 @@ export const rewriteHeaders = (
 
 type SplitMessage = { headerLines: string[]; separator: string; body: string; newline: string };
 
+// Line endings may be mixed: Gmail prepends CRLF headers (`Received`, `Delivered-To`) to a message it imported with LF.
 const splitMessage = (message: string): SplitMessage => {
-  const newline = message.includes('\r\n') ? '\r\n' : '\n';
-  const separator = newline + newline;
-  const index = message.indexOf(separator);
-  const head = index === -1 ? message : message.slice(0, index);
-  const body = index === -1 ? '' : message.slice(index + separator.length);
-  return { headerLines: head.split(newline), separator, body, newline };
+  const end = /\r?\n\r?\n/.exec(message);
+  const head = end ? message.slice(0, end.index) : message;
+  return {
+    headerLines: head.split(/\r?\n/),
+    separator: end?.[0] ?? '',
+    body: end ? message.slice(end.index + end[0].length) : '',
+    newline: head.includes('\r\n') ? '\r\n' : '\n',
+  };
 };
 
 /** Groups physical lines into headers, keeping each folded continuation line with its header. */
