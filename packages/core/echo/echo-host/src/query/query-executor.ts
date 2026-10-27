@@ -46,6 +46,7 @@ import {
   type QueueRef,
   type QueueWindow,
   type ReverseRef,
+  decodeSnapshot,
 } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
@@ -172,7 +173,7 @@ type QueryItem = {
 
   recordId?: number;
 
-  backing?: { heads: readonly string[]; json: string };
+  backing?: Backing;
 
   /** Heads of the document the item was read at, which the row ships as its version. */
   heads?: readonly string[];
@@ -237,13 +238,13 @@ const QueryItem = Object.freeze({
     spaceId: meta.spaceId,
     queueId: null,
     queueNamespace: null,
-    doc: objectStructureFromJson(JSON.parse(snapshot.json), { createdAt: meta.createdAt ?? undefined }),
+    doc: objectStructureFromJson(decodeSnapshot(snapshot.jsonb), { createdAt: meta.createdAt ?? undefined }),
     data: null,
     rank: 1,
     createdAt: meta.createdAt,
     updatedAt: meta.updatedAt,
     recordId: meta.recordId,
-    backing: snapshot.heads ? { heads: snapshot.heads, json: snapshot.json } : undefined,
+    backing: snapshot.heads ? { heads: snapshot.heads, jsonb: snapshot.jsonb } : undefined,
     heads: snapshot.version,
   }),
 
@@ -980,7 +981,9 @@ export class QueryExecutor extends Resource {
 
         rank: item.rank,
 
-        documentJson: item.backing?.json ?? (item.data ? JSON.stringify(item.data) : undefined),
+        ...(item.backing
+          ? backingDocument(item.backing)
+          : { documentJson: item.data ? JSON.stringify(item.data) : undefined }),
 
         groupKey: serializedGroupKey,
         groupCount: serializedGroupKey !== undefined ? groupCounts.get(serializedGroupKey) : undefined,
@@ -1016,7 +1019,7 @@ export class QueryExecutor extends Resource {
       }
       const backing = backings.get(index);
       return backing
-        ? { ...result, documentJson: backing.json, heads: backing.heads, bytes: backing.bytes }
+        ? { ...result, ...backingDocument(backing), heads: backing.heads, bytes: backing.bytes }
         : withoutBacking(result);
     });
   }
@@ -1031,7 +1034,10 @@ export class QueryExecutor extends Resource {
     indices: readonly number[],
   ): Promise<Map<number, BackingSource>> {
     const fromIndex = indices.filter(
-      (index) => results[index].documentJson === undefined && items[index]?.recordId !== undefined,
+      (index) =>
+        results[index].documentJson === undefined &&
+        results[index].documentJsonb === undefined &&
+        items[index]?.recordId !== undefined,
     );
     const indexed =
       fromIndex.length > 0
@@ -1046,9 +1052,17 @@ export class QueryExecutor extends Resource {
     const sources = new Map<number, BackingSource>();
     for (const index of indices) {
       const row = byRecord.get(items[index]?.recordId ?? -1);
-      const json = results[index].documentJson ?? row?.json;
-      if (json !== undefined) {
-        sources.set(index, { json, heads: row?.heads ?? results[index].heads! });
+      const { documentJson, documentJsonb } = results[index];
+      const document: Document | undefined =
+        documentJson !== undefined
+          ? { json: documentJson }
+          : documentJsonb !== undefined
+            ? { jsonb: documentJsonb }
+            : row !== undefined
+              ? { jsonb: row.jsonb }
+              : undefined;
+      if (document !== undefined) {
+        sources.set(index, { ...document, heads: row?.heads ?? results[index].heads! });
       }
     }
     return sources;
@@ -3290,7 +3304,7 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           queueId: row.queueId !== '' ? row.queueId : undefined,
           queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
           rank: row.rank,
-          documentJson: row.documentJson ?? undefined,
+          documentJsonb: row.documentJsonb ?? undefined,
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
           heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
@@ -3475,7 +3489,8 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
       a.result?.aggregates === b.result?.aggregates &&
       a.result?.rank === b.result?.rank &&
       // A feed row ships its indexed body, so an edit to it changes the record without moving the row.
-      a.result?.documentJson === b.result?.documentJson
+      a.result?.documentJson === b.result?.documentJson &&
+      bytesEqual(a.result?.documentJsonb, b.result?.documentJsonb)
     );
   }
   return (
@@ -3501,10 +3516,35 @@ const evidenceKey = (item: QueryItem): string =>
 
 const STORED_CHANGES_CONCURRENCY = 16;
 
-type BackingSource = { json: string; heads: string[] };
+/** An object's indexed body: JSONB when read from the index, JSON text when serialized from a loaded document. */
+type Document = { json: string; jsonb?: undefined } | { jsonb: Uint8Array; json?: undefined };
+
+type Backing = Document & { heads: readonly string[] };
+
+type BackingSource = Document & { heads: string[] };
+
+/** The result fields that ship a backing's body, in whichever encoding it was read in. */
+const backingDocument = (backing: Document): Pick<QueryService.QueryResult, 'documentJson' | 'documentJsonb'> =>
+  backing.jsonb !== undefined ? { documentJsonb: backing.jsonb } : { documentJson: backing.json };
+
+const bytesEqual = (a: Uint8Array | undefined, b: Uint8Array | undefined): boolean => {
+  if (a === b) {
+    return true;
+  }
+  if (a === undefined || b === undefined || a.length !== b.length) {
+    return false;
+  }
+  for (let index = 0; index < a.length; index++) {
+    if (a[index] !== b[index]) {
+      return false;
+    }
+  }
+  return true;
+};
 
 const withoutBacking = ({
   documentJson: _documentJson,
+  documentJsonb: _documentJsonb,
   heads: _heads,
   bytes: _bytes,
   createdAt: _createdAt,

@@ -10,10 +10,11 @@ import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
+import { MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import { EntityMetaIndex } from './entity-meta-index.ts';
 import type { IndexerObject } from './interface.ts';
-import { ObjectSnapshotIndex } from './object-snapshot-index.ts';
+import { ObjectSnapshotIndex, decodeSnapshot } from './object-snapshot-index.ts';
 
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 
@@ -24,6 +25,64 @@ const migrated = Effect.fnUntraced(function* () {
 });
 
 describe('ObjectSnapshotIndex', () => {
+  it.effect(
+    'stores snapshots as JSONB, which SQL reads as JSON and the readers decode',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const sql = yield* SqlClient.SqlClient;
+      const metaIndex = new EntityMetaIndex(sql);
+      yield* metaIndex.migrate();
+
+      const data = {
+        id: EntityId.random(),
+        [ATTR_TYPE]: TYPE_PERSON,
+        value: 'ремонт 設計 🚀',
+        nested: { list: [1, 'two'] },
+      };
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data,
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      yield* store.update([object]);
+
+      const [row] = yield* sql<{ type: string; value: string; text: string }>`
+        SELECT typeof(snapshot) AS type, snapshot ->> '$.value' AS value, json(snapshot) AS text FROM objectSnapshot`;
+      expect(row.type).toBe('blob');
+      expect(row.value).toBe(data.value);
+      expect(JSON.parse(row.text)).toEqual(data);
+      invariant(object.recordId !== null);
+      const [snapshot] = yield* store.querySnapshotsJSON([object.recordId]);
+      expect(snapshot.snapshot).toEqual(data);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'converts snapshots stored as JSON text when migrating to JSONB',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const sql = yield* SqlClient.SqlClient;
+      const data = { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, value: 'legacy' };
+      // A row as the text-era writer left it, with the conversion not yet recorded as applied.
+      yield* sql`INSERT INTO objectSnapshot (recordId, snapshot) VALUES (1, ${JSON.stringify(data)})`;
+      yield* sql`DELETE FROM ${sql(MIGRATIONS_TABLE)} WHERE name = 'snapshot_jsonb'`;
+
+      yield* store.migrate();
+
+      const [row] = yield* sql<{ type: string }>`SELECT typeof(snapshot) AS type FROM objectSnapshot`;
+      expect(row.type).toBe('blob');
+      const [snapshot] = yield* store.querySnapshotsJSON([1]);
+      expect(snapshot.snapshot).toEqual(data);
+    }, Effect.provide(TestLayer)),
+  );
+
   it.effect(
     'returns snapshots for all present recordIds',
     Effect.fnUntraced(function* () {
@@ -127,7 +186,7 @@ describe('ObjectSnapshotIndex', () => {
       yield* store.update([object]);
       const [backing] = yield* store.queryBackings([object.recordId!]);
       expect(backing.heads).toEqual(['h1', 'h2']);
-      expect(JSON.parse(backing.json)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
+      expect(decodeSnapshot(backing.jsonb)[ATTR_META]).toEqual({ keys: [], tags: ['t'] });
 
       yield* store.update([{ ...object, heads: undefined }]);
       expect(yield* store.queryBackings([object.recordId!])).toEqual([]);

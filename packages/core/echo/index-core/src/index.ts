@@ -17,7 +17,12 @@ export { type ConvergenceKeyIntent, type FeedOptionsIntent, type IndexerIntent }
 export { ActivityIndex, type ActivityRow } from './indexes/activity-index.ts';
 export { type ChangeSummary, type DocumentActivity, type Index, type IndexerObject } from './indexes/interface.ts';
 export { FtsIndex, type FtsQuery, buildFtsCondition } from './indexes/fts-index.ts';
-export { type ObjectBacking, type ObjectSnapshot, ObjectSnapshotIndex } from './indexes/object-snapshot-index.ts';
+export {
+  type ObjectBacking,
+  type ObjectSnapshot,
+  ObjectSnapshotIndex,
+  decodeSnapshot,
+} from './indexes/object-snapshot-index.ts';
 export {
   type EntityMeta,
   EntityMetaIndex,

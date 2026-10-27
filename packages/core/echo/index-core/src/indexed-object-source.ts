@@ -8,12 +8,12 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
-import type { Obj } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { type EntityMeta } from './indexes/entity-meta-index.ts';
 import { type IndexerObject } from './indexes/interface.ts';
+import { decodeSnapshot } from './indexes/object-snapshot-index.ts';
 
 /**
  * Cursor identity of every index fed from this source. `objectMeta.version` is global, so one
@@ -76,7 +76,7 @@ export class IndexedObjectSource implements IndexDataSource {
 
       // Inner join: a record's snapshot row is written in the same transaction that stamps its
       // counter, so a counter with no snapshot names a record that no longer exists.
-      const rows = yield* sql<EntityMeta & { snapshot: string }>`
+      const rows = yield* sql<EntityMeta & { snapshot: Uint8Array | ArrayBuffer }>`
         SELECT m.*, s.snapshot
         FROM objectMeta AS m
         JOIN objectSnapshot AS s ON s.recordId = m.recordId
@@ -95,7 +95,7 @@ export class IndexedObjectSource implements IndexDataSource {
         documentId: row.documentId === '' ? null : row.documentId,
         queuePosition: row.queuePosition,
         recordId: row.recordId,
-        data: JSON.parse(row.snapshot) as Obj.JSON,
+        data: decodeSnapshot(row.snapshot),
         createdAt: row.createdAt,
         updatedAt: row.updatedAt ?? 0,
       }));

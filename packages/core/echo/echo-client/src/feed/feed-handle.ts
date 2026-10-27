@@ -7,8 +7,9 @@ import * as EffectContext from 'effect/Context';
 import { Event, UpdateScheduler, scheduleTask, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
-import { EchoFeedCodec } from '@dxos/echo-protocol';
+import { EchoFeedCodec, type FeedBlockRef } from '@dxos/echo-protocol';
 import {
+  ATTR_META,
   ObjectDatabaseId,
   type ObjectJSON,
   ParentId,
@@ -16,7 +17,6 @@ import {
   assertObjectModel,
   isProxy,
   makeDecodedEntityLive,
-  objectFromJSON,
   setRefResolverOnData,
 } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
@@ -25,6 +25,7 @@ import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
+import * as Jsonb from '@dxos/util/Jsonb';
 
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { FeedCoreRegistry } from './feed-core-registry.ts';
@@ -611,49 +612,83 @@ export class FeedHandle {
    * whichever of these observes an id first wins the identity for that entity.
    */
   async upsertFromJSON(json: ObjectJSON): Promise<Entity.Unknown | undefined> {
-    if (!EntityId.isValid(json.id)) {
-      log.verbose('feed object missing valid id; ignored', { json });
+    return this.#upsert({
+      id: json.id,
+      blockRef: () => EchoFeedCodec.blockOf(json),
+      decode: (options) => Obj.fromJSON(json, options),
+      source: json,
+    });
+  }
+
+  /**
+   * {@link upsertFromJSON} over the object's JSONB, as an index-backed query ships it: the id and meta are read
+   * without decoding the body, which is decoded once, only when the object is new or its block is newer.
+   */
+  async upsertFromJSONB(jsonb: Uint8Array): Promise<Entity.Unknown | undefined> {
+    return this.#upsert({
+      id: Jsonb.readTopLevelString(jsonb, 'id'),
+      blockRef: () => EchoFeedCodec.blockOf({ [ATTR_META]: Jsonb.readTopLevel(jsonb, ATTR_META) }),
+      decode: (options) => Obj.fromJSONB(jsonb, options),
+      source: { bytes: jsonb.length },
+    });
+  }
+
+  async #upsert({
+    id,
+    blockRef,
+    decode,
+    source,
+  }: {
+    id: string | undefined;
+    blockRef: () => FeedBlockRef;
+    decode: (options: DecodeOptions) => Promise<DecodedEntity>;
+    /** What the log names when the object is ignored. */
+    source: unknown;
+  }): Promise<Entity.Unknown | undefined> {
+    if (id === undefined || !EntityId.isValid(id)) {
+      log.verbose('feed object missing valid id; ignored', { source });
       return undefined;
     }
-    const id = json.id;
 
     const existingCore = this.#cores.get(id);
     if (existingCore) {
-      const ref = EchoFeedCodec.blockOf(json);
+      const ref = blockRef();
       if (!existingCore.accepts(ref)) {
         return existingCore.entity;
       }
       try {
-        const decoded = await Obj.fromJSON(json, {
-          refResolver: this._refResolver,
-          uri: EID.make({ spaceId: this._spaceId, entityId: id }),
-          database: this._database,
-          parent: this._parentEntity,
-        });
-        existingCore.reconcile(decoded, ref);
+        existingCore.reconcile(await decode(this.#decodeOptions(id)), ref);
       } catch (err) {
-        log.verbose('schema validation error; object ignored', { json, error: err });
+        log.verbose('schema validation error; object ignored', { source, error: err });
       }
       return existingCore.entity;
     }
 
     let hydrating = this.#hydrating.get(id);
     if (!hydrating) {
-      hydrating = this.#hydrateNew(json, id);
+      hydrating = this.#hydrateNew(id, decode, source);
       this.#hydrating.set(id, hydrating);
       void hydrating.finally(() => this.#hydrating.delete(id));
     }
     return hydrating;
   }
 
-  async #hydrateNew(json: ObjectJSON, id: EntityId): Promise<Entity.Unknown | undefined> {
+  #decodeOptions(id: EntityId): DecodeOptions {
+    return {
+      refResolver: this._refResolver,
+      uri: EID.make({ spaceId: this._spaceId, entityId: id }),
+      database: this._database,
+      parent: this._parentEntity,
+    };
+  }
+
+  async #hydrateNew(
+    id: EntityId,
+    decode: (options: DecodeOptions) => Promise<DecodedEntity>,
+    source: unknown,
+  ): Promise<Entity.Unknown | undefined> {
     try {
-      const snapshot = await objectFromJSON(json, {
-        refResolver: this._refResolver,
-        uri: EID.make({ spaceId: this._spaceId, entityId: id }),
-        database: this._database,
-        parent: this._parentEntity,
-      });
+      const snapshot = await decode(this.#decodeOptions(id));
       // Rewrap the decoded snapshot as a live reactive proxy so `Obj.update` mutates and notifies.
       const decoded = makeDecodedEntityLive(snapshot);
       invariant(Entity.isEntity(decoded), 'objectFromJSON produced an invalid entity');
@@ -667,7 +702,7 @@ export class FeedHandle {
       this.#registerCore(decoded);
       return decoded;
     } catch (err) {
-      log.verbose('schema validation error; object ignored', { json, error: err });
+      log.verbose('schema validation error; object ignored', { source, error: err });
       return undefined;
     }
   }
@@ -942,3 +977,7 @@ const blockKeyOf = (json: ObjectJSON): string => {
     ? EchoFeedCodec.blockId(actorId, sequence)
     : `object:${json.id}`;
 };
+
+type DecodeOptions = NonNullable<Parameters<typeof Obj.fromJSON>[1]>;
+
+type DecodedEntity = Obj.Unknown;

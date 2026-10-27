@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Jsonb": {
+      "source": "./src/Jsonb.ts",
+      "types": "./dist/types/src/Jsonb.d.ts",
+      "import": "./dist/lib/Jsonb.mjs"
+    },
     "./package.json": "./package.json",
     "./Position": {
       "source": "./src/Position.ts",

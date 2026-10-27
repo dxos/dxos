@@ -10,13 +10,14 @@ import { Context, ContextDisposedError } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, subscribeStream } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 import { chunkArray, isNonNullable } from '@dxos/util';
+import * as Jsonb from '@dxos/util/Jsonb';
 
 import { getSnapshotState } from '../core-db/snapshot-state.ts';
 import { getObjectCore } from '../echo-handler/index.ts';
@@ -608,11 +609,11 @@ export class IndexQuerySource implements RemoteQuerySource {
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
     if (hydratedIntoFeedHandle.size > 0 && this._lastRemoteResults === records) {
       this._lastRemoteResults = records.map((record) => {
-        if (record.documentJson === undefined || !hydratedIntoFeedHandle.has(record.id)) {
+        if (!hasDocument(record) || !hydratedIntoFeedHandle.has(record.id)) {
           return record;
         }
         this._releasedDocumentJsonIds.add(record.id);
-        return { ...record, documentJson: undefined };
+        return { ...record, documentJson: undefined, documentJsonb: undefined };
       });
     }
 
@@ -769,8 +770,8 @@ export class IndexQuerySource implements RemoteQuerySource {
     invariant(EntityId.isValid(result.id), 'Invalid id');
 
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
-    const documentJsonReleased = result.documentJson === undefined && this._releasedDocumentJsonIds.has(result.id);
-    if (result.queueId && (result.documentJson !== undefined || documentJsonReleased)) {
+    const documentJsonReleased = !hasDocument(result) && this._releasedDocumentJsonIds.has(result.id);
+    if (result.queueId && (hasDocument(result) || documentJsonReleased)) {
       invariant(EntityId.isValid(result.queueId), 'Invalid queueId');
       const queueEchoUri = EID.make({ spaceId: result.spaceId, entityId: result.queueId });
       const refResolver = this._params.graph.createRefResolver({
@@ -813,22 +814,27 @@ export class IndexQuerySource implements RemoteQuerySource {
         };
       }
 
-      invariant(result.documentJson !== undefined);
-      const json = JSON.parse(result.documentJson);
+      const options = {
+        refResolver,
+        uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
+        database,
+        parent,
+      };
+      const { documentJsonb } = result;
+      const json = documentJsonb === undefined ? JSON.parse(result.documentJson ?? failedInvariant()) : undefined;
       let object;
       try {
-        object = feedHandle
-          ? await feedHandle.upsertFromJSON(json)
-          : makeDecodedEntityLive(
-              await Obj.fromJSON(json, {
-                refResolver,
-                uri: EID.make({ spaceId: result.spaceId, entityId: result.id }),
-                database,
-                parent,
-              }),
-            );
+        object =
+          documentJsonb !== undefined
+            ? feedHandle
+              ? await feedHandle.upsertFromJSONB(documentJsonb)
+              : makeDecodedEntityLive(await Obj.fromJSONB(documentJsonb, options))
+            : feedHandle
+              ? await feedHandle.upsertFromJSON(json)
+              : makeDecodedEntityLive(await Obj.fromJSON(json, options));
       } catch (err) {
-        const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
+        const type = documentJsonb !== undefined ? Jsonb.readTopLevelString(documentJsonb, ATTR_TYPE) : json[ATTR_TYPE];
+        const typeDxn = typeof type === 'string' ? type : '<unknown>';
         if (!emittedSchemaValidationWarnings.has(typeDxn)) {
           emittedSchemaValidationWarnings.add(typeDxn);
           log.warn('object failed schema validation', { type: typeDxn, error: err });
@@ -957,3 +963,7 @@ const matchesDeletedOption = (object: Entity.Unknown, query: QueryAST.Query): bo
       return true;
   }
 };
+
+/** Whether a row still carries its object body, in either encoding. */
+const hasDocument = (result: QueryService.QueryResult): boolean =>
+  result.documentJson !== undefined || result.documentJsonb !== undefined;

@@ -634,7 +634,7 @@ describe('SqlPlanCompiler', () => {
         fixture,
         Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]),
       );
-      expect(rows.every((row) => row.documentJson === null)).toBe(true);
+      expect(rows.every((row) => row.documentJsonb === null)).toBe(true);
       expect(rows.every((row) => row.documentId.startsWith('doc-'))).toBe(true);
     }).pipe(Effect.provide(TestLayer)),
   );

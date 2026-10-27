@@ -27,6 +27,19 @@ describe('QueryService wire schema', () => {
     expect(decodedJson).toEqual(documentJson);
   });
 
+  test('round-trips documentJsonb bytes verbatim, through the schema and a structured clone', () => {
+    const documentJsonb = new Uint8Array(20_000).map((_, index) => (index * 31) % 256);
+    const response: QueryService.QueryResponse = {
+      results: [{ id: 'obj1', spaceId: 'space1', rank: 0, documentJsonb }],
+    };
+
+    const decoded = Schema.decodeSync(QueryService.QueryResponse)(
+      structuredClone(Schema.encodeSync(QueryService.QueryResponse)(response)),
+    );
+
+    expect(decoded.results?.[0]?.documentJsonb).toEqual(documentJsonb);
+  });
+
   test('round-trips a >8KB JSON payload with an astral character (JSON.parse succeeds)', () => {
     // Emoji at absolute offset 8191 inside the JSON string; `{"body":"` is 9 chars, so 8182 leading `a`s.
     const documentJson = '{"body":"' + 'a'.repeat(8182) + '\u{1F7E9}' + 'b'.repeat(8192) + '"}';

@@ -1126,6 +1126,17 @@ export const fromJSON: (
 ) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**
+ * {@link fromJSON} over the object's SQLite JSONB, as the index stores it and a query ships it: one decode
+ * replaces the text parse and the walks that restore bytes and references.
+ *
+ * @performance Async; O(n) single decode pass, plus the schema decode and resolver round trips of {@link fromJSON}.
+ */
+export const fromJSONB: (
+  jsonb: Uint8Array,
+  options?: { refResolver?: Ref.Resolver; uri?: URI.URI; database?: Database.Database; parent?: Unknown },
+) => Promise<Unknown> = objInternal.objectFromJSONB as any;
+
+/**
  * Comparator function type for sorting objects.
  * Accepts both reactive objects and snapshots.
  */

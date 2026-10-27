@@ -10,6 +10,7 @@ import type * as Statement from 'effect/sql/Statement';
 
 import type { Obj } from '@dxos/echo';
 import { ATTR_TYPE } from '@dxos/echo/internal';
+import * as Jsonb from '@dxos/util/Jsonb';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { chunkArray, chunkRows } from '../utils.ts';
@@ -60,10 +61,10 @@ export class ObjectSnapshotIndex implements Index {
       for (const chunk of chunkArray(recordIds)) {
         const rows = yield* sql<{
           recordId: number;
-          snapshot: string;
+          snapshot: StoredBlob;
         }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
         for (const row of rows) {
-          results.push({ recordId: row.recordId, snapshot: JSON.parse(row.snapshot) });
+          results.push({ recordId: row.recordId, snapshot: decodeSnapshot(row.snapshot) });
         }
       }
 
@@ -72,7 +73,7 @@ export class ObjectSnapshotIndex implements Index {
   }
 
   /**
-   * Each document object's JSON text with the heads it was read at, in one read so the two agree, and
+   * Each document object's JSONB with the heads it was read at, in one read so the two agree, and
    * the document's bytes where the host stored them. Objects stored without heads are omitted.
    */
   queryBackings(recordIds: readonly number[]): Effect.Effect<readonly ObjectBacking[], SqlError.SqlError> {
@@ -80,13 +81,13 @@ export class ObjectSnapshotIndex implements Index {
       const sql = this.#sql;
       const results: ObjectBacking[] = [];
       for (const chunk of chunkArray(recordIds)) {
-        const rows = yield* sql<{ recordId: number; snapshot: string; heads: string; bytes: StoredBlob | null }>`
+        const rows = yield* sql<{ recordId: number; snapshot: StoredBlob; heads: string; bytes: StoredBlob | null }>`
           SELECT recordId, snapshot, heads, bytes FROM objectSnapshot
           WHERE recordId IN ${sql.in(chunk)} AND heads IS NOT NULL`;
         for (const row of rows) {
           results.push({
             recordId: row.recordId,
-            json: row.snapshot,
+            jsonb: toUint8Array(row.snapshot),
             heads: JSON.parse(row.heads),
             ...(row.bytes !== null && { bytes: toUint8Array(row.bytes) }),
           });
@@ -97,7 +98,7 @@ export class ObjectSnapshotIndex implements Index {
   }
 
   /**
-   * Each document object's JSON text with the version it was read at, and its backing heads when a client can
+   * Each document object's JSONB with the version it was read at, and its backing heads when a client can
    * back it. Objects stored without a version (feed blocks, and rows indexed before versions) are omitted.
    */
   querySnapshots(recordIds: readonly number[]): Effect.Effect<readonly ObjectSnapshot[], SqlError.SqlError> {
@@ -105,13 +106,13 @@ export class ObjectSnapshotIndex implements Index {
       const sql = this.#sql;
       const results: ObjectSnapshot[] = [];
       for (const chunk of chunkArray(recordIds)) {
-        const rows = yield* sql<{ recordId: number; snapshot: string; heads: string | null; version: string }>`
+        const rows = yield* sql<{ recordId: number; snapshot: StoredBlob; heads: string | null; version: string }>`
           SELECT recordId, snapshot, heads, COALESCE(version, heads) AS version FROM objectSnapshot
           WHERE recordId IN ${sql.in(chunk)} AND COALESCE(version, heads) IS NOT NULL`;
         for (const row of rows) {
           results.push({
             recordId: row.recordId,
-            json: row.snapshot,
+            jsonb: toUint8Array(row.snapshot),
             version: JSON.parse(row.version),
             heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
           });
@@ -182,11 +183,11 @@ export class ObjectSnapshotIndex implements Index {
       const isPartialBlock = ({ object }: { object: IndexerObject }) =>
         (object.data as Record<string, unknown>)[ATTR_TYPE] === undefined;
       const partial = pending.filter(isPartialBlock).map(({ recordId }) => recordId);
-      const prior = new Map<number, string>();
+      const prior = new Map<number, StoredBlob>();
       for (const chunk of chunkArray(partial)) {
         const rows = yield* sql<{
           recordId: number;
-          snapshot: string;
+          snapshot: StoredBlob;
         }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
         for (const row of rows) {
           prior.set(row.recordId, row.snapshot);
@@ -197,7 +198,7 @@ export class ObjectSnapshotIndex implements Index {
         const existing = prior.get(recordId);
         const merged =
           isPartialBlock({ object }) && existing !== undefined
-            ? { ...(JSON.parse(existing) as Record<string, unknown>), ...object.data }
+            ? { ...decodeSnapshot(existing), ...object.data }
             : object.data;
         const version = object.version ?? object.heads;
         return {
@@ -209,9 +210,14 @@ export class ObjectSnapshotIndex implements Index {
         };
       });
 
+      // `sql.insert` binds plain values only, so the rows are spelled out to route each snapshot through `jsonb()`,
+      // which encodes in C what `JSON.stringify` produced natively.
       for (const chunk of chunkRows(rows)) {
+        const values = chunk.map(
+          (row) => sql`(${row.recordId}, jsonb(${row.snapshot}), ${row.heads}, ${row.version}, ${row.bytes})`,
+        );
         yield* sql`
-            INSERT INTO objectSnapshot ${sql.insert(chunk)}
+            INSERT INTO objectSnapshot (recordId, snapshot, heads, version, bytes) VALUES ${sql.join(', ', false)(values)}
             ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, version = excluded.version, bytes = excluded.bytes
           `;
       }
@@ -219,13 +225,25 @@ export class ObjectSnapshotIndex implements Index {
   );
 }
 
-/** A document object's JSON with the heads it was read at, and those heads again when a client can back it. */
-export type ObjectSnapshot = { recordId: number; json: string; version: string[]; heads?: string[] };
+/** A document object's JSONB with the heads it was read at, and those heads again when a client can back it. */
+export type ObjectSnapshot = { recordId: number; jsonb: Uint8Array; version: string[]; heads?: string[] };
 
-/** An object's JSON with the heads it was read at, and its document's bytes when the host stored them. */
-export type ObjectBacking = { recordId: number; json: string; heads: string[]; bytes?: Uint8Array };
+/** An object's JSONB with the heads it was read at, and its document's bytes when the host stored them. */
+export type ObjectBacking = { recordId: number; jsonb: Uint8Array; heads: string[]; bytes?: Uint8Array };
 
 /** SQLite drivers hand a BLOB back as a `Uint8Array` (node, wa-sqlite) or an `ArrayBuffer` (Durable Object storage). */
 type StoredBlob = Uint8Array | ArrayBuffer;
 
 const toUint8Array = (blob: StoredBlob): Uint8Array => (blob instanceof Uint8Array ? blob : new Uint8Array(blob));
+
+/** A stored snapshot as the object it encodes. */
+export const decodeSnapshot = (blob: StoredBlob): Obj.JSON => {
+  const value = Jsonb.decode(toUint8Array(blob));
+  if (!isObjectJson(value)) {
+    throw new TypeError('objectSnapshot row does not hold an object');
+  }
+  return value;
+};
+
+const isObjectJson = (value: unknown): value is Obj.JSON =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) && typeof Reflect.get(value, 'id') === 'string';
