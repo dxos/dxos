@@ -75,8 +75,9 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
         const source = FeatureSpec.getSource(path, id);
         const feature = existing.get(source);
         if (feature) {
-          // An explicit target takes the features its text declares, wherever they were moved to since.
-          if (specRef && Spec.getContainer(feature)?.id !== spec.id) {
+          // An explicit target takes the features its text declares, wherever they were moved to since, unless it lies
+          // beneath the feature itself.
+          if (specRef && Spec.getContainer(feature)?.id !== spec.id && !Spec.isWithin(spec, feature)) {
             detach(feature);
             attach(spec, feature);
           }

@@ -201,6 +201,17 @@ feat F-1: Sync
       ]);
     }).pipe(Effect.provide(testLayer())),
   );
+
+  it.effect('leaves a feature where it is when the target is its own breakdown', () =>
+    Effect.gen(function* () {
+      const first = yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, name: 'A' });
+      const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
+      const { spec: target } = yield* createSpec.handler({ name: 'Sync', feature: ref(feature) });
+      yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, spec: ref(target) });
+      expect(Spec.getContainer(feature)?.id).toBe(first.spec);
+      expect(target.features).toHaveLength(0);
+    }).pipe(Effect.provide(testLayer())),
+  );
 });
 
 describe('FeatureOperation.AddDependency', () => {

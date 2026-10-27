@@ -50,7 +50,10 @@ export const steps = [
       await demo.title({ value: 'Feature links', subtitle: 'dxn:<meta.key>#<mnemonic> and @feature tags' });
       await caption(demo, 1, "Open the spec's feature map as cards");
       // The canvas card is a summary; the test count is on the feature's own card, opened in the next step.
-      await demo.hover({ selector: '[data-testid="feature-canvas-node"] >> nth=0', label: 'Provider sync' });
+      await demo.hover({
+        selector: '[data-testid="feature-canvas-node"]:has-text("Provider sync")',
+        label: 'Provider sync',
+      });
       await demo.sleep({ ms: BEAT });
     },
   },

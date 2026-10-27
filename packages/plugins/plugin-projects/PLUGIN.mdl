@@ -223,10 +223,10 @@ test QA-5: Showcase clip
 test QA-6: Walk a spec's feature map
   desc: |
     A spec is the feature map the sidebar lists. A feature nests by owning a spec of its own, which the map zooms
-    into. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/spec-map.mjs` against the
-    SpecFeatures story, whose seed puts eight features on one spec and gives "Provider sync" two subfeatures.
+    into. Walked by the autocue flow `spec-map` against the SpecFeatures story, whose seed puts eight features on one
+    spec and gives "Provider sync" two subfeatures.
   actors: human
-  status: unverified
+  status: passing            # 2026-10-27, recorded by autocue/spec-map.mjs
   given:
     - storybook serves plugin-projects
     - the seeded spec "Inbox and agents" names a project and holds eight features
