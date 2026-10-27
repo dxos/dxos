@@ -1,0 +1,16 @@
+diagram kind=sequence
+node Dialog "Share dialog" role=actor
+node ShareOp "ShareObject op"
+node SSM "EDGE SpaceStateMachine"
+node Handler "Share link handler"
+node Plank "Plank"
+node Client "Space join"
+node Guard "Scope guard"
+edge Dialog calls ShareOp "copy link"
+edge ShareOp sends SSM "invitation, then DelegatedInvitationScope"
+note Handler:right "The guest opens the link"
+edge Handler sends Plank "open the plank"
+edge Handler calls Client "join with syncScope"
+edge Client calls SSM "redeem the invitation"
+edge Client sends Guard "syncScope"
+edge Client sends Plank "the space opens: the object shows"

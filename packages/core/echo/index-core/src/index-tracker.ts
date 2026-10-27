@@ -152,6 +152,23 @@ export class IndexTracker {
       }),
   );
 
+  /** Whether `indexName` holds a cursor for `resourceId`, which it writes once it has read that resource. */
+  hasCursor = Effect.fn('IndexTracker.hasCursor')(
+    (query: {
+      indexName: string;
+      sourceName: string;
+      spaceId: SpaceId;
+      resourceId: string;
+    }): Effect.Effect<boolean, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const rows = yield* sql<{
+          found: number;
+        }>`SELECT 1 AS found FROM indexCursor WHERE indexName = ${query.indexName} AND spaceId = ${query.spaceId} AND sourceName = ${query.sourceName} AND resourceId = ${query.resourceId} LIMIT 1`;
+        return rows.length > 0;
+      }),
+  );
+
   /** Delete cursors for documents (resource ids) wiped by garbage collection. */
   deleteCursors = Effect.fn('IndexTracker.deleteCursors')(
     (query: { spaceId: SpaceId; resourceIds: readonly string[] }): Effect.Effect<void, SqlError.SqlError> =>

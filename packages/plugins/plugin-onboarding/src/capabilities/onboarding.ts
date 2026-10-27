@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { OnboardingManager } from '../onboarding-manager.ts';
 import { OnboardingCapabilities } from './capabilities.ts';
@@ -29,6 +30,7 @@ export default Capability.makeModule(
       recoverIdentity: searchProps.get('recoverIdentity') === 'true',
       deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,
       spaceInvitationCode: searchProps.get('spaceInvitationCode') ?? undefined,
+      shareLink: searchProps.has(SpaceOperation.SHARE_PARAM),
       accountInvitationCode: searchProps.get('accountInvitationCode') ?? undefined,
       email: searchProps.get('email') ?? undefined,
     });

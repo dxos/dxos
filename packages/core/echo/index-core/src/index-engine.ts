@@ -448,15 +448,26 @@ export class IndexEngine {
    * `objectSnapshot` is filled by the indexing pass, so a database that predates it holds rows
    * without one, and the store fills over several passes after upgrade. The compiled query path
    * reads that store directly instead of loading documents, so until it is complete a query there
-   * would silently return fewer objects than exist — not stale data, missing data. The query
-   * service gates a compiled query's first execution on this for the rows the query can read, and
-   * caches `true` once seen, since it never goes back to false. The in-memory path loads documents
-   * itself and is not gated.
+   * would silently return fewer objects than exist — not stale data, missing data. Until this holds
+   * for the rows a query can read, the query service runs that query's uncompiled plan, which loads
+   * documents itself, and caches `true` once seen, since it never goes back to false.
    */
   hasCompleteSnapshots(
     opts: { spaceIds?: readonly SpaceId[]; feeds?: boolean } = {},
   ): Effect.Effect<boolean, SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectSnapshotIndex.countMissingSnapshots(opts).pipe(Effect.map((missing) => missing === 0));
+  }
+
+  /**
+   * Whether the primary indexes have read `resourceId` from `sourceName` at least once, so its objects have rows
+   * (possibly behind the source) rather than none.
+   */
+  hasIndexed(query: {
+    sourceName: string;
+    spaceId: SpaceId;
+    resourceId: string;
+  }): Effect.Effect<boolean, SqlError.SqlError> {
+    return this.#tracker.hasCursor({ ...query, indexName: INDEX_NAMES.objectSnapshot });
   }
 
   /**

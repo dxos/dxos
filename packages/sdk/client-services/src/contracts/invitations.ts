@@ -32,9 +32,15 @@ export interface Manager {
   onPersistentInvitationsLoaded(ctx: Context, callback: () => void): void;
   authenticate(request: { invitationId: string; authCode: string }): Promise<void>;
   setInvitationHandlerFactory(
-    getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
+    getHandler: (
+      invitation: Partial<Invitation> & Pick<Invitation, 'kind'>,
+      options?: InvitationHandlerOptions,
+    ) => InvitationProtocol,
   ): void;
-  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol;
+  getInvitationHandler(
+    invitation: Partial<Invitation> & Pick<Invitation, 'kind'>,
+    options?: InvitationHandlerOptions,
+  ): InvitationProtocol;
   createInvitation(
     ctx: Context,
     options: Partial<Invitation> & Pick<Invitation, 'kind'>,
@@ -45,9 +51,16 @@ export interface Manager {
     request: {
       invitation: Partial<Invitation> & Pick<Invitation, 'invitationId'>;
       deviceProfile?: DeviceProfileDocument;
+      syncScope?: { objectIds: readonly string[] };
     },
   ): AuthenticatingInvitation;
 }
+
+/** Choices the guest makes when accepting an invitation; the host never sees them. */
+export type InvitationHandlerOptions = {
+  /** Object ids to replicate from a space joined through an object share link. */
+  syncScope?: readonly string[];
+};
 
 /** Effect service tag for {@link Manager}. */
 export class ManagerService extends EffectContext.Service<ManagerService, Manager>()(

@@ -18,7 +18,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
+import { Event, Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -64,7 +64,7 @@ import { DeletionResolver } from './deletion.ts';
 import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
-import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
 import {
@@ -78,6 +78,7 @@ import {
   replacementDocumentId,
 } from './retirement.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
+import { UnindexedDocuments } from './unindexed-documents.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -249,6 +250,9 @@ export class EchoHost extends Resource {
   /** What the index is doing, for boot screens and progress indicators; see {@link DataService.IndexStatus}. */
   readonly indexStatus: IndexStatusTracker;
 
+  /** A partially replicated space's scope grew to take in objects this host created; the payload is what was added. */
+  readonly syncScopeExtended = new Event<{ spaceId: SpaceId; objectIds: string[] }>();
+
   private _feedService: FeedService.Handlers;
 
   readonly #indexTransactionLimits: Partial<IndexTransactionLimits> | undefined;
@@ -269,6 +273,9 @@ export class EchoHost extends Resource {
 
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
+
+  /** Documents saved since the index last drained, so queries can read the ones it has never seen from disk. */
+  readonly #unindexedDocuments = new UnindexedDocuments();
 
   /** The latest retirement pass per space; passes are chained so two never write one space's directory at once. */
   readonly #retirements = new Map<SpaceId, Promise<void>>();
@@ -325,7 +332,14 @@ export class EchoHost extends Resource {
     this._indexScheduler = new IndexScheduler({
       feedBlocks: this._feedStore.onNewBlocks,
       documentsSaved: this._automergeHost.documentsSaved,
-      runPass: (ctx, reasons) => this._runIndexPass(ctx, reasons),
+      runPass: async (ctx, reasons) => {
+        const startedAt = this.#unindexedDocuments.beginPass();
+        const outcome = await this._runIndexPass(ctx, reasons);
+        if (outcome) {
+          this.#unindexedDocuments.endPass(startedAt, outcome.drained);
+        }
+        return outcome;
+      },
     });
     this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, {
       // Read the mutable slot lazily so a handler wired after construction takes effect;
@@ -350,8 +364,7 @@ export class EchoHost extends Resource {
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      // `QueryEntry.feedScoped`, or a compiled query whose snapshot store is still filling, is what
-      // decides a query must await indexing before its first result.
+      // Only a one-shot feed-scoped query awaits it; every other query answers from the index and disk as they stand.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: resolveQueryExecutorMode(queryExecutor),
       feedStore: this._feedStore,
@@ -363,6 +376,7 @@ export class EchoHost extends Resource {
       hasCompleteSnapshots: (scope) =>
         RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots(scope)),
       holdsDocument: (subscriptionIds, documentId) => this._dataService.holds(subscriptionIds, documentId),
+      unreadDocuments: (spaceIds) => this.#unreadDocuments(spaceIds),
     });
 
     this._dataService = new DataServiceImpl({
@@ -516,16 +530,28 @@ export class EchoHost extends Resource {
     await this.indexStatus.opened(() =>
       RuntimeProvider.runPromise(this._runtime)(countIndexBacklog({ pin, spaceIds: this._spaceStateManager.spaceIds })),
     );
+    // A released document's bytes may already be stored, and a pass skipped it while it was quarantined.
+    this._automergeHost.documentReleased.on(this._ctx, () => this._indexScheduler.schedule('document-released'));
+    this._automergeHost.documentStored.on(this._ctx, (documentId) => this.#unindexedDocuments.markSaved(documentId));
+    this.#unindexedDocuments.added.on(this._ctx, (documentId) => {
+      void this.#classifyUnindexed(documentId);
+    });
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
+      const documentIds = this.#applySyncScope(e);
       const previous = this._spaceDocumentIds.get(e.spaceId);
-      this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
+      const listed = new Set(documentIds);
+      this._spaceDocumentIds.set(e.spaceId, listed);
+      // A joining space's root is saved before the space lists it, which left it unclassified.
+      for (const documentId of this.#unindexedDocuments.unclassified((documentId) => listed.has(documentId))) {
+        void this.#classifyUnindexed(documentId);
+      }
 
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
       }
       void this._automergeHost.updateLocalCollectionState(
         deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
-        e.documentIds,
+        documentIds,
       );
 
       // TODO(dmaretskyi): Current algortithm is too expensive.
@@ -539,7 +565,7 @@ export class EchoHost extends Resource {
         // link removal is never observed before the create it depends on, and the sole writer of a
         // `links` key (object creation) always writes a freshly created document url. Registering
         // the new collection state first also means no fetch can race the wipe.
-        const departed = previous ? this.#departedDocuments(previous, e) : [];
+        const departed = previous ? this.#departedDocuments(previous, documentIds) : [];
         if (departed.length > 0 || e.previousRootId) {
           this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
         }
@@ -858,6 +884,21 @@ export class EchoHost extends Resource {
     await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
     await this._spaceStateManager.setSpaceRootRefs(spaceId, { ...refs, credentialsDocUrl });
     return credentialsDocUrl;
+  }
+
+  /**
+   * Limits a space to the documents of `objectIds` (plus its directory, space root and credentials documents) for a
+   * peer that joined through an object share link; `undefined` replicates the whole space. Set before the space's
+   * root is opened so the first sync round is already limited. Enforced by this host only: other members and EDGE
+   * serve the whole space to any member.
+   */
+  setSpaceSyncScope(spaceId: SpaceId, objectIds: readonly string[] | undefined): void {
+    this._spaceStateManager.setSyncScope(spaceId, objectIds);
+  }
+
+  /** Object ids a partially replicated space is limited to; undefined for a space replicated in full. */
+  getSpaceSyncScope(spaceId: SpaceId): ReadonlySet<string> | undefined {
+    return this._spaceStateManager.getSyncScope(spaceId);
   }
 
   /** References carried by the space root document, or undefined for a space that predates it. */
@@ -1320,9 +1361,116 @@ export class EchoHost extends Resource {
   }
 
   /** Document ids present in the space's previous directory listing but not the current one. */
-  #departedDocuments(previous: ReadonlySet<DocumentId>, event: SpaceDocumentListUpdatedEvent): DocumentId[] {
-    const current = new Set(event.documentIds);
+  #departedDocuments(previous: ReadonlySet<DocumentId>, documentIds: readonly DocumentId[]): DocumentId[] {
+    const current = new Set(documentIds);
     return [...previous].filter((documentId) => !current.has(documentId));
+  }
+
+  /**
+   * Marks a just-saved document the index has never read as one queries read from disk, and re-runs the queries over
+   * its space so its objects show before a pass indexes them. A document outside every known space stays unmarked,
+   * left to the pass.
+   */
+  async #classifyUnindexed(documentId: DocumentId): Promise<void> {
+    const spaceId = this.#spaceOfDocument(documentId);
+    if (!spaceId || !this._indexEngine) {
+      return;
+    }
+    const indexed = await RuntimeProvider.runPromise(this._runtime)(
+      this._indexEngine.hasIndexed({
+        sourceName: this._automergeDataSource.sourceName,
+        spaceId,
+        resourceId: documentId,
+      }),
+    ).catch((err) => {
+      log.warn('index cursor could not be read', { documentId, err });
+      return true;
+    });
+    if (this.#unindexedDocuments.classify(documentId, !indexed) && !indexed) {
+      this._queryService.invalidateQueries(await this.#documentHint(spaceId, documentId));
+    }
+  }
+
+  /** The queries a document's objects can affect, as narrow as the hint an index pass over it would give. */
+  async #documentHint(spaceId: SpaceId, documentId: DocumentId): Promise<InvalidationHint> {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+      fetchFromNetwork: false,
+    });
+    const objects = Object.entries(lease?.doc()?.objects ?? {});
+    const typeUris = objects.map(([, structure]) => structure.system?.type?.['/']);
+    return {
+      spaceIds: new Set([spaceId]),
+      objectIds: new Set(objects.map(([objectId]) => objectId).filter((objectId) => EntityId.isValid(objectId))),
+      // An untyped object can match any type-less query, so the hint stays open on types.
+      typenames: typeUris.every((uri) => uri !== undefined)
+        ? new Set(typeUris.map((uri) => canonicalTypename(uri)))
+        : undefined,
+    };
+  }
+
+  #spaceOfDocument(documentId: DocumentId): SpaceId | undefined {
+    for (const [spaceId, documentIds] of this._spaceDocumentIds) {
+      if (documentIds.has(documentId)) {
+        return spaceId;
+      }
+    }
+    return undefined;
+  }
+
+  /** Per space, the saved documents the index has never read; every known space when `spaceIds` is null. */
+  #unreadDocuments(spaceIds: Iterable<SpaceId> | null): Map<SpaceId, DocumentId[]> {
+    const unread = new Map<SpaceId, DocumentId[]>();
+    if (this.#unindexedDocuments.size === 0) {
+      return unread;
+    }
+    for (const spaceId of spaceIds ?? this._spaceDocumentIds.keys()) {
+      const inSpace = this._spaceDocumentIds.get(spaceId);
+      // A branch document holds draft copies under the objects' own ids.
+      const documentIds = inSpace
+        ? this.#unindexedDocuments.unread(
+            (documentId) => inSpace.has(documentId) && !this._spaceStateManager.isBranchDocument(documentId),
+          )
+        : [];
+      if (documentIds.length > 0) {
+        unread.set(spaceId, documentIds);
+      }
+    }
+    return unread;
+  }
+
+  /**
+   * Applies a partially replicated space's scope: quarantines its out-of-scope documents and releases any that came
+   * into scope. Runs before the collection is published, so no sync round can request a document before it is
+   * refused. Documents this host created stay in the collection, since the scope it joined with cannot name them.
+   *
+   * @returns The documents the space's collection holds.
+   */
+  #applySyncScope(event: SpaceDocumentListUpdatedEvent): DocumentId[] {
+    const outOfScope = Object.entries(event.outOfScope).flatMap(([documentId, objectIds]) =>
+      isValidDocumentId(documentId) ? [{ documentId, objectIds }] : [],
+    );
+    const created = outOfScope.filter(({ documentId }) => this._automergeHost.isCreatedInSession(documentId));
+    const excluded = outOfScope
+      .filter(({ documentId }) => !this._automergeHost.isCreatedInSession(documentId))
+      .map(({ documentId }) => documentId);
+    const scope = this._spaceStateManager.getSyncScope(event.spaceId);
+    if (created.length > 0 && scope) {
+      // The guest's own objects join the scope; the space manager persists the extension so a restart keeps them.
+      const objectIds = created.flatMap(({ objectIds }) => objectIds);
+      this._spaceStateManager.setSyncScope(event.spaceId, [...scope, ...objectIds]);
+      this.syncScopeExtended.emit({ spaceId: event.spaceId, objectIds });
+    }
+    const documentIds = [...event.documentIds, ...created.map(({ documentId }) => documentId)];
+    for (const documentId of documentIds) {
+      this._automergeHost.releaseOutOfScopeDocument(documentId);
+    }
+    for (const documentId of excluded) {
+      // The quarantine is recorded synchronously; only its cache eviction is awaited.
+      void this._automergeHost
+        .quarantineDocument(documentId, { reason: 'out-of-scope' })
+        .catch((err) => log.warn('failed to quarantine out-of-scope document', { documentId, err }));
+    }
+    return documentIds;
   }
 
   /**

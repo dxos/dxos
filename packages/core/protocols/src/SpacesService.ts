@@ -64,6 +64,8 @@ export const UpdateSpaceRequest = Schema.Struct({
    */
   state: Schema.optional(SpaceState),
   edgeReplication: Schema.optional(EdgeReplicationSetting),
+  /** Object ids to add to a partially replicated space's sync scope; ignored for a space replicated in full. */
+  extendSyncScope: Schema.optional(mutableArray(Schema.String)),
 });
 export interface UpdateSpaceRequest extends Schema.Schema.Type<typeof UpdateSpaceRequest> {}
 

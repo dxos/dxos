@@ -24,6 +24,7 @@ import {
   type LargeSpaceMetadata,
   LargeSpaceMetadataSchema,
   type SpaceMetadata,
+  SpaceSyncScopeSchema,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
@@ -64,6 +65,10 @@ export interface IMetadataStore {
 
   getSpaceEdgeReplicationSetting(spaceKey: PublicKey): EdgeReplicationSetting | undefined;
   setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void>;
+
+  /** Object ids the space replicates, or undefined when it replicates the whole space. */
+  getSpaceSyncScope(spaceKey: PublicKey): readonly string[] | undefined;
+  setSpaceSyncScope(spaceKey: PublicKey, objectIds: readonly string[]): Promise<void>;
 
   readonly deletedSpaces: PublicKey[];
   addDeletedSpace(spaceKey: PublicKey): Promise<void>;
@@ -420,6 +425,16 @@ export class MetadataStore implements IMetadataStore {
 
   async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
     this._getSpace(spaceKey).edgeReplication = setting;
+    await this._save();
+    await this.flush();
+  }
+
+  getSpaceSyncScope(spaceKey: PublicKey): readonly string[] | undefined {
+    return this.hasSpace(spaceKey) ? this._getSpace(spaceKey).syncScope?.objectIds : undefined;
+  }
+
+  async setSpaceSyncScope(spaceKey: PublicKey, objectIds: readonly string[]): Promise<void> {
+    this._getSpace(spaceKey).syncScope = create(SpaceSyncScopeSchema, { objectIds: [...objectIds] });
     await this._save();
     await this.flush();
   }

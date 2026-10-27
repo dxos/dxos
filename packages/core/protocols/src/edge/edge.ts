@@ -210,6 +210,55 @@ export type JoinSpaceResponseBody = {
   spaceGenesisFeedKey: string;
 };
 
+/**
+ * Reads the objects a delegated invitation shares (its `DelegatedInvitationScope`) without joining the space or
+ * having an identity: holding the invitation's guest key is the capability.
+ */
+export type ReadSharedObjectsRequest = {
+  invitationId: string;
+  /** Unix ms the signature was made at; EDGE refuses a signature older than a few minutes. */
+  issuedAt: number;
+  /** Base64 Ed25519 signature by the invitation's guest key over SHA-256 of {@link getSharedObjectsChallenge}. */
+  signature: string;
+};
+
+/**
+ * One Automerge document of a shared space, in the shape a client seeds its database with (`WorkingSetRow` in
+ * `@dxos/echo-client`), with the bytes in base64.
+ */
+export type ShareCacheRow = {
+  documentId: string;
+  /** The document's heads as EDGE holds it. */
+  heads: string[];
+  /** Base64 of the document's Automerge bytes. */
+  data: string;
+};
+
+/**
+ * A shared space as a client opens it before it has joined: the space root, which routes each object to its document,
+ * and the documents of the shared objects. An object not indexed yet, a feed object, or one whose document also holds
+ * objects outside the scope is missing rather than an error.
+ */
+export type ReadSharedObjectsResponseBody = {
+  /** `automerge:<documentId>` of the space root, which `rows` holds. */
+  spaceRootUrl: string;
+  rows: ShareCacheRow[];
+};
+
+/**
+ * What a {@link ReadSharedObjectsRequest} signs. Bound to the space and the time so a captured signature reads nothing
+ * elsewhere and soon expires; the prefix keeps it from ever equalling a join challenge, which is `<invitationId>:<key>`.
+ */
+export const getSharedObjectsChallenge = ({
+  spaceId,
+  invitationId,
+  issuedAt,
+}: {
+  spaceId: string;
+  invitationId: string;
+  issuedAt: number;
+}): string => `dxos.shared-objects:${spaceId}:${invitationId}:${issuedAt}`;
+
 export type RecoverIdentitySignature =
   | string
   // This is the format of the signature from the WebAuthn authenticator.

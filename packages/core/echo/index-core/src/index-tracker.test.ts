@@ -61,4 +61,20 @@ describe('IndexTracker', () => {
       expect(resultsNullSpace[0]).toEqual(cursor2);
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'tells whether an index has read a resource of a space',
+    Effect.fnUntraced(function* () {
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
+      yield* tracker.migrate();
+      const spaceId = SpaceId.random();
+      const query = { indexName: 'test-index', sourceName: 'automerge', spaceId, resourceId: 'doc-1' };
+
+      expect(yield* tracker.hasCursor(query)).toBe(false);
+      yield* tracker.updateCursors([{ ...query, cursor: 'heads-1' }]);
+      expect(yield* tracker.hasCursor(query)).toBe(true);
+      expect(yield* tracker.hasCursor({ ...query, spaceId: SpaceId.random() })).toBe(false);
+      expect(yield* tracker.hasCursor({ ...query, indexName: 'other-index' })).toBe(false);
+    }, Effect.provide(TestLayer)),
+  );
 });

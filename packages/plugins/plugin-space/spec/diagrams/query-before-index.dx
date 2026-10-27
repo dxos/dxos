@@ -1,0 +1,21 @@
+diagram flow=down
+group host "ECHO host" {
+  node Service "QueryService" ref="packages/core/echo/echo-host/src/db-host/query-service.ts"
+  node Executor "QueryExecutor" ref="packages/core/echo/echo-host/src/query/query-executor.ts"
+  node Unread "UnindexedDocuments" ref="packages/core/echo/echo-host/src/db-host/unindexed-documents.ts"
+  node Host "EchoHost" ref="packages/core/echo/echo-host/src/db-host/echo-host.ts"
+  node Store "AutomergeHost" ref="packages/core/echo/echo-host/src/automerge/automerge-host.ts"
+}
+group index "index-core" right-of host {
+  node Engine "IndexEngine" ref="packages/core/echo/index-core/src/index-engine.ts"
+  node Tracker "IndexTracker" ref="packages/core/echo/index-core/src/index-tracker.ts"
+}
+edge Service -> Executor "execQuery"
+edge Service -> Unread "unread per space"
+edge Executor -> Store "read from disk"
+edge Executor -> Engine "index rows"
+edge Store -> Host "documentStored"
+edge Host -> Unread "classify"
+edge Host -> Engine "hasIndexed?"
+edge Engine -> Tracker
+edge Engine -> Service "pass done: re-run"

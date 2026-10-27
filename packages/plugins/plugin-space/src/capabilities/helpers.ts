@@ -19,6 +19,10 @@ export const makeCreateInvitationUrl =
     return baseUrl.toString();
   };
 
+/** The origin shareable links point at: the app's own unless the plugin was given another (e.g. on Tauri). */
+export const resolveShareableLinkOrigin = ({ shareableLinkOrigin }: SpaceSchema.SpacePluginOptions): string =>
+  shareableLinkOrigin ?? (typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+
 /** Builds the join-by-key URL builder for a space admitted contacts can open directly. */
 export const makeCreateJoinUrl =
   ({

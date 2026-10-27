@@ -621,6 +621,7 @@ export class Client {
       this._echoClient,
       this._effectRuntime,
       bootCache && ((spaceId) => bootCache.takeWorkingSet(spaceId)),
+      bootCache && ((spaceId) => bootCache.isPending(spaceId)),
     );
 
     const shell = this._shellManager

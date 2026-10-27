@@ -522,9 +522,13 @@ What landed, and where it departs from the proposal above.
   range (resolvable only against the versions present), and a `timestamp` day group in a named zone
   (local day boundaries depend on the store's timestamp range). `planDeclinedByCompiler` detects all
   three and the in-memory executor answers instead, so `QueryPlanner.createPlan` is synchronous.
-- **The query gate** is `QueryServiceProps.hasCompleteSnapshots`; `QueryServiceImpl` awaits
-  `updateIndexes()` before a compiled query's first execution while it is false and caches `true`
-  once seen. A memory-path query is not gated on it, since it loads the documents itself.
+- **The query gate** is `QueryServiceProps.hasCompleteSnapshots`; while it is false a compiled query
+  runs its uncompiled plan, which loads documents itself, and `QueryServiceImpl` caches `true` once
+  seen. A query never waits for indexing to answer: a document saved since the index last drained,
+  that the index has never read, is read from disk by the wildcard and type selects
+  (`QueryExecutorOptions.unreadDocuments`), and a query over its space runs uncompiled until a pass
+  indexes it. Only a one-shot feed-scoped query awaits `updateIndexes()`, as feeds have no disk read
+  and it gets no second answer.
 - **The in-memory path stays.** It remains the default: `QueryExecutor` still holds `IndexEngine`,
   `AutomergeHost` and `SpaceStateManager`, `resolveQueryExecutorMode` defaults to `memory`, and a
   plan the compiler declines runs step by step whatever the mode says. The compiled path is one

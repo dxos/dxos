@@ -33,6 +33,7 @@ export type IndexRunReason =
   | 'feed-blocks'
   | 'trace-blocks'
   | 'documents-saved'
+  | 'document-released'
   | 'batch-continuation'
   | 'retry'
   | 'rpc-update-indexes'

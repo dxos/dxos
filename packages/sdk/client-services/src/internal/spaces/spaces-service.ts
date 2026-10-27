@@ -108,6 +108,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     spaceKey,
     state,
     edgeReplication,
+    extendSyncScope,
   }: SpacesService.UpdateSpaceRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
@@ -136,6 +137,10 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
 
         if (edgeReplication !== undefined) {
           await dataSpaceManager.setSpaceEdgeReplicationSetting(ctx, spaceKey, edgeReplication);
+        }
+
+        if (extendSyncScope?.length) {
+          await dataSpaceManager.extendSpaceSyncScope(spaceKey, extendSyncScope);
         }
       },
       catch: toServiceError,

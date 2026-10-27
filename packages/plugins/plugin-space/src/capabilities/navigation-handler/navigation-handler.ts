@@ -23,6 +23,7 @@ import { SpaceOperation } from '#types';
 
 import { JoinByKeyError, NoIdentityError } from '../../errors.ts';
 import { readJoinSpaceKey } from './join-space-key.ts';
+import { handleShareLink } from './share-link-handler.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -32,8 +33,8 @@ export type NavigationHandlerOptions = {
 };
 
 /**
- * NavigationHandler for space invitation URL params.
- * Handles ?spaceInvitationCode=X → join space via invitation.
+ * NavigationHandlers for space invitation URL params.
+ * Handles ?spaceInvitationCode=X → join space via invitation, and ?share=X → open a shared object.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({
@@ -104,7 +105,28 @@ export default Capability.makeModule(
         Effect.provideService(Operation.Service, operationService),
       );
 
-    return Capability.contribute(AppCapabilities.NavigationHandler, handler);
+    // Spaces a share link is joining, each with the object it shares: the link's own URL names the workspace and the
+    // object, which would otherwise read as missing until the join lands — the invitation's scope vouches for both.
+    const joining = new Map<string, string>();
+    const joiningLoader: AppCapabilities.NavigationTargetLoader = {
+      id: `${meta.profile.key}/share-link`,
+      load: ({ spaceId, entityId }) =>
+        Effect.succeed(
+          joining.has(spaceId) && (entityId === undefined || entityId === joining.get(spaceId)) ? 'exists' : 'unknown',
+        ),
+    };
+
+    const shareLinkHandler: AppCapabilities.NavigationHandler = (url: URL) =>
+      handleShareLink(url, joining).pipe(
+        Effect.provideService(Capability.Service, capabilities),
+        Effect.provideService(Operation.Service, operationService),
+      );
+
+    return [
+      Capability.contribute(AppCapabilities.NavigationHandler, handler),
+      Capability.contribute(AppCapabilities.NavigationHandler, shareLinkHandler),
+      Capability.contribute(AppCapabilities.NavigationTargetLoader, joiningLoader),
+    ];
   }),
 );
 

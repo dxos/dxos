@@ -47,6 +47,12 @@ export const setSpacesOrder = (ordering: Obj.Any, nodeIds: readonly string[]): v
 
 export type SpacePluginOptions = {
   /**
+   * The app booted to open a share link: an identity it creates makes its own spaces only once the shared space is
+   * ready, since they would otherwise hold the worker the guest is waiting on.
+   */
+  shareBoot?: boolean;
+
+  /**
    * Origin used for shareable links (object copy-link and invitation base).
    * Defaults to window.location.origin.
    */

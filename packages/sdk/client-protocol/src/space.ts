@@ -48,6 +48,12 @@ export interface SpaceInternal {
   get db(): EchoDatabase;
   get data(): SpaceData;
 
+  /**
+   * Set while this client lists the space from documents fetched before it joined (a share link's), not from its
+   * services; it turns false once the services list the space as ready.
+   */
+  get provisional(): boolean;
+
   getCredentials(): Promise<Credential[]>;
 
   getEpochs(): Promise<SpecificCredential<Epoch>[]>;
@@ -66,6 +72,12 @@ export interface SpaceInternal {
   migrate(): Promise<void>;
 
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
+
+  /**
+   * Adds objects to the space's sync scope when this client replicates it partially (it joined through an object
+   * share link); a no-op for a space replicated in full.
+   */
+  extendSyncScope(objectIds: readonly string[]): Promise<void>;
 
   /**
    * Has EDGE move the space's credentials off its hypercore control feed onto a space root document,

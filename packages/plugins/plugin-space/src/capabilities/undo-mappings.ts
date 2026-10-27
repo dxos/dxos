@@ -18,10 +18,11 @@ import { SpaceOperationConfig } from '../operations/helpers.ts';
 type UndoMappingsOptions = {
   createInvitationUrl: (invitationCode: string) => string;
   createJoinUrl: (spaceKey: PublicKey) => string;
+  shareableLinkOrigin: string;
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl, createJoinUrl }: UndoMappingsOptions) {
+  Effect.fnUntraced(function* ({ createInvitationUrl, createJoinUrl, shareableLinkOrigin }: UndoMappingsOptions) {
     return [
       Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
@@ -64,7 +65,7 @@ export default Capability.makeModule(
           ],
         }),
       ]),
-      Capability.contribute(SpaceOperationConfig, { createInvitationUrl, createJoinUrl }),
+      Capability.contribute(SpaceOperationConfig, { createInvitationUrl, createJoinUrl, shareableLinkOrigin }),
     ];
   }),
 );

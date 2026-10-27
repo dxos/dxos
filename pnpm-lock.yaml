@@ -17594,6 +17594,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -17718,6 +17721,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../common/crypto
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../../core/compute/extractor-lib

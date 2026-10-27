@@ -12,6 +12,7 @@ import {
   type CreateSpaceOptions,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
+  type JoinSpaceOptions,
   type Space,
   SpaceProperties,
 } from '@dxos/client-protocol';
@@ -36,7 +37,7 @@ import { trace } from '@dxos/tracing';
 import { RPC_TIMEOUT } from '../common.ts';
 import { InvitationsProxy } from '../invitations/index.ts';
 import { type WorkingSetSource } from '../services/boot-cache/index.ts';
-import { SpaceProxy, type TakeWorkingSet } from './space-proxy.ts';
+import { type IsPendingSpace, SpaceProxy, type TakeWorkingSet } from './space-proxy.ts';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -52,6 +53,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     private readonly _echoClient: EchoClient,
     private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
     private readonly _takeWorkingSet?: TakeWorkingSet,
+    private readonly _isPending?: IsPendingSpace,
   ) {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
@@ -174,6 +176,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
             this._echoClient,
             this._runtime,
             this._takeWorkingSet,
+            this._isPending,
           );
 
           if (this._shouldOpenSpace(space)) {
@@ -341,13 +344,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return spaceProxy;
   }
 
-  join(invitation: Invitation | string) {
+  join(invitation: Invitation | string, options?: JoinSpaceOptions) {
     if (!this._invitationProxy) {
       throw new ApiError({ message: 'Client not open.' });
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy.join(invitation);
+    return this._invitationProxy.join(invitation, undefined, options);
   }
 
   async joinBySpaceKey(spaceKey: PublicKey): Promise<Space> {

@@ -42,6 +42,8 @@ import {
   type JoinSpaceResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
+  type ReadSharedObjectsRequest,
+  type ReadSharedObjectsResponseBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
   type SerializedError,
@@ -448,6 +450,23 @@ export class EdgeHttpClient extends BaseHttpClient {
       body,
       method: 'POST',
       auth: true,
+    });
+  }
+
+  /**
+   * Reads the objects a delegated invitation shares; needs no identity, so a share link can show them before its
+   * holder has joined or even has one.
+   */
+  public async readSharedObjects(
+    ctx: Context,
+    spaceId: SpaceId,
+    body: ReadSharedObjectsRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<ReadSharedObjectsResponseBody> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/shared-objects`, this.baseUrl), {
+      ...args,
+      body,
+      method: 'POST',
     });
   }
 

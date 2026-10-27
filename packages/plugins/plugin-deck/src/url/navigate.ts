@@ -74,10 +74,22 @@ export const deckNavigation = Effect.fnUntraced(function* (params: {
   const companionAnchor =
     anchorId && variant && isCompanionOpen(companionPlanks, flatten, anchorId) ? anchorId : undefined;
 
+  // A plank the URL names keeps the URL's pair until the graph can represent it, or a navigation made while it resolves
+  // (such as closing the companion) would close it.
+  const unresolved = Option.match(
+    Navigation.parse(window.location.pathname, PathResolution.buildUrlKeyTable(builder)),
+    {
+      onNone: () => new Map<string, UrlPath.Pair>(),
+      onSome: ({ pairs }) => Navigation.getUnresolvedPairs(pairs),
+    },
+  );
+
   const pairs: UrlPath.Pair[] = [];
   const navigatedIds = new Map<Navigation.PlankSegment, string>();
   for (const nodeId of active) {
-    const represented = PathResolution.representNode(builder, nodeId);
+    const represented = PathResolution.representNode(builder, nodeId).pipe(
+      Option.orElse(() => Option.fromNullishOr(unresolved.get(nodeId))),
+    );
     if (Option.isNone(represented)) {
       log.error('node has no URL binding, so it cannot be opened', { nodeId });
       continue;

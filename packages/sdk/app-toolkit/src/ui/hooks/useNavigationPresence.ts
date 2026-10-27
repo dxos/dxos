@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -45,6 +46,10 @@ export const useNavigationPresence = (
 ): AppCapabilities.NavigationTargetVerdict => {
   const loaders = Hooks.useCapabilities(AppCapabilities.NavigationTargetLoader);
   const present = !!id && Option.isSome(AppGraph.getNode(graph, id));
+  // An object's target resolves only once its workspace has a node, which can land after the plank first asks.
+  const spaceId = id ? GraphPath.getSpaceIdFromPath(id) : undefined;
+  const spaceNode = useMemo(() => graph.node(spaceId ? GraphPath.getSpacePath(spaceId) : ''), [graph, spaceId]);
+  const spacePresent = Option.isSome(useAtomValue(spaceNode));
   const [verdict, setVerdict] = useState<AppCapabilities.NavigationTargetVerdict>('unknown');
 
   useEffect(() => {
@@ -61,10 +66,21 @@ export const useNavigationPresence = (
     let current = true;
     setVerdict('unknown');
     void EffectEx.runPromise(
-      Effect.forEach(loaders, (loader) =>
-        loader
-          .load(target)
-          .pipe(Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown'))),
+      Effect.forEach(
+        loaders,
+        (loader) =>
+          loader.load(target).pipe(
+            Effect.catch(() => Effect.succeed<AppCapabilities.NavigationTargetVerdict>('unknown')),
+            // One loader's proof settles it, without waiting on another that loads the whole space to answer.
+            Effect.tap((loaderVerdict) =>
+              Effect.sync(() => {
+                if (current && loaderVerdict === 'exists') {
+                  setVerdict('exists');
+                }
+              }),
+            ),
+          ),
+        { concurrency: 'unbounded' },
       ),
     ).then((verdicts) => {
       if (current) {
@@ -74,7 +90,7 @@ export const useNavigationPresence = (
     return () => {
       current = false;
     };
-  }, [graph, id, present, loaders]);
+  }, [graph, id, present, loaders, spacePresent]);
 
   return present ? 'exists' : verdict;
 };

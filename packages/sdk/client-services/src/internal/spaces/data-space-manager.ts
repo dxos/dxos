@@ -50,7 +50,7 @@ import * as Hook from '@dxos/effect/Hook';
 import { type HypercoreStore, HypercoreStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import {
@@ -71,7 +71,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage, type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { EdgeReplicationSetting, SpaceSyncScopeSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
@@ -310,6 +310,16 @@ export class DataSpaceManager extends Resource {
     log('open');
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    // Objects a guest creates in a partially replicated space join its scope; persisted so a restart keeps them.
+    this._echoHost.syncScopeExtended.on(this._ctx, ({ spaceId, objectIds }) => {
+      const space = this.getSpaceById(spaceId);
+      if (space) {
+        void this.extendSpaceSyncScope(space.key, objectIds).catch((err) =>
+          log.warn('failed to persist sync scope', { spaceId, err }),
+        );
+      }
+    });
+
     markMilestone('spaces.opening', `${this._metadataStore.spaces.length} spaces`);
     const spacesToActivate: DataSpace[] = [];
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
@@ -500,6 +510,7 @@ export class DataSpaceManager extends Resource {
       controlTimeframe: opts.controlTimeframe && fromTimeframe(opts.controlTimeframe),
       dataTimeframe: opts.dataTimeframe && fromTimeframe(opts.dataTimeframe),
       tags,
+      syncScope: opts.syncScope && create(SpaceSyncScopeSchema, { objectIds: [...opts.syncScope] }),
     });
 
     const space = await this._constructSpace(ctx, metadata);
@@ -982,8 +993,31 @@ export class DataSpaceManager extends Resource {
     space.stateUpdate.emit();
   }
 
+  @synchronized
+  async extendSpaceSyncScope(spaceKey: PublicKey, objectIds: readonly string[]): Promise<void> {
+    const space = this._spaces.get(spaceKey);
+    invariant(space, 'Space not found.');
+    const scope = this._metadataStore.getSpaceSyncScope(spaceKey);
+    if (!scope) {
+      return;
+    }
+    const extended = [...new Set([...scope, ...objectIds])];
+    if (extended.length === scope.length) {
+      return;
+    }
+    await this._metadataStore.setSpaceSyncScope(spaceKey, extended);
+    this._echoHost.setSpaceSyncScope(space.id, extended);
+  }
+
   private async _constructSpace(ctx: Context, metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
+    // Applied before the data pipeline opens the space's root, so its first sync round is already limited.
+    if (metadata.syncScope) {
+      const spaceId = SpaceId.isValid(metadata.spaceId)
+        ? metadata.spaceId
+        : await createIdFromSpaceKey(requirePublicKey(metadata.key));
+      this._echoHost.setSpaceSyncScope(spaceId, metadata.syncScope.objectIds);
+    }
     const gossip = new Gossip({
       localPeerId: this.signingContext.deviceKey,
     });
@@ -1251,6 +1285,11 @@ export class DataSpaceManager extends Resource {
     space: DataSpace,
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
+    // Only a member who may admit others can host an invitation; creating one otherwise throws, which would abort
+    // the caller's `afterReady` before it announces the space.
+    if (!space.inner.spaceState.hasMembershipManagementPermission(this.signingContext.identityKey)) {
+      return;
+    }
     const tasks = invitations.map(([credentialId, invitation]) => {
       const expiresOn = toDate(invitation.expiresOn);
       return this._invitationsManager.createInvitation(this._ctx, {
