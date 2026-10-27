@@ -143,11 +143,11 @@ export type ExtractOptions = Omit<Request, 'fields'>;
  * Extracts every field from `state` in one call. Answers are typed by their field; a field the
  * provider did not answer (or answered with the wrong type) is null, so callers never branch on presence.
  */
-export const extract = <const Fs extends Fields>(
+export const extract: <const Fs extends Fields>(
   fields: Fs,
   options: ExtractOptions,
-): Effect.Effect<{ readonly answers: Answers<Fs>; readonly usage?: Usage }, AiError.AiError, ExtractionModel> =>
-  Effect.gen(function* () {
+) => Effect.Effect<{ readonly answers: Answers<Fs>; readonly usage?: Usage }, AiError.AiError, ExtractionModel> =
+  Effect.fnUntraced(function* <const Fs extends Fields>(fields: Fs, options: ExtractOptions) {
     const model = yield* ExtractionModel;
     const result = yield* model.extract({ ...options, fields });
     const answers = Object.fromEntries(

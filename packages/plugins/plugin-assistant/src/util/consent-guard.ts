@@ -111,28 +111,27 @@ export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, neve
   });
 
 /** Posts a request card to the chat and waits for the person's answer; an interrupted wait cancels it. */
-const ask = (chat: Chat.Chat, title: string, preview: ContentBlock.Request['preview']) =>
-  Effect.gen(function* () {
-    // A chat always owns its feed, so a failed load is a defect rather than an answer.
-    const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
-    const requestId = PublicKey.random().toHex();
-    const answer = yield* Deferred.make<ContentBlock.RequestOption['kind']>();
-    const message = Message.make({
-      sender: 'assistant',
-      blocks: [{ _tag: 'request', requestId, title, options: [...CONSENT_OPTIONS], ...(preview && { preview }) }],
-    });
-    pending.set(requestId, { chatId: chat.id, answer });
-    yield* Feed.append(feed, [message]);
-    return yield* Deferred.await(answer).pipe(
-      Effect.onInterrupt(() =>
-        Effect.gen(function* () {
-          resolve(message, requestId, undefined);
-          yield* Feed.append(feed, [message]);
-        }),
-      ),
-      Effect.ensuring(Effect.sync(() => pending.delete(requestId))),
-    );
+const ask = Effect.fnUntraced(function* (chat: Chat.Chat, title: string, preview: ContentBlock.Request['preview']) {
+  // A chat always owns its feed, so a failed load is a defect rather than an answer.
+  const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
+  const requestId = PublicKey.random().toHex();
+  const answer = yield* Deferred.make<ContentBlock.RequestOption['kind']>();
+  const message = Message.make({
+    sender: 'assistant',
+    blocks: [{ _tag: 'request', requestId, title, options: [...CONSENT_OPTIONS], ...(preview && { preview }) }],
   });
+  pending.set(requestId, { chatId: chat.id, answer });
+  yield* Feed.append(feed, [message]);
+  return yield* Deferred.await(answer).pipe(
+    Effect.onInterrupt(() =>
+      Effect.gen(function* () {
+        resolve(message, requestId, undefined);
+        yield* Feed.append(feed, [message]);
+      }),
+    ),
+    Effect.ensuring(Effect.sync(() => pending.delete(requestId))),
+  );
+});
 
 /** Records the outcome on the request block, so the card shows the answer instead of the buttons. */
 const resolve = (message: Message.Message, requestId: string, optionId: string | undefined) =>
