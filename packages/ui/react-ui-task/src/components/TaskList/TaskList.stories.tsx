@@ -673,7 +673,7 @@ const DefaultStory = ({
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Layout.Flex classNames='p-3'>
+        <Layout.Flex classNames='p-trim-md'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}

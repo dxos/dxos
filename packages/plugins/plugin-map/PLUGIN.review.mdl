@@ -1,0 +1,338 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-map/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MapPlugin
+
+The plugin is largely built: the `Map` type, the create-object entry that builds a `ViewModel` with a
+pivot field, the built-in view `MarkerProvider`, the `map` companion gated on a matching provider, the
+MapTiler/OSM tile switch from the `apiKeys` setting, and marker selection dispatching
+`LayoutOperation.Select` all exist. Almost nothing is tested beyond activation (`plugin.test.ts`,
+`MapPlugin.workerd.test.ts`) and one storybook smoke story, so most verdicts are `untested`.
+
+The divergences: `createMap` is not an operation (creation is a `CreateObjectEntry`), `toggleMapView`
+takes a required `{ type }` instead of flipping, `Map.coordinates` is used only as the globe's tour
+route rather than as static markers, and `MapViewEditor` neither persists a changed typename nor
+writes a field id into `pivotFieldId` (it writes the property name, which the marker provider then
+fails to match). The skill has no tools and a one-line instruction.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict GeoPoint: The plugin uses echo's `Format.GeoPoint`, a [lng, lat] tuple.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/Map.ts#Map]
+  note: There is no plugin-local GeoPoint; `Map` fields use `Format.GeoPoint` from `@dxos/echo`, stored as [lng, lat] and read that way in `useViewMarkers`.
+```
+
+```mdl
+verdict MapViewType: The `'globe' | 'map'` literal union exists as `MapControlType`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx#MapControlType]
+  note: Also repeated inline as `Schema.Literals(['globe', 'map'])` in `StateSchema` and `SetControlType`.
+```
+
+```mdl
+verdict Map: The ECHO type has name, view, center, zoom and coordinates as specified.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/Map.ts#Map, github:dxos/dxos/packages/plugins/plugin-map/src/types/Map.ts#make]
+  note: Registration is checked in `MapPlugin.workerd.test.ts`, but no test exercises the fields.
+```
+
+```mdl
+verdict CreateMap: The create-dialog schema has name, typename and locationFieldName.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/MapAction.ts#CreateMap]
+  note: `locationFieldName` is annotated with `LocationAnnotationId`, which routes it to the `LocationField` form input.
+```
+
+```mdl
+verdict MapState: The state atom holds type, center and zoom, but it is persisted and center/zoom are never written.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/MapCapabilities.ts#StateSchema, github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/state.ts]
+  note: The atom is a `KvsStore` (persisted, not transient). `MapSurface` keeps center/zoom in local React state, so `MapState.center`/`zoom` are never set.
+```
+
+```mdl
+verdict APIKey: The type comes from `@dxos/schema` as the spec says.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/Settings.ts#Settings]
+  note: Used via `Schema.Array(APIKey)` in the settings schema; no test in this package.
+```
+
+```mdl
+verdict MapSettings: Settings hold an optional `apiKeys` array annotated with recognized domains.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/settings.ts]
+  note: Contributed as `AppCapabilities.Settings` and as `MapCapabilities.Settings`; no test.
+```
+
+```mdl
+verdict GeoLine: The source/target arc type exists, with an extra optional color.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/MapCapabilities.ts#GeoLine]
+  note: Declared twice (also in `components/types.ts`).
+```
+
+```mdl
+verdict MarkerSet: The marker set has markers, lines and selection, plus an unspecified `tour`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/MapCapabilities.ts#MarkerSet]
+  note: `tour` (globe tour stops) is not in the spec.
+```
+
+```mdl
+verdict MarkerProvider: The multi capability with id, match and useMarkers exists.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/MapCapabilities.ts#MarkerProvider]
+  note: The story passes `viewMarkerProvider` directly; no test resolves providers through the capability.
+```
+
+```mdl
+verdict MapArticle: The container renders provider markers as map or globe with props injected by MapSurface.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx#MapArticle, github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/MapSurface.tsx#MapSurface]
+  walkthrough:
+    - The surface resolves the provider, tile URL, MapState type and selection writer. github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/MapSurface.tsx#MapSurface
+    - The article mounts the provider's markers on MapControl or GlobeControl and reads the selection. github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx#MapArticle
+  note: |
+    Covered only by a smoke story. There is no `toolbar` slot, and the in-control toggle flips a local
+    `useControlledState` copy of `type` rather than invoking the op, so it does not reach other surfaces.
+```
+
+```mdl
+verdict MapViewEditor: The properties form lists typenames and GeoPoint columns but only saves the column, as a name.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapViewEditor/MapViewEditor.tsx#MapViewEditor]
+  note: |
+    `onSave` ignores `coordinateSource`, writes the property key into `view.projection.pivotFieldId`
+    (a field id elsewhere), has no `footer` slot and emits no `onChange`.
+```
+
+```mdl
+verdict createMap: Map creation is a CreateObjectEntry, not an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/create-object.ts]
+  note: No `createMap` operation is registered (only `SetControlType`). The entry builds the view via `ViewModel.makeFromDatabase` and adds the Map with `SpaceOperation.AddObject`.
+```
+
+```mdl
+verdict toggleMapView: The op `setControlType` sets an explicit type instead of toggling.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/MapOperation.ts#SetControlType, github:dxos/dxos/packages/plugins/plugin-map/src/operations/set-control-type.ts]
+  walkthrough:
+    - The op declares a required `{ type: 'globe' | 'map' }` input. github:dxos/dxos/packages/plugins/plugin-map/src/types/MapOperation.ts#SetControlType
+    - The handler writes that type into the MapState atom. github:dxos/dxos/packages/plugins/plugin-map/src/operations/set-control-type.ts
+  note: The spec's input is empty and the op flips; the flip lives in the app-graph action, which reads the state and passes the opposite type.
+```
+
+```mdl
+verdict F-1.1: Map is offered in the create menu via a CreateObjectEntry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/create-object.ts]
+  note: No test creates a Map through the entry.
+```
+
+```mdl
+verdict F-1.2: A typename creates a ViewModel whose view the Map references.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/create-object.ts]
+  note: Implemented with `ViewModel.makeFromDatabase`; untested.
+```
+
+```mdl
+verdict F-1.3: locationFieldName is passed as the view's pivot field.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/create-object.ts]
+  note: Passed as `pivotFieldName` to `ViewModel.makeFromDatabase`, which resolves it to a field id; untested here.
+```
+
+```mdl
+verdict F-1.4: Map.coordinates are used as the globe tour route, not displayed as markers.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/marker-provider.tsx#viewMarkerProvider]
+  note: '`useViewMarkers` maps `coordinates` to `tour` only; markers come solely from view rows, so a Map without a view shows no pins.'
+```
+
+```mdl
+verdict F-2.1: Map article and section surfaces render MapArticle in the MapState type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/MapSurface.tsx#MapSurface]
+  note: The story renders MapArticle directly with no surface or state.
+```
+
+```mdl
+verdict F-2.2: The view provider queries the view's type and converts rows to markers.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/marker-provider.tsx#viewMarkerProvider]
+  note: No test populates a view and checks markers.
+```
+
+```mdl
+verdict F-2.3: Rows with a missing or malformed GeoPoint are dropped.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/marker-provider.tsx#viewMarkerProvider]
+  note: The row mapper returns undefined for non-array, short or non-numeric values and filters them; untested.
+```
+
+```mdl
+verdict F-2.4: The globe type renders GlobeControl instead of MapControl.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx#MapArticle]
+  note: The branch is on `type === 'map'`; no test or globe story.
+```
+
+```mdl
+verdict F-3.1: Invoking the op sets MapState.type; the graph action flips it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/operations/set-control-type.ts, github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/app-graph-builder.ts]
+  note: The op itself takes the target type (see toggleMapView); the menu action computes the flip. Untested.
+```
+
+```mdl
+verdict F-3.2: The op state is plugin-scoped, but the in-map toggle button is local to one surface.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/MapSurface.tsx#MapSurface, github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.tsx#MapArticle]
+  note: Every surface reads the shared atom, but `MapControl`/`GlobeControl` `onToggle` calls a local `setType`, so that toggle reaches no other surface.
+```
+
+```mdl
+verdict F-4.1: The objectProperties surface renders MapViewEditor for a Map.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/react-surface.ts]
+  note: No test or story renders the properties panel.
+```
+
+```mdl
+verdict F-4.2: The editor shows both pickers but changing the typename is not saved.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapViewEditor/MapViewEditor.tsx#MapViewEditor]
+  note: Only `coordinateColumn` is saved, and it is written as a property name into `pivotFieldId`, which `useViewMarkers` compares against field ids.
+```
+
+```mdl
+verdict F-5.1: A Map skill is contributed but has no tools to create or update maps.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/skills/MapSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/skill-definition.ts]
+  note: '`Skill.toolDefinitions({ tools: [] })`: the AI cannot act on maps through it.'
+```
+
+```mdl
+verdict F-5.2: The skill instructions are one generic sentence.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/skills/MapSkill.ts#make]
+  note: '"You can create and update maps to show geospatial data." — no description of views, markers, globe or tiles.'
+```
+
+```mdl
+verdict F-6.1: The built-in view marker provider is registered for Map objects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/marker-provider.tsx#viewMarkerProvider]
+  note: The story uses it directly; no test asserts its registration.
+```
+
+```mdl
+verdict F-6.2: Other plugins contribute providers; plugin-trip does.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/MapCapabilities.ts#MarkerProvider, github:dxos/dxos/packages/plugins/plugin-trip/src/capabilities/marker-provider.tsx#tripMarkerProvider]
+  note: No test exercises provider resolution across plugins.
+```
+
+```mdl
+verdict F-6.3: A `map` companion is offered for non-Map objects that a provider matches.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/react-surface.ts]
+  walkthrough:
+    - The companion connector emits a `map` companion only when a MarkerProvider matches the object. github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/app-graph-builder.ts
+    - The companion surface renders MapSurface for the companion's primary object. github:dxos/dxos/packages/plugins/plugin-map/src/capabilities/react-surface.ts
+  note: No graph-builder test.
+```
+
+```mdl
+verdict F-6.4: Map clicks and nearest-marker globe clicks dispatch LayoutOperation.Select.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/components/Globe/GlobeControl.tsx#GlobeControl, github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/MapSurface.tsx#MapSurface]
+  walkthrough:
+    - GlobeControl picks the nearest marker within a threshold on canvas click. github:dxos/dxos/packages/plugins/plugin-map/src/components/Globe/GlobeControl.tsx#GlobeControl
+    - MapSurface turns the selected id into a `LayoutOperation.Select` call. github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/MapSurface.tsx#MapSurface
+  note: No test.
+```
+
+```mdl
+verdict F-7.1: Settings expose an `apiKeys` list of APIKey.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/Settings.ts#Settings]
+  note: No test.
+```
+
+```mdl
+verdict F-7.2: apiKeys carries a RecognizedDomainsAnnotation of `maptiler.com`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/types/Settings.ts#RECOGNIZED_API_KEY_DOMAINS]
+  note: No test.
+```
+
+```mdl
+verdict F-7.3: A maptiler.com key yields a MapTiler tile URL; otherwise OSM is used.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/build-tile-url.ts#buildTileUrl]
+  note: '`buildTileUrl` is pure and easy to test but has no test.'
+```
+
+```mdl
+verdict T-1: The storybook smoke story renders a viewless Map, but asserts nothing.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapArticle/MapArticle.stories.tsx]
+  note: The story only renders without error; nothing checks `Map.view === undefined` or zero markers, and creation is not driven.
+```
+
+```mdl
+verdict T-2: Nothing creates a Map with a view and checks markers.
+  status: missing
+  note: No unit, story or e2e test drives the create flow with a typename.
+```
+
+```mdl
+verdict T-3: Nothing invokes the toggle op and checks for GlobeControl.
+  status: missing
+  note: The workerd test only checks the op key is registered.
+```
+
+```mdl
+verdict T-4: Nothing tests malformed GeoPoint omission.
+  status: missing
+  note: No test file in plugin-map covers `useViewMarkers`.
+```
+
+```mdl
+verdict T-5: Nothing tests the object properties editor.
+  status: missing
+  note: No story or test renders MapViewEditor.
+```
+
+```mdl
+verdict T-6: Nothing tests the map companion.
+  status: missing
+  note: No app-graph test in plugin-map or plugin-trip asserts the companion node.
+```
+
+```mdl
+verdict T-7: Nothing tests the MapTiler tile URL.
+  status: missing
+  note: '`buildTileUrl` has no test.'
+```
+
+```mdl
+verdict QA-1: The QA test is manual only.
+  status: missing
+  note: No automated test creates a map over a dataset and toggles the globe; the spec marks it human-only.
+```

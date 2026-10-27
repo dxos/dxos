@@ -26,7 +26,7 @@ const DefaultStory = () => (
       </Header.Root>
     }
   >
-    <div className='p-3 text-fg-muted'>Article body content.</div>
+    <div className='p-trim-md text-fg-muted'>Article body content.</div>
   </ObjectArticle>
 );
 

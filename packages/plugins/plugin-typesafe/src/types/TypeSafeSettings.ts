@@ -33,7 +33,7 @@ export type DecisionModel = Schema.Schema.Type<typeof DecisionModel>;
 export const Settings = Schema.Struct({
   /**
    * What `Model.defaultDecisionModel` resolves to — the model behind every decision whose caller did
-   * not pin one. Unset means jev on TypeSafe's own API.
+   * not pin one. Unset means Cloudflare's Clef on Workers AI, which answers through EDGE with no key.
    */
   decisionModel: Schema.optional(
     DecisionModel.annotate({

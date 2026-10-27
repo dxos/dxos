@@ -1,0 +1,593 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-calls/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: CallsPlugin
+
+The live call stack is built and renders well in stories. `CallManager` joins a room through the
+swarm synchronizer and the Cloudflare SFU peer, exposes self, users, tracks and media as atoms,
+and toggles media. `ParticipantGrid`, the participant tile (mute, raised hand, speaking, local pin),
+the toolbar, `CallArticle` and `CallDebugPanel` (with `@peermetrics/webrtc-stats`) all exist with
+stories. An "Active Call" deck companion appears while joined. `SetSimulatedParticipants` is a real
+operation.
+
+The persistent half of the spec is not built. There is no `Call` ECHO type: `CallsCapabilities.Call`
+is a runtime `{ roomId }`. There is no `CallTransport` and no `provisionCall`, and the transport
+provider has `join(roomId)`/`leave()` with no `makeConfig`, so F-9, F-10.2–10.4, T-10, T-13 and
+QA-2 are missing. Two other gaps: `CallsCapabilities.EventHandler` is a singleton that plugin-calls
+never invokes (plugin-meeting's `call-extension.ts` says so), so F-5.2–5.5 are missing; and there is
+no display-name gate, so F-1.3, F-6 and T-4 are missing.
+
+The biggest divergence is the thread boundary. plugin-thread depends on `@dxos/plugin-calls` and
+renders "Start video call" in its own `ChannelArticle`. It does not come from a graph
+type-extension. The data types (`Participant`, `TrackBundle`, `CallState`, `MediaState`, track
+ids) are shaped by the `UserState` proto and the SFU wire format, not by the spec's model. The
+call "ops" are `CallManager` methods, as the spec's QA preamble itself records.
+
+Only `plugin.test.ts` (plugin loads) is a unit test; every acceptance scenario is `missing`.
+
+Of 82 items: 7 done, 15 untested, 3 partial, 27 diverged, 30 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Call: No persistent Call ECHO type exists; the only Call is a runtime { roomId }.
+  status: missing
+  note: Searched dxos for a call typename, `provisionCall` and `Call.transport`; `CallsCapabilities.Call` is `type Call = { roomId: string }`, used as an article subject.
+```
+
+```mdl
+verdict CallTransport: No CallTransport descriptor exists.
+  status: missing
+  note: Nothing persists a transport kind or provider config; providers are picked from the registry at join time.
+```
+
+```mdl
+verdict RoomId: A room id is a bare string, the anchor object's URI, treated as opaque.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.setRoomId, github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallArticle/CallArticle.tsx#CallArticleProps]
+  note: Not wrapped as `{ value }`. No test.
+```
+
+```mdl
+verdict Participant: A participant is the UserState proto (id, name, raised hand, speaking, joined, encoded tracks), not the spec's shape.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#UserState]
+  note: No `identityDid`, `isSelf` or `pinned` field; self is `CallState.self` and pinning is local React state in `ParticipantGrid`.
+```
+
+```mdl
+verdict TrackBundle: UserState.tracks holds encoded SFU track names and enabled flags, not MediaStreamTracks.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#UserState, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#TrackNameCodec]
+  note: Remote streams are pulled by encoded name and held in `MediaState.pulledVideoStreams` / `pulledAudioTracks`.
+```
+
+```mdl
+verdict MediaToggles: Toggle state lives as audioEnabled, videoEnabled and screenshareEnabled inside MediaState.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/media-manager.ts#MediaState]
+  note: There is no separate toggles type.
+```
+
+```mdl
+verdict CallState: CallState has roomId, users, self, activities, raisedHand, speaking, joined and tracks; audio tracks to play are a manager atom.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-swarm-synchronizer.ts#CallState, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager]
+  note: All fields are optional; `activities` and `tracks` are extra; `audioTracksToPlay` is `CallManager.audioTracksToPlayAtom`, not a field.
+```
+
+```mdl
+verdict MediaState: MediaState is a flat record of devices, tracks, pushed and pulled tracks and the SFU peer, not three TrackInfos.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/media-manager.ts#MediaState]
+  note: No per-kind `TrackInfo` structure.
+```
+
+```mdl
+verdict TrackInfo: No TrackInfo type exists.
+  status: missing
+  note: MediaState carries device ids and tracks directly (see MediaState).
+```
+
+```mdl
+verdict SessionId: SFU session ids are plain strings on the Session record and track objects.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/util/calls-service.ts#Session]
+  note: Not wrapped as a type.
+```
+
+```mdl
+verdict TrackId: Track ids are EncodedTrackName strings of sessionId/trackName/mid.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#EncodedTrackName, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#TrackNameCodec]
+  note: Not a `{ value }` type.
+```
+
+```mdl
+verdict LocalTrack: Pushed tracks are TrackObjects with location, trackName, sessionId and mid.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#TrackObject]
+  note: No `kind` or `label`; kind is implied by which `pushed*Track` field holds it.
+```
+
+```mdl
+verdict RemoteTrack: Pulled tracks are TrackObjects decoded from encoded names, with location remote.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#TrackObject, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/types.ts#TrackNameCodec]
+  note: No `kind` or `participantId` field.
+```
+
+```mdl
+verdict SpeakingHandle: No handle exists; a SpeakingMonitor is constructed per track and closed.
+  status: missing
+  note: See SpeakingMonitor; `@dxos/av` has no `watch`/`stop` API.
+```
+
+```mdl
+verdict CallTransportProvider: The provider has kind, label, join(roomId) and leave(), with no makeConfig.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallsCapabilities.ts#CallTransportProvider, github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/call-transport.ts]
+  note: `join` takes a room id, not a Call, and nothing produces persisted config. No test.
+```
+
+```mdl
+verdict CallsCapabilities.Manager: CallManager is contributed as a singleton once the client is initialized, browser and tauri only.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallsCapabilities.ts#Manager, github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/call-manager.ts, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager]
+  note: `plugin.test.ts` only checks the plugin loads; no test exercises the manager. Activation is `ClientEvents.Initialized`, not `client-ready`.
+```
+
+```mdl
+verdict CallArticle: CallArticle shows the grid and toolbar when joined to its room and the lobby otherwise.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallArticle/CallArticle.tsx#CallArticle, github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallArticle/CallArticle.stories.tsx]
+  note: No `toolbar` slot or `fullscreen` prop; the audio mixer is the plugin's ReactRoot (`Call.Audio`), not part of the article.
+```
+
+```mdl
+verdict ParticipantGrid: ParticipantGrid lays out self and users responsively and keeps the pinned participant locally.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/ParticipantGrid.tsx#ParticipantGrid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/ParticipantGrid.stories.tsx]
+```
+
+```mdl
+verdict ParticipantTile: The Participant tile shows video, name, mute, raised hand and speaking.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/Participant.tsx#Participant]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/Participant.stories.tsx]
+  note: Named `Participant`; pinning is wired through the grid's `onPinnedChange`.
+```
+
+```mdl
+verdict Toolbar: The toolbar has mic, camera, screenshare, raise-hand and leave controls, but no share-link action.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Call/Toolbar.tsx#Toolbar]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Call/Toolbar.stories.tsx]
+  note: The `channel` prop only resolves a graph node; there is no `shareLink`.
+```
+
+```mdl
+verdict Lobby: The Lobby is a camera preview with a join toolbar, not a display-name form.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Lobby/Lobby.tsx#Lobby]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Lobby/Lobby.stories.tsx]
+  note: No display-name state or profile update; it is shown whenever the viewer is not joined to the room.
+```
+
+```mdl
+verdict CallDebugPanel: CallDebugPanel shows call and media state and optional WebRTC stats.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallDebugPanel/CallDebugPanel.tsx#CallDebugPanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallDebugPanel/CallDebugPanel.stories.tsx]
+```
+
+```mdl
+verdict CallsService: CallsServicePeer pushes and pulls tracks against the SFU over one peer connection; sessions are created internally.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/util/calls-service.ts#CallsServicePeer]
+  note: API is `pushTrack`/`pullTrack`/`_closeTrackInBulk`, not `createSession`/`pushTracks`/`pullTracks`/`closeSession`; no `SessionUnavailable` error. No test.
+```
+
+```mdl
+verdict CallSwarmSynchronizer: The synchronizer joins the room swarm and shares UserState, with one stateUpdated event.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-swarm-synchronizer.ts#CallSwarmSynchronizer]
+  note: `join()`/`leave()` take no room id (set separately), `setTracks` replaces `publish`, and there are no per-peer join/leave/change events. No test.
+```
+
+```mdl
+verdict MediaManager: MediaManager turns audio, video and screenshare on and off and pushes them to the SFU.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/media-manager.ts#MediaManager]
+  note: API is `turnXOn`/`turnXOff`, not `requestX`/`stop`; no typed `PermissionDenied`/`DeviceUnavailable` errors. No test.
+```
+
+```mdl
+verdict SpeakingMonitor: SpeakingMonitor (in @dxos/av) watches one track per instance and exposes isSpeaking and speakingChanged.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/common/av/src/SpeakingMonitor.ts#SpeakingMonitor]
+  note: Constructed with the track and closed as a Resource; no `watch`/`stop` or handle. Not tested.
+```
+
+```mdl
+verdict startCall: Starting a call is CallManager.join behind the transport provider's join(roomId), not an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/call-transport.ts, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.join]
+  note: No operation key (as the spec's QA preamble notes). It does not invoke `EventHandler.onJoin` and has no `DisplayNameMissing` check.
+```
+
+```mdl
+verdict leaveCall: Leaving is CallManager.leave, which emits left; media is turned off by the UI handler, not the method.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.leave, github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallArticle/CallArticle.tsx#CallArticle]
+  note: No operation; `EventHandler.onLeave` is never invoked.
+```
+
+```mdl
+verdict toggleAudio: Audio is toggled by CallManager.turnAudioOn and turnAudioOff, not an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.turnAudioOn, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.turnAudioOff]
+  note: No operation key.
+```
+
+```mdl
+verdict toggleVideo: Video is toggled by CallManager.turnVideoOn and turnVideoOff, not an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.turnVideoOn, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.turnVideoOff]
+  note: No operation key.
+```
+
+```mdl
+verdict toggleScreenshare: Screenshare is toggled by CallManager.turnScreenshareOn and turnScreenshareOff, not an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.turnScreenshareOn, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.turnScreenshareOff]
+  note: No operation key.
+```
+
+```mdl
+verdict raiseHand: Raising a hand is CallManager.setRaisedHand, shared through the swarm, not an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.setRaisedHand]
+  note: No operation key.
+```
+
+```mdl
+verdict pinParticipant: Pinning is local state in ParticipantGrid; there is no manager method or operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/ParticipantGrid.tsx#ParticipantGrid]
+  note: No operation and nothing on `CallManager`.
+```
+
+```mdl
+verdict provisionCall: No provisionCall exists.
+  status: missing
+  note: No method or operation creates a persistent Call (there is no Call type).
+```
+
+```mdl
+verdict SetSimulatedParticipants: The operation hands participants and transcript to CallManager.simulate, which plays them locally.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallOperation.ts#SetSimulatedParticipants, github:dxos/dxos/packages/plugins/plugin-calls/src/operations/set-simulated-participants.ts, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.simulate, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-simulation.ts#CallSimulation]
+  walkthrough:
+    - The operation declares participants (src, screenshare, avatar) and timed transcript lines. github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallOperation.ts#SetSimulatedParticipants
+    - The handler forwards them to CallManager.simulate, clearing on an empty list. github:dxos/dxos/packages/plugins/plugin-calls/src/operations/set-simulated-participants.ts
+    - CallManager keeps join local while simulated and emits simulatedUtterance for each line. github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.simulate
+  note: The SimulatedCall story calls `CallManager.simulate` directly and plugin-meeting's autocue drives the operation, but no test invokes it.
+```
+
+```mdl
+verdict F-1.1: plugin-thread's ChannelArticle renders the Start video call action itself, gated on a call transport provider.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle]
+  note: The action is not a graph type-extension from plugin-calls; plugin-thread imports `CallsCapabilities` and depends on `@dxos/plugin-calls`.
+```
+
+```mdl
+verdict F-1.2: The action joins via the provider with the channel URI; the Channel article itself switches to the call surface and chat moves to a companion.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle, github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/app-graph-builder.ts]
+  note: The Active Call deck companion also appears, but the primary article shows the call rather than chat. No display-name check, no tests.
+```
+
+```mdl
+verdict F-1.3: No display-name gate before starting a call.
+  status: missing
+  note: Searched plugin-calls and plugin-thread for `displayName`/`updateProfile`; the Lobby has no name form.
+```
+
+```mdl
+verdict F-2.1: An activeCall deck companion is contributed while joined and renders CallSidebar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallSidebar/CallSidebar.tsx#CallSidebar]
+  note: The surface id is `activeCallCompanion`, not `deck-companion--active-call`. No test.
+```
+
+```mdl
+verdict F-2.2: plugin-thread adds a chat companion to the Channel in the current call's room.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/capabilities/app-graph-builder.ts]
+  note: Contributed by plugin-thread's `channelChatCompanion` type-extension; no test.
+```
+
+```mdl
+verdict F-3.1: ParticipantGrid lays out self and remote users responsively, including fullscreen.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/ParticipantGrid.tsx#ParticipantGrid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/ParticipantGrid.stories.tsx]
+```
+
+```mdl
+verdict F-3.2: Tiles show mute, raised hand and speaking from the swarm UserState, which carries SpeakingMonitor's signal.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/Participant.tsx#Participant, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/Participant.stories.tsx]
+```
+
+```mdl
+verdict F-3.3: Pinning sets local grid state that promotes the participant.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Participant/ParticipantGrid.tsx#ParticipantGrid]
+  note: No story or test clicks pin.
+```
+
+```mdl
+verdict F-4.1: The toolbar exposes microphone, camera, screenshare, raise-hand and Leave.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Call/Toolbar.tsx#Toolbar]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Call/Toolbar.stories.tsx]
+```
+
+```mdl
+verdict F-4.2: Toggles call CallManager.turnXOn/Off; MediaManager updates the track and the swarm shares the new track state.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/components/Call/Toolbar.tsx#Toolbar, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/media-manager.ts#MediaManager, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager]
+  note: The "op:toggleX" is a manager method, as the spec's QA preamble records. No test.
+```
+
+```mdl
+verdict F-4.3: Leave turns media off and leaves via the provider; the companion disappears when joinedAtom turns false.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallArticle/CallArticle.tsx#CallArticle, github:dxos/dxos/packages/plugins/plugin-calls/src/calls/call-manager.ts#CallManager.leave]
+  note: The "op:leaveCall" is `CallManager.leave`. No test.
+```
+
+```mdl
+verdict F-5.1: EventHandler declares onJoin, onLeave, onCallStateUpdated and onMediaStateUpdated, but is a singleton, not multi.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallsCapabilities.ts#EventHandler, github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallsCapabilities.ts#CallProperties]
+  note: Declared with `Capability.makeSingleton`, so only one plugin can contribute it; all four callbacks are required, not optional.
+```
+
+```mdl
+verdict F-5.2: Nothing invokes EventHandler.onJoin.
+  status: missing
+  note: Searched plugin-calls for callers; plugin-meeting's `call-extension.ts` notes that plugin-calls never invokes `onJoin`.
+```
+
+```mdl
+verdict F-5.3: Nothing invokes EventHandler.onCallStateUpdated.
+  status: missing
+  note: CallManager emits `callStateUpdated`, but no code forwards it to the capability.
+```
+
+```mdl
+verdict F-5.4: Nothing invokes EventHandler.onMediaStateUpdated.
+  status: missing
+  note: CallManager emits `mediaStateUpdated` with `[state, isSpeaking]`, but no code forwards it to the capability.
+```
+
+```mdl
+verdict F-5.5: Nothing invokes EventHandler.onLeave.
+  status: missing
+  note: CallManager emits `left` with the room id; no code forwards it to the capability.
+```
+
+```mdl
+verdict F-6.1: Users without a display name can join.
+  status: missing
+  note: No check on `profile.displayName` in plugin-calls or plugin-thread.
+```
+
+```mdl
+verdict F-6.2: The Lobby has no display-name form.
+  status: missing
+  note: The Lobby shows a preview and a join button for anyone not in the room.
+```
+
+```mdl
+verdict F-6.3: No updateProfile call or automatic resume.
+  status: missing
+  note: Searched for `updateProfile` in plugin-calls; none.
+```
+
+```mdl
+verdict F-7.1: A devtoolsOverview surface renders CallDebugPanel with call state and media state.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallDebugPanel/CallDebugPanel.tsx#CallDebugPanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallDebugPanel/CallDebugPanel.stories.tsx]
+```
+
+```mdl
+verdict F-7.2: CallDebugPanel attaches @peermetrics/webrtc-stats to the SFU peer connection behind a toggle.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallDebugPanel/CallDebugPanel.tsx#CallDebugPanel]
+  note: The stories have no peer connection, so the stats path is never exercised.
+```
+
+```mdl
+verdict F-8.1: plugin-calls has no plugin-thread dependency and takes Channel from @dxos/types.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallsCapabilities.ts#CallProperties]
+  note: Checked `plugin-calls/package.json` and imports. No automated dependency check.
+```
+
+```mdl
+verdict F-8.2: plugin-thread depends on plugin-calls and renders the call action and call surface in its Channel article.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle]
+  note: `plugin-thread/package.json` lists `@dxos/plugin-calls`; ChannelArticle reads `CallsCapabilities.CallTransportProvider` and `Manager`.
+```
+
+```mdl
+verdict F-8.3: ChannelArticle reads call capabilities optionally, so it renders chat-only without plugin-calls.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle]
+  note: `useCapabilities(...)[0]` yields undefined and the action is hidden. No test registers ThreadPlugin alone.
+```
+
+```mdl
+verdict F-8.4: ThreadCapabilities no longer declares CallManager or CallExtension; plugin-meeting uses CallsCapabilities.EventHandler.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting/src/capabilities/call-extension.ts]
+  note: Checked `plugin-thread/src/types/ThreadCapabilities.ts`; structural, no test.
+```
+
+```mdl
+verdict F-9.1: No Call ECHO type exists to hold name, created and transport.
+  status: missing
+  note: See Call.
+```
+
+```mdl
+verdict F-9.2: No provisionCall writes a Call.
+  status: missing
+  note: See provisionCall.
+```
+
+```mdl
+verdict F-9.3: CallArticle renders the live grid for a { roomId } subject; there is no persisted Call to open.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallArticle/CallArticle.tsx#CallArticle]
+  note: The article surface matches any subject with a string `roomId`.
+```
+
+```mdl
+verdict F-9.4: plugin-calls has no plugin-meeting or plugin-transcription dependency.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/call-transport.ts]
+  note: Checked `plugin-calls/package.json`; a call joins from a Channel with no Meeting. No test.
+```
+
+```mdl
+verdict F-10.1: The Cloudflare provider org.dxos.call.transport.cloudflare is contributed when the calls service is configured.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/capabilities/call-transport.ts]
+  note: Contributes nothing when the EDGE calls endpoint is absent. No test.
+```
+
+```mdl
+verdict F-10.2: Consumers take the first registered provider and call join(roomId); nothing resolves by Call.transport.kind.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/containers/CallArticle/CallArticle.tsx#CallArticle, github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle]
+  note: There is no persisted kind or config to resolve from.
+```
+
+```mdl
+verdict F-10.3: No provisionCall, so no default transport selection.
+  status: missing
+  note: See provisionCall.
+```
+
+```mdl
+verdict F-10.4: No transport config is persisted; the room id is always the host object's URI.
+  status: missing
+  note: Rejoining derives the room id from the anchor object, the opposite of this requirement.
+```
+
+```mdl
+verdict F-11.1: plugin-calls has no reference to Event or Meeting.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-calls/src/types/CallsCapabilities.ts#Call]
+  note: True trivially: plugin-calls has no persistent Call. Meeting-side linkage was not reviewed here.
+```
+
+```mdl
+verdict T-1: No automated test joins a call from a Channel.
+  status: missing
+  note: Only `plugin.test.ts` exists; no e2e covers calls.
+```
+
+```mdl
+verdict T-2: No test checks chat and call side by side.
+  status: missing
+  note: No automated coverage.
+```
+
+```mdl
+verdict T-3: No test leaves a call and checks teardown or onLeave.
+  status: missing
+  note: No automated coverage; `onLeave` is never invoked.
+```
+
+```mdl
+verdict T-4: No test of a display-name gate.
+  status: missing
+  note: The gate does not exist.
+```
+
+```mdl
+verdict T-5: No test of lifecycle callbacks.
+  status: missing
+  note: The callbacks are never invoked.
+```
+
+```mdl
+verdict T-6: No test registers ThreadPlugin without CallsPlugin.
+  status: missing
+  note: No automated coverage.
+```
+
+```mdl
+verdict T-7: No test toggles media and checks propagation.
+  status: missing
+  note: No automated coverage.
+```
+
+```mdl
+verdict T-8: No test drives SpeakingMonitor into CallState.
+  status: missing
+  note: No automated coverage in plugin-calls or `@dxos/av`.
+```
+
+```mdl
+verdict T-9: No test asserts the debug panel's contents.
+  status: missing
+  note: `CallDebugPanel.stories.tsx` renders seeded state but has no play function or assertions.
+```
+
+```mdl
+verdict T-10: No test provisions a Call.
+  status: missing
+  note: provisionCall and the Call type do not exist.
+```
+
+```mdl
+verdict T-13: No test resumes a Call.
+  status: missing
+  note: There is no persisted transport config to resume from.
+```
+
+```mdl
+verdict QA-1: No automation runs the start, toggle and leave round-trip.
+  status: missing
+  note: Human-only QA needing real devices and the SFU.
+```
+
+```mdl
+verdict QA-2: No automation provisions a Call.
+  status: missing
+  note: provisionCall does not exist.
+```
+

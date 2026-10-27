@@ -61,9 +61,9 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {!result ? (
-              <p className='p-3 text-fg-muted'>{t('scores.empty.label')}</p>
+              <p className='p-trim-md text-fg-muted'>{t('scores.empty.label')}</p>
             ) : (
-              <Layout.Flex column gap='md' asChild classNames='p-3 text-sm'>
+              <Layout.Flex column gap='md' asChild classNames='p-trim-md text-sm'>
                 <div data-testid='illustrator.scores'>
                   <Layout.Flex align='baseline' gap='sm'>
                     <span className='text-3xl font-medium tabular-nums' data-testid='illustrator.scores.overall'>

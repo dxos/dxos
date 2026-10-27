@@ -14,6 +14,7 @@ import { type Task } from '@dxos/types';
 import {
   FeatureArticle,
   FeatureCardContent,
+  FeatureCompanion,
   MoveTaskDialog,
   ProjectArticle,
   ProjectArtifactsArticle,
@@ -21,7 +22,7 @@ import {
   ShowcaseArticle,
   ShowcaseCardContent,
 } from '#containers';
-import { MOVE_TASK_DIALOG } from '#meta';
+import { FEATURE_COMPANION, MOVE_TASK_DIALOG } from '#meta';
 import { Feature, Showcase } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
@@ -41,6 +42,16 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Feature.Feature),
         component: FeatureArticle,
         props: ({ role, data }) => ({ role, ...data }),
+      }),
+      // The project's feature companion (see the `feature` node in the graph builder).
+      Surface.create({
+        id: 'feature.companion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, FEATURE_COMPANION),
+          AppSurface.companion(AppSurface.Article, Project.Project),
+        ),
+        component: FeatureCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
       }),
       Surface.create({
         id: 'feature.card',

@@ -177,7 +177,7 @@ const COLUMNS = `var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) a
 const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
   <Tree.Item node={node}>
     {/* `contents`, so the row's columns stay in its grid; right-clicking the row opens its node's actions. */}
-    <div className='contents' {...(node.item ? AppNode.contextMenuProps(node.item.id) : {})}>
+    <div className='contents' {...(node.item ? AppNode.contextMenuProps(node.item.id, NAV_TREE_ITEM) : {})}>
       <Tree.ItemIndicator />
       <Tree.ItemIcon />
       <Tree.ItemText data-testid='treeItem.heading' />

@@ -717,9 +717,18 @@ export class RefImpl<T> implements Ref<T> {
     return Hash.hash(this.#uri.toString());
   }
 
-  /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
+  /**
+   * Effect Equal trait. See {@link Hash.symbol} for rationale. The resolver and target take part, so
+   * refs to one object from different clients (same URI, different databases) are separate cache
+   * entries rather than all resolving through whichever client's ref was cached first.
+   */
   [Equal.symbol](that: Equal.Equal): boolean {
-    return that instanceof RefImpl && this.#uri === that.uri;
+    return (
+      that instanceof RefImpl &&
+      this.#uri === that.uri &&
+      this.#resolver === that.#resolver &&
+      this.#target === that.#target
+    );
   }
 
   pipe() {

@@ -814,6 +814,12 @@ export const pushRepoUpdates: <E, R>(
 // Main handler
 //
 
+/** Epoch milliseconds of the newest `updated_at` among `items`; `-Infinity` when none carries one. */
+const newestUpdate = (items: readonly GitHubApi.DeltaItem[]): number =>
+  Math.max(
+    ...items.map((item) => (item.updated_at ? Date.parse(item.updated_at) : Number.NaN)).filter(Number.isFinite),
+  );
+
 /** One binding's poll, as reported in {@link GitHubOperation.SyncResult}. */
 type BindingSyncResult = {
   /** The delta answered 304. */
@@ -823,8 +829,6 @@ type BindingSyncResult = {
   pulled: { issues: number; pullRequests: number };
   pushed: GitHubPushResult;
 };
-
-const NO_PUSH: GitHubPushResult = { repos: 0, issues: 0 };
 
 /**
  * The `Repo` a binding targets. A binding made before bindings targeted a `Repo` targets its issue
@@ -991,12 +995,22 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
             ? new Date(Cursor.parseKey(binding.max)).toISOString()
             : sinceFromOptions(options, now);
           const etag = binding.max ? Cursor.readToken(binding) : undefined;
-          const delta = yield* GitHubApi.listIssuesSince(
+          let delta = yield* GitHubApi.listIssuesSince(
             repo.owner,
             repo.name,
             etag ? { since, etag } : { since, direction: 'asc', maxPages: BACKFILL_PAGES },
           );
           requests += delta.status === 'ok' ? delta.requests : 1;
+          // A capped chunk whose items all fall within the overlap of the watermark (more than ten pages
+          // updated in the same few seconds) cannot advance it, so that backlog is read to its end at once.
+          if (
+            delta.status === 'ok' &&
+            delta.truncated &&
+            newestUpdate(delta.value) - WATERMARK_OVERLAP_MS <= Cursor.parseKey(binding.max)
+          ) {
+            delta = yield* GitHubApi.listIssuesSince(repo.owner, repo.name, { since, direction: 'asc' });
+            requests += delta.status === 'ok' ? delta.requests : 1;
+          }
           const items = delta.status === 'ok' ? delta.value : [];
           const issueItems = items.filter((item) => item.pull_request == null);
           const pullItems = items.filter((item) => item.pull_request != null);
@@ -1006,9 +1020,20 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
           const pending = (yield* queryOpenPullRequests(repo, { settled: metadata.hourly })).filter(
             (pullRequest) => !deltaNumbers.has(pullRequest.number),
           );
+          const pushCallbacks = {
+            updateIssue: (owner: string, repoName: string, issueNumber: number, input: GitHubApi.IssueUpdateInput) =>
+              GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.asVoid),
+            updateRepo: (owner: string, repoName: string, input: GitHubApi.RepoUpdateInput) =>
+              GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.asVoid),
+          };
+          const coordinates = { id: externalId, owner: repo.owner, name: repo.name };
+
           if (delta.status === 'not-modified' && pending.length === 0) {
+            // A local repository edit is pushed even when GitHub reports nothing new; it costs no request unless diverged.
+            const pushed = yield* pushRepoUpdates(binding, coordinates, new Map(), pushCallbacks);
+            requests += pushed.repos;
             return {
-              result: { notModified: true, requests, pulled: { issues: 0, pullRequests: 0 }, pushed: NO_PUSH },
+              result: { notModified: true, requests, pulled: { issues: 0, pullRequests: 0 }, pushed },
               watermark: undefined,
             };
           }
@@ -1069,24 +1094,11 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
           // Push: snapshot-diff the bound Repo and the pulled issues, PATCHing only diverged fields.
           // TODO(wittjosiah): the candidate set is this poll's delta, so a local edit to an issue
           //   GitHub has not touched since is pushed only once GitHub next reports it.
-          const pushed = yield* pushRepoUpdates(
-            binding,
-            { id: externalId, owner: repo.owner, name: repo.name },
-            remoteIssuesById,
-            {
-              updateIssue: (owner, repoName, issueNumber, input) =>
-                GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.asVoid),
-              updateRepo: (owner, repoName, input) => GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.asVoid),
-            },
-          );
+          const pushed = yield* pushRepoUpdates(binding, coordinates, remoteIssuesById, pushCallbacks);
           requests += pushed.issues + pushed.repos;
 
           // The watermark moves only once every page is applied, and never backwards.
-          const newest = Math.max(
-            ...items
-              .map((item) => (item.updated_at ? Date.parse(item.updated_at) : Number.NaN))
-              .filter(Number.isFinite),
-          );
+          const newest = newestUpdate(items);
           // A truncated backfill stores no ETag, so the next run continues oldest first from the watermark.
           const truncated = delta.status === 'ok' && delta.truncated === true;
           const watermark =

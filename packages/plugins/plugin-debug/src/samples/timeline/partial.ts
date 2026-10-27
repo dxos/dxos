@@ -44,7 +44,8 @@ type FeatureSeed = {
   readonly description: string;
   readonly status: Feature.Status;
   readonly spec: string;
-  readonly subfeatures?: readonly Feature.Subfeature[];
+  /** Its parts, each added as a feature whose parent is this one. */
+  readonly subfeatures?: readonly { readonly name: string; readonly status: Feature.Status }[];
   /** Keys of the features this one needs. */
   readonly needs?: readonly string[];
 };
@@ -240,19 +241,19 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
 
       const byKey = new Map<string, Feature.Feature>();
       for (const seed of FEATURES) {
-        byKey.set(
-          seed.key,
-          yield* Database.add(
-            Feature.make({
-              name: seed.name,
-              description: seed.description,
-              status: seed.status,
-              specs: [seed.spec],
-              subfeatures: seed.subfeatures?.map((subfeature) => ({ ...subfeature })),
-              project: Ref.make(project),
-            }),
-          ),
+        const feature = yield* Database.add(
+          Feature.make({
+            name: seed.name,
+            description: seed.description,
+            status: seed.status,
+            specs: [seed.spec],
+            project: Ref.make(project),
+          }),
         );
+        for (const subfeature of seed.subfeatures ?? []) {
+          yield* Database.add(Feature.make({ ...subfeature, parent: Ref.make(feature) }));
+        }
+        byKey.set(seed.key, feature);
       }
 
       const featureOf = (key: string): Feature.Feature => {
