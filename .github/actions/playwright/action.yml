@@ -28,6 +28,8 @@ runs:
       env:
         REF: ${{ env.WORKSPACE_SNAPSHOT_REF }}
       run: |
+        # A second browser in the same job reuses the mount; fetching again would overwrite the mounted image.
+        if mountpoint -q /mnt/ws/playwright; then exit 0; fi
         mount_browsers() (
           set -euo pipefail
           image=/mnt/ws/playwright.sqfs
