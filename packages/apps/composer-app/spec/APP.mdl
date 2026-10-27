@@ -12,11 +12,12 @@ app-level test suites a Routine runs. The navigation and presentation structure 
 
 ## Extensions
 
-| Term    | URI                       |
-| ------- | ------------------------- |
-| `test`  | `org.dxos.mdl.test@1.0`   |
-| `step`  | `org.dxos.mdl.step@1.0`   |
-| `suite` | `org.dxos.mdl.suite@1.0`  |
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `step`     | `org.dxos.mdl.step@1.0`     |
+| `suite`    | `org.dxos.mdl.suite@1.0`    |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 The dialect is [`packages/reflect/deus/lang/qa.mdl`](../../../reflect/deus/lang/qa.mdl); the runner
 is the `composer-qa` skill, through `/dxos:qa`.
