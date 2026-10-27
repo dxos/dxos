@@ -157,7 +157,7 @@ const taggedSubjects = Effect.fnUntraced(function* (mailbox: Mailbox.Mailbox, la
     : [];
 });
 
-describe('LabelMailbox operation', () => {
+describe('TriageMailbox operation', () => {
   it.effect(
     'applies the confident answers as tags and leaves the unsure ones alone',
     Effect.fnUntraced(

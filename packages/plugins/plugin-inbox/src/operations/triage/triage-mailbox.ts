@@ -10,6 +10,7 @@ import { AiService, ExtractionModel } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Tagging, TagIndex } from '@dxos/schema';
 import { Message, Task, TaskSet } from '@dxos/types';
@@ -108,16 +109,26 @@ const handler = InboxOperation.TriageMailbox.pipe(
       // is triaged again, which only adds its band.
       const applied = new Set(Object.values(priorityUris));
 
-      // Inbox records the contacts and summaries it extracts on sync in the same per-message ledger as
-      // triage's tasks, so only a recorded Task marks a message as already read for tasks.
-      const taskIds = new Set((yield* Database.query(Filter.type(Task.Task)).run).map((task) => task.id));
-
       const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
       const pending = messages
         .filter((message) => !Tagging.get(message, { index }).some((uri) => applied.has(uri)))
         .sort((left, right) => Date.parse(right.created) - Date.parse(left.created))
         .slice(0, limit);
       const skipped = messages.length - pending.length;
+
+      // Inbox records the contacts and summaries it extracts on sync in the same per-message ledger as
+      // triage's tasks, so only a recorded Task marks a message as already read for tasks. Scoped to
+      // this batch's ledger entries, so the lookup stays bounded by the batch limit.
+      const recordedIds = pending
+        .flatMap((message) => Mailbox.getExtractedObjectIds(mailbox, message.id))
+        .filter((id) => EntityId.isValid(id));
+      const taskIds = new Set(
+        recordedIds.length > 0
+          ? (yield* Database.query(Filter.and(Filter.type(Task.Task), Filter.id(...recordedIds))).run).map(
+              (task) => task.id,
+            )
+          : [],
+      );
 
       const traceWriter = yield* Trace.TraceService;
       const progressKey = InboxOperation.createTriageProgressKey(mailbox);
