@@ -131,6 +131,7 @@ export const translations = [
 
         'mailbox-toolbar.title': 'Mailbox toolbar',
         'mailbox-toolbar-sort.menu': 'Sort messages',
+        'mailbox-toolbar-extract.menu': 'Extract',
         'mailbox-toolbar-filter.menu': 'Filter messages',
 
         'query-filter-save-button.label': 'Save',

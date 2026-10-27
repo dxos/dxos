@@ -681,13 +681,19 @@ const useMailboxActions = (
               if (jobs.nodes.length > 0) {
                 menu.separator('line');
               }
-              for (const item of extractActions) {
-                menu.action(
-                  `extract-${item.id}`,
-                  { label: item.label, icon: 'ph--magic-wand--regular' },
-                  item.onSelect,
-                );
-              }
+              menu.group(
+                'extract',
+                {
+                  label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
+                  icon: 'ph--magic-wand--regular',
+                  testId: 'inbox.mailbox.extract',
+                },
+                (group) => {
+                  for (const item of extractActions) {
+                    group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+                  }
+                },
+              );
             }
           },
           'inbox.mailbox.more',
