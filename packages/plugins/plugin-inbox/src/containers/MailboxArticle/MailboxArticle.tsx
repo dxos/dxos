@@ -637,15 +637,6 @@ const useMailboxActions = (
             checked: loadRemoteImages,
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
-        )
-        .action(
-          'composeEmail',
-          {
-            type: 'composeEmail',
-            icon: 'ph--pen--regular',
-            label: ['compose-email.label', { ns: meta.profile.key }],
-          },
-          handleCompose,
         );
 
       // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
@@ -668,6 +659,15 @@ const useMailboxActions = (
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
+        .action(
+          'composeEmail',
+          {
+            type: 'composeEmail',
+            icon: 'ph--pen--regular',
+            label: ['compose-email.label', { ns: meta.profile.key }],
+          },
+          handleCompose,
+        )
         .menu(
           TOOLBAR_OVERFLOW_ID,
           (menu) => {
@@ -676,7 +676,7 @@ const useMailboxActions = (
               rootId: TOOLBAR_OVERFLOW_ID,
             });
             menu.subgraph(jobs);
-            // Contributed actions (plugin-labeler's triage, plugin-crm's image search) are mailbox-wide
+            // Contributed actions (triage, plugin-crm's image search) are mailbox-wide
             // jobs like sync and analyze, not extractors, so they sit beside them.
             for (const item of mailboxActions) {
               menu.action(`mailbox-${item.id}`, { label: item.label, icon: item.icon }, item.onSelect);
