@@ -306,7 +306,8 @@ class Reader {
           return decoder.decode(bytes.subarray(start, end));
         }
       }
-      return String.fromCharCode.apply(null, bytes.subarray(start, end));
+      // `Reflect.apply` takes the bytes as an array-like, where a spread would copy them into arguments first.
+      return Reflect.apply(String.fromCharCode, null, bytes.subarray(start, end));
     }
     return decoder.decode(bytes.subarray(start, end));
   }

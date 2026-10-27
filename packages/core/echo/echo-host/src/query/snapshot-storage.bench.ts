@@ -83,7 +83,12 @@ const schemaResolver = new StaticRefResolver().addSchema(BenchItem);
 const PRIORITY_LEVELS = 5;
 const ORDER_LIMIT = 20;
 const TAGS = ['urgent', 'backlog', 'design', 'infra', 'review', 'blocked'];
-const BENCH_OPTIONS = { time: 1_000, warmupIterations: 2 };
+const SECOND_MS = 1_000;
+/** Each row samples for this long after its warm-up. */
+const ROW_TIME_MS = 1 * SECOND_MS;
+/** Covers seeding the largest scale, which runs inside the first row's warm-up. */
+const SCALE_TIMEOUT_MS = 10 * 60 * SECOND_MS;
+const BENCH_OPTIONS = { time: ROW_TIME_MS, warmupIterations: 2 };
 
 let sink: unknown;
 
@@ -203,7 +208,7 @@ const run = <A>(fixture: Fixture, effect: Effect.Effect<A, unknown, SqlClient.Sq
   RuntimeProvider.runPromise(fixture.runtime)(effect);
 
 for (const count of COUNTS) {
-  describe(`snapshot storage (N=${count})`, { tags: ['manual'], timeout: 600_000 }, () => {
+  describe(`snapshot storage (N=${count})`, { tags: ['manual'], timeout: SCALE_TIMEOUT_MS }, () => {
     // `vitest bench` runs no `beforeAll`, so the fixture is built on first use; tinybench's warm-up absorbs it.
     let pending: Promise<Fixture> | undefined;
     const getFixture = (): Promise<Fixture> => (pending ??= setup(count));
