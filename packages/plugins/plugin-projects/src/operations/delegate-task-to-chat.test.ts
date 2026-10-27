@@ -30,6 +30,17 @@ import { Task } from '@dxos/types';
 import { ProjectsPlugin } from '#plugin';
 import { ProjectOperation } from '#types';
 
+await Harness.preload({
+  plugins: [
+    ClientPlugin.make({}),
+    SpacePlugin.make({}),
+    TasksPlugin.make(),
+    AssistantPlugin.make(),
+    RoutinePlugin.make(),
+    ProjectsPlugin(),
+  ],
+});
+
 describe('ProjectOperation.DelegateTaskToChat', () => {
   test('opens a chat carrying the task in its checklist', async ({ expect }) => {
     await using harness = await setup();
@@ -55,6 +66,33 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // The checklist is a plain ref array, so delegation does not claim ownership of the task: an
     // unparented one stays unparented.
     expect(Obj.getParent(task)).toBeUndefined();
+  });
+
+  test("opens Composer's agent on the task and its source by URI, fenced to them", async ({ expect }) => {
+    const prompts: string[] = [];
+    await using harness = await setup({
+      aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware((request) => {
+        prompts.push(request.text);
+        return { parts: [ScriptedLanguageModel.text('On it.')] };
+      }),
+    });
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const source = space.db.add(Task.make({ title: 'The email it came from', status: 'todo' }));
+    const task = space.db.add(Task.make({ title: 'Reply to Dana', status: 'todo', artifacts: [Ref.make(source)] }));
+    const other = space.db.add(Task.make({ title: 'Book the lunch', status: 'todo' }));
+    await space.db.flush();
+
+    await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    await expect.poll(() => prompts.find((text) => text.includes('Reply to Dana'))).toBeDefined();
+    const prompt = prompts.find((text) => text.includes('Reply to Dana')) ?? '';
+    expect(prompt).toContain(`${Obj.getURI(task)}; made from ${Obj.getURI(source)}`);
+    expect(prompt).toContain('Work on these tasks only');
+    expect(prompt).not.toContain(Obj.getURI(other));
   });
 
   test('names a chat handed several tasks from their titles', async ({ expect }) => {

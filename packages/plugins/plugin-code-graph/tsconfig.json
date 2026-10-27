@@ -22,6 +22,9 @@
       "path": "../../common/diagram"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/errors"
     },
     {
@@ -34,6 +37,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -41,6 +47,9 @@
     },
     {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../sdk/app-framework"
@@ -58,6 +67,12 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-transcription"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -71,6 +86,12 @@
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-transcription"
+    },
+    {
+      "path": "../plugin-typesafe"
     }
   ]
 }

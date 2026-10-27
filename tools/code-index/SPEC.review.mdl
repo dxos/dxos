@@ -1,0 +1,492 @@
+---
+spec: github:dxos/dxos/tools/code-index/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: CodeIndex
+
+code-index meets its spec closely, and its test suite tracks the spec's own case lists almost line for line.
+`Store.test.ts`, `Indexer.test.ts`, `typescript.test.ts`, `package.test.ts`, `Mdl.test.ts`, `Reasoner.test.ts`,
+`agreement.test.ts`, the MCP tests and `Watch.test.ts` cover the commit protocol, version and backend resets,
+incremental passes, import edges, call sites, spec facts, ordered reasoning and the MCP tools. The gaps are small:
+`stats` counts derived graphs from a recorded summary and per-graph native counts rather than a grouped SPARQL count
+(F-11.5); `workspace/Log.ts` opens a SQLite database of its own outside `Store` (F-1.3); `Indexer.Options` takes
+`reasoners` and has no `DEFAULT_REASONER`. A few behaviours have no test: unreadable files reported as skipped, a
+`Package` node surviving a lone reindex, the sub-millisecond type step and a failed watch pass.
+
+The review parser lists only modules whose ids have no `/`, so `worker/*` and `mcp/*` are not judged as modules;
+their behaviour is judged through F-4, F-8, F-10 and F-11. The `F-11` fence is not closed before `F-12`, but F-12's
+requirements still parse.
+
+Of 65 items: 56 done, 6 untested, 2 partial, 1 diverged, 0 missing. (Counts include the 7 `T-*` tests.)
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Store: The scoped Store service, ledger, commit, RDF, reasoning and generation APIs exist as specified.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#Store, github:dxos/dxos/tools/code-index/src/Store.ts#layer, github:dxos/dxos/tools/code-index/src/Store.ts#Api, github:dxos/dxos/tools/code-index/src/Store.ts#StoreError, github:dxos/dxos/tools/code-index/src/Store.ts#FileRecord, github:dxos/dxos/tools/code-index/src/Store.ts#FileState]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+  note: The API also has `touchFiles`, `writePass` and `derivedGraphCounts`, which the spec does not list; `reasonAll` takes reasoner inputs rather than raw rules.
+```
+
+```mdl
+verdict Ontology: IRIs, VERSION, the JSON-LD context, the document schemas and the LDkit schemas are exported.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Ontology.ts#PREFIX, github:dxos/dxos/tools/code-index/src/Ontology.ts#VERSION, github:dxos/dxos/tools/code-index/src/Ontology.ts#fileIri, github:dxos/dxos/tools/code-index/src/Ontology.ts#graphIri, github:dxos/dxos/tools/code-index/src/Ontology.ts#derivedGraphIri, github:dxos/dxos/tools/code-index/src/Ontology.ts#CONTEXT, github:dxos/dxos/tools/code-index/src/Ontology.ts#FileDocument, github:dxos/dxos/tools/code-index/src/Ontology.ts#FileSchema, github:dxos/dxos/tools/code-index/src/Ontology.ts#prefixes]
+  tests: [github:dxos/dxos/tools/code-index/src/Ontology.test.ts]
+```
+
+```mdl
+verdict Crawler: gitRoot, storeDir, crawl and the default extension and filename sets exist.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Crawler.ts#crawl, github:dxos/dxos/tools/code-index/src/Crawler.ts#gitRoot, github:dxos/dxos/tools/code-index/src/Crawler.ts#storeDir, github:dxos/dxos/tools/code-index/src/Crawler.ts#DEFAULT_EXTENSIONS, github:dxos/dxos/tools/code-index/src/Crawler.ts#DEFAULT_FILENAMES]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict Indexer: run, Timings, Result and DEFAULT_BATCH_SIZE exist; Options and the reasoner naming differ.
+  status: partial
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run, github:dxos/dxos/tools/code-index/src/Indexer.ts#Options, github:dxos/dxos/tools/code-index/src/Indexer.ts#Result, github:dxos/dxos/tools/code-index/src/Indexer.ts#Timings, github:dxos/dxos/tools/code-index/src/Indexer.ts#DEFAULT_BATCH_SIZE]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+  note: |
+    `Options` takes `reasoners: Reasoner[]` instead of `rules`, and adds `commitSize`, `summarize` and `onProgress`.
+    There is no `DEFAULT_REASONER` anywhere in `src/`; each rule file names its own graph. `Result` adds `touched` and
+    `reasoners`.
+```
+
+```mdl
+verdict Mdl: parse and parseFrontmatter read frontmatter, fenced blocks, headers and indented fields.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Mdl.ts#parse, github:dxos/dxos/tools/code-index/src/Mdl.ts#parseFrontmatter, github:dxos/dxos/tools/code-index/src/Mdl.ts#Block, github:dxos/dxos/tools/code-index/src/Mdl.ts#Document]
+  tests: [github:dxos/dxos/tools/code-index/src/Mdl.test.ts]
+```
+
+```mdl
+verdict Cli: DEFAULT_RULES, command and run exist, with every subcommand in the table plus serve, chat and design.
+  status: untested
+  evidence: [github:dxos/dxos/tools/code-index/src/Cli.ts#DEFAULT_RULES, github:dxos/dxos/tools/code-index/src/Cli.ts#command, github:dxos/dxos/tools/code-index/src/Cli.ts#run]
+  note: No test drives the CLI. The commands table omits `serve` (F-12), `chat` and the design subcommand, which `command` registers.
+```
+
+```mdl
+verdict F-1.1: The SQLite schema comes from numbered migrations recorded in code_index_migrations.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/migrations/index.ts#MIGRATIONS_TABLE, github:dxos/dxos/tools/code-index/src/Store.ts#layer]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-1.2: Records and quads survive reopening the store.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#layer]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-1.3: Only Store opens the index databases, but workspace/Log.ts opens a SQLite database of its own.
+  status: partial
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#layer, github:dxos/dxos/tools/code-index/src/internal/sqlite.ts#clientLayer]
+  note: |
+    `internal/sqlite.ts#clientLayer` is imported by `Store.ts` and by `workspace/Log.ts`, which opens a separate
+    workspace database. `mcp/Lock.ts` only reads the RocksDB LOCK paths. No test enforces the rule.
+```
+
+```mdl
+verdict F-1.4: A store recorded under another ontology version is emptied on open and reindexed.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#layer, github:dxos/dxos/tools/code-index/src/Ontology.ts#VERSION]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-1.5: A js-stamped or unstamped store is reset by a writer and refused by a reader.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#layer]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-2.1: A reindex swaps the graph, leaving the old one empty and the ledger on the new IRI.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#Api]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-2.2: Derived quads live in graph:derived/<reasoner>, replaced wholesale by reasoning.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Ontology.ts#derivedGraphIri, github:dxos/dxos/tools/code-index/src/Store.ts#Api]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-2.3: An interrupted commit's pending_graph is deleted by reconcile on the next open.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#Api]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-2.4: File and derived graph IRIs have disjoint prefixes.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Ontology.ts#graphIri, github:dxos/dxos/tools/code-index/src/Ontology.ts#derivedGraphIri]
+  tests: [github:dxos/dxos/tools/code-index/src/Ontology.test.ts]
+```
+
+```mdl
+verdict F-3.1: A second pass over an unchanged tree indexes nothing.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-3.2: Editing one file reindexes exactly that file.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-3.3: --force reindexes everything.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-3.4: A deleted file loses its graph and ledger row.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-3.5: A content-preserving touch records the mtime without reindexing or reasoning.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run, github:dxos/dxos/tools/code-index/src/Store.ts#Api]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-4.1: The worker catches a failed read or analysis and returns the file as skipped.
+  status: untested
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/main.ts, github:dxos/dxos/tools/code-index/src/worker/Protocol.ts]
+  note: The `AnalyzeBatch` handler pushes `{ path, reason }` to `skipped`; `Indexer.test.ts` only asserts that `skipped` is empty on a clean pass.
+```
+
+```mdl
+verdict F-4.2: A parse failure still yields a file node with deus:parseError.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#analyzeTypeScript]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts]
+```
+
+```mdl
+verdict F-5.1: The crawl uses git ls-files, so ignored files are never indexed.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Crawler.ts#crawl]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-5.2: A resolved specifier is an imports edge, otherwise an importsModule literal, never both.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#analyzeTypeScript]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts]
+```
+
+```mdl
+verdict F-7.1: package.json and moon.yml each assert the Package node from their own graph, but no test reindexes one alone.
+  status: untested
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/package.ts#analyzePackageJson, github:dxos/dxos/tools/code-index/src/worker/analyzers/package.ts#analyzeMoonYml]
+  note: The per-file graphs make this hold by construction; `package.test.ts` checks each analyzer's output, not survival across a lone reindex.
+```
+
+```mdl
+verdict F-7.2: Only workspace: ranges become declaresDep.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/package.ts#analyzePackageJson]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/package.test.ts]
+```
+
+```mdl
+verdict F-8.1: A workspace import records both the member IRI and the resolved symbol IRI.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#analyzeTypeScript]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts]
+```
+
+```mdl
+verdict F-8.2: Type-position references are apiDependsOn and value-position ones implDependsOn.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#analyzeTypeScript]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts]
+```
+
+```mdl
+verdict F-8.3: Every stored snippet parses as TypeScript or is absent.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#snippetOf]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts]
+```
+
+```mdl
+verdict F-8.4: IRIs read as written, percent-encoding only reserved characters and dot segments.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Ontology.ts#fileIri, github:dxos/dxos/tools/code-index/src/Ontology.ts#iri]
+  tests: [github:dxos/dxos/tools/code-index/src/Ontology.test.ts]
+```
+
+```mdl
+verdict F-8.5: Call sites to resolvable callees that carry literals are keyed by enclosing symbol, callee and ordinal.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#analyzeTypeScript]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts, github:dxos/dxos/tools/code-index/src/Ontology.test.ts]
+```
+
+```mdl
+verdict F-8.6: Call-site literals are capped at 8 positions, 3 deep, 16 elements, 256 characters, 32 literals and 2000 sites.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#CALL_POSITIONS, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#CALL_PATH_DEPTH, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#CALL_ARRAY_MAX, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#LITERAL_MAX, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#CALL_LITERALS_MAX, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#CALL_SITES_MAX]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts]
+```
+
+```mdl
+verdict F-8.7: References from top-level statements belong to the file's top-level symbol, so usages finds them.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.ts#analyzeTypeScript]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts, github:dxos/dxos/tools/code-index/src/mcp/Server.test.ts]
+```
+
+```mdl
+verdict F-10.1: The agreement harness finds no disagreement with tsc on its fixtures.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/types/agreement.ts#compareFiles, github:dxos/dxos/tools/code-index/src/worker/types/Infer.ts#infer]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/types/agreement.test.ts]
+```
+
+```mdl
+verdict F-10.2: Untypeable positions are left unknown rather than approximated.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/types/Infer.ts#infer]
+  tests: [github:dxos/dxos/tools/code-index/src/worker/types/agreement.test.ts, github:dxos/dxos/tools/code-index/src/worker/types/Term.test.ts]
+```
+
+```mdl
+verdict F-10.3: Nothing measures or bounds the per-file cost of the type step.
+  status: untested
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/types/Infer.ts#infer]
+  note: No test or benchmark asserts a per-file time; the indexer reports only the summed `parse` phase.
+```
+
+```mdl
+verdict F-10.4: A function or static method returning Layer is a deus:EffectLayerFactory with the layer's provides and requires.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/rules/15-types.n3]
+  tests: [github:dxos/dxos/tools/code-index/src/Reasoner.test.ts, github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts]
+```
+
+```mdl
+verdict F-9.1: Block keys come from the header, and repeated keys are disambiguated in order.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/worker/analyzers/spec.ts#analyzeMdl]
+  tests: [github:dxos/dxos/tools/code-index/src/Mdl.test.ts]
+```
+
+```mdl
+verdict F-9.2: Every tracked .mdl parses without error.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Mdl.ts#parse]
+  tests: [github:dxos/dxos/tools/code-index/src/Mdl.test.ts]
+```
+
+```mdl
+verdict F-9.3: Rules classify spec blocks, link them to code and each other, and find gaps.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/rules/70-specs.n3, github:dxos/dxos/tools/code-index/rules/80-gaps.n3]
+  tests: [github:dxos/dxos/tools/code-index/src/Reasoner.test.ts]
+```
+
+```mdl
+verdict F-6.1: No closure rule ships, and 50-example.n3 explains why in its header.
+  status: untested
+  evidence: [github:dxos/dxos/tools/code-index/rules/50-example.n3]
+  note: A constraint on the rule set rather than behaviour; no test guards against a closure rule coming back.
+```
+
+```mdl
+verdict F-6.2: Retracting an import retracts what it entailed.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#Api]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts, github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-6.3: Each reasoner reads file graphs and earlier reasoners' graphs, never its own or a later one's.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Reasoner.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Reasoner.test.ts, github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-6.4: Reasoning is skipped only when the same reasoners ran over the current generation.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run, github:dxos/dxos/tools/code-index/src/Reasoner.ts#signature]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-6.6: A rule with an unbound predicate reads the whole graph.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Store.ts#Api]
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-6.5: --no-reason leaves the derived graph as it was, and the next pass catches up.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Indexer.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict F-6.8: The resolve-refs pass links references to declarations through barrels and aliases.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/ReferenceResolution.ts#derive, github:dxos/dxos/tools/code-index/src/ReferenceResolution.ts#NAME]
+  tests: [github:dxos/dxos/tools/code-index/src/Reasoner.test.ts]
+```
+
+```mdl
+verdict F-6.9: usesDeprecated links a symbol to deprecated declarations it depends on, directly or through resolvesTo.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/rules/67-usage.n3]
+  tests: [github:dxos/dxos/tools/code-index/src/Reasoner.test.ts]
+```
+
+```mdl
+verdict F-11.1: The stdio server writes only JSON-RPC to stdout.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/mcp/Server.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/mcp/Stdio.test.ts]
+```
+
+```mdl
+verdict F-11.2: The server opens read-only, skipping migration and reconcile, and a missing store fails with a hint.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/mcp/Server.ts#open, github:dxos/dxos/tools/code-index/src/Store.ts#layer]
+  tests: [github:dxos/dxos/tools/code-index/src/mcp/Server.test.ts, github:dxos/dxos/tools/code-index/src/Store.test.ts]
+```
+
+```mdl
+verdict F-11.3: A held store fails at startup, naming the holder and what to do.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/mcp/Lock.ts#layer, github:dxos/dxos/tools/code-index/src/mcp/Lock.ts#explain, github:dxos/dxos/tools/code-index/src/mcp/Lock.ts#holders]
+  tests: [github:dxos/dxos/tools/code-index/src/mcp/Lock.test.ts]
+```
+
+```mdl
+verdict F-11.4: SELECT is capped at the engine, default 200 and max 2000 rows, and reports truncation.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/mcp/Sparql.ts#boundQuery, github:dxos/dxos/tools/code-index/src/mcp/Server.ts#QUERY_DEFAULT_LIMIT, github:dxos/dxos/tools/code-index/src/mcp/Server.ts#QUERY_MAX_LIMIT]
+  tests: [github:dxos/dxos/tools/code-index/src/mcp/Server.test.ts]
+```
+
+```mdl
+verdict F-11.5: stats counts derived graphs from a recorded summary and per-graph native counts, not a grouped SPARQL count.
+  status: diverged
+  evidence: [github:dxos/dxos/tools/code-index/src/mcp/Server.ts#handlers, github:dxos/dxos/tools/code-index/src/Summary.ts#load, github:dxos/dxos/tools/code-index/src/Summary.ts#compute]
+  tests: [github:dxos/dxos/tools/code-index/src/mcp/Server.test.ts]
+  note: |
+    `stats` reads `Summary.load`, whose `derived` comes from `Store.derivedGraphCounts`, which calls the addon's
+    `countGraph` (`graphLength`) once per derived graph. It still never materialises quads, which is the point of the
+    requirement, but the mechanism differs from the spec's grouped SPARQL count.
+```
+
+```mdl
+verdict F-11.6: usages finds users through barrels, re-exports, namespaces and bare specifiers, grouped by package.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/mcp/Server.ts#handlers]
+  tests: [github:dxos/dxos/tools/code-index/src/mcp/Server.test.ts]
+```
+
+```mdl
+verdict F-12.1: Each indexed directory and its ancestors is watched non-recursively.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Watch.ts#directories, github:dxos/dxos/tools/code-index/src/Watch.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Watch.test.ts]
+```
+
+```mdl
+verdict F-12.2: A directory created under a watched one is watched at once.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Watch.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Watch.test.ts]
+```
+
+```mdl
+verdict F-12.3: A new watch is followed by one more pass, which sees files written before it began.
+  status: done
+  evidence: [github:dxos/dxos/tools/code-index/src/Watch.ts#run]
+  tests: [github:dxos/dxos/tools/code-index/src/Watch.test.ts]
+```
+
+```mdl
+verdict F-12.4: A failed pass is reported as a Failed event and the watch continues.
+  status: untested
+  evidence: [github:dxos/dxos/tools/code-index/src/Watch.ts#run, github:dxos/dxos/tools/code-index/src/Watch.ts#Event]
+  note: `run` catches the cause and reports `{ _tag: 'Failed' }`; no test forces a pass to fail.
+```
+
+```mdl
+verdict T-1: Store.test.ts runs every listed case.
+  status: done
+  tests: [github:dxos/dxos/tools/code-index/src/Store.test.ts]
+  note: '"conclusions are never premises of the next pass" is named "a reasoner never reads its own conclusions back".'
+```
+
+```mdl
+verdict T-2: Indexer.test.ts runs every listed case.
+  status: done
+  tests: [github:dxos/dxos/tools/code-index/src/Indexer.test.ts]
+```
+
+```mdl
+verdict T-3: typescript.test.ts and Reasoner.test.ts run every listed case.
+  status: done
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/typescript.test.ts, github:dxos/dxos/tools/code-index/src/Reasoner.test.ts]
+```
+
+```mdl
+verdict T-4: package.test.ts runs every listed case.
+  status: done
+  tests: [github:dxos/dxos/tools/code-index/src/worker/analyzers/package.test.ts]
+```
+
+```mdl
+verdict T-5: Mdl.test.ts and Reasoner.test.ts run every listed case.
+  status: done
+  tests: [github:dxos/dxos/tools/code-index/src/Mdl.test.ts, github:dxos/dxos/tools/code-index/src/Reasoner.test.ts]
+```
+
+```mdl
+verdict T-6: agreement.test.ts checks every fixture against tsc, and Reasoner.test.ts checks the layer case.
+  status: done
+  tests: [github:dxos/dxos/tools/code-index/src/worker/types/agreement.test.ts, github:dxos/dxos/tools/code-index/src/Reasoner.test.ts]
+  note: The Effect-model case runs inside the single `fixtures have no disagreements` test rather than as its own case.
+```
+
+```mdl
+verdict T-7: Server.test.ts and Stdio.test.ts run every listed case; the stdio test skips without Bun.
+  status: done
+  tests: [github:dxos/dxos/tools/code-index/src/mcp/Server.test.ts, github:dxos/dxos/tools/code-index/src/mcp/Stdio.test.ts]
+```

@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { meta } from '#meta';
 import { CodeProject, SourceFile } from '#types';
@@ -12,16 +12,16 @@ import { CodeProject, SourceFile } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Spec.Spec)]: {
-        'typename.label': 'Spec',
-        'typename.label_zero': 'Specs',
-        'typename.label_one': 'Spec',
-        'typename.label_other': 'Specs',
-        'object-name.placeholder': 'New spec',
-        'add-object.label': 'Add spec',
-        'rename-object.label': 'Rename spec',
-        'delete-object.label': 'Delete spec',
-        'object-deleted.label': 'Spec deleted',
+      [Type.getTypename(SpecDocument.SpecDocument)]: {
+        'typename.label': 'Spec Document',
+        'typename.label_zero': 'Spec Documents',
+        'typename.label_one': 'Spec Document',
+        'typename.label_other': 'Spec Documents',
+        'object-name.placeholder': 'New spec document',
+        'add-object.label': 'Add spec document',
+        'rename-object.label': 'Rename spec document',
+        'delete-object.label': 'Delete spec document',
+        'object-deleted.label': 'Spec document deleted',
       },
       [Type.getTypename(CodeProject.CodeProject)]: {
         'typename.label': 'Code Project',
@@ -81,6 +81,10 @@ export const translations = [
         'changelog-graph.edge.approves.label': 'Approves',
         'changelog-graph.edge.affects.label': 'Affects',
         'spec-view.label': 'View',
+        'spec-diff.label': 'Diff',
+        'spec-diff.base.label': 'Changes since {{base}}',
+        'spec-diff.head.label': 'Uncommitted changes',
+        'spec-diff.fold.label': 'Fold unchanged lines',
         'spec-view.decisions.label': 'Decision graph',
         'spec-view.log.label': 'Decisions by person',
         'spec-view.definitions.label': 'Definitions',
@@ -112,7 +116,15 @@ export const translations = [
         'decision-log.count.label_one': '{{count}} decision',
         'decision-log.count.label_other': '{{count}} decisions',
         'decision-log.empty.message': 'This spec has no changelog.',
-        'definition-graph.acceptance.label': 'Scenarios & tests',
+        'definition-graph.group-concepts.label': 'Concepts',
+        'definition-graph.group-requirements.label': 'Features & requirements',
+        'definition-graph.group-qa.label': 'Scenarios & tests',
+        'definition-graph.change.added.label': 'New',
+        'definition-graph.change.changed.label': 'Changed',
+        'definition-graph.change.removed.label': 'Removed',
+        'definition-graph.change.added.count': '+{{count}} new',
+        'definition-graph.change.changed.count': '~{{count}} changed',
+        'definition-graph.change.removed.count': '−{{count}} removed',
         'definition-graph.uses.label_one': 'Uses {{count}}',
         'definition-graph.uses.label_other': 'Uses {{count}}',
         'definition-graph.used-by.label_one': 'Used by {{count}}',
@@ -120,6 +132,7 @@ export const translations = [
         'data-model.stored.typename.label': 'Stored · typename',
         'data-model.stored.ref.label': 'Stored · holds refs',
         'data-model.stored.described.label': 'Stored · per desc',
+        'data-model.stored.table.label': 'Stored · SQL table',
         'data-model.embedded.label': 'Embedded',
         'data-model.legend.stored.label': 'Stored object',
         'data-model.edge.embeds.label': 'Embeds',

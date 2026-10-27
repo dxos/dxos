@@ -10,3 +10,6 @@ import config from '../dx.config.ts';
 export const meta = Plugin.getMetaFromConfig(config);
 
 export const MOVE_TASK_DIALOG = DXN.make(`${meta.profile.key}.moveTaskDialog`);
+
+/** The spec plank's companion that shows the feature selected on its feature map. */
+export const FEATURE_COMPANION = 'feature';

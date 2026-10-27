@@ -1,0 +1,46 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-canvas/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: CanvasPlugin
+
+The spec carries only QA tests and a changelog; it declares no types, ops or feature requirements,
+so the review judges whether automation exercises its QA tests. The review tool lists two items,
+QA-1 and QA-3, because QA-2, QA-4 and QA-5 share QA-1's fenced block and are not parsed as separate
+items. Both listed tests are driven end to end by autocue recording scripts in
+`plugin-canvas/autocue/`. These scripts click through every step and fail if a target element never
+appears, but they assert none of the stated expectations (node counts, breadcrumb text, live frame
+contents) and no CI task runs them. Both are therefore `partial`.
+
+Of 2 items: 0 done, 0 untested, 2 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-1: An autocue script drives the draw, connect and nest path, but checks none of the expectations.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-canvas/autocue/draw-and-nest.mjs]
+  note: |
+    `draw-and-nest.mjs` (tagged `@mdl ... test QA-1`) performs every step and waits for elements to appear, so a
+    missing control fails it; it never checks "About counts 4 nodes", links following moved shapes, or the frame
+    drawing its nested scene. It is a demo recording, not a CI test. No Playwright spec in
+    `composer-app/src/playwright` covers canvas.
+```
+
+```mdl
+verdict QA-3: An autocue script walks the architecture tour, but asserts none of the stated outcomes.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-canvas/autocue/architecture-tour.mjs]
+  note: |
+    `architecture-tour.mjs` drives the template tour as a recording; it does not check the twelve boxes, the
+    four-level breadcrumb text or the embedded EDGE sequence diagram, and no CI task runs it.
+```

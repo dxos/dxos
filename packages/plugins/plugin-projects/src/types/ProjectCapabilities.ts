@@ -13,8 +13,6 @@ import type { Database, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import type * as FeatureMapView from './FeatureMapView.ts';
-
 /**
  * Id of the built-in default template. Declared here (rather than on the template itself) so callers
  * that create a project without the picker can name it without importing the template module.
@@ -47,8 +45,6 @@ export type Template = {
    * `Database.Service` may still be used for read-only lookups (e.g. loading a subject's feed ref).
    */
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Project.Project, Error, Database.Service>;
-  /** How the new project's Features tab first shows its features; the user's own choice wins after that. */
-  featureView?: FeatureMapView.Mode;
 };
 
 export const Template = Capability.make<Template>()(`${meta.profile.key}.capability.template`);

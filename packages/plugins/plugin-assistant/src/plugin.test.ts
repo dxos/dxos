@@ -38,6 +38,10 @@ import { AssistantEvents, AssistantOperation } from '#types';
 import { AssistantSkill } from './skills/assistant/index.ts';
 import { PluginManagerSkill } from './skills/plugin-manager/index.ts';
 
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make(), RoutinePlugin.make()],
+});
+
 EntityId.dangerouslyDisableRandomness();
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;

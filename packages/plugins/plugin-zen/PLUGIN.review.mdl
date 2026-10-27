@@ -1,0 +1,303 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-zen/PLUGIN.mdl
+commit: 859c2f38b9d3170c71fae8d83de5fb68c8555fea
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ZenPlugin
+
+The data model, mixer engine, binaural generator, sample player, countdown with linear fade-out and
+the Mixer/Sound/Editor components are all built and match the spec closely. Apart from the sleep fade, nothing is
+tested beyond module activation, so every other implemented item is `untested` and every scenario `missing`.
+Two divergences come from one design choice: `MixerEngine.updateLayer` rebuilds a layer on every
+change, so neither live AudioParam ramps (F-4.4) nor in-place sample muting (F-5.3) happen, though
+the generator and player both have code for them.
+
+Of 39 items: 3 done, 25 untested, 0 partial, 2 diverged, 9 missing. Only the sleep fade (F-6) is
+tested, by unit tests of `timedPlaybackStep` and of `MixerEngine` against a fake AudioContext. Findings:
+
+- **Few behavioural tests.** Only `MixerEngine.fadeOut`/`stop` and `timedPlaybackStep` are tested; layer
+  playback, `BinauralGenerator` and `useCountdown` could be tested the same way and are not.
+- **F-4.4 diverged.** `BinauralGenerator.setConfig` (ramped) is never called; changes restart the layer.
+- **F-5.3 diverged.** Mute stops the sample node instead of setting its gain to zero.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict BrainwavePreset: BrainwavePreset is delta | theta | alpha | beta.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/generator.ts#BrainwavePreset]
+  note: No test.
+```
+
+```mdl
+verdict SampleSource: SampleSourceSchema has type sample and a free sample string.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/types/Sequence.ts#SampleSourceSchema, github:dxos/dxos/packages/plugins/plugin-zen/src/types/Sequence.ts#SAMPLE_NAMES]
+  note: `sample` is any string, not restricted to the seven names. No test.
+```
+
+```mdl
+verdict GeneratorSource: GeneratorSourceSchema spreads BinauralConfigSchema fields under type generator.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/types/Sequence.ts#GeneratorSourceSchema, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/generator.ts#BinauralConfigSchema]
+  note: No test.
+```
+
+```mdl
+verdict Source: SourceSchema is the union of sample and generator sources.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/types/Sequence.ts#SourceSchema]
+  note: No test.
+```
+
+```mdl
+verdict Sequence: Sequence has id, name?, source, volume and muted.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/types/Sequence.ts#Sequence]
+  note: No test.
+```
+
+```mdl
+verdict Dream: Dream is an ECHO object dxos.org.type.Dream with name, duration and sequences.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/types/Dream.ts#Dream, github:dxos/dxos/packages/plugins/plugin-zen/src/types/Dream.ts#make]
+  note: `plugin.test.ts` only checks module activation. No test creates a Dream.
+```
+
+```mdl
+verdict Mixer: Mixer renders the reorderable layer list, play/stop, countdown and a split Sound panel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer]
+  note: All listed actions exist as handlers; `remaining` comes from `useCountdown`. Only a story renders it.
+```
+
+```mdl
+verdict Sound: Sound shows source type, sample picker or generator controls, and volume, emitting onUpdate.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Sound/Sound.tsx#Sound]
+  note: Only a story renders it.
+```
+
+```mdl
+verdict Editor: Editor is a Form.Root with autoSave writing changed fields to the Dream.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Editor/Editor.tsx#Editor]
+  note: Renders every schema field (omitId), not only name and duration. No test.
+```
+
+```mdl
+verdict F-1.1: A CreateObjectEntry creates a Dream via Dream.make.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/capabilities/create-object.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.2: Editor auto-saves name and duration to ECHO.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Editor/Editor.tsx#Editor]
+  note: Save timing is whatever Form `autoSave` does, not verified to be per blur. No test.
+```
+
+```mdl
+verdict F-1.3: duration 0 or absent disables the timer and auto-stop.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer]
+  note: `timed = (duration ?? 0) > 0`. No test.
+```
+
+```mdl
+verdict F-2.1: Add pushes makeSequence(): rain, volume 0.5, unmuted.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/types/Sequence.ts#makeSampleSequence]
+  note: No test.
+```
+
+```mdl
+verdict F-2.2: Delete filters the layer out and, when playing, stops it via engine.removeLayer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.removeLayer]
+  note: No test.
+```
+
+```mdl
+verdict F-2.3: Drag reorder splices Dream.sequences in ECHO.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer]
+  note: No test.
+```
+
+```mdl
+verdict F-2.4: Mute toggles Sequence.muted and swaps only that layer while playing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.updateLayer]
+  note: No test.
+```
+
+```mdl
+verdict F-3.1: play creates one AudioContext and master GainNode and starts every non-muted layer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.play]
+  note: Layers start sequentially with `await`, not strictly simultaneously. No test.
+```
+
+```mdl
+verdict F-3.2: stop stops all sources, disconnects the master gain and closes the context.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.stop]
+  note: No test.
+```
+
+```mdl
+verdict F-3.3: A countdown shows when timed and playback stops at 0.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/hooks/useCountdown.ts#useCountdown]
+  walkthrough:
+    - useCountdown ticks remaining seconds down once a second. github:dxos/dxos/packages/plugins/plugin-zen/src/hooks/useCountdown.ts#useCountdown
+    - Mixer stops the engine and the countdown when remaining reaches 0. github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer
+  note: No test.
+```
+
+```mdl
+verdict F-3.4: updateLayer stops and recreates only the changed layer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.updateLayer]
+  note: No test.
+```
+
+```mdl
+verdict F-4.1: BinauralGenerator routes two sine oscillators through a ChannelMerger at base and base + beat.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/generator.ts#BinauralGenerator]
+  note: No test.
+```
+
+```mdl
+verdict F-4.2: BRAINWAVE_PRESETS gives delta 2, theta 6, alpha 10, beta 20 Hz.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/generator.ts#BRAINWAVE_PRESETS, github:dxos/dxos/packages/plugins/plugin-zen/src/components/Sound/Sound.tsx#Sound]
+  note: Sound syncs beatFrequency when the preset changes. No test.
+```
+
+```mdl
+verdict F-4.3: An optional looping pink-noise buffer uses the Paul Kellet coefficients.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/generator.ts#BinauralGenerator]
+  note: No test.
+```
+
+```mdl
+verdict F-4.4: Live config changes restart the generator layer instead of ramping AudioParams.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.updateLayer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/generator.ts#BinauralGenerator.setConfig]
+  note: `BinauralGenerator.setConfig` ramps with `setTargetAtTime`, but nothing calls it: `Mixer` routes every change through `MixerEngine.updateLayer`, which stops the old node and starts a new one.
+```
+
+```mdl
+verdict F-5.1: The seven samples play from HTMLAudio elements with loop = true.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/player.ts#SamplePlayer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sounds.ts#SAMPLE_URLS]
+  note: Looping relies on `HTMLAudioElement.loop`, which can gap; nothing checks seamlessness. No test.
+```
+
+```mdl
+verdict F-5.2: Each SamplePlayer has its own GainNode before the master gain.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/player.ts#SamplePlayer]
+  note: No test.
+```
+
+```mdl
+verdict F-5.3: Muting a sample layer stops and drops its node rather than silencing it in place.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.updateLayer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/player.ts#SamplePlayer]
+  note: `SamplePlayer.muted` can silence in place, but a mute toggle goes through `updateLayer`, which stops the player and does not start the replacement while muted.
+```
+
+```mdl
+verdict F-6.1: A timed Dream fades its master gain linearly to zero over its last 30 s, or its whole length when shorter, then stops.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#sleepFadeSeconds, github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut]
+  tests: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.test.ts, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.test.ts]
+  walkthrough:
+    - sleepFadeSeconds caps the fade at SLEEP_FADE_SECONDS (30) or the Dream's duration. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#sleepFadeSeconds
+    - timedPlaybackStep asks for the fade once remaining falls to that length, and for a stop at zero. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep
+    - Mixer runs the step on every countdown tick and acts on it. github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer
+    - fadeOut ramps the master gain linearly to zero over the remaining seconds. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut
+```
+
+```mdl
+verdict F-6.2: A manual stop closes the AudioContext at once with no ramp, and the step then does nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.stop, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep, github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.test.ts, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.test.ts]
+```
+
+```mdl
+verdict F-6.3: timedPlaybackStep never fades or stops an untimed Dream.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#sleepFadeSeconds]
+  tests: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.test.ts]
+```
+
+```mdl
+verdict T-1: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict T-2: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict T-3: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict T-4: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict T-5: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict T-6: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict T-7: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict T-8: No automated test runs this scenario.
+  status: missing
+  note: plugin-zen has only `plugin.test.ts` (module activation) and stories without play functions.
+```
+
+```mdl
+verdict QA-1: The Dream build-and-play QA test is not automated.
+  status: missing
+  note: No Playwright or composer-qa automation runs it.
+```

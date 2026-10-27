@@ -375,14 +375,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           },
           () => handleToggleGizmos(),
         )
-        .build(),
-    [isPlaying, handleTogglePlaying, handleAddRandomObject, gizmosVisible, handleToggleGizmos],
-  );
-
-  return (
-    <Panel.Root role={role}>
-      <Panel.Header classNames='dx-expand'>
-        <ActionToolbar {...menuActions} attendableId={attendableId}>
+        .custom('view', { label: ['view.label', { ns: meta.profile.key }] }, () => (
           <Tabs.Root
             orientation='horizontal'
             value={view}
@@ -401,7 +394,25 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
               </Tabs.Trigger>
             </Tabs.List>
           </Tabs.Root>
-        </ActionToolbar>
+        ))
+        .build(),
+    [
+      isPlaying,
+      handleTogglePlaying,
+      handleAddRandomObject,
+      gizmosVisible,
+      handleToggleGizmos,
+      view,
+      hasAttention,
+      handleViewChange,
+      t,
+    ],
+  );
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body asChild>
         <div className='relative'>
@@ -409,7 +420,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
           <canvas
             ref={canvasRef}
-            className={`dx-expand absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
+            className={`dx-expand absolute inset-0 outline-none bg-base-surface ${view === 'map' ? 'invisible' : ''}`}
             style={{ touchAction: 'none' }}
           />
           {view === 'map' && (

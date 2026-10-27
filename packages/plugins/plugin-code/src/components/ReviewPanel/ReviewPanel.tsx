@@ -10,11 +10,13 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 import { type SourceKey } from '#sync';
 
+import { type SourceReader } from '../SpecEditor/snippet-card.ts';
 import { type ReviewModel, STATUS_STYLE, type Verdict, VERDICT_STATUSES, summarizeReview } from '../SpecModel/index.ts';
 import { VerdictCard } from '../VerdictCard/index.ts';
 
@@ -27,16 +29,18 @@ export type ReviewPanelProps = {
   /** A verdict became current, or its menu asked to show the item: reveal it in the spec. */
   onSelect?: (id: string) => void;
   onOpenCode?: (key: SourceKey) => void;
+  /** The checkout's text of a file, for the current verdict's walkthrough. */
+  read?: SourceReader;
 };
 
 /** Mosaic tiles get only their item, so the panel's handlers reach them through context. */
-const ReviewPanelContext = createContext<Pick<ReviewPanelProps, 'onSelect' | 'onOpenCode'>>({});
+const ReviewPanelContext = createContext<Pick<ReviewPanelProps, 'onSelect' | 'onOpenCode' | 'read'>>({});
 
 /**
  * The latest compliance review of a spec: counts per status, then every verdict, worst first, as a list of cards.
  * The list is the shared card container: arrow keys move the current card, and the current card follows the spec.
  */
-export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode }: ReviewPanelProps) => {
+export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode, read }: ReviewPanelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const verdicts = useMemo(
     () =>
@@ -45,15 +49,15 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode 
       ),
     [review],
   );
-  const handlers = useMemo(() => ({ onSelect, onOpenCode }), [onSelect, onOpenCode]);
+  const handlers = useMemo(() => ({ onSelect, onOpenCode, read }), [onSelect, onOpenCode, read]);
   const handleCurrentChange = useCallback((id: string | undefined) => id && onSelect?.(id), [onSelect]);
 
   if (!review) {
     return (
-      <Layout.Flex column gap='sm' classNames='p-4 text-description' data-testid='review-panel.empty'>
-        <span>{t('review-panel.empty.label')}</span>
-        {reviewKey && <code className='text-xs'>{reviewKey}</code>}
-      </Layout.Flex>
+      <Status.Empty icon='ph--seal-check--regular' classNames='dx-fill' data-testid='review-panel.empty'>
+        {t('review-panel.empty.label')}
+        {reviewKey && <code className='block text-xs'>{reviewKey}</code>}
+      </Status.Empty>
     );
   }
 
@@ -72,8 +76,10 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode 
         <Focus.Group asChild>
           <Mosaic.Container asChild currentId={selected} onCurrentChange={handleCurrentChange}>
             <ScrollArea.Root orientation='vertical' classNames='grow'>
-              <ScrollArea.Viewport>
+              {/* The viewport pads the list and the stack spaces the cards, so each card keeps its own frame. */}
+              <ScrollArea.Viewport classNames='p-2'>
                 <Mosaic.Stack
+                  classNames='gap-2'
                   Tile={VerdictTile}
                   items={verdicts}
                   getId={(verdict: Verdict) => verdict.id}
@@ -91,7 +97,7 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode 
 type VerdictTileProps = Pick<MosaicTileProps<Verdict>, 'location' | 'data' | 'current'>;
 
 const VerdictTile = forwardRef<HTMLDivElement, VerdictTileProps>(({ data, location, current }, forwardedRef) => {
-  const { onSelect, onOpenCode } = useContext(ReviewPanelContext);
+  const { onSelect, onOpenCode, read } = useContext(ReviewPanelContext);
   const { setCurrentId } = useMosaicContainer('VerdictTile');
   const handleCurrentChange = useCallback(() => setCurrentId(data.id), [data.id, setCurrentId]);
   return (
@@ -104,7 +110,14 @@ const VerdictTile = forwardRef<HTMLDivElement, VerdictTileProps>(({ data, locati
       current={current}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <VerdictCard verdict={data} current={current} onReveal={onSelect} onOpenCode={onOpenCode} ref={forwardedRef} />
+        <VerdictCard
+          verdict={data}
+          current={current}
+          read={read}
+          onReveal={onSelect}
+          onOpenCode={onOpenCode}
+          ref={forwardedRef}
+        />
       </Focus.Item>
     </Mosaic.Tile>
   );

@@ -31,11 +31,14 @@ const REVIEWED_KINDS = new Set([
   'test',
 ]);
 
+/** A walkthrough says where things are; more steps than this retells the code. */
+const MAX_WALKTHROUGH = 5;
+
 /** Kinds judged on whether automation exercises them rather than on whether code implements them. */
 const EXERCISE_KINDS = new Set(['scenario', 'test']);
 
 /** A key list written inline (`[a, b]`), wrapped over lines, or as `- a` items, as `parseReview` reads it. */
-const keyList = (value: string | undefined): string[] =>
+export const keyList = (value: string | undefined): string[] =>
   (value ?? '')
     .split(/[,\n]/)
     .map((item) => item.replace(/^[\s[-]+|[\s\]]+$/g, ''))
@@ -64,7 +67,8 @@ export const reviewItems = (text: string): ReviewItem[] =>
     return reqs.length > 0 ? reqs : [{ id: header[2], kind: header[1], line, title: header[3] ?? '' }];
   });
 
-const frontmatter = (text: string): Record<string, string> =>
+/** The flat `key: value` pairs of a document's YAML frontmatter. */
+export const frontmatter = (text: string): Record<string, string> =>
   Object.fromEntries(
     (text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').split('\n').flatMap((line) => {
       const match = line.match(/^([\w-]+):\s*(.*?)\s*(?:#.*)?$/);
@@ -72,10 +76,32 @@ const frontmatter = (text: string): Record<string, string> =>
     }),
   );
 
-const field = (body: string, name: string): string | undefined => {
+/** A block field at two spaces of indent; a `|` value continues on lines indented four or more. */
+export const blockField = (body: string, name: string): string | undefined => {
   const match = body.match(new RegExp(`^  ${name}:[ \\t]*(.*)$((?:\\n {4,}.*)*)`, 'm'));
   return match ? `${match[1]} ${match[2]}`.replace(/^\|/, '').trim() : undefined;
 };
+
+/**
+ * The items a reference to `id` covers: a block's reqs (or the block itself when it has none), or one nested req.
+ */
+export const itemsUnder = (text: string, id: string): ReviewItem[] => {
+  const block = blocks(text).find(({ body }) => body.split('\n')[0].match(/^\w+\s+([A-Za-z][\w.-]*)/)?.[1] === id);
+  if (block) {
+    const end = block.line + block.body.split('\n').length;
+    return reviewItems(text).filter(({ line }) => line >= block.line && line < end);
+  }
+  return reviewItems(text).filter((item) => item.id === id);
+};
+
+/** Each verdict's status and note, by item id. */
+export const reviewVerdicts = (text: string): Map<string, { status?: string; note?: string }> =>
+  new Map(
+    blocks(text).flatMap(({ body }) => {
+      const id = body.split('\n')[0].match(/^verdict\s+([A-Za-z][\w.-]*)/)?.[1];
+      return id ? [[id, { status: blockField(body, 'status'), note: blockField(body, 'note') }] as const] : [];
+    }),
+  );
 
 /** Whether the source declares the name: a top-level declaration, a member, or an export list entry. */
 const declares = (source: string, name: string): boolean => {
@@ -168,15 +194,15 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
     if (specText && !itemIds.has(id)) {
       errors.push(`${at}: ${id} is not a reviewable item of the spec (run \`items\` for the list)`);
     }
-    const status = field(body, 'status');
+    const status = blockField(body, 'status');
     if (!status || !STATUSES.has(status)) {
       errors.push(`${at}: ${id} has status \`${status ?? ''}\`; use one of ${[...STATUSES].join(', ')}`);
     }
-    if (status && status !== 'done' && !field(body, 'note')) {
+    if (status && status !== 'done' && !blockField(body, 'note')) {
       errors.push(`${at}: ${id} is ${status} but has no note saying what is missing or different`);
     }
     const exercise = EXERCISE_KINDS.has(kindOf.get(id) ?? '');
-    const evidence = keyList(field(body, 'evidence'));
+    const evidence = keyList(blockField(body, 'evidence'));
     if (!exercise && (status === 'done' || status === 'untested' || status === 'partial') && evidence.length === 0) {
       warnings.push(`${at}: ${id} is ${status} with no evidence`);
     }
@@ -192,7 +218,7 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
         }
       }
     }
-    const tests = keyList(field(body, 'tests'));
+    const tests = keyList(blockField(body, 'tests'));
     if (exercise && status === 'untested') {
       errors.push(`${at}: ${id} is a ${kindOf.get(id)}; use done, partial, diverged or missing (see lang/review.mdl)`);
     }
@@ -213,6 +239,34 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
         errors.push(`${at}: a test key names the test file only, without #: ${key}`);
       } else if (file && !(yield* exists(file))) {
         errors.push(`${at}: test file not found: ${key}`);
+      }
+    }
+    // Each step is `- <sentence>. github:<key>`; the joined field holds them as `- ` separated items.
+    const steps = (blockField(body, 'walkthrough') ?? '')
+      .split(/(?:^|\s)-\s+/)
+      .map((step) => step.trim())
+      .filter(Boolean);
+    if (steps.length > MAX_WALKTHROUGH) {
+      errors.push(`${at}: ${id} has ${steps.length} walkthrough steps; keep it to ${MAX_WALKTHROUGH}`);
+    }
+    if (steps.length > 0 && evidence.length < 2) {
+      warnings.push(`${at}: ${id} has one implementation; its code chip already shows it, so drop the walkthrough`);
+    }
+    for (const step of steps) {
+      const key = step.match(/(github:\S+)\s*$/)?.[1];
+      if (!key) {
+        errors.push(`${at}: walkthrough step does not end with a github: key: ${step}`);
+        continue;
+      }
+      const { file, symbol, error } = yield* resolveKey(key);
+      if (error) {
+        errors.push(`${at}: ${error}`);
+      } else if (file && !(yield* exists(file))) {
+        errors.push(`${at}: walkthrough file not found: ${key}`);
+      } else if (file && symbol) {
+        if (!declares(yield* fs.readFileString(file), symbol.split('.').pop() ?? symbol)) {
+          errors.push(`${at}: no declaration of ${symbol} in ${key.split('#')[0]} (walkthrough)`);
+        }
       }
     }
   }

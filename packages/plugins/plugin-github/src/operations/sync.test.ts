@@ -15,7 +15,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
-import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
+import { Milestone, Organization, Person, PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
 import { GitHubApi } from '../services/index.ts';
@@ -49,14 +49,17 @@ const milestone = (overrides: Partial<GitHubApi.GitHubMilestone> = {}): GitHubAp
   ...overrides,
 });
 
+/** What a push addresses the bound repository by. */
+const coordinates = { id: '1234', owner: 'dxos', name: 'composer' };
+
 /** Answers the endpoints a repo sync calls; the repo's owner is a user, so the org lookup is a 404. */
 const githubFetch =
   (issues: GitHubApi.GitHubIssue[]): typeof globalThis.fetch =>
   async (input) => {
     const { pathname } = new URL(input instanceof Request ? input.url : input);
     const body =
-      pathname === '/user/repos'
-        ? [repo()]
+      pathname === '/repos/dxos/composer'
+        ? repo()
         : pathname === '/repos/dxos/composer/milestones'
           ? []
           : pathname === '/repos/dxos/composer/issues'
@@ -77,9 +80,9 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
   });
 
   /**
-   * Builds an external-sync `Cursor` (spec.source = Connection's access token,
-   * spec.target = a Project standing in for the repo's local root) plus seeds
-   * the binding's snapshots as if a previous pull had run.
+   * Builds an external-sync `Cursor` (spec.source = Connection's access token, spec.target = the
+   * repo's `Repo`), the issue `TaskSet` keyed like the repo, and seeds the binding's snapshots as if
+   * a previous pull had run.
    */
   const setup = async (snapshots: Record<string, unknown>) => {
     const { db, graph } = await builder.createDatabase();
@@ -92,6 +95,8 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       TaskSet.TaskSet,
       Task.Task,
       Milestone.Milestone,
+      Repo.Repo,
+      PullRequest.PullRequest,
     ]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: GITHUB_SOURCE, token: 'tok' }));
     const connection = db.add(Obj.make(Connection.Connection, { connectorId: 'github', accessToken: Ref.make(token) }));
@@ -99,6 +104,13 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       TaskSet.make({
         [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: String(repo().id) }] },
         name: repo().full_name,
+      }),
+    );
+    const local = db.add(
+      Repo.make({
+        [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: String(repo().id) }] },
+        owner: 'dxos',
+        name: 'composer',
         // Seed description to match a prior pull so tests that only diverge `name`
         // don't trip the description-push path.
         description: repo().description ?? undefined,
@@ -106,8 +118,8 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     );
     const created = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
-        target: Ref.make(project),
+        source: Connection.getAccessToken(connection),
+        target: Ref.make(local),
         externalId: String(repo().id),
         snapshots,
       }),
@@ -115,7 +127,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     if (!Cursor.isExternal(created)) {
       throw new Error('expected external-sync cursor');
     }
-    return { db, binding: created, project };
+    return { db, binding: created, project, local };
   };
 
   test('locally-edited issue title PATCHes only diverged fields', async ({ expect }) => {
@@ -136,7 +148,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     let updateIssueInput: GitHubApi.IssueUpdateInput | undefined;
     let updateIssueNumber: number | undefined;
     const result = await Effect.gen(function* () {
-      return yield* pushRepoUpdates(binding, repo(), new Map([['5678', issue()]]), {
+      return yield* pushRepoUpdates(binding, coordinates, new Map([['5678', issue()]]), {
         updateIssue: (_owner, _repo, num, input) => {
           updateIssueInput = input;
           updateIssueNumber = num;
@@ -146,7 +158,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       });
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
-    expect(result.tasks).toBe(1);
+    expect(result.issues).toBe(1);
     expect(updateIssueNumber).toBe(42);
     expect(updateIssueInput).toEqual({ title: 'Edited locally' });
     // Snapshot refreshed on the binding.
@@ -171,7 +183,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
     let calls = 0;
     const result = await Effect.gen(function* () {
-      return yield* pushRepoUpdates(binding, repo(), new Map([['5678', issue()]]), {
+      return yield* pushRepoUpdates(binding, coordinates, new Map([['5678', issue()]]), {
         updateIssue: () => {
           calls++;
           return Effect.succeed(undefined);
@@ -180,7 +192,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       });
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
-    expect(result.tasks).toBe(0);
+    expect(result.issues).toBe(0);
     expect(calls).toBe(0);
   });
 
@@ -200,7 +212,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
     let updateIssueInput: GitHubApi.IssueUpdateInput | undefined;
     await Effect.gen(function* () {
-      yield* pushRepoUpdates(binding, repo(), new Map([['5678', issue()]]), {
+      yield* pushRepoUpdates(binding, coordinates, new Map([['5678', issue()]]), {
         updateIssue: (_owner, _repo, _num, input) => {
           updateIssueInput = input;
           return Effect.succeed(undefined);
@@ -213,16 +225,16 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
   });
 
   test('locally-edited repo description → PATCH /repos', async ({ expect }) => {
-    const { db, binding, project } = await setup({
-      '1234': { name: 'dxos/composer', description: 'composer monorepo' },
+    const { db, binding, local } = await setup({
+      '1234': { name: 'composer', description: 'composer monorepo' },
     });
-    Obj.update(project, (project) => {
-      project.description = 'rewritten';
+    Obj.update(local, (local) => {
+      local.description = 'rewritten';
     });
 
     let updateRepoInput: GitHubApi.RepoUpdateInput | undefined;
     const result = await Effect.gen(function* () {
-      return yield* pushRepoUpdates(binding, repo(), new Map(), {
+      return yield* pushRepoUpdates(binding, coordinates, new Map(), {
         updateIssue: () => Effect.succeed(undefined),
         updateRepo: (_owner, _repo, input) => {
           updateRepoInput = input;
@@ -231,21 +243,21 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       });
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
-    expect(result.projects).toBe(1);
+    expect(result.repos).toBe(1);
     expect(updateRepoInput).toEqual({ description: 'rewritten' });
   });
 
   test('repo rename diverges locally → logged but NOT pushed', async ({ expect }) => {
-    const { db, binding, project } = await setup({
-      '1234': { name: 'dxos/composer', description: 'composer monorepo' },
+    const { db, binding, local } = await setup({
+      '1234': { name: 'composer', description: 'composer monorepo' },
     });
-    Obj.update(project, (project) => {
-      project.name = 'dxos/composer-renamed';
+    Obj.update(local, (local) => {
+      local.name = 'composer-renamed';
     });
 
     let calls = 0;
     const result = await Effect.gen(function* () {
-      return yield* pushRepoUpdates(binding, repo(), new Map(), {
+      return yield* pushRepoUpdates(binding, coordinates, new Map(), {
         updateIssue: () => Effect.succeed(undefined),
         updateRepo: () => {
           calls++;
@@ -254,7 +266,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       });
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
-    expect(result.projects).toBe(0);
+    expect(result.repos).toBe(0);
     expect(calls).toBe(0);
   });
 
@@ -282,7 +294,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     let updateIssueInput: GitHubApi.IssueUpdateInput | undefined;
     let calls = 0;
     const result = await Effect.gen(function* () {
-      return yield* pushRepoUpdates(binding, repo(), new Map([['5678', pullRequestIssue]]), {
+      return yield* pushRepoUpdates(binding, coordinates, new Map([['5678', pullRequestIssue]]), {
         updateIssue: (_owner, _repo, _num, input) => {
           calls++;
           updateIssueInput = input;
@@ -294,7 +306,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
     // No task push (status was the only diverging field, and PR status is
     // pull-only).
-    expect(result.tasks).toBe(0);
+    expect(result.issues).toBe(0);
     expect(calls).toBe(0);
     expect(updateIssueInput).toBeUndefined();
     // Snapshot status stays at the previous remote-pulled value so the
@@ -324,7 +336,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
     let updateIssueInput: GitHubApi.IssueUpdateInput | undefined;
     await Effect.gen(function* () {
-      yield* pushRepoUpdates(binding, repo(), new Map([['5678', pullRequestIssue]]), {
+      yield* pushRepoUpdates(binding, coordinates, new Map([['5678', pullRequestIssue]]), {
         updateIssue: (_owner, _repo, _num, input) => {
           updateIssueInput = input;
           return Effect.succeed(undefined);
@@ -354,7 +366,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
 
     let calls = 0;
     const result = await Effect.gen(function* () {
-      return yield* pushRepoUpdates(binding, repo(), new Map([['5678', issue()]]), {
+      return yield* pushRepoUpdates(binding, coordinates, new Map([['5678', issue()]]), {
         updateIssue: () => {
           calls++;
           return Effect.succeed(undefined);
@@ -363,7 +375,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       });
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
-    expect(result.tasks).toBe(0);
+    expect(result.issues).toBe(0);
     expect(calls).toBe(0);
   });
 
@@ -474,7 +486,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
   });
 
   test('reports one meter per repo, sized to its issues before any is counted', async ({ expect }) => {
-    const { db, binding, project } = await setup({});
+    const { db, binding, local } = await setup({});
     const issues = [
       issue({ id: 1, number: 1 }),
       issue({ id: 2, number: 2, title: 'Second' }),
@@ -517,7 +529,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
       EffectEx.runAndForwardErrors,
     );
 
-    const syncKey = Progress.createSyncKey(project);
+    const syncKey = Progress.createSyncKey(local);
     expect(statusUpdates.every((update) => update.progress?.key === syncKey)).toBe(true);
     const totalIndex = statusUpdates.findIndex((update) => update.progress?.total !== undefined);
     const firstCountIndex = statusUpdates.findIndex((update) => (update.progress?.current ?? 0) > 0);

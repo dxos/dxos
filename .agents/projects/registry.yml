@@ -6,6 +6,36 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: hypercore-removal
+    status: active
+    user: dmaretskyi
+    host: cloud
+    created: 2026-08-24
+    summary: 'Move space credentials off the hypercore control feed onto Automerge space root + credentials documents, then delete hypercore. EDGE executes the per-space migration; clients adopt the root EDGE records.'
+    tasks: .agents/projects/hypercore-removal/TASKS.md
+    design: .agents/projects/hypercore-removal/DESIGN.md
+    prs: [12726, 12774]
+    resume: 'Client wired to the EDGE-run migration (Composer space-settings button, members adopt on open, two-client e2e in edge). NEXT: push signal so open clients adopt without reopening, then the edge-initiated bulk pass.'
+  - name: multi-actor
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-24
+    summary: 'Several identities editing one object at once, each in its own real plugin article, driven by an actor flow on a virtual clock and rendered frame by frame for the autocue grid. First scenario: four actors writing, correcting and commenting on a markdown document (stories-agent).'
+    tasks: .agents/projects/multi-actor/TASKS.md
+    design: .agents/projects/multi-actor/DESIGN.md
+    prs: [14053]
+    resume: 'Phase 1 done: markdown story recorded (temp/collab). NEXT: a second article (sheet or kanban) on the same harness.'
+  - name: plugin-recorder
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-26
+    summary: 'Record a presentation voice-over (and screen/camera video) from plugin-presenter decks: presenter gains speaker notes (window or subtitles), slide durations and extension points; plugin-recorder adds a Record toolbar item, mic/video settings with a level meter, and stores takes as plugin-studio MediaArtifact variants.'
+    tasks: packages/plugins/plugin-recorder/docs/TASKS.md
+    design: packages/plugins/plugin-recorder/docs/DESIGN.md
+    prs: []
+    resume: 'Phase 1 in progress on claude/upbeat-faraday-7abfc9.'
   - name: autocue-ui
     status: active
     user: burdon

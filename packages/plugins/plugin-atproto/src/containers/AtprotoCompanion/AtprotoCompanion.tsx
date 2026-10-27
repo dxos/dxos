@@ -213,7 +213,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Layout.Flex column gap='md' classNames='p-3'>
+            <Layout.Flex column gap='md' classNames='p-trim-md'>
               {/* Publish status — the status icon overrides the Message's default valence icon. A
                   neutral "checking" state shows until the first async derivation resolves. */}
               <Banner.Root

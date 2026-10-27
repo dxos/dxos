@@ -987,9 +987,11 @@
     line-height: var(--dx-line-height);
   }
   /* The toolbar's ScrollArea frame takes the place the toolbar would, and never sizes it without its items. */
+  /* Fills its container; beside siblings in a row it shrinks to what is left, but a column cannot squeeze its height. */
   .dx-scroll-root.dx-toolbar-scroll {
-    flex-shrink: 0;
     width: 100%;
+    min-width: 0;
+    min-height: fit-content;
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
@@ -998,14 +1000,14 @@
     margin-inline: var(--dx-control-inset);
   }
   /*
-   * A visible edge at either end of the toolbar starts one gap in, on a list's icon column; an icon-only Button's icon
-   * already sits there in its square cell, so only its hover fill reaches the inset. A Block is such a cell too, even
-   * when empty (a Board column's place for a drag handle it does not have).
+   * A visible edge at either end of the toolbar starts one gap in, whether it is a labelled control or a square icon
+   * button, so the two ends match. A Block is a cell of its own, even when empty (a Board column's place for a drag
+   * handle it does not have).
    */
-  .dx-toolbar:has(> :first-child:not([data-square], .dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
+  .dx-toolbar:has(> :first-child:not(.dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
     padding-inline-start: calc(var(--dx-gap-size) - var(--dx-control-inset));
   }
-  .dx-toolbar:has(> :last-child:not([data-square], .dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
+  .dx-toolbar:has(> :last-child:not(.dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
     padding-inline-end: calc(var(--dx-gap-size) - var(--dx-control-inset));
   }
   .dx-toolbar > .dx-input {

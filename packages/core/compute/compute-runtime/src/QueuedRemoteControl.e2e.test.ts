@@ -267,8 +267,14 @@ describe('queued remote control (e2e against a local host)', () => {
           yield* waitUntil(host.applied.pipe(Effect.map((applied) => applied.length === 1)));
 
           yield* link.dropAcks(false);
-          yield* client.connected;
-          yield* client.drained;
+          // The host answers once the turn settles, so a single `connected` can land before the
+          // flusher starts the backoff it should cut; signal until the redelivery drains the queue.
+          yield* waitUntil(
+            client.connected.pipe(
+              Effect.andThen(client.pending),
+              Effect.map((pending) => pending.length === 0),
+            ),
+          );
 
           // Redelivered under the same idempotency key, so the host recognised and ignored it.
           expect((yield* host.applied).map((entry) => entry.input)).toEqual(['once']);

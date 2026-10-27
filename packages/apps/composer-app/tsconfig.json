@@ -352,6 +352,9 @@
       "path": "../../plugins/plugin-qa"
     },
     {
+      "path": "../../plugins/plugin-recorder"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -404,6 +407,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-ste"
     },
     {
       "path": "../../plugins/plugin-stream-deck"

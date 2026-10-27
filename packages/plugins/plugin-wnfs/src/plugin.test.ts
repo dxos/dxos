@@ -9,6 +9,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { WnfsPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), WnfsPlugin()] });
+
 describe('WnfsPlugin', () => {
   test('activates without errors', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({

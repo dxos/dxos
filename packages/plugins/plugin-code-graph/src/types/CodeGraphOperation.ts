@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -168,9 +169,10 @@ export const SetLayout = Operation.make({
     name: 'Set Code Graph Layout',
     description: [
       'Chooses how the canvas places the boxes:',
-      '`illustrator` (the semantic engine: boxes on a grid, framed by package, arrows routed through the gutters),',
+      '`illustrator` (the semantic engine: boxes on a grid, arrows routed through the gutters),',
       '`force` (a force-directed layout snapped to slots), `rank` (rows by dependency rank, fewest crossings),',
       'or `diagram` (the illustrator’s full drawing, read-only).',
+      'With `grouped`, the illustrator layout and drawing frame each package’s boxes together.',
     ].join(' '),
     icon: 'ph--layout--regular',
   },
@@ -180,7 +182,56 @@ export const SetLayout = Operation.make({
     resetPositions: Schema.optional(Schema.Boolean).annotate({
       description: 'Forget where the user dragged boxes, so the layout places every box.',
     }),
+    grouped: Schema.optional(Schema.Boolean).annotate({
+      description: 'Frame boxes by package (illustrator and diagram layouts); unchanged when omitted.',
+    }),
   }),
   output: Schema.Void,
   services: [Database.Service],
+});
+
+export const RunCommand = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.codeGraph.runCommand'),
+    name: 'Run Code Graph Command',
+    description: [
+      'Carries out one short command on a code graph ("clear the graph", "show me the ECHO package exports")',
+      'with its own fast model, apart from the chat assistant. The model may only add SPARQL results or remove boxes',
+      'by a text filter; a decision model ends the loop once the command is done.',
+    ].join(' '),
+    icon: 'ph--terminal--regular',
+  },
+  input: Schema.Struct({
+    graph: Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to change.' }),
+    command: Schema.String.annotate({ description: 'What the user typed or said.' }),
+  }),
+  output: Schema.Struct({
+    message: Schema.String,
+    stop: Schema.Literals(['done', 'judge', 'limit', 'error']),
+    turns: Schema.Number,
+    actions: Schema.Array(
+      Schema.Struct({
+        type: Schema.Literals(['add', 'remove']),
+        detail: Schema.String,
+        error: Schema.optional(Schema.String),
+      }),
+    ),
+    addedNodes: Schema.Number,
+    removedNodes: Schema.Number,
+    /** What did not fit on the graph, summarised. */
+    trailer: Schema.optional(Schema.String),
+    elapsedMs: Schema.Number,
+    /** Every model call, action and judgement, timed, for the verbose view. */
+    trace: Schema.Array(
+      Schema.Struct({
+        kind: Schema.Literals(['ground', 'model', 'add', 'remove', 'judge']),
+        turn: Schema.Number,
+        ms: Schema.Number,
+        label: Schema.String,
+        detail: Schema.optional(Schema.String),
+        error: Schema.optional(Schema.String),
+      }),
+    ),
+  }),
+  services: [Database.Service, AiService.AiService],
 });

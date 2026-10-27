@@ -109,6 +109,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
           onSurfaceClick={handleDismiss}
         >
           <Visualization.Graph onNodeHover={handleHover} />
+          <Visualization.TypeFilter />
         </Visualization.Root>
       </Panel.Body>
     </Panel.Root>

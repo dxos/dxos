@@ -613,6 +613,9 @@
       "path": "packages/plugins/plugin-qa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-recorder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
@@ -665,6 +668,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ste/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-stream-deck/tsconfig.json"

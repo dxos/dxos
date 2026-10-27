@@ -12,6 +12,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { IllustratorPlugin } from '#plugin';
 import { Drawing } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), IllustratorPlugin()] });
+
 describe('IllustratorPlugin', () => {
   // Canvas is written to the database by every variant's create flow, so the plugin that owns the
   // type must register it — registering it from a renderer plugin breaks the others when disabled.
