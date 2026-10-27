@@ -286,6 +286,13 @@ Features **nest**: a feature with a `parent` is one of that feature's **subfeatu
 with its own description, requirements, status, dependencies and tasks. A top-level feature belongs to at most one
 **project**, whose Features tab shows it on a map; a reader zooms into a feature to see its subfeatures.
 
+**Keep every string short.** A feature map is read at a glance, so write the fewest words that say it:
+
+- a feature **name** is a noun phrase of two to five words ("Provider sync", not "Syncing mail with providers");
+- a **description** is one sentence, two at most;
+- a **requirement** is one short, testable sentence; split a long one rather than chaining clauses;
+- no preamble, no restating the name, no hedging, no lists of examples.
+
 **Specs are the unstructured source; features add the structure.** A spec's `feat` blocks and their `req` lines
 become features and requirements: extract them rather than linking to the spec.
 

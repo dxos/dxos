@@ -72,7 +72,7 @@ export type Requirement = Schema.Schema.Type<typeof Requirement>;
  */
 export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.2.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
+    name: Schema.String.pipe(Schema.annotate({ title: 'Name', description: 'A noun phrase of two to five words.' })),
 
     description: Schema.optional(
       Schema.String.pipe(
@@ -80,7 +80,7 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
         Schema.annotate({
           title: 'Description',
           description:
-            'The ideal: what the feature does when complete and why it matters, in the present tense. Not its current state.',
+            'One or two short sentences: the ideal, what the feature does when complete, in the present tense. Not its current state.',
         }),
       ),
     ),
@@ -90,7 +90,7 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
         Schema.annotate({
           title: 'Requirements',
           description:
-            'What the feature must do, one testable statement each, extracted from its spec block (its req lines) where there is one.',
+            'What the feature must do: one short, testable sentence each, extracted from its spec block (its req lines) where there is one.',
         }),
       ),
     ),

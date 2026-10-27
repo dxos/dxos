@@ -57,5 +57,10 @@ export const REQUIREMENT_STYLE = { icon: 'ph--check-circle--regular', hue: 'teal
 /** A requirement row's icon, coloured unlike the muted row icons, since requirements are what a reader scans for. */
 export const RequirementIcon = () => <Icon.Icon icon={REQUIREMENT_STYLE.icon} hue={REQUIREMENT_STYLE.hue} />;
 
+/** A requirement's spec id (`F-3.1`), small and on one line, before the requirement's text. */
+export const RequirementId = ({ id }: { id: string }) => (
+  <span className='shrink-0 text-xs text-description tabular-nums whitespace-nowrap'>{id}</span>
+);
+
 /** Row icons sit a step below the text, so the header's status icon stays the card's one strong glyph. */
 export const RowIcon = ({ icon }: { icon: string }) => <Icon.Icon icon={icon} tone='muted' />;

@@ -24,7 +24,7 @@ import {
   type FeatureTarget,
   getFeatureSignals,
 } from './feature.ts';
-import { ACTIVE_STYLE, FEATURE_STATUS_STYLE, RequirementIcon, RowIcon, StatusIcon } from './fields.tsx';
+import { ACTIVE_STYLE, FEATURE_STATUS_STYLE, RequirementIcon, RequirementId, RowIcon, StatusIcon } from './fields.tsx';
 
 const SIGNAL_STYLE: Record<FeatureSignal, { icon: string; hue: Tag.TagHue }> = {
   'blocked': { icon: 'ph--lock--regular', hue: 'error' },
@@ -471,19 +471,15 @@ const FeatureCardRequirements = (_: FeatureCardRequirementsProps) => {
   return feature.requirements.length > 0 ? (
     <Card.Section title={t('feature-card.requirements.title')}>
       {feature.requirements.map((requirement, index) => (
-        <Card.Row
-          key={requirement.id ?? index}
-          leading={<RequirementIcon />}
-          trailing={
-            requirement.id && (
-              <Card.Text variant='muted' classNames='tabular-nums whitespace-nowrap'>
-                {requirement.id}
-              </Card.Text>
-            )
-          }
-          data-testid='feature-card.requirement'
-        >
-          <Card.Text>{requirement.text}</Card.Text>
+        <Card.Row key={requirement.id ?? index} leading={<RequirementIcon />} data-testid='feature-card.requirement'>
+          <Card.Text>
+            {requirement.id && (
+              <>
+                <RequirementId id={requirement.id} />{' '}
+              </>
+            )}
+            {requirement.text}
+          </Card.Text>
         </Card.Row>
       ))}
     </Card.Section>

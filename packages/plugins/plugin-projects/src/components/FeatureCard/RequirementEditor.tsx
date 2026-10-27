@@ -12,7 +12,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { meta } from '#meta';
 import { type Feature } from '#types';
 
-import { RequirementIcon, RowIcon } from './fields.tsx';
+import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 
 type CommitFieldProps = {
   value: string;
@@ -94,37 +94,35 @@ export const RequirementEditor = ({ requirements, onChange }: RequirementEditorP
           classNames='[&_.dx-card-row-content]:overflow-visible'
           leading={<RequirementIcon />}
           trailing={
-            // The spec id sits after the text, on one line, so the text keeps the row's full width.
-            <Layout.Flex gap='xs' classNames='items-center'>
-              {requirement.id && (
-                <Card.Text variant='muted' classNames='tabular-nums whitespace-nowrap'>
-                  {requirement.id}
-                </Card.Text>
-              )}
-              <Card.Action
-                icon='ph--x--regular'
-                label={t('requirement-editor.remove.label')}
-                data-testid={`requirement-editor.${index}.remove`}
-                onClick={() => onChange(remove(index))}
-              />
-            </Layout.Flex>
+            <Card.Action
+              icon='ph--x--regular'
+              label={t('requirement-editor.remove.label')}
+              data-testid={`requirement-editor.${index}.remove`}
+              onClick={() => onChange(remove(index))}
+            />
           }
         >
-          <CommitField
-            value={requirement.text}
-            label={t('requirement-editor.text.label')}
-            testId={`requirement-editor.${index}.text`}
-            autoFocus={index === focusIndex}
-            onCommit={(text) =>
-              onChange(
-                text
-                  ? copy().map((candidate, candidateIndex) =>
-                      candidateIndex === index ? { ...candidate, text } : candidate,
-                    )
-                  : remove(index),
-              )
-            }
-          />
+          {/* The spec id leads the text, as it does in the read-only list; the field takes the rest of the row. */}
+          <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
+            {requirement.id && <RequirementId id={requirement.id} />}
+            <div className='grow min-w-0'>
+              <CommitField
+                value={requirement.text}
+                label={t('requirement-editor.text.label')}
+                testId={`requirement-editor.${index}.text`}
+                autoFocus={index === focusIndex}
+                onCommit={(text) =>
+                  onChange(
+                    text
+                      ? copy().map((candidate, candidateIndex) =>
+                          candidateIndex === index ? { ...candidate, text } : candidate,
+                        )
+                      : remove(index),
+                  )
+                }
+              />
+            </div>
+          </Layout.Flex>
         </Card.Row>
       ))}
       <Card.Row

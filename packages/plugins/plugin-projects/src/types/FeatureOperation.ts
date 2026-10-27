@@ -48,7 +48,7 @@ export class ParentCycleError extends BaseError.extend(
 ) {}
 
 const DESCRIPTION =
-  'The ideal: what the feature does when it is complete and why it matters, in the present tense. Not its current state.';
+  'One or two short sentences: the ideal, what the feature does when complete, in the present tense. Not its current state.';
 
 const SPECS = 'The spec blocks the requirements came from, e.g. packages/plugins/plugin-inbox/PLUGIN.mdl#F-3.';
 
