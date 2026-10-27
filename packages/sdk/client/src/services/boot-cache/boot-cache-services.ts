@@ -96,6 +96,7 @@ export class BootCacheServices implements ClientServicesProvider {
   #snapshot?: BootSnapshot;
   #providerOpen = false;
   #persisting?: Promise<void>;
+  #cleared = false;
 
   readonly rpc: ClientServicesRpc;
   readonly services: Partial<ClientServices>;
@@ -199,31 +200,43 @@ export class BootCacheServices implements ClientServicesProvider {
    * a space whose documents are where they were at the last write is not written again.
    */
   persist(spaces: Iterable<WorkingSetSource>): Promise<void> {
-    // One at a time: a write that overlapped an earlier one could land first and be overwritten by it.
+    return this.#enqueue(() => this.#persist(spaces), 'boot cache not written');
+  }
+
+  /** Empties the store, after any write already queued; no later {@link persist} writes again. */
+  clear(): Promise<void> {
+    this.#cleared = true;
+    return this.#enqueue(async () => {
+      this.#written.clear();
+      this.#recorded.clear();
+      await this.#store.clear();
+    }, 'boot cache not cleared');
+  }
+
+  /** One store operation at a time: one that overlapped an earlier one could land first and be overwritten by it. */
+  #enqueue(operation: () => Promise<void>, failure: string): Promise<void> {
     const previous = this.#persisting ?? Promise.resolve();
-    const next = previous.then(() => this.#persist(spaces));
-    this.#persisting = next.catch((error) => log.warn('boot cache not written', { error }));
+    this.#persisting = previous.then(operation).catch((error) => log.warn(failure, { error }));
     return this.#persisting;
   }
 
-  async clear(): Promise<void> {
-    this.#written.clear();
-    this.#recorded.clear();
-    await this.#store.clear();
-  }
-
   async #persist(spaces: Iterable<WorkingSetSource>): Promise<void> {
+    // Before the services answer, nothing live has been recorded and spaces may not be open, so a write
+    // would replace the snapshot with less than it holds.
+    if (this.#cleared || !this.#providerOpen) {
+      return;
+    }
     const started = performance.now();
     let remaining = this.#maxBytes;
     const changed = new Map<string, WorkingSetRow[]>();
-    const present = new Set<string>();
+    const listed = new Set<string>();
     let rowCount = 0;
     for (const space of spaces) {
+      listed.add(space.id);
       const rows = space.exportWorkingSet({ maxBytes: remaining });
       if (rows.length === 0) {
         continue;
       }
-      present.add(space.id);
       rowCount += rows.length;
       remaining -= rows.reduce((total, row) => total + row.bytes.length, 0);
       const signature = signatureOf(rows);
@@ -232,7 +245,8 @@ export class BootCacheServices implements ClientServicesProvider {
         this.#written.set(space.id, signature);
       }
     }
-    const remove = [...this.#written.keys()].filter((spaceId) => !present.has(spaceId));
+    // A listed space that exported nothing is not open yet, which is no reason to drop what it last wrote.
+    const remove = [...this.#written.keys()].filter((spaceId) => !listed.has(spaceId));
     remove.forEach((spaceId) => this.#written.delete(spaceId));
     const exported = performance.now();
     const streams: RecordedStreams = Object.fromEntries(this.#recorded);
