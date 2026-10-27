@@ -233,8 +233,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (EID.isEID(uri)) {
-          const res = this._resolveSync(uri, context, onLoad);
+        // Parsed rather than prefix-checked: a malformed `echo:` URI in stored data resolves to nothing
+        // instead of throwing out of every caller that walks an object's refs.
+        const eid = EID.tryParse(uri);
+        if (eid) {
+          const res = this._resolveSync(eid, context, onLoad);
           return res ? materializeStoredSchema(res) : undefined;
         }
 
@@ -592,7 +595,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       loadedStack: new StackTrace().getStack(),
     }));
 
-    log('trap', { spaceId, objectId });
     if (onResolve) {
       entry(this._resolveEvents, spaceId)
         .orInsert(new Map())
