@@ -230,15 +230,20 @@ const NODE_BUILTIN_STUBS = {
 
 /**
  * The plugins the dedicated worker loads by URL are entries of its own build, so they share its
- * chunks: one instance of `effect`'s identities and the RPC router across the worker.
+ * chunks: one instance of `effect`'s identities and the RPC router across the worker. Worker realms
+ * resolve the `plugin-worker` condition, which is what keeps `Capability.workerModule` modules out of the page.
  */
 const MODULE_URL: ModuleUrlPluginOptions = {
   workers: { 'src/workers/dedicated-worker.ts': ['src/workers/client-plugin.ts'] },
+  workerConditions: ['plugin-worker'],
 };
 
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
+  // `?module-url` imports (compiled module URLs handed to a worker to `import()`) and worker-realm
+  // resolution; first, since it decides a worker module's id before the resolvers below settle on the page's.
+  ModuleUrlPlugin(MODULE_URL),
   // Resolve `@dxos/*` (and matching `#*` subpath imports) via the `source`
   // condition rather than the published `dist/`. This is required at both
   // `serve` and `build` time so Vite-specific constructs survive into the
@@ -266,8 +271,6 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   slimWasm(),
   // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
   DxosLogPlugin(),
-  // `?module-url` imports: compiled module URLs handed to a worker to `import()`.
-  ModuleUrlPlugin(MODULE_URL),
   wasm(),
   // sourcemaps(),
 ];

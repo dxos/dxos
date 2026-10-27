@@ -41,3 +41,23 @@ worker entry, recorded on `globalThis.__dxModuleUrlHosted`, so the module keeps 
 whatever it shares from the worker's own chunks. It stays a dynamic import, not an extra entry, because
 Vite takes a worker build's first output chunk as the worker and entries are ordered by name. Vite copies that build's files into the importing build, and the module's URL is filled in
 when the importing chunk renders.
+
+## Worker-only variants
+
+`workerConditions` names package `imports` conditions that worker realms resolve `#…` subpaths with,
+ahead of the page's. A package whose `imports` entry declares one gives its workers that variant and the
+page the other, so the page's graph never contains the worker's:
+
+```json
+"imports": { "#capabilities": { "plugin-worker": "./gen/plugin-worker.ts", "browser": "./gen/browser.ts" } }
+```
+
+```ts
+const options = { workers: { ... }, workerConditions: ['plugin-worker'] };
+```
+
+In a build the `worker.plugins` instance applies them. Dev serves the page and its workers from one module
+graph, so the plugin tags every module under a worker entry (and every `?module-url` URL) with
+`?dx-worker`: a module both realms import gets a URL per realm, and the worker's resolves its own variant.
+List the plugin first, since it delegates to the other resolvers and must run before they settle on the
+page's id. Only `#…` subpaths (package `imports`) are re-targeted, not `exports` conditions.

@@ -48,7 +48,14 @@ export const parseFile = (filePath: string): SourceFile | null => {
     return null;
   }
   const text = fs.readFileSync(filePath, 'utf8');
-  return ts.createSourceFile(filePath, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  // By extension: a `.ts` file parsed as TSX misreads generic arrow functions as JSX and loses every
+  // declaration after the first one.
+  const kind = /\.[cm]?jsx?$/.test(filePath)
+    ? ts.ScriptKind.JSX
+    : filePath.endsWith('.tsx')
+      ? ts.ScriptKind.TSX
+      : ts.ScriptKind.TS;
+  return ts.createSourceFile(filePath, text, ts.ScriptTarget.Latest, true, kind);
 };
 
 /** Full source text of a node, as written (not re-printed). */

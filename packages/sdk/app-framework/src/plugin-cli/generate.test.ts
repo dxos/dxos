@@ -294,4 +294,34 @@ describe('dx-plugin gen', () => {
       },
     );
   });
+  it('reads a maker default from a `.ts` maker module with generic arrow functions', () => {
+    // Regression: maker modules were parsed as TSX, where `<const T extends ...>(...) =>` reads as JSX,
+    // so every declaration after the first generic arrow — and its default — went missing.
+    withPlugin(
+      {
+        'package.json': PACKAGE_JSON,
+        'src/capabilities/makers.ts': [
+          'const lazy = <const P extends readonly string[]>(name: string, spec: { provides: P }, load: () => Promise<unknown>) =>',
+          '  ({ name, spec, load });',
+          'export const workerModule = <const P extends readonly string[]>(name: string, spec: { provides: P }, load: () => Promise<unknown>) =>',
+          "  lazy(name, { ...spec, environments: ['plugin-worker'] }, load);",
+        ].join('\n'),
+        'src/capabilities/index.ts': [
+          "import * as Makers from './makers.ts';",
+          "export const Services = Makers.workerModule('Services', { provides: [] }, () => import('./services'));",
+          "export const Ui = Makers.workerModule('Ui', { provides: [], environments: ['browser'] }, () => import('./ui'));",
+        ].join('\n'),
+      },
+      (dir) => {
+        const result = generate(dir);
+        expect(result.environments).toEqual(['browser', 'plugin-worker']);
+        expect(read(dir, 'plugin-worker')).toContain("Makers.workerModule('Services'");
+        expect(read(dir, 'browser')).toContain('export const Services = undefined;');
+        // The worker condition precedes `browser`, which a worker build matches too.
+        const source = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')).imports['#capabilities']
+          .source;
+        expect(Object.keys(source)).toEqual(['plugin-worker', 'browser']);
+      },
+    );
+  });
 });

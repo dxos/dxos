@@ -74,6 +74,18 @@ same unit of contribution a tab uses.
     `strictExecutionOrder` and no per-chunk CSS, and still failed to start in production.
     A plugin built elsewhere still bundles its own copies: sharing with it needs a shared-module registry.
 
+- **D7 — a worker-only module is decided at build time, by a package condition.** `Capability.workerModule`
+  is a `lazyModule` that activates on `WorkerEvents.Startup` under the `plugin-worker` condition alone, so
+  `dx-plugin gen` stubs it out of every other `#capabilities` slice and emits a `plugin-worker` slice ordered
+  ahead of `browser`. The page resolves the `browser` slice and never contains the module. Worker realms
+  resolve the `plugin-worker` slice: `ModuleUrlPlugin`'s `workerConditions` re-targets `#…` subpaths in worker
+  builds (`config.isWorker`), and in dev, which serves the page and its workers from one module graph, it
+  tags every module under a worker entry (and every `?module-url` URL) with `?dx-worker`, so a module both
+  realms import gets a URL per realm. The plugin definition stays the one place the module is declared
+  (per review: "same plugin, additional module"). Rejected: activation by event alone (worker-only by
+  convention, and the page still built the module's chunk); a worker-only import path attached by the
+  worker entry (no resolver, but the plugin no longer lists the module).
+
 ## Risks
 
 - The base imports `LayerStack` from the `@dxos/compute-runtime` root barrel, which drags the AI
@@ -87,3 +99,6 @@ same unit of contribution a tab uses.
 - Rolldown's default splitting of the worker build can form chunk cycles. One ran `HubHttpClient`'s chunk
   before `BaseHttpClient`'s, so Composer keeps `edge-client` in one chunk group. One harmless cycle
   remains (no class crosses it); a new one surfaces as `Class extends value undefined` at worker start.
+
+- D7's dev tagging compiles every source module a worker imports a second time, under its tagged URL.
+  Pre-bundled dependencies are not tagged (their ids carry a `?v=` query already), so they keep one URL.

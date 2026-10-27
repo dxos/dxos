@@ -28,8 +28,8 @@ export type MakerDefaults = {
 const resolveModuleFile = (fromDir: string, spec: string): string | null => {
   if (spec.startsWith('.')) {
     const base = path.resolve(fromDir, spec);
-    const candidates = [`${base}.ts`, `${base}.tsx`, path.join(base, 'index.ts'), path.join(base, 'index.tsx')];
-    return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
+    const candidates = [base, `${base}.ts`, `${base}.tsx`, path.join(base, 'index.ts'), path.join(base, 'index.tsx')];
+    return candidates.find((candidate) => fs.existsSync(candidate) && fs.statSync(candidate).isFile()) ?? null;
   }
 
   const match = /^(@[^/]+\/[^/]+|[^@][^/]*)(\/.*)?$/.exec(spec);

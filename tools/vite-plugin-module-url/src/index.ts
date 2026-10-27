@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { dirname, posix, relative, resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, posix, relative, resolve } from 'node:path';
 import { RolldownMagicString } from 'rolldown';
 import { type Plugin } from 'vite';
 
@@ -16,6 +17,12 @@ export type ModuleUrlPluginOptions = {
    * `worker.plugins`, which is the one that sees the worker's build.
    */
   workers?: Readonly<Record<string, readonly string[]>>;
+  /**
+   * Package `imports` conditions a worker realm resolves `#…` subpaths with, ahead of the conditions the
+   * page uses: a package declaring one (e.g. a plugin's worker-only capabilities slice) gives the worker
+   * that variant and the page the other, so the page's graph never contains the worker's.
+   */
+  workerConditions?: readonly string[];
 };
 
 /**
@@ -31,6 +38,89 @@ const hostedFiles = new Map<string, string>();
 const placeholderModules: string[] = [];
 
 const PLACEHOLDER_RE = /__DX_MODULE_URL_(\d+)__/g;
+
+/**
+ * Query the dev server tags every module of a worker realm with. Dev serves the page and its workers
+ * from one module graph, so without it a module both import resolves to one URL for both, and only
+ * one of them could get its own condition's variant.
+ */
+const WORKER_QUERY = 'dx-worker';
+
+const WORKER_IMPORTER_RE = new RegExp(`[?&](worker_file|${WORKER_QUERY})(&|=|$)`);
+
+/** A plain file id the dev server can serve under its own URL: no query, not virtual, not pre-bundled. */
+const isTaggable = (id: string): boolean =>
+  isAbsolute(id) && !id.includes('?') && !id.startsWith('\0') && !id.includes('/node_modules/.vite/');
+
+const packageJsonCache = new Map<string, { dir: string; imports: unknown } | null>();
+
+/** The nearest package.json above a file, with its `imports` map. */
+const findPackage = (file: string): { dir: string; imports: unknown } | null => {
+  let dir = dirname(file);
+  const visited: string[] = [];
+  for (;;) {
+    const cached = packageJsonCache.get(dir);
+    if (cached !== undefined) {
+      visited.forEach((entry) => packageJsonCache.set(entry, cached));
+      return cached;
+    }
+    visited.push(dir);
+    const path = join(dir, 'package.json');
+    if (existsSync(path)) {
+      const found = { dir, imports: JSON.parse(readFileSync(path, 'utf8')).imports };
+      visited.forEach((entry) => packageJsonCache.set(entry, found));
+      return found;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      visited.forEach((entry) => packageJsonCache.set(entry, null));
+      return null;
+    }
+    dir = parent;
+  }
+};
+
+/**
+ * The target a worker condition selects in the conditions object holding `target`, when that condition
+ * precedes the key the page's resolution took: the first matching key wins, as in Node's resolution.
+ */
+const workerTarget = (node: unknown, target: string, conditions: readonly string[]): string | undefined => {
+  if (typeof node !== 'object' || node === null) {
+    return undefined;
+  }
+  const entries = Object.entries(node);
+  for (const [index, [, value]] of entries.entries()) {
+    if (value === target) {
+      const preferred = entries
+        .slice(0, index)
+        .find(([key, candidate]) => conditions.includes(key) && typeof candidate === 'string');
+      return preferred?.[1];
+    }
+    const nested = workerTarget(value, target, conditions);
+    if (nested !== undefined) {
+      return nested;
+    }
+  }
+  return undefined;
+};
+
+/** Re-targets a resolved `#…` subpath to its worker-condition variant, if its package declares one. */
+const resolveWorkerVariant = (specifier: string, resolvedId: string, conditions: readonly string[]): string => {
+  if (!specifier.startsWith('#') || conditions.length === 0 || !isAbsolute(resolvedId)) {
+    return resolvedId;
+  }
+  const pkg = findPackage(resolvedId);
+  const entry =
+    pkg && typeof pkg.imports === 'object' && pkg.imports !== null
+      ? (pkg.imports as Record<string, unknown>)[specifier]
+      : undefined;
+  if (!pkg || entry === undefined) {
+    return resolvedId;
+  }
+  const relativeTarget = `./${relative(pkg.dir, resolvedId).split('\\').join('/')}`;
+  const variant = workerTarget(entry, relativeTarget, conditions);
+  return variant ? resolve(pkg.dir, variant) : resolvedId;
+};
 
 /** Where a host worker's entry lists the loaders of the modules built into its build. */
 const HOSTED_GLOBAL = '__dxModuleUrlHosted';
@@ -61,6 +151,10 @@ const devBasePath = (base: string): string => {
  * Vite's built-ins cannot do this: `new URL('./x.ts', import.meta.url)` and `?url` copy the raw
  * source as an asset, and `?worker&url` bundles a worker entry with its exports tree-shaken away.
  *
+ * With `workerConditions`, a worker realm resolves `#…` subpaths with those conditions first: in a build
+ * through the worker bundles' own instance, in dev by giving every module under a worker entry (and every
+ * module URL) a query of its own, since dev serves the page and its workers from one module graph.
+ *
  * Dev serves the source module through `/@fs/`. In a build, a module listed under a worker in `workers`
  * is a dynamically imported chunk of that worker's build, so it shares the worker's chunks; Vite copies that
  * build's files into the importing build, and the URL is resolved once both exist. Any other module
@@ -69,9 +163,11 @@ const devBasePath = (base: string): string => {
  * a chunking scheme that assumes it sees the whole graph. Either way the plugin must be in
  * `worker.plugins` too, and `worker.format` must be `'es'`.
  */
-export const ModuleUrlPlugin = ({ workers = {} }: ModuleUrlPluginOptions = {}): Plugin => {
+export const ModuleUrlPlugin = ({ workers = {}, workerConditions = [] }: ModuleUrlPluginOptions = {}): Plugin => {
   let command: 'serve' | 'build' = 'serve';
   let base = '/';
+  /** This instance runs in a worker bundle's own build. */
+  let isWorkerBuild = false;
   /** Each hosted module, by its host worker's entry. */
   let hosts = new Map<string, string[]>();
   /** The host each hosted module is built into. */
@@ -84,6 +180,7 @@ export const ModuleUrlPlugin = ({ workers = {} }: ModuleUrlPluginOptions = {}): 
     configResolved: (config) => {
       command = config.command;
       base = config.base;
+      isWorkerBuild = config.isWorker;
       hosts = new Map(
         Object.entries(workers).map(([host, modules]) => [
           resolve(config.root, host),
@@ -119,13 +216,31 @@ export const ModuleUrlPlugin = ({ workers = {} }: ModuleUrlPluginOptions = {}): 
         }
       }
     },
-    async resolveId(source, importer) {
-      if (!source.endsWith(QUERY)) {
-        return;
-      }
+    resolveId: {
+      // Ahead of the other resolvers, which it delegates to: a worker realm's id must be chosen before
+      // one of them settles on the page's.
+      order: 'pre',
+      async handler(source, importer) {
+        if (source.endsWith(QUERY)) {
+          const resolved = await this.resolve(source.slice(0, -QUERY.length), importer, { skipSelf: true });
+          return resolved ? `${resolved.id}${QUERY}` : undefined;
+        }
 
-      const resolved = await this.resolve(source.slice(0, -QUERY.length), importer, { skipSelf: true });
-      return resolved ? `${resolved.id}${QUERY}` : undefined;
+        const inWorkerRealm = command === 'serve' ? !!importer && WORKER_IMPORTER_RE.test(importer) : isWorkerBuild;
+        if (workerConditions.length === 0 || !inWorkerRealm || (command === 'build' && !source.startsWith('#'))) {
+          return;
+        }
+        const cleanImporter = importer?.replace(/\?.*$/, '');
+        const resolved = await this.resolve(source, cleanImporter, { skipSelf: true });
+        if (!resolved || resolved.external) {
+          return resolved;
+        }
+        const id = resolveWorkerVariant(source, resolved.id, workerConditions);
+        if (command === 'build') {
+          return id === resolved.id ? resolved : { ...resolved, id };
+        }
+        return { ...resolved, id: isTaggable(id) ? `${id}?${WORKER_QUERY}` : id };
+      },
     },
     load(id) {
       if (!id.endsWith(QUERY)) {
@@ -134,7 +249,9 @@ export const ModuleUrlPlugin = ({ workers = {} }: ModuleUrlPluginOptions = {}): 
 
       const file = id.slice(0, -QUERY.length);
       if (command === 'serve') {
-        const path = JSON.stringify(posix.join(devBasePath(base), '@fs', file));
+        // Tagged as a worker realm's module, so what it imports resolves as the worker's.
+        const tag = workerConditions.length > 0 ? `?${WORKER_QUERY}` : '';
+        const path = JSON.stringify(`${posix.join(devBasePath(base), '@fs', file)}${tag}`);
         return `export default new URL(${path}, location.href).href;`;
       }
 

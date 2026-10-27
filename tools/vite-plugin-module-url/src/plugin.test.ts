@@ -28,6 +28,8 @@ const loadDevUrlModule = async (base: string | undefined, file: string): Promise
 };
 
 const fixtureDir = resolve(import.meta.dirname, '../test/fixture');
+const conditionsDir = resolve(import.meta.dirname, '../test/conditions');
+const WORKER_CONDITIONS = { workerConditions: ['plugin-worker'] };
 const sharedDir = resolve(import.meta.dirname, '../test/shared');
 
 describe('ModuleUrlPlugin', () => {
@@ -130,6 +132,74 @@ describe('ModuleUrlPlugin', () => {
     const compiled = await server.transformRequest(`/@fs${join(fixtureDir, 'geometry.ts')}`);
     expect(compiled?.code).toContain('class Path');
     expect(compiled?.code).not.toMatch(/interface Measured|satisfies/);
+  });
+
+  test('a worker build resolves `#` subpaths with the worker conditions, and the page build never sees them', async () => {
+    const outDir = await mkdtemp(join(tmpdir(), 'module-url-'));
+    onTestFinished(() => rm(outDir, { recursive: true, force: true }));
+
+    await build({
+      root: conditionsDir,
+      configFile: false,
+      logLevel: 'silent',
+      plugins: [ModuleUrlPlugin(WORKER_CONDITIONS)],
+      worker: { format: 'es', plugins: () => [ModuleUrlPlugin(WORKER_CONDITIONS)] },
+      build: {
+        outDir,
+        minify: false,
+        rollupOptions: {
+          input: join(conditionsDir, 'main.ts'),
+          preserveEntrySignatures: 'strict',
+          output: { entryFileNames: '[name].js', chunkFileNames: '[name].js' },
+        },
+      },
+    });
+
+    const main = await readFile(join(outDir, 'main.js'), 'utf8');
+    expect(main).toContain('page-realm');
+    expect(main).not.toContain('worker-realm');
+    const host = (await readdir(join(outDir, 'assets'))).find((name) => /^host-.*\.js$/.test(name));
+    const hostCode = await readFile(join(outDir, 'assets', `${host}`), 'utf8');
+    expect(hostCode).toContain('worker-realm');
+    expect(hostCode).not.toContain('page-realm');
+  });
+
+  test("serve tags a worker realm's imports, so `#` subpaths resolve with the worker conditions there only", async () => {
+    const server = await createServer({
+      root: conditionsDir,
+      configFile: false,
+      logLevel: 'silent',
+      plugins: [ModuleUrlPlugin(WORKER_CONDITIONS)],
+      server: { middlewareMode: true, ws: false },
+    });
+    onTestFinished(() => server.close());
+
+    const page = await server.transformRequest('/main.ts');
+    expect(page?.code).toContain('/realm.page.ts');
+    expect(page?.code).not.toContain('dx-worker');
+
+    const host = await server.transformRequest('/host.ts?worker_file&type=module');
+    expect(host?.code).toContain('/realm.worker.ts?dx-worker');
+    expect(host?.code).toContain('/label.ts?dx-worker');
+
+    // What a tagged module imports stays in the worker realm.
+    const label = await server.transformRequest('/label.ts?dx-worker');
+    expect(label?.code).toContain('label');
+  });
+
+  test("serve leaves a worker realm's imports untagged without worker conditions", async () => {
+    const server = await createServer({
+      root: conditionsDir,
+      configFile: false,
+      logLevel: 'silent',
+      plugins: [ModuleUrlPlugin()],
+      server: { middlewareMode: true, ws: false },
+    });
+    onTestFinished(() => server.close());
+
+    const host = await server.transformRequest('/host.ts?worker_file&type=module');
+    expect(host?.code).toContain('/realm.page.ts');
+    expect(host?.code).not.toContain('dx-worker');
   });
 
   test.each([
