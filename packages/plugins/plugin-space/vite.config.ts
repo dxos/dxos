@@ -32,6 +32,7 @@ export default defineConfig({
     'SpaceForm': 'src/types/SpaceForm.ts',
     'SpaceSchema': 'src/types/SpaceSchema.ts',
     'SpaceSurface': 'src/types/SpaceSurface.ts',
+    'ShareCache': 'src/ShareCache.ts',
     'SpaceCapability': 'src/types/SpaceCapability.ts',
     'types/Settings': 'src/types/Settings.ts',
     'CollectionOperation': 'src/types/CollectionOperation.ts',

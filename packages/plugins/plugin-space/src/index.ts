@@ -8,5 +8,6 @@ export * as CardMasonry from './CardMasonry.ts';
 export * as Containers from './Containers.ts';
 export * as Dashboard from './Dashboard.ts';
 export * as Hooks from './Hooks.ts';
+export * as ShareCache from './ShareCache.ts';
 export * from '#operations';
 export * from '#skills';

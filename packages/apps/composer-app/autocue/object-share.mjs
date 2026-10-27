@@ -16,6 +16,9 @@
  *   node .agents/skills/autocue/scripts/pair.mjs --boot-peers Alice \
  *     --flow packages/apps/composer-app/autocue/object-share.mjs --out /tmp/share
  *
+ * Against an EDGE that does not serve the `shared-objects` route yet, add `SHARE_CACHE_FROM_INVITER=1`: Bob's read is
+ * then answered from Alice's client (`serveShareCache`).
+ *
  * Keep the file free of imports, since it is loaded from outside the workspace.
  */
 
@@ -115,10 +118,10 @@ let openedAt;
 /** The stages of opening the link that the stopwatch shows, in the order they happen. */
 const STAGES = [
   ['client', 'Composer started'],
+  ['listed', 'Space opened from EDGE'],
+  ['rendered', 'Document on screen'],
   ['identity', 'Identity created'],
   ['joined', 'Joined the space'],
-  ['ready', 'Space ready'],
-  ['rendered', 'Document on screen'],
 ];
 
 /**
@@ -177,16 +180,16 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
     } catch {}
     mark('client', !!client?.initialized);
     mark('identity', !!client?.halo.identity.get());
-    mark('joined', !!space);
-    // `SpaceState.SPACE_READY`.
-    mark('ready', space?.state.get() === 3);
+    mark('listed', !!space);
+    // `SpaceState.SPACE_READY`, reported by the client's own services once the join lands.
+    mark('joined', !!space && !space.internal.provisional && space.state.get() === 3);
     checkRendered();
     // The script runs before the document has a body, and boot may replace what the body holds.
     if (!panel.isConnected && document.body) {
       document.body.append(panel);
     }
     render();
-    if (reached.rendered !== undefined) {
+    if (reached.rendered !== undefined && reached.joined !== undefined) {
       clearInterval(interval);
       observer.disconnect();
     }
@@ -197,7 +200,7 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
   observer.observe(document, { subtree: true, childList: true, characterData: true });
 };
 
-/** Bob's stage times in ms from pressing Enter, once the shared document is on screen. */
+/** Bob's stage times in ms from pressing Enter, once the shared document is on screen and the join has landed. */
 const timeOpening = async (page) => {
   const deadline = Date.now() + JOIN_TIMEOUT;
   for (;;) {
@@ -206,7 +209,7 @@ const timeOpening = async (page) => {
       page.evaluate(() => globalThis.shareOpenTiming).catch(() => undefined),
       new Promise((resolve) => setTimeout(() => resolve(undefined), PROBE_TIMEOUT)),
     ]);
-    if (timing?.reached.rendered !== undefined) {
+    if (timing?.reached.rendered !== undefined && timing?.reached.joined !== undefined) {
       return Object.fromEntries(
         Object.entries(timing.reached).map(([key, at]) => [key, Math.round(timing.timeOrigin + at - openedAt)]),
       );
@@ -216,6 +219,40 @@ const timeOpening = async (page) => {
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
+};
+
+/** The share link's payload, as `encodeSharePayload` in plugin-space wrote it. */
+const decodeSharePayload = async (link) => {
+  const encoded = new URL(link).searchParams.get('share').replaceAll('-', '+').replaceAll('_', '/');
+  const bytes = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return JSON.parse(await new Response(stream).text());
+};
+
+/**
+ * Answers Bob's read of the shared space as EDGE's `shared-objects` route would, for an EDGE that does not serve it
+ * yet: from Alice's client, which holds the same documents EDGE would read from its replicator — the space root and the
+ * documents of the link's scope. It checks neither the signature nor the scope, which EDGE's own tests cover.
+ */
+const serveShareCache = async (alice, bob, link) => {
+  const { spaceId, objects } = await decodeSharePayload(link);
+  const cache = await alice.page.evaluate(
+    ({ spaceId, objects }) => {
+      const space = globalThis.dxos.client.spaces.get(spaceId);
+      const [root, ...rows] = space.internal.db.exportWorkingSet({ maxBytes: 64 * 1024 * 1024 });
+      const base64 = (bytes) => btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''));
+      return {
+        spaceRootUrl: `automerge:${root.documentId}`,
+        rows: [root, ...rows.filter(({ objectId }) => objectId && objects.includes(objectId))].map(
+          ({ documentId, heads, bytes }) => ({ documentId, heads, data: base64(bytes) }),
+        ),
+      };
+    },
+    { spaceId, objects },
+  );
+  await bob.context.route('**/db/spaces/*/shared-objects', (route) =>
+    route.fulfill({ headers: { 'access-control-allow-origin': '*' }, json: { success: true, data: cache } }),
+  );
 };
 
 export const steps = [
@@ -318,6 +355,9 @@ export const steps = [
     subtitle: 'QA-3 step 3: Open the link on the guest',
     run: async ({ peers: { alice, bob } }) => {
       await alice.click(alice.page.getByTestId('share-object-dialog.done'));
+      if (process.env.SHARE_CACHE_FROM_INVITER) {
+        await serveShareCache(alice, bob, shareLink);
+      }
       await bob.context.addInitScript(STOPWATCH, {
         text: SHARED_TEXT,
         spaceId: new URL(shareLink).pathname.split('/')[2],

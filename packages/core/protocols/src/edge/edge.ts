@@ -222,29 +222,27 @@ export type ReadSharedObjectsRequest = {
   signature: string;
 };
 
-/** One database object a share link reads. Only objects stored in Automerge documents are served; feed objects are not. */
-export type SharedObject = {
-  id: string;
-  /** The Automerge document holding the object. */
+/**
+ * One Automerge document of a shared space, in the shape a client seeds its database with (`WorkingSetRow` in
+ * `@dxos/echo-client`), with the bytes in base64.
+ */
+export type ShareCacheRow = {
   documentId: string;
-  /** Heads of that document as the index read it; empty when the index did not record them. */
+  /** The document's heads as EDGE holds it. */
   heads: string[];
-};
-
-/** A document holding shared objects and no others, so a reader can load it without seeing anything outside the scope. */
-export type SharedDocument = {
-  documentId: string;
-  /** Base64 of the document's Automerge bytes, which `Automerge.loadIncremental` applies to an empty document. */
+  /** Base64 of the document's Automerge bytes. */
   data: string;
 };
 
 /**
- * Shared objects EDGE has indexed, and the documents that hold them. An object not indexed yet, a feed object, or one
- * whose document also holds objects outside the scope is missing rather than an error.
+ * A shared space as a client opens it before it has joined: the space root, which routes each object to its document,
+ * and the documents of the shared objects. An object not indexed yet, a feed object, or one whose document also holds
+ * objects outside the scope is missing rather than an error.
  */
 export type ReadSharedObjectsResponseBody = {
-  objects: SharedObject[];
-  documents: SharedDocument[];
+  /** `automerge:<documentId>` of the space root, which `rows` holds. */
+  spaceRootUrl: string;
+  rows: ShareCacheRow[];
 };
 
 /**

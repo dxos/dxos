@@ -24,7 +24,13 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
 import { SpaceOperationError } from '../../operations/errors.ts';
-import { type SharePayload, type ShareTarget, decodeSharePayload, readShareTarget } from '../../util/index.ts';
+import {
+  type SharePayload,
+  type ShareTarget,
+  decodeSharePayload,
+  readShareTarget,
+  waitUntilJoined,
+} from '../../util/index.ts';
 
 /** How long a fresh browser may take to create its identity (onboarding does that for a share link). */
 const IDENTITY_TIMEOUT = 60_000;
@@ -83,8 +89,9 @@ const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, paylo
     // Kept until now: onboarding reads it from the address bar, after this handler starts, to create the identity.
     removeQueryParam(SpaceOperation.SHARE_PARAM);
 
+    // A space listed from the link's cache before the join is not this client's yet, so the join below still runs.
     const existing = client.spaces.get(spaceId);
-    if (existing) {
+    if (existing && !existing.internal.provisional) {
       // A member who joined through another link replicates only that link's objects; a full member is unaffected.
       yield* Effect.tryPromise(() => existing.internal.extendSyncScope(payload.objects)).pipe(
         Effect.timeout(EXTEND_TIMEOUT),
@@ -210,6 +217,7 @@ const joinAndOpen = (
         navigation: 'immediate',
       });
       yield* Effect.tryPromise(() => space.waitUntilReady());
+      yield* waitUntilJoined(space);
     }).pipe(
       Effect.timeout(SPACE_TIMEOUT),
       Effect.mapError((cause) => new SpaceOperationError({ message: 'The shared space did not open.', cause })),

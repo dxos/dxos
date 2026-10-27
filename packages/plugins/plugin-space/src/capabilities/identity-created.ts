@@ -17,6 +17,8 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { SpaceCapabilities } from '#types';
 
+import { waitUntilJoined } from '../util/index.ts';
+
 /** Longest this identity's own spaces wait for the shared space, short of the module activation timeout. */
 const SHARE_JOIN_WAIT = 20_000;
 
@@ -36,7 +38,10 @@ const waitForSharedSpace = (client: Client): Effect.Effect<void> =>
     });
     return Effect.sync(() => subscription.unsubscribe());
   }).pipe(
-    Effect.flatMap((space) => Effect.tryPromise(() => space.waitUntilReady())),
+    // Joined, not only listed: a space listed from the link's cache is ready before the join has begun.
+    Effect.flatMap((space) =>
+      Effect.tryPromise(() => space.waitUntilReady()).pipe(Effect.andThen(waitUntilJoined(space))),
+    ),
     Effect.ignore,
     Effect.andThen(Effect.sleep(SHARE_RENDER_SETTLE)),
     Effect.timeoutOrElse({ duration: SHARE_JOIN_WAIT, orElse: () => Effect.void }),

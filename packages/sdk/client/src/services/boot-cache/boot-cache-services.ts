@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { create, isMessage } from '@bufbuild/protobuf';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
+import { asyncTimeout } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
@@ -16,7 +18,15 @@ import {
 } from '@dxos/client-protocol';
 import { type ExportWorkingSetOptions, type WorkingSetRow } from '@dxos/echo-client';
 import { BaseError } from '@dxos/errors';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { fromPublicKey } from '@dxos/protocols/buf';
+import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  QuerySpacesResponseSchema,
+  Space_PipelineStateSchema,
+  SpaceSchema,
+} from '@dxos/protocols/buf/dxos/client/services_pb';
 import { markMilestone } from '@dxos/util';
 
 import { BootCacheStore, type BootSnapshot, type RecordedStreams } from './boot-cache-store.ts';
@@ -41,6 +51,21 @@ export class ServicesUnavailableError extends BaseError.extend(
 
 export const DEFAULT_BOOT_CACHE_MAX_BYTES = 16 * 1024 * 1024;
 
+/** How long opening waits for {@link BootCacheOptions.pendingSpaces} before it opens without them. */
+const PENDING_SPACES_TIMEOUT = 5_000;
+
+/**
+ * A space this client has not joined yet, listed and opened from documents fetched elsewhere — a share link's, from
+ * EDGE — until the services list it.
+ */
+export type PendingSpace = {
+  spaceId: string;
+  spaceKey: PublicKey;
+  /** `automerge:<documentId>` of the space root, which {@link rows} holds. */
+  spaceRootUrl: string;
+  rows: WorkingSetRow[];
+};
+
 export type BootCacheOptions = {
   /** Upper bound on the working-set bytes persisted across every space. */
   maxBytes?: number;
@@ -49,6 +74,11 @@ export type BootCacheOptions = {
    * start its worker once the page has what it needs; a client without a snapshot opens them at once.
    */
   servicesGate?: () => Promise<void>;
+  /**
+   * Spaces to list and open before this client has joined them, such as the one a share link is joining. Each stays
+   * listed until the services list it, and its database opens from the rows given.
+   */
+  pendingSpaces?: () => Promise<PendingSpace[]>;
 };
 
 /** A space whose working set the boot cache persists. */
@@ -85,6 +115,9 @@ export class BootCacheServices implements ClientServicesProvider {
   readonly #store = new BootCacheStore();
   readonly #maxBytes: number;
   readonly #servicesGate?: () => Promise<void>;
+  readonly #loadPendingSpaces?: () => Promise<PendingSpace[]>;
+  /** Spaces listed from {@link BootCacheOptions.pendingSpaces} that the services have not listed yet, by space id. */
+  readonly #pending = new Map<string, PendingSpace>();
   readonly #providerOpened = Promise.withResolvers<void>();
   /** Messages each recorded stream delivered this session, written with the next {@link persist}. */
   readonly #recorded = new Map<string, unknown[]>();
@@ -102,11 +135,12 @@ export class BootCacheServices implements ClientServicesProvider {
 
   constructor(
     provider: ClientServicesProvider,
-    { maxBytes = DEFAULT_BOOT_CACHE_MAX_BYTES, servicesGate }: BootCacheOptions = {},
+    { maxBytes = DEFAULT_BOOT_CACHE_MAX_BYTES, servicesGate, pendingSpaces }: BootCacheOptions = {},
   ) {
     this.#provider = provider;
     this.#maxBytes = maxBytes;
     this.#servicesGate = servicesGate;
+    this.#loadPendingSpaces = pendingSpaces;
     // Every deferred call receives the rejection too; this records it when no call is waiting.
     this.#providerOpened.promise.catch((error) => log.warn('client services failed to open', { error }));
     const resolve = Effect.tryPromise({
@@ -150,7 +184,15 @@ export class BootCacheServices implements ClientServicesProvider {
     return this.#snapshot !== undefined;
   }
 
+  /** Whether a space is listed only from {@link BootCacheOptions.pendingSpaces}, which the services do not list yet. */
+  isPending(spaceId: string): boolean {
+    return this.#pending.has(spaceId);
+  }
+
   async open(): Promise<void> {
+    // Fetched while the store is read and the services open, which is what it is waited for alongside.
+    const pending =
+      this.#loadPendingSpaces && !this.#providerOpen ? this.#readPendingSpaces(this.#loadPendingSpaces) : undefined;
     const snapshot = this.#providerOpen
       ? undefined
       : await this.#store.read().catch((error) => {
@@ -173,6 +215,9 @@ export class BootCacheServices implements ClientServicesProvider {
         markMilestone('boot-cache.services-open');
       });
     opening.then(this.#providerOpened.resolve, this.#providerOpened.reject);
+    for (const space of (await pending) ?? []) {
+      this.#pending.set(space.spaceId, space);
+    }
     if (snapshot) {
       markMilestone('boot-cache.opened-from-cache');
       log('opened from boot cache', { spaces: snapshot.spaces.size });
@@ -189,7 +234,7 @@ export class BootCacheServices implements ClientServicesProvider {
 
   /** The working set a space last held, handed out once: a later open in this session starts from the services. */
   takeWorkingSet(spaceId: string): WorkingSetRow[] | undefined {
-    const rows = this.#snapshot?.spaces.get(spaceId);
+    const rows = this.#snapshot?.spaces.get(spaceId) ?? this.#pending.get(spaceId)?.rows;
     this.#snapshot?.spaces.delete(spaceId);
     return rows;
   }
@@ -231,6 +276,10 @@ export class BootCacheServices implements ClientServicesProvider {
     const listed = new Set<string>();
     let rowCount = 0;
     for (const space of spaces) {
+      // Not this client's to keep until it has joined; the services list it once it has.
+      if (this.#pending.has(space.id)) {
+        continue;
+      }
       listed.add(space.id);
       const rows = space.exportWorkingSet({ maxBytes: remaining });
       if (rows.length === 0) {
@@ -261,6 +310,38 @@ export class BootCacheServices implements ClientServicesProvider {
     markMilestone('boot-cache.written', JSON.stringify(written));
   }
 
+  async #readPendingSpaces(load: () => Promise<PendingSpace[]>): Promise<PendingSpace[]> {
+    try {
+      return await asyncTimeout(load(), PENDING_SPACES_TIMEOUT);
+    } catch (error) {
+      log.warn('pending spaces not read, opening without them', { error });
+      return [];
+    }
+  }
+
+  /**
+   * Lists each pending space as a space ready to open from its rows, in place of what the services list for it. A space
+   * the services list as ready stops being pending, so from then on the services alone decide how it is listed; until
+   * then their earlier states (joining, initializing) would close the database the rows opened.
+   */
+  #withPendingSpaces(message: unknown, fromServices: boolean): unknown {
+    if (this.#pending.size === 0 || !isMessage(message, QuerySpacesResponseSchema)) {
+      return message;
+    }
+    if (fromServices) {
+      message.spaces
+        .filter(({ state }) => state === SpaceState.SPACE_READY)
+        .forEach(({ id }) => this.#pending.delete(id));
+    }
+    if (this.#pending.size === 0) {
+      return message;
+    }
+    const spaces = message.spaces.filter(({ id }) => !this.#pending.has(id));
+    return create(QuerySpacesResponseSchema, {
+      spaces: [...spaces, ...[...this.#pending.values()].map(serializePendingSpace)],
+    });
+  }
+
   #intercept(tag: string, policy: 'latest' | 'initial'): DeferredStreamInterceptor {
     return (payload, live) => {
       const key = streamKey(tag, payload);
@@ -287,7 +368,24 @@ export class BootCacheServices implements ClientServicesProvider {
           }),
         ),
       );
+      if (tag === QUERY_SPACES) {
+        const replayed = Stream.fromIterable(replay ?? []).pipe(
+          Stream.map((message) => this.#withPendingSpaces(message, false)),
+        );
+        return Stream.concat(replayed, recorded.pipe(Stream.map((message) => this.#withPendingSpaces(message, true))));
+      }
       return replay?.length ? Stream.concat(Stream.fromIterable(replay), recorded) : recorded;
     };
   }
 }
+
+const QUERY_SPACES = 'SpacesService.querySpaces';
+
+/** A pending space as the services would list a ready one, with only what opening its database needs. */
+const serializePendingSpace = ({ spaceId, spaceKey, spaceRootUrl }: PendingSpace) =>
+  create(SpaceSchema, {
+    id: spaceId,
+    spaceKey: fromPublicKey(spaceKey),
+    state: SpaceState.SPACE_READY,
+    pipeline: create(Space_PipelineStateSchema, { directoryUrl: spaceRootUrl }),
+  });

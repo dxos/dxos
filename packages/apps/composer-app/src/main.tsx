@@ -622,12 +622,23 @@ const main = async () => {
   // lazily-imported module would otherwise sit behind. Its call surfaces failures; this one only
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
+  // A share link's space opens from what EDGE serves for the link's invitation, before the guest has joined it.
+  const sharePayload = url.searchParams.get(PARAM_SHARE);
+  const shareEdgeUrl = config.values.runtime?.services?.edge?.url;
+  const pendingSpaces =
+    sharePayload && shareEdgeUrl
+      ? async () => {
+          const ShareCache = await import('@dxos/plugin-space/ShareCache');
+          return ShareCache.load({ payload: sharePayload, edgeUrl: shareEdgeUrl });
+        }
+      : undefined;
   const client = new Client({
     config,
     services,
-    bootCache: BOOT_CACHE
-      ? { servicesGate: DEFER_WORKER ? () => whenIdle(WORKER_DEFER_CAP_MS) : undefined }
-      : undefined,
+    bootCache:
+      BOOT_CACHE || pendingSpaces
+        ? { servicesGate: DEFER_WORKER ? () => whenIdle(WORKER_DEFER_CAP_MS) : undefined, pendingSpaces }
+        : undefined,
   });
   void client
     .initialize()

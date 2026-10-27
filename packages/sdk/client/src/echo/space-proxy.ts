@@ -91,6 +91,9 @@ const INITIALIZATION_RETRY_MAX_MS = 30_000;
 /** Hands a space the working set a boot cache persisted for it, once. */
 export type TakeWorkingSet = (spaceId: string) => WorkingSetRow[] | undefined;
 
+/** Whether a space is listed only from documents fetched before this client joined it. */
+export type IsPendingSpace = (spaceId: string) => boolean;
+
 /**
  * Returns the {@link Space} that owns the given object, or `undefined`.
  *
@@ -192,6 +195,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     private readonly _echoClient: EchoClient,
     private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
     private readonly _takeWorkingSet?: TakeWorkingSet,
+    private readonly _isPending?: IsPendingSpace,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -218,6 +222,9 @@ export class SpaceProxy implements Space, CustomInspectable {
       },
       get data() {
         return self._data;
+      },
+      get provisional() {
+        return self._isPending?.(self.id) ?? false;
       },
       createEpoch: this._createEpoch.bind(this),
       getCredentials: this._getCredentials.bind(this),

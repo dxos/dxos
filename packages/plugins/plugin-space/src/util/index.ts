@@ -3,6 +3,7 @@
 //
 
 export * from './collection-path.ts';
+export * from './joined-space.ts';
 export * from './object-form.ts';
 export * from './settings-space.ts';
 export * from './share-payload.ts';
