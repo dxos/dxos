@@ -895,6 +895,20 @@ feature code-index: CodeIndex
   note: Seeded from its review of 2026-10-27: 56 done, 6 untested, 2 partial, 1 diverged.
 ```
 
+### New features
+
+```mdl
+feature plugin-zen.sleep-fade: Timed Dreams fade out instead of stopping
+  status: planned
+  specs: [packages/plugins/plugin-zen/PLUGIN.mdl#F-6]
+  depends: [plugin-zen]
+  note: |
+    A timed Dream is for falling asleep, and an abrupt stop when the timer runs out wakes the listener.
+    Over the last 30 seconds of a timed Dream (the whole Dream when it is shorter), the master volume
+    ramps down to silence, then playback stops as it does today. Stopping by hand and untimed Dreams
+    are unaffected.
+```
+
 ## Changelog
 
 ```mdl
@@ -903,4 +917,12 @@ decision D-1: The feature map starts with one feature per reviewed spec, each ma
   by: agent:claude-code
   for: user:dmaretskyi
   why: The spec reviews of 2026-10-27 judged every spec in the repo, so a status derived from them is the most accurate starting point; per-spec features can be split later.
+```
+
+```mdl
+decision D-2: Add plugin-zen.sleep-fade — a timed Dream fades its master volume to silence over its last 30 seconds before it stops.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The first new feature to carry down the waterfall end to end; small, user-facing, and checkable by a unit test.
 ```
