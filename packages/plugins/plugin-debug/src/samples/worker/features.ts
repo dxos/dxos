@@ -23,7 +23,8 @@ export type FeatureSeed = {
   readonly description: string;
   /** The spec block it is described by; F-1 is seeded, the agent writes the rest. */
   readonly feat: string;
-  readonly subfeatures?: readonly Feature.Subfeature[];
+  /** Its parts, each added as a feature whose parent is this one. */
+  readonly subfeatures?: readonly { readonly name: string; readonly status: Feature.Status }[];
   /** Indexes into the template's task list. */
   readonly tasks: readonly number[];
 };
@@ -71,18 +72,19 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
       const projectRef = Ref.make(project.project);
       const features: Feature.Feature[] = [];
       for (const seed of FEATURES) {
-        features.push(
-          yield* Database.add(
-            Feature.make({
-              name: seed.name,
-              description: seed.description,
-              status: 'planned',
-              specs: [`${SPEC_PATH}#${seed.feat}`],
-              subfeatures: seed.subfeatures?.map((subfeature) => ({ ...subfeature })),
-              project: projectRef,
-            }),
-          ),
+        const feature = yield* Database.add(
+          Feature.make({
+            name: seed.name,
+            description: seed.description,
+            status: 'planned',
+            specs: [`${SPEC_PATH}#${seed.feat}`],
+            project: projectRef,
+          }),
         );
+        for (const subfeature of seed.subfeatures ?? []) {
+          yield* Database.add(Feature.make({ ...subfeature, parent: Ref.make(feature) }));
+        }
+        features.push(feature);
       }
 
       for (const [index, feature] of features.entries()) {

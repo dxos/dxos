@@ -1,0 +1,388 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-linear/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: LinearPlugin
+
+The sync engine is real and well tested at the unit level. `operations/sync.ts` pulls a team's
+projects and issues with a snapshot-driven three-way merge (remote wins on conflict), then pushes
+only diverged fields through `projectUpdate` and `issueUpdate`, sending `null` to clear priority and
+estimate. `sync.test.ts` covers the merge cases, title, status, priority and project-description
+pushes, and set membership. `linear-api.ts` holds the GraphQL client with jittered exponential retry
+on 429/5xx and the priority and status mappers.
+
+The biggest divergence is the object model: Linear projects mirror as `TaskSet` objects (not
+`Project`), and an issue's project is expressed as `TaskSet.tasks` membership, not a `Task.project`
+ref. The Task status vocabulary is `started`, not `in-progress`, and estimates are converted from
+points to t-shirt sizes. Workflow states are fetched whenever a team has any issues, not only when a
+status push is needed. Untested: `GetLinearTeams`, `maxDaysBack`, soft-delete skipping, retry, and
+most of the mapping table; no test runs T-1, T-7, T-8 or QA-1.
+
+Of 48 items: 11 done, 20 untested, 8 partial, 5 diverged, 4 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Viewer: The viewer schema matches and feeds onTokenCreated and testConnection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#Viewer, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#fetchViewer]
+  note: Used by `capabilities/connector.ts` to stamp `accessToken.account`; no test calls `fetchViewer`.
+```
+
+```mdl
+verdict Team: The team schema matches.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#Team, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#fetchTeams]
+  note: Fields match; only the sync meter test's mock returns a team, and nothing asserts on it.
+```
+
+```mdl
+verdict Project: The Linear project schema matches and is exercised by the pull tests.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#Project]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict StateType: All six state categories are a Schema literal union.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#StateType]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict IssueState: The issue state schema matches.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#IssueStateSchema]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict Issue: The issue schema matches, with an extra projectMilestone ref.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#Issue]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict WorkflowState: The workflow state schema matches.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#WorkflowState, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#fetchTeamWorkflowStates]
+  note: The meter test's mock returns an empty state list; status push tests stub `resolveStateId`, so no test exercises real workflow states.
+```
+
+```mdl
+verdict SyncTarget: Targets use the shared ConnectorSpec RemoteTarget schema.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#RemoteTarget]
+  note: `RemoteTarget` has id, name, optional description and an extra `metadata` record; no Linear test produces targets.
+```
+
+```mdl
+verdict SyncOptions: SyncOptions carries an optional maxDaysBack.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/types/LinearOperation.ts#SyncOptions]
+  note: Registered as the connector's `optionsSchema`; no test sets it.
+```
+
+```mdl
+verdict PullResult: The sync output's pulled struct carries teams, projects and tasks counts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/types/LinearOperation.ts#SyncLinearTeams]
+  note: Declared inline in the `SyncLinearTeams` output, not as a named type; the handler that sums it per binding has no test.
+```
+
+```mdl
+verdict GetLinearTeams: Lists reachable teams sorted by key without creating objects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/types/LinearOperation.ts#GetLinearTeams, github:dxos/dxos/packages/plugins/plugin-linear/src/operations/get-teams.ts]
+  walkthrough:
+    - The operation declares the connection input and GetSyncTargetsOutput. github:dxos/dxos/packages/plugins/plugin-linear/src/types/LinearOperation.ts#GetLinearTeams
+    - The handler fetches teams, sorts by key case-insensitively and maps them to targets. github:dxos/dxos/packages/plugins/plugin-linear/src/operations/get-teams.ts
+  note: Target names are formatted `<key> · <name>`. No test invokes the handler.
+```
+
+```mdl
+verdict SyncLinearTeams: Pull-then-push per bound team works, but the input and error shapes differ from the spec.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/types/LinearOperation.ts#SyncLinearTeams, github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#syncTeamBinding, github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  walkthrough:
+    - The operation takes the connection and an optional priority cursor id. github:dxos/dxos/packages/plugins/plugin-linear/src/types/LinearOperation.ts#SyncLinearTeams
+    - Binding.syncAll fans out over every external cursor of the connection, isolating failures. github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll
+    - syncTeamBinding pulls projects, milestones and issues, pushes divergences, records the cursor outcome and toasts. github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#syncTeamBinding
+    - pushTeamUpdates diffs each mirrored object against its snapshot and patches Linear. github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates
+  note: |
+    The input has `priority?: string` (a cursor id to sync first) instead of `team?: Ref<Project>`. A missing database fails
+    with `ConnectorSync.DatabaseMissingError`, not `IntegrationDatabaseMissing`, and an unbound team adds
+    `LinearTeamUnresolvedError`. Projects mirror as `TaskSet`, and milestones are pulled too.
+```
+
+```mdl
+verdict F-1.1: Discovery returns sorted targets and creates nothing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/get-teams.ts]
+  note: The handler only reads; no test checks the sort or the absence of local objects.
+```
+
+```mdl
+verdict F-2.1: A new remote project creates a TaskSet, not a Project.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#upsertProject]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: `upsertProject` creates `TaskSet.make` keyed by the `linear.app` foreign id with name and description; the spec says `Project`.
+```
+
+```mdl
+verdict F-2.2: Project merge works per field with remote-wins, but on a TaskSet.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#upsertProject]
+  note: Name and description go through `mergeField` and the snapshot is refreshed; the object is a `TaskSet`. No test covers a project merge (merge tests use tasks).
+```
+
+```mdl
+verdict F-3.1: A new remote issue creates a Task keyed by its id with mapped fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#upsertTask]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-3.2: Task fields merge per field, remote wins on conflict, snapshot refreshed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#upsertTask]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-3.3: maxDaysBack becomes an updatedAt >= filter on the issues query.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#sinceFromOptions, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#fetchTeamIssues]
+  note: `sinceFromOptions` computes the ISO cutoff and `fetchTeamIssues` sends `{ updatedAt: { gte } }`; no test sets `maxDaysBack`.
+```
+
+```mdl
+verdict F-3.4: Project membership is TaskSet.tasks, not a Task.project ref.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#setTaskContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: `setTaskContainer` pushes the task into the project's `TaskSet.tasks` and sets the ECHO parent; no `Task.project` field is written. Tested by the set-membership and move tests.
+```
+
+```mdl
+verdict F-4.1: Diverged project fields are pushed alone and the snapshot refreshed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-4.2: Soft-deleted objects are skipped on push.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates]
+  note: `Obj.isDeleted(local)` guards both loops; no test deletes an object.
+```
+
+```mdl
+verdict F-5.1: Diverged title or description is pushed alone.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-5.2: Status pushes resolve a stateId by category, but states are fetched whenever issues exist.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#syncTeamBinding, github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#taskStatusToStateType]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: |
+    `syncTeamBinding` fetches workflow states once per team whenever `remoteIssuesById` is non-empty, not only when a status
+    diverged, so read-only syncs still pay the call. Missing mapping logs a warning and skips status, as specified. The
+    test stubs `resolveStateId`.
+```
+
+```mdl
+verdict F-5.3: Priority pushes as 1-4, null to clear.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#taskPriorityToPriorityNumber]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-5.4: Estimate pushes, null to clear, after a size-to-points conversion.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#taskEstimateToEstimatePoints]
+  note: Local estimates are t-shirt sizes converted back to representative points (`xl` → 8), so a pushed estimate can differ from the original; no test edits an estimate.
+```
+
+```mdl
+verdict F-6.1: Priority 1 maps to urgent.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#priorityNumberToTaskPriority]
+  note: No test uses priority 1.
+```
+
+```mdl
+verdict F-6.2: Priority 2 maps to high.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#priorityNumberToTaskPriority]
+  note: No test uses priority 2.
+```
+
+```mdl
+verdict F-6.3: Priority 3 maps to medium.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#priorityNumberToTaskPriority]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-6.4: Priority 4 maps to low.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#priorityNumberToTaskPriority]
+  note: No test uses priority 4.
+```
+
+```mdl
+verdict F-6.5: Priority 0 maps to undefined.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#priorityNumberToTaskPriority]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-7.1: started maps to Task status started, not in-progress.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#stateTypeToTaskStatus]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: The Task status vocabulary is `todo | started | done | failed | cancelled`; there is no `in-progress`.
+```
+
+```mdl
+verdict F-7.2: completed and canceled map to done.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#stateTypeToTaskStatus]
+  note: No test uses those state types.
+```
+
+```mdl
+verdict F-7.3: triage, backlog and unstarted map to todo.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#stateTypeToTaskStatus]
+  note: No test uses those state types.
+```
+
+```mdl
+verdict F-7.4: todo resolves to unstarted.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#taskStatusToStateType]
+  note: Push tests stub `resolveStateId`, so `taskStatusToStateType` is never called by a test.
+```
+
+```mdl
+verdict F-7.5: started resolves to started; there is no in-progress status.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#taskStatusToStateType]
+  note: Maps `started` → `started`; the spec's `in-progress` does not exist. Also maps `failed` and `cancelled` → `canceled`, which the spec omits. Untested.
+```
+
+```mdl
+verdict F-7.6: done resolves to completed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#taskStatusToStateType]
+  note: Not called by any test.
+```
+
+```mdl
+verdict F-8.1: Jittered exponential retry on 429, 5xx and transport errors, but up to 3 retries rather than 3 attempts.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#linearGraphQL, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#shouldRetry]
+  note: `Schedule.upTo({ times: 3 })` allows three retries after the first try (four attempts), and timeouts and transport failures also retry. No test.
+```
+
+```mdl
+verdict F-8.2: Other 4xx and GraphQL errors are not retried.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#shouldRetry, github:dxos/dxos/packages/plugins/plugin-linear/src/services/linear-api.ts#linearGraphQL]
+  note: `shouldRetry` returns false for non-429 status errors and for `LinearGraphQLError`; no test.
+```
+
+```mdl
+verdict F-8.3: A failed binding records lastError and siblings continue.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#syncTeamBinding, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  note: `Cursor.recordError` stamps the binding and `syncAll` turns each failure into an outcome; no Linear test runs a failing binding.
+```
+
+```mdl
+verdict T-1: No test invokes GetLinearTeams.
+  status: missing
+  note: `sync.test.ts` and `plugin.test.ts` never call the discovery handler.
+```
+
+```mdl
+verdict T-2: A test creates a project via upsertProject but asserts only the later push.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#upsertProject]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: The project-description push test calls `upsertProject` for a new id but does not assert name, description or snapshot; the object is a `TaskSet`.
+```
+
+```mdl
+verdict T-3: The first-pull test creates a Task; project membership is tested separately.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#upsertTask]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: Asserts title, status and priority snapshot only (not description or estimate); membership is tested via `TaskSet.tasks`, not `Task.project`.
+```
+
+```mdl
+verdict T-4: Local-wins and remote-wins are tested in separate cases, not together.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#upsertTask]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: 'local-only edit is preserved' covers description and 'remote-only change' covers title; no single test edits both and checks both snapshots.
+```
+
+```mdl
+verdict T-5: Project push is tested with description, not name.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: The test asserts `updateProject` gets `{ description }` only and does not check the snapshot refresh.
+```
+
+```mdl
+verdict T-6: Status push is tested with a stubbed state resolver.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.ts#pushTeamUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-linear/src/operations/sync.test.ts]
+  note: No workflow-state fetch and no `completed` category lookup; the test injects `resolveStateId` and does not assert the snapshot.
+```
+
+```mdl
+verdict T-7: No test sets maxDaysBack.
+  status: missing
+  note: The meter test's mock ignores the query filter; nothing asserts `updatedAt` filtering.
+```
+
+```mdl
+verdict T-8: No test deletes a mirrored object before push.
+  status: missing
+  note: Searched `sync.test.ts` for deletion; none.
+```
+
+```mdl
+verdict QA-1: Blocked manual test; no automation.
+  status: missing
+  note: Requires a live Linear OAuth token; no fixture-backed run exists.
+```

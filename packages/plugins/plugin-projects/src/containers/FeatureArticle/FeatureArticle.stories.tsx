@@ -94,11 +94,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The form over the feature's fields, then its dependencies, dependents, subfeatures, tasks and showcases. */
+/** The form over the feature's fields and requirements, then its subfeatures, then how it relates to the rest. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByDisplayValue(FEATURE_NAME, undefined, { timeout: 10_000 })).toBeInTheDocument();
+    await expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3);
+    const subfeatures = within(canvas.getByTestId('feature-article.subfeatures'));
+    await expect(await subfeatures.findByText('IMAP')).toBeInTheDocument();
     const relations = within(await canvas.findByTestId('feature-article.relations', undefined, { timeout: 10_000 }));
     await expect(await relations.findByText('OAuth tokens')).toBeInTheDocument();
     await expect(relations.getByText('Compose & send')).toBeInTheDocument();
@@ -112,6 +115,17 @@ const pick = async (canvasElement: HTMLElement, testId: string, label: string) =
   await userEvent.click(await canvas.findByTestId(testId, undefined, { timeout: 10_000 }));
   // The picker queries the space only once open, so its options arrive after the popup does.
   await userEvent.click(await screen.findByRole('option', { name: new RegExp(label) }, { timeout: 5_000 }));
+};
+
+/** A subfeature typed into its field is added as a feature beneath this one. */
+export const AddSubfeature: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = await canvas.findByTestId('feature-article.add-subfeature', undefined, { timeout: 10_000 });
+    await userEvent.type(input, 'Outlook{Enter}');
+    const subfeatures = within(canvas.getByTestId('feature-article.subfeatures'));
+    await expect(await subfeatures.findByText('Outlook', undefined, { timeout: 5_000 })).toBeInTheDocument();
+  },
 };
 
 /** A dependency is added from the picker and removed from its row. */

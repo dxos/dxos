@@ -284,7 +284,8 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                     cached.instructions === instructions &&
                     cached.location === location &&
                     cached.process === executable.key &&
-                    cached.guard === guard &&
+                    // No guard asked for is no demand for an unguarded process, so it reuses a guarded one.
+                    (guard === undefined || cached.guard === guard) &&
                     !Process.isTerminal(cached.handle.status.state)
                   ) {
                     return cached.session;

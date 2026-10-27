@@ -32,9 +32,9 @@ export const types = [
 ];
 
 /**
- * Writes card models into a database as the objects and relations they are derived from — features with
- * their subfeatures, `DependsOn`, tasks and milestones with `Implements`, and showcases with `Demonstrates` —
- * all in one project. Ids in the models are only keys within the seed.
+ * Writes card models into a database as the objects and relations they are derived from — features with their
+ * subfeatures (as features naming their parent), `DependsOn`, tasks and milestones with `Implements`, and showcases
+ * with `Demonstrates` — all in one project. Ids in the models are only keys within the seed.
  */
 export const seed = (
   db: Database.Database,
@@ -48,12 +48,15 @@ export const seed = (
         name: model.name,
         description: model.description,
         status: model.status,
+        requirements: model.requirements.map((requirement) => ({ ...requirement })),
         specs: [...model.specs],
-        subfeatures: model.subfeatures.map((subfeature) => ({ ...subfeature })),
         code: model.code.map((link) => ({ ...link })),
         project: Ref.make(project),
       }),
     );
+    for (const subfeature of model.subfeatures) {
+      db.add(Feature.make({ name: subfeature.name, status: subfeature.status, parent: Ref.make(feature) }));
+    }
     // A model's link names the key only; the mnemonic comes from the object the seed creates.
     const link = model.link ? DXN.tryMake(model.link) : undefined;
     if (link) {
@@ -82,11 +85,11 @@ export const seed = (
         db.add(Feature.makeDependsOn({ [Relation.Source]: feature, [Relation.Target]: dependency }));
       }
     }
-    for (const { title, done, milestone: milestoneName } of model.tasks) {
+    for (const { title, done, active, milestone: milestoneName } of model.tasks) {
       const task = db.add(
         Task.make({
           title,
-          status: done ? 'done' : 'started',
+          status: done ? 'done' : active ? 'started' : 'todo',
           milestone: milestoneName ? Ref.make(milestone(milestoneName)) : undefined,
         }),
       );

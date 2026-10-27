@@ -4,11 +4,12 @@
 //
 
 /**
- * Records every showcase flow (`packages/{apps,plugins}/<pkg>/autocue/showcase.mjs`) unattended, in two variants, and
- * writes REPORT.md + report.json, so a night's run can be read in the morning and the failing flows fixed:
+ * Records every showcase flow (`packages/{apps,plugins}/<pkg>/autocue/showcase.mjs`) unattended, in each variant
+ * `--themes` names, and writes REPORT.md + report.json, so a night's run can be read in the morning and the failing flows fixed:
  *
  * - light: the showcase clip — 60 fps, no captions or ident, the `clip: <name>` step cut to the flow's `CLIP_MS`.
  * - dark: the demo — 30 fps, captions, the whole take trimmed of dead air and bookended by the Composer ident.
+ * - clip-dark: the light clip recorded in the dark theme, for a dark grid (`--themes clip-dark`).
  *
  * A failed take is retried, then logged and skipped; it never ends the run.
  *
@@ -17,8 +18,8 @@
  *
  * `--grid-min` is the closest a clip may repeat in the grid; a subset run (`--only`) has too few clips for 3, so lower it.
  *
- * After the flows, the light clips are laid out as the grid (`layout.mjs`) and the Grid composite is rendered to
- * `<out>/composite.mp4` (and `temp/composite/composite.mp4`) by `render.mjs`, from a storybook scoped to
+ * After the flows, the first clip variant's clips are laid out as the grid (`layout.mjs`) and the Grid composite is
+ * rendered to `<out>/composite.mp4` (and `temp/composite/composite.mp4`) by `render.mjs`, from a storybook scoped to
  * `tools/autocue` on :9009 that the runner starts if nothing answers there and stops afterwards.
  *
  * `--publish` uploads each flow's light and dark videos once both pass and sets them as the plugin's showcase entry in
@@ -26,7 +27,7 @@
  * in `.secrets/r2.env`). A run recorded without `--publish` is published later with `publish.mjs --run <out>`.
  *
  * Composer must answer on :4173; without `--no-serve` the runner starts it if it does not, and stops it at the end.
- * Recording rules: SHOWCASE.md beside it.
+ * Recording rules: docs/SHOWCASE.md.
  */
 
 import { execFileSync, spawn } from 'node:child_process';
@@ -67,9 +68,13 @@ for (const theme of THEMES) {
 
 /** How each variant is recorded (`run.sh` reads these) and finished. */
 const VARIANTS = {
-  light: { THEME: 'light', FPS: '60', CAPTIONS: 'off' },
-  dark: { THEME: 'dark', FPS: '30', CAPTIONS: 'on' },
+  'light': { THEME: 'light', FPS: '60', CAPTIONS: 'off' },
+  'dark': { THEME: 'dark', FPS: '30', CAPTIONS: 'on' },
+  'clip-dark': { THEME: 'dark', FPS: '60', CAPTIONS: 'off' },
 };
+
+/** Variants recorded as bare clips for the Grid grid, rather than bookended demos. */
+const isClip = (theme) => VARIANTS[theme].CAPTIONS === 'off';
 
 // run.sh calls `node`; the runner's own Node (24, for the driver's dependencies) goes first on PATH.
 const env = { ...process.env, PATH: `${path.dirname(process.execPath)}:${process.env.PATH}` };
@@ -174,29 +179,28 @@ const demoCut = async (take, name) => {
   return path.join(dir, 'session.webm');
 };
 
-/** Turns a take into its variant's video: the cut clip (light) or the trimmed, bookended demo (dark). */
+/** Turns a take into its variant's video: the cut clip (light, clip-dark) or the trimmed, bookended demo (dark). */
 const finish = async (theme, take, name, ms) => {
   const out = path.join(CLIPS, theme, `${name}.mp4`);
-  const done =
-    theme === 'light'
-      ? await run('bash', [
-          path.join(HERE, 'cutstep.sh'),
-          take,
-          path.join(CLIPS, theme),
-          `clip: ${name}`,
-          name,
-          '0',
-          String(ms / 1000),
-        ])
-      : await run(process.execPath, [
-          path.join(ROOT, '.agents/skills/autocue/scripts/trim-static.mjs'),
-          ...['--in', await demoCut(take, name), '--out', path.join(CLIPS, theme, `${name}.webm`)],
-          ...['--ident', 'composer', '--theme', 'dark', '--mp4', '--fps', '30', '--duration', 'off', '--upload', 'off'],
-        ]);
+  const done = isClip(theme)
+    ? await run('bash', [
+        path.join(HERE, 'cutstep.sh'),
+        take,
+        path.join(CLIPS, theme),
+        `clip: ${name}`,
+        name,
+        '0',
+        String(ms / 1000),
+      ])
+    : await run(process.execPath, [
+        path.join(ROOT, '.agents/skills/autocue/scripts/trim-static.mjs'),
+        ...['--in', await demoCut(take, name), '--out', path.join(CLIPS, theme, `${name}.webm`)],
+        ...['--ident', 'composer', '--theme', 'dark', '--mp4', '--fps', '30', '--duration', 'off', '--upload', 'off'],
+      ]);
   if (done.code !== 0 || !existsSync(out)) {
     return {
       ok: false,
-      error: `${theme === 'light' ? 'cut' : 'trim'} failed: ${done.output.trim().split('\n').pop()}`,
+      error: `${isClip(theme) ? 'cut' : 'trim'} failed: ${done.output.trim().split('\n').pop()}`,
     };
   }
   // A step can pass on a blank plank, so each video gets frames a person can check in the morning.
@@ -304,11 +308,12 @@ for (const [index, file] of flows.entries()) {
   }
 }
 
-// The light clips become the Grid grid, placed so no clip repeats near itself; a failure here is reported, not fatal.
-const layout = THEMES.includes('light')
+// The clips become the Grid grid, placed so no clip repeats near itself; a failure here is reported, not fatal.
+const gridVariant = THEMES.find(isClip);
+const layout = gridVariant
   ? await run(process.execPath, [
       path.join(HERE, 'layout.mjs'),
-      ...['--run', path.relative(ROOT, OUT), '--min', options['grid-min']],
+      ...['--run', path.relative(ROOT, OUT), '--min', options['grid-min'], '--variant', gridVariant],
     ])
   : undefined;
 
@@ -326,7 +331,7 @@ if (layout?.code === 0 && !options['no-composite']) {
     for (let attempt = 0; attempt < 2 && !(render?.code === 0 && existsSync(out)); attempt++) {
       render = await run(process.execPath, [
         path.join(HERE, 'render.mjs'),
-        ...['--out', out, '--fps', '60', '--theme', 'light', '--url', options.storybook],
+        ...['--out', out, '--fps', '60', '--theme', VARIANTS[gridVariant].THEME, '--url', options.storybook],
       ]);
     }
     if (render.code === 0 && existsSync(out)) {

@@ -95,7 +95,7 @@ describe('loadDiagramSet', () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
     const drawings = await loadDiagramDrawings(db, architectureDiagrams(files));
-    expect(drawings.size).toBe(12);
+    expect(drawings.size).toBe(15);
 
     const violations: string[] = [];
     for (const [id, drawing] of drawings) {
@@ -128,7 +128,7 @@ describe('loadDiagramSet', () => {
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
     const drawings = await loadDiagramDrawings(db, architectureDiagrams(files));
-    expect(drawings.size).toBe(12);
+    expect(drawings.size).toBe(15);
 
     const counts = [...drawings].map(([id, drawing]) => {
       // A drill-down box is a frame onto its child drawing, so it counts as a box of this scene.

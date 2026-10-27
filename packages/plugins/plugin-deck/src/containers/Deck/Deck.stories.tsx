@@ -166,7 +166,7 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
             <Listbox.Item
               key={message.id}
               id={message.id}
-              classNames='rounded-sm border border-separator p-3 text-start hover:bg-hover-surface'
+              classNames='rounded-sm border border-separator p-trim-md text-start hover:bg-hover-surface'
               data-testid='story.launcher.row'
             >
               {message.title}

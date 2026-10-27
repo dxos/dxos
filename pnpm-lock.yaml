@@ -1745,7 +1745,7 @@ pnpmfileChecksum: sha256-HfdXnQ57lkGOnGDIqwvpKXC8RFCIbD00oMkDJI7W7aQ=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.49':
-    hash: f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a
+    hash: 7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443
     path: patches/@automerge__automerge-repo@2.6.0-subduction.49.patch
   '@automerge/automerge-subduction@0.21.0':
     hash: 2faca23c0b6c3b7cd22bfbfeb8a85419307be0d8daab8e0230d542ae8057af48
@@ -2181,7 +2181,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../../packages/common/keys
@@ -2263,7 +2263,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@automerge/automerge-subduction':
         specifier: 0.21.0
         version: 0.21.0(patch_hash=2faca23c0b6c3b7cd22bfbfeb8a85419307be0d8daab8e0230d542ae8057af48)
@@ -5994,7 +5994,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -6197,7 +6197,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@automerge/automerge-subduction':
         specifier: 0.21.0
         version: 0.21.0(patch_hash=2faca23c0b6c3b7cd22bfbfeb8a85419307be0d8daab8e0230d542ae8057af48)
@@ -6322,7 +6322,7 @@ importers:
     dependencies:
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@dxos/crypto':
         specifier: workspace:*
         version: link:../../../common/crypto
@@ -7880,7 +7880,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: 'catalog:'
         version: 2.6.0-subduction.49
@@ -10283,6 +10283,9 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10292,6 +10295,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/plugin-typesafe':
+        specifier: workspace:*
+        version: link:../plugin-typesafe
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -10936,6 +10942,9 @@ importers:
       '@dxos/plugin-kanban':
         specifier: workspace:*
         version: link:../plugin-kanban
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -10948,12 +10957,18 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-spacetime':
+        specifier: workspace:*
+        version: link:../plugin-spacetime
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
       '@dxos/plugin-tldraw':
         specifier: workspace:*
         version: link:../plugin-tldraw
+      '@dxos/plugin-voxel':
+        specifier: workspace:*
+        version: link:../plugin-voxel
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -11057,6 +11072,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      chess.js:
+        specifier: 'catalog:'
+        version: 1.4.0
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -12318,6 +12336,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -13185,6 +13206,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../common/permission
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
@@ -14120,6 +14144,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.5.0
         version: 3.5.0
+      '@codemirror/commands':
+        specifier: 'catalog:'
+        version: 6.11.1
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6
@@ -17573,7 +17600,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -18920,6 +18947,9 @@ importers:
       '@dxos/react-ui-calendar':
         specifier: workspace:*
         version: link:../../ui/react-ui-calendar
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -20382,6 +20412,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      playwright:
+        specifier: 'catalog:'
+        version: 1.63.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -20645,7 +20678,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -20797,6 +20830,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -20890,7 +20926,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@bufbuild/protobuf':
         specifier: 'catalog:'
         version: 2.11.0
@@ -21166,7 +21202,7 @@ importers:
         version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -21741,6 +21777,12 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -21753,6 +21795,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
@@ -21799,9 +21844,30 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
     devDependencies:
-      '@dxos/keys':
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
+      '@dxos/ai':
         specifier: workspace:*
-        version: link:../../common/keys
+        version: link:../../core/compute/ai
+      '@dxos/compute-hyperformula':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-hyperformula
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/plugin-canvas':
         specifier: workspace:*
         version: link:../../plugins/plugin-canvas
@@ -21817,18 +21883,42 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-presenter':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-presenter
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-preview
       '@dxos/plugin-review':
         specifier: workspace:*
         version: link:../../plugins/plugin-review
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sheet
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-tasks
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-testing
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -47427,13 +47517,13 @@ snapshots:
 
   '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.49':
     dependencies:
-      '@automerge/automerge-repo': 2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)
+      '@automerge/automerge-repo': 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo@2.6.0-subduction.49(patch_hash=f2cd1c865cada8c459ebb58ad1a936ccf4464aacb805527143dbc73e40458a9a)':
+  '@automerge/automerge-repo@2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)':
     dependencies:
       '@automerge/automerge': 3.5.0
       '@automerge/automerge-subduction': 0.21.0(patch_hash=2faca23c0b6c3b7cd22bfbfeb8a85419307be0d8daab8e0230d542ae8057af48)

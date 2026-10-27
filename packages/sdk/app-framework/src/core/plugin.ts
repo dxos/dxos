@@ -17,6 +17,7 @@ import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protoco
 
 import * as ActivationEvent from './activation-event.ts';
 import * as Capability from './capability.ts';
+import * as HotModules from './hot-modules.ts';
 import type * as PluginManager from './plugin-manager/index.ts';
 
 //
@@ -216,6 +217,8 @@ export type ModuleEntry = {
   readonly provides?: readonly Capability.AnyTag[];
   readonly activate: (props?: any) => Effect.Effect<any, Error, any>;
   readonly load?: () => Promise<unknown>;
+  /** What the module was authored from, when `activate` wraps it; defaults to `activate`. */
+  readonly source?: unknown;
 };
 
 class PluginModuleImpl implements PluginModule {
@@ -224,19 +227,33 @@ class PluginModuleImpl implements PluginModule {
   readonly activation: ActivationSpec;
   readonly activate: PluginModule['activate'];
   readonly load: PluginModule['load'];
+  readonly source: unknown;
 
   constructor(options: {
     id: string;
     activation: ActivationSpec;
     activate: PluginModule['activate'];
     load: PluginModule['load'];
+    source: unknown;
   }) {
     this.id = options.id;
     this.activation = options.activation;
     this.activate = options.activate;
     this.load = options.load;
+    this.source = options.source;
   }
 }
+
+/**
+ * Whether two modules come from the same authored definition — the same module object, as when a
+ * re-created plugin reuses it. Re-creating a plugin keeps such a module running rather than repeating
+ * its activation's side effects.
+ */
+export const isSameDefinition = (left: PluginModule, right: PluginModule): boolean =>
+  left instanceof PluginModuleImpl &&
+  right instanceof PluginModuleImpl &&
+  left.id === right.id &&
+  left.source === right.source;
 
 /**
  * Runtime plugin metadata, derived from the `@dxos/protocols` registry schemas (protocols owns the
@@ -440,6 +457,7 @@ export function addModule<T>(
         provides: module.provides,
         activate: () => module(pluginOptions),
         load: module.load,
+        source: module,
       }));
   }
   // Direct-call style: addModule(builder, moduleOptions).
@@ -507,6 +525,7 @@ const resolveModule = (
     // declared requires; the manager supplies exactly those services plus the ambient ones.
     activate: moduleOptions.activate as PluginModule['activate'],
     load: moduleOptions.load,
+    source: moduleOptions.source ?? moduleOptions.activate,
   });
 };
 
@@ -656,6 +675,7 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     if (!mod || typeof mod.default !== 'function') {
       return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'missing-default' } }));
     }
+    HotModules.trackPlugin(mod, id);
     const result = mod.default(options);
     if (!isPlugin(result)) {
       return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'invalid-plugin' } }));

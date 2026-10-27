@@ -433,12 +433,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
     };
 
+    const done = () => settled || cancelled;
     const diskOnly = source !== 'network';
     for (const candidateSpaceId of candidateSpaceIds) {
       const db = this._databases.get(candidateSpaceId);
+      let dbAttempt: Promise<unknown> = Promise.resolve();
       if (db) {
         pendingDb++;
-        void db
+        dbAttempt = db
           .loadObjectCoreById(entityId, { diskOnly, returnWithUnsatisfiedDeps: true })
           .then((core) => {
             pendingDb--;
@@ -461,10 +463,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const handles = [...db._knownFeedHandles()];
         if (handles.length > 0) {
           pendingQueue++;
-          void this.#searchFeedHandles(candidateSpaceId, entityId, handles)
+          // A disk load misses definitively, and most ids name document objects, so the feeds (each
+          // read whole on a miss) are searched only once the database has not answered.
+          void this.#searchFeedHandles(candidateSpaceId, entityId, handles, {
+            before: diskOnly ? dbAttempt : undefined,
+            done,
+          })
             .then((item) => {
               pendingQueue--;
-              if (cancelled) {
+              // Settled by the database: polling now would outlive the cleanup that already ran.
+              if (done()) {
                 return;
               }
               if (item != null) {
@@ -508,6 +516,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     spaceId: SpaceId,
     entityId: EntityId,
     handles: ReturnType<DatabaseImpl['_knownFeedHandles']>,
+    { before, done }: { before?: Promise<unknown>; done?: () => boolean } = {},
   ): Promise<Entity.Unknown | undefined> {
     for (const handle of handles) {
       const cached = handle.getCachedObjectById(entityId);
@@ -515,11 +524,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return cached;
       }
     }
+    await before;
     for (const handle of handles) {
+      if (done?.()) {
+        return undefined;
+      }
       const [item] = await handle.getObjectsById([entityId]);
       if (item != null) {
         return item;
       }
+    }
+    if (done?.()) {
+      return undefined;
     }
     return this._resolveObjectInSpaceFeeds(spaceId, entityId);
   }
