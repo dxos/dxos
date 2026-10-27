@@ -127,9 +127,10 @@ const createMarkdownActions = ({
   return Atom.make((get) => {
     // Subscribe to state changes.
     const stateSnapshot = get(state);
-    // Image, blocks, lists and headings carry collapse ranks, so a narrow plank folds them before the unranked
-    // controls a user reaches for more often: formatting, search, view mode, and contributed actions (comments,
-    // recording). An unranked item folds last first, so view mode — last in the row — is first to go without one.
+    // Lists, blocks and image carry collapse ranks, so a narrow plank folds them before the unranked controls a
+    // user reaches for more often: formatting, search, view mode, and contributed actions (comments, recording).
+    // Which control goes first is a question of what a user can spare, not of what anything else depends on:
+    // a tour reaches its target wherever the toolbar put it. See `Tour.toolbarStep`.
     return MenuBuilder.make()
       .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
       .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
