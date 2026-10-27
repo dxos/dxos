@@ -878,7 +878,9 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
   const snapshot = Cursor.readSnapshot<RepoSnapshot>(binding, externalId);
 
   const hourly = snapshot?.readAt === undefined || now - snapshot.readAt >= REPO_READ_INTERVAL_MS;
-  if (hourly) {
+  // A pending local description edit is merged against a fresh read, or the push could overwrite a newer GitHub edit.
+  const localEdit = snapshot?.description !== undefined && snapshot.description !== (repo.description ?? '');
+  if (hourly || localEdit) {
     const result = yield* GitHubApi.fetchRepoConditional(repo.owner, repo.name, snapshot?.etag).pipe(
       Effect.catchIf(
         (error) => {
@@ -898,8 +900,10 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
     } else if (snapshot) {
       Cursor.writeSnapshot(binding, externalId, { ...snapshot, readAt: now });
     }
-    // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
-    // carries only the milestones its issues name.
+  }
+  // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
+  // carries only the milestones its issues name.
+  if (hourly) {
     const milestones = yield* GitHubApi.fetchRepoMilestones(repo.owner, repo.name);
     requests++;
     for (const milestone of milestones) {
