@@ -231,6 +231,10 @@ is invisible there until something publishes it.
   day (06:00 UTC); to bump edge to a commit that landed since, dispatch it first.
 - The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
+- **Skills edge shares live here.** edge installs them with `npx skills` (recorded in its
+  `skills-lock.json`), so change a skill here, never in edge's copy; a skill folder holds no
+  repo-specific content (rules go in each repo's `.agents/rules/`). `scripts/skills-sync.ts` reports
+  which copies are behind or edited in place, and `agents/routines/skills-sync.md` acts on it.
 
 ## Long-running tasks
 
