@@ -91,7 +91,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     await expect.poll(() => prompts.find((text) => text.includes('Reply to Dana'))).toBeDefined();
     const prompt = prompts.find((text) => text.includes('Reply to Dana')) ?? '';
     expect(prompt).toContain(`${Obj.getURI(task)}; made from ${Obj.getURI(source)}`);
-    expect(prompt).toContain('and only these');
+    expect(prompt).toContain('Work on these tasks only');
     expect(prompt).not.toContain(Obj.getURI(other));
   });
 

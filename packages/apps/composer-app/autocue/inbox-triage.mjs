@@ -214,6 +214,12 @@ export const steps = [
         selector: `${REQUEST} [data-testid="assistant.request.preview"] button >> nth=0`,
         label: 'Reply',
       });
+      // Expanding does not scroll the thread, so bring the whole preview into view.
+      await page.waitForTimeout(600);
+      await page
+        .locator(`${REQUEST} [data-testid="assistant.request.preview"]`)
+        .first()
+        .evaluate((element) => element.scrollIntoView({ block: 'end', behavior: 'smooth' }));
       await caption(demo, 'The reply it will send, under the request');
       await page.waitForTimeout(BEAT * 3);
     },

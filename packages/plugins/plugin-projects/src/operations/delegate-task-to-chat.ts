@@ -214,12 +214,12 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
                 project,
                 context: project ? yield* projectContext(project) : undefined,
               });
-        // Another agent's brief is the system writing on the reader's behalf, so it shows as context
-        // rather than as words the reader typed.
+        // The brief is the system writing on the reader's behalf, so it shows as context rather than as
+        // words the reader typed.
         const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
           chat,
           prompt,
-          ...(harness !== SessionConfig.COMPOSER_HARNESS && { disposition: 'synthetic' as const }),
+          disposition: 'synthetic',
         }).pipe(Effect.exit);
         if (Exit.isFailure(started)) {
           log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
@@ -233,13 +233,14 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
 /**
  * Composer's opening prompt: the tasks by address, so the agent starts from them rather than finding
  * them, and fenced to exactly these — a project's other tasks sit one hop away and are not this
- * session's to work.
+ * session's to work. Its first line is all the collapsed brief shows in the chat.
  */
-const OPENING_PROMPT = concat`
-  You have been assigned the tasks below, and only these. The project may hold other tasks; they are
-  not yours, so do not read, change, or act on them.
-  Work on your tasks in order. This may require you to read, update, or create artifacts associated
-  with the project. Mark each task ready for review as you complete it.
+const OPENING_PROMPT = 'You have been assigned the tasks below.';
+
+const SCOPE_PROMPT = concat`
+  Work on these tasks only: the project may hold others, and they are not yours, so do not read,
+  change, or act on them. Work on your tasks in order. This may require you to read, update, or
+  create artifacts associated with the project. Mark each task ready for review as you complete it.
 `;
 
 /** Added when the tasks came from objects (an email), which are bound to the chat beside them. */
@@ -260,9 +261,13 @@ const renderOpeningPrompt = Effect.fnUntraced(function* (tasks: readonly Task.Ta
     }),
   );
   const hasSources = entries.some((entry) => entry.hasSources);
-  return [OPENING_PROMPT, '', ...entries.map((entry) => entry.line), ...(hasSources ? ['', SOURCES_PROMPT] : [])].join(
-    '\n',
-  );
+  return [
+    OPENING_PROMPT,
+    ...entries.map((entry) => entry.line),
+    '',
+    SCOPE_PROMPT,
+    ...(hasSources ? ['', SOURCES_PROMPT] : []),
+  ].join('\n');
 });
 
 /**
