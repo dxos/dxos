@@ -21,7 +21,7 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const CallExtension = Capability.lazyModule(
   'CallExtension',
   {
-    requires: [MeetingCapabilities.State],
+    requires: [MeetingCapabilities.State, Capabilities.AtomRegistry],
     provides: [CallsCapabilities.EventHandler],
     // Both features must be live: the handler extends calls but reads meeting state.
     activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),

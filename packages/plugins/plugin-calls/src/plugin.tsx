@@ -6,6 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   AppGraphBuilder,
+  CallEvents,
   CallManager,
   CallTransport,
   OperationHandler,
@@ -18,6 +19,7 @@ import { meta } from '#meta';
 
 export const CallsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CallEvents),
   Plugin.addModule(CallManager),
   Plugin.addModule(CallTransport),
   Plugin.addModule(OperationHandler),

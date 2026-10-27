@@ -37,6 +37,17 @@ export const CallManager = Capability.lazyModule(
   },
   () => import('./call-manager.ts'),
 );
+// Without it the `EventHandler` contract is never invoked, so a meeting in a call never transcribes.
+export const CallEvents = Capability.lazyModule(
+  'CallEvents',
+  {
+    requires: [Capabilities.AtomRegistry, CallsCapabilities.Manager],
+    provides: [],
+    activatesOn: ClientEvents.Initialized,
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./call-events.ts'),
+);
 export const CallTransport = Capability.lazyModule(
   'CallTransport',
   {
