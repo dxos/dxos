@@ -30,7 +30,7 @@ the main character.
 
 ### Mail
 
-- 1 `Mailbox` "Inbox": 36 messages in 24 threads, plus 5 thread summaries in the annotations feed.
+- 1 `Mailbox` "Inbox": 36 messages in 24 threads, plus 5 thread summaries in the annotations feed, whose people are object links (chips with a preview card).
 - Threads share a `threadId` (subject slug); each reply's `parentMessage` is the previous message.
 - Senders are Actors (name, email) copied from the people seeds. Non-person senders: Stripe, SCA
   Events, UPS, Daily Coffee News, Stack & Co. Packaging.

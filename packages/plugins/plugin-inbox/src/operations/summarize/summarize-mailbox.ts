@@ -15,11 +15,12 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { normalizeEmail } from '@dxos/extractor-lib';
 import { log } from '@dxos/log';
-import { Message, Person } from '@dxos/types';
+import { Message, type Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as InboxOperation from '../../types/InboxOperation.ts';
 import * as Mailbox from '../../types/Mailbox.ts';
+import { type ObjectReference, keepKnownObjectLinks, referencesPrompt } from '../../types/SummaryText.ts';
 import { isAiUnavailableCause } from '../extractor/ai-gate.ts';
 import { withMailboxLock } from '../mailbox-lock.ts';
 
@@ -83,10 +84,38 @@ const transcriptFor = (thread: readonly Message.Message[]): string => {
   return entries.join('\n\n---\n\n');
 };
 
-export const promptFor = (thread: readonly Message.Message[]): string => {
+/** Caps the linkable objects listed per thread, so a large address book cannot crowd out the transcript. */
+const MAX_REFERENCES = 12;
+
+export const promptFor = (thread: readonly Message.Message[], references: readonly ObjectReference[] = []): string => {
   const subject = thread.map((message) => stringProperty(message, 'subject')).find(Boolean) ?? '(none)';
   const count = thread.length;
-  return `${SUMMARY_PROMPT}\n\nSUBJECT: ${subject}\nMESSAGES: ${count}\n\n${transcriptFor(thread)}`;
+  const known = referencesPrompt(references.slice(0, MAX_REFERENCES));
+  return [SUMMARY_PROMPT, known, `SUBJECT: ${subject}\nMESSAGES: ${count}`, transcriptFor(thread)]
+    .filter((section) => section.length > 0)
+    .join('\n\n');
+};
+
+const EMAIL_PATTERN = /[^\s<>,;"'()]+@[^\s<>,;"'()]+\.[^\s<>,;"'()]+/g;
+
+/** Every address a thread names: its senders plus the `to`/`cc` headers. */
+export const threadAddresses = (thread: readonly Message.Message[]): Set<string> => {
+  const addresses = new Set<string>();
+  for (const message of thread) {
+    const sender = normalizeEmail(message.sender?.email);
+    if (sender) {
+      addresses.add(sender);
+    }
+    for (const header of ['to', 'cc']) {
+      for (const match of stringProperty(message, header)?.match(EMAIL_PATTERN) ?? []) {
+        const address = normalizeEmail(match);
+        if (address) {
+          addresses.add(address);
+        }
+      }
+    }
+  }
+  return addresses;
 };
 
 /**
@@ -145,11 +174,73 @@ const summarize = Effect.fnUntraced(function* (
 
   // The gate: senders the space already knows as people.
   const people = yield* Database.query(Filter.type(Person.Person)).run;
-  const known = new Set(
-    people.flatMap((person) =>
-      (person.emails ?? []).map((email) => normalizeEmail(email.value)).filter((email): email is string => !!email),
-    ),
-  );
+  const personByEmail = new Map<string, Person.Person>();
+  for (const person of people) {
+    for (const email of person.emails ?? []) {
+      const address = normalizeEmail(email.value);
+      if (address) {
+        personByEmail.set(address, person);
+      }
+    }
+  }
+  const known = new Set(personByEmail.keys());
+
+  // Organizations are loaded once each: several correspondents usually share an employer.
+  const organizations = new Map<string, Organization.Organization | undefined>();
+  const organizationOf = Effect.fnUntraced(function* (person: Person.Person) {
+    const ref = person.organization;
+    if (!ref) {
+      return undefined;
+    }
+    const key = ref.uri.toString();
+    if (!organizations.has(key)) {
+      const organization = yield* Database.load(ref).pipe(Effect.catch(() => Effect.succeed(undefined)));
+      organizations.set(key, organization);
+    }
+    return organizations.get(key);
+  });
+
+  /**
+   * The people and organizations a thread's summary may link: its participants, and anyone the
+   * space knows whose full name the thread mentions.
+   */
+  const referencesFor = Effect.fnUntraced(function* (thread: readonly Message.Message[]) {
+    const text = thread.map(messageText).join('\n');
+    const participants = new Set<Person.Person>();
+    for (const address of threadAddresses(thread)) {
+      const person = personByEmail.get(address);
+      if (person) {
+        participants.add(person);
+      }
+    }
+    for (const person of people) {
+      if (person.fullName && text.includes(person.fullName)) {
+        participants.add(person);
+      }
+    }
+
+    const references: ObjectReference[] = [];
+    const seen = new Set<string>();
+    for (const person of participants) {
+      const organization = yield* organizationOf(person);
+      const label = person.fullName ?? person.preferredName;
+      if (label) {
+        const uri = Obj.getURI(person).toString();
+        if (!seen.has(uri)) {
+          seen.add(uri);
+          references.push({ label, uri, kind: 'person', detail: organization?.name });
+        }
+      }
+      if (organization?.name) {
+        const uri = Obj.getURI(organization).toString();
+        if (!seen.has(uri)) {
+          seen.add(uri);
+          references.push({ label: organization.name, uri, kind: 'organization' });
+        }
+      }
+    }
+    return references;
+  });
 
   // Already-summarized threads are skipped by their newest message's id rather than by feed
   // position, so a cursor reset never re-bills work whose result is already in the feed — and a
@@ -191,8 +282,11 @@ const summarize = Effect.fnUntraced(function* (
     }
 
     const subject = threadSubject(thread);
-    const text = yield* LanguageModel.generateText({ prompt: promptFor(thread) }).pipe(
-      Effect.map((response) => response.text.trim()),
+    const references = (yield* referencesFor(thread)).slice(0, MAX_REFERENCES);
+    const linkable = new Set(references.map((reference) => reference.uri));
+    const text = yield* LanguageModel.generateText({ prompt: promptFor(thread, references) }).pipe(
+      // Links to anything not offered are unlinked, so every chip in the tile resolves.
+      Effect.map((response) => keepKnownObjectLinks(response.text.trim(), linkable)),
       Effect.provide(modelLayer),
       // A summary is advisory: one failed generation skips its thread rather than failing the
       // run and stranding the summaries already appended. An UNAVAILABLE model is different — it

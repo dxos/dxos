@@ -18,6 +18,9 @@ import * as Mailbox from '../types/Mailbox.ts';
 /** Default cron for the cascade (daily, early); the user edits the schedule on the trigger. */
 const DEFAULT_CRON = '0 6 * * *';
 
+/** Feed items per firing; a sync commits mail in pages, and one cascade run covers a whole page. */
+const NEW_MAIL_BATCH_SIZE = Trigger.MAX_FEED_BATCH_SIZE;
+
 const Input = Schema.Struct({
   mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ title: 'Mailbox' }),
 });
@@ -50,6 +53,40 @@ export const analyzeMailbox: RoutineCapabilities.Template = {
           spec: Trigger.specTimer(DEFAULT_CRON),
           // Resolved at scaffold time so the routine's input is inspectable; an unnamed mailbox
           // yields none and the cascade reports the correspondent stage as skipped.
+          input: { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
+          concurrency: 1,
+        }),
+      });
+    }),
+};
+
+/**
+ * "Analyze New Mail" automation template: the same cascade as {@link analyzeMailbox}, fired by the
+ * mailbox feed instead of a clock, so mail that a sync appends is classified and summarized as soon as
+ * it lands. The cascade's own cursors make a firing over already-analyzed mail a no-op.
+ */
+export const analyzeNewMail: RoutineCapabilities.Template = {
+  id: 'org.dxos.routine.analyzeNewMail',
+  label: 'Analyze New Mail',
+  icon: AI_ACTION_ICON,
+  inputSchema: Input,
+  scaffold: ({ name, input }) =>
+    Effect.gen(function* () {
+      if (!Ref.isRef(input?.mailbox)) {
+        return yield* Effect.fail(
+          new InboxOperationError({ message: 'Analyze New Mail template requires a mailbox.' }),
+        );
+      }
+      const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
+      // The feed spec takes the live feed object, not its ref.
+      const feed = yield* Database.load(mailbox.feed);
+
+      return Wire.makeRoutine({
+        name: name ?? `Analyze new mail — ${mailbox.name ?? 'Mailbox'}`,
+        spec: { kind: 'runnable', runnable: Ref.fromURI(InboxOperation.AnalyzeMailbox.meta.key) },
+        trigger: Trigger.make({
+          enabled: true,
+          spec: Trigger.specFeed(feed, { batchSize: NEW_MAIL_BATCH_SIZE }),
           input: { mailbox: Ref.make(mailbox), me: Mailbox.identityAddresses(mailbox) },
           concurrency: 1,
         }),

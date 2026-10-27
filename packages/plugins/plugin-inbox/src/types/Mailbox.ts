@@ -12,6 +12,8 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
+import { toPlainSummary } from './SummaryText.ts';
+
 export const SKILL_KEY = 'org.dxos.skill.inbox';
 
 // TOOD(burdon): Factor out Message/Email utils with tests.
@@ -444,7 +446,8 @@ export const getSummaryText = (annotation: MessageLike): string | undefined => {
 /**
  * Newest summary per source message, keyed by message id — the read model for UI that renders
  * summaries beside messages it already has (the article), where the full {@link mergeAnnotations}
- * pairing would mean re-walking the message feed.
+ * pairing would mean re-walking the message feed. Values are plain text (see {@link toPlainSummary}),
+ * since every reader renders them as a single row.
  */
 export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, string> => {
   const newest = new Map<string, MessageLike>();
@@ -463,7 +466,7 @@ export const summaryIndex = (annotations: Iterable<MessageLike>): Map<string, st
   for (const [parent, annotation] of newest) {
     const summary = getSummaryText(annotation);
     if (summary !== undefined) {
-      index.set(parent, summary);
+      index.set(parent, toPlainSummary(summary));
     }
   }
   return index;

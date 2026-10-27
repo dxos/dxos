@@ -7,10 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { analyzeMailbox } from '../templates/analyze-mailbox.ts';
+import { analyzeMailbox, analyzeNewMail } from '../templates/analyze-mailbox.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.contribute(RoutineCapabilities.Template, analyzeMailbox)];
+    return [
+      Capability.contribute(RoutineCapabilities.Template, analyzeMailbox),
+      Capability.contribute(RoutineCapabilities.Template, analyzeNewMail),
+    ];
   }),
 );

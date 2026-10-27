@@ -564,12 +564,12 @@ export default Capability.makeModule(
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
-          const binding = liveBindingFor(mailbox, get);
-          // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
-          // view's main call to action on a mailbox that has nothing to analyze yet.
-          if (!db || !binding) {
+          if (!db) {
             return Effect.succeed([]);
           }
+          // An unbound mailbox was filled by an import (a sample space, an archive), so it has nothing to
+          // wait for and is analyzable at once.
+          const binding = liveBindingFor(mailbox, get);
           return Effect.gen(function* () {
             const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
             const scanKey = InboxOperation.createAnalyzeProgressKey(mailbox);
@@ -582,7 +582,7 @@ export default Capability.makeModule(
             // survives restarts — a message count would also answer "is there anything here", but not
             // "has the mailbox finished arriving". Read through the object atom so the button enables
             // the moment the first sync lands.
-            const synced = Boolean(get(Obj.atom(binding.cursor)).lastTick);
+            const synced = binding ? Boolean(get(Obj.atom(binding.cursor)).lastTick) : true;
             return [
               {
                 // The pipeline cascade the user runs by hand after a first sync: deterministic
