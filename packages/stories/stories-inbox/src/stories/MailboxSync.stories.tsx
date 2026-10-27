@@ -7,11 +7,13 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { type Client } from '@dxos/client';
 import { persistentClientServices } from '@dxos/client/testing';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
-import { Feed, Tag } from '@dxos/echo';
+import { Feed, Filter, Tag } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -57,6 +59,20 @@ const TYPES = [
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
 const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'preview' }));
 
+/** The returning identity's default space, once the settings space that designates it has opened. */
+const getReadyDefaultSpace = (client: Client) =>
+  Effect.gen(function* () {
+    const settingsSpace = AppSpace.getSettingsSpace(client);
+    if (settingsSpace) {
+      yield* Effect.promise(() => settingsSpace.waitUntilReady());
+    }
+    const space = AppSpace.getDefaultSpace(client);
+    if (space) {
+      yield* Effect.promise(() => space.waitUntilReady());
+    }
+    return space;
+  });
+
 const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
@@ -68,13 +84,20 @@ const DECORATORS = [
         ...CLIENT_SERVICES,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            if (client.halo.identity.get()) {
+            const space = client.halo.identity.get()
+              ? yield* getReadyDefaultSpace(client)
+              : (yield* initializeIdentity(client)).defaultSpace;
+            if (!space) {
               return;
             }
 
-            const { defaultSpace } = yield* initializeIdentity(client);
-            defaultSpace.db.add(Mailbox.make());
-            yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+            // The profile is persistent, so a Mailbox deleted in an earlier run would otherwise leave the
+            // story with nothing to connect or sync.
+            const mailboxes = yield* Effect.promise(() => space.db.query(Filter.type(Mailbox.Mailbox)).run());
+            if (mailboxes.length === 0) {
+              space.db.add(Mailbox.make());
+              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+            }
           }),
       }),
       SpacePlugin({}),
