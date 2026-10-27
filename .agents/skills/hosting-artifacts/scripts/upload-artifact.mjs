@@ -177,8 +177,8 @@ const main = async () => {
   // cache entry than the body a viewer downloads, and a wrong type or truncated body is invisible until then.
   const head = await fetch(url, { method: 'GET' });
   // The CDN compresses text (HTML, JSON) on the way out, dropping its length, ETag and ranges, so text is checked by
-  // its decoded body; media is checked by headers without downloading it.
-  const text = !/^(video|image)\//.test(contentType);
+  // its decoded body; media and archives, which can be large, are checked by headers without downloading them.
+  const text = /^(text\/|application\/(json|x-ndjson))/.test(contentType);
   const downloaded = text ? Buffer.from(await head.arrayBuffer()) : undefined;
   if (!text) {
     await head.body?.cancel();
