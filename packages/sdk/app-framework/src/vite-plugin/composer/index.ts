@@ -147,7 +147,7 @@ export type ComposerPluginOptions = {
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
   // A plugin defined by `Plugin.config` builds from its `dx.config.ts`; older projects from `src/plugin.tsx`.
   const configFile = findDxConfigFile(process.cwd());
-  const definesPlugin = configFile !== undefined && readFileSync(configFile, 'utf8').includes('Plugin.config(');
+  const definesPlugin = configFile !== undefined && /Plugin\.config[<(]/.test(readFileSync(configFile, 'utf8'));
   const entry = options?.entry ?? (definesPlugin ? configFile : 'src/plugin.tsx');
   const port = options?.port ?? PluginManifest.DEV_SERVER_PORT;
   // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2.Config`). When the caller

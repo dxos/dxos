@@ -132,6 +132,9 @@ export const moduleBodyAttributePlugin = (): VitePlugin => ({
 /** Query parameter on a library entry for `dx.config.ts` that limits it to one runtime's modules. */
 export const LIBRARY_ENV_PARAM = 'dx-env';
 
+/** Query parameter for an app's lazily loaded half of a config: the module list a plugin needs once enabled. */
+const MODULES_PARAM = 'dx-modules';
+
 export type PluginConfigPluginOptions = {
   /** Restricts the plugin to one command, e.g. `'build'` for a library whose tests import the config. */
   apply?: 'build' | 'serve';
@@ -190,6 +193,19 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
         return null;
       }
 
+      const library = this.environment.mode === 'build' && Boolean(this.environment.config.build.lib);
+      const query = new URLSearchParams(id.split('?')[1] ?? '');
+      // An app boots with each plugin's metadata only; its module list loads when the plugin is enabled.
+      if (!library && !query.has(MODULES_PARAM)) {
+        return [
+          "import * as Plugin from '@dxos/app-framework/Plugin';",
+          `const plugin = ${JSON.stringify(config.plugin)};`,
+          'export const meta = Plugin.getMetaFromConfig({ plugin });',
+          `export const make = Plugin.lazy(meta, () => import(${JSON.stringify(`${file}?${MODULES_PARAM}`)}));`,
+          'export default { plugin, meta, make };',
+        ].join('\n');
+      }
+
       const { conditions } = this.environment.config.resolve;
       const target =
         this.environment.config.consumer === 'client'
@@ -203,8 +219,7 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
       // A library's dist is re-bundled downstream, so each body loads through an import a bundler can
       // follow. The default entry keeps every module with its environments; a `?dx-env=` entry keeps
       // one runtime's modules, so a headless bundle never reaches a browser-only body.
-      const library = this.environment.mode === 'build' && Boolean(this.environment.config.build.lib);
-      const libraryEnv = library ? new URLSearchParams(id.split('?')[1] ?? '').get(LIBRARY_ENV_PARAM) : null;
+      const libraryEnv = library ? query.get(LIBRARY_ENV_PARAM) : null;
       const keep = (environments?: readonly string[]) =>
         !environments || (library ? !libraryEnv || environments.includes(libraryEnv) : environments.includes(target));
       const loaders: string[] = [];
@@ -276,8 +291,10 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
       return [
         "import * as Plugin from '@dxos/app-framework/Plugin';",
         `const plugin = Plugin.fromManifest(${json}, {${loaders.join(', ')}});`,
-        'export const { meta, make } = plugin;',
-        'export default plugin;',
+        // The app's lazy half is loaded by `Plugin.lazy`, which takes the factory as the default export.
+        ...(library
+          ? ['export const { meta, make } = plugin;', 'export default plugin;']
+          : ['export default plugin.make;']),
       ].join('\n');
     },
   };

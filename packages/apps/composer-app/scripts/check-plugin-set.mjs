@@ -56,6 +56,8 @@ const allPlugins = readdirSync(pluginsDir).filter((name) => name.startsWith('plu
  * (`import(\`./plugin-x.js\`)`), and missing that form silently understates the graph.
  */
 const SPECIFIER = /(?:\bfrom|\bimport)\s*\(?\s*["'`]([^"'`]+\.js)["'`]/g;
+// Plugin manifests name each module body by URL (`url: "/assets/x.js"`), loaded on activation.
+const MANIFEST_URL = /\burl"?\s*:\s*["'`](\/?assets\/[^"'`]+\.js)["'`]/g;
 
 /** Entry script + modulepreload closure of an HTML page, as emitted hrefs. */
 const pageEntries = (html) =>
@@ -72,7 +74,7 @@ const reachable = (hrefs) => {
     }
     seen.add(chunk);
     const source = readFileSync(path.join(outDir, chunk), 'utf8');
-    for (const [, specifier] of source.matchAll(SPECIFIER)) {
+    for (const [, specifier] of [...source.matchAll(SPECIFIER), ...source.matchAll(MANIFEST_URL)]) {
       queue.push(
         specifier.startsWith('.')
           ? path.normalize(path.join(path.dirname(chunk), specifier))
@@ -103,7 +105,7 @@ const CONFIG_MODULE = /(?:^|\/)plugins\/(plugin-[a-z0-9-]+)\/dx\.config\.ts$/;
 const configPlugins = new Set(
   allPlugins.filter((name) => {
     const file = path.join(pluginsDir, name, 'dx.config.ts');
-    return existsSync(file) && readFileSync(file, 'utf8').includes('Plugin.config(');
+    return existsSync(file) && /Plugin\.config[<(]/.test(readFileSync(file, 'utf8'));
   }),
 );
 const bodyOf = (source) => {
