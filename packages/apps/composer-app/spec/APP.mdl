@@ -1038,19 +1038,34 @@ test QA-16: Hot-reload a plugin capability
 ## Changelog
 
 ```mdl
-decision D-1: QA-16 records plugin-module hot replacement on a non-React capability, with a plugin-definition edit as the full-reload contrast.
+decision D-1: QA-16 shows a plugin capability without React hot-reloading, since a React component edit already hot-reloads.
   date: 2026-10-22
-  by: agent:claude-code
-  for: user:dmytro
+  by: user:dmaretskyi
   affects: [QA-16]
-  why: The user asked for a recording that shows a non-React capability reloading, since a React component change already hot-reloads.
 ```
 
 ```mdl
-decision D-2: QA-16 drops its full-reload contrast: a plugin-definition edit now re-creates the plugin in place, so the flow drops and restores a module instead.
+decision D-2: QA-16 edits plugin-space's app-graph builder, with a plugin-definition edit as the full-reload contrast. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-16]
+  why: The app-graph builder contributes visible navtree nodes and has no React in it, so the edit shows on screen without Fast Refresh.
+```
+
+```mdl
+decision D-3: Editing a plugin's definition re-creates the plugin in place, without a page reload.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [QA-16]
+```
+
+```mdl
+decision D-4: QA-16 drops its full-reload contrast and instead drops and restores a module from plugin-space's definition. Fills in [D-3].
   date: 2026-10-27
   by: agent:claude-code
-  for: user:dmytro
+  for: user:dmaretskyi
   affects: [QA-16]
-  why: The user asked for plugin definitions to hot-reload too, which removed the reload the old last step demonstrated.
+  supersedes: D-2
+  why: The plugin-definition edit no longer reloads the page, so the old last step had nothing left to contrast.
 ```
