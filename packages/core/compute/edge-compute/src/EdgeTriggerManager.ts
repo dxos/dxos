@@ -47,10 +47,15 @@ const REPLICATION_BACKOFF = Schedule.exponential(Duration.seconds(1), 2).pipe(Sc
 /** EDGE's 409 message for a switched-off trigger (`FORCE_RUN_REFUSED.disabled` in compute-service). */
 const TRIGGER_DISABLED_MESSAGE = 'Trigger disabled';
 
+/** EDGE's 409 message for a trigger with a run in flight (`FORCE_RUN_REFUSED.running` in compute-service). */
+const TRIGGER_RUNNING_MESSAGE = 'Trigger already running';
+
 const isRefusal = (error: unknown): error is EdgeCallFailedError =>
   error instanceof EdgeCallFailedError && error.status === 409;
 
 const isDisabledRefusal = (error: unknown): boolean => isRefusal(error) && error.message === TRIGGER_DISABLED_MESSAGE;
+
+const isRunningRefusal = (error: unknown): boolean => isRefusal(error) && error.message === TRIGGER_RUNNING_MESSAGE;
 
 /**
  * EDGE implementation of {@link RemoteTriggerManager.Service}.
@@ -126,11 +131,15 @@ const make = (
             while: (error) => !isRefusal(error) || isDisabledRefusal(error),
           }),
           Effect.asVoid,
-          // Still disabled once the backoff is spent: EDGE disabled it itself, ahead of the local copy.
           Effect.catch((error) =>
-            isDisabledRefusal(error)
-              ? Effect.fail(new Trigger.TriggerDisabledError(options.trigger.id))
-              : Effect.die(error),
+            // The run asked for is already going (often this call's own earlier attempt, whose response
+            // was lost), so the request is met.
+            isRunningRefusal(error)
+              ? Effect.void
+              : // Still disabled once the backoff is spent: EDGE disabled it itself, ahead of the local copy.
+                isDisabledRefusal(error)
+                ? Effect.fail(new Trigger.TriggerDisabledError(options.trigger.id))
+                : Effect.die(error),
           ),
           Effect.tap(() => refresh),
         ),
