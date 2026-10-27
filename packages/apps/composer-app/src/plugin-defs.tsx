@@ -54,7 +54,6 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as IrohBeaconPlugin from '@dxos/plugin-iroh-beacon/IrohBeaconPlugin';
 import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
-import * as LabelerPlugin from '@dxos/plugin-labeler/LabelerPlugin';
 import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
@@ -169,7 +168,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       IdeogramPlugin.meta.profile.key,
       AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
-      LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
       TypeSafePlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
@@ -295,7 +293,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
-    LabelerPlugin.make(),
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),

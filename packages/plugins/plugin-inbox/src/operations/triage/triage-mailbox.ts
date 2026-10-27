@@ -10,17 +10,16 @@ import { AiService, ExtractionModel } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { Tagging, TagIndex } from '@dxos/schema';
 import { Message, Task, TaskSet } from '@dxos/types';
 
-import { LabelerOperation } from '#types';
+import { InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { LABELER_TAG_SOURCE, LabelerTag, type LabelerTagId } from '../constants.ts';
-import { EXTRACTION_MODEL, TaskFields, extractionState, toTasks } from '../extraction.ts';
-import { findOrCreateInboxProject } from '../inbox-project.ts';
+import { TRIAGE_SOURCE, TriageTag, type TriageTagId } from './constants.ts';
+import { EXTRACTION_MODEL, TaskFields, extractionState, toTasks } from './extraction.ts';
+import { findOrCreateInboxProject } from './inbox-project.ts';
 import {
   DECISION_MODEL,
   DEFAULT_MIN_CONFIDENCE,
@@ -29,7 +28,7 @@ import {
   labelQuestions,
   messageState,
   toVerdict,
-} from '../questions.ts';
+} from './questions.ts';
 
 /** The system tag each priority band is applied as. */
 const PRIORITY_TAG: Record<Priority, SystemTags.PriorityTagId> = {
@@ -48,27 +47,28 @@ const TASK_PRIORITY: Record<Priority, Task.Task['priority']> = {
 };
 
 /** Finds-or-creates one of this plugin's own tags, keyed so a second run reuses it. */
-const findOrCreateLabelerTag = (db: Pick<Database.Database, 'query' | 'add'>, id: LabelerTagId) =>
+const findOrCreateTriageTag = (db: Pick<Database.Database, 'query' | 'add'>, id: TriageTagId) =>
   Tag.findOrCreate(db, {
-    key: { source: LABELER_TAG_SOURCE, id: LabelerTag[id].id },
-    label: LabelerTag[id].label,
-    hue: LabelerTag[id].hue,
+    key: { source: TRIAGE_SOURCE, id: TriageTag[id].id },
+    label: TriageTag[id].label,
+    hue: TriageTag[id].hue,
   });
 
 /**
- * Labels the mailbox's messages with the space's own tags.
+ * Triages the mailbox's messages: labels them with the space's own tags and a priority band, and files
+ * what a message asks of the reader as tasks.
  *
  * One decision call per message answers all three questions at once — needs a reply, which label,
  * how urgent — and each answer is applied only if its confidence clears the threshold, so an unsure
  * model leaves the message alone rather than guessing. Messages already carrying one of these tags
  * are skipped, which makes a re-run cheap and idempotent without a cursor.
  */
-const handler = LabelerOperation.LabelMailbox.pipe(
+const handler = InboxOperation.TriageMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, batchLimit, minConfidence, tasks: extractTasks = true }) {
       const limit = Math.min(
-        batchLimit ?? LabelerOperation.DEFAULT_LABEL_MAILBOX_BATCH_LIMIT,
-        LabelerOperation.MAX_LABEL_MAILBOX_BATCH_LIMIT,
+        batchLimit ?? InboxOperation.DEFAULT_TRIAGE_MAILBOX_BATCH_LIMIT,
+        InboxOperation.MAX_TRIAGE_MAILBOX_BATCH_LIMIT,
       );
       const threshold = minConfidence ?? DEFAULT_MIN_CONFIDENCE;
 
@@ -94,7 +94,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
       const tagUris = tags.map((tag) => Obj.getURI(tag).toString());
       const criteria = Object.fromEntries(tags.map((tag, index) => [tagUris[index], tag.label]));
 
-      const needsReplyTag = yield* Effect.promise(() => findOrCreateLabelerTag(db, 'needsReply'));
+      const needsReplyTag = yield* Effect.promise(() => findOrCreateTriageTag(db, 'needsReply'));
       const needsReplyUri = Obj.getURI(needsReplyTag).toString();
       const priorityUris = Object.fromEntries(
         yield* Effect.forEach(
@@ -116,8 +116,22 @@ const handler = LabelerOperation.LabelMailbox.pipe(
         .slice(0, limit);
       const skipped = messages.length - pending.length;
 
+      // Inbox records the contacts and summaries it extracts on sync in the same per-message ledger as
+      // triage's tasks, so only a recorded Task marks a message as already read for tasks. Scoped to
+      // this batch's ledger entries, so the lookup stays bounded by the batch limit.
+      const recordedIds = pending
+        .flatMap((message) => Mailbox.getExtractedObjectIds(mailbox, message.id))
+        .filter((id) => EntityId.isValid(id));
+      const taskIds = new Set(
+        recordedIds.length > 0
+          ? (yield* Database.query(Filter.and(Filter.type(Task.Task), Filter.id(...recordedIds))).run).map(
+              (task) => task.id,
+            )
+          : [],
+      );
+
       const traceWriter = yield* Trace.TraceService;
-      const progressKey = LabelerOperation.createLabelProgressKey(mailbox);
+      const progressKey = InboxOperation.createTriageProgressKey(mailbox);
       const reportStatus = (current: number, message?: string) =>
         traceWriter.write(Trace.StatusUpdate, {
           message: message ?? mailbox.name ?? 'Mailbox',
@@ -137,7 +151,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
           return taskSet;
         }).pipe(projectLock.withPermits(1));
 
-      log.info('label: start', {
+      log.info('triage: start', {
         mailbox: Obj.getURI(mailbox),
         messages: messages.length,
         pending: pending.length,
@@ -158,7 +172,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
             : DecisionModel.decide(TriageQuestions, { input: context });
 
           const verdict = toVerdict(answers, threshold);
-          log.info('label: verdict', { subject: context.subject, answers, verdict });
+          log.info('triage: verdict', { subject: context.subject, answers, verdict });
           // The choice key IS the tag's URI, so a confident answer resolves without a lookup by label.
           const labelUri = verdict.label && tagUris.includes(verdict.label) ? verdict.label : undefined;
           if (labelUri) {
@@ -170,7 +184,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
           Tagging.set(message, priorityUris[verdict.priority], { index });
 
           // Only a message asking something of the recipient is read for tasks, and only once.
-          const extracted = Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0;
+          const extracted = Mailbox.getExtractedObjectIds(mailbox, message.id).some((id) => taskIds.has(id));
           const tasks =
             extractTasks && !extracted && verdict.needsReply
               ? yield* ExtractionModel.extract(TaskFields, {
@@ -183,7 +197,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
                   // a bonus, not the run.
                   Effect.catch((error) =>
                     Effect.sync(() => {
-                      log.warn('label: extraction failed', { subject: context.subject, error });
+                      log.warn('triage: extraction failed', { subject: context.subject, error });
                       return [];
                     }),
                   ),
@@ -222,7 +236,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
             tasks: tasks.length,
           };
         }),
-        { concurrency: LabelerOperation.LABEL_MAILBOX_CONCURRENCY },
+        { concurrency: InboxOperation.TRIAGE_MAILBOX_CONCURRENCY },
       ).pipe(Effect.provide(AiService.decisionModel(DECISION_MODEL)));
 
       const count = (predicate: (verdict: (typeof verdicts)[number]) => boolean) => verdicts.filter(predicate).length;
@@ -232,7 +246,7 @@ const handler = LabelerOperation.LabelMailbox.pipe(
       const tasks = verdicts.reduce((sum, result) => sum + result.tasks, 0);
 
       yield* Database.flush();
-      log.info('label: done', { processed, labelled, needsReply, urgent, tasks, skipped });
+      log.info('triage: done', { processed, labelled, needsReply, urgent, tasks, skipped });
 
       return { processed, labelled, needsReply, urgent, tasks, skipped };
     }),
