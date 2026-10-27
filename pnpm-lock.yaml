@@ -273,6 +273,9 @@ catalogs:
     '@lezer/generator':
       specifier: ^1.8.0
       version: 1.8.0
+    '@lezer/highlight':
+      specifier: ^1.2.3
+      version: 1.2.3
     '@lit/react':
       specifier: ^1.0.8
       version: 1.0.8
@@ -20146,6 +20149,9 @@ importers:
       '@effect/platform-node':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@lezer/lr':
         specifier: ^1.4.10
         version: 1.4.10

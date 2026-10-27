@@ -5,6 +5,7 @@
 import { LanguageDescription, LanguageSupport } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 
+import { codeFenceHighlight } from './code.ts';
 import { mdlFenceHighlight } from './fences.ts';
 import { mdlBlockLanguage } from './syntax.ts';
 
@@ -20,8 +21,9 @@ export const mdlBlockDescription = LanguageDescription.of({
 });
 
 /**
- * CodeMirror extensions for Spec .mdl block-body highlighting and fence decoration.
+ * CodeMirror extensions for Spec .mdl block-body highlighting and fence decoration, and for the
+ * highlighting of fenced code in other languages.
  * Does NOT include the Markdown language itself — pass mdlBlockDescription to
  * createMarkdownExtensions() instead so it merges cleanly with the standard language set.
  */
-export const mdl = (): Extension => mdlFenceHighlight;
+export const mdl = (): Extension => [mdlFenceHighlight, codeFenceHighlight];

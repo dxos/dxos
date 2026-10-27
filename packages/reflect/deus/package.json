@@ -48,6 +48,7 @@
     "@codemirror/view": "catalog:",
     "@dxos/errors": "workspace:*",
     "@effect/platform-node": "catalog:",
+    "@lezer/highlight": "catalog:",
     "@lezer/lr": "catalog:",
     "effect": "catalog:"
   },
