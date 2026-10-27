@@ -12,7 +12,8 @@ const { prepare, steps: browserSteps } = await import(
  * The Composer Plugin demo in a browser, ending in the private plugin registry: the assistant builds World Clock
  * from scratch in a Sandbox on EDGE, the sandbox it creates already holds an API token for the reader's account
  * (`DX_API_TOKEN`), and `dx registry publish --private` uploads the build. The plugin then appears in Plugins →
- * Registry on its own, with nothing loaded by URL; the reader installs it there and opens its Clocks page.
+ * Registry on its own, with nothing loaded by URL; the reader installs it there and opens its Clocks page. Last, the
+ * registry opens the plugin's specification: the `PLUGIN.mdl` the template seeded, carried by the published bundle.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-2
  * @app composer-app production bundle served by `vite preview` on :4173, talking to EDGE dev
@@ -24,8 +25,18 @@ const { prepare, steps: browserSteps } = await import(
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
  * Remote plugins install only from a bundle (vite dev has no import map). EDGE must run registry-service with its
- * `PLUGIN_REGISTRY_DB`.
+ * `PLUGIN_REGISTRY_DB`. The first setup step binds the app's identity to a `test+…@dxos.org` account, which EDGE dev
+ * and preview admit with no invitation, so a fresh profile needs no sign-in.
  */
+
+/** The hub the bundle talks to; `DX_EDGE_BASE_URL` at build time. */
+const HUB_URL = `${process.env.DX_EDGE_BASE_URL ?? 'https://dev.dxos.network/'}hub/`;
+
+/** Marks the identity this profile last bound, so a restarted take does not bind it again. */
+const BOUND_KEY = 'autocue.composerPluginRegistry.boundIdentity';
+
+/** EDGE takes a few minutes to serve a newly bound identity; the sandbox's token mint fails before then. */
+const BIND_SETTLE = 3 * 60_000;
 
 const TWENTY_FIVE_MIN = 25 * 60_000;
 
@@ -95,6 +106,37 @@ const parentDone = ({ page }) =>
 
 export const steps = [
   step('Prep (off camera): clear the last take'),
+  {
+    // The sandbox's account token and the private registry both need an account; a `test+` email binds one.
+    name: 'Prep (off camera): bind the identity to an EDGE account',
+    setup: true,
+    done: ({ page }) =>
+      page.evaluate((key) => localStorage.getItem(key) === globalThis.dxos?.client.halo.identity.get()?.did, BOUND_KEY),
+    run: async ({ page }) => {
+      const identity = await page.evaluate(() => {
+        const current = globalThis.dxos.client.halo.identity.get();
+        const hex = Array.from(current.identityKey.data, (byte) => byte.toString(16).padStart(2, '0')).join('');
+        return { identityDid: current.did, identityKey: hex };
+      });
+      const { execFileSync } = await import('node:child_process');
+      // curl, not fetch: it honours the sandbox's HTTPS proxy. Not `-f`: the hub refuses an identity already bound.
+      execFileSync('curl', [
+        '-sS',
+        '-X',
+        'POST',
+        '-H',
+        'content-type: application/json',
+        '-d',
+        JSON.stringify({ ...identity, email: `test+qa-plugin-registry-${Date.now()}@dxos.org` }),
+        `${HUB_URL}account/invitation-code/redeem`,
+      ]);
+      await page.evaluate(([key, did]) => localStorage.setItem(key, did), [BOUND_KEY, identity.identityDid]);
+      // The client caches its EDGE credential from before the binding.
+      await page.reload({ timeout: 120_000 });
+      await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 180_000 });
+      await page.waitForTimeout(BIND_SETTLE);
+    },
+  },
   {
     name: 'Prep (off camera): pick the model, dismiss notices',
     setup: true,
@@ -185,4 +227,40 @@ export const steps = [
     },
   },
   step('Add two timezones'),
+  {
+    // The round trip's last leg: the registry renders the spec the template seeded, read from the installed bundle.
+    name: "Open World Clock's specification from the registry",
+    narration:
+      'The spec the project started from came back through the published bundle, so the registry shows exactly what the agent was asked to build.',
+    run: async ({ demo, page }) => {
+      await demo.caption({
+        value: "Open World Clock's specification from the registry",
+        subtitle: 'the PLUGIN.mdl the template seeded, shipped in the bundle',
+      });
+      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
+      const registryTab = '[data-testid="pluginRegistry.registry"]';
+      await page.locator(registryTab).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await demo.click({ selector: `${registryTab} >> nth=0`, label: 'Registry' });
+      const plugin = page.locator(card(PLUGIN_NAME)).first();
+      await plugin.waitFor({ state: 'visible', timeout: 60_000 });
+      await plugin.scrollIntoViewIfNeeded();
+      await demo.click({ selector: `${card(PLUGIN_NAME)} >> nth=0 >> button:has-text("Details")`, label: 'Details' });
+      const openSpec = 'span:text-is("Open Specification")';
+      await page.locator(openSpec).first().waitFor({ state: 'visible', timeout: 30_000 });
+      await page.waitForTimeout(LINGER);
+      await demo.click({ selector: `${openSpec} >> nth=0`, label: 'Open Specification' });
+      const spec = page.locator('[data-testid="spec-article.spec"]').first();
+      await spec.waitFor({ state: 'visible', timeout: 30_000 });
+      // The seeded text, not just any spec: its plugin name and component come from the template.
+      await page
+        .locator('[data-testid="spec-article.spec"]:has-text("WorldClockPlugin"):has-text("ClocksArticle")')
+        .first()
+        .waitFor({ state: 'visible', timeout: 30_000 });
+      await demo.caption({
+        value: 'The spec round-trips from the project template to the registry',
+        subtitle: 'plugin-projects QA-2',
+      });
+      await page.waitForTimeout(10_000);
+    },
+  },
 ];

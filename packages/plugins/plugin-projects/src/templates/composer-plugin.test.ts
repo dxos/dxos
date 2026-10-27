@@ -14,7 +14,9 @@ import { Text } from '@dxos/schema';
 import { Task, TaskSet } from '@dxos/types';
 
 import {
+  PLUGIN_KEY,
   type Variant,
+  WORLD_CLOCK_SPEC,
   composerPlugin,
   desktopVariant,
   makeComposerPlugin,
@@ -139,6 +141,20 @@ describe('Composer Plugin project template', () => {
       'https://edge.example.com/',
     );
     expect(variant.steps.at(-1)?.description).toContain('--package=https://cli.example.com/dx.tgz dx');
+  });
+
+  test('seeds the spec the plugin ships, so the registry shows the text the project started from', async ({
+    expect,
+  }) => {
+    const project = await scaffold(registryVariant(TOOLCHAIN, 'https://edge.example.com/'));
+    const taskSet = await project.taskSet?.load();
+    const parent = await taskSet?.tasks[0].load();
+    const write = (await parent?.subtasks?.[1].load())?.description ?? '';
+    expect(WORLD_CLOCK_SPEC.startsWith(`---\nid: ${PLUGIN_KEY}\n`)).toBe(true);
+    expect(write).toContain(`\`\`\`\`markdown\n${WORLD_CLOCK_SPEC}\`\`\`\``);
+    expect(write).toContain(`Use the key \`${PLUGIN_KEY}\``);
+    expect(write).toContain("spec: 'PLUGIN.mdl'");
+    expect(write).toContain('AppCapability.pluginAsset');
   });
 
   test('is offered in a browser only with a toolchain and an EDGE', ({ expect }) => {

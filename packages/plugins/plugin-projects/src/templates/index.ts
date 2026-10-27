@@ -12,6 +12,8 @@ export {
   GUIDE,
   IDS,
   PARENT_INSTRUCTIONS,
+  PLUGIN_KEY,
+  WORLD_CLOCK_SPEC,
   type Variant,
   composerPlugin,
   makeComposerPlugin,

@@ -135,6 +135,7 @@ Field reference for `plugin`:
 | `homePage`    | no       | Homepage URL.                                                                                                                           |
 | `tags`        | no       | List of tags for categorization/discovery.                                                                                              |
 | `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs.                         |
+| `spec`        | no       | Path of the plugin's `.mdl` spec inside the package, e.g. `PLUGIN.mdl`. See [Ship a spec](#ship-a-spec).                                |
 
 Field reference for `publish`:
 
@@ -831,6 +832,43 @@ const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
   );
 };
 ```
+
+### Ship a spec
+
+A plugin can carry its `.mdl` spec (a `PLUGIN.mdl` beside `dx.config.ts`). The registry's detail view then shows
+**Open Specification**, which renders the spec with its definitions sidebar. It takes three changes:
+
+1. Name the file in `dx.config.ts`: `spec: 'PLUGIN.mdl'`.
+2. Contribute its text from the plugin, so the bundle carries it. The module loads the file only when the spec is
+   first opened, and `pluginId` must be the plugin's key:
+
+   ```tsx
+   // src/plugin.tsx
+   import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
+   export default Plugin.define(meta).pipe(
+     // ...the plugin's other modules.
+     Plugin.addModule(
+       AppCapability.pluginAsset({
+         pluginId: meta.profile.key,
+         path: 'PLUGIN.mdl',
+         content: () => import('../PLUGIN.mdl?raw'),
+         mimeType: 'application/x-mdl',
+       }),
+     ),
+     Plugin.make,
+   );
+   ```
+
+3. Declare Vite's `?raw` imports for `tsc`, since the example `tsconfig.json` loads no ambient types:
+
+   ```ts
+   // src/raw.d.ts
+   declare module '*?raw' {
+     const content: string;
+     export default content;
+   }
+   ```
 
 ## Command reference
 
