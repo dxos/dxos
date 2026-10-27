@@ -1,0 +1,198 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-connector/spec/EVENTS.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Connector event dispatch
+
+This spec is a future design, and the code has not built it yet. In `dxos`, `Trigger.Spec` has no
+`event` kind (only email, feed, subscription, direct, timer and webhook), and `ConnectorSync` has no
+`events` field. In `edge`, kms-service has no `providers/` directory, no `Provider` interface, no
+`/events/<provider>` ingress and no grant issuer. compute-service has no `EventRouter` and no
+`event_routes` table. Its webhook trigger is the generic per-trigger webhook, not provider dispatch.
+
+The only groundwork that exists is in kms-service's OAuth code. Provider data still comes from a
+`switch` in `getProviderData`, which is the thing F-1 replaces. GitHub is managed only for GitHub App
+installation grants: `MANAGED_PROVIDERS` holds Google and MCP, so a user's GitHub OAuth token still
+goes to the client.
+
+Of 27 items: 0 done, 0 untested, 1 partial, 0 diverged, 26 missing. Three findings matter most:
+
+- **No `event` trigger kind.** F-2 and every scenario depend on `EventSpec`, which is not in `@dxos/compute`.
+- **The provider switch is still there.** `getProviderData` branches per provider, so F-1.1 and F-1.2 have not started.
+- **GitHub user tokens are not managed.** Without a managed user token, kms cannot run `checkAccess`, which F-2.4 needs for any grant.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Provider: No Provider extension point exists in kms-service.
+  status: missing
+  note: '`kms-service/src` has no `providers/` directory and declares no `Provider`, `ProviderWebhook` or `Providers`; provider data comes from the `getProviderData` switch in `oauth/provider.ts`.'
+```
+
+```mdl
+verdict EventSpec: Trigger.Spec has no event kind.
+  status: missing
+  note: '`packages/core/compute/compute/src/types/Trigger.ts` declares email, feed, subscription, direct, timer and webhook specs; no `EventSpec` or `specEvent`.'
+```
+
+```mdl
+verdict EventGrant: No event grant UCAN is issued anywhere.
+  status: missing
+  note: Searched dxos and edge for `EventGrant`, `event/subscribe` and `dxos:event:`; nothing.
+```
+
+```mdl
+verdict EventRouter: compute-service has no event router or routes table.
+  status: missing
+  note: No `EventRouter`, `event_routes` migration, or `dispatch` entrypoint in `compute-service/src`; its `triggers/webhook.ts` is the generic per-trigger webhook.
+```
+
+```mdl
+verdict EventGrants: kms-service has no grant issuer.
+  status: missing
+  note: No `issue` method or `NotManaged`/`AccessDenied` errors in `kms-service/src`.
+```
+
+```mdl
+verdict F-1.1: kms-service still branches per provider.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/kms-service/src/oauth/provider.ts#getProviderData]
+  note: '`getProviderData` is a `switch` over `OAuthProvider`, and `OAuthHandler` special-cases GitHub App flows inline.'
+```
+
+```mdl
+verdict F-1.2: The OAuth flow reads provider data from the switch, not Providers.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/kms-service/src/oauth/provider.ts#getProviderData]
+  note: There is no `Providers` registry to read.
+```
+
+```mdl
+verdict F-1.3: Only GitHub App installation grants are managed; user GitHub OAuth tokens are not.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/kms-service/src/oauth/managed-tokens.ts#isManagedProvider, github:dxos/edge/packages/services/kms-service/src/oauth/handler.ts#OAuthHandler]
+  note: '`MANAGED_PROVIDERS` holds Google and MCP only; `OAuthHandler` registers GitHub App installations with `managed: true`, but a user GitHub token is returned to the client as is. No test covers either path.'
+```
+
+```mdl
+verdict F-2.1: plugin-connector creates no event trigger.
+  status: missing
+  note: '`ConnectorSync` in `plugin-connector/src/types/ConnectorSpec.ts` has no `events` field, and `Binding.scaffoldRoutine` wraps only the declared `sync.trigger`.'
+```
+
+```mdl
+verdict F-2.2: No grant is issued on trigger load.
+  status: missing
+  note: The TriggersDispatcher has no event-trigger load path and there is no `EventGrants.issue`.
+```
+
+```mdl
+verdict F-2.4: No access check backs any trigger.
+  status: missing
+  note: There is no `checkAccess` for any provider.
+```
+
+```mdl
+verdict F-3.1: There is no /events/<provider> ingress.
+  status: missing
+  note: Neither kms-service nor the edge router serves `POST /events/...`.
+```
+
+```mdl
+verdict F-3.2: No provider webhook verification exists.
+  status: missing
+  note: No `X-Hub-Signature-256` check in kms-service.
+```
+
+```mdl
+verdict F-3.3: No delivery-id dedupe exists.
+  status: missing
+  note: Nothing records `X-GitHub-Delivery` ids.
+```
+
+```mdl
+verdict F-3.4: No queued fan-out from an ingress exists.
+  status: missing
+  note: There is no ingress to answer quickly.
+```
+
+```mdl
+verdict F-4.1: No route matching exists.
+  status: missing
+  note: There is no router.
+```
+
+```mdl
+verdict F-4.2: No EventPoke is delivered to any dispatcher.
+  status: missing
+  note: No `EventPoke` type in dxos or edge.
+```
+
+```mdl
+verdict F-4.3: No per-trigger coalescing exists.
+  status: missing
+  note: There is no event delivery to coalesce.
+```
+
+```mdl
+verdict F-4.4: No grant expiry check exists.
+  status: missing
+  note: There are no routes or grants.
+```
+
+```mdl
+verdict F-5.1: No revocation handling exists.
+  status: missing
+  note: No `revokes` or `EventRouter.revoke`.
+```
+
+```mdl
+verdict F-5.2: Deleting a managed token removes no routes.
+  status: missing
+  note: There are no routes to remove.
+```
+
+```mdl
+verdict F-5.3: No route cleanup on trigger delete or disable.
+  status: missing
+  note: There are no routes.
+```
+
+```mdl
+verdict F-6.1: plugin-connector never adjusts the timer schedule.
+  status: missing
+  note: The sync routine's timer keeps the connector's `trigger` spec; nothing switches it to hourly.
+```
+
+```mdl
+verdict T-1: No test delivers a webhook to a bound repository.
+  status: missing
+  note: Nothing to run.
+```
+
+```mdl
+verdict T-2: No test checks an unauthorized event trigger.
+  status: missing
+  note: Nothing to run.
+```
+
+```mdl
+verdict T-3: No test sends a forged delivery to /events/github.
+  status: missing
+  note: Nothing to run.
+```
+
+```mdl
+verdict T-4: No test runs an installation revocation.
+  status: missing
+  note: Nothing to run.
+```

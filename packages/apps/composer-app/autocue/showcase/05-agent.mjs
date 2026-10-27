@@ -6,7 +6,7 @@
  * Showcase scene 5: agents in the document. Mention Kai in a comment and it rewrites the paragraph, then ask the
  * companion assistant to research a topic and add a section with sources.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-17
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183)
  *
  * Kai (plugin-review) answers only on threads created while Markdown's "Comment agent mode" is on, so setup sets it

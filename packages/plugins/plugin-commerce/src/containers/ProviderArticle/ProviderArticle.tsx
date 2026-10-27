@@ -72,7 +72,7 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
       <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
       </Panel.Header>
-      <Panel.Body classNames='flex flex-col gap-2 p-3'>
+      <Panel.Body classNames='flex flex-col gap-2 p-trim-md'>
         <span className='text-sm text-fg-muted'>{t('search-fields.label')}</span>
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>

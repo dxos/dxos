@@ -35,7 +35,7 @@ test.describe('Tour tests', () => {
     await Support.walk(host.page, GLOBAL_TOUR);
   });
 
-  test('a document tour picks up steps contributed by other plugins', { tag: ['@QA-9'] }, async () => {
+  test('a document tour picks up contributed steps, however the toolbar collapses', { tag: ['@QA-9'] }, async () => {
     test.slow();
 
     await host.createSpace();
@@ -44,6 +44,11 @@ test.describe('Tour tests', () => {
     await expect(host.page.getByTestId('deck.companion')).toBeVisible();
 
     await Support.awaitFragments(host.page);
+    await Support.startFromCompanion(host.page);
+    await Support.walk(host.page, DOCUMENT_TOUR);
+
+    await host.page.setViewportSize({ width: 1200, height: 800 });
+    await expect(host.page.getByTestId('editor.toolbar.viewMode')).toBeHidden();
     await Support.startFromCompanion(host.page);
     await Support.walk(host.page, DOCUMENT_TOUR);
 

@@ -1,0 +1,72 @@
+---
+id: org.dxos.spec.sql
+name: DSL.Sql
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The SQL dialect: one `table` block that declares a SQL table a component owns — its columns, key,
+indexes, and the migration set that creates it. Before this dialect a spec named its tables only in
+prose ("a new migration adds the column"), so a reviewer could not see the schema a requirement
+relies on, and a spec review could not judge it.
+
+A `table` block states the schema as it is after the spec's changes, not the history: the history is
+the numbered migrations in the code, and the reasons are in the changelog. Use `type` for an ECHO
+schema; a `table` is a store-level SQL table that is not an ECHO object.
+
+## Extensions
+
+| Term    | URI                       |
+| ------- | ------------------------- |
+| `table` | `org.dxos.mdl.table@1.0` |
+
+## Model
+
+- **The identifier is the table name**, exactly as in the DDL (`feeds`, `convergenceKeyIntents`).
+  The inline prose says what one row is.
+- **`columns:`** has one line per column: `name: SQLTYPE [constraint …]  # meaning`.
+  - `SQLTYPE` is a SQLite storage class: `INTEGER`, `REAL`, `TEXT` or `BLOB`. A column that holds
+    JSON is `TEXT` with `json` in its comment and the TypeScript type it decodes to.
+  - A trailing `?` on the name means `NULL` is allowed (`feedNamespace?: TEXT`); without it the
+    column is `NOT NULL`.
+  - Constraints are written as in SQL: `PRIMARY KEY`, `AUTOINCREMENT`, `UNIQUE`, `DEFAULT <value>`,
+    `REFERENCES <table>(<column>)`.
+- **`key:`** names the primary key, and `unique:` any other unique keys, as column lists.
+- **`indexes:`** has one line per secondary index: `name(columns)` and why a query needs it.
+- **`store:`** names the database the table lives in and, in parentheses, its migration-history table
+  (`feed store (feed_migrations)`), so the reader knows which migrations change it. A spec names
+  components and specs, never file paths: the code moves, the names stay.
+- **`new:`** marks a table or columns the spec adds: `table` for a new table, or the list of new
+  columns. A spec review checks that a migration adds each of them.
+- A `table` is a spec item: a requirement cites it as `table:feeds` or a column as
+  `table:feeds.options`, a review can judge it (`verdict table:feeds`), and a `github:` key may
+  point at the migration that creates it.
+
+## Definitions
+
+```mdl
+ext table
+  uri: org.dxos.mdl.table@1.0
+  desc: |
+    A SQL table a component owns. The identifier is the table name; the inline prose is what one row
+    is. Columns, keys and indexes are the schema after the spec's changes.
+  fields:
+    store: Prose                # the database, and its migration-history table in parentheses
+    columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
+    key?: Prose                 # the primary key, as a column list
+    unique?: ProseList          # other unique keys, as column lists
+    indexes?: ProseList         # `name(columns): why a query needs it`
+    new?: Prose                 # `table`, or the columns this spec adds
+  inline-prose: true
+  syntax: |
+    table feeds: One feed of a space, by namespace.
+      store: feed store (feed_migrations)
+      columns:
+        feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
+        spaceId: TEXT
+        feedId: TEXT                                      # the Feed object's entity id
+        options?: TEXT                                    # json FeedOptions; NULL = defaults
+      key: feedPrivateId
+      new: options
+```

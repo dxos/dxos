@@ -7,7 +7,7 @@
  * `two-peer-collaboration.mjs`, recorded separately and spliced in). Every scene's off-camera setup runs first, so
  * the countdown lands once and the take runs straight through. Each scene also runs on its own from `showcase/`.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-17
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183), on the
  *   showcase profile: Gmail connected and synced (scene 7) and the World Clock project finished (scene 6). See
  *   agents/superpowers/specs/2026-10-09-composer-showcase-video-design.md.

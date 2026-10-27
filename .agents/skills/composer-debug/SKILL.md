@@ -25,8 +25,10 @@ different scope.
 
 ## Safety
 
-The port is arbitrary `eval` in a page holding the user's data. It is off until they turn it
-on, and that gesture is not blanket consent for anything you then choose to run.
+The port is arbitrary `eval` in a page holding the user's data. On a deployed origin it is off
+until they turn it on; a local dev server (`vite dev`) opens it at boot unless started with
+`DX_DEBUG_PORT=false`. Either way, an open port is not blanket consent for anything you then
+choose to run.
 
 1. **The user opens the port.** Never instruct them to leave it on, and never open a browser
    yourself to work around a closed one.
@@ -43,17 +45,19 @@ on, and that gesture is not blanket consent for anything you then choose to run.
 
 Ask for one of these, then for the session id:
 
-| Where       | How                                                          | Scope               |
-| ----------- | ------------------------------------------------------------ | ------------------- |
-| Running app | **Settings → Debug → Agent debug port**, copy the session id | `dxos` + `composer` |
-| Console     | `window.__DXOS__.debugPort.start()` returns the id           | same                |
-| Safe mode   | `/recovery.html` → **Debug Port**, id appears in the log     | `dxos` + `recovery` |
+| Where       | How                                                                                                                  | Scope               |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Local dev   | Already open: id in `packages/apps/composer-app/temp/debug-port.json` or the vite log (`Debug port session: <uuid>`) | `dxos` + `composer` |
+| Running app | **Settings → Debug → Agent debug port**, copy the session id                                                         | `dxos` + `composer` |
+| Console     | `window.__DXOS__.debugPort.start()` returns the id                                                                   | same                |
+| Safe mode   | `/recovery.html` → **Debug Port**, id appears in the log                                                             | `dxos` + `recovery` |
 
 The Debug plugin is enabled by default on dev builds. On production origins the switch ships
 too — that is deliberate, because the sessions worth debugging are on real deployments.
 
-A fresh `crypto.randomUUID()` is minted per activation, nothing is persisted, and **a reload
-stops the port**. "It stopped working" almost always means they reloaded: ask for a new id
+On a local dev server the id is fixed per server start and survives reloads; read it yourself
+rather than asking. Everywhere else a fresh `crypto.randomUUID()` is minted per activation,
+nothing is persisted, and **a reload stops the port**. "It stopped working" almost always means they reloaded: ask for a new id
 rather than retrying the old one.
 
 ## 2. Connect
@@ -65,11 +69,11 @@ node .agents/skills/composer-forensics/scripts/composer-recovery.js --session <u
 The script starts the loopback server on `127.0.0.1:9321`, waits for the browser to poll,
 delivers one snippet, prints the JSON result, and exits.
 
-| Variable                            | Use                                                                                                                                                                |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `COMPOSER_RECOVERY_CONNECT_TIMEOUT` | Raise to `15000`-`25000` when the browser fails to connect within the 6 s default. A tab the user is not looking at polls slowly; the session is usually alive.    |
-| `COMPOSER_RECOVERY_TIMEOUT`         | Raise when the snippet blocks (see `alert` below); default 120 s.                                                                                                  |
-| `COMPOSER_RECOVERY_HTTPS=1`         | Required on HTTPS origins — an HTTPS page cannot fetch `http://127.0.0.1` (mixed content). Needs an mkcert-trusted cert; see `composer-forensics/COMMANDS.md` §12. |
+| Variable                            | Use                                                                                                                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COMPOSER_RECOVERY_CONNECT_TIMEOUT` | The default (36 s) covers a browser backed off to its 30 s poll ceiling; raise it when a tab the user is not looking at still fails to connect. The session is usually alive. |
+| `COMPOSER_RECOVERY_TIMEOUT`         | Raise when the snippet blocks (see `alert` below); default 120 s.                                                                                                             |
+| `COMPOSER_RECOVERY_HTTPS=1`         | Required on HTTPS origins — an HTTPS page cannot fetch `http://127.0.0.1` (mixed content). Needs an mkcert-trusted cert; see `composer-forensics/COMMANDS.md` §12.            |
 
 **Give the command a generous timeout of your own.** A probe that walks the DOM of a loaded deck
 can take minutes. The port is not what gives up — the page keeps working and the result still

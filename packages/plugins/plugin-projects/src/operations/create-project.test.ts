@@ -22,6 +22,10 @@ import * as TestingHarness from '@dxos/plugin-testing/Harness';
 import { ProjectsPlugin } from '#plugin';
 import { ProjectCapabilities, ProjectOperation } from '#types';
 
+await TestingHarness.preload({
+  plugins: [ClientPlugin.make({}), SpacePlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+});
+
 describe('ProjectOperation.Create', () => {
   test('scaffolds the owned graph and files it with one cascading add', async ({ expect }) => {
     await using harness = await setup();
@@ -107,6 +111,7 @@ const setup = async (): Promise<Harness> => {
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),
+      // Holds the view state a template's initial Features view is written to.
       AssistantPlugin.make(),
       TasksPlugin.make(),
       ProjectsPlugin(),

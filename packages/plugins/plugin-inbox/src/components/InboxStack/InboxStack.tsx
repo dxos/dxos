@@ -17,8 +17,10 @@ import * as Focus from '@dxos/react-ui/Focus';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, type Message, Person } from '@dxos/types';
+import { toHue } from '@dxos/ui-theme';
 
 import { useVisibleTags } from '#hooks';
 
@@ -63,6 +65,9 @@ export type MessageGroup = {
 
 /** A stack entry: an individual message or a conversation group. Entries of both kinds may be mixed. */
 export type InboxStackItem = Message.Message | MessageGroup;
+
+/** A run of consecutive entries shown under one heading (e.g. a priority band). */
+export type InboxStackSection = { id: string; label: string; hue?: string; count: number };
 
 /** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
 export type MessageTagsFamily = (messageId: string) => Atom.Atom<InboxStackTag[]>;
@@ -135,6 +140,13 @@ export type InboxStackProps = {
   db?: Database.Database;
   /** Creates the Person for a sender the space does not know (the avatar's hover affordance). */
   onContactCreate?: (actor: Actor.Actor) => void;
+  /**
+   * The heading an entry sits under; consecutive entries with the same section id share one heading,
+   * drawn above the first of them. `items` must already be ordered by section.
+   */
+  getSection?: (item: InboxStackItem) => InboxStackSection | undefined;
+  /** Slides tiles to their new place when the order changes (e.g. after triage regroups the list). */
+  animateReorder?: boolean;
   onAction?: InboxStackActionHandler;
 };
 
@@ -158,6 +170,8 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
       searchQuery,
       db,
       onContactCreate,
+      getSection,
+      animateReorder,
       onAction,
       ...props
     },
@@ -168,9 +182,14 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
 
     const tileItems = useMemo(
       () =>
-        items?.map((item): StackTileData =>
-          isMessageGroup(item)
+        items?.map((item, index): StackTileData => {
+          const section = getSection?.(item);
+          const previous = index > 0 ? getSection?.(items[index - 1]) : undefined;
+          // Only the first entry of a run draws the heading.
+          const heading = section && section.id !== previous?.id ? { section } : {};
+          return isMessageGroup(item)
             ? {
+                ...heading,
                 conversationId: item.id,
                 messages: item.messages,
                 total: item.total,
@@ -186,6 +205,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 onAction,
               }
             : {
+                ...heading,
                 message: item,
                 tagsAtom: tagsAtom?.(item.id),
                 starredAtom: starredAtom?.(item.id),
@@ -197,10 +217,11 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 getContact,
                 onContactCreate,
                 onAction,
-              },
-        ),
+              };
+        }),
       [
         items,
+        getSection,
         tagsAtom,
         starredAtom,
         inboxAtom,
@@ -255,13 +276,6 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
       [onAction],
     );
 
-    const handleSelectionChange = useCallback(
-      (id: string, _selected: boolean) => {
-        onAction?.({ type: 'select', messageId: id });
-      },
-      [onAction],
-    );
-
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -274,6 +288,22 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
       [],
     );
 
+    // Click / Enter select the tile's message (a conversation's latest), as they make it current; the action handler
+    // resolves message ids, not conversation ids.
+    const itemProps = useCallback(
+      (tileId: string) => ({
+        'aria-selected': effectiveSelectedIds ? effectiveSelectedIds.has(tileId) : undefined,
+        'onActivate': () => {
+          const item = tileItems?.find((item) => getItemId(item) === tileId);
+          const messageId = item && ('message' in item ? item.message.id : item.messages[0]?.id);
+          if (messageId) {
+            onAction?.({ type: 'select', messageId });
+          }
+        },
+      }),
+      [effectiveSelectedIds, tileItems, getItemId, onAction],
+    );
+
     return (
       <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
@@ -281,8 +311,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
           withFocus
           currentId={effectiveCurrentId}
           onCurrentChange={handleCurrentChange}
-          selectedIds={effectiveSelectedIds}
-          onSelectionChange={handleSelectionChange}
+          itemProps={itemProps}
         >
           <ScrollArea.Root width='regular'>
             <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
@@ -296,6 +325,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 gap={8}
                 inset={false}
                 pagination={pagination}
+                animateReorder={animateReorder}
               />
               {loading && (
                 <Layout.Grid role='status' center classNames='px-2 py-3'>
@@ -323,24 +353,50 @@ InboxStack.displayName = 'InboxStack';
 
 type StackTileData = MessageTileData | ConversationTileData;
 
-type StackTileProps = Pick<MosaicTileProps<StackTileData>, 'data' | 'location' | 'current'>;
+type StackTileProps = Pick<MosaicTileProps<StackTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
 /** Dispatches on the entry kind: message entries render a message tile, groups a conversation tile. */
-const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current }, forwardedRef) =>
-  'message' in data ? (
-    <MessageTile ref={forwardedRef} data={data} location={location} current={current} />
+const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current, binding }, forwardedRef) => {
+  const tile =
+    'message' in data ? (
+      <MessageTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
+    ) : (
+      <ConversationTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
+    );
+  return data.section ? (
+    <>
+      <SectionHeading section={data.section} />
+      {tile}
+    </>
   ) : (
-    <ConversationTile ref={forwardedRef} data={data} location={location} current={current} />
-  ),
-);
+    tile
+  );
+});
 
 StackTile.displayName = 'StackTile';
+
+/** The heading drawn above the first tile of a section. */
+const SectionHeading = ({ section }: { section: InboxStackSection }) => (
+  <div
+    role='heading'
+    aria-level={3}
+    className='flex items-center gap-2 px-1 pt-2 pb-2'
+    data-testid='inbox.section'
+    data-section={section.id}
+  >
+    <Tag.Tag hue={toHue(section.hue)}>{section.label}</Tag.Tag>
+    <span className='text-sm text-description'>{section.count}</span>
+  </div>
+);
 
 //
 // MessageTile
 //
 
-type MessageTileData = {
+/** Set on the first tile of a section, which draws its heading. */
+type SectionData = { section?: InboxStackSection };
+
+type MessageTileData = SectionData & {
   message: Message.Message;
   tagsAtom?: Atom.Atom<InboxStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
@@ -356,114 +412,117 @@ type MessageTileData = {
   onAction?: InboxStackActionHandler;
 };
 
-type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
+type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
-const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
-  const {
-    message,
-    tagsAtom,
-    starredAtom,
-    inboxAtom,
-    enableArchive,
-    enableIgnoreSender,
-    enableCreateTopic,
-    searchQuery,
-    getContact,
-    onContactCreate,
-    onAction,
-  } = data;
-  const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
-  const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
-  const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
-  const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
-  const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
-  const messageTags = useVisibleTags(tags);
+const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(
+  ({ data, location, current, binding }, forwardedRef) => {
+    const {
+      message,
+      tagsAtom,
+      starredAtom,
+      inboxAtom,
+      enableArchive,
+      enableIgnoreSender,
+      enableCreateTopic,
+      searchQuery,
+      getContact,
+      onContactCreate,
+      onAction,
+    } = data;
+    const { date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
+    const { setCurrentId } = useMosaicContainer('MessageTile');
+    const tags = useAtomValue(tagsAtom ?? EMPTY_TAGS_ATOM);
+    const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
+    const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
+    const messageTags = useVisibleTags(tags);
 
-  // Click / Enter commit both current and selection. Arrow keys only move
-  // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
-  // change), so they don't select.
-  const handleCurrentChange = useCallback(() => {
-    setCurrentId(message.id);
-    setSelected(message.id, true);
-  }, [message.id, setCurrentId, setSelected]);
+    // Click / Enter commit current; the container's `itemProps` selects. Arrow keys only move
+    // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
+    // change), so they don't select.
+    const handleCurrentChange = useCallback(() => {
+      setCurrentId(message.id);
+    }, [message.id, setCurrentId]);
 
-  const handleAvatarClick = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onAction?.({ type: 'select', messageId: message.id });
-    },
-    [message.id, onAction],
-  );
+    const handleAvatarClick = useCallback(
+      (event: MouseEvent) => {
+        event.stopPropagation();
+        onAction?.({ type: 'select', messageId: message.id });
+      },
+      [message.id, onAction],
+    );
 
-  const handleToggleStar = useCallback(
-    () => onAction?.({ type: 'star', messageId: message.id }),
-    [message.id, onAction],
-  );
+    const handleToggleStar = useCallback(
+      () => onAction?.({ type: 'star', messageId: message.id }),
+      [message.id, onAction],
+    );
 
-  const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
+    const handleTagClick = useCallback((label: string) => onAction?.({ type: 'select-tag', label }), [onAction]);
 
-  const searchSnippet = useMemo(
-    () => (searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined),
-    [message, searchQuery],
-  );
+    const searchSnippet = useMemo(
+      () =>
+        searchQuery && message.blocks?.length ? buildSnippet(getMessageBodyText(message), searchQuery) : undefined,
+      [message, searchQuery],
+    );
 
-  const menuItems = useMemo(
-    () =>
-      buildTileMenuItems({
-        messageId: message.id,
-        senderEmail: message.sender?.email,
-        inInbox,
-        enableArchive,
-        enableIgnoreSender,
-        enableCreateTopic,
-        onAction,
-      }),
-    [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id],
-  );
+    const menuItems = useMemo(
+      () =>
+        buildTileMenuItems({
+          messageId: message.id,
+          senderEmail: message.sender?.email,
+          inInbox,
+          enableArchive,
+          enableIgnoreSender,
+          enableCreateTopic,
+          onAction,
+        }),
+      [enableArchive, inInbox, enableIgnoreSender, enableCreateTopic, onAction, message.sender?.email, message.id],
+    );
 
-  return (
-    <CardTile.Root
-      ref={forwardedRef}
-      id={message.id}
-      data={data}
-      location={location}
-      current={current}
-      onCurrentChange={handleCurrentChange}
-      data-testid='inbox.message.row'
-    >
-      <CardTile.Header
-        menu
-        menuItems={menuItems}
-        starred={starred}
-        onToggleStar={onAction ? handleToggleStar : undefined}
-        title={
-          <>
-            <span className='grow truncate font-medium'>{subject}</span>
-            <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{date}</span>
-          </>
-        }
-      />
-      <Card.Body>
-        <Row.Person
-          actor={message.sender}
-          role='from'
-          getContact={getContact}
-          onContactCreate={onContactCreate}
-          onClick={handleAvatarClick}
+    return (
+      <CardTile.Root
+        ref={forwardedRef}
+        id={message.id}
+        data={data}
+        location={location}
+        binding={binding}
+        current={current}
+        onCurrentChange={handleCurrentChange}
+        data-testid='inbox.message.row'
+      >
+        <CardTile.Header
+          menu
+          menuItems={menuItems}
+          starred={starred}
+          onToggleStar={onAction ? handleToggleStar : undefined}
+          title={
+            <>
+              <span className='grow truncate font-medium'>{subject}</span>
+              <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{date}</span>
+            </>
+          }
         />
-        {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
-        {snippet && (
-          <Card.Row>
-            <Card.Text variant='muted'>
-              {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
-            </Card.Text>
-          </Card.Row>
-        )}
-        <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
-      </Card.Body>
-    </CardTile.Root>
-  );
-});
+        <Card.Body>
+          <Row.Person
+            actor={message.sender}
+            role='from'
+            getContact={getContact}
+            onContactCreate={onContactCreate}
+            onClick={handleAvatarClick}
+          />
+          {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
+          {snippet && (
+            <Card.Row>
+              <Card.Text variant='muted'>
+                {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
+              </Card.Text>
+            </Card.Row>
+          )}
+          <Row.Tags tags={messageTags} onTagClick={handleTagClick} />
+        </Card.Body>
+      </CardTile.Root>
+    );
+  },
+);
 
 MessageTile.displayName = 'MessageTile';
 
@@ -471,7 +530,7 @@ MessageTile.displayName = 'MessageTile';
 // ConversationTile
 //
 
-type ConversationTileData = {
+type ConversationTileData = SectionData & {
   conversationId: string;
   messages: Message.Message[];
   /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */
@@ -489,10 +548,10 @@ type ConversationTileData = {
   onAction?: InboxStackActionHandler;
 };
 
-type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' | 'location' | 'current'>;
+type ConversationTileProps = Pick<MosaicTileProps<ConversationTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
 const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
-  ({ data, location, current }, forwardedRef) => {
+  ({ data, location, current, binding }, forwardedRef) => {
     const {
       conversationId,
       messages,
@@ -513,7 +572,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     const starred = useAtomValue(starredAtom ?? NOT_STARRED_ATOM);
     const inInbox = useAtomValue(inboxAtom ?? NOT_STARRED_ATOM);
     const { subject } = getMessageProps(latest, new Date());
-    const { setCurrentId, setSelected } = useMosaicContainer('ConversationTile');
+    const { setCurrentId } = useMosaicContainer('ConversationTile');
 
     // Click / Enter commit current + selection using the LATEST message's ID, not
     // the conversationId. The parent's action handler resolves `messageId` against the
@@ -522,8 +581,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     // when computing `effectiveCurrentId` so the tile still lights up.
     const handleCurrentChange = useCallback(() => {
       setCurrentId(latest.id);
-      setSelected(latest.id, true);
-    }, [latest.id, setCurrentId, setSelected]);
+    }, [latest.id, setCurrentId]);
 
     const handleConversationClick = useCallback(
       (event: MouseEvent) => {
@@ -554,6 +612,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
         id={conversationId}
         data={data}
         location={location}
+        binding={binding}
         current={current}
         onCurrentChange={handleCurrentChange}
         onClick={handleConversationClick}

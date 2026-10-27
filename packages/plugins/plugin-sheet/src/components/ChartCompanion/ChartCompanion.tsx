@@ -4,11 +4,10 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { PublicKey } from '@dxos/keys';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Plot, type PlotValue, toPlotData } from '@dxos/react-ui-plot';
+import { type PlotValue } from '@dxos/react-ui-plot';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
@@ -19,17 +18,25 @@ import * as Typography from '@dxos/react-ui/Typography';
 import { meta } from '#meta';
 import { Sheet } from '#types';
 
+import { ChartView } from './ChartView.tsx';
+
 const DEFAULT_RANGE = 'A1:B5';
 
 // The list opens showing whole rows; a two-line row is 3.5rem.
 const LIST_ROW_HEIGHT = 3.5;
 const LIST_ROWS = 3;
 
+/** A chart as the companion lists it. */
+export type ChartItem = Sheet.ChartProperties & { id: string };
+
 export type ChartCompanionProps = {
   /** Scopes the toolbar to the host plank's attention; without one it is always enabled. */
   attendableId?: string;
-  charts: readonly Sheet.Chart[];
-  onChange: (charts: Sheet.Chart[]) => void;
+  charts: readonly ChartItem[];
+  /** Adds a chart and returns its id. */
+  onAdd: (props: Sheet.ChartProperties) => string;
+  onUpdate: (id: string, props: Partial<Sheet.ChartProperties>) => void;
+  onDelete: (id: string) => void;
   /** Computed cell values for a range in A1 notation; a new function identity re-renders the chart. */
   getValues: (range: string) => PlotValue[][] | undefined;
   /** The sheet's current selection in A1 notation; new charts start from it. */
@@ -42,7 +49,9 @@ export type ChartCompanionProps = {
 export const ChartCompanion = ({
   attendableId,
   charts,
-  onChange,
+  onAdd,
+  onUpdate,
+  onDelete,
   getValues,
   selection,
   onSelectRange,
@@ -53,24 +62,17 @@ export const ChartCompanion = ({
   const current = charts.find((chart) => chart.id === selected) ?? charts[0];
 
   const handleAdd = useCallback(() => {
-    const chart: Sheet.Chart = {
-      id: PublicKey.random().toHex(),
-      range: selection ?? DEFAULT_RANGE,
-      type: 'bar',
-      header: true,
-    };
-    onChange([...charts, chart]);
-    setSelected(chart.id);
-  }, [charts, selection, onChange]);
+    setSelected(onAdd({ range: selection ?? DEFAULT_RANGE, type: 'bar', header: true }));
+  }, [selection, onAdd]);
 
   const handleDelete = useCallback(() => {
     const index = charts.findIndex((chart) => chart.id === current?.id);
-    if (index >= 0) {
-      const next = charts.filter((chart) => chart.id !== current?.id);
-      onChange(next);
+    if (current && index >= 0) {
+      const next = charts.filter((chart) => chart.id !== current.id);
+      onDelete(current.id);
       setSelected(next[Math.min(index, next.length - 1)]?.id);
     }
-  }, [charts, current, onChange]);
+  }, [charts, current, onDelete]);
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -85,9 +87,8 @@ export const ChartCompanion = ({
   );
 
   const handleUpdate = useCallback(
-    (values: Partial<Sheet.Chart>) =>
-      onChange(charts.map((chart) => (chart.id === current?.id ? { ...chart, ...values, id: chart.id } : chart))),
-    [charts, current, onChange],
+    (values: Partial<Sheet.ChartProperties>) => current && onUpdate(current.id, values),
+    [current, onUpdate],
   );
 
   const menuActions = useMenuBuilder(
@@ -195,37 +196,26 @@ export const ChartCompanion = ({
 ChartCompanion.displayName = 'ChartCompanion';
 
 type ChartDetailProps = Pick<ChartCompanionProps, 'getValues'> & {
-  chart: Sheet.Chart;
+  chart: ChartItem;
   editing: boolean;
-  onUpdate: (values: Partial<Sheet.Chart>) => void;
+  onUpdate: (values: Partial<Sheet.ChartProperties>) => void;
   onCancel: () => void;
 };
 
 /** The selected chart, or its settings form while editing. */
 const ChartDetail = ({ chart, editing, getValues, onUpdate, onCancel }: ChartDetailProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const data = useMemo(() => {
-    const values = getValues(chart.range);
-    return values && toPlotData(values, { header: chart.header });
-  }, [getValues, chart.range, chart.header]);
-
-  if (editing) {
-    return (
-      <Form.Root schema={Sheet.Chart} values={chart} onSave={onUpdate} onCancel={onCancel}>
-        <Form.Viewport scroll>
-          <Form.Content>
-            <Form.Fields />
-            <Form.Actions />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
-    );
-  }
-
-  return data ? (
-    <Plot data={data} options={chart} classNames='p-2' />
+  const { id: _id, ...values } = chart;
+  return editing ? (
+    <Form.Root schema={Sheet.ChartProperties} values={values} onSave={onUpdate} onCancel={onCancel}>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.Fields />
+          <Form.Actions />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   ) : (
-    <Typography.Text classNames='p-2 text-fg-subtle'>{t('invalid-range.message')}</Typography.Text>
+    <ChartView chart={values} getValues={getValues} onUpdate={onUpdate} />
   );
 };
 
@@ -243,6 +233,8 @@ const chartIcon = (type?: Sheet.ChartType) => {
       return 'ph--chart-polar--regular';
     case 'map':
       return 'ph--globe-hemisphere-west--regular';
+    case 'timeline':
+      return 'ph--line-segments--regular';
     case 'bar':
     default:
       return 'ph--chart-bar--regular';

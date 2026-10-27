@@ -6,7 +6,7 @@
  * Showcase scene 7: Inbox. Open a synced Gmail mailbox, open a thread and its AI summary, draft a reply with
  * AI reply, then turn the message into a project.
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-17
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183), on the
  *   showcase profile, where a Mailbox named `MAILBOX` is connected to Gmail and has synced. Record with
  *   `driver.mjs --profile <showcase profile>`; a fresh identity has no mailbox.

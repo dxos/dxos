@@ -44,7 +44,7 @@
 - Modify: `src/components/Header/Header.tsx`, `src/components/Header/index.ts`
 - Create: `src/components/Header/Header.stories.tsx`
 
-- [ ] **Step 1:** Replace `Header.tsx` body with `Header.Root` only (spec §2): `Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-subdued-separator', classNames)}` + `Card.Body`, forwarding `data-testid`/`classNames`. `export const Header = { Root };`.
+- [ ] **Step 1:** Replace `Header.tsx` body with `Header.Root` only (spec §2): `Card.Root border={false} fullWidth classNames={mx('p-1 border-b border-separator-subtle', classNames)}` + `Card.Body`, forwarding `data-testid`/`classNames`. `export const Header = { Root };`.
 - [ ] **Step 2:** `Header.stories.tsx` — `Header.Root` composing a few `Row.*` children.
 - [ ] **Step 3:** Verify lint+build; commit `refactor(plugin-inbox): reduce Header to borderless-card Header.Root` (may be squashed with Task 1).
 

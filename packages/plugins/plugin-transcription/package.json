@@ -125,6 +125,11 @@
       "types": "./dist/types/src/types/TranscriptOperation.d.ts",
       "import": "./dist/lib/TranscriptOperation.mjs"
     },
+    "./Whistle": {
+      "source": "./src/whistle/Whistle.ts",
+      "types": "./dist/types/src/whistle/Whistle.d.ts",
+      "import": "./dist/lib/Whistle.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -145,6 +150,9 @@
       ],
       "TranscriptOperation": [
         "dist/types/src/types/TranscriptOperation.d.ts"
+      ],
+      "Whistle": [
+        "dist/types/src/whistle/Whistle.d.ts"
       ]
     }
   },
@@ -187,6 +195,7 @@
   "devDependencies": {
     "@codemirror/state": "catalog:",
     "@dxos/echo-doc": "workspace:*",
+    "@dxos/fixtures": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

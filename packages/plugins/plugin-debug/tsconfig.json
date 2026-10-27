@@ -191,6 +191,9 @@
       "path": "../plugin-kanban"
     },
     {
+      "path": "../plugin-map"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {
@@ -209,6 +212,9 @@
       "path": "../plugin-space"
     },
     {
+      "path": "../plugin-spacetime"
+    },
+    {
       "path": "../plugin-status-bar"
     },
     {
@@ -219,6 +225,9 @@
     },
     {
       "path": "../plugin-tldraw"
+    },
+    {
+      "path": "../plugin-voxel"
     }
   ]
 }

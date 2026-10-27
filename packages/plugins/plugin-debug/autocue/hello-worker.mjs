@@ -3,9 +3,10 @@
 //
 
 /**
- * Hello Worker: create the space from its template, have an agent draw the proposed architecture on the canvas and file
- * it on the project, open the diagram, then hand the sandbox and code tasks to a second chat and watch the Gantt
- * fill in. Stops before the deploy, whose claim URL is a bearer credential the take must not show.
+ * Hello Worker: create the space from its template, look at its partial spec and feature map, then hand the three
+ * planning tasks to one chat and watch it complete the spec in Composer, draw it, file the implementation as tasks of
+ * its own and work them until the deployed Worker answers. The take never opens the chat: it carries the claim URL, a
+ * bearer credential for the temporary account.
  *
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-9
  * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview
@@ -14,7 +15,8 @@
  *   moon run composer-app:bundle
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
- * The dev environment enables plugin-debug (the template) and Sandbox; Illustrator and Canvas are on by default.
+ * The dev environment enables plugin-debug (the template), Code (the spec article) and Sandbox; Illustrator and Canvas
+ * are on by default.
  */
 
 const TEMPLATE = 'Hello Worker';
@@ -23,11 +25,16 @@ const PROJECT = 'Hello Worker';
 /** The Assistant's remote model; Composer's default left delegated chats silent on EDGE preview. */
 const MODEL = 'DeepSeek V4 Pro';
 
+const SPEC_TASK = 'Complete the spec';
 const DIAGRAM_TASK = 'Draw the proposed architecture';
-const CODE_TASKS = ['Create a sandbox and install wrangler', 'Write the Worker'];
+const PLAN_TASK = 'Plan the implementation as tasks';
+const PLANNING_TASKS = [SPEC_TASK, DIAGRAM_TASK, PLAN_TASK];
+
+const FEATURE = 'Greeting endpoint';
 
 const FINISHED = ['done', 'review'];
 const TWENTY_MIN = 20 * 60_000;
+const FORTY_MIN = 40 * 60_000;
 
 /** Agent stretches play at this factor, with the trimmer's fast-forward badge on screen. */
 const FAST = 10;
@@ -118,6 +125,61 @@ const waitFinished = async (page, titles) => {
   }
 };
 
+/**
+ * Every task in the take's space with its status and whether it is the reader's, read from ECHO. The agent's own
+ * implementation tasks are not known ahead, so the take waits on all of them.
+ */
+const allTasks = (page) =>
+  page
+    .evaluate(async (key) => {
+      const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+      const tasks = space
+        ? await space.db
+            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task')))
+            .run()
+            .catch(() => [])
+        : [];
+      return tasks.map((task) => ({ title: task.title, status: task.status, reader: task.assignee?.role === 'user' }));
+    }, TAKE_SPACE)
+    .catch(() => []);
+
+/** Whether the agent has filed its implementation tasks and finished every one that is not the reader's. */
+const shipped = async (page) => {
+  const tasks = await allTasks(page);
+  return tasks.length > PLANNING_TASKS.length && tasks.every((task) => task.reader || FINISHED.includes(task.status));
+};
+
+/** The spec's text in the take's space, read from ECHO. */
+const specText = (page) =>
+  page
+    .evaluate(async (key) => {
+      const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+      const [spec] = space
+        ? await space.db
+            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.specDocument')))
+            .run()
+            .catch(() => [])
+        : [];
+      const text = await spec?.content?.load?.();
+      return text?.content ?? '';
+    }, TAKE_SPACE)
+    .catch(() => '');
+
+/** Opens the feature's spec from its article, which opens the Spec object in the deck. */
+const openSpec = async (demo, page) => {
+  await demo.click({ selector: '[data-testid="projectsPlugin.tab.features"] >> nth=0', label: 'Features' });
+  await demo.click({ selector: '[data-testid="projectsPlugin.featureMap.kanban"] >> nth=0', label: 'Kanban' });
+  const card = page.locator(`[data-testid="feature-card"]:has-text("${FEATURE}")`).first();
+  await card.waitFor({ state: 'visible', timeout: 15_000 });
+  await demo.click({
+    selector: `[data-testid="feature-card"]:has-text("${FEATURE}") [data-testid="feature-card.menu"] button >> nth=0`,
+    label: FEATURE,
+  });
+  await demo.click({ selector: '[data-testid="feature-card.open"] >> nth=0', label: 'Open' });
+  await demo.click({ selector: '[data-testid="feature-card.spec"] >> nth=0', label: 'Spec' });
+  await page.getByTestId('spec-article.spec').first().waitFor({ state: 'visible', timeout: 30_000 });
+};
+
 /** Back to the project's Tasks tab, through the plank's breadcrumb when an artifact holds the plank. */
 const openTasks = async (demo, page) => {
   const tasks = page.locator('[data-testid="projectsPlugin.tab.tasks"]').first();
@@ -131,7 +193,10 @@ const openTasks = async (demo, page) => {
   }
   await tasks.waitFor({ timeout: 15_000 });
   await demo.click({ selector: '[data-testid="projectsPlugin.tab.tasks"] >> nth=0', label: 'Tasks' });
-  await page.locator(TASK_ROW).nth(5).waitFor({ state: 'visible', timeout: 15_000 });
+  await page
+    .locator(TASK_ROW)
+    .nth(PLANNING_TASKS.length - 1)
+    .waitFor({ state: 'visible', timeout: 15_000 });
 };
 
 /** Ticks the named rows and assigns them to the agent as one chat. */
@@ -185,7 +250,7 @@ export const steps = [
   {
     name: 'Create a space from the Hello Worker template',
     run: async ({ demo, page }) => {
-      await demo.title({ value: 'Hello Worker', subtitle: 'From a diagram to a Cloudflare Worker', hold: 3_600 });
+      await demo.title({ value: 'Hello Worker', subtitle: 'From a partial spec to a Cloudflare Worker', hold: 3_600 });
       await caption(demo, 'Create a space from the Hello Worker template');
       await demo.click({ selector: '[data-testid="spacePlugin.addSpace"]', label: 'Add space' });
       await demo.click({ selector: 'role=menuitem[name="Create space"]', label: 'Create space' });
@@ -216,7 +281,7 @@ export const steps = [
   {
     name: 'Open the project and its tasks',
     run: async ({ demo, page }) => {
-      await caption(demo, 'Six tasks, from a diagram to a deployed Worker');
+      await caption(demo, 'Three tasks: finish the spec, draw it, plan the work');
       await closeCompanion(page);
       await showProject(page);
       await demo.click({ selector: PROJECT_NODE, label: PROJECT });
@@ -225,28 +290,48 @@ export const steps = [
     },
   },
   {
-    name: 'Assign the diagram task to the agent',
+    name: 'Open the feature map and the spec',
     run: async ({ demo, page }) => {
-      await caption(demo, 'First, the agent draws the proposed architecture');
-      await delegate(demo, page, [DIAGRAM_TASK]);
+      await caption(demo, 'Four features, and a spec that states only the first');
+      await openSpec(demo, page);
+      await page.waitForTimeout(BEAT * 3);
+    },
+  },
+  {
+    name: 'Assign the planning tasks to the agent',
+    run: async ({ demo, page }) => {
+      await caption(demo, 'One chat takes all three');
+      await openTasks(demo, page);
+      await delegate(demo, page, PLANNING_TASKS);
       await closeCompanion(page);
       await page.waitForTimeout(BEAT);
     },
   },
   {
-    name: 'Wait for the diagram',
+    name: 'Watch the spec fill in',
+    done: async ({ page }) => FINISHED.includes((await statuses(page, [SPEC_TASK]))[SPEC_TASK]),
+    run: async ({ demo, page }) => {
+      await demo.speed({ factor: FAST });
+      await waitFinished(page, [SPEC_TASK]);
+      await demo.speed({ factor: 1 });
+      const text = await specText(page);
+      if (!['F-2', 'F-3', 'F-4'].every((id) => text.includes(`feat ${id}`))) {
+        throw new Error('the spec task finished without a feat block for each of F-2 to F-4');
+      }
+      await caption(demo, 'The agent wrote the rest of the spec');
+      await openSpec(demo, page);
+      await page.waitForTimeout(BEAT * 3);
+    },
+  },
+  {
+    name: 'Open the diagram from the project',
     done: async ({ page }) => FINISHED.includes((await statuses(page, [DIAGRAM_TASK]))[DIAGRAM_TASK]),
     run: async ({ demo, page }) => {
       await demo.speed({ factor: FAST });
       await waitFinished(page, [DIAGRAM_TASK]);
       await demo.speed({ factor: 1 });
-      await page.waitForTimeout(BEAT);
-    },
-  },
-  {
-    name: 'Open the diagram from the project',
-    run: async ({ demo, page }) => {
-      await caption(demo, 'The diagram, filed on the project');
+      await caption(demo, 'Then drew it, and filed the diagram on the project');
+      await openTasks(demo, page);
       // Filing an artifact can open it in the project's plank by itself, which hides the project's tabs.
       const overview = page.locator('[data-testid="projectsPlugin.tab.overview"]').first();
       if (await visible(overview, 2_000)) {
@@ -274,33 +359,46 @@ export const steps = [
     },
   },
   {
-    name: 'Assign the sandbox and code tasks to the agent',
+    name: 'Watch the plan become tasks',
+    done: async ({ page }) => FINISHED.includes((await statuses(page, [PLAN_TASK]))[PLAN_TASK]),
     run: async ({ demo, page }) => {
-      await caption(demo, 'Then the code: a sandbox, and the Worker');
+      await caption(demo, 'Then planned the implementation as tasks of its own');
       await openTasks(demo, page);
-      await delegate(demo, page, CODE_TASKS);
-      await closeCompanion(page);
-    },
-  },
-  {
-    name: 'Watch the Gantt fill in',
-    done: async ({ page }) => {
-      const current = await statuses(page, CODE_TASKS);
-      return CODE_TASKS.every((title) => FINISHED.includes(current[title]));
-    },
-    run: async ({ demo, page }) => {
       await demo.speed({ factor: FAST });
-      await waitFinished(page, CODE_TASKS);
+      // The plan task stays open while the agent works the tasks it filed, so waiting on new rows is the cue.
+      await page.locator(TASK_ROW).nth(PLANNING_TASKS.length).waitFor({ state: 'visible', timeout: TWENTY_MIN });
       await demo.speed({ factor: 1 });
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: 'Hold on the finished Gantt',
-    narration: 'The agent and the plan share one space: every task it works lands on the same Gantt the team reads.',
+    name: 'Watch the Worker ship',
+    done: async ({ page }) => shipped(page),
     run: async ({ demo, page }) => {
-      await caption(demo, 'Three tasks done by the agent, each a lane on the Gantt');
-      await page.getByTestId('projectsPlugin.pipeline.chart').first().scrollIntoViewIfNeeded();
+      await caption(demo, 'And worked them until the Worker answered');
+      await page
+        .getByTestId('projectsPlugin.pipeline.chart')
+        .first()
+        .scrollIntoViewIfNeeded()
+        .catch(() => {});
+      await demo.speed({ factor: FAST });
+      const deadline = Date.now() + FORTY_MIN;
+      while (!(await shipped(page))) {
+        if (Date.now() > deadline) {
+          throw new Error(`not shipped within forty minutes: ${JSON.stringify(await allTasks(page))}`);
+        }
+        await page.waitForTimeout(5_000);
+      }
+      await demo.speed({ factor: 1 });
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Hold on the shipped project',
+    narration: 'The spec, the diagram, the plan and the Worker it produced all live in one space.',
+    run: async ({ demo, page }) => {
+      await caption(demo, 'The claim is yours: it is the only task left');
+      await openTasks(demo, page);
       await page.waitForTimeout(10_000);
     },
   },

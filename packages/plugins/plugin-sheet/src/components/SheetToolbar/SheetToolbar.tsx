@@ -2,88 +2,81 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
-import type * as Registry from 'effect/reactivity/AtomRegistry';
-import React, { useContext, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import { type CompleteCellRange } from '@dxos/compute-hyperformula';
+import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import {
   type ActionGraphProps,
   ActionToolbar,
-  createGapSeparator,
   graphActions,
   isToolbarAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
-import { type SheetModel } from '../../model/index.ts';
+import { SheetUtil } from '#types';
+
+import { type Formatting, FormattingToolbar, formattingAt, writeFormatting } from '../FormattingToolbar/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
-import { createAlign, useAlignState } from './align.ts';
-import { createStyle, useStyleState } from './style.ts';
-import { type ToolbarStateAtom, useToolbarState } from './useToolbarState.ts';
 
-type ToolbarActionsContext = {
-  model: SheetModel;
-  stateAtom: ToolbarStateAtom;
-  registry: Registry.AtomRegistry;
-  cursorFallbackRange?: CompleteCellRange;
-  customActions?: Atom.Atom<ActionGraphProps>;
-};
+const NO_FORMATTING: Formatting = { styles: [] };
 
-const createToolbarActions = ({
-  model,
-  stateAtom,
-  registry,
-  cursorFallbackRange,
-  customActions,
-}: ToolbarActionsContext): Atom.Atom<ActionGraphProps> => {
-  return Atom.make((get) => {
-    const state = get(stateAtom);
-    const context = { model, state, stateAtom, registry, cursorFallbackRange };
-    const align = createAlign(context);
-    const style = createStyle(context);
-    const gap = createGapSeparator();
-
-    const graph: ActionGraphProps = {
-      nodes: [...align.nodes, ...style.nodes, ...gap.nodes],
-      edges: [...align.edges, ...style.edges, ...gap.edges],
-    };
-
-    if (customActions) {
-      const custom = get(customActions);
-      graph.nodes.push(...custom.nodes);
-      graph.edges.push(...custom.edges);
-    }
-
-    return graph;
-  });
-};
+/** The toolbar's own actions are the formatting sections; this graph is empty, so the action toolbar holds only contributed ones. */
+const NO_ACTIONS = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
 
 export type SheetToolbarProps = {};
 
+/**
+ * The formatting sections for the selected cells (showing what applies at the cursor), then any toolbar actions other
+ * plugins contribute for the sheet.
+ */
 export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
   const { attendableId, model, cursorFallbackRange } = useSheetContext();
-  const stateAtom = useToolbarState({});
-  const registry = useContext(RegistryContext);
-  useAlignState(stateAtom);
-  useStyleState(stateAtom);
+  const [ranges] = useObject(model.sheet, 'ranges');
+  const formatting = useMemo(
+    () => (cursorFallbackRange ? formattingAt(model.sheet, cursorFallbackRange.from) : NO_FORMATTING),
+    [model.sheet, ranges, cursorFallbackRange],
+  );
+
+  const handleChange = useCallback(
+    (key: string, values: string[], managed?: string[]) => {
+      if (cursorFallbackRange) {
+        const range = SheetUtil.rangeToIndex(model.sheet, cursorFallbackRange);
+        Obj.update(model.sheet, (sheet) => writeFormatting(sheet, range, key, values, managed));
+      }
+    },
+    [model.sheet, cursorFallbackRange],
+  );
 
   const { graph } = Hooks.useAppGraph();
-  const customActions = useMemo(() => {
-    return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
-  }, [graph, attendableId]);
-
-  const actionsCreator = useMemo(
-    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
-    [model, stateAtom, registry, cursorFallbackRange, customActions],
+  const customActions = useMemo(
+    () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
+    [graph, attendableId],
   );
-  const menuActions = useMenuActions(actionsCreator);
+  const menuActions = useMenuActions(NO_ACTIONS);
 
   return (
-    <ActionToolbar {...menuActions} attendableId={attendableId} {...Util.composableProps(props)} ref={forwardedRef} />
+    <div {...Util.composableProps(props, { classNames: 'flex items-center min-w-0' })} ref={forwardedRef}>
+      <Toolbar.Root classNames='w-auto shrink-0'>
+        <FormattingToolbar
+          formatting={formatting}
+          onChange={handleChange}
+          disabled={!cursorFallbackRange}
+          testId='grid.toolbar'
+        />
+      </Toolbar.Root>
+      {/* Contributed actions (e.g. comment) sit at the toolbar's end. */}
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        customActions={customActions}
+        classNames='justify-end'
+      />
+    </div>
   );
 });
 

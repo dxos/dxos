@@ -61,6 +61,8 @@ export type EvalToolkitOptions = {
   /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
+  readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
 };
@@ -82,6 +84,7 @@ export const evaluate = Effect.fnUntraced(function* ({
   sandbox,
   runtime,
   operations,
+  skills,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
 }: EvaluateOptions) {
@@ -90,7 +93,7 @@ export const evaluate = Effect.fnUntraced(function* ({
     .evaluate({
       code: dialect.wrap(code),
       dialect,
-      context: { runtime, operations, print: printer.print },
+      context: { runtime, operations, skills, print: printer.print },
       timeout,
     })
     .pipe(Effect.result);
@@ -106,6 +109,11 @@ export const evaluate = Effect.fnUntraced(function* ({
   if (result.success !== undefined && printer.isEmpty()) {
     // A program that printed nothing but produced a value: show the value rather than nothing.
     printer.print(result.success);
+  }
+
+  const hint = dialect.name === 'effect' && printer.isEmpty() ? emptyOutputHint(code) : undefined;
+  if (hint) {
+    printer.print(hint);
   }
 
   return printer.output();
@@ -227,10 +235,25 @@ const truncationWarning = (maxOutput: number): string =>
  * is not an effect reads as `(intermediate value) is not iterable`, and is most often a ref loaded as
  * `yield* ref.load` or through a helper that does not exist.
  */
-const hintFor = (message: string): string =>
-  /is not iterable/.test(message)
-    ? '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.'
-    : '';
+const hintFor = (message: string): string => {
+  if (/is not iterable/.test(message)) {
+    return '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.';
+  }
+  const undefinedName = /^(?:ReferenceError: )?(\w+) is not defined/m.exec(message)?.[1];
+  if (undefinedName) {
+    return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
+  }
+  return '';
+};
+
+/**
+ * A pointer for an Effect-dialect program that printed nothing because it called `print` without
+ * `yield*`, which builds the effect and drops it.
+ */
+const emptyOutputHint = (code: string): string | undefined =>
+  /(?<!yield\*\s*)\bprint\(|console\.log\(/.test(code)
+    ? 'Nothing was printed. `print` is an effect: write `yield* print(...)`; `console.log` does not reach you.'
+    : undefined;
 
 /**
  * A failure's message cut to what the model can act on.

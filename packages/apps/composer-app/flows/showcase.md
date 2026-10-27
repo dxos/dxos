@@ -20,7 +20,7 @@ How to read this document (autocue's natural-language flow format).
 - The picture waits for the narrator: a step lasts at least as long as its bullets take to speak.
 
 The committed scripts this was written from are `packages/apps/composer-app/autocue/showcase/*.mjs`, joined by
-`autocue/composer-showcase.mjs`; the test they satisfy is `spec/APP.mdl` QA-16.
+`autocue/composer-showcase.mjs`; the test they satisfy is `spec/APP.mdl` QA-17.
 -->
 
 # Composer showcase

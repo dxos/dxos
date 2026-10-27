@@ -19,6 +19,7 @@ import {
   type Rect,
   RectangleMarker,
   ViewPlugin,
+  type ViewUpdate,
   keymap,
   layer,
 } from '@codemirror/view';
@@ -118,9 +119,13 @@ export const comments = (options: CommentsOptions): Extension => {
     ViewPlugin.fromClass(
       class {
         private readonly unsubscribe: () => void;
+        private readonly updateComments: () => void;
+        // Whether the last `setComments` dropped a comment whose cursor this replica cannot resolve yet.
+        private missing = false;
+
         constructor(view: EditorView) {
           const { id } = options;
-          const updateComments = () => {
+          this.updateComments = () => {
             const comments = options.getComments?.() ?? [];
             // Local `id` const so the truthiness narrowing survives into the microtask closure.
             if (id && id === view.state.facet(documentId)) {
@@ -128,11 +133,27 @@ export const comments = (options: CommentsOptions): Extension => {
             }
           };
 
-          this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
+          this.unsubscribe = options.subscribe?.(this.updateComments) ?? (() => {});
           // Prime the initial decoration pass: `subscribe` may not emit for an already-resolved source
           // (e.g. an ECHO query whose results resolved before mount), so read once now that the source is
           // subscribed. Owning this here means adapters never have to prime manually.
-          updateComments();
+          this.updateComments();
+        }
+
+        update(update: ViewUpdate) {
+          for (const tr of update.transactions) {
+            for (const effect of tr.effects) {
+              if (effect.is(setComments)) {
+                const sent = effect.value.comments.filter((comment) => comment.cursor).length;
+                this.missing = update.state.field(commentsState).comments.length < sent;
+              }
+            }
+          }
+
+          // A comment can replicate before the edits its cursor cites; retry once more text arrives.
+          if (update.docChanged && this.missing) {
+            this.updateComments();
+          }
         }
 
         destroy = () => {
@@ -681,13 +702,10 @@ export const scrollCommentIntoView = (
 // rounding each would pinch the interior edges into notches on a multi-line comment.
 const styles = EditorView.theme({
   // The layer only paints the background; text colour comes from the inline mark, which wraps exactly
-  // the comment text. `!important` and the descendant selector win over markdown syntax-highlight tokens
-  // nested inside the range.
+  // the comment text. Light in both themes, since the highlight fill is a mid-tone hue (500/600) in both.
+  // `!important` and the descendant selector win over markdown syntax-highlight tokens nested inside the range.
   '.cm-comment, .cm-comment *': {
-    color: 'var(--color-teal-fg) !important',
-  },
-  '.cm-comment[data-current="1"], .cm-comment[data-current="1"] *': {
-    color: 'var(--color-orange-fg) !important',
+    color: 'var(--color-neutral-50) !important',
   },
   '.cm-comment': {
     cursor: 'pointer',

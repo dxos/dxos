@@ -59,6 +59,15 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
   }
 };
 
+const floatingClassNames = (position: string) =>
+  mx(
+    'absolute z-10 opacity-0 pointer-events-none transition-opacity',
+    'group-hover/embed:opacity-100 group-hover/embed:pointer-events-auto',
+    // A tab onto the hidden open button reveals it; a click elsewhere in the embed does not.
+    'has-[:focus-visible]:opacity-100 has-[:focus-visible]:pointer-events-auto',
+    position,
+  );
+
 export type PreviewComponentProps = WidgetProps<
   {
     /** The widget id, for reporting the target's state back to the editor. */
@@ -341,7 +350,7 @@ export const PreviewComponent = ({
     if (mode === 'section') {
       return (
         <div
-          className='relative grid scroll-mt-16 outline-hidden whitespace-normal'
+          className='group/embed relative grid scroll-mt-16 outline-hidden whitespace-normal'
           style={sizeStyle(size, 'vertical')}
           {...frameProps}
           {...resizeAttributes}
@@ -363,22 +372,27 @@ export const PreviewComponent = ({
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
-          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute bottom-1 right-1'>
-            <span className='dx-tag dx-tag-inline flex gap-1' data-hue='neutral'>
+          {/* The tag and open button are inset at the bottom, shown only on hover, so they cover the surface only then. */}
+          <Layout.Flex
+            align='center'
+            justify='center'
+            gap='xs'
+            classNames={floatingClassNames('bottom-2 left-1/2 -translate-x-1/2')}
+          >
+            <span className='dx-tag dx-tag-inline flex items-center gap-1 pe-0' data-hue='neutral'>
               {objectIcon && <Icon.Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
+              <Button.Root
+                size='md'
+                icon='ph--arrow-square-out--regular'
+                iconOnly
+                label='Open'
+                variant='ghost'
+                iconSize='md'
+                classNames='hover:bg-transparent'
+                onClick={handleOpen}
+              />
             </span>
-          </Layout.Flex>
-
-          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute top-1 right-1'>
-            <Button.Root
-              size='sm'
-              icon='ph--arrow-square-out--regular'
-              iconOnly
-              label='Open'
-              variant='ghost'
-              onClick={handleOpen}
-            />
           </Layout.Flex>
 
           <ResizeHandle

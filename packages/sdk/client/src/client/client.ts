@@ -7,7 +7,15 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import {
+  Event,
+  MulticastObservable,
+  Trigger,
+  asyncTimeout,
+  scheduleTask,
+  scheduleTaskInterval,
+  synchronized,
+} from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -40,10 +48,11 @@ import {
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { type JsonKeyOptions, type MaybePromise, markMilestone } from '@dxos/util';
 
 import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge/index.ts';
 import { type MeshProxy } from '../mesh/mesh-proxy.ts';
+import type { BootCacheOptions, BootCacheServices } from '../services/boot-cache/index.ts';
 import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
@@ -77,7 +86,17 @@ export type ClientOptions = {
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
+
+  /**
+   * Opens from what the last session persisted to IndexedDB — the startup streams and each space's working
+   * set — instead of waiting for the services, which bring it current once reachable. Off when unset.
+   */
+  bootCache?: BootCacheOptions;
 };
+
+/** The first boot-cache write waits this long after initialization, so it holds what the app settled on. */
+const BOOT_CACHE_FIRST_WRITE_MS = 5_000;
+const BOOT_CACHE_WRITE_INTERVAL_MS = 60_000;
 
 /**
  * The Client class encapsulates the core client-side API of DXOS.
@@ -116,6 +135,7 @@ export class Client {
   readonly version = DXOS_VERSION;
 
   private _services?: ClientServicesProvider;
+  private _bootCache?: BootCacheServices;
 
   private _initialized = false;
 
@@ -224,6 +244,15 @@ export class Client {
    */
   waitUntilInitialized({ timeout }: { timeout?: number } = {}): Promise<void> {
     return this._initializedTrigger.wait({ timeout });
+  }
+
+  /**
+   * Resolves once the services are open. Without {@link ClientOptions.bootCache} that is when
+   * `initialize()` completes; with it, `initialize()` can complete from the cache well before.
+   */
+  async waitUntilServicesOpen(): Promise<void> {
+    await this.waitUntilInitialized();
+    await this._bootCache?.whenServicesOpen();
   }
 
   /**
@@ -404,6 +433,7 @@ export class Client {
     }
 
     performance.mark('client.initialize:called');
+    markMilestone('client.initializing');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services/index.ts');
     const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
@@ -444,11 +474,19 @@ export class Client {
       hasCreateOpfsWorker: !!this._options.createOpfsWorker,
       sqlitePath: this._options.sqlitePath,
     });
-    this._services = await (this._options.services ??
+    const provider = await (this._options.services ??
       createClientServices(this._config, {
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
+    if (this._options.bootCache) {
+      // Loaded only when asked for, so a client without it carries none of it at boot.
+      const { BootCacheServices, BootCacheStore } = await import('../services/boot-cache/index.ts');
+      if (BootCacheStore.isAvailable()) {
+        this._bootCache = new BootCacheServices(provider, this._options.bootCache);
+      }
+    }
+    this._services = this._bootCache ?? provider;
     performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
     // Once, not per `_open`: the provider outlives a reopen and keeps every callback it is given.
@@ -484,10 +522,36 @@ export class Client {
 
     this._initialized = true;
     this._initializedTrigger.wake();
+    if (this._bootCache) {
+      this._persistBootCache(this._bootCache);
+    }
     performance.mark('client.initialize:completed');
+    markMilestone('client.ready');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
     return this;
+  }
+
+  /** Writes the boot cache once the app has settled, then periodically and whenever the page is hidden. */
+  private _persistBootCache(bootCache: BootCacheServices): void {
+    const persist = async () => {
+      const spaces = this._runtime?.spaces;
+      if (spaces) {
+        await bootCache.persist(spaces._workingSetSources());
+      }
+    };
+    const ctx = this._ctx;
+    scheduleTask(ctx, persist, BOOT_CACHE_FIRST_WRITE_MS);
+    scheduleTaskInterval(ctx, persist, BOOT_CACHE_WRITE_INTERVAL_MS);
+    if (typeof document !== 'undefined') {
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') {
+          void persist();
+        }
+      };
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      ctx.onDispose(() => document.removeEventListener('visibilitychange', onVisibilityChange));
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
@@ -550,7 +614,14 @@ export class Client {
 
     const mesh = new MeshProxy(this._services, this._effectRuntime);
     const halo = new HaloProxy(this._services, this._effectRuntime);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._effectRuntime);
+    const bootCache = this._bootCache;
+    const spaces = new SpaceList(
+      this._config,
+      this._services,
+      this._echoClient,
+      this._effectRuntime,
+      bootCache && ((spaceId) => bootCache.takeWorkingSet(spaceId)),
+    );
 
     const shell = this._shellManager
       ? new Shell({
@@ -779,6 +850,7 @@ export class Client {
 
     log('resetting...');
     this._resetting = true;
+    await this._bootCache?.clear().catch((err) => log.warn('boot cache not cleared', { err }));
     invariant(this._services, 'Client not initialized.');
     await runServiceCall(this._effectRuntime, this._services.rpc, 'SystemService.reset', undefined).catch((err) => {
       if (!isHostShutDownByReset(err)) {

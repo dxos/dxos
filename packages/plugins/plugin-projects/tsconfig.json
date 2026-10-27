@@ -106,6 +106,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-masonry"
     },
     {
@@ -125,6 +128,9 @@
     },
     {
       "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"

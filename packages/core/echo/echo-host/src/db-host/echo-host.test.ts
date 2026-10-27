@@ -5,14 +5,15 @@
 import { getHeads } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/sql/SqlClient';
 import * as SqlError from 'effect/sql/SqlError';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Filter, Query } from '@dxos/echo';
+import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EchoFeedCodec, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -24,6 +25,8 @@ import { type DataService, type QueryService } from '@dxos/protocols/rpc';
 import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost, type EchoHostProps } from './echo-host.ts';
+import { FeedDataSource } from './feed-data-source.ts';
+import { IndexPassFailedError } from './index-scheduler.ts';
 
 describe('EchoHost.updateIndexes', () => {
   test('runs a pass only when something was saved since the last one', async () => {
@@ -95,7 +98,7 @@ describe('EchoHost index status', () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const spaceId = SpaceId.random();
-    const first = new EchoHost({ runtime });
+    const first = new EchoHost({ runtime, assignQueuePositions: true });
     await first.open(Context.default());
     for (let i = 0; i < 3; i++) {
       await first.createDoc<DatabaseDirectory>({
@@ -177,7 +180,7 @@ describe('EchoHost index status', () => {
   test('counts the stored feed blocks of its spaces as the rebuild when it opens', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
-    const first = new EchoHost({ runtime });
+    const first = new EchoHost({ runtime, assignQueuePositions: true });
     await first.open(Context.default());
     const root = await first.createSpaceRoot(Context.default(), PublicKey.random());
     const spaceId = root.doc()!.access!.spaceId!;
@@ -347,6 +350,41 @@ describe('EchoHost trace indexing', () => {
   });
 });
 
+describe('EchoHost feed indexing', () => {
+  // Regression: every pass a feed append started re-read the heads of every document and every
+  // cursor, though an append changes no document (UI lag trace, 2026-10-26).
+  test('a pass started by feed appends alone does not rescan documents', async () => {
+    const { host, runtime, spaceId, saveDocs } = await setup();
+    await saveDocs(200);
+    await host.updateIndexes();
+    const update = vi.spyOn(host.indexEngine, 'update');
+    const documentScans = () => update.mock.calls.filter(([, source]) => source.sourceName === 'automerge').length;
+    const feedScans = () => update.mock.calls.filter(([, source]) => source.sourceName !== 'automerge').length;
+
+    const feedId = EntityId.random();
+    for (let index = 0; index < 20; index++) {
+      const scansBefore = feedScans();
+      await RuntimeProvider.runPromise(runtime)(
+        host.feedStore.appendLocal([
+          {
+            spaceId,
+            feedId,
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+            data: EchoFeedCodec.encode({ id: EntityId.random() }),
+          },
+        ]),
+      );
+      await expect.poll(feedScans).toBeGreaterThan(scansBefore);
+    }
+    expect(documentScans()).toBe(0);
+
+    // A document saved after the appends is still indexed by the next background pass.
+    const scansBefore = documentScans();
+    await saveDocs();
+    await expect.poll(documentScans).toBeGreaterThan(scansBefore);
+  });
+});
+
 describe('EchoHost query service', () => {
   test('a one-shot query stream ends after its first result', async () => {
     const { host, spaceId, saveObject } = await setup();
@@ -411,6 +449,78 @@ describe('EchoHost query service', () => {
 
     releaseBatch.wake();
     await batch;
+  });
+
+  test('queries run one at a time and report only their own evaluation time', async ({ expect }) => {
+    const STALL_MS = 200;
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    let running = 0;
+    let overlapped = false;
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      overlapped ||= running > 0;
+      running++;
+      try {
+        if (this.queryId === 'slow') {
+          await sleep(STALL_MS);
+        }
+        return await execQuery.call(this);
+      } finally {
+        running--;
+      }
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const run = (queryId: string) =>
+      EffectEx.runPromise(
+        Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, queryId))),
+      );
+    const [slow, queued] = await Promise.all([run('slow'), run('queued')]);
+
+    expect(overlapped).toBe(false);
+    expect(Option.getOrThrow(slow).executionTime).toBeGreaterThanOrEqual(STALL_MS);
+    // Queued behind the stalled query, yet charged only for its own run.
+    expect(Option.getOrThrow(queued).executionTime).toBeLessThan(STALL_MS / 2);
+  });
+
+  test('a query closed while queued behind a batch is skipped', async ({ expect }) => {
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    const slowStarted = new Trigger();
+    const releaseSlow = new Trigger();
+    onTestFinished(() => {
+      releaseSlow.wake();
+    });
+    const executed: string[] = [];
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      executed.push(this.queryId);
+      if (this.queryId === 'slow') {
+        slowStarted.wake();
+        await releaseSlow.wait();
+      }
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const slow = EffectEx.runPromise(
+      Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'slow'))),
+    );
+    const queued = Effect.runFork(
+      Stream.runDrain(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'queued'))),
+    );
+    await slowStarted.wait();
+    await EffectEx.runPromise(Fiber.interrupt(queued));
+    releaseSlow.wake();
+    await slow;
+    await host.queryService.awaitQueryUpdates();
+
+    expect(executed).toEqual(['slow']);
   });
 
   test('a one-shot id lookup cancelled before it runs is never executed', async () => {
@@ -543,6 +653,366 @@ describe('EchoHost index transactions', () => {
     await answer;
     expect(events.indexOf('answer')).toBeGreaterThan(-1);
     expect(events.indexOf('answer')).toBeLessThan(events.lastIndexOf('commit'));
+  });
+});
+
+// A profile whose stored feed cursor carried a token the store did not issue failed every index pass,
+// and the failure put the host into ERROR, so no space on that device ever opened again.
+describe('EchoHost index failures', () => {
+  test('a feed cursor with another token is read again and leaves the host open', async () => {
+    const { host, runtime, spaceId, saveObject } = await setup();
+    const sql = await RuntimeProvider.runPromise(runtime)(SqlClient.SqlClient);
+    await RuntimeProvider.runPromise(runtime)(
+      sql`
+        INSERT INTO indexCursor (indexName, spaceId, sourceName, resourceId, cursor)
+        VALUES ('objectSnapshot', ${spaceId}, 'queue', ${FeedProtocol.WellKnownNamespaces.data}, 'foreign|5')
+      `,
+    );
+    await RuntimeProvider.runPromise(runtime)(
+      host.feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: EntityId.random(),
+          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          data: EchoFeedCodec.encode({ id: EntityId.random() }),
+        },
+      ]),
+    );
+
+    const objectId = EntityId.random();
+    await saveObject(objectId);
+    await host.updateIndexes();
+    // The failure reaches the host's context on a microtask.
+    await Promise.resolve();
+
+    expect(host.isOpen).toBe(true);
+    const rows = await RuntimeProvider.runPromise(runtime)(
+      host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [objectId] }),
+    );
+    expect(rows.map((row) => row.objectId)).toEqual([objectId]);
+    const cursors = await RuntimeProvider.runPromise(runtime)(
+      sql<{ cursor: string }>`SELECT cursor FROM indexCursor WHERE sourceName = 'queue' AND spaceId = ${spaceId}`,
+    );
+    expect(cursors.map(({ cursor }) => cursor)).not.toContain('foreign|5');
+  });
+});
+
+describe('EchoHost feed options', () => {
+  const FEED_TYPE = DXN.make('org.dxos.type.feed', '0.1.0');
+
+  /** A Feed object in its own document, and `count` blocks appended to the feed it names. */
+  const saveFeed = async (
+    host: EchoHost,
+    runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
+    spaceId: SpaceId,
+    data: Record<string, unknown>,
+    count: number,
+  ) => {
+    const feedId = EntityId.random();
+    await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects: { [feedId]: EntityStructure.makeObject({ type: FEED_TYPE, data }) },
+      links: {},
+    });
+    await host.flush(Context.default());
+    await RuntimeProvider.runPromise(runtime)(
+      host.feedStore.appendLocal(
+        Array.from({ length: count }, () => ({
+          spaceId,
+          feedId,
+          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          data: EchoFeedCodec.encode({ id: EntityId.random() }),
+        })),
+      ),
+    );
+    return { spaceId, feedId, feedNamespace: FeedProtocol.WellKnownNamespaces.data };
+  };
+
+  // Positions are assigned locally because a replica never trims a block it has not pushed.
+  test('an index pass applies the options of an indexed Feed object to the store and clears the intent', async () => {
+    const { host, runtime, spaceId } = await setup({ assignQueuePositions: true });
+    const feed = await saveFeed(host, runtime, spaceId, { retention: { maxLength: 2 } }, 4);
+    await host.updateIndexes();
+
+    const run = RuntimeProvider.runPromise(runtime);
+    expect(await run(host.feedStore.getFeedOptions(feed))).toEqual({ retention: { maxLength: 2 } });
+    expect(await run(host.feedStore.countBlocks(feed))).toBe(2);
+    expect((await run(host.indexEngine.takeFeedOptionsIntents())).intents).toEqual([]);
+  });
+
+  // T-1: the intent is the only record of the change once the cursor has passed the Feed object.
+  test('an intent whose apply failed is applied by the startup pass after a restart', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const run = RuntimeProvider.runPromise(runtime);
+    const spaceId = SpaceId.random();
+
+    const first = new EchoHost({ runtime, assignQueuePositions: true });
+    await first.open(Context.default());
+    const feed = await saveFeed(first, runtime, spaceId, { retention: { maxLength: 1 } }, 3);
+    vi.spyOn(first.feedStore, 'setFeedOptions').mockReturnValue(
+      Effect.fail(
+        new SqlError.SqlError({ reason: new SqlError.UnknownError({ cause: undefined, message: 'disk I/O error' }) }),
+      ),
+    );
+    await first.updateIndexes();
+    expect((await run(first.indexEngine.takeFeedOptionsIntents())).intents).toHaveLength(1);
+    expect(await run(first.feedStore.countBlocks(feed))).toBe(3);
+    await first.close();
+
+    const second = new EchoHost({ runtime, assignQueuePositions: true });
+    await second.open(Context.default());
+    onTestFinished(async () => {
+      await second.close();
+    });
+    await second.updateIndexes();
+    expect(await run(second.feedStore.getFeedOptions(feed))).toEqual({ retention: { maxLength: 1 } });
+    expect(await run(second.feedStore.countBlocks(feed))).toBe(1);
+    expect((await run(second.indexEngine.takeFeedOptionsIntents())).intents).toEqual([]);
+  });
+});
+
+describe('EchoHost failed index pass', () => {
+  // A flush that resolved would drop the client's record of writes the index does not hold yet.
+  test('updateIndexes fails with the pass, and a query that waits on it still answers', async () => {
+    const { host, spaceId, saveObject } = await setup();
+    const update = host.indexEngine.update.bind(host.indexEngine);
+    vi.spyOn(host.indexEngine, 'update').mockImplementation(() => Effect.die(new Error('pass failed')));
+
+    await saveObject(EntityId.random());
+    await expect(host.updateIndexes()).rejects.toBeInstanceOf(IndexPassFailedError);
+    expect(host.isOpen).toBe(true);
+
+    const feedScoped: QueryService.QueryRequest = {
+      queryId: EntityId.random(),
+      reactivity: QueryReactivity.ONE_SHOT,
+      query: JSON.stringify(
+        Query.select(Filter.everything()).from([{ _tag: 'feed', feedUri: `echo://${spaceId}/${EntityId.random()}` }])
+          .ast,
+      ),
+    };
+    const responses = await EffectEx.runPromise(
+      Stream.runCollect(host.queryService['QueryService.execQuery'](feedScoped)),
+    );
+    expect(responses).toHaveLength(1);
+
+    vi.mocked(host.indexEngine.update).mockImplementation(update);
+    await host.updateIndexes();
+  });
+});
+
+// `deleteIdentity` wipes every row while the host stays open. A cursor left without its token's row
+// failed every index pass after the next start, so no space on the device opened again.
+describe('EchoHost storage wipe', () => {
+  const setupWipe = async () => {
+    const { host, runtime } = await setup();
+    const run = RuntimeProvider.runPromise(runtime);
+    const sql = await run(SqlClient.SqlClient);
+    const spaceId = SpaceId.random();
+    const append = () =>
+      run(
+        host.feedStore.appendLocal([
+          {
+            spaceId,
+            feedId: EntityId.random(),
+            feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+            data: EchoFeedCodec.encode({ id: EntityId.random() }),
+          },
+        ]),
+      );
+    const wipe = () =>
+      host.wipeStorage(() =>
+        run(
+          Effect.gen(function* () {
+            yield* sql`DELETE FROM cursor_tokens`;
+            yield* sql`DELETE FROM indexCursor`;
+            yield* sql`DELETE FROM blocks`;
+            yield* sql`DELETE FROM feeds`;
+          }),
+        ),
+      );
+    // Cursors the next start would fail on: no token stored for the space, or another one.
+    const orphanedCursors = () =>
+      run(sql<{ spaceId: string; cursor: string; token: string | null }>`
+        SELECT indexCursor.spaceId, indexCursor.cursor, cursor_tokens.token
+        FROM indexCursor LEFT JOIN cursor_tokens ON cursor_tokens.spaceId = indexCursor.spaceId
+        WHERE indexCursor.sourceName = 'queue'
+      `).then((rows) => rows.filter(({ cursor, token }) => token === null || !cursor.startsWith(`${token}|`)));
+    const queueCursors = () => run(sql`SELECT cursor FROM indexCursor WHERE sourceName = 'queue'`);
+
+    // The space's feed, indexed once.
+    vi.spyOn(host['_spaceStateManager'], 'spaceIds', 'get').mockReturnValue([spaceId]);
+    await append();
+    await host.updateIndexes();
+    return { host, append, wipe, orphanedCursors, queueCursors };
+  };
+
+  test('a pass under way when the wipe starts does not write its cursors back after it', async () => {
+    const { host, append, wipe, orphanedCursors } = await setupWipe();
+
+    // A trace block lands as the identity is deleted; hold the pass reading it until the wipe has started.
+    await append();
+    const passRead = new Trigger();
+    const releasePass = new Trigger();
+    const read = FeedDataSource.prototype.getChangedObjects;
+    vi.spyOn(FeedDataSource.prototype, 'getChangedObjects').mockImplementationOnce(function (
+      this: FeedDataSource,
+      ...args
+    ) {
+      return read.apply(this, args).pipe(
+        Effect.tap(() =>
+          Effect.promise(async () => {
+            passRead.wake();
+            await releasePass.wait();
+          }),
+        ),
+      );
+    });
+    const pass = host.updateIndexes();
+    await passRead.wait();
+    const wiped = wipe();
+    releasePass.wake();
+    await Promise.all([pass, wiped]);
+
+    expect(await orphanedCursors()).toEqual([]);
+  });
+
+  // An identity deleted in place and then recovered brings back the same space ids.
+  test('a space indexed again after the wipe stores its cursor under a stored token', async () => {
+    const { host, append, wipe, orphanedCursors, queueCursors } = await setupWipe();
+    await wipe();
+
+    await append();
+    await host.updateIndexes();
+
+    // A cursor only a pass writes, so indexing resumed after the wipe.
+    expect(await queueCursors()).not.toHaveLength(0);
+    expect(await orphanedCursors()).toEqual([]);
+  });
+});
+
+describe.each(['memory', 'sql'] as const)('EchoHost %s executor evidence', (queryExecutor) => {
+  // Both objects inline in the space root, which the memory executor resolves references through.
+  const saveLinked = async ({ host }: Awaited<ReturnType<typeof setup>>) => {
+    const root = await host.createSpaceRoot(Context.default(), PublicKey.random());
+    const spaceId = root.doc()?.access?.spaceId;
+    if (!spaceId) {
+      throw new Error('Space root has no space id.');
+    }
+    const organization = EntityId.random();
+    const person = EntityId.random();
+    root.change((doc) => {
+      doc.objects ??= {};
+      doc.objects[organization] = EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'acme' } });
+      doc.objects[person] = EntityStructure.makeObject({
+        type: TEST_TYPE,
+        data: { title: 'alice', employer: { '/': `echo:///${organization}` } },
+      });
+    });
+    await host.flush(Context.default());
+    await host.updateIndexes();
+    return { spaceId, organization, person, root };
+  };
+
+  const headsOf = (handle: { doc: () => Parameters<typeof getHeads>[0] | null | undefined }) => {
+    const doc = handle.doc();
+    if (!doc) {
+      throw new Error('Document not loaded.');
+    }
+    return getHeads(doc);
+  };
+
+  const execOnce = async (host: EchoHost, spaceId: SpaceId, query: Query.Any) => {
+    const [response] = await EffectEx.runPromise(
+      Stream.runCollect(
+        host.queryService['QueryService.execQuery']({
+          queryId: EntityId.random(),
+          reactivity: QueryReactivity.ONE_SHOT,
+          query: JSON.stringify(query.from([{ _tag: 'space', spaceId }]).ast),
+        }),
+      ),
+    );
+    return response?.results ?? [];
+  };
+
+  test('a row ships the heads it was read at as its version', async () => {
+    const context = await setup({ queryExecutor });
+    const { spaceId, person, root } = await saveLinked(context);
+    const results = await execOnce(context.host, spaceId, Query.select(Filter.id(person)));
+    expect(results.find((row) => row.id === person)?.version).toEqual({
+      kind: 'automerge',
+      documentId: root.documentId,
+      heads: headsOf(root),
+    });
+  });
+
+  test('a traversal hit ships the edge that reached it, with its holder', async () => {
+    const context = await setup({ queryExecutor });
+    const { spaceId, organization, person, root } = await saveLinked(context);
+    const results = await execOnce(context.host, spaceId, Query.select(Filter.id(person)).reference('employer'));
+    expect(results.map((row) => row.id)).toEqual([organization]);
+    expect(results[0].paths).toEqual([
+      [
+        {
+          from: person,
+          to: organization,
+          kind: 'ref',
+          property: 'employer',
+          holder: person,
+          holderHeads: headsOf(root),
+        },
+      ],
+    ]);
+  });
+
+  test('a re-run that reaches the same hit by another edge resends it', async () => {
+    const context = await setup({ queryExecutor });
+    const { spaceId, organization, root } = await saveLinked(context);
+    const emissions: QueryService.QueryResponse[] = [];
+    const twoPaths = (response: QueryService.QueryResponse) => response.results?.[0]?.paths?.length === 2;
+    const done = EffectEx.runPromise(
+      context.host.queryService['QueryService.execQuery']({
+        queryId: EntityId.random(),
+        reactivity: QueryReactivity.REACTIVE,
+        query: JSON.stringify(
+          Query.select(Filter.everything())
+            .reference('employer')
+            .from([{ _tag: 'space', spaceId }]).ast,
+        ),
+      }).pipe(
+        Stream.tap((response) => Effect.sync(() => emissions.push(response))),
+        Stream.takeUntil(twoPaths),
+        Stream.runDrain,
+      ),
+    );
+    await expect.poll(() => emissions.length).toBeGreaterThan(0);
+    expect(emissions[0].results?.map((row) => row.id)).toEqual([organization]);
+
+    root.change((doc) => {
+      doc.objects ??= {};
+      doc.objects[EntityId.random()] = EntityStructure.makeObject({
+        type: TEST_TYPE,
+        data: { title: 'bob', employer: { '/': `echo:///${organization}` } },
+      });
+    });
+    await context.host.flush(Context.default());
+    await context.host.updateIndexes();
+    await asyncTimeout(done, 5_000);
+    expect(emissions.at(-1)?.results?.map((row) => row.id)).toEqual([organization]);
+  });
+
+  test('a collapsed group ships each member with its share', async () => {
+    const context = await setup({ queryExecutor });
+    const { spaceId, organization, person } = await saveLinked(context);
+    const [group] = await execOnce(
+      context.host,
+      spaceId,
+      Query.select(Filter.everything()).aggregate({ count: Aggregate.count() }),
+    );
+    expect(group.groupCount).toBe(2);
+    expect(group.manifest?.map((member) => member.id).sort()).toEqual([organization, person].sort());
+    expect(group.manifest?.map((member) => JSON.parse(member.contribution))).toEqual([{ count: 1 }, { count: 1 }]);
   });
 });
 
@@ -713,7 +1183,10 @@ const idLookupRequest = (
 });
 
 const setup = async (
-  options: Pick<EchoHostProps, 'indexTransactionLimits' | 'indexRecountInterval' | 'queryExecutor'> = {},
+  options: Pick<
+    EchoHostProps,
+    'indexTransactionLimits' | 'indexRecountInterval' | 'queryExecutor' | 'assignQueuePositions'
+  > = {},
 ) => {
   const { runtime, dispose } = createTestSqliteRuntime();
   const host = new EchoHost({ runtime, ...options });

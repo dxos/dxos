@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, yieldOrContinue } from '@dxos/async';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -24,7 +24,8 @@ import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import {
-  type QuerySource,
+  type RemoteQuerySource,
+  type RemoteRunOptions,
   type SourceEntry,
   getQueryDeletedOption,
   getTargetSpacesForQuery,
@@ -94,7 +95,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderProps) {}
 
   // TODO(burdon): Rename createQuerySource
-  create(): QuerySource {
+  create(): RemoteQuerySource {
     return new IndexQuerySource({
       service: this._params.service,
       runtime: this._params.runtime,
@@ -123,7 +124,7 @@ export type IndexQuerySourceProps = {
 /**
  * Runs queries against an index.
  */
-export class IndexQuerySource implements QuerySource {
+export class IndexQuerySource implements RemoteQuerySource {
   changed = new Event<void>();
 
   readonly kind = 'index';
@@ -136,6 +137,12 @@ export class IndexQuerySource implements QuerySource {
 
   /** Whether the current reactive stream failed. */
   #failed = false;
+
+  /** Whether the latest integrated answer left out derivations over its budget. */
+  #truncated = false;
+  /** Host evaluation time (ms) of the latest response received, and of the answer last integrated. */
+  #receivedExecutionTime?: number = undefined;
+  #executionTime?: number = undefined;
 
   private _query?: QueryAST.Query = undefined;
   private _results?: SourceEntry[] = [];
@@ -197,6 +204,7 @@ export class IndexQuerySource implements QuerySource {
     this.#responses = 0;
     this.#integrated = 0;
     this.#failed = false;
+    this.#truncated = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -224,9 +232,12 @@ export class IndexQuerySource implements QuerySource {
     return this.#failed;
   }
 
-  /** Index results are produced asynchronously from the host query stream. */
-  isSynchronous(): boolean {
-    return false;
+  isTruncated(): boolean {
+    return this.#truncated;
+  }
+
+  executionTime(): number | undefined {
+    return this.#executionTime;
   }
 
   isPending(): boolean {
@@ -237,16 +248,16 @@ export class IndexQuerySource implements QuerySource {
     return !this._answered;
   }
 
-  async run(_ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]> {
+  async run(_ctx: Context, query: QueryAST.Query, opts?: RemoteRunOptions): Promise<SourceEntry[]> {
     // The index serves spaces and feeds; a query whose explicit scopes target neither
     // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
     // made the whole query fail on edge — the query host rejects space-less queries, and
-    // the fail-fast merge in `GraphQueryContext.run` discarded the registry source's results.
+    // the fail-fast merge in `LocalQueryEngine.run` discarded the registry's results.
     if (!queryTargetsSpacesOrFeeds(query)) {
       return [];
     }
     return new Promise((resolve, reject) => {
-      this._runOneShot(query, resolve, reject);
+      this._runOneShot(query, resolve, reject, opts?.onExecutionTime);
     });
   }
 
@@ -265,6 +276,9 @@ export class IndexQuerySource implements QuerySource {
     this.#responses = 0;
     this.#integrated = 0;
     this.#failed = false;
+    this.#truncated = false;
+    this.#receivedExecutionTime = undefined;
+    this.#executionTime = undefined;
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -286,6 +300,7 @@ export class IndexQuerySource implements QuerySource {
     query: QueryAST.Query,
     resolve: (results: SourceEntry[]) => void,
     reject: (error: Error) => void,
+    onExecutionTime?: (executionTime: number) => void,
   ): void {
     const queryId = nextQueryId++;
     log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
@@ -349,6 +364,9 @@ export class IndexQuerySource implements QuerySource {
                 // set; fail instead, naming the objects that did not load.
                 throw new TimeoutError(hydrationTimeout, _describeStall(stalled, response.results?.length ?? 0));
               }
+              if (response.executionTime !== undefined) {
+                onExecutionTime?.(response.executionTime);
+              }
               settle(() => resolve(results));
             } catch (err: any) {
               settle(() => reject(err));
@@ -397,15 +415,18 @@ export class IndexQuerySource implements QuerySource {
         onData: (response) => {
           try {
             this.#responses++;
+            this.#receivedExecutionTime = response.executionTime;
             if (response.unchanged) {
               // The host re-ran and kept its last answer. A pass in flight publishes this count when it lands.
               if (!this._hydrating) {
                 this.#integrated = this.#responses;
+                this.#executionTime = this.#receivedExecutionTime;
                 this.changed.emit();
               }
               return;
             }
             this._assertResultSpaces(query, response);
+            this.#truncated = response.truncated !== undefined;
             // Remember the raw host records so a later local object load can re-hydrate them.
             this._lastRemoteResults = response.results ?? [];
             this._releasedDocumentJsonIds.clear();
@@ -494,6 +515,7 @@ export class IndexQuerySource implements QuerySource {
         const records = this._lastRemoteResults ?? [];
         // Only host responses count as answers; a pass re-run by a local object load answers nothing new.
         const responses = this.#responses;
+        const executionTime = this.#receivedExecutionTime;
 
         const ctx = new Context();
         this._hydrationCtx = ctx;
@@ -513,6 +535,7 @@ export class IndexQuerySource implements QuerySource {
         this._results = results;
         this._answered = true;
         this.#integrated = Math.max(this.#integrated, responses);
+        this.#executionTime = executionTime;
         this.changed.emit();
       } while (this._hydratePending || this.#integrated < this.#responses);
     } catch (err: any) {
@@ -547,15 +570,37 @@ export class IndexQuerySource implements QuerySource {
 
     const load = await this._placeRows(ctx, records);
     const hydratedIntoFeedHandle = new Set<string>();
+    // One timer per pass, not per record: per-record timers cost ~1s of main thread per 30s on large
+    // reactive results. Each chunk restarts the budget, as its records' own timers would have.
+    const budget = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
+    let deadline = 0;
+    let expire = () => {};
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onTimer = () => {
+      const remaining = deadline - performance.now();
+      timer = remaining > 0 ? setTimeout(onTimer, remaining) : undefined;
+      if (timer === undefined) {
+        expire();
+      }
+    };
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
-    for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
-      await yieldOrContinue('smooth');
-      processedResults.push(
-        ...(await Promise.all(
-          chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, load)),
-        )),
-      );
+    try {
+      for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
+        await yieldOrContinue('smooth');
+        deadline = performance.now() + budget;
+        const stall = new Promise<typeof STALLED>((resolve) => {
+          expire = () => resolve(STALLED);
+        });
+        timer ??= setTimeout(onTimer, budget);
+        processedResults.push(
+          ...(await Promise.all(
+            chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, load, stall)),
+          )),
+        );
+      }
+    } finally {
+      clearTimeout(timer);
     }
     const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
@@ -640,6 +685,7 @@ export class IndexQuerySource implements QuerySource {
    * Hydrate one record under a bounded budget. Hydration reaches document loading, which waits on
    * replication and never settles while a document is unavailable; left unbounded it held the
    * caller's whole query open for as long as the index-query budget allowed.
+   * `stall` settles when the pass's hydration budget runs out.
    */
   private async _hydrateRecord(
     ctx: Context,
@@ -648,20 +694,15 @@ export class IndexQuerySource implements QuerySource {
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle: Set<string>,
     load: RowLoader,
+    stall: Promise<typeof STALLED>,
   ): Promise<SourceEntry | null | typeof STALLED> {
-    const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const hydration = this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle);
-    // The abandoned hydration may still reject after the race has settled, which would surface as an
-    // unhandled rejection; the real outcome is already taken below.
-    hydration.catch(() => {});
-    // Compared by identity so a TimeoutError thrown from within hydration is not mistaken for ours.
-    const expired = new TimeoutError(timeout, 'index hit hydration');
     try {
-      return await asyncTimeout(hydration, timeout, expired);
+      // The race keeps a handler on the abandoned hydration, so its late rejection is not unhandled.
+      return await Promise.race([
+        this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle),
+        stall,
+      ]);
     } catch (err) {
-      if (err === expired) {
-        return STALLED;
-      }
       if (err instanceof ContextDisposedError) {
         return null;
       }
@@ -704,6 +745,7 @@ export class IndexQuerySource implements QuerySource {
         match: { rank: result.rank },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
         group: _groupFromRemoteResult(result),
+        manifest: result.manifest,
       };
     }
 
@@ -767,6 +809,7 @@ export class IndexQuerySource implements QuerySource {
           match: { rank: result.rank },
           resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
           group: _groupFromRemoteResult(result),
+          ..._evidenceFromRemoteResult(result),
         };
       }
 
@@ -804,6 +847,7 @@ export class IndexQuerySource implements QuerySource {
         match: { rank: result.rank },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
         group: _groupFromRemoteResult(result),
+        ..._evidenceFromRemoteResult(result),
       };
       return queryResult;
     }
@@ -830,6 +874,7 @@ export class IndexQuerySource implements QuerySource {
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
       group: _groupFromRemoteResult(result),
+      ..._evidenceFromRemoteResult(result),
     };
     return queryResult;
   }
@@ -888,6 +933,12 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
         ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
       }
     : undefined;
+
+/** What the host says it evaluated a row at and how it reached it, which the engine revalidates the row against. */
+const _evidenceFromRemoteResult = (result: QueryService.QueryResult): Pick<SourceEntry, 'version' | 'paths'> => ({
+  ...(result.version && { version: result.version }),
+  ...(result.paths && { paths: result.paths }),
+});
 
 const recordKey = (spaceId: string, objectId: string): string => `${spaceId}:${objectId}`;
 

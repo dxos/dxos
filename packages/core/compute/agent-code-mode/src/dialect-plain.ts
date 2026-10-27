@@ -5,11 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
+import { type HintSyntax, makeDescriber } from './describe.ts';
 import {
   type BindingsContext,
   type Dialect,
@@ -47,10 +48,42 @@ export const PlainDialect: Dialect = {
 
   wrap: (code) => code,
 
-  bindings: ({ runtime, operations, print }: BindingsContext) => {
+  bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
     const run = RuntimeProvider.runPromise(Effect.succeed(runtime));
+    const describe = makeDescriber({ syntax: PLAIN_HINTS, skills });
+    const anchor = (target: Obj.Unknown | string): Query.Any =>
+      Query.select(Filter.id(typeof target === 'string' ? target : target.id));
     return {
       print,
+
+      /** The object's card with what only a query can tell: its relations, children and referrers. */
+      describe: (value: unknown) => run(describe(value)),
+
+      /** Relations whose source (`out`) or target (`in`) is the object, optionally of one relation type. */
+      relations: (target: Obj.Unknown | string, direction: 'out' | 'in' = 'out', type?: string) =>
+        run(
+          Database.query(
+            direction === 'out'
+              ? anchor(target).sourceOf(type === undefined ? undefined : typeURI(type))
+              : anchor(target).targetOf(type === undefined ? undefined : typeURI(type)),
+          ).run,
+        ),
+
+      /** Objects whose parent is the object. */
+      children: (target: Obj.Unknown | string) => run(Database.query(anchor(target).children()).run),
+
+      /** Objects whose `field` (any field when omitted) references the object, optionally of one type. */
+      referrers: async (target: Obj.Unknown | string, type?: string, field?: string) => {
+        const referrers = await run(
+          Database.query(
+            type === undefined ? anchor(target).referencedBy() : anchor(target).referencedBy(typeURI(type)),
+          ).run,
+        );
+        // Narrowed here rather than in the query: the field is a name the model typed, which the
+        // query's typed overload cannot take.
+        const id = typeof target === 'string' ? target : target.id;
+        return field === undefined ? referrers : referrers.filter((referrer) => referencesVia(referrer, field, id));
+      },
 
       /** Objects of `typename`, optionally narrowed by exact property values. */
       query: (typename: string, props?: Record<string, unknown>) =>
@@ -107,12 +140,20 @@ export const PlainDialect: Dialect = {
 
     Prefer one \`eval\` call that does the whole job — query, inspect, change, print — over a call
     per step. Print the specific values you need to reason about, not whole objects, and keep the
-    output small.
+    output small. Stay on the objects the request names or the conversation is attached to: reading
+    or changing others the request did not ask about spends calls and risks unasked-for writes.
 
     ### API
 
-    - \`print(...values)\` — adds a line to this call's output. Strings go through verbatim,
-      everything else is printed as JSON.
+    - \`print(...values)\` — adds a line to this call's output. Strings go through verbatim. An
+      object prints as a card: its type, id, label and fields, refs as \`→ type id "label"\`. Print
+      the object itself, never \`JSON.stringify\` it. Anything else prints as JSON, long strings and
+      arrays cut with a \`…[+N chars]\` / \`… N more\` marker.
+    - \`print(await describe(obj))\` — the card plus counts of the object's relations, children and
+      referrers, with the call that fetches each — the only way to see that those exist.
+    - \`await relations(obj, 'out' | 'in', typename?)\`, \`await children(obj)\`,
+      \`await referrers(obj, typename?, field?)\` — the relations from or to an object, the objects
+      it is the parent of, and the objects whose ref fields point at it.
     - \`await query(typename, props?)\` — objects of that typename, optionally narrowed by exact
       property values, e.g. \`await query('example.com/type/Task', { status: 'open' })\`.
     - \`await make(typename, props)\` — a new object; it is not stored until you add it.
@@ -129,6 +170,22 @@ export const PlainDialect: Dialect = {
     ${operations.length > 0 ? renderPlainOperations(operations) : NO_OPERATIONS}
   `,
 };
+
+/** The calls a described object's hints show, in this dialect's facade. */
+const PLAIN_HINTS: HintSyntax = {
+  relations: (id, relation, direction) => `await relations('${id}', '${direction}', '${relation}')`,
+  children: (id) => `await children('${id}')`,
+  referrers: (id, type, field) => `await referrers('${id}', '${type}'${field === undefined ? '' : `, '${field}'`})`,
+};
+
+/** Whether `object`'s `field` holds a ref (directly or in an array) to the object `id`. */
+const referencesVia = (object: object, field: string, id: string): boolean => {
+  const value: unknown = Reflect.get(object, field);
+  return (Array.isArray(value) ? value : [value]).some((ref) => Ref.isRef(ref) && String(ref.uri).endsWith(`/${id}`));
+};
+
+/** A type named by typename, as `query` takes it, or by the versioned DXN a hint names it by. */
+const typeURI = (type: string) => (DXN.isDXN(type) ? type : DXN.make(type));
 
 const renderPlainOperations = (operations: readonly SandboxOperation[]): string => trim`
   ### Operations

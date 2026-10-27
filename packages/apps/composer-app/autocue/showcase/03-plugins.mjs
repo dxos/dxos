@@ -6,7 +6,7 @@
  * Showcase scene 3: the plugin gallery. Open Plugins, filter, and switch on two plugins that are off by default:
  * Explorer (scene 4 graphs the space with it), and Cloudflare (a connector to the Cloudflare API, a nod to what Composer runs on).
  *
- * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
+ * @mdl packages/apps/composer-app/spec/APP.mdl test QA-17
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183)
  */
 

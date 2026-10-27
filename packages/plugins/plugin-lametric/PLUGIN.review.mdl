@@ -1,0 +1,277 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-lametric/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: LaMetricPlugin
+
+The plugin is built to the spec and unusually well tested. Frame projection (`toFrames`), the four-frame cap,
+indexed frames, abbreviated stat labels, local and cloud transports, DIY widget discovery and the
+de-duplicating, trailing-edge `Pusher` all have unit tests, and `smoke.test.ts` drives the local transport
+against a stand-in HTTP device. Gaps are at the edges. `PushStatus` on failure never carries the HTTP
+`status`: the transport throws a plain `Error` and the pusher reports only `{ state: 'failed' }`. The
+settings schema has no `port` or `scheme` field, so the user cannot pick plain HTTP or a non-default port
+though `TransportConfig` supports both. The Tauri HTTP permission allows any host on ports 8080 and 4343, not
+only LaMetric hosts. The headless driver itself (`dashboard-driver.ts`) has no test.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict GoalData: Declared as a Schema struct with start, current, end and unit.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#GoalData]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.test.ts]
+```
+
+```mdl
+verdict Frame: A union of TextFrame and GoalFrame, each with an optional index.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#Frame, github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#TextFrame, github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#GoalFrame]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.test.ts]
+```
+
+```mdl
+verdict Payload: Declared as a struct holding an array of frames.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#Payload]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.test.ts]
+```
+
+```mdl
+verdict TransportConfig: The type matches, but the Settings schema users edit has no port or scheme field.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#TransportConfig, github:dxos/dxos/packages/plugins/plugin-lametric/src/types/Settings.ts#Settings]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.test.ts]
+  note: |
+    `TransportConfig` has every spec field and defaults ports to 4343/8080. `Settings.Settings`, which the driver passes in,
+    declares only address, apiKey, widgetId, appId, accessToken and minPushIntervalMs, so scheme is always https and the
+    port always 4343 in the app.
+```
+
+```mdl
+verdict PushStatus: idle, pushed with kind, and failed exist, but failed never carries the HTTP status.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/types/LaMetricCapabilities.ts#PushStatus, github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.ts#Pusher]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.test.ts]
+  note: The transport throws `Error('LaMetric push rejected: <status>')` and `Pusher` reports `{ state: 'failed' }` without `status`.
+```
+
+```mdl
+verdict VirtualLaMetric: Renders the 37x8 matrix through the same toPixels used by the tests.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/components/VirtualLaMetric/VirtualLaMetric.tsx#VirtualLaMetric, github:dxos/dxos/packages/plugins/plugin-lametric/src/render/pixels.ts#toPixels]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/pixels.test.ts, github:dxos/dxos/packages/plugins/plugin-lametric/src/components/VirtualLaMetric/VirtualLaMetric.stories.tsx]
+```
+
+```mdl
+verdict F-1.1: Pending or running tasks win the slots, and a determinate one becomes a goal frame.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics, github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts, github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts]
+  walkthrough:
+    - toMetrics keeps only pending and running tasks and gives each a ratio when it has a total. github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics
+    - toFrames turns a ratio into goalData with end 100. github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames
+```
+
+```mdl
+verdict F-1.2: A task with no total has no ratio and renders as a text frame.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts]
+```
+
+```mdl
+verdict F-1.3: With nothing active, toMetrics emits the object, feed, type and plugin counts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts]
+```
+
+```mdl
+verdict F-1.4: MAX_FRAMES is 4 and both the slot count and toFrames cap at it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#MAX_FRAMES, github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts]
+```
+
+```mdl
+verdict F-1.5: Stat labels are shortened to obj, feeds, types and plugins in toFrames.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts]
+```
+
+```mdl
+verdict F-1.6: Favorites are never projected: toMetrics emits only tasks and four stats.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics]
+  note: No test asserts that favorites are absent; nothing in the plugin references them.
+```
+
+```mdl
+verdict F-1.7: toFrames numbers every frame from zero.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts]
+```
+
+```mdl
+verdict F-2.1: selectTransport checks the address first and returns a local transport when it is set.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#selectTransport]
+  note: The local and cloud fixtures are tested separately; no test gives both an address and cloud credentials to show local wins.
+```
+
+```mdl
+verdict F-2.6: Local posts to the DIY package on v2 with Basic dev:key; cloud posts to v1 with X-Access-Token.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#selectTransport, github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#localWidgetPath, github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.ts#cloudWidgetPath]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.test.ts, github:dxos/dxos/packages/plugins/plugin-lametric/src/protocol/LaMetric.test.ts]
+```
+
+```mdl
+verdict F-2.7: discoverWidgetId reads /api/v2/device/apps and picks the DIY package's first widget.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#discoverWidgetId, github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/dashboard-driver.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.test.ts]
+```
+
+```mdl
+verdict F-2.2: The driver passes tauriFetch, which lazy-imports @tauri-apps/plugin-http, to both paths.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/index.ts#tauriFetch, github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/dashboard-driver.ts]
+  note: Tests inject a fake FetchLike; nothing exercises the Tauri client.
+```
+
+```mdl
+verdict F-2.3: The Tauri http permission names the LaMetric cloud host but allows any host on ports 8080 and 4343.
+  status: partial
+  evidence: [github:dxos/dxos/packages/apps/composer-app/src-tauri/capabilities/desktop.json]
+  note: |
+    `http:default` allows `https://developer.lametric.com/*`, `http://*:8080/*` and `https://*:4343/*`. It is not global,
+    but the LAN entries are port-scoped wildcards, not LaMetric hosts.
+```
+
+```mdl
+verdict F-2.4: selectTransport returns undefined on incomplete config and the driver then issues no request.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#selectTransport, github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/dashboard-driver.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.test.ts]
+  note: With an address and key but no widget id the driver does issue one discovery GET to the device app list.
+```
+
+```mdl
+verdict F-2.5: Pusher catches a rejected push, logs it and sets PushStatus failed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.ts#Pusher]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.test.ts]
+  note: The status code is not included in the reported status (see PushStatus).
+```
+
+```mdl
+verdict F-2.8: The code treats any 2xx as pushed; only the request shape is validated, by the smoke test.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#selectTransport]
+  note: |
+    This is a hardware caveat rather than behaviour; the code reports `pushed` on any ok response, as the spec admits. The
+    smoke test checks package, path and body but nothing can check that the device rendered.
+```
+
+```mdl
+verdict F-3.1: Pusher drops a payload whose JSON equals the last one.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.ts#Pusher]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.test.ts]
+```
+
+```mdl
+verdict F-3.2: Changes inside minIntervalMs are held and the latest is sent on the trailing edge.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.ts#Pusher]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.test.ts]
+```
+
+```mdl
+verdict F-3.3: The dashboard driver is a headless capability that subscribes to the dashboard atom.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/dashboard-driver.ts]
+  note: No test activates the driver module.
+```
+
+```mdl
+verdict F-4.1: The driver reads plugin-space's Dashboard capability rather than querying the space itself.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/dashboard-driver.ts]
+  note: No test covers the driver's subscription to SpaceCapabilities.Dashboard.
+```
+
+```mdl
+verdict F-4.2: The driver passes MAX_FRAMES as the slot count to Dashboard.toMetrics.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/dashboard-driver.ts]
+  note: The driver call site is untested; toFrames' own cap is tested.
+```
+
+```mdl
+verdict T-1: frames.test maps a 0.456 ratio to current 46 of 100; metrics.test shows an active task replaces the stats.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames, github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts]
+```
+
+```mdl
+verdict T-2: frames.test maps a progress metric with no ratio to a text frame with title and count.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts]
+```
+
+```mdl
+verdict T-3: frames.test asserts "42 obj" and that it does not overflow the matrix.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.ts#toFrames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/render/frames.test.ts]
+```
+
+```mdl
+verdict T-4: selectTransport returns undefined for an address and widget with no API key.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#selectTransport]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.test.ts]
+  note: The test checks that no transport is built; that no request is made follows from the driver, which is untested.
+```
+
+```mdl
+verdict T-7: discoverWidgetId tests pick the DIY widget and return nothing when it is absent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#discoverWidgetId]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.test.ts]
+```
+
+```mdl
+verdict T-5: The pusher test sends a, then b and c in the window, and only c follows on the trailing edge.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.ts#Pusher]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/capabilities/pusher.test.ts]
+```
+
+```mdl
+verdict T-6: smoke.test posts to a stand-in HTTP device and checks path, Basic credential and body.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/LaMetricTransport.ts#selectTransport]
+  tests: [github:dxos/dxos/packages/plugins/plugin-lametric/src/transport/smoke.test.ts]
+```
+
+```mdl
+verdict QA-1: Blocked manual QA; no automation runs it.
+  status: missing
+  note: Needs LaMetric hardware and the Tauri shell; the steps also assume port and scheme settings fields that do not exist.
+```

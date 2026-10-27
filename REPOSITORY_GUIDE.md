@@ -314,7 +314,7 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 
 **npm `@next`.** A manual dispatch of `publish-all.yml` (Actions → **Publish** → Run workflow) cuts an ephemeral snapshot (`0.9.1-next-<datetime>`) — nothing committed, no tags. Both channels live in `publish-all.yml` because npm's OIDC trusted publisher is bound to that filename; the trigger picks the channel (push → `@latest`, dispatch → `@next`).
 
-**Previews.** `pkg-pr-new.yml` publishes all public packages to [pkg.pr.new](https://pkg.pr.new), an ephemeral per-commit install channel: `main` once a day at 06:00 UTC, every commit `deploy-apps.yml` deploys, and a branch tip on dispatch.
+**Previews.** `pkg-pr-new.yml` publishes all public packages to [pkg.pr.new](https://pkg.pr.new), an ephemeral per-commit install channel: every commit to `main`, every commit `deploy-apps.yml` deploys, and a branch tip on dispatch.
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 
@@ -368,7 +368,7 @@ gh run watch
 
 Handy as aliases — e.g. `gh alias set deploy-dev 'workflow run deploy-apps.yml -f environment=dev'`, then just `gh deploy-dev`.
 
-**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-preview`) applies only there. `remote <env>` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it. The `dev` MODE (`pnpm secrets dev <app>`, which writes `.dev.vars` for local `wrangler dev`) always requires an app; note this is a different `dev` from the `dev` ENVIRONMENT in `pnpm secrets remote dev`, which takes the usual `all` default. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-preview`) applies only there. `remote <env>` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it. The `dev` MODE (`pnpm secrets dev <app>`, which writes `.dev.vars` for local `wrangler dev`) always requires an app; note this is a different `dev` from the `dev` ENVIRONMENT in `pnpm secrets remote dev`, which takes the usual `all` default. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
 
 `secret put` both creates a version and deploys it, so Cloudflare refuses it when a Worker's latest version is not the deployed one. That is the normal state for `composer-dev`, which per-PR deploys upload versions to — promoting the latest there would push whichever PR version happens to be on top. `pnpm secrets` detects that specific refusal and writes the secret with `wrangler versions secret put` instead, which does not deploy; it then says so, because the secret only reaches the running Worker on the next deploy or `versions upload`. Any other failure is reported and exits non-zero as before.
 
@@ -411,8 +411,7 @@ Examples:
 
 ## CI
 
-The build/test pipeline runs on Depot CI. See [`.depot/README.md`](./.depot/README.md), including how to
-run a workflow off uncommitted changes without pushing. What is still on GitHub Actions, and why, is in
+The build/test pipeline runs on GitHub Actions' free standard runners. See
 [`.github/workflows/README.md`](./.github/workflows/README.md).
 
 ## Trunk (flaky test quarantining / CI Autopilot)

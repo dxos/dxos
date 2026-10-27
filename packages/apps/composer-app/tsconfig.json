@@ -172,6 +172,9 @@
       "path": "../../plugins/plugin-code"
     },
     {
+      "path": "../../plugins/plugin-code-graph"
+    },
+    {
       "path": "../../plugins/plugin-commerce"
     },
     {
@@ -268,9 +271,6 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
-      "path": "../../plugins/plugin-labeler"
-    },
-    {
       "path": "../../plugins/plugin-lametric"
     },
     {
@@ -349,6 +349,9 @@
       "path": "../../plugins/plugin-qa"
     },
     {
+      "path": "../../plugins/plugin-recorder"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {
@@ -401,6 +404,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-ste"
     },
     {
       "path": "../../plugins/plugin-stream-deck"

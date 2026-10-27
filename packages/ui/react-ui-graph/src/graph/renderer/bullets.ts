@@ -4,7 +4,8 @@
 
 import { easeLinear, interpolate, select } from 'd3';
 
-import { type D3Callable, type D3Selection } from '../../util/index.ts';
+import { type D3Callable, type D3Selection, getCircumferencePoints } from '../../util/index.ts';
+import { type GraphLayoutEdge } from '../types.ts';
 
 export type BulletOptions = {
   max?: number;
@@ -30,8 +31,9 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
 
       // Match source node.
       if (source.id === nodeId) {
-        const path = select(edges[i]);
-        const p = path.node().getPointAtLength(0);
+        const shape = edges[i] as SVGGeometryElement;
+        const pointAt = createPointAt(shape, d);
+        const p = pointAt(0);
 
         const bullet = select(group)
           .append('circle')
@@ -47,11 +49,8 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
           .duration(minDuration + Math.random() * maxDuration)
           .ease(easeLinear)
           .tween('pathTween', function () {
-            const length = path.node().getTotalLength();
-            const r = interpolate(0, length);
-
             return (t) => {
-              const point = path.node().getPointAtLength(r(t));
+              const point = pointAt(t);
               select(this).attr('cx', point.x).attr('cy', point.y);
             };
           })
@@ -69,4 +68,19 @@ export const createBullets = (group: SVGGElement, nodeId: string, options: Bulle
       }
     });
   };
+};
+
+/**
+ * Point at fraction `t` along the edge. A straight edge's polyline also traces its arrowheads,
+ * so its segment is rebuilt from the edge's endpoints instead of measured from the shape.
+ */
+const createPointAt = (shape: SVGGeometryElement, edge: GraphLayoutEdge): ((t: number) => { x: number; y: number }) => {
+  if (shape instanceof SVGPolylineElement) {
+    const { source, target } = edge;
+    const [[x1, y1], [x2, y2]] = getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r);
+    return (t) => ({ x: x1 + (x2 - x1) * t, y: y1 + (y2 - y1) * t });
+  }
+
+  const length = shape.getTotalLength();
+  return (t) => shape.getPointAtLength(interpolate(0, length)(t));
 };

@@ -1,0 +1,494 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-spacetime/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Spacetime
+
+The plugin implements almost everything the spec describes: the Scene and Object types, a Babylon.js
+canvas, select, move and extrude tools, Manifold booleans, GLB/OBJ import and STL export, and the
+toolbar. The spec's ops are not registered Operations. They are engine functions and tool actions
+(`AddObjectAction`, `JoinObjectsAction`, …), so each op is judged by the code behind it.
+
+Tests cover the geometry engine well. `boolean-ops.test.ts` covers union, subtract and result position,
+`extrusion.test.ts` covers extrusion, drag simulation and the minimum-size clamp, and
+`obj-import.test.ts` covers OBJ parsing. The colour picker hook has a test. Selection, the move tool,
+the camera, the keyboard shortcuts and the tool actions that write to ECHO have no tests, and only
+stories render the canvas.
+
+Three divergences matter. Delete is bound to `x`/Backspace, not Del. Deleting removes the refs from
+`scene.objects` but never deletes the ECHO objects. Import only succeeds for watertight meshes,
+because a mesh Manifold rejects returns `null` and nothing is added; the spec implies a non-watertight
+mesh still imports.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Scene: The ECHO type has name and owned objects hidden from forms, and make() adds a default cube.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Scene.ts#Scene, github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Scene.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/SpacetimeEditor.stories.tsx, github:dxos/dxos/packages/plugins/plugin-spacetime/src/containers/SceneCard/SceneCard.stories.tsx]
+```
+
+```mdl
+verdict Object: The ECHO type has label, primitive, mesh, position, scale, rotation and color.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#Object, github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/useSelectedObjectColor.test.ts]
+```
+
+```mdl
+verdict PrimitiveType: The literal union is cube, sphere, cylinder, cone and pyramid.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#PrimitiveType]
+  note: Matches the spec. No test enumerates the literals.
+```
+
+```mdl
+verdict PresetType: The literal union is firetruck, race and taxi.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#PresetType]
+  note: Matches the spec. No test.
+```
+
+```mdl
+verdict Vec3: A struct with x, y and z.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#Vec3]
+  note: Matches the spec. No dedicated test.
+```
+
+```mdl
+verdict Mesh: Holds base64 vertexData and indexData, with encode and decode helpers.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#Mesh, github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#encodeTypedArray, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/mesh-serializer.ts#serializeManifold]
+  note: No test round-trips the encoding.
+```
+
+```mdl
+verdict SceneArticle: Renders toolbar and canvas, or an inline canvas in the section role, and remembers the camera per scene.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/containers/SceneArticle/SceneArticle.tsx#SceneArticle, github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/SceneView.ts#cameraAspect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/containers/SceneArticle/SceneArticle.stories.tsx]
+  note: The tool, selection mode, grid and debug state live in the SpacetimeEditor's editor-state atom, not in the article.
+```
+
+```mdl
+verdict SpacetimeCanvas: The Babylon canvas has an ArcRotateCamera, a HemisphericLight and shortcuts, but delete is on x or Backspace, not Del.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeCanvas/SpacetimeCanvas.tsx#SpacetimeCanvas, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/scene-manager.ts#SceneManager]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/SpacetimeEditor.stories.tsx]
+  note: The keydown handler maps `m`, `e`, `x` and `backspace`. The Delete key is not handled.
+```
+
+```mdl
+verdict SpacetimeToolbar: Has templates, add, delete, hue, tools, selection mode, grid and debug, join and subtract, import and export.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeToolbar/SpacetimeToolbar.tsx#SpacetimeToolbar, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeToolbar/actions.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/SpacetimeEditor.stories.tsx]
+```
+
+```mdl
+verdict createScene: Not an Operation; the create-object entry makes a Scene with a cube and files it with AddObject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Scene.ts#make]
+  note: There is no `targetNodeId` input. No test invokes the entry.
+```
+
+```mdl
+verdict addObject: AddObjectAction creates a primitive or a preset and appends it to the scene.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/add-object.ts#AddObjectAction]
+  note: Not a registered Operation. No test runs the action.
+```
+
+```mdl
+verdict deleteObject: DeleteObjectsAction removes the refs and disposes runtime meshes, but leaves the ECHO objects.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/delete-objects.ts#DeleteObjectsAction]
+  note: The action splices `scene.objects` and calls `disposeSceneObject` for meshes and solids. It never calls `db.remove`, so the orphaned Object stays in the space. Untested.
+```
+
+```mdl
+verdict booleanUnion: JoinObjectsAction unions the solids with Manifold and stores the result as a mesh at the first object's position.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/join-objects.ts#JoinObjectsAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#joinSolids]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.test.ts]
+  walkthrough:
+    - The action collects the selected solids and positions, then replaces them with one mesh Object. github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/join-objects.ts#JoinObjectsAction
+    - joinSolids computes the union and the primary's position. github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#joinSolids
+  note: The tests cover the engine function, not the action's ECHO writes.
+```
+
+```mdl
+verdict booleanSubtract: SubtractObjectsAction computes primary minus the others and stores the result as a mesh at the primary's position.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/subtract-objects.ts#SubtractObjectsAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#subtractSolids]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.test.ts]
+  walkthrough:
+    - The action collects the selected solids in order, then replaces them with one mesh Object. github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/subtract-objects.ts#SubtractObjectsAction
+    - subtractSolids computes A − B − … and keeps A's position. github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#subtractSolids
+  note: The tests cover the engine function, not the action's ECHO writes.
+```
+
+```mdl
+verdict importGLB: Loads a GLB into a Manifold solid; a non-watertight mesh yields nothing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/glb-import.ts#importGLB, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/import-export.ts#handleImport]
+  note: '`importGLB` returns `null` when no mesh converts to a Manifold, and `handleImport` then adds no Object, so only watertight models import. Untested.'
+```
+
+```mdl
+verdict importOBJ: Parses OBJ and builds a Manifold; a non-manifold mesh yields nothing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/obj-import.ts#importOBJ, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/obj-import.ts#parseOBJ]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/obj-import.test.ts]
+  note: As for GLB, a non-watertight OBJ returns `null` and is not added to the scene.
+```
+
+```mdl
+verdict exportSTL: Writes the selected solid as binary STL and downloads object.stl.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/stl-export.ts#exportSTL, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/import-export.ts#handleExport]
+  note: No test.
+```
+
+```mdl
+verdict FR-1.1: Creating a Scene article makes a Scene with one default cube.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Scene.ts#make]
+  note: No test asserts the default cube.
+```
+
+```mdl
+verdict FR-1.2: Scene.objects is an ordered array of owned Object refs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Scene.ts#Scene]
+  note: No test asserts the order.
+```
+
+```mdl
+verdict FR-1.3: The Scene article renders the Babylon viewport.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/containers/SceneArticle/SceneArticle.tsx#SceneArticle, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeCanvas/SpacetimeCanvas.tsx#SpacetimeCanvas]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/containers/SceneArticle/SceneArticle.stories.tsx]
+```
+
+```mdl
+verdict FR-1.4: Changes are ECHO writes, so they replicate; the canvas reacts to scene changes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeCanvas/SpacetimeCanvas.tsx#SpacetimeCanvas]
+  note: No multi-peer test.
+```
+
+```mdl
+verdict FR-1.5: clearColor comes from the container's computed background-color.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/scene-manager.ts#resolveBackgroundColor]
+  note: No test.
+```
+
+```mdl
+verdict FR-2.1: The toolbar's add action creates an Object from the chosen template.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/add-object.ts#AddObjectAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeToolbar/actions.ts]
+  note: No test.
+```
+
+```mdl
+verdict FR-2.2: Delete runs from the toolbar, x or Backspace, but not Del, and leaves the ECHO objects in the space.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/delete-objects.ts#DeleteObjectsAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeCanvas/SpacetimeCanvas.tsx#SpacetimeCanvas]
+  note: The Del key is not handled. The removed Objects are not deleted from ECHO (see deleteObject). Untested.
+```
+
+```mdl
+verdict FR-2.3: The hue picker writes the selected object's color.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/useSelectedObjectColor.ts#useSelectedObjectColor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/useSelectedObjectColor.test.ts]
+```
+
+```mdl
+verdict FR-2.4: Position, scale, rotation, color and mesh are ECHO fields that the tools write.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/types/Model.ts#Object, github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/move-tool.ts#MoveTool, github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/extrude-tool.ts#ExtrudeTool]
+  note: No test checks that tool edits persist.
+```
+
+```mdl
+verdict FR-3.1: The toolbar toggles object and face selection modes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeToolbar/selection.ts#createSelectionModeActions]
+  note: No test.
+```
+
+```mdl
+verdict FR-3.2: A click selects the object, and a HighlightLayer shows the glow.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/select-tool.ts#SelectTool, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeCanvas/SpacetimeCanvas.tsx#SpacetimeCanvas]
+  note: No test.
+```
+
+```mdl
+verdict FR-3.3: A face click selects all coplanar triangles with an overlay mesh.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/select-tool.ts#selectFace, github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/select-tool.ts#buildFaceSelectionMesh]
+  note: No test.
+```
+
+```mdl
+verdict FR-3.4: A click on empty space clears the selection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/select-tool.ts#SelectTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-3.5: Shift-click toggles an object in a multi-object selection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/select-tool.ts#SelectTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-3.6: The multi-selection keeps click order, and the first entry is the primary.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/select-tool.ts#SelectTool]
+  note: The order is kept by appending to `objects`. No test.
+```
+
+```mdl
+verdict FR-4.1: SelectTool picks objects or faces according to the mode.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/select-tool.ts#SelectTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.2.1: A drag translates the object on the X/Z ground plane.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/move-tool.ts#MoveTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.2.2: Holding Cmd or Alt at drag start moves the object along Y.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/move-tool.ts#MoveTool]
+  note: The modifier is read once from the start event (`metaKey || altKey`). No test.
+```
+
+```mdl
+verdict FR-4.2.3: Shift snaps the position to the grid during the drag and at pointer-up.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/move-tool.ts#MoveTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.2.4: The position is written to ECHO only in onPointerUp.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/move-tool.ts#MoveTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.2.5: The camera control is detached during the drag and reattached afterwards.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/move-tool.ts#MoveTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.2.6: Companion objects in a multi-selection move by the same delta.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/move-tool.ts#MoveTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.3.1: Extrude needs a face selection, and picks one on the first click when none exists.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/extrude-tool.ts#ExtrudeTool]
+  note: No test of the tool.
+```
+
+```mdl
+verdict FR-4.3.2: A drag extrudes the face along its normal with warp().
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/extrusion.ts#applyExtrusion, github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/extrude-tool.ts#ExtrudeTool]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/extrusion.test.ts]
+```
+
+```mdl
+verdict FR-4.3.3: Shift snaps the extrusion distance.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/extrude-tool.ts#ExtrudeTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.3.4: A negative extrusion is clamped to keep MIN_SIZE.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/extrusion.ts#applyExtrusion, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/extrusion.ts#MIN_SIZE]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/extrusion.test.ts]
+```
+
+```mdl
+verdict FR-4.3.5: The Babylon mesh is updated from the extruded solid on each move.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/extrude-tool.ts#ExtrudeTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-4.3.6: On pointer-up the solid is replaced and the mesh is serialized to the Object.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/tools/extrude-tool.ts#ExtrudeTool]
+  note: No test.
+```
+
+```mdl
+verdict FR-5.1: An ArcRotateCamera orbits the scene center.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/scene-manager.ts#SceneManager]
+  note: No test.
+```
+
+```mdl
+verdict FR-5.2: Wheel zoom is set by wheelPrecision; pinch comes from Babylon's default pointer input.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/scene-manager.ts#SceneManager]
+  note: Zoom is limited to a radius of 2 to 50. No test.
+```
+
+```mdl
+verdict FR-5.3: The toolbar toggles the Y=0 grid.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/scene-manager.ts#createGroundGrid, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeToolbar/view.ts]
+  note: No test.
+```
+
+```mdl
+verdict FR-5.4: The toolbar toggles the debug panel with FPS and an axes viewer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeCanvas/DebugPanel.tsx, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeToolbar/view.ts]
+  note: No test.
+```
+
+```mdl
+verdict FR-6.1: GLB and GLTF import adds an Object only when the mesh is watertight.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/glb-import.ts#importGLB, github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeEditor/import-export.ts#handleImport]
+  note: A model Manifold rejects is dropped without a message. Untested.
+```
+
+```mdl
+verdict FR-6.2: OBJ import adds an Object only when the mesh is watertight.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/obj-import.ts#importOBJ]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/obj-import.test.ts]
+  note: The parser is tested. A non-manifold OBJ is not imported.
+```
+
+```mdl
+verdict FR-6.3: A watertight import becomes a Manifold solid, and anything else fails.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/glb-import.ts#importGLB, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/obj-import.ts#importOBJ]
+  note: Conversion is required, not conditional, which is the gap in FR-6.1 and FR-6.2. No test runs the GLB conversion.
+```
+
+```mdl
+verdict FR-6.4: Export writes the selected solid as binary STL.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/stl-export.ts#exportSTL]
+  note: No test.
+```
+
+```mdl
+verdict FR-7.1: Join unions all selected solids into a new Object.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/join-objects.ts#JoinObjectsAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#joinSolids]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.test.ts]
+```
+
+```mdl
+verdict FR-7.2: Subtract computes the ordered difference primary − others.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/subtract-objects.ts#SubtractObjectsAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#subtractSolids]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.test.ts]
+```
+
+```mdl
+verdict FR-7.3: The source refs are removed and one new Object is appended.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/join-objects.ts#JoinObjectsAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/subtract-objects.ts#SubtractObjectsAction]
+  note: As with delete, the source Objects are unlinked but not removed from ECHO. No test.
+```
+
+```mdl
+verdict FR-7.4: The result is placed at the primary's position.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#joinSolids, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.ts#subtractSolids]
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.test.ts]
+```
+
+```mdl
+verdict FR-7.5: The result Object stores the serialized mesh with no primitive.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/tools/actions/join-objects.ts#JoinObjectsAction, github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/mesh-serializer.ts#serializeManifold]
+  note: No test checks the stored Object.
+```
+
+```mdl
+verdict FR-7.6: Join and subtract are disabled below two selected objects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/components/SpacetimeToolbar/actions.ts]
+  note: The actions also return early below two. No test.
+```
+
+```mdl
+verdict T-FR-1.1: No test creates a Scene article and checks its default cube.
+  status: missing
+  note: No test file calls `Scene.make` or the create-object entry. The stories create scenes but assert nothing.
+```
+
+```mdl
+verdict T-FR-3.5: No test drives multi-select ordering.
+  status: missing
+  note: No test exercises `SelectTool`.
+```
+
+```mdl
+verdict T-FR-4.2.3: No test drives a snapped move.
+  status: missing
+  note: No test exercises `MoveTool`.
+```
+
+```mdl
+verdict T-FR-7.2: The engine test checks A − B geometry and position; nothing checks removal or the stored mesh.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/engine/boolean-ops.test.ts]
+  note: `subtractSolids` is tested directly. `SubtractObjectsAction` and its scene writes are not.
+```
+
+```mdl
+verdict T-FR-8: No test checks that shortcuts are ignored in text inputs.
+  status: missing
+  note: The guard exists in the canvas keydown handler, but no test exercises it.
+```
+
+```mdl
+verdict QA-1: The QA test is human-only, and nothing automates it.
+  status: missing
+  note: The test is `actors: human`. Searched for Playwright and autocue specs; an autocue `build-a-scene` drives QA-2, not QA-1.
+```

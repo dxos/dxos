@@ -7,7 +7,9 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Feature from '@dxos/plugin-projects/Feature';
 
+import { SPEC_PATH } from './spec.ts';
 import * as WorkerSpace from './WorkerSpace.ts';
 
 /** A task as the archive serializes it: refs become `{ '/': 'echo:///<id>' }`. */
@@ -18,6 +20,23 @@ type ArchivedTask = {
   'status'?: string;
   'dependsOn'?: Array<{ '/': string }>;
   'assignee'?: { role?: string; name?: string };
+};
+
+/** Any archived entity, with the fields the feature-map checks read. */
+type Archived = {
+  '@type'?: string;
+  'id': string;
+  'name'?: string;
+  'title'?: string;
+  'status'?: string;
+  'specs'?: string[];
+  'project'?: { '/': string };
+  'document'?: { '/': string };
+  'spec'?: { '/': string };
+  'features'?: Array<{ '/': string }>;
+  '@relationSource'?: string;
+  '@relationTarget'?: string;
+  '@meta'?: { keys?: Array<{ source: string; id: string }> };
 };
 
 /** The archive's tasks, in the order they were written. */
@@ -32,22 +51,89 @@ const taskArchive = async (definition: ReturnType<typeof WorkerSpace.make>): Pro
  * schema it seeds changes incompatibly, the build fails here.
  */
 describe('Worker template', () => {
-  test('builds the project and its six steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
-    const { json, objectCount } = await EffectEx.runPromise(buildArchive(WorkerSpace.make()));
-    const counts = histogram(json);
-    const countOf = (typename: string) =>
-      Object.entries(counts)
-        .filter(([type]) => type.includes(typename))
-        .reduce((total, [, count]) => total + count, 0);
+  test(
+    'builds the project, its three planning steps, the spec and the feature map, and nothing else',
+    { timeout: 120_000 },
+    async ({ expect }) => {
+      const { json, objectCount } = await EffectEx.runPromise(buildArchive(WorkerSpace.make()));
+      const counts = histogram(json);
+      const countOf = (typename: string) =>
+        Object.entries(counts)
+          .filter(([type]) => type.includes(typename))
+          .reduce((total, [, count]) => total + count, 0);
 
-    expect(objectCount).toBeGreaterThan(0);
-    expect(countOf('type.project')).toBe(1);
-    expect(countOf('type.instructions')).toBe(1);
-    expect(countOf('type.taskSet')).toBe(1);
-    expect(countOf('type.task:')).toBe(6);
-    // The URL and the response body are what the run produces, so the space ships no documents.
-    expect(countOf('type.document')).toBe(0);
-  });
+      expect(objectCount).toBeGreaterThan(0);
+      // With the colon, so the specs' `type.projects.spec` is not counted as a project.
+      expect(countOf('type.project:')).toBe(1);
+      expect(countOf('type.instructions')).toBe(1);
+      expect(countOf('type.taskSet')).toBe(1);
+      expect(countOf('type.task:')).toBe(3);
+      // Four features, and the endpoint's two subfeatures.
+      expect(countOf('type.feature:')).toBe(6);
+      // The map, and the spec that breaks the endpoint down; the map holds the one document.
+      expect(countOf('type.projects.spec:')).toBe(2);
+      expect(countOf('type.specDocument:')).toBe(1);
+      // The URL and the response body are what the run produces, so the space ships no documents.
+      expect(countOf('type.document')).toBe(0);
+    },
+  );
+
+  // The feature map is the plan seen from what the Worker must do: one feature per block the finished spec will have,
+  // each depending on the one before it.
+  test(
+    'the feature map files a feature per spec block, and opens the spec in the space',
+    { timeout: 120_000 },
+    async ({ expect }) => {
+      const { json } = await EffectEx.runPromise(buildArchive(WorkerSpace.make()));
+      const objects: Archived[] = JSON.parse(json).objects;
+      const ofType = (typename: string) => objects.filter((object) => object['@type']?.includes(typename));
+      const [project] = ofType('type.project:');
+      const all = ofType('type.feature:');
+      const byRef = (ref: { '/': string } | undefined) =>
+        objects.find((object) => `echo:///${object.id}` === ref?.['/']);
+      const map = ofType('type.projects.spec:').find((spec) => spec.project);
+      const features = (map?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
+      const tasks = ofType('type.task:');
+
+      expect(features.map((feature) => feature.name)).toEqual([
+        'Greeting endpoint',
+        'Deploy without an account',
+        'Verified response',
+        'Claimed account',
+      ]);
+      expect(features.every((feature) => feature.status === 'planned')).toBe(true);
+      expect(map?.project?.['/']).toBe(`echo:///${project.id}`);
+      expect(features.map((feature) => feature.specs)).toEqual(
+        ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
+      );
+      // The endpoint's parts are features of their own, on the spec that breaks it down.
+      const subfeatures = (byRef(features[0].spec)?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
+      expect(subfeatures.map((feature) => feature.name)).toEqual(['JSON greeting', 'UTC time']);
+      expect(all).toHaveLength(features.length + subfeatures.length);
+
+      // Each feature needs the one before it.
+      const dependsOn = ofType('relation.dependsOn');
+      expect(dependsOn.map((relation) => [relation['@relationSource'], relation['@relationTarget']])).toEqual(
+        features.slice(1).map((feature, index) => [`echo:///${feature.id}`, `echo:///${features[index].id}`]),
+      );
+
+      // Only the diagram is seeded against a feature, the endpoint it draws; the agent links the tasks it files.
+      const implementsLinks = ofType('relation.implements').map((relation) => [
+        relation['@relationSource'],
+        relation['@relationTarget'],
+      ]);
+      const diagram = tasks.find((task) => task.title === 'Draw the proposed architecture');
+      expect(implementsLinks).toEqual([[`echo:///${diagram?.id}`, `echo:///${features[0].id}`]]);
+
+      // The map's document is the space's copy of the path the features cite, so their cards open it instead of GitHub.
+      const [document] = ofType('type.specDocument:');
+      expect(map?.document?.['/']).toBe(`echo:///${document.id}`);
+      expect(document['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      for (const feature of features) {
+        expect(Feature.getSpecPath(feature.specs?.[0] ?? '')).toBe(SPEC_PATH);
+      }
+    },
+  );
 
   // Falsifiable without hardcoding the archive's contents: every typename in the archive must be one
   // the definition DECLARED. The zero-count above would not be — `countOf` substring-matches, so
@@ -72,12 +158,9 @@ describe('Worker template', () => {
     const tasks = await taskArchive(WorkerSpace.make());
 
     expect(tasks.map((task) => task.title)).toEqual([
+      'Complete the spec',
       'Draw the proposed architecture',
-      'Create a sandbox and install wrangler',
-      'Write the Worker',
-      'Deploy it with no Cloudflare login',
-      'Fetch the deployed URL and check the response',
-      'Claim the temporary Cloudflare account',
+      'Plan the implementation as tasks',
     ]);
     expect(tasks.every((task) => task.status === 'todo')).toBe(true);
 
@@ -89,15 +172,10 @@ describe('Worker template', () => {
     ]);
   });
 
-  // The one browser step is the reader's, and it is last: an agent with no login cannot update a
-  // claimed account, so claiming before the deploy would strand the run.
-  test('only the claim is assigned to the reader, and it is last', { timeout: 120_000 }, async ({ expect }) => {
+  // The template seeds the plan, not the work: the agent files the implementation tasks, the reader's claim among
+  // them, so no seeded task is assigned.
+  test('no seeded task is assigned', { timeout: 120_000 }, async ({ expect }) => {
     const tasks = await taskArchive(WorkerSpace.make());
-    const assigned = tasks.filter((task) => task.assignee !== undefined);
-
-    expect(assigned.map((task) => task.title)).toEqual(['Claim the temporary Cloudflare account']);
-    // The role is what the row reads as "not the agent's"; a name alone would not say that.
-    expect(assigned.map((task) => task.assignee?.role)).toEqual(['user']);
-    expect(tasks.at(-1)?.title).toEqual('Claim the temporary Cloudflare account');
+    expect(tasks.filter((task) => task.assignee !== undefined)).toEqual([]);
   });
 });

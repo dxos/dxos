@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/diagram"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -44,6 +47,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-doc"
@@ -76,6 +82,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -91,6 +100,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
@@ -98,6 +110,12 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-file-system"
+    },
+    {
+      "path": "../plugin-github"
     },
     {
       "path": "../plugin-space"

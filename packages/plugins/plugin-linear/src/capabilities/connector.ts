@@ -14,7 +14,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { LinearOperation } from '#types';
 
-import { LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants.ts';
+import { LINEAR_APP_PROVIDER_ID, LINEAR_MCP_ENDPOINT, LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants.ts';
 import { LinearApi } from '../services/index.ts';
 
 /**
@@ -58,10 +58,18 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
+const sync: ConnectorSpec.ConnectorEntry['sync'] = {
+  operation: LinearOperation.SyncLinearTeams,
+  getTargets: LinearOperation.GetLinearTeams,
+  materializeTarget: LinearOperation.MaterializeLinearTarget,
+  optionsSchema: LinearOperation.SyncOptions,
+};
+
 /**
- * Contributes a single `ConnectorSpec.Connector` entry that wires Linear's discovery,
- * materialization, and sync operations plus the token-created hook to the
- * `'linear.app'` source.
+ * Contributes Linear's two `ConnectorSpec.Connector` entries, wiring its discovery, materialization,
+ * and sync operations plus the token-created hook to the `'linear.app'` source. One acts as the
+ * person who connects; the other as DXOS's Linear app, whose writes Linear attributes to the app and
+ * which a workspace admin has to authorize. The app's own user answers the `viewer` query.
  *
  * Sync targets are Linear teams; each is bound by one external-sync `Cursor` whose
  * `spec.target` is the team's local root Project. Per-binding `SyncOptions.maxDaysBack`
@@ -84,16 +92,27 @@ export default Capability.makeModule(
         id: LINEAR_PROVIDER_ID,
         source: LINEAR_SOURCE,
         label: 'Linear',
+        kind: 'user',
+        mcp: () => LINEAR_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.LINEAR,
           scopes: ['read', 'write'],
         },
-        sync: {
-          operation: LinearOperation.SyncLinearTeams,
-          getTargets: LinearOperation.GetLinearTeams,
-          materializeTarget: LinearOperation.MaterializeLinearTarget,
-          optionsSchema: LinearOperation.SyncOptions,
+        sync,
+        onTokenCreated,
+        testConnection,
+      },
+      {
+        id: LINEAR_APP_PROVIDER_ID,
+        source: LINEAR_SOURCE,
+        label: 'Linear App',
+        kind: 'app',
+        mcp: () => LINEAR_MCP_ENDPOINT,
+        oauth: {
+          provider: OAuthProvider.LINEAR,
+          scopes: ['read', 'write'],
         },
+        sync,
         onTokenCreated,
         testConnection,
       },

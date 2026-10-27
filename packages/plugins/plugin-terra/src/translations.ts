@@ -40,6 +40,7 @@ export const translations = [
         'add-random-object.label': 'Add random object',
         'show-gizmos.label': 'Show rotation gizmos',
         'hide-gizmos.label': 'Hide rotation gizmos',
+        'view.label': 'View',
         'scene-view.label': '3D',
         'map-view.label': 'Map',
         'camera-view.label': 'Camera',

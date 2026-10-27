@@ -1,0 +1,130 @@
+name: Workspace Snapshot
+
+# Builds the snapshot that `.github/actions/workspace-snapshot/mount` mounts: nightly from main, and on any
+# change to how it is built. `bench` then takes the same commit to a built state both ways, today's checkout
+# and setup against the mounted snapshot, so the saving stays measured.
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  schedule:
+    - cron: '41 4 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - .github/actions/workspace-snapshot/**
+      - .github/actions/setup/action.yml
+      - .github/actions/playwright/action.yml
+      - .github/workflows/workspace-image.yml
+  workflow_dispatch:
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+concurrency:
+  group: workspace-snapshot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      tag: ${{ steps.tags.outputs.tag }}
+    steps:
+      # Exactly Check's clone, so a job's checkout reuses it instead of re-cloning.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # `ws-latest-sqfs` only from main: a branch build must never become what every job mounts.
+      - name: Resolve tags
+        id: tags
+        run: |
+          tag="ws-${GITHUB_SHA:0:12}-sqfs"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "all=$tag${{ github.ref == 'refs/heads/main' && ' ws-latest-sqfs' || '' }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build snapshot
+        uses: ./.github/actions/workspace-snapshot/create
+        with:
+          tags: ${{ steps.tags.outputs.all }}
+          username: dxos-bot
+          password: ${{ secrets.GH_DXOS_BOT_PAT }}
+
+  bench:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [baseline, snapshot]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout. A
+      # remote `dxos/dxos/...@ref` reference would download and unpack the whole repository instead.
+      - name: Checkout the snapshot actions
+        if: ${{ matrix.variant == 'snapshot' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ matrix.variant == 'snapshot' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+        with:
+          tag: ${{ needs.build.outputs.tag }}
+
+      # `clean: false`, or checkout's `git clean -ffdx` deletes every node_modules in the snapshot.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+          clean: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      # As the browser jobs install them: from the snapshot's bundle when mounted, from the network otherwise.
+      # webkit needs the most system packages, chromium the fewest.
+      - name: Playwright (chromium)
+        uses: ./.github/actions/playwright
+        with:
+          browser: chromium
+
+      - name: Playwright (webkit)
+        uses: ./.github/actions/playwright
+        with:
+          browser: webkit
+
+      - name: Build
+        run: moon exec --on-failure continue :build || true
+
+      # Every dependency file once, cold: where reading from a compressed image costs.
+      - name: Read node_modules
+        run: |
+          SECONDS=0
+          bytes=$(find node_modules/.pnpm -type f -print0 | xargs -0 cat | wc -c)
+          echo "read $((bytes / 1000000)) MB in ${SECONDS}s"
+
+      # A real suite: the passthrough argument changes the task's hash, so this one runs while its
+      # dependencies still come from cache.
+      - name: Test (client)
+        run: moon run client:test -- --reporter=dot || true
