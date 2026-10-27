@@ -82,13 +82,12 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
                   label: connection.name ?? connection.connectorId ?? connection.id,
                 }))}
               >
-                <Listbox.Viewport>
-                  <Listbox.Content aria-label={t('connections.label')}>
-                    {connections.map((connection) => (
-                      <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Viewport>
+                {/* No `Listbox.Viewport`: `Form.Viewport` scrolls, so the rows inherit its gutter grid. */}
+                <Listbox.Content aria-label={t('connections.label')}>
+                  {connections.map((connection) => (
+                    <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
+                  ))}
+                </Listbox.Content>
               </Listbox.Root>
             </Form.FieldSet>
           )}
