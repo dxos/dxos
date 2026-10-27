@@ -4,3 +4,15 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
+
+tasks:
+  # The `manual`-tagged benches (`src/**/*.bench.ts`). Never a PR gate and never cached: a measurement is
+  # not a pass/fail, and a cached one measured nothing. `SNAPSHOT_BENCH_COUNTS` sets the scales.
+  bench:
+    command: pnpm exec vitest bench --run --outputJson ../../../../test-results/echo-host-bench/results.json
+    env:
+      DX_RUN_MANUAL_TESTS: '1'
+    deps:
+      - ^:build
+    options:
+      cache: false

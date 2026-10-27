@@ -132,6 +132,11 @@ export const QueryResult = Schema.Struct({
    */
   documentJson: Schema.optional(Schema.String),
   /**
+   * {@link documentJson} as SQLite JSONB, which is how the index stores it, so the host ships its bytes without a
+   * text round trip and the client decodes them in one pass. A row carries one of the two, never both.
+   */
+  documentJsonb: Schema.optional(Schema.Uint8Array),
+  /**
    * JSON-encoded group key (an object keyed by the aggregate's group-field names). Present iff the query has an aggregate clause.
    */
   groupKey: Schema.optional(Schema.String),

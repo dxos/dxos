@@ -12,12 +12,14 @@ import { Event, sleep } from '@dxos/async';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
+import { ATTR_TYPE, StaticRefResolver } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
+import * as Jsonb from '@dxos/util/Jsonb';
 
 import { type ObjectUpdate } from './index-query-source-provider.ts';
 import { IndexQuerySource } from './index-query-source-provider.ts';
@@ -285,6 +287,52 @@ describe('IndexQuerySource', () => {
     const results = await source.run(Context.default(), makeQuery(spaceId));
 
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
+  });
+
+  test('a feed row whose JSONB cannot be read is dropped without failing the query', async () => {
+    const spaceId = SpaceId$.random();
+    const queueId = EntityId.random();
+    const [broken, readable] = [EntityId.random(), EntityId.random()];
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  // An object header claiming 255 bytes of payload where none follow.
+                  { id: broken, spaceId, queueId, rank: 0, documentJsonb: new Uint8Array([0xcc, 0xff]) },
+                  {
+                    id: readable,
+                    spaceId,
+                    queueId,
+                    rank: 0,
+                    documentJsonb: Jsonb.encode({ id: readable, [ATTR_TYPE]: 'dxn:type:org.dxos.type.person:0.1.0' }),
+                  },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: { loadObject: async () => undefined, updateEvent: noopUpdateEvent },
+      graph: {
+        createRefResolver: () => new StaticRefResolver(),
+        getDatabase: () => undefined,
+      },
+    });
+    onTestFinished(() => source.close());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+
+    expect(results.map((entry) => entry.id)).toEqual([readable]);
   });
 
   // Regression: every hit armed and cleared its own budget timer, which on a re-hydration pass over a

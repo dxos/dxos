@@ -21,6 +21,7 @@ import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type DataService, type QueryService } from '@dxos/protocols/rpc';
+import * as Jsonb from '@dxos/util/Jsonb';
 
 import { QueryExecutor } from '../query/index.ts';
 import { createTestSqliteRuntime } from '../testing/index.ts';
@@ -1040,7 +1041,7 @@ describe('EchoHost index-backed rows', () => {
     );
     const row = (id: EntityId) => response?.results?.find((result) => result.id === id);
     expect(row(saved)?.heads).toEqual(getHeads(savedHandle.doc()!));
-    expect(JSON.parse(row(saved)!.documentJson!).title).toBe(saved);
+    expect(Reflect.get(Object(documentOf(row(saved))), 'title')).toBe(saved);
     expect(row(saved)?.bytes).toBeDefined();
     expect(row(unsaved)?.heads).toBeUndefined();
     expect(row(unsaved)?.bytes).toBeUndefined();
@@ -1240,3 +1241,11 @@ const setup = async (
 
   return { host, runtime, spaceId, saveDocs, saveObject, saveObjects };
 };
+
+/** A row's object body, whichever encoding the host shipped it in. */
+const documentOf = (result: QueryService.QueryResult | undefined): unknown =>
+  result?.documentJsonb !== undefined
+    ? Jsonb.decode(result.documentJsonb)
+    : result?.documentJson !== undefined
+      ? JSON.parse(result.documentJson)
+      : undefined;

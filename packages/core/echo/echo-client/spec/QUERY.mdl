@@ -25,7 +25,7 @@ The packages involved:
 | `@dxos/echo-client`  | `QueryResultImpl`, `LocalQueryEngine`, `WorkingSetView`, `RegistryView`, the merge.     |
 | `@dxos/protocols`    | The `QueryService` wire schema shared by the host and EDGE.                             |
 | `@dxos/echo-host`    | `QueryExecutor` (memory and SQL), `SqlPlanCompiler`.                                    |
-| `@dxos/index-core`   | The object snapshot index: each object's JSON copy, its heads and its version.         |
+| `@dxos/index-core`   | The object snapshot index: each object's JSONB copy, its heads and its version.        |
 
 The long-form design, with the reasoning and the rejected alternatives, is
 `packages/core/echo/echo-client/docs/SYNC_QUERIES.md`. Tests map to the acceptance scenarios:
@@ -237,6 +237,8 @@ service QueryService
   ops:
     execQuery(request: QueryRequest) → stream QueryResponse
   fields:
+    QueryResult.documentJson?: string      # the object's copy as JSON text, for a reader that takes JSON
+    QueryResult.documentJsonb?: bytes      # the same copy as the index stores it, SQLite JSONB [F-12.2]
     QueryResult.version?: Version
     QueryResult.paths?: PathEdge[][]
     QueryResult.manifest?: ManifestEntry[]
@@ -463,7 +465,36 @@ feat F-11: The host answers from index copies
 
   req F-11.3:
     when: a client subscription already holds a hit's document
-    then: the row ships without its JSON copy or stored changes
+    then: the row ships without its index copy or stored changes
+```
+
+```mdl
+feat F-12: The index copy is JSONB end to end
+
+  req F-12.1:
+    when: the indexer stores an object's copy
+    then: objectSnapshot.snapshot holds it as SQLite JSONB, encoded in-process, so predicates and ordering
+          read it without parsing text
+
+  req F-12.2:
+    when: a host or EDGE ships an index-backed row to a client over a message channel or a worker binding
+    then: the row carries the stored bytes as documentJsonb and no documentJson
+    when: EDGE answers the exec-query HTTP route
+    then: each row carries documentJson text and no documentJsonb
+
+  req F-12.3:
+    when: the client hydrates a row that carries documentJsonb
+    then: it builds the object in one decode pass that also restores byte values and, when the type has no
+          schema, references
+
+  req F-12.4:
+    when: a feed block carries a partial object (no type)
+    then: the indexer merges its keys onto the stored copy inside SQLite, as an object spread would: a
+          key replaces the stored value whole, and a key whose value is undefined is removed
+
+  req F-12.5:
+    when: the full-text index reads changed objects
+    then: it reads their copies through ObjectSnapshotIndex, as every other reader does
 ```
 
 ## Current limits
@@ -730,4 +761,47 @@ decision D-17: Every revalidation field on the wire is optional. An old host or 
   for: user:dmaretskyi
   affects: [QueryService]
   why: The host, EDGE and clients deploy separately; optional fields keep every pairing working without a protocol version.
+```
+
+```mdl
+decision D-18: The index stores object copies as SQLite JSONB, and JSONB is carried up the stack to the client, which builds an object from it in one parse instead of a JSON parse followed by a separate construction step.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-12.1, F-12.2, F-12.3, F-11.3]
+```
+
+```mdl
+decision D-19: Writes encode the JSONB copy in-process, and partial feed blocks merge onto the stored copy in SQL. The memory executor stays, since the working set is an important part of querying. The full-text index reads copies from the object snapshot index like every other path.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-12.1, F-12.4, F-12.5, F-11]
+```
+
+```mdl
+decision D-20: EDGE answers its HTTP route with JSON, and sends the JSONB bytes over worker bindings.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-12.2]
+```
+
+```mdl
+decision D-21: A partial block merges with jsonb_set per key and jsonb_remove for keys whose value is undefined, which gives object-spread semantics. Fills in [D-19].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.4]
+  why: The merge it replaces was a JavaScript object spread, so readers expect a key to replace its value whole.
+  rejected:
+    - jsonb_patch: RFC 7396 merge-patch deep-merges nested objects and deletes keys set to null, which changes what readers see.
+```
+
+```mdl
+decision D-22: QueryResult gains an optional documentJsonb next to documentJson, and a server sends one of the two. Existing copies are converted in place by a one-time migration. Fills in [D-18] and [D-20].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QueryService, F-12.1, F-12.2]
+  why: An optional field keeps old clients and EDGE deployments working; one encoding per row avoids shipping the copy twice.
+  rejected:
+    - Base64 JSONB inside documentJson for HTTP: an HTTP client would need a JSONB reader to use the result.
 ```

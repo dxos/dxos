@@ -16,6 +16,7 @@ import {
   isEncodedUint8Array,
   visitValues,
 } from '@dxos/util';
+import * as Jsonb from '@dxos/util/Jsonb';
 
 import type * as Database from '../../Database.ts';
 import type * as Obj from '../../Obj.ts';
@@ -100,20 +101,80 @@ export const objectFromJSON = async (
   assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
   const type = URI.make(jsonData[ATTR_TYPE]);
+  const schema = await resolveSchema(type, refResolver);
+  const decodedInput = restoreUint8Arrays(stripInternalJsonKeys(jsonData));
+  const obj =
+    schema != null
+      ? await decodeWithSchema(schema, decodedInput, refResolver)
+      : decodeGeneric(decodedInput, { refResolver });
+  return completeObject(obj, jsonData, type, schema, { refResolver, uri, database, parent });
+};
+
+/**
+ * {@link objectFromJSON} over the object's SQLite JSONB, in one pass where the JSON route takes three: the type is
+ * read without decoding the rest, so the schema is known before decoding, and the decode itself restores the
+ * `Uint8Array` markers and, when no schema will, the encoded references, instead of a text parse followed by a
+ * walk for each.
+ */
+export const objectFromJSONB = async (
+  jsonb: Uint8Array,
+  options: { refResolver?: RefResolver; uri?: URI.URI; database?: Database.Database; parent?: Obj.Unknown } = {},
+): Promise<AnyEntity> => {
+  const typename = Jsonb.readTopLevelString(jsonb, ATTR_TYPE);
+  assertArgument(typename !== undefined, 'jsonb', 'expected object to have a type');
+  const type = URI.make(typename);
+  const schema = await resolveSchema(type, options.refResolver);
+  const jsonData = Jsonb.decode(jsonb, {
+    mapObject: schema != null ? restoreUint8Array : (value) => restoreValue(value, options.refResolver),
+    // The meta's encoded tag references are resolved to tag entities below, not to plain refs.
+    skipMapping: RAW_KEYS,
+  });
+  assumeType<ObjectJSON>(jsonData);
+  assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonb', 'expect object');
+  assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
+  const decodedInput = stripInternalJsonKeys(jsonData);
+  const obj = schema != null ? await decodeWithSchema(schema, decodedInput, options.refResolver) : decodedInput;
+  return completeObject(obj, jsonData, type, schema, options);
+};
+
+const RAW_KEYS: ReadonlySet<string> = new Set([ATTR_META]);
+
+type ResolvedSchema = NonNullable<Awaited<ReturnType<RefResolver['resolveSchema']>>>;
+
+const resolveSchema = async (type: URI.URI, refResolver: RefResolver | undefined) => {
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
-  const decodedInput = restoreUint8Arrays(stripInternalJsonKeys(jsonData));
+  return schema;
+};
 
-  let obj: any;
-  if (schema != null) {
-    obj = await Schema.decodeUnknownPromise(schema)(decodedInput);
-    if (refResolver) {
-      setRefResolverOnData(obj, refResolver);
-    }
-  } else {
-    obj = decodeGeneric(decodedInput, { refResolver });
+const decodeWithSchema = async (schema: ResolvedSchema, input: unknown, refResolver: RefResolver | undefined) => {
+  const obj: any = await Schema.decodeUnknownPromise(schema)(input);
+  if (refResolver) {
+    setRefResolverOnData(obj, refResolver);
   }
+  return obj;
+};
 
+/** A decoded object's marker, if it is one, as the value it encodes. */
+const restoreUint8Array = (value: Record<string, unknown>): unknown =>
+  isEncodedUint8Array(value) ? decodeUint8ArrayFromJson(value) : value;
+
+const restoreValue = (value: Record<string, unknown>, refResolver: RefResolver | undefined): unknown =>
+  isEncodedReference(value) ? refFromEncodedReference(value, refResolver) : restoreUint8Array(value);
+
+/** Stamps the type, kind, meta, parent and location onto a decoded object, from its JSON's internal keys. */
+const completeObject = async (
+  obj: any,
+  jsonData: ObjectJSON,
+  type: URI.URI,
+  schema: ResolvedSchema | undefined,
+  {
+    refResolver,
+    uri,
+    database,
+    parent,
+  }: { refResolver?: RefResolver; uri?: URI.URI; database?: Database.Database; parent?: Obj.Unknown },
+): Promise<AnyEntity> => {
   invariant(EntityId.isValid(obj.id), 'Invalid object id');
   setTypename(obj, type);
   if (schema) {

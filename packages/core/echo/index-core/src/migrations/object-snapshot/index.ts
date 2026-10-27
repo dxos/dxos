@@ -8,12 +8,14 @@ import init from './0001_init.sql?raw';
 import objectState from './0002_object_state.sql?raw';
 import objectBytes from './0003_object_bytes.sql?raw';
 import objectVersion from './0004_object_version.sql?raw';
+import snapshotJsonb from './0005_snapshot_jsonb.sql?raw';
 
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
   '0002_object_state': SqlMigrations.apply(objectState),
   '0003_object_bytes': SqlMigrations.apply(objectBytes),
   '0004_object_version': SqlMigrations.apply(objectVersion),
+  '0005_snapshot_jsonb': SqlMigrations.apply(snapshotJsonb),
 };
 
 /** Own history table per store, since many stores share the client database. */

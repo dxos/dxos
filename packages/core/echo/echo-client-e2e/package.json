@@ -30,12 +30,14 @@
     "@dxos/perf-harness": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/sql-sqlite": "workspace:*"
   },
   "beast": {}
 }
