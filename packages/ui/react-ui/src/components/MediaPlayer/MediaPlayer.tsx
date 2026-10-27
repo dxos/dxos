@@ -16,8 +16,15 @@ export type MediaPlayerFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down
 
 type MediaPlayerStatus = 'loading' | 'loaded' | 'error';
 
-/** iframe sandbox flags compatible with typical oEmbed-style players. */
-const IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
+/**
+ * iframe sandbox flags compatible with typical oEmbed-style players. `allow-presentation` only where the
+ * engine knows it: WebKit rejects it with a console error for every embed.
+ */
+let iframeSandbox: string | undefined;
+const getIframeSandbox = (): string =>
+  (iframeSandbox ??= document.createElement('iframe').sandbox.supports('allow-presentation')
+    ? 'allow-scripts allow-same-origin allow-presentation'
+    : 'allow-scripts allow-same-origin');
 
 /** Cloudflare Stream `/iframe` embeds: `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`. */
 const CLOUDFLARE_STREAM_IFRAME_PATTERN =
@@ -105,7 +112,7 @@ export const MediaPlayer = ({
           src={src}
           title={alt ?? 'Embedded media'}
           loading='lazy'
-          sandbox={IFRAME_SANDBOX}
+          sandbox={getIframeSandbox()}
           referrerPolicy='no-referrer'
           allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
           allowFullScreen
