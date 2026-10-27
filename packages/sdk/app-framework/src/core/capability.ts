@@ -14,6 +14,7 @@ import type { DXN } from '@dxos/keys';
 import type * as ActivationEvent from './activation-event.ts';
 import type * as CapabilityManager from './capability-manager.ts';
 import { CapabilityNotFoundError } from './errors.ts';
+import * as HotModules from './hot-modules.ts';
 import type * as Plugin from './plugin.ts';
 
 //
@@ -558,9 +559,12 @@ export const lazyModule = <
     Effect.gen(function* () {
       // Chunk import measured separately from the body: on deferral the import moves to the
       // interaction path wholesale, so its cost has its own axis in the startup profile.
-      const moduleId = (yield* CurrentModuleId) ?? name;
+      const currentModuleId = yield* CurrentModuleId;
+      const moduleId = currentModuleId ?? name;
       performance.mark(`module-import:${moduleId}:start`);
-      const { default: getModule } = yield* Effect.promise(() => loader());
+      const loaded = yield* Effect.promise(() => loader());
+      HotModules.track(loaded, currentModuleId);
+      const getModule = loaded.default;
       performance.mark(`module-import:${moduleId}:end`);
       performance.measure(
         `module-import:${moduleId}`,

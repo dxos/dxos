@@ -67,6 +67,7 @@ export const operations: readonly Operation.Definition.Any[] = [
   FeatureOperation.LinkTask,
   FeatureOperation.CreateShowcase,
   FeatureOperation.GetFeatures,
+  FeatureOperation.ImportSpec,
 ];
 
 /**

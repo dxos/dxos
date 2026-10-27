@@ -587,7 +587,7 @@ const useToolbarActions = ({
             group.action(
               'pipeline',
               {
-                label: ['pipeline.label', { ns: meta.profile.key }],
+                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: meta.profile.key }],
                 icon: 'ph--chart-bar-horizontal--regular',
                 testId: 'projectsPlugin.pipeline',
               },

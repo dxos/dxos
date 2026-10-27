@@ -72,6 +72,7 @@ import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as QaPlugin from '@dxos/plugin-qa/QaPlugin';
+import * as RecorderPlugin from '@dxos/plugin-recorder/RecorderPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
@@ -311,6 +312,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     PipelinePlugin.make(),
     PresenterPlugin.make(),
     QaPlugin.make(),
+    // Records a presentation's voice-over; it asks for the microphone only when Record is pressed.
+    RecorderPlugin.make(),
     ProjectsPlugin.make(),
     ReviewPlugin.make(),
     isLocal && SamplePlugin.make(),

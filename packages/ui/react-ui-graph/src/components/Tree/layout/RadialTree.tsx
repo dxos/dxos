@@ -51,7 +51,7 @@ export const RadialTree = ({
   classNames,
   data,
   label = (d) => d.label ?? d.id,
-  slots = defaultTreeLayoutSlots,
+  slots: slotsProp,
   r = 4,
   padding = 80,
   initialCollapsed,
@@ -60,6 +60,8 @@ export const RadialTree = ({
   onNodeHover,
 }: RadialTreeProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // A partial `slots` (e.g. only `nodeFill`) must extend the defaults, not drop their classes.
+  const slots = useMemo(() => ({ ...defaultTreeLayoutSlots, ...slotsProp }), [slotsProp]);
   const { setRef, width, height } = useContainerSize();
 
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(initialCollapsed ?? []));

@@ -1,0 +1,379 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-voxel/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: VoxelPlugin
+
+Almost everything the spec describes is built: the `World` ECHO type with the voxel map, the four
+operations, the shape generators, the Conway `Life` model ticking every 500 ms, and the editor with
+ghost cursor, bounds check, orbit controls and a read-only fit camera. Testing is the gap: the only
+test is `plugin.test.ts` (module activation), so every behaviour is `untested` and every scenario
+`missing`. Two divergences: `addVoxels` does not overwrite occupied cells, and Seed replaces the whole
+voxel map rather than only the ground plane.
+
+Of 50 items: 0 done, 37 untested, 1 partial, 1 diverged, 11 missing. Findings:
+
+- **No behavioural tests.** The ops (T-6, T-9) and `Life.tick` (T-7) are pure enough to unit-test but
+  have none.
+- **addVoxels diverged.** It skips occupied keys, contradicting the spec's overwrite note.
+- **F-5.1 partial.** Seeding wipes voxels above the ground plane.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict VoxelProps: VoxelProps is an Effect schema with a hue string.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#VoxelProps]
+  note: No test exercises it.
+```
+
+```mdl
+verdict VoxelData: VoxelData is x, y, z plus hue.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#VoxelData]
+  note: No test exercises it.
+```
+
+```mdl
+verdict VoxelMap: VoxelMap is a record keyed by "x:y:z" with voxelKey/parseVoxelKey helpers.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#VoxelMap, github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#voxelKey]
+  note: No test exercises it.
+```
+
+```mdl
+verdict World: World is an ECHO object org.dxos.type.voxel with name, gridX, gridY, blockSize and voxels; defaults 32/32/1.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#World, github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#getGridDimensions, github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#make]
+  note: `plugin.test.ts` only checks module activation; nothing creates or reads a World in a test.
+```
+
+```mdl
+verdict ToolMode: ToolMode is select | add | remove.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#ToolMode]
+  note: Declared in VoxelEditor; no test.
+```
+
+```mdl
+verdict ModelType: ModelType lists the five shapes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/models/models.ts#ModelType, github:dxos/dxos/packages/plugins/plugin-voxel/src/models/models.ts#MODEL_TYPES]
+  note: No test.
+```
+
+```mdl
+verdict Origin: Origin exists only as unexported local shapes (a models.ts type and the Position/origin schemas).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#GenerateShape]
+  note: There is no exported `Origin` type; `models.ts` declares a private `Origin` and VoxelOperation a private `Position` struct. No test.
+```
+
+```mdl
+verdict VoxelEditor: VoxelEditor renders the Three.js scene with ghost cursor, selection indicator, grid, gizmo and a read-only fit camera.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: Props and defaults (16, 16, 1, add, blue, grid on) match. Orbit/pan is also bound to Option/Shift+left, beyond the spec. Only stories render it.
+```
+
+```mdl
+verdict VoxelToolbar: VoxelToolbar provides tool-mode toggle, grid, shape, clear, seed, play/pause and HuePicker.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelToolbar/VoxelToolbar.tsx#VoxelToolbar]
+  note: Rendered in `Panel.Header`, not `Panel.Toolbar`. Only a story renders it.
+```
+
+```mdl
+verdict VoxelArticle: VoxelArticle owns tool, hue, grid, life and selection state and composes toolbar, editor and hint bar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: Matches the spec; uses `Panel.Header`/`Panel.Body`. Only stories render it.
+```
+
+```mdl
+verdict VoxelCard: VoxelCard renders VoxelEditor read-only with no toolbar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelCard/VoxelCard.tsx#VoxelCard]
+  note: Only a story renders it.
+```
+
+```mdl
+verdict queryWorld: queryWorld returns grid dimensions, block size, voxel count and voxels.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#QueryWorld, github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/query-world.ts]
+  walkthrough:
+    - The operation declares the world ref input and the result schema. github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#QueryWorld
+    - The handler loads the world and converts the voxel map to an array. github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/query-world.ts
+  note: No test invokes the handler.
+```
+
+```mdl
+verdict addVoxels: addVoxels skips coordinates already occupied instead of overwriting them.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#AddVoxels, github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/add-voxels.ts]
+  note: The spec says existing voxels are overwritten; the handler only writes keys not already in the map (`if (!(key in voxelMap))`), so a hue change at an occupied cell is dropped. No test.
+```
+
+```mdl
+verdict removeVoxels: removeVoxels deletes present keys and ignores absent ones, returning the count.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#RemoveVoxels, github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/remove-voxels.ts]
+  walkthrough:
+    - The operation declares world and positions input. github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#RemoveVoxels
+    - The handler deletes each present key and counts removals. github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/remove-voxels.ts
+  note: No test.
+```
+
+```mdl
+verdict generateShape: generateShape builds the named model at the origin with the hue and writes it, overwriting.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#GenerateShape, github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/generate-shape.ts, github:dxos/dxos/packages/plugins/plugin-voxel/src/models/models.ts#generateModel]
+  walkthrough:
+    - The operation declares shape literals, origin and hue. github:dxos/dxos/packages/plugins/plugin-voxel/src/types/VoxelOperation.ts#GenerateShape
+    - The handler generates voxels and writes them into the world map. github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/generate-shape.ts
+    - generateModel dispatches to the five shape generators. github:dxos/dxos/packages/plugins/plugin-voxel/src/models/models.ts#generateModel
+  note: No test.
+```
+
+```mdl
+verdict F-1.1: A ground click in add mode places a voxel at the rounded cell at z=0.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor, github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: `handleGroundClick` in the editor scene; no test.
+```
+
+```mdl
+verdict F-1.2: A face click in add mode places a voxel offset by the face normal.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: `handleVoxelClick` in the editor scene; no test.
+```
+
+```mdl
+verdict F-1.3: A semi-transparent ghost cursor follows the pointer in add mode.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: The ground ghost is not bounds-checked, so it can show over cells where placement is rejected. No test.
+```
+
+```mdl
+verdict F-1.4: Out-of-bounds placements are dropped by isInBounds before onAddVoxel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: Bounds are the half-extent around origin; no test.
+```
+
+```mdl
+verdict F-2.1: A voxel click in remove mode deletes it from the world map.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor, github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-2.2: In remove mode the ghost cursor is red over the hovered voxel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: `GhostCursor` uses 0xff0000 when `isRemove`; no test.
+```
+
+```mdl
+verdict F-3.1: The toolbar HuePicker sets selectedHue, used for new voxels.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelToolbar/VoxelToolbar.tsx#VoxelToolbar, github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-3.2: Changing hue leaves stored voxels untouched.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: True by construction; no test.
+```
+
+```mdl
+verdict F-4.1: The Generate button places a random model at selectedPosition or origin.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle, github:dxos/dxos/packages/plugins/plugin-voxel/src/models/models.ts#generateRandomModel]
+  note: No test.
+```
+
+```mdl
+verdict F-4.2: The generateShape handler places the requested shape with the hue.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/operations/generate-shape.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-4.3: generateModel supports cube, wall, sphere, cylinder and tower.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/models/models.ts#generateModel]
+  note: No test.
+```
+
+```mdl
+verdict F-5.1: Seed applies a random well-known pattern at z=0 but replaces the whole voxel map.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle, github:dxos/dxos/packages/plugins/plugin-voxel/src/models/life.ts#Life.randomPattern]
+  note: `handleSeedLife` calls `updateVoxels(toVoxelMap(pattern))`, wiping every existing voxel including those at z>0. No test.
+```
+
+```mdl
+verdict F-5.2: Play ticks Life every 500 ms with Conway rules.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle, github:dxos/dxos/packages/plugins/plugin-voxel/src/models/life.ts#Life.tick]
+  note: `LIFE_TICK_MS = 500`; no test of the tick.
+```
+
+```mdl
+verdict F-5.3: Pause clears the interval and keeps the voxel state.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-5.4: Each tick writes the next map into the ECHO World.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-5.5: Life.tick keeps non-ground voxels unchanged.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/models/life.ts#Life.tick]
+  note: Seeding still wipes them (see F-5.1). No test.
+```
+
+```mdl
+verdict F-6.1: Interactive add/remove update World.voxels via useObject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-6.2: VoxelArticle reads voxels through useObject and re-renders on remote updates.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/containers/VoxelArticle/VoxelArticle.tsx#VoxelArticle]
+  note: No multi-peer test.
+```
+
+```mdl
+verdict F-6.3: New Worlds are created with typename org.dxos.type.voxel through the space create entry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/types/Voxel.ts#World, github:dxos/dxos/packages/plugins/plugin-voxel/src/capabilities/create-object.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-7.1: The camera starts in perspective framing the grid center.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: No test.
+```
+
+```mdl
+verdict F-7.2: Middle-drag orbits around the grid center.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: Also Option+left-drag; the hint bar advertises Option-drag rather than middle-click. No test.
+```
+
+```mdl
+verdict F-7.3: Shift+middle-drag pans.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: Also Shift+left-drag. No test.
+```
+
+```mdl
+verdict F-7.4: Scroll zooms (enableZoom).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor]
+  note: No test.
+```
+
+```mdl
+verdict F-7.5: Read-only mode fits voxel bounds and disables pan, zoom and rotate.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/VoxelEditor.tsx#VoxelEditor, github:dxos/dxos/packages/plugins/plugin-voxel/src/components/VoxelEditor/voxel-bounds.ts#computeVoxelBounds]
+  note: No test of `computeVoxelBounds` or `FitCamera`.
+```
+
+```mdl
+verdict T-1: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-2: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-3: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-4: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-5: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-6: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-7: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-8: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-9: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict T-10: No automated test runs this scenario.
+  status: missing
+  note: plugin-voxel has only `plugin.test.ts` (module activation) and stories without play functions; no e2e spec.
+```
+
+```mdl
+verdict QA-1: The agent-only QA test is not automated.
+  status: missing
+  note: No Playwright or composer-qa automation runs it.
+```
