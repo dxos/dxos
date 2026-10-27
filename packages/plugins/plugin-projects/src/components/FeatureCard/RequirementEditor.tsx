@@ -12,7 +12,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { meta } from '#meta';
 import { type Feature } from '#types';
 
-import { RowIcon } from './fields.tsx';
+import { RequirementIcon, RowIcon } from './fields.tsx';
 
 type CommitFieldProps = {
   value: string;
@@ -92,7 +92,7 @@ export const RequirementEditor = ({ requirements, onChange }: RequirementEditorP
           key={index}
           // The column's content clips overflow (for truncation), which would cut off the field's box.
           classNames='[&_.dx-card-row-content]:overflow-visible'
-          leading={<RowIcon icon='ph--check-circle--regular' />}
+          leading={<RequirementIcon />}
           trailing={
             // The spec id sits after the text, on one line, so the text keeps the row's full width.
             <Layout.Flex gap='xs' classNames='items-center'>

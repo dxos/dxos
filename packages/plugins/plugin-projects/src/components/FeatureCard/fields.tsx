@@ -51,5 +51,11 @@ export const StatusIcon = ({ status, muted }: StatusIconProps) => {
   );
 };
 
+/** The requirement glyph, in one hue everywhere it appears so requirements read as one kind of row. */
+export const REQUIREMENT_STYLE = { icon: 'ph--check-circle--regular', hue: 'teal' } as const;
+
+/** A requirement row's icon, coloured unlike the muted row icons, since requirements are what a reader scans for. */
+export const RequirementIcon = () => <Icon.Icon icon={REQUIREMENT_STYLE.icon} hue={REQUIREMENT_STYLE.hue} />;
+
 /** Row icons sit a step below the text, so the header's status icon stays the card's one strong glyph. */
 export const RowIcon = ({ icon }: { icon: string }) => <Icon.Icon icon={icon} tone='muted' />;
