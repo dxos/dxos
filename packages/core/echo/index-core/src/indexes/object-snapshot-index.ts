@@ -13,6 +13,7 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { chunkArray, chunkRows } from '../utils.ts';
+import { type EntityMeta } from './entity-meta-index.ts';
 import type { Index, IndexerObject } from './interface.ts';
 
 /**
@@ -118,6 +119,42 @@ export class ObjectSnapshotIndex implements Index {
         }
       }
       return results;
+    });
+  }
+
+  /**
+   * How many snapshots belong to records stamped past `version` in `objectMeta`. A record's snapshot row is
+   * written in the transaction that stamps its counter, so a counter without one names a deleted record.
+   */
+  countStampedSince(version: number): Effect.Effect<number, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const [row] = yield* this.#sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM objectMeta AS m
+        JOIN objectSnapshot AS s ON s.recordId = m.recordId
+        WHERE m.version > ${version}
+      `;
+      return row?.count ?? 0;
+    });
+  }
+
+  /** Up to `limit` snapshots of records stamped past `version`, parsed, with their meta, in stamp order. */
+  readStampedSince(
+    version: number,
+    limit: number,
+  ): Effect.Effect<readonly { meta: EntityMeta; snapshot: Obj.JSON }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const rows = yield* this.#sql<EntityMeta & { snapshot: string }>`
+        SELECT m.*, s.snapshot
+        FROM objectMeta AS m
+        JOIN objectSnapshot AS s ON s.recordId = m.recordId
+        WHERE m.version > ${version}
+        ORDER BY m.version
+        LIMIT ${limit}
+      `;
+      // The row is handed on as the meta, snapshot column and all: copying it without that column costs more
+      // than the parse on wide meta rows.
+      return rows.map((row) => ({ meta: row, snapshot: JSON.parse(row.snapshot) }));
     });
   }
 

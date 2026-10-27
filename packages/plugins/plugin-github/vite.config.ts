@@ -17,6 +17,7 @@ export default defineConfig({
     'skills': 'src/skills/index.ts',
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
+    'TextMerge': 'src/file-sync/TextMerge.ts',
     'GitHubCapabilities': 'src/types/GitHubCapabilities.ts',
     'GitHubEvents': 'src/types/GitHubEvents.ts',
     'GitHubOperation': 'src/types/GitHubOperation.ts',
