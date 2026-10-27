@@ -99,6 +99,9 @@ const featureStatuses = (page) =>
 
 /** Polls until `done` holds, fast-forwarded, failing with the last snapshot after `minutes`. */
 const waitFor = async (demo, page, done, minutes, label) => {
+  // The feature map repaints only when a card changes, so a long wait records few frames, and the cards turning
+  // operational are the payoff.
+  await openProjectTab(demo, page, 'features');
   await demo.speed({ factor: FAST });
   const deadline = Date.now() + minutes * 60_000;
   for (;;) {
