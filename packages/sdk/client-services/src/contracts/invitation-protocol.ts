@@ -29,6 +29,13 @@ export interface InvitationProtocol {
   checkCanInviteNewMembers(): Error | undefined;
 
   /**
+   * Resolves once the resource being shared has loaded enough state for
+   * {@link InvitationProtocol.checkCanInviteNewMembers} to be meaningful (e.g. the space is ready).
+   * Rejects if `ctx` is disposed first. Protocols without such state may omit it.
+   */
+  waitUntilReady?(ctx: Context): Promise<void>;
+
+  /**
    * Protocol-specific information to include in the invitation.
    */
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'>;

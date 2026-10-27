@@ -117,6 +117,12 @@ const parseArgs = () => {
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
+    // Every flag takes a value, so a trailing flag, or one followed by the next flag, would otherwise be misread;
+    // `--chromium-args` is exempt because its value is itself a list of `--` flags.
+    if (value === undefined || (value.startsWith('--') && key !== 'chromium-args')) {
+      console.error(`--${key} needs a value`);
+      process.exit(1);
+    }
     options[key] = /^[\d.]+$/.test(value) ? Number(value) : value;
   }
   // A person recording their own screen wants the product on camera, not the agent's narration of it.

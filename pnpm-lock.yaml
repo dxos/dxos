@@ -10140,6 +10140,9 @@ importers:
       '@dxos/plugin-file-system':
         specifier: workspace:*
         version: link:../plugin-file-system
+      '@dxos/plugin-github':
+        specifier: workspace:*
+        version: link:../plugin-github
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -10192,6 +10195,9 @@ importers:
         specifier: 'catalog:'
         version: 0.28.0
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -10283,6 +10289,9 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10292,6 +10301,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/plugin-typesafe':
+        specifier: workspace:*
+        version: link:../plugin-typesafe
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -12264,6 +12276,9 @@ importers:
 
   packages/plugins/plugin-github:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
       '@codemirror/language':
         specifier: 'catalog:'
         version: 6.12.4
@@ -12291,6 +12306,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
@@ -12330,6 +12348,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -12369,6 +12390,9 @@ importers:
       '@dxos/react-ui-query':
         specifier: workspace:*
         version: link:../../ui/react-ui-query
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -13197,6 +13221,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../common/permission
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
@@ -20382,6 +20409,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      playwright:
+        specifier: 'catalog:'
+        version: 1.63.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -20797,6 +20827,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

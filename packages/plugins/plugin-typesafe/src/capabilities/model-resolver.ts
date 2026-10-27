@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import * as Redacted from 'effect/Redacted';
 
 import { Model } from '@dxos/ai';
-import { TypeSafeResolver } from '@dxos/ai/resolvers';
+import { ClairicResolver, TypeSafeResolver } from '@dxos/ai/resolvers';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -23,7 +23,13 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { TypeSafeCapabilities, TypeSafeSettings } from '#types';
 
 import { TYPESAFE_SOURCE } from '../constants.ts';
-import { EDGE_ENDPOINT, WORKERS_AI_ENDPOINT, isEdgeRequest, makeEdgeHttpClient } from './edge-http-client.ts';
+import {
+  CLAIRIC_ENDPOINT,
+  EDGE_ENDPOINT,
+  WORKERS_AI_ENDPOINT,
+  isEdgeRequest,
+  makeEdgeHttpClient,
+} from './edge-http-client.ts';
 
 const aiError = (reason: AiError.AiErrorReason): AiError.AiError =>
   AiError.make({ module: 'TypeSafe', method: 'decide', reason });
@@ -81,6 +87,12 @@ export const resolveEndpoint = (configured: string | undefined): string => {
   return endpoint && endpoint !== TypeSafeResolver.DEFAULT_ENDPOINT ? endpoint : EDGE_ENDPOINT;
 };
 
+/** Where a Clairic call goes: EDGE unless an allowed override is configured. */
+export const resolveExtractionEndpoint = (configured: string | undefined): string => {
+  const endpoint = configured?.trim();
+  return endpoint && TypeSafeSettings.isAllowedEndpoint(endpoint) ? endpoint : CLAIRIC_ENDPOINT;
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
@@ -126,14 +138,17 @@ export default Capability.makeModule(
       }),
     ).pipe(Layer.provide(FetchHttpClient.layer));
 
-    return Capability.contribute(
-      AppCapabilities.AiModelResolver,
+    return Capability.contributeAll(AppCapabilities.AiModelResolver, [
       TypeSafeResolver.make({
         typesafe: { apiKey, endpoint },
         // Workers AI bills the platform Cloudflare account, so there is no vendor key to send.
         workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => WORKERS_AI_ENDPOINT },
-        defaultModel: () => settings()?.decisionModel ?? Model.typesafeJev.id,
+        defaultModel: () => settings()?.decisionModel ?? Model.cloudflareClef.id,
       }).pipe(Layer.provide(httpClient)),
-    );
+      ClairicResolver.make({
+        apiKey: Effect.succeed(undefined),
+        endpoint: () => resolveExtractionEndpoint(settings()?.extractionEndpoint),
+      }).pipe(Layer.provide(httpClient)),
+    ]);
   }),
 );

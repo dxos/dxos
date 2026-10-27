@@ -205,7 +205,15 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
     paginationThreshold?: number;
     /** Pads the first and last item by `gap`; `false` when the scroll viewport already pads its content. @default true. */
     inset?: boolean;
+    /**
+     * Slides rows to their new place when the order changes rather than jumping (rows are keyed by item
+     * id, so a reorder is a change of offset). Off under `prefers-reduced-motion`.
+     */
+    animateReorder?: boolean;
   };
+
+/** How long a reordered row takes to reach its new place. */
+const REORDER_TRANSITION = 'transform 480ms cubic-bezier(0.2, 0.8, 0.2, 1)';
 
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
@@ -222,6 +230,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       pagination,
       paginationThreshold,
       inset = true,
+      animateReorder = false,
       onChange,
       draggable = true,
       debug,
@@ -231,6 +240,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
   ) => {
     invariant(Tile);
     invariant(!pagination || !draggable, 'pagination requires draggable={false}');
+    const reducedMotion = Util.useReducedMotion();
+    const transition = animateReorder && !reducedMotion ? REORDER_TRANSITION : undefined;
     const { id, dragging, currentId, itemProps, registerScrollTo } =
       useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const selectable = useSelectable(items, getId, itemProps);
@@ -359,6 +370,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                 position: 'absolute',
                 top: 0,
                 left: 0,
+                transition,
                 ...(orientation === 'vertical'
                   ? {
                       width: '100%',

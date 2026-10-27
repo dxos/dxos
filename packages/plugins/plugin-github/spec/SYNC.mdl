@@ -254,7 +254,14 @@ unchanged.
 // Added to packages/plugins/plugin-github/src/services/github-api.ts.
 export type Conditional<A> =
   | { readonly status: 'not-modified' }
-  | { readonly status: 'ok'; readonly value: A; readonly etag: string | undefined; readonly requests: number };
+  | {
+      readonly status: 'ok';
+      readonly value: A;
+      readonly etag: string | undefined;
+      readonly requests: number;
+      /** The read stopped at its page cap with pages left. */
+      readonly truncated?: boolean;
+    };
 
 /**
  * GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=desc&since=…&per_page=100, following `Link`
@@ -286,7 +293,7 @@ export const fetchRepoConditional: (
 service GitHubApi
   desc: Typed GitHub REST and GraphQL client bound to one access token.
   ops:
-    listIssuesSince(owner: string, repo: string, since?: string, etag?: string) → Conditional<DeltaItem[]>
+    listIssuesSince(owner: string, repo: string, options: { since?: string, etag?: string, direction?: asc | desc, maxPages?: number }) → Conditional<DeltaItem[]>
     fetchPullRequestDetails(owner: string, repo: string, numbers: number[]) → PullRequestDetail[]
     fetchRepoConditional(owner: string, repo: string, etag?: string) → Conditional<GitHubRepo>
   errors:
@@ -363,7 +370,7 @@ feat F-2: Delta polling
     then: the first request is listIssuesSince with since = Cursor.max and etag = Cursor.spec.token
 
   req F-2.2:
-    when: the delta answers 304 and no open PullRequest of the binding has `checks` = pending
+    when: the delta answers 304, no open PullRequest of the binding has `checks` = pending, and the Repo description has no local edit
     then: the run ends for that binding after one request, and Cursor.lastTick advances
 
   req F-2.3:
@@ -374,13 +381,13 @@ feat F-2: Delta polling
 
   req F-2.5: Cursor.max advances once every page of the delta is applied, so an interrupted run re-reads from the last complete watermark. It becomes the largest `updated_at` returned, minus 5 seconds, so an item updated in the same second as the watermark is read again; snapshots make that re-read a no-op.
 
-  req F-2.6: The repository itself is read with fetchRepoConditional, and its milestones with it whether or not the repository answers 304, at most once an hour per binding, so neither is part of the one-request quiet poll; the organization and its members are read at most once a day per binding, and a failed organization read other than 404 is retried on the next poll.
+  req F-2.6: The repository itself is read with fetchRepoConditional, and its milestones with it whether or not the repository answers 304, at most once an hour per binding, so neither is part of the one-request quiet poll; the repository is also read, conditionally, on any poll where the Repo description has a local edit, so the push is merged against GitHub's current value; the organization and its members are read at most once a day per binding, and a failed organization read other than 404 is retried on the next poll.
 
   req F-2.8:
     when: a binding has no stored ETag yet (its first sync, or a backfill still in progress)
-    then: the delta is read oldest first, at most 10 pages a run; a run that stops at the cap advances Cursor.max, stores no ETag and asks to run again, and the run that reaches the end stores the ETag, after which polls read newest first
+    then: the delta is read oldest first, at most 10 pages a run; a run that stops at the cap advances Cursor.max, stores no ETag and asks to run again, and the run that reaches the end stores the ETag, after which polls read newest first. A capped chunk that cannot advance Cursor.max, because every item in it falls within the overlap, is read to its end in the same run.
 
-  req F-2.7: Issues keep today's three-way merge and push of title, description and status; pull requests are pull-only.
+  req F-2.7: Issues keep today's three-way merge and push of title, description and status; pull requests are pull-only. A diverged Repo description is pushed on every poll, a poll whose delta answers 304 included.
 ```
 
 ```mdl
@@ -397,7 +404,7 @@ feat F-3: Scheduling
 
 ```mdl
 scenario T-1: Quiet repository
-  given: a binding whose last run stored Cursor.max and the ETag of the delta that watermark names; nothing changed on GitHub since
+  given: a binding whose last run stored Cursor.max and the ETag of the delta that watermark names; nothing changed on GitHub or in the Repo since
   when: SyncGitHubRepositories runs
   then:
     - exactly one request is made for that binding
@@ -711,4 +718,33 @@ decision D-27: Only a 404 from the organization read means the owner is a user; 
   for: user:dmaretskyi
   affects: [F-2.6]
   why: Treating a 403, a timeout or a 5xx as "no organization" skipped the organization and its members for a day.
+```
+
+```mdl
+decision D-28: A capped backfill chunk that would not advance the watermark is read to its end in the same run. Narrows [D-25].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.8]
+  why: When more than ten pages were updated within the five-second overlap, the next run would start at the same watermark and read the same ten pages forever.
+  rejected:
+    - Persist the next page link or an issue-id tie-breaker on the cursor: GitHub's page links are not stable across runs while items change, and the case is rare enough that one longer run is cheaper than new cursor state.
+```
+
+```mdl
+decision D-29: The Repo description push runs on quiet polls too. Fills in [F-2.7].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-2.7]
+  why: A quiet poll returned before the push, so a local description edit in a repository with no other activity was never sent; the push costs no request unless the description diverged.
+```
+
+```mdl
+decision D-30: A poll with a local Repo description edit first reads the repository with its ETag and merges the edit against that read; the one-request quiet poll in F-2.2 and T-1 excludes such a poll. Fills in [D-29].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-2.6, T-1]
+  why: Between hourly reads the stored snapshot can be older than GitHub's description, so pushing against it overwrote a GitHub edit made since; the read costs one request, answered 304 when GitHub did not change.
 ```

@@ -1,0 +1,238 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-explorer/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ExplorerPlugin
+
+The explorer works as the spec describes in outline. The `Graph` type, the create-object entry, the
+article with its `QueryEditor` and variant toggle, the live `SpaceGraphModel` and the variant table in
+`variants.ts` are all present. Projector swaps carry the previous layout. The cluster projector toggles
+collapse on group clicks. The lattice variant sorts by typename then label. Coverage is thin: apart from
+stories for `ExplorerArticle` and `Visualization`, only a plugin activation test and an unrelated `Tree`
+test exist, so most behaviour is `untested`. Three places diverge. `SVG.Zoom` wraps every variant, not
+only force. Leaving a node keeps the preview open until the surface is clicked. `createGraph` and
+`buildFilter` are not operations: creation is a `CreateObjectEntry` and the filter comes from
+`QueryEditor`/`QueryBuilder`, which returns no filter rather than a `ParseError`. The code also adds
+`swarm` and `plexus` variants and a Neighborhood companion that the spec does not mention.
+
+Of 30 items: 4 done, 15 untested, 2 partial, 2 diverged, 7 missing. QA-2 shares QA-1's fence, so `deus` does not list it as an item.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QueryInput: Graph.query holds an optional raw string and a QueryAST.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/types/Graph.ts#Graph]
+  note: No test creates or reads `Graph.query`; the article does not read it either and starts from the toolbar filter.
+```
+
+```mdl
+verdict GraphObject: Graph has name, view and query, but view is optional.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/types/Graph.ts#Graph, github:dxos/dxos/packages/plugins/plugin-explorer/src/types/Graph.ts#make]
+  note: '`view` is `Schema.optional`, where the spec makes it required. No test constructs a Graph outside stories.'
+```
+
+```mdl
+verdict ExplorerVariant: The article offers force, cluster, bundle and lattice, plus swarm and plexus.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/variants.ts#ExplorerArticleVariant]
+  tests: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/Visualization.stories.tsx]
+  note: '`swarm` and `plexus` are not in the spec, and `neighborhood` is a companion-only variant.'
+```
+
+```mdl
+verdict ExplorerArticle: The article renders a toolbar (article role only) with QueryEditor and variant toggle over the visualization.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx#ExplorerArticle, github:dxos/dxos/packages/plugins/plugin-explorer/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.stories.tsx]
+  note: The surface passes the Graph object as `subject`, though the props are typed as a View.
+```
+
+```mdl
+verdict Visualization: Visualization keeps one SVG.Graph mount and recreates the projector from the last layout on each variant change.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/Visualization.tsx#VisualizationGraph, github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/variants.ts#VisualizationVariant]
+  tests: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/Visualization.stories.tsx]
+```
+
+```mdl
+verdict createGraph: Graph creation is a CreateObjectEntry, not an operation; it seeds a View from the typename and adds via SpaceOperation.AddObject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/capabilities/create-object.ts]
+  note: There is no operation key, so nothing can invoke it as `op:createGraph`. No test runs `createObject`.
+```
+
+```mdl
+verdict buildFilter: QueryEditor compiles the text with QueryBuilder, which returns no filter on bad syntax instead of a ParseError.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx#ExplorerArticle, github:dxos/dxos/packages/core/echo/echo-query/src/parser/query-builder.ts#QueryBuilder]
+  tests: [github:dxos/dxos/packages/core/echo/echo-query/src/parser/query.test.ts]
+  note: It is a builder inside `@dxos/react-ui-query`'s `QueryEditor`, not an explorer operation, and its `BuildResult` has no error channel.
+```
+
+```mdl
+verdict F-1.1: Graph stores a name, a View ref and a query with its AST.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/types/Graph.ts#Graph]
+  note: No unit test creates a Graph.
+```
+
+```mdl
+verdict F-1.2: Creation derives a View with ViewModel.makeFromDatabase and writes the Graph through AddObject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/capabilities/create-object.ts]
+  note: No test runs the create-object entry.
+```
+
+```mdl
+verdict F-1.3: Graph is a user type with an article surface, so it lists in the space and opens.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/types/Graph.ts#Graph, github:dxos/dxos/packages/plugins/plugin-explorer/src/capabilities/react-surface.ts]
+  note: No e2e opens a Graph.
+```
+
+```mdl
+verdict F-2.1: Mounting opens a SpaceGraphModel against the subject's database.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/hooks/useGraphModel.ts#useGraphModel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.stories.tsx]
+```
+
+```mdl
+verdict F-2.2: The toolbar's QueryEditor sets the filter, and useGraphModel applies it with setFilter.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx#ExplorerArticle, github:dxos/dxos/packages/plugins/plugin-explorer/src/hooks/useGraphModel.ts#useGraphModel]
+  walkthrough:
+    - QueryEditor reports the built filter and the article stores it. github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx#ExplorerArticle
+    - The hook calls model.setFilter when the filter changes. github:dxos/dxos/packages/plugins/plugin-explorer/src/hooks/useGraphModel.ts#useGraphModel
+  note: No test types a query.
+```
+
+```mdl
+verdict F-2.3: Unmount closes the model in the effect cleanup.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/hooks/useGraphModel.ts#useGraphModel]
+  note: No test unmounts the article and checks `close`.
+```
+
+```mdl
+verdict F-2.4: SpaceGraphModel updates the mounted SVG.Graph as objects change.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/hooks/useGraphModel.ts#useGraphModel, github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/Visualization.tsx#VisualizationGraph]
+  note: No test of `SpaceGraphModel` or of the explorer changes an object under a mounted graph.
+```
+
+```mdl
+verdict F-3.1: A variant change snapshots the live layout and seeds the new projector with it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/Visualization.tsx#VisualizationGraph]
+  note: Stories render one variant each; nothing switches variants and checks positions.
+```
+
+```mdl
+verdict F-3.2: Force mounts inside SVG.Zoom and enables drag.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/Visualization.tsx#VisualizationGraph, github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/variants.ts]
+  note: No test checks the zoom wrapper or drag.
+```
+
+```mdl
+verdict F-3.3: Cluster and bundle are also inside SVG.Zoom; grouping by typename and label fade-in are as described.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/Visualization.tsx#VisualizationGraph, github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/variants.ts]
+  note: '`VisualizationGraph` always wraps `SVG.Graph` in `SVG.Zoom`, for every variant.'
+```
+
+```mdl
+verdict F-3.4: Lattice draws small rounded rects sorted by typename then label.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/variants.ts]
+  note: No test checks the sort order.
+```
+
+```mdl
+verdict F-3.5: Clicking a cluster root or group toggles its subtree inside the projector.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-graph/src/graph/projector/graph-cluster-projector.ts#GraphClusterProjector.toggleCollapsed]
+  note: '`handleNodeClick` in `GraphClusterProjector` does it, not explorer code; no test clicks a group.'
+```
+
+```mdl
+verdict F-4.1: Hover dispatches DxAnchorActivate with the object's URI, label and kind card.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx#ExplorerArticle]
+  note: The plexus and swarm variants emit no hover. No test checks the event.
+```
+
+```mdl
+verdict F-4.2: Leaving a node keeps the preview open; it closes on a surface click.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx#ExplorerArticle]
+  note: '`handleHover` returns early for a null node, so the popover stays; `handleDismiss` clears it on `onSurfaceClick`.'
+```
+
+```mdl
+verdict F-4.3: Synthetic nodes have no object, so no preview fires, and cluster and bundle draw them neutral.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.tsx#ExplorerArticle, github:dxos/dxos/packages/plugins/plugin-explorer/src/components/Visualization/variants.ts]
+  note: No test hovers a synthetic node.
+```
+
+```mdl
+verdict T-1: No automation creates a Graph through the dialog.
+  status: missing
+  note: No e2e or unit test runs the create-object entry.
+```
+
+```mdl
+verdict T-2: The article story mounts the model and renders the graph, but asserts nothing.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-explorer/src/containers/ExplorerArticle/ExplorerArticle.stories.tsx]
+  note: The story covers the mount and render; no test checks the toolbar or the rendered nodes.
+```
+
+```mdl
+verdict T-3: No automation switches variants.
+  status: missing
+  note: Stories fix one variant per story; none switches and checks the tween or the zoom wrapper.
+```
+
+```mdl
+verdict T-4: No automation types a filter.
+  status: missing
+  note: No explorer test drives `QueryEditor`.
+```
+
+```mdl
+verdict T-5: No automation hovers a node.
+  status: missing
+  note: No test listens for `DxAnchorActivate`.
+```
+
+```mdl
+verdict T-6: No automation checks the lattice order.
+  status: missing
+  note: No test reads lattice node positions.
+```
+
+```mdl
+verdict T-7: No automation unmounts the article.
+  status: missing
+  note: No test checks `SpaceGraphModel.close`.
+```
+
+```mdl
+verdict QA-1: No automation runs the create-and-switch round trip.
+  status: missing
+  note: QA-1 is human-only; no Playwright spec covers it.
+```

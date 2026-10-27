@@ -27,7 +27,7 @@
  * in `.secrets/r2.env`). A run recorded without `--publish` is published later with `publish.mjs --run <out>`.
  *
  * Composer must answer on :4173; without `--no-serve` the runner starts it if it does not, and stops it at the end.
- * Recording rules: SHOWCASE.md beside it.
+ * Recording rules: docs/SHOWCASE.md.
  */
 
 import { execFileSync, spawn } from 'node:child_process';

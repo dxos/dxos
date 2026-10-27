@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { AssistantCapabilities, type AssistantOptions } from '#types';
 
+import { respond as respondToConsent } from '../util/consent-guard.ts';
 import { composerTurnProducer } from './turn-producers.ts';
 
 /** Registers Composer's own loop as an agent, so pickers list it beside the agents other plugins add. */
@@ -24,6 +25,8 @@ export default Capability.makeModule(
         locations: ['local', 'edge'],
         availability: Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }),
         makeTurnProducer: composerTurnProducer(manager, options?.codeModeTurnProducer?.(manager)),
+        // Answers the consent requests the chat's guard posts (see `consentGuard`).
+        respond: respondToConsent,
       }),
       ...(options?.codeModeTurnProducer ? [Capability.contribute(AssistantCapabilities.CodeModeAvailable, true)] : []),
     ];

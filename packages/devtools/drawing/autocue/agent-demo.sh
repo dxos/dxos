@@ -22,8 +22,6 @@ export DX_PROFILE="${DEMO_DX_PROFILE:-autocue-drawing-sh}"
 # A CLI profile created under DX_LOCAL_DEV=1 points at EDGE preview (`0` or unset means production), the
 # EDGE the `bundle-e2e` Composer the take opens at the end also syncs through.
 export DX_LOCAL_DEV=1
-# Error logs go to the terminal on camera; a reloaded `dx space share` invitation logs a stack on every `dx` start.
-export LOG_PROCESSOR=noop
 
 # Clears only a directory this script set up before (marked), or an empty one: never a checkout by mistake.
 # Checked before the profile reset below, so a wrong --cwd changes nothing.

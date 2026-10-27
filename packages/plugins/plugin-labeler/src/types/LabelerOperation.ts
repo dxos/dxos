@@ -30,7 +30,7 @@ export const LabelMailbox = Operation.make({
     key: DXN.make('org.dxos.operation.labeler.labelMailbox'),
     name: 'Label Mailbox',
     description:
-      "Labels mailbox messages with the space's own tags, plus needs-reply and urgent, using a decision model.",
+      "Triages mailbox messages: labels them with the space's own tags, needs-reply and a priority band using a decision model, and extracts action items as tasks using an extraction model.",
     icon: 'ph--tag--regular',
   },
   services: [AiService.AiService, Database.Service, Trace.TraceService],
@@ -41,6 +41,11 @@ export const LabelMailbox = Operation.make({
     batchLimit: Schema.optional(
       Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum messages labelled this run (hard-capped at 200).',
+      }),
+    ),
+    tasks: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Also extract action items from messages that ask something, as tasks (default true).',
       }),
     ),
     minConfidence: Schema.optional(
@@ -58,6 +63,8 @@ export const LabelMailbox = Operation.make({
     needsReply: Schema.Number,
     /** Messages tagged urgent. */
     urgent: Schema.Number,
+    /** Tasks extracted and filed in the mailbox's project. */
+    tasks: Schema.Number,
     /** Messages skipped because they already carried one of these tags. */
     skipped: Schema.Number,
   }),

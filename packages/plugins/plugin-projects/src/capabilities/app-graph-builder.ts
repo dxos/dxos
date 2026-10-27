@@ -25,7 +25,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
+import { FEATURE_COMPANION, meta } from '#meta';
 import { ProjectOperation } from '#types';
 
 import { inboxResearch } from '../templates/index.ts';
@@ -64,6 +64,21 @@ export default Capability.makeModule(
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const taskExtensions = yield* createProjectTasksExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
+    // The feature companion: the feature selected on the project's map, beside the project plank.
+    const featureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
+      id: 'featureCompanion',
+      relation: AppNode.companion,
+      type: Project.Project,
+      connector: () =>
+        Effect.succeed([
+          AppNode.makeCompanion({
+            variant: FEATURE_COMPANION,
+            label: ['feature-companion.label', { ns: meta.profile.key }],
+            icon: 'ph--puzzle-piece--regular',
+            data: FEATURE_COMPANION,
+          }),
+        ]),
+    });
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
       ...actionExtensions,
@@ -73,6 +88,7 @@ export default Capability.makeModule(
       ...artifactsActionExtensions,
       ...taskExtensions,
       ...mailboxExtensions,
+      ...featureCompanionExtensions,
     ]);
   }),
 );
