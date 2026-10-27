@@ -69,7 +69,8 @@ runs:
         stage() (
           set -euo pipefail
           timeout 600 pnpm exec playwright install chromium firefox webkit
-          for attempt in 1 2 3; do sudo timeout 240 apt-get update -qq && break; [ "$attempt" = 3 ] && exit 1; done
+          bash .github/actions/playwright/ubuntu-sources-only.sh
+          for attempt in 1 2 3; do sudo timeout 240 apt-get update -q && break; [ "$attempt" = 3 ] && exit 1; done
           mapfile -t pkgs < <(pnpm exec playwright install-deps --dry-run chromium firefox webkit 2>&1 | sed -n 's/^  //p')
           mkdir -p "$bundle/archives/partial" "$bundle/lists"
           if [ "${#pkgs[@]}" -gt 0 ]; then

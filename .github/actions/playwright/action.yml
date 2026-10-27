@@ -131,6 +131,7 @@ runs:
       env:
         BROWSER: ${{ inputs.browser }}
       run: |
+        bash "$GITHUB_ACTION_PATH/ubuntu-sources-only.sh"
         for attempt in 1 2 3; do
           timeout --kill-after=15 240 pnpm exec playwright install --with-deps "$BROWSER" && exit 0
           echo "::warning::Playwright install attempt $attempt failed or stalled (exit $?)."
