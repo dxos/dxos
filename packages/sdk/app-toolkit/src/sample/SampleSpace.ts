@@ -462,6 +462,8 @@ export const makeTemplate = <
   readonly hue?: string;
   /** Omit from the create picker; reachable only by id. */
   readonly hidden?: boolean;
+  /** Ids of the plugins that render the content, enabled when the template is applied. */
+  readonly plugins?: ReadonlyArray<string>;
   readonly definition: Definition<Partials, A, R>;
 }): {
   readonly id: string;
@@ -470,6 +472,7 @@ export const makeTemplate = <
   readonly icon?: string;
   readonly hue?: string;
   readonly hidden?: boolean;
+  readonly plugins?: ReadonlyArray<string>;
   readonly apply: (options: {
     readonly client: { addTypes: (types: Type.AnyEntity[]) => Promise<void> };
     readonly space: { readonly db: Database.Database; readonly properties: Obj.Any };
@@ -483,6 +486,7 @@ export const makeTemplate = <
   icon: asIconValue(options.icon ?? options.definition.space.icon),
   hue: options.hue ?? options.definition.space.hue,
   hidden: options.hidden,
+  plugins: options.plugins,
   apply: ({ client, space }) =>
     Effect.gen(function* () {
       yield* Effect.tryPromise({

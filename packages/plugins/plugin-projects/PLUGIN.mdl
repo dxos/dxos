@@ -15,11 +15,18 @@ the commit and library versions the app was built from (`VITE_DX_PLUGIN_TOOLCHAI
 vite config). The browser has no local sandbox, so there plugin-dev-shell contributes its own version of the
 template, which builds with the dev shell of a vite server.
 
+Every variant builds World Clock from one spec, `src/templates/world-clock.mdl`: the project files it as its
+artifact, and the plugin bundles it as its `PLUGIN.mdl` and contributes it as a plugin asset, so once installed
+its page in Plugins → Registry opens the spec it was built from. The **World Clock** space template
+(`src/samples/world-clock/`) seeds that project with a feature per `feat` block of the spec, and is offered
+wherever the Composer Plugin template is.
+
 ## Extensions
 
-| Term   | URI                     |
-|--------|-------------------------|
-| `test` | `org.dxos.mdl.test@1.0` |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
 
@@ -216,4 +223,66 @@ test QA-5: Showcase clip
     - name: Send it to the agent
       do: Tick the first task and click Send to agent.
       expect: the Gantt panel opens
+
+test QA-6: World Clock round trip — build from the space template, install from the registry, open the spec
+  desc: |
+    The investor-demo walk of QA-2, started from the World Clock space template instead of an empty space and ending
+    on the spec. The space holds the Composer Plugin project, the spec World Clock is built from and its feature map;
+    the agent builds the plugin with the spec bundled and publishes it to the reader's private registry; the reader
+    installs it, opens its Clocks page, then opens its page in Plugins → Registry and clicks Open Specification, which
+    shows the spec the space started from. Walked by the autocue flow
+    `packages/plugins/plugin-projects/autocue/world-clock-round-trip.mjs`, recorded rather than shown live.
+  actors: both
+  status: unverified
+  given:
+    - every given of QA-2
+    - plugin-code is enabled (it renders a plugin's spec; on by default where `DX_ENVIRONMENT=dev`)
+    - no plugin named "World Clock" is installed, and no "World Clock" space is left from an earlier run
+  steps:
+    - name: Create a space from the World Clock template
+      do: Click + in the rail, pick the "World Clock" template and click Create, then open the "World Clock" project.
+      capture: space
+      expect: the project opens; its artifacts hold the "World Clock" spec and its Tasks tab holds "Build the World Clock plugin" over four subtasks
+    - name: Show the feature map and the spec
+      do: Open the project's Features tab, then open "Clocks page" and its Spec.
+      expect: five Planned features, "Clocks page" to "Bundled specification", one per `feat` block of the spec, and the World Clock spec opens rendered
+    - name: Assign the parent task to the agent
+      do: Open the Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+      expect: the delegated chat holds the parent and its four subtasks and is working
+    - name: Wait for the agent to publish the plugin
+      do: Watch the subtasks tick off.
+      invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox" }
+      expect: all five tasks are finished, and the chat shows an `Uploaded: <edge>/registry/private/modules/…/manifest.json` line
+      assert: return $result.results.length === 1
+    - name: Install World Clock from the registry
+      do: Open Plugins, then Registry, find the World Clock card and click Install.
+      expect: World Clock is listed without being loaded by URL, and installing it enables and activates it
+    - name: Open the Clocks page and add two timezones
+      do: Click Clocks under the WORLD CLOCK group of the new space, then add two timezones with the plus card.
+      expect: the page shows the map above three ticking clock cards and the plus card
+    - name: Open the spec from the registry
+      do: Open Plugins, then Registry, click the World Clock card's name to open its page, and click Open Specification.
+      expect: the World Clock spec opens beside the plugin's page, its features F-1 to F-5 the ones the space's feature map lists
+      note: The chip shows only once the plugin has contributed its `PLUGIN.mdl` as a plugin asset and plugin-code is enabled.
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: A World Clock space template seeds the Composer Plugin project, the spec World Clock is built from and its feature map, so the round trip — build, publish to the private registry, install, open the spec — starts from one space.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [QA-6]
+  why: The round trip shows template, build, registry and spec working together.
+```
+
+```mdl
+decision D-2: Every Composer Plugin variant builds from one spec, files it as the project's artifact, and has the plugin bundle it as `PLUGIN.mdl` and contribute it as a plugin asset, so the registry's Open Specification works for a plugin installed from the private registry. Builds on [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-6]
+  why: plugin-code renders a plugin's spec only from a `PluginAsset` the plugin contributes, and a remote plugin has no files on disk to read it from.
 ```

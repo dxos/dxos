@@ -13,8 +13,12 @@ export {
   IDS,
   PARENT_INSTRUCTIONS,
   type Variant,
+  WORLD_CLOCK_SPEC,
+  WORLD_CLOCK_SPEC_PATH,
   composerPlugin,
+  composerPluginVariant,
   makeComposerPlugin,
+  makeWorldClockSpec,
   readGuide,
   writePlugin,
 } from './composer-plugin.ts';

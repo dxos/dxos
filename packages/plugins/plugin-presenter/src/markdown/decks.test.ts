@@ -13,6 +13,8 @@ const load = (name: string) => readFileSync(new URL(`../../testing/${name}`, imp
 describe.each([
   { name: 'deck.md', slides: 11 },
   { name: '2025-05-20-effect.md', slides: 17 },
+  // Written by the showcase skill's generator, whose own test keeps it in step with this fixture.
+  { name: 'showcase.md', slides: 4 },
 ])('$name', ({ name, slides }) => {
   const parts = splitSlides(load(name));
 

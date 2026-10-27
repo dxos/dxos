@@ -11,6 +11,7 @@ import {
   lintMdl,
   parseChangelog,
   parseMdlBlocks,
+  parseShowcases,
 } from './check.ts';
 
 const block = (body: string) => ['```mdl', body, '```', ''].join('\n');
@@ -22,6 +23,15 @@ describe('mdl lint', () => {
     expect(messages(block('widget W-1'))).toEqual([
       'Unknown block type "widget". Declare it in the Extensions table or define it with an `ext` block.',
     ]);
+  });
+
+  test('checks every block of a fence, not only the first', ({ expect }) => {
+    const text = block(
+      ['feat F-1: Start a call', '  req F-1.1: Shows a call action.', 'widget W-1', 'decision D-1: Use X.'].join('\n'),
+    );
+    const diagnostics = lintMdl(text);
+    expect(diagnostics.map(({ source }) => source)).toEqual(['mdl/block-type', 'mdl/decision']);
+    expect(diagnostics.map(({ from, to }) => text.slice(from, to))).toEqual(['widget W-1', 'decision D-1: Use X.']);
   });
 
   describe('decision', () => {
@@ -271,5 +281,78 @@ describe('parseMdlBlocks', () => {
       { type: 'feat', id: 'F-1', title: 'Start a call' },
     ]);
     expect(blocks[0].body).toBe('  fields:\n    name?: string\n');
+  });
+
+  test('reads every block of a fence that holds several', ({ expect }) => {
+    const text = [
+      '```mdl',
+      'feat F-1: Start a call',
+      '  req F-1.1: A Channel shows a call action.',
+      '  desc: |',
+      '    an indented line is never a header',
+      '',
+      'feat F-1.1: Ring',
+      'op Call.start',
+      '  key: start',
+      '```',
+    ].join('\n');
+    const blocks = parseMdlBlocks(text);
+    expect(
+      blocks.map(({ type, id, title, from }) => ({ type, id, title, line: text.slice(0, from).split('\n').length })),
+    ).toEqual([
+      { type: 'feat', id: 'F-1', title: 'Start a call', line: 1 },
+      { type: 'feat', id: 'F-1.1', title: 'Ring', line: 7 },
+      { type: 'op', id: 'Call.start', title: undefined, line: 8 },
+    ]);
+    expect(blocks[0].body).toBe(
+      '  req F-1.1: A Channel shows a call action.\n  desc: |\n    an indented line is never a header\n\n',
+    );
+    expect(blocks[1].body).toBe('');
+    expect(blocks[2].body).toBe('  key: start\n');
+  });
+});
+
+describe('showcase', () => {
+  const feature = block('feat F-1: Start a call\n  req F-1.1: A Channel shows a call action.');
+
+  test('cites declared features and requirements', ({ expect }) => {
+    expect(messages(feature + block('showcase SC-1: A call starts\n  for: [F-1, F-1.1]'))).toEqual([]);
+  });
+
+  test('missing for', ({ expect }) => {
+    expect(
+      messages(feature + block('showcase SC-1: A call starts\n  pr: https://github.com/dxos/dxos/pull/1')),
+    ).toEqual(['Showcase is missing `for:` — name the features or requirements it shows.']);
+  });
+
+  test('cites an undeclared feature', ({ expect }) => {
+    expect(messages(feature + block('showcase SC-1: A call starts\n  for: [F-1, F-2]'))).toEqual([
+      'Showcase cites `F-2`, which this spec does not declare as a feat or req.',
+    ]);
+  });
+
+  test('reads the fields of each showcase', ({ expect }) => {
+    const text =
+      feature +
+      block(
+        [
+          'showcase SC-1: A call starts',
+          '  for: [F-1]',
+          '  pr: https://github.com/dxos/dxos/pull/1',
+          '  video: https://example.com/call.mp4  # narrated',
+          '  note: |',
+          '    Recorded on two peers.',
+        ].join('\n'),
+      );
+    expect(parseShowcases(text)).toEqual([
+      {
+        id: 'SC-1',
+        title: 'A call starts',
+        for: ['F-1'],
+        pr: 'https://github.com/dxos/dxos/pull/1',
+        video: 'https://example.com/call.mp4',
+        note: 'Recorded on two peers.',
+      },
+    ]);
   });
 });

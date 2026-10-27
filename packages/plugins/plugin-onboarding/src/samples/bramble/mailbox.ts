@@ -394,27 +394,31 @@ const makeMailbox = (
 
 // Conversation summaries, keyed by thread subject (any message's subject in the thread — it is
 // normalized to the thread key). `SummarizeMailbox` derives these with a model at runtime; the
-// exemplar writes them by hand so a fresh import shows the affordance without a model call.
-const THREAD_SUMMARIES: Record<string, string> = {
-  'Espresso blend pilot — interested':
-    'Hatch wants in on the Spring Blend pilot for their espresso bar. Kai committed to a 2 lb sample of v1; Priya confirmed the bar is available to experiment on.',
-  'Label proofs — Spring Blend':
-    'Riley picked option B (bramble sketch) from the Letterform Press proofs. Kai asked for a warmer background; Riley warmed it and sent final approval to the printer. **Closed.**',
-  'Pricing — Sidamo container':
-    'Abel quoted the full Sidamo container at ~6% over last year, in line with earlier discussion. Kai confirmed and told him to start the export paperwork.',
-  'Q2 planning — agenda':
-    'Kai opened the Q2 agenda: Spring Blend launch date, sourcing-trip logistics, and the part-time roaster hire. Riley added packaging lead times and the new freight quote.',
-  'Spring blend v1 — feedback':
-    'Hatch cupped v1 and liked the chocolate and red fruit; their wholesale customers asked specifically about the espresso roast. Priya would commit to a standing **20 lb/week** at launch, which Kai penciled in.',
-};
+// exemplar writes them by hand so a fresh import shows the affordance without a model call. People are
+// object links, as `SummarizeMailbox` writes them, so the tile shows their chips and preview cards.
+const threadSummaries = (person: (key: PersonKey) => string): Record<string, string> => ({
+  'Espresso blend pilot — interested': `Hatch wants in on the Spring Blend pilot for their espresso bar. ${person('kai')} committed to a 2 lb sample of v1; ${person('priya')} confirmed the bar is available to experiment on.`,
+  'Label proofs — Spring Blend': `${person('riley')} picked option B (bramble sketch) from the Letterform Press proofs. Kai asked for a warmer background; Riley warmed it and sent final approval to the printer. **Closed.**`,
+  'Pricing — Sidamo container': `${person('abel')} quoted the full Sidamo container at ~6% over last year, in line with earlier discussion. ${person('kai')} confirmed and told him to start the export paperwork.`,
+  'Q2 planning — agenda': `${person('kai')} opened the Q2 agenda: Spring Blend launch date, sourcing-trip logistics, and the part-time roaster hire. ${person('riley')} added packaging lead times and the new freight quote.`,
+  'Spring blend v1 — feedback': `Hatch cupped v1 and liked the chocolate and red fruit; their wholesale customers asked specifically about the espresso roast. ${person('priya')} would commit to a standing **20 lb/week** at launch, which ${person('kai')} penciled in.`,
+});
+
+/** A person as a markdown object link labelled with their preferred name. */
+const personLink =
+  (people: PersonMap) =>
+  (key: PersonKey): string => {
+    const person = people[key];
+    return `[${person.preferredName ?? person.fullName ?? key}](${Obj.getURI(person).toString()})`;
+  };
 
 /**
- * Files each {@link THREAD_SUMMARIES} entry under the newest message of its thread, in the mailbox's
+ * Files each {@link threadSummaries} entry under the newest message of its thread, in the mailbox's
  * `annotations` feed — the second, derived-only feed alongside the message log. Summaries are
  * immutable annotation Messages whose `parentMessage` names their subject, so the conversation view
  * resolves them without the message feed carrying anything derived.
  */
-const makeSummaries = (messages: Message.Message[]): Message.Message[] => {
+const makeSummaries = (messages: Message.Message[], people: PersonMap): Message.Message[] => {
   // Messages arrive oldest-first, so the last one seen per thread is the newest.
   const newestByThread = new Map<string, Message.Message>();
   for (const message of messages) {
@@ -423,7 +427,7 @@ const makeSummaries = (messages: Message.Message[]): Message.Message[] => {
     }
   }
 
-  const summaries = Object.entries(THREAD_SUMMARIES).map(([subject, text]) => {
+  const summaries = Object.entries(threadSummaries(personLink(people))).map(([subject, text]) => {
     const message = newestByThread.get(threadIdFor(subject));
     if (!message) {
       throw new Error(`No thread found for summary subject "${subject}".`);
@@ -479,7 +483,7 @@ export const Inbox: SampleSpace.Partial<InboxResult, PersonMap> = SampleSpace.pa
       const { db } = yield* Database.Service;
       const annotations = Mailbox.findOrCreateAnnotations(mailbox, db);
       yield* SampleSpace.appendToFeed(feed, messages);
-      yield* SampleSpace.appendToFeed(annotations, makeSummaries(messages));
+      yield* SampleSpace.appendToFeed(annotations, makeSummaries(messages, people));
 
       return { mailbox, messages };
     }),

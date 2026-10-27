@@ -304,6 +304,8 @@ export type SpaceTemplate = Readonly<{
   hue?: string;
   /** Omit from the create picker; reachable only by id. */
   hidden?: boolean;
+  /** Ids of the plugins that render the content; `SpaceOperation.ApplyTemplate` enables those that are installed but off. */
+  plugins?: ReadonlyArray<string>;
   /** Registers the content's types on the client, then writes it into the space; `SpaceOperation.ApplyTemplate` runs it. */
   apply: (options: {
     readonly client: Client;

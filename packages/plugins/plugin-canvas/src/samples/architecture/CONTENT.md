@@ -10,8 +10,8 @@ that embeds three ECHO diagrams and a benchmarks sheet.
 - Provides: `drawings.<id>` for each diagram below, `docs.composer`, `docs.dxos`, `docs.edge`, `echo`, `metrics`,
   `design`, `benchmarks`
 - Clock: unused
-- Used by: `ArchitectureSpace.makeTemplate` (`org.dxos.plugin.canvas.template.architecture`) and
-  `FieldstoneSpace.makeTemplate` (plugin-debug)
+- Used by: `ArchitectureSpace.makeTemplate` (`org.dxos.plugin.canvas.template.architecture`), which applies the
+  [DXOS wiki](wiki/CONTENT.md) after it, and `FieldstoneSpace.makeTemplate` (plugin-debug)
 
 ## Contents
 

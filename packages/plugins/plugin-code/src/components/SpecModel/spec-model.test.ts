@@ -4,7 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { parseMdlBlocks } from '@dxos/deus/extension';
+
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
+import CANVAS_SPEC from '../../../../plugin-canvas/PLUGIN.mdl?raw';
+import MARKDOWN_SPEC from '../../../../plugin-markdown/PLUGIN.mdl?raw';
 import TRIP_SPEC from '../../../../plugin-trip/PLUGIN.mdl?raw';
 import {
   buildApiModel,
@@ -55,6 +59,49 @@ describe('spec model', () => {
       'F-1',
       'Meeting',
     ]);
+  });
+
+  test('reads every block of a fence that lists several', ({ expect }) => {
+    const spec = [
+      '```mdl',
+      'feat F-1: Edit',
+      '  req F-1.1: Types text.',
+      '',
+      'feat F-2: View',
+      '  req F-2.1: Shows text.',
+      '```',
+    ].join('\n');
+    expect(parseMdlBlocks(spec).map(({ type, id, title }) => [type, id, title])).toEqual([
+      ['feat', 'F-1', 'Edit'],
+      ['feat', 'F-2', 'View'],
+    ]);
+    expect(parseMdlBlocks(spec)[1].body).toContain('req F-2.1');
+    const features = buildDefinitionGraph(MARKDOWN_SPEC).definitions.filter(({ kind }) => kind === 'feat');
+    expect(features.length).toBeGreaterThan(5);
+  });
+
+  test('draws a dotted feature below the feature it is part of', ({ expect }) => {
+    const spec = [
+      '```mdl',
+      'feat F-1: Nesting',
+      '```',
+      '```mdl',
+      'feat F-1.1: Drill in, part of [F-1]',
+      '  req F-1.1.1: Opens the child scene.',
+      '  req F-1.1.2: Up returns.',
+      '```',
+    ].join('\n');
+    const { definitions, edges } = buildDefinitionGraph(spec);
+    expect(edges).toEqual([{ id: 'F-1->F-1.1', from: 'F-1', to: 'F-1.1' }]);
+    expect(definitions.find(({ id }) => id === 'F-1.1')?.requirements).toBe(2);
+    expect(definitions.find(({ id }) => id === 'F-1')?.requirements).toBeUndefined();
+  });
+
+  test('gives the canvas plugin a feature tree', ({ expect }) => {
+    const { definitions, edges } = buildDefinitionGraph(CANVAS_SPEC);
+    const roots = definitions.filter(({ kind, id }) => kind === 'feat' && !id.includes('.'));
+    expect(roots.length).toBeGreaterThanOrEqual(5);
+    roots.forEach(({ id }) => expect(edges.some(({ from, to }) => from === id && to.startsWith(`${id}.`))).toBe(true));
   });
 
   test('keeps stored types and the types they embed', ({ expect }) => {

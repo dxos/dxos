@@ -128,6 +128,32 @@ feat F-1: Sync
       expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'New mail shows within ten seconds.' }]);
     }).pipe(Effect.provide(testLayer())),
   );
+
+  it.effect('imports every block of a shared fence and nests a dotted feature under its parent', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Inbox' }));
+      const { created } = yield* importSpec.handler({
+        path: 'packages/a/PLUGIN.mdl',
+        text: [
+          '```mdl',
+          'feat F-1.1: Push',
+          '  req F-1.1.1: Pushes.',
+          '',
+          'feat F-1: Sync',
+          'feat F-2: Search',
+          '```',
+        ].join('\n'),
+        project: ref(project),
+      });
+      expect(created).toHaveLength(3);
+      const features = yield* Database.query(Filter.type(Feature.Feature)).run;
+      const byName = new Map(features.map((feature) => [feature.name, feature]));
+      expect(byName.get('Push')?.parent?.target?.id).toBe(byName.get('Sync')?.id);
+      expect(byName.get('Push')?.project).toBeUndefined();
+      expect(byName.get('Sync')?.project?.target?.id).toBe(project.id);
+      expect(byName.get('Search')?.project?.target?.id).toBe(project.id);
+    }).pipe(Effect.provide(testLayer())),
+  );
 });
 
 describe('FeatureOperation.AddDependency', () => {

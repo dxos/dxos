@@ -16,38 +16,54 @@ export const FENCE_REGEX = /^```mdl\s*$/gm;
 
 type BlockHeader = { type: string; id: string; from: number; to: number; body: string };
 
+/** An unindented `<kind> <id>` line, which opens another block inside the same fence. */
+const LATER_HEADER = /^[a-z]\w*\s+[^\s:]/;
+
 /**
  * Extracts block headers from the raw document text.
- * Returns { type, id, from, to, body } for each fenced block opening,
- * reading the block type from the first line of the block body.
+ * Returns { type, id, from, to, body } for each block, reading the block type from its header line. A fence may hold
+ * several blocks, each opened by an unindented header; the first spans the fence's opening line and each later one
+ * spans its own header line, so diagnostics land on the block they are about.
  */
 const parseBlockHeaders = (text: string): BlockHeader[] => {
   const results: BlockHeader[] = [];
   const fenceRe = new RegExp(FENCE_REGEX.source, FENCE_REGEX.flags);
   let match: RegExpExecArray | null;
   while ((match = fenceRe.exec(text)) !== null) {
-    const fenceEnd = match.index + match[0].length;
+    const fenceStart = match.index;
+    const fenceEnd = fenceStart + match[0].length;
     const bodyStart = text.indexOf('\n', fenceEnd);
     if (bodyStart === -1) {
       continue;
     }
     const firstBodyLineStart = bodyStart + 1;
-    const firstBodyLineEnd = text.indexOf('\n', firstBodyLineStart);
-    const firstBodyLine = (
-      firstBodyLineEnd === -1 ? text.slice(firstBodyLineStart) : text.slice(firstBodyLineStart, firstBodyLineEnd)
-    ).trim();
 
     // An unclosed block (mid-edit) ends at the next fence of either kind, or at the end of the text.
     const endMatch = /^```/m.exec(text.slice(firstBodyLineStart));
-    const body = endMatch
+    const fenceBody = endMatch
       ? text.slice(firstBodyLineStart, firstBodyLineStart + endMatch.index)
       : text.slice(firstBodyLineStart);
 
-    // First body line: "<blockType> [name][: label]"
-    const lineMatch = firstBodyLine.match(/^(\w+)(?:\s+([^\s:][^\n:]*?))?(?::\s*[^\n]*)?\s*$/);
-    const blockType = lineMatch?.[1] ?? '';
-    const id = lineMatch?.[2]?.trim() ?? '';
-    results.push({ type: blockType, id, from: match.index, to: match.index + match[0].length, body });
+    const starts: number[] = [];
+    let lineStart = 0;
+    for (const line of fenceBody.split('\n')) {
+      if (starts.length === 0 || LATER_HEADER.test(line)) {
+        starts.push(lineStart);
+      }
+      lineStart += line.length + 1;
+    }
+    starts.forEach((start, index) => {
+      const body = fenceBody.slice(start, starts[index + 1]);
+      const newline = body.indexOf('\n');
+      const header = (newline === -1 ? body : body.slice(0, newline)).trim();
+      // Header line: "<blockType> [name][: label]"
+      const lineMatch = header.match(/^(\w+)(?:\s+([^\s:][^\n:]*?))?(?::\s*[^\n]*)?\s*$/);
+      const blockType = lineMatch?.[1] ?? '';
+      const id = lineMatch?.[2]?.trim() ?? '';
+      const from = index === 0 ? fenceStart : firstBodyLineStart + start;
+      const to = index === 0 ? fenceEnd : from + (newline === -1 ? body.length : newline);
+      results.push({ type: blockType, id, from, to, body });
+    });
   }
   return results;
 };
@@ -85,6 +101,64 @@ const lintDecision = (body: string): string[] => {
   return errors;
 };
 
+// A `feat` block's id, or a `req` line's id, wherever it is declared in the document.
+const FEATURE_ID = /^\s*(?:feat|req)\s+([\w.-]+)\s*:/gm;
+
+/** The feature and requirement ids a spec declares, which a `showcase` may cite. */
+const featureIds = (text: string): Set<string> => new Set([...text.matchAll(FEATURE_ID)].map((match) => match[1]));
+
+/**
+ * Checks a `showcase` (`lang/showcase.mdl`): it cites at least one feature or requirement, and only ones the
+ * document declares, so a renamed feature does not leave its showcases pointing at nothing.
+ */
+const lintShowcase = (body: string, declared: Set<string>): string[] => {
+  const cited = parseList(fieldValue(body, 'for'));
+  if (cited.length === 0) {
+    return ['Showcase is missing `for:` — name the features or requirements it shows.'];
+  }
+  return cited
+    .filter((id) => !declared.has(id))
+    .map((id) => `Showcase cites \`${id}\`, which this spec does not declare as a feat or req.`);
+};
+
+/** One `showcase` block: a non-normative example of features the spec declares (`lang/showcase.mdl`). */
+export type Showcase = {
+  id: string;
+  title: string;
+  /** Feature and requirement ids it shows. */
+  for: string[];
+  pr?: string;
+  video?: string;
+  image?: string;
+  note?: string;
+};
+
+/** Every `showcase` block of a spec, in document order. */
+export const parseShowcases = (text: string): Showcase[] =>
+  parseBlockHeaders(text)
+    .filter(({ type }) => type === 'showcase')
+    .map(({ id, body }) => {
+      const showcase: Showcase = {
+        id,
+        title: body
+          .split('\n')[0]
+          .replace(/^\w+\s+[^:]*:\s*/, '')
+          .trim(),
+        for: parseList(fieldValue(body, 'for')),
+      };
+      const pr = fieldValue(body, 'pr');
+      const video = fieldValue(body, 'video');
+      const image = fieldValue(body, 'image');
+      const note = fieldText(body, 'note');
+      return {
+        ...showcase,
+        ...(pr && { pr }),
+        ...(video && { video }),
+        ...(image && { image }),
+        ...(note && { note }),
+      };
+    });
+
 /** One fenced `mdl` block: its type, identifier and title from the header line, and the body below it. */
 export type MdlBlock = {
   type: string;
@@ -94,11 +168,11 @@ export type MdlBlock = {
   title?: string;
   /** The block's lines after the header. */
   body: string;
-  /** Offset of the opening fence in the text. */
+  /** Offset of the opening fence for a fence's first block, or of the header line for each later one. */
   from: number;
 };
 
-/** Every fenced `mdl` block of a spec, in document order. */
+/** Every `mdl` block of a spec, in document order, including each later block of a fence that holds several. */
 export const parseMdlBlocks = (text: string): MdlBlock[] =>
   parseBlockHeaders(text).map(({ type, id, from, body }) => {
     const newline = body.indexOf('\n');
@@ -113,11 +187,13 @@ export const parseMdlBlocks = (text: string): MdlBlock[] =>
  * Checks:
  *   - Unknown block types (first body line of ```mdl blocks) → error
  *   - `decision` attribution (`by:` / `for:` actor prefixes) → error
+ *   - `showcase` citing no feature, or one the document does not declare → error
  *   - (future) Missing required fields → error
  *   - (future) Unresolved cross-references → error
  */
 export const lintMdl = (text: string): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
+  const declared = featureIds(text);
   for (const { type, from, to, body } of parseBlockHeaders(text)) {
     if (type && !KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
       diagnostics.push({
@@ -130,6 +206,10 @@ export const lintMdl = (text: string): Diagnostic[] => {
     } else if (type === 'decision') {
       for (const message of lintDecision(body)) {
         diagnostics.push({ from, to, severity: 'error', source: 'mdl/decision', message });
+      }
+    } else if (type === 'showcase') {
+      for (const message of lintShowcase(body, declared)) {
+        diagnostics.push({ from, to, severity: 'error', source: 'mdl/showcase', message });
       }
     }
   }

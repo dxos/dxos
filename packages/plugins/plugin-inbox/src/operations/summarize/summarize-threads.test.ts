@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { groupThreads, promptFor, threadSubject } from './summarize-mailbox.ts';
+import { groupThreads, promptFor, threadAddresses, threadSubject } from './summarize-mailbox.ts';
 
 const makeMessage = ({
   minutes,
@@ -92,5 +92,30 @@ describe('thread prompt', () => {
     const prompt = promptFor(thread);
     expect(prompt).toContain('NEWEST');
     expect(prompt).not.toContain('OLDEST');
+  });
+
+  test('lists the objects the summary may link, ahead of the transcript', ({ expect }) => {
+    const thread = [makeMessage({ minutes: 0, threadId: 't', subject: 'Pilot', body: 'Count us in.' })];
+    const prompt = promptFor(thread, [{ label: 'Priya Shah', uri: 'echo:///01PRIYA', kind: 'person' }]);
+    expect(prompt).toContain('- Priya Shah (person): echo:///01PRIYA');
+    expect(prompt.indexOf('echo:///01PRIYA')).toBeLessThan(prompt.indexOf('Count us in.'));
+    expect(promptFor(thread)).not.toContain('KNOWN OBJECTS');
+  });
+});
+
+describe('thread addresses', () => {
+  test('collects senders and to/cc recipients, normalized', ({ expect }) => {
+    const message = Message.make({
+      created: new Date('2026-07-01T00:00:00.000Z').toISOString(),
+      sender: { email: 'Bob@Example.com' },
+      blocks: [{ _tag: 'text', text: 'Hi' }],
+      properties: { to: 'Kai Chen <kai@bramblecoffee.com>, priya@hatch.coffee', cc: '"Sam" <sam@bramblecoffee.com>' },
+    });
+    expect([...threadAddresses([message])].sort()).toEqual([
+      'bob@example.com',
+      'kai@bramblecoffee.com',
+      'priya@hatch.coffee',
+      'sam@bramblecoffee.com',
+    ]);
   });
 });

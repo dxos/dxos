@@ -35,6 +35,7 @@ Appendix; the app terms (`node`, `deck`, `plank`, `companion`, `surface`, `menu`
 | `companion` | `org.dxos.mdl.companion@1.0`   |
 | `surface`   | `org.dxos.mdl.surface@1.0`     |
 | `menu`      | `org.dxos.mdl.menu@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## External types
 
@@ -615,6 +616,13 @@ feat F-6: Extraction & enrichment
   req F-6.2: The enrich cascade (deterministic → classify → summarize → analyze) is idempotent
     and cancellable; each tier is individually invocable and capped.
   req F-6.3: The processing pipeline advances a durable cursor and can be reset.
+  req F-6.4: A conversation summary links the people and organizations it mentions to their objects,
+    so the summary tile shows them as chips with a preview card; a link to an object the summarizer
+    was not offered is reduced to its label, and one-line summary rows show labels only.
+  req F-6.5: The "Analyze New Mail" routine template runs the cascade from the mailbox feed, so mail
+    a sync appends is classified and summarized without a manual run.
+  req F-6.6: Analyze is offered on a mailbox with no connection, since its content was imported and
+    there is no sync to wait for.
 ```
 
 ```mdl
@@ -791,6 +799,46 @@ test QA-2: Create a draft calendar event and save it to Google
         NO `invoke` — op:deleteEvent and op:syncDraftEvents are documented in this spec but have no
         `key:` yet: no `org.dxos.operation.inbox.deleteEvent` / `.syncDraftEvents` was found registered
         in `src/types/InboxOperation.ts`. Guessing one would violate Execution Rule 6.
+```
+
+## Changelog
+
+```mdl
+decision D-1: Email is demo-ready: new mail is categorized and summarized without a manual step, summaries show cards for the objects they mention, and the sample inbox shows the flow without a live sync.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-2: A summary's mentions of known people and organizations are `[label](echo:…)` links; the summarizer is offered the thread's participants, anyone the space knows whose full name the thread mentions, and their employers. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.4, SummarizeMailbox]
+  why: The summary tile already renders object links as chips with a preview card, so linking is the whole change; offering only listed URIs and unlinking the rest keeps every chip resolvable.
+  rejected:
+    - Block cards (`![label](echo:…)`) in the summary: a one-sentence summary with embedded cards reads as a list of objects rather than a summary.
+```
+
+```mdl
+decision D-3: New mail runs the cascade through a feed-triggered routine template, "Analyze New Mail", beside the daily "Analyze Mailbox" one. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.5]
+  why: Each tier keeps its own cursor and cap, so a firing over mail already analyzed costs nothing, and the feed trigger runs locally where the AI service is.
+  rejected:
+    - Re-enabling the on-arrival stage inside the sync: it needs capabilities that edge compute does not have.
+```
+
+```mdl
+decision D-4: Analyze is shown on a mailbox with no connection. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.6]
+  why: The sample inbox has no connection, so the action was hidden on the one mailbox that shows the flow without a live sync.
 ```
 
 ---

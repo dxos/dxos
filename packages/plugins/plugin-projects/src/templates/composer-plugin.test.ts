@@ -7,14 +7,18 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Text } from '@dxos/schema';
-import { Task, TaskSet } from '@dxos/types';
+import { Spec, Task, TaskSet } from '@dxos/types';
+
+import { Feature, FeatureSpec } from '#types';
 
 import {
   type Variant,
+  WORLD_CLOCK_SPEC,
+  WORLD_CLOCK_SPEC_PATH,
   composerPlugin,
   desktopVariant,
   makeComposerPlugin,
@@ -49,7 +53,7 @@ describe('Composer Plugin project template', () => {
 
   const scaffold = async (variant: Variant = desktopVariant(TOOLCHAIN)) => {
     const { db } = await builder.createDatabase({
-      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
+      types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task, Spec.Spec],
     });
     const project = db.add(
       await EffectEx.runPromise(
@@ -139,6 +143,37 @@ describe('Composer Plugin project template', () => {
       'https://edge.example.com/',
     );
     expect(variant.steps.at(-1)?.description).toContain('--package=https://cli.example.com/dx.tgz dx');
+  });
+
+  test('files the spec World Clock is built from as the project artifact the features cite', async ({ expect }) => {
+    const project = await scaffold();
+    expect(project.artifacts).toHaveLength(1);
+    const spec = await project.artifacts[0].load();
+    if (!Spec.isSpec(spec)) {
+      throw new Error('the project artifact must be the spec');
+    }
+    expect(spec.name).toBe('World Clock');
+    expect((await spec.content.load()).content).toBe(WORLD_CLOCK_SPEC);
+    expect(Obj.getMeta(spec).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: WORLD_CLOCK_SPEC_PATH }]);
+    expect(FeatureSpec.parse(WORLD_CLOCK_SPEC).map((feature) => feature.id)).toEqual([
+      'F-1',
+      'F-2',
+      'F-3',
+      'F-4',
+      'F-5',
+    ]);
+  });
+
+  test.for([
+    ['desktop', desktopVariant(TOOLCHAIN)],
+    ['registry', registryVariant(TOOLCHAIN, 'https://edge.example.com/')],
+  ] as const)('the %s build bundles the spec so the registry can open it', ([, variant], { expect }) => {
+    const write = variant.steps[1].description ?? '';
+    expect(write).toContain("spec: 'PLUGIN.mdl'");
+    expect(write).toContain("import spec from '../PLUGIN.mdl?raw';");
+    expect(write).toContain('ActivationEvents.PluginAssetsRequested');
+    expect(write).toContain('AppCapabilities.PluginAsset');
+    expect(write).toContain(`\`\`\`mdl\n${WORLD_CLOCK_SPEC.trim()}\n\`\`\``);
   });
 
   test('is offered in a browser only with a toolchain and an EDGE', ({ expect }) => {

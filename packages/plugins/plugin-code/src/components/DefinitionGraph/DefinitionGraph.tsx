@@ -123,6 +123,9 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
               {change && <Tag.Tag hue={CHANGE_HUE[change]}>{t(`definition-graph.change.${change}.label`)}</Tag.Tag>}
               <Tag.Tag hue={hue}>{definition.kind}</Tag.Tag>
               {status && <Tag.Tag hue={STATUS_STYLE[status].hue}>{STATUS_STYLE[status].label}</Tag.Tag>}
+              {definition.requirements !== undefined && (
+                <Tag.Tag>{t('definition-graph.requirements.label', { count: definition.requirements })}</Tag.Tag>
+              )}
               {definition.dependsOn.length > 0 && (
                 <Tag.Tag>{t('definition-graph.uses.label', { count: definition.dependsOn.length })}</Tag.Tag>
               )}

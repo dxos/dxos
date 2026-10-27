@@ -4,6 +4,6 @@
 
 import { CrawlState } from '@dxos/crawler';
 
-import { DiscordChannel } from '#types';
+import { DiscordChannel, ShowAndTell } from '#types';
 
-export default [CrawlState.CrawlState, DiscordChannel.DiscordChannel];
+export default [CrawlState.CrawlState, DiscordChannel.DiscordChannel, ShowAndTell.Entry];

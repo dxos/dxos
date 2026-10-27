@@ -23,6 +23,8 @@ export default defineConfig({
     'DiscordChannel': 'src/types/DiscordChannel.ts',
     'DiscordEvents': 'src/types/DiscordEvents.ts',
     'DiscordOperation': 'src/types/DiscordOperation.ts',
+    'ShowAndTell': 'src/types/ShowAndTell.ts',
+    'ShowAndTellOperation': 'src/types/ShowAndTellOperation.ts',
     'types': 'src/types/index.ts',
   },
   jsx: 'react',

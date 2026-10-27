@@ -7,10 +7,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
@@ -37,6 +38,7 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
 export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
   const [tab, setTab] = useState<MeetingTab>('notes');
   // The Call tab is offered only when the calls plugin contributes a transport provider.
   const callAvailable = Hooks.useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
@@ -57,7 +59,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
 
   // Toolbar tabs (single-select toggle group) + a generate/regenerate-summary action.
   const menuActions = useMenuBuilder(
-    () =>
+    (get) =>
       MenuBuilder.make()
         .root({ label: ['meeting-toolbar.menu', { ns: meta.profile.key }] })
         .subgraph((builder) =>
@@ -86,7 +88,9 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
           ),
         )
         .separator()
-        .menu('more', (group) => [
+        .menu('more', (group) => {
+          // Contributed actions, e.g. starting transcription while this meeting's call is live.
+          group.subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction, rootId: 'more' }));
           group.action(
             'generate-summary',
             {
@@ -94,10 +98,10 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
               icon: 'ph--book-open-text--regular',
             },
             handleGenerateSummary,
-          ),
-        ])
+          );
+        })
         .build(),
-    [tab, tabs, hasSummary, handleGenerateSummary],
+    [tab, tabs, hasSummary, handleGenerateSummary, graph, attendableId],
   );
 
   const callData = useMemo(

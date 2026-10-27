@@ -12,7 +12,7 @@ import { Resource } from '@dxos/context';
 import { Database, Feed, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Transcriber } from '@dxos/pipeline-transcription';
+import { type AudioRecorder, type TranscribeFn, Transcriber } from '@dxos/pipeline-transcription';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription/capture';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -47,7 +47,16 @@ export type TranscriptionManagerOptions = {
    * Enrich the message before it is written to the transcription feed.
    */
   messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
+
+  /** Captures the audio track; defaults to the browser's Web Audio recorder. */
+  createRecorder?: (track: MediaStreamTrack) => AudioRecorder;
+
+  /** Replaces the HTTP transport to the endpoint. */
+  transcribe?: TranscribeFn;
 };
+
+const createMediaStreamRecorder = (track: MediaStreamTrack): AudioRecorder =>
+  new MediaStreamRecorder({ mediaStreamTrack: track, config: { interval: RECORD_INTERVAL } });
 
 /**
  * Manages transcription state for a meeting. Concrete implementation of the
@@ -58,9 +67,15 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
   private readonly _registry: Registry.AtomRegistry;
   private readonly _transcriptionEndpoint?: string;
   private readonly _messageEnricher?: TranscriptionCapabilities.TranscriptMessageEnricher;
+  private readonly _createRecorder: (track: MediaStreamTrack) => AudioRecorder;
+  private readonly _transcribe?: TranscribeFn;
   private _audioStreamTrack?: MediaStreamTrack = undefined;
+  /** Track the current recorder captures; compared to detect a device change. */
+  private _recorderTrack?: MediaStreamTrack = undefined;
+  /** Latest speaking state, kept while disabled so a transcriber opened mid-utterance records it. */
+  private _recording = false;
   private _identityDid?: string = undefined;
-  private _mediaRecorder?: MediaStreamRecorder = undefined;
+  private _mediaRecorder?: AudioRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
   private _feed?: Feed.Feed = undefined;
   private _feedServiceLayer?: Layer.Layer<Database.Service> = undefined;
@@ -71,6 +86,8 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     this._registry = options.registry;
     this._transcriptionEndpoint = options.transcriptionEndpoint;
     this._messageEnricher = options.messageEnricher;
+    this._createRecorder = options.createRecorder ?? createMediaStreamRecorder;
+    this._transcribe = options.transcribe;
   }
 
   get enabled(): Atom.Atom<boolean> {
@@ -95,6 +112,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
   }
 
   setRecording(recording?: boolean): this {
+    this._recording = !!recording;
     if (!this.isOpen || !this.getEnabled()) {
       return this;
     }
@@ -162,15 +180,13 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
 
     // Reinitialize transcriber if feed or media stream track has changed.
     let needReinit = false;
-    if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
+    if (!this._mediaRecorder || this._audioStreamTrack !== this._recorderTrack) {
       // Retire the old transcriber before latching the new recorder: assigning first would bind a
       // surviving transcriber to a recorder it never opened, and the track equality above would
       // then read as unchanged for the rest of the session.
       await this.#closeTranscriber();
-      this._mediaRecorder = new MediaStreamRecorder({
-        mediaStreamTrack: this._audioStreamTrack,
-        config: { interval: RECORD_INTERVAL },
-      });
+      this._mediaRecorder = this._createRecorder(this._audioStreamTrack);
+      this._recorderTrack = this._audioStreamTrack;
       needReinit = true;
     }
     if (needReinit) {
@@ -181,6 +197,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
           endpoint: this._transcriptionEndpoint,
         },
         recorder: this._mediaRecorder,
+        transcribe: this._transcribe,
         onSegments: (segments) => this._onSegments(segments),
       });
 
@@ -190,9 +207,14 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
         // Drop the recorder as well: latching an unopened transcriber would leave `needReinit`
         // false, so every later enable/track update would silently no-op for this session.
         this._mediaRecorder = undefined;
+        this._recorderTrack = undefined;
         throw err;
       }
       this._transcriber = transcriber;
+      // Speaking-state updates only fire on change, so an utterance already under way would be dropped.
+      if (this._recording) {
+        transcriber.startChunksRecording();
+      }
     }
   }
 
@@ -201,6 +223,7 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     // Drop the recorder too: a closed transcriber left latched keeps the track comparison equal, so
     // re-enabling without a device change would resume nothing.
     this._mediaRecorder = undefined;
+    this._recorderTrack = undefined;
   }
 
   /**

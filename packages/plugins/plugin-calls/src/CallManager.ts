@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+export { type BindCallEventsOptions, type CallEventSource, bindCallEvents } from './calls/call-events.ts';
 export { CallManager, type GlobalState } from './calls/call-manager.ts';
 export {
   type SimulatedAvatar,

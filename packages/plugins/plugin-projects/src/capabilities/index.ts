@@ -65,7 +65,7 @@ export const ComposerPluginTemplate = Capability.lazyModule(
   'ComposerPluginTemplate',
   {
     requires: [ClientCapabilities.Client],
-    provides: [ProjectCapabilities.Template],
+    provides: [ProjectCapabilities.Template, AppCapabilities.SpaceTemplate],
     activatesOn: ClientEvents.Initialized,
     environments: ['browser', 'tauri'],
   },

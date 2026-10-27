@@ -24,6 +24,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `op@1.1`    | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -62,6 +63,21 @@ type DiscordChannel
     applicationId: string           # Discord application (bot) id; keys the EDGE gateway
     guildId?: string
     channels: string[]              # Discord channel ids; the first receives posts with no thread
+    curate?: string[]               # listed channels whose messages with a link or attachment reach the agent unaddressed
+```
+
+```mdl
+type ShowAndTellEntry
+  desc: One link shared in a show-and-tell channel; a row of the space's show-and-tell table.
+  fields:
+    date: DateTime                  # when it was shared
+    author: string                  # the sharer's Discord username
+    link: string                    # the link; a Discord attachment is filed as its message's link
+    title: string
+    category: demo | video | design | code | doc | article | other
+    summary: string                 # one line on what it shows
+    messageId?: string              # Discord message id; with link, the entry's foreign key
+    channelId?: string
 ```
 
 ## Services
@@ -148,6 +164,62 @@ op SyncDiscordChannel
     to keep the feed clean. Discord embeds and attachments are not yet mapped
     to ContentBlock — plain text only for now. A toast is emitted on success
     or failure via LayoutOperation.AddToast.
+```
+
+```mdl
+op FileLinks
+  key: org.dxos.operation.discord.recordShowAndTellLinks
+  desc: >
+    Files every link of one shared message as a ShowAndTellEntry: each link in the message text, in
+    order, then the links the model lists that the text does not hold (attachments). The model's title,
+    category and summary are kept on the link they name; a missing title is the link's host and path, a
+    missing category is guessed from the host and file extension. Expiring Discord CDN URLs are dropped
+    and the message's own link is filed once in their place.
+  input:
+    author: string
+    text: string                     # the message text, verbatim
+    links?: { url, title?, category?, summary? }[]
+    postedAt?: DateTime              # defaults to now
+    messageId?: string
+    channelId?: string
+    messageLink?: string             # filed in place of expiring attachment URLs
+  output: { filed: { link, title, category, summary }[], skipped: number }
+  effects: [echo:read, echo:write]
+  note: A link already filed for the same message is skipped, so a redelivered message files nothing twice.
+```
+
+```mdl
+op ListLinks
+  key: org.dxos.operation.discord.listShowAndTellLinks
+  desc: >
+    The entries shared in a period (this-week by default, last-week, this-month or all; weeks start
+    Monday, UTC), optionally of one author or category, oldest first, with a Markdown digest: one
+    section per author, the most active first, one line per entry.
+  input:
+    period?: this-week | last-week | this-month | all
+    author?: string                  # compared without a leading @, case-insensitively
+    category?: string
+  output: { from?: string, to?: string, entries: ShowAndTellEntry[], digest: string }
+  effects: [echo:read]
+```
+
+```mdl
+op EnableShowAndTell
+  key: org.dxos.operation.discord.enableShowAndTell
+  desc: >
+    Makes an agent the show-and-tell curator of one Discord channel: adds the channel id to the config's
+    channels and curate lists, creates the agent's Show-and-tell mode (binding the curator skill) when it
+    has none, and switches the agent's own chat into it, whose skills every Discord conversation's chat
+    copies.
+  input:
+    agent: Ref<Agent>
+    channel: Ref<Channel>            # Discord-backed
+    discordChannelId: string
+  output: { mode: string, channels: string[], curate: string[], switched: boolean }
+  effects: [echo:read, echo:write]
+  errors:
+    ShowAndTellError: the channel is not backed by Discord
+  note: switched is false when the agent has no chat yet; the mode is still created.
 ```
 
 ## Channel backend
@@ -241,6 +313,20 @@ feat F-5: ECHO Persistence and Replication
     then: the channel's message list reflects the new messages without additional sync
     tags: [collaborative]
   req F-5.3: All ECHO mutations (Channel creation, Message append, cursor update) are transacted per-target so a mid-sync crash cannot leave the space in a partially-updated state.
+```
+
+```mdl
+feat F-6: Show-and-tell Curator
+
+  req F-6.1: A team commits one Discord channel to demos and links; an agent bound to it files each shared demo or link and summarizes what everybody shared.
+  req F-6.2:
+    when: a top-level message in a channel listed in DiscordChannel.curate has a link or an attachment and does not address the agent
+    then: EDGE submits it to the agent with `addressed: curate` in its header, and the agent calls op:FileLinks and reacts to the message without replying
+  req F-6.3: Each shared link becomes one ShowAndTellEntry (date, author, link, title, category, summary); the same link in the same message is filed once.
+  req F-6.4:
+    when: someone asks the agent what was shared or done in a period ("what did we do this week?")
+    then: the agent calls op:ListLinks and replies with a summary drawn only from the entries returned
+  req F-6.5: op:EnableShowAndTell switches the curator on for one channel; removing the channel from DiscordChannel.curate switches it off.
 ```
 
 ## Acceptance
@@ -422,6 +508,38 @@ test QA-2: Re-sync is idempotent
       expect: no duplicate Channel is created and pulled.added is 0
       assert: return $result.pulled.added === 0
       blocked: Requires a live Discord bot token and an already-synced Integration (see QA-1).
+```
+
+## Changelog
+
+```mdl
+decision D-1: One Discord channel is committed to demos and show-and-tell. People drop links there, to demos they made or things they have seen; the agent's only job is to file and categorize them, keep a list of them in the space as a table of links, and summarize what everybody did when asked, such as "what did we do this week?".
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-6.1, F-6.3, F-6.4]
+```
+
+```mdl
+decision D-2: The curator is an agent mode, Show-and-tell, set on the agent's own chat, whose skills every Discord conversation copies; a channel is curated by listing it in DiscordChannel.curate, which makes EDGE submit its unaddressed messages that carry a link or attachment. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DiscordChannel, F-6.2, F-6.5, EnableShowAndTell]
+  why: Only addressed messages reached the agent, and each Discord message starts its own chat, so a per-chat setting could not reach the next share.
+  rejected:
+    - Requiring people to mention the agent with every link: the channel is for dropping links, and a forgotten mention loses the row.
+    - Binding the curator skill on the DiscordChannel type: every Discord agent would carry it.
+```
+
+```mdl
+decision D-3: A row is a ShowAndTellEntry object keyed by message and link; links are extracted from the message text deterministically and the model only adds the title, category and summary, with the category guessed from the host when it gives none. A Discord attachment is filed as its message's link. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [ShowAndTellEntry, FileLinks, ListLinks, F-6.3]
+  why: A link the model skips would be lost from the table; Discord attachment URLs expire within a day.
+  rejected:
+    - Creating a Table view object with the rows: the plugin has no dependency on the table plugin, and the type opens as a table in Composer.
 ```
 
 ---

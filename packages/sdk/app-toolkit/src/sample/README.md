@@ -13,6 +13,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 | ------------------- | ---------------------------------------------------------- | ------------ |
 | AI Briefing         | `plugin-magazine/src/samples/ai-briefing/CONTENT.md`       | `partial.ts` |
 | Architecture        | `plugin-canvas/src/samples/architecture/CONTENT.md`        | `partial.ts` |
+| DXOS wiki           | `plugin-canvas/src/samples/architecture/wiki/CONTENT.md`   | `partial.ts` |
 | Bramble             | `plugin-onboarding/src/samples/bramble/CONTENT.md`         | `partial.ts` |
 | Alien Labs team     | `plugin-debug/src/samples/fieldstone/team/CONTENT.md`      | `partial.ts` |
 | Alien Labs inbox    | `plugin-debug/src/samples/fieldstone/inbox-crm/CONTENT.md` | `partial.ts` |
@@ -26,7 +27,7 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 | Template          | Code                                                          | Partials                                      |
 | ----------------- | ------------------------------------------------------------- | --------------------------------------------- |
 | AI Briefing       | `plugin-magazine/src/samples/ai-briefing/AiBriefingSpace.ts`  | AI Briefing                                   |
-| DXOS Architecture | `plugin-canvas/src/samples/architecture/ArchitectureSpace.ts` | Architecture                                  |
+| DXOS Architecture | `plugin-canvas/src/samples/architecture/ArchitectureSpace.ts` | Architecture, DXOS wiki                       |
 | Bramble           | `plugin-onboarding/src/samples/bramble/BrambleSpace.ts`       | Bramble                                       |
 | Alien Labs   | `plugin-debug/src/samples/fieldstone/FieldstoneSpace.ts`      | team, inbox-crm, projects, docs, metrics, Architecture |
 | Reading Room      | `plugin-magazine/src/samples/reading-room/ReadingRoomSpace.ts` | Reading Room                                  |
@@ -49,6 +50,9 @@ the partial with the `sample-space-content` skill (`.agents/skills/sample-space-
 A template's `build` runs in the new space's process (`SpaceOperation.ApplyTemplate`), so it can
 schedule operations, such as a first feed sync. A test that builds such a template provides
 `Operation.Service` itself.
+
+A template lists the plugins its content renders with (`plugins` in `SampleSpace.makeTemplate`);
+`SpaceOperation.ApplyTemplate` enables any that are installed but off, and a toast names them.
 
 A template may apply partials from other packages. The package that owns the partial exports it
 through a `samples` subpath and must be public.

@@ -13,6 +13,8 @@ export type DefinitionModel = {
   title?: string;
   /** Ids of the other definitions this one names, in order of first mention. */
   dependsOn: string[];
+  /** How many `req` lines a feature declares; absent for any other kind. */
+  requirements?: number;
   /** Set on a node that lives outside this spec: a block of another spec, or a code symbol. */
   external?: ExternalModel;
 };
@@ -307,15 +309,17 @@ export const buildDefinitionGraph = (
   const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => {
     const prose = `${title ?? ''}\n${body}`;
     const linked = [...findSourceKeys(prose).map(({ key }) => key), ...(annotated.get(id) ?? [])].map(link);
+    const requirements = type === 'feat' ? body.match(REQ_LINE)?.length : undefined;
     return {
       id,
       kind: type,
       ...(title && { title }),
+      ...(requirements && { requirements }),
       // Keys are removed first so their paths' words are not read as names of this spec's blocks.
       dependsOn: [...new Set([...namedIds(prose.replace(SOURCE_KEYS, ' '), ids, id), ...linked])],
     };
   });
-  const all = [...definitions, ...externals.values()];
+  const all = [...nestFeatures(definitions), ...externals.values()];
   return {
     definitions: all,
     edges: all.flatMap(({ id, dependsOn }) => dependsOn.map((to) => ({ id: `${id}->${to}`, from: id, to }))),
@@ -323,6 +327,41 @@ export const buildDefinitionGraph = (
 };
 
 const SOURCE_KEYS = /github:\S+/g;
+
+const REQ_LINE = /^\s*req\s+\S/gm;
+
+/** The feature a dotted feature id belongs to (`F-4.1` → `F-4`), if the spec declares it. */
+const parentFeature = (definition: DefinitionModel, byId: ReadonlyMap<string, DefinitionModel>) => {
+  const dot = definition.id.lastIndexOf('.');
+  const parent = dot > 0 ? byId.get(definition.id.slice(0, dot)) : undefined;
+  return definition.kind === 'feat' && parent?.kind === 'feat' ? parent : undefined;
+};
+
+/**
+ * Points each parent feature at its sub-features, so the ranked layout draws the feature tree top-down instead of
+ * leaving a sub-feature beside its parent or, when its text names the parent, above it.
+ */
+const nestFeatures = (definitions: readonly DefinitionModel[]): DefinitionModel[] => {
+  const byId = new Map(definitions.map((definition) => [definition.id, definition]));
+  const children = new Map<string, string[]>();
+  const parents = new Map<string, string>();
+  for (const definition of definitions) {
+    const parent = parentFeature(definition, byId);
+    if (parent) {
+      parents.set(definition.id, parent.id);
+      children.set(parent.id, [...(children.get(parent.id) ?? []), definition.id]);
+    }
+  }
+  return definitions.map((definition) => ({
+    ...definition,
+    dependsOn: [
+      ...new Set([
+        ...(children.get(definition.id) ?? []),
+        ...definition.dependsOn.filter((id) => id !== parents.get(definition.id)),
+      ]),
+    ],
+  }));
+};
 
 /** A definition graph narrowed to the kinds still shown, with lookups for drawing it. */
 export type DefinitionSelection = DefinitionGraphModel & {

@@ -125,7 +125,8 @@
   "files": [
     "dist",
     "dx.config.ts",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",

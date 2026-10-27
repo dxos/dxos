@@ -44,6 +44,28 @@ const transcriptionManagerFamily = Atom.family((store: MeetingCapabilities.Meeti
   Atom.make((get) => get(store.stateAtom).transcriptionManager),
 );
 
+/**
+ * Announces the meeting's transcription state on the call; every peer (this one included) applies it
+ * in `MeetingOperation.HandlePayload`, so all of them record into the one transcript feed.
+ */
+const broadcastTranscription = Effect.fnUntraced(function* (meeting: Meeting.Meeting, transcriptionEnabled: boolean) {
+  const callManager = yield* Capability.get(CallsCapabilities.Manager);
+  const transcript = yield* Effect.promise(() => meeting.transcript.load());
+  const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
+  const transcriptFeedUri = Feed.getFeedUri(transcriptFeed);
+  invariant(transcriptFeedUri, 'Transcript feed has no feed URI');
+  const typename = Type.getTypename(Meeting.Meeting);
+  invariant(typename);
+  callManager.setActivity(typename, {
+    meetingId: Obj.getURI(meeting),
+    transcriptDxn: transcriptFeedUri.toString(),
+    transcriptionEnabled,
+  });
+  if (!transcriptionEnabled) {
+    log.info('transcription disabled');
+  }
+});
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Read reactively so extensions establish a dependency and heal once these capabilities
@@ -153,21 +175,8 @@ export default Capability.makeModule(
                     meeting = addResult.object as Meeting.Meeting;
                   }
 
-                  const callManager = yield* Capability.get(CallsCapabilities.Manager);
-                  const transcript = yield* Effect.promise(() => meeting.transcript.load());
-                  const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                  const transcriptFeedUri = Feed.getFeedUri(transcriptFeed);
-                  invariant(transcriptFeedUri, 'Transcript feed has no feed URI');
-                  const transcriptionEnabled = !enabled;
-                  callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                    meetingId: Obj.getURI(meeting),
-                    transcriptDxn: transcriptFeedUri.toString(),
-                    transcriptionEnabled,
-                  });
-
-                  if (!transcriptionEnabled) {
-                    log.warn('transcription disabled');
-                  } else {
+                  yield* broadcastTranscription(meeting, !enabled);
+                  if (!enabled) {
                     const companion = Attention.linkedSegment('transcript');
                     yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
                   }
@@ -201,6 +210,47 @@ export default Capability.makeModule(
                 data: get(Obj.atom(meeting.transcript)),
                 position: Position.first,
               }),
+            ];
+          }).pipe(Effect.orDie),
+      }),
+
+      // A call held in the meeting's own room (its Call tab) toggles transcription from the meeting itself.
+      AppGraphBuilder.createTypeExtension({
+        id: 'meetingTranscript',
+        type: Meeting.Meeting,
+        actions: (meeting, get) =>
+          Effect.gen(function* () {
+            const [callManager] = get(callManagerAtom);
+            const [store] = get(meetingStateAtom);
+            if (!callManager || !store) {
+              return [];
+            }
+            const joined = get(callManager.joinedAtom);
+            const roomId = get(callManager.roomIdAtom);
+            if (!joined || roomId !== Obj.getURI(meeting)) {
+              return [];
+            }
+
+            const transcriptionManager = get(transcriptionManagerFamily(store));
+            const active = get(activeMeetingFamily(store)) === meeting;
+            const enabled = active && transcriptionManager ? get(transcriptionManager.enabled) : false;
+            return [
+              {
+                id: 'action.startStopMeetingTranscription',
+                data: Effect.fnUntraced(function* () {
+                  if (!active) {
+                    yield* Operation.invoke(MeetingOperation.SetActive, { object: meeting });
+                  }
+                  yield* broadcastTranscription(meeting, !enabled);
+                }),
+                properties: {
+                  label: enabled
+                    ? ['stop-transcription.label', { ns: meta.profile.key }]
+                    : ['start-transcription.label', { ns: meta.profile.key }],
+                  icon: 'ph--subtitles--regular',
+                  disposition: 'toolbar',
+                },
+              },
             ];
           }).pipe(Effect.orDie),
       }),

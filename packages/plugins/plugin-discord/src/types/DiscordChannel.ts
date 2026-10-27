@@ -52,6 +52,13 @@ export const Properties = Schema.Struct({
     title: 'Channels',
     description: 'Discord channel ids the bot listens in; the first one receives posts with no thread.',
   }),
+  // Read by EDGE's gateway: without it the agent only sees messages that address it.
+  curate: Schema.optional(
+    Schema.Array(Schema.String).annotate({
+      title: 'Show-and-tell channels',
+      description: 'Listed channels where every message with a link or attachment reaches the agent, to be filed.',
+    }),
+  ),
 });
 
 export type Properties = Schema.Schema.Type<typeof Properties>;
