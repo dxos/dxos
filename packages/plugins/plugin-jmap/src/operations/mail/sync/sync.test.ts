@@ -834,7 +834,9 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(starredUri);
   });
 
-  test('a run out of time mid-delta leaves the token for the next run, which applies the rest', async ({ expect }) => {
+  test('the time budget never cuts a delta short, so a spent budget still applies every reconcile in one run', async ({
+    expect,
+  }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateJmapDataset({ count: 3, seed: 94, start: subDays(now, 6), end: subDays(now, 2) });
     const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
@@ -851,25 +853,13 @@ describe('runJmapSync against a mock JMAP API', () => {
       state: 'state-1',
       changeLog: [{ sinceState: 'state-0', newState: 'state-1', updated: base.emails.map((email) => email.id) }],
     };
-    // A zero budget is spent after one item, so the first run applies one reconcile and stops.
-    const runOnce = () =>
-      EffectEx.runPromise(
-        Effect.exit(runJmapSync({ connection: Ref.make(connection), now, timeBudgetMs: 0 })).pipe(
-          Effect.provide(jmapSyncTestServices(db, run2)),
-        ),
-      );
-
-    const first = await runOnce();
-    expect(Exit.isFailure(first) && Process.RunAgainError.is(Cause.squash(first.cause))).toBe(true);
-    expect(tokenOf(binding)).toBe('state-0');
-
-    let runs = 1;
-    let exit: Exit.Exit<unknown, unknown> = first;
-    while (Exit.isFailure(exit) && runs < 10) {
-      exit = await runOnce();
-      runs += 1;
-    }
-    expect(Exit.isSuccess(exit)).toBe(true);
+    // A replayed delta has no position inside it, so cutting reconciles on time could starve its tail;
+    // even with the budget spent at once, all three apply and the token advances in a single run.
+    await EffectEx.runPromise(
+      runJmapSync({ connection: Ref.make(connection), now, timeBudgetMs: 0 }).pipe(
+        Effect.provide(jmapSyncTestServices(db, run2)),
+      ),
+    );
     expect(tokenOf(binding)).toBe('state-1');
 
     const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));

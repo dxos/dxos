@@ -650,8 +650,10 @@ export const runMailSync = (
     // Start pipeline
     //
 
-    // One wall-clock budget across additions and reconciles, so neither can run the clock past it alone.
-    // At least one item per run, so a chain of runs always progresses however slow each item is.
+    // Wall-clock budget for additions only: a capped run replays its reconciles from the unadvanced token
+    // with no position inside the delta, so cutting them could starve the delta's tail forever; the
+    // provider already bounds them per run (JMAP `maxChanges`, Gmail `maxResults`). At least one item per
+    // run, so a chain of runs always progresses however slow each item is.
     let kept = 0;
     const withinBudget = <A, E, R>(self: Stream.Stream<A, E, R>): Stream.Stream<A, E, R> =>
       self.pipe(
@@ -706,7 +708,7 @@ export const runMailSync = (
 
     // Additions and reconciles converge into the shared email tail → single commit. `dedup`/`bound`/
     // `decode` are add-only (a retag targets an already-committed message), so they run before the merge.
-    yield* Stream.merge(inserts, reconciles.pipe(withinBudget)).pipe(
+    yield* Stream.merge(inserts, reconciles).pipe(
       EmailStage.processAttachments(),
       // TODO(wittjosiah): Not compatible with edge compute — reaches `Capability.Service`
       //   (`InboxCapabilities.ObjectExtractor`) and invokes `Operation.ExtractMessage`, neither of
@@ -827,8 +829,7 @@ export const runMailSync = (
     // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
     Cursor.extendRange(binding, extent);
 
-    // Running out of time is a cap like any other: state stays put and the next run resumes the window,
-    // replaying any reconciles this run did not reach from the unadvanced token.
+    // Running out of time is a cap like any other: state stays put and the next run resumes the window.
     const capped = taken >= maxMessages || outOfTime;
     // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
     // and more remain. Both signals mean "re-run", but only `!capped` advances state.
