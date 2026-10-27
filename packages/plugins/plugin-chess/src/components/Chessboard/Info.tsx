@@ -135,7 +135,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
       ref={scrollerRef}
       tabIndex={0}
       data-chessboard-arrow-navigation
-      className={mx('overflow-y-auto outline-hidden focus-visible:ring-2 focus-visible:ring-primary-500', classNames)}
+      className={mx('overflow-y-auto outline-hidden', classNames)}
       style={{
         minHeight: min === undefined ? 'auto' : `${min * 24}px`,
         maxHeight: max === undefined ? 'auto' : `${max * 24}px`,

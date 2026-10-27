@@ -22,7 +22,10 @@ export type QueryMetrics = {
   updates: number;
   /** Timed executions: one-shot runs, and reactive starts up to the first complete answer. */
   executions: number;
-  /** Total, slowest and most recent execution time (ms). */
+  /**
+   * Total, slowest and most recent execution time (ms): the host's reported evaluation plus the client's own
+   * evaluation, excluding time queued on the host, in transit, or waiting for documents to load.
+   */
   totalTime: number;
   maxTime: number;
   lastTime: number;

@@ -93,9 +93,9 @@ jobs:
     runs-on: ubuntu-24.04
     # The scheduled run bypasses the cache: the compile gate takes about 24 minutes, then module structure
     # rebuilds every package again (another 12), before knip and the docs bundle.
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -482,18 +482,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cell: ['1/2', '2/2']
-    # `statuses: write` lets the second cell post the advisory suites' results.
+        # A core change runs every node suite (~3 h of test time), which two cells cannot finish inside the cap below.
+        cell: ['1/4', '2/4', '3/4', '4/4']
     permissions:
       actions: write
       contents: read
       packages: read
-      statuses: write
     runs-on: ubuntu-24.04
     # A forced nightly once rebuilt every dependency per shard here; a cell took 58 minutes.
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -556,13 +555,6 @@ jobs:
           shard: ${{ strategy.job-index }}
           of: ${{ strategy.job-total }}
 
-      # The second cell also runs the advisory suites, memory retention and the model-fixture replay, which once
-      # had a runner each for under 30 s of work. Each reports as its own commit status; neither fails
-      # this cell. Not in the merge queue, where nobody reads those statuses and the PR already ran them.
-      - name: Advisory suites
-        if: ${{ !cancelled() && strategy.job-index == 1 && github.event_name != 'merge_group' }}
-        uses: ./.github/actions/advisory
-
       # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
       # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
       - name: Cancel run on failure
@@ -576,6 +568,43 @@ jobs:
   # Every `:test-native`: suites that compile native code or load it, kept out of the `:test` sweep. The Rust
   # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
   # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
+  # The advisory suites (memory retention, model-fixture replay), apart from the test cells because their minutes ran a
+  # cell into its cap and cancelled tests that had passed; `test` does not wait on them.
+  advisory:
+    name: advisory
+    needs: plan
+    if: >-
+      ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
+      needs.plan.outputs.node == 'true' && github.event_name != 'merge_group' }}
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: '24.11.1'
+      MOON_CONCURRENCY: 4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+        with:
+          force: 'false'
+
+      - name: Advisory suites
+        uses: ./.github/actions/advisory
+
   native:
     if: >-
       ${{ inputs.only != 'check' && inputs.only != 'e2e' &&
@@ -586,9 +615,9 @@ jobs:
       packages: read
       actions: write
     runs-on: ubuntu-24.04
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     steps:
       # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
       - name: Checkout the snapshot actions
@@ -654,9 +683,9 @@ jobs:
       actions: write
     runs-on: ubuntu-24.04
     # Covers a cold build: fork or Dependabot PRs with no remote cache.
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 90 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 90 || 40 }}
     env:
       # The test phase; the build step overrides it.
       MOON_CONCURRENCY: 1

@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -52,6 +52,7 @@ import {
 // Aliased: `Canvas` here is the scene engine's component namespace.
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
+import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
 import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
@@ -96,6 +97,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   // In Composer the canvas's edits join the app's history, scoped to this canvas; without a tracker it keeps its own.
   const tracker = Hooks.useOptionalCapability(Capabilities.HistoryTracker);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const [hovered, setHovered] = useState(false);
   const history = useMemo(
     () => (tracker ? createTrackerHistory({ tracker, invoker, canvas }) : undefined),
     [tracker, invoker, canvas],
@@ -212,10 +215,29 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     [registry, bound, db],
   );
 
+  // Panel.Root takes no pointer handlers, so the section tracks the pointer on its element.
+  useEffect(() => {
+    if (!section || !element) {
+      return;
+    }
+    const enter = () => setHovered(true);
+    const leave = () => setHovered(false);
+    element.addEventListener('pointerenter', enter);
+    element.addEventListener('pointerleave', leave);
+    return () => {
+      element.removeEventListener('pointerenter', enter);
+      element.removeEventListener('pointerleave', leave);
+    };
+  }, [section, element]);
+
   return (
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
-    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}>
+    <Panel.Root
+      role={role}
+      classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}
+      ref={setElement}
+    >
       {newer && !embedded && (
         <Panel.Header>
           <NewerFormatBanner />
@@ -263,8 +285,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               createGeneratorWorker={createGeneratorWorker}
             >
               <Canvas.Viewport liveDepth={settings.liveDepth} />
-              {/* Unset means shown: settings saved before the default existed hold neither key. */}
-              {!slide && (settings.showToolbar ?? true) && (
+              <CanvasEditCommands element={element} />
+              {/* Unset means shown: settings saved before the default existed hold neither key. A section shows its bars
+                  only under the pointer, so an embed in a document reads as a picture until it is used. */}
+              {!slide && (!section || hovered) && (settings.showToolbar ?? true) && (
                 <>
                   <Canvas.Navigation />
                   <Canvas.Actions />

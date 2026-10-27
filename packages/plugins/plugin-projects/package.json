@@ -94,6 +94,16 @@
       "types": "./dist/types/src/types/FeatureOperation.d.ts",
       "import": "./dist/lib/FeatureOperation.mjs"
     },
+    "./FeatureSpec": {
+      "source": "./src/types/FeatureSpec.ts",
+      "types": "./dist/types/src/types/FeatureSpec.d.ts",
+      "import": "./dist/lib/FeatureSpec.mjs"
+    },
+    "./LegacyFeature": {
+      "source": "./src/types/LegacyFeature.ts",
+      "types": "./dist/types/src/types/LegacyFeature.d.ts",
+      "import": "./dist/lib/LegacyFeature.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
@@ -200,7 +210,6 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",

@@ -27,6 +27,15 @@
       "port": 9009
     },
     {
+      "name": "storybook-autocue-composer",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=../tools/autocue,apps/composer-app moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
       "name": "composer-autocue",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -304,7 +313,25 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=stories/stories-agent,plugins/plugin-review moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "storybook-comments",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
         "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=stories/stories-agent,plugins/plugin-review,ui/react-ui-list,plugins/plugin-presenter,plugins/plugin-assistant moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
+      "name": "storybook-graph",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=ui/react-ui-graph,plugins/plugin-explorer moon run storybook-react:serve-nodeps"
       ],
       "port": 9009
     },

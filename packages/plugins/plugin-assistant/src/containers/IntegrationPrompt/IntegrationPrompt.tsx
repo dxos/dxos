@@ -50,7 +50,7 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   }
 
   return (
-    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
+    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-trim-md border border-separator-subtle rounded-sm'>
       <Layout.Flex gap='sm' align='center'>
         <Icon.Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
         <Layout.Flex column classNames='min-w-0'>

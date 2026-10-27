@@ -11,8 +11,29 @@ import { FeatureOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOperation.Update.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ feature: featureRef, key, name, description, status, specs, subfeatures, project }) {
+    Effect.fn(function* ({
+      feature: featureRef,
+      key,
+      name,
+      description,
+      requirements,
+      status,
+      specs,
+      project,
+      parent,
+    }) {
       const feature = yield* Database.load(featureRef);
+      // Walk up from the new parent: reaching the feature means it would become its own ancestor.
+      for (let ancestor = parent && (yield* Database.load(parent)); ancestor;) {
+        if (ancestor.id === feature.id) {
+          return yield* Effect.fail(
+            new FeatureOperation.ParentCycleError({
+              message: `"${feature.name}" cannot be a subfeature of its own subfeature.`,
+            }),
+          );
+        }
+        ancestor = ancestor.parent && (yield* Database.load(ancestor.parent));
+      }
       Obj.update(feature, (feature) => {
         if (key === null) {
           delete Obj.getMeta(feature).key;
@@ -25,22 +46,25 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
         if (description !== undefined) {
           feature.description = description;
         }
+        if (requirements !== undefined) {
+          feature.requirements = requirements.map((requirement) => ({ ...requirement }));
+        }
         if (status !== undefined) {
           feature.status = status;
         }
         if (specs !== undefined) {
           feature.specs = [...specs];
         }
-        if (subfeatures !== undefined) {
-          feature.subfeatures = subfeatures.map((subfeature) => ({ ...subfeature }));
-        }
-        if (project === null) {
+        // A feature sits on one map, its project's or its parent's, and a position belongs to that map's canvas.
+        if (project !== undefined || parent !== undefined) {
           delete feature.project;
+          delete feature.parent;
           delete feature.position;
-        } else if (project !== undefined) {
-          feature.project = project;
-          // A position belongs to one project's canvas.
-          delete feature.position;
+          if (parent) {
+            feature.parent = parent;
+          } else if (project) {
+            feature.project = project;
+          }
         }
       });
       yield* Database.flush();
