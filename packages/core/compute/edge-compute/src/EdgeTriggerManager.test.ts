@@ -121,6 +121,24 @@ describe('EdgeTriggerManager', () => {
     }),
   );
 
+  it.effect('treats a trigger already running on edge as run, without retrying', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      // The first attempt started the run but its response was lost; the retry finds it in flight.
+      const forceRun = vi
+        .spyOn(edgeClient, 'forceRunCronTrigger')
+        .mockRejectedValueOnce(notReplicatedError())
+        .mockRejectedValue(refusedError('Trigger already running'));
+
+      const fiber = yield* forkInvoke(edgeClient);
+      yield* TestClock.adjust('120 seconds');
+
+      expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
+      expect(forceRun).toHaveBeenCalledTimes(2);
+    }),
+  );
+
   it.effect('does not retry any other refusal', () =>
     Effect.gen(function* () {
       const edgeClient = new EdgeHttpClient('https://edge.example.com');

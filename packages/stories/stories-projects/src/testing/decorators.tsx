@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
+import { type Space } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
@@ -27,7 +28,12 @@ import { translations as tasksTranslations } from '@dxos/plugin-tasks/translatio
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TagIndex, Text } from '@dxos/schema';
-import { StoryAiPlugin, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
+import {
+  type ModuleLayout,
+  StoryAiPlugin,
+  createStoryDecorators,
+  makeModuleSurfacesPlugin,
+} from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { moduleSurfaces } from '../modules/index.ts';
@@ -70,6 +76,8 @@ export type DecoratorsProps = {
   plugins?: Plugin.Plugin[];
   /** Extra ECHO types beyond the shared project/mailbox set. */
   types?: Type.AnyEntity[];
+  /** Seeds story-specific objects once the mailbox exists; a returned layout replaces the story's `layout` arg. */
+  seed?: (space: Space) => Promise<ModuleLayout | void>;
 };
 
 /**
@@ -79,7 +87,7 @@ export type DecoratorsProps = {
  * The plugin list is what populates the skill-definition registry that resolves a skill ref to a
  * display label; without the owning plugin the article's skill rows and picker render empty.
  */
-export const createDecorators = ({ mailboxName, messages, ai, plugins = [], types = [] }: DecoratorsProps) =>
+export const createDecorators = ({ mailboxName, messages, ai, plugins = [], types = [], seed }: DecoratorsProps) =>
   createStoryDecorators({
     // Skill-definition modules ride the assistant's start event, and nothing here opens assistant UI
     // or materializes a toolkit — without firing it the article's skill rows resolve to blank labels.
@@ -115,6 +123,7 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
         );
       }
       await space.db.flush({ indexes: true });
+      return seed?.(space);
     },
     plugins: [
       SpacePlugin({}),

@@ -21,6 +21,7 @@ export const handlers = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./mailbox/update-project-tasks.ts')),
   ),
   ProjectMailboxOperation.UpdateTravelLog.pipe(Operation.lazyHandler(() => import('./mailbox/update-travel-log.ts'))),
+  ProjectMailboxOperation.TriageMessages.pipe(Operation.lazyHandler(() => import('./triage/triage-messages.ts'))),
   ProjectOperation.DelegateTaskToChat.pipe(Operation.lazyHandler(() => import('./delegate-task-to-chat.ts'))),
   ProjectOperation.CopyTaskPrompt.pipe(Operation.lazyHandler(() => import('./copy-task-prompt.ts'))),
   ProjectOperation.GetProject.pipe(Operation.lazyHandler(() => import('./get-project.ts'))),

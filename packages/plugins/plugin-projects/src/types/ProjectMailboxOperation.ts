@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
@@ -117,6 +117,50 @@ export const UpdateInvestorLog = Operation.make({
     threads: Schema.Number,
     /** Person objects created for investor senders (never duplicated). */
     contacts: Schema.Number,
+  }),
+}).pipe(Operation.idempotent, Operation.mutation('write'));
+
+/** What triage files for a message: a drafted reply to review, and work items. */
+export const TriageResult = Schema.Struct({
+  reply: Schema.optional(Schema.String).annotate({
+    description: 'A draft reply when the message asks the team something; omitted otherwise.',
+  }),
+  tasks: Schema.Array(
+    Schema.Struct({
+      kind: Schema.Literals(['bug', 'feature', 'docs', 'action']),
+      title: Schema.String,
+      description: Schema.optional(Schema.String),
+    }),
+  ).annotate({ description: 'Work the message asks for or reveals; empty for chatter.' }),
+});
+export type TriageResult = Schema.Schema.Type<typeof TriageResult>;
+
+/**
+ * Reads a message feed (a chat channel's, such as a synced Discord channel) and asks the model, per
+ * new message, whether it needs a reply and what work it asks for. A question becomes a "Reply to"
+ * task carrying the drafted reply, so nothing is posted without a person reviewing it; work becomes
+ * one task each. Cursored per feed and project, and keyed per message, so reruns never duplicate.
+ */
+export const TriageMessages = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.processMessages'),
+    name: 'Triage Messages',
+    description:
+      "Drafts replies to questions and files tasks for the work a channel's new messages ask for, in the project's task set.",
+    icon: 'ph--funnel--regular',
+  },
+  services: [AiService.AiService, Database.Service],
+  input: Schema.Struct({
+    project: Ref.Ref(Project.Project).annotate({ description: 'Project whose task set receives the tasks.' }),
+    feed: Ref.Ref(Feed.Feed).annotate({ description: 'Message feed to triage, e.g. a synced channel.' }),
+    model: Schema.optional(Schema.String.annotate({ description: 'Model name; defaults to Claude Haiku.' })),
+  }),
+  output: Schema.Struct({
+    scanned: Schema.Number,
+    /** Drafted replies filed this run. */
+    replies: Schema.Number,
+    /** Work tasks filed this run. */
+    tasks: Schema.Number,
   }),
 }).pipe(Operation.idempotent, Operation.mutation('write'));
 

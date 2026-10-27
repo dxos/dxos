@@ -51,7 +51,31 @@ export const runJmapSync = ({
 export const jmapSyncTestServices = (
   db: Database.Database,
   dataset: JmapDataset,
-  options?: { traceLayer?: Layer.Layer<Trace.TraceService> },
+  {
+    latencyMs,
+    ...options
+  }: {
+    traceLayer?: Layer.Layer<Trace.TraceService>;
+    /** Delay per fetched email, so a run spends wall-clock time the way a live account does. */
+    latencyMs?: number;
+  } = {},
 ): Layer.Layer<
   JmapMailApi | Database.Service | Resolver | Capability.Service | Trace.TraceService | Operation.Service
-> => Layer.mergeAll(JmapMailApi.mock(dataset), ambientSyncServices(db, options));
+> =>
+  Layer.mergeAll(
+    latencyMs ? withLatency(latencyMs, JmapMailApi.mock(dataset)) : JmapMailApi.mock(dataset),
+    ambientSyncServices(db, options),
+  );
+
+const withLatency = (latencyMs: number, api: Layer.Layer<JmapMailApi>): Layer.Layer<JmapMailApi> =>
+  Layer.effect(
+    JmapMailApi,
+    Effect.gen(function* () {
+      const inner = yield* JmapMailApi;
+      return JmapMailApi.of({
+        ...inner,
+        emailGet: (target, ids, properties) =>
+          Effect.sleep(ids.length * latencyMs).pipe(Effect.andThen(inner.emailGet(target, ids, properties))),
+      });
+    }),
+  ).pipe(Layer.provide(api));

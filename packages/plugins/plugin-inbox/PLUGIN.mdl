@@ -35,6 +35,7 @@ Appendix; the app terms (`node`, `deck`, `plank`, `companion`, `surface`, `menu`
 | `companion` | `org.dxos.mdl.companion@1.0`   |
 | `surface`   | `org.dxos.mdl.surface@1.0`     |
 | `menu`      | `org.dxos.mdl.menu@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## External types
 
@@ -791,6 +792,47 @@ test QA-2: Create a draft calendar event and save it to Google
         NO `invoke` — op:deleteEvent and op:syncDraftEvents are documented in this spec but have no
         `key:` yet: no `org.dxos.operation.inbox.deleteEvent` / `.syncDraftEvents` was found registered
         in `src/types/InboxOperation.ts`. Guessing one would violate Execution Rule 6.
+```
+
+```mdl
+test QA-3: A sync that runs out of time continues until the mailbox is synced
+  desc: The `runAgain` chain under a time budget, against a mock JMAP account slowed to the pace of a
+    live one. Each run stops taking messages when its budget is spent, keeps what it committed, and
+    the next run continues from there; together the runs sync every message exactly once. On EDGE the
+    budget is 40s inside the 60s invocation deadline; the story shortens it so the chain fits a demo.
+  actors: human
+  covers: [F-3.1]
+  status: unverified
+  given:
+    - the `stories-inbox/MailboxSyncChain` story is open, with an empty mailbox bound to a mock JMAP
+      account of 120 messages, a 4s budget and 350ms per message
+  steps:
+    - name: Start the sync
+      do: In the Sync runs panel, click Sync.
+      expect: Run 1 starts, and its bar grows toward the budget marker
+    - name: Watch the first run stop at its budget
+      do: Wait for Run 1 to end.
+      expect: Run 1 ends shortly after the marker as "out of time → continues", having added some of the
+        messages, and Run 2 starts at once
+    - name: Watch the chain complete
+      do: Wait for the last run to end.
+      expect: the last run reads "complete", the panel reads "120 / 120 messages", and the mailbox lists
+        120 messages with no duplicates
+      note: |
+        NO `invoke` — the chain runs in the story against the mock account, not through a routine;
+        on EDGE the dispatcher drives the same `runAgain` continuation.
+```
+
+## Changelog
+
+```mdl
+decision D-1: QA-3 checks that a sync run which spends its time budget stops, keeps its progress and continues through `runAgain`, until every message is synced exactly once.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmytro@braneframe.com
+  affects: [F-3.1, QA-3]
+  why: An EDGE run is killed at its 60s deadline before it saves its position, so the next run fetches the same messages again (dxos/dxos#14243); QA-3 checks the fix for that.
+  source: https://github.com/dxos/dxos/issues/14243
 ```
 
 ---
