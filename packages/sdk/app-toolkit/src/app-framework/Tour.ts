@@ -34,6 +34,9 @@ export type Step = {
  * A step pointing at a toolbar control, which a narrow toolbar may have folded into its overflow (⋮)
  * menu. The control keeps its test id there, so the step only has to open the menu to reach it —
  * which also keeps the tour independent of how the toolbar ranks its controls for collapse.
+ *
+ * A control that collapses as part of a group is one level further in, since a group becomes a
+ * submenu whose items resolve only once it opens; the step is then skipped rather than reached.
  */
 export const toolbarStep = (testId: string, step: Omit<Step, 'target' | 'before'>): Step => {
   const target = `[data-testid="${testId}"]`;
