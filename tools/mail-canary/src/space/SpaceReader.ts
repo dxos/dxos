@@ -23,6 +23,8 @@ const DX_BIN = fileURLToPath(new URL('../../../../packages/devtools/cli/bin/dx',
 
 const execFileAsync = promisify(execFile);
 
+const SPACE_SYNC_TIMEOUT_MS = 300_000;
+
 const SyncEvent = Schema.Struct({
   pid: Schema.String,
   type: Schema.Literals(['start', 'end']),
@@ -98,6 +100,11 @@ export class SpaceReader {
         try: () => writeFile(file, readSpaceProgram({ since, maxMessages })),
         catch: (cause) => new DxError({ message: `cannot write the eval program: ${String(cause)}` }),
       });
+      // `dx space sync` waits until the space's documents match EDGE (cli-util `waitForSync`), and now and
+      // then times out on its own 60 s limit; the program then pulls the feeds, which it does not cover.
+      yield* this.#run(['space', 'sync', '--space-id', this.spaceId, '--timeout', String(SPACE_SYNC_TIMEOUT_MS)]).pipe(
+        Effect.retry({ times: 2 }),
+      );
       const stdout = yield* this.#run([
         '--json',
         'eval',
@@ -132,7 +139,11 @@ export class SpaceReader {
         });
         return stdout;
       },
-      catch: (cause) => new DxError({ message: this.#redact(`dx ${args[0] ?? ''} failed: ${String(cause)}`) }),
+      catch: (cause) => {
+        // dx logs its error to stdout, so the exit message alone does not say why it failed.
+        const output = cause instanceof Error && 'stdout' in cause ? String(cause.stdout).slice(-600) : '';
+        return new DxError({ message: this.#redact(`dx ${args[0] ?? ''} failed: ${String(cause)}\n${output}`) });
+      },
     });
   }
 

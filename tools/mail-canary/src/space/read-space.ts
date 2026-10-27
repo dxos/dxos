@@ -14,9 +14,6 @@ export const TRACE_FEED_KIND = 'dxos.org.feed.trace';
 // Feed rows per query; small, since a query response over 32 MiB fails on EDGE.
 const PAGE_SIZE = 50;
 
-// A fresh sign-in replicates the space after `dx` starts; on preview the mailbox lands within a minute.
-const REPLICATION_TIMEOUT_MS = 120_000;
-
 export type ReadSpaceParams = {
   /** Read trace events back to this epoch millisecond. */
   readonly since: number;
@@ -33,7 +30,7 @@ export type ReadSpaceParams = {
  * filter pushdown yet, so a foreign-key filter would decode the whole feed.
  */
 export const readSpaceProgram = (params: ReadSpaceParams): string => `
-const params = ${JSON.stringify({ ...params, pageSize: PAGE_SIZE, replicationTimeout: REPLICATION_TIMEOUT_MS })};
+const params = ${JSON.stringify({ ...params, pageSize: PAGE_SIZE })};
 const syncKey = ${JSON.stringify(SYNC_OPERATION_KEY)};
 const gmailSource = ${JSON.stringify(GMAIL_SOURCE)};
 
@@ -46,17 +43,17 @@ const page = (feed, typename, read) =>
       .from(feed),
   ).run;
 
-let mailbox;
-for (let waited = 0; ; waited += 5000) {
-  [mailbox] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.mailbox'))).run;
-  if (mailbox || waited >= params.replicationTimeout) {
-    break;
-  }
-  yield* Effect.sleep('5 seconds');
-}
+// A feed replicates apart from the documents, so a fresh profile holds only part of it until pulled;
+// EDGE answers the pull's query slowly at times, hence the retries.
+const { db } = yield* Database.Service;
+const pull = (feed) =>
+  Effect.tryPromise(() => db.syncFeed(feed, { shouldPush: false })).pipe(Effect.retry({ times: 2 }));
+
+const [mailbox] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.mailbox'))).run;
 const messages = [];
 if (mailbox) {
   const feed = yield* Database.load(mailbox.feed);
+  yield* pull(feed);
   for (let read = 0; read < params.maxMessages; read += params.pageSize) {
     const rows = yield* page(feed, 'org.dxos.type.message', read);
     for (const message of rows) {
@@ -76,6 +73,7 @@ const [traceFeed] = yield* Database.query(
 ).run;
 const events = [];
 if (traceFeed) {
+  yield* pull(traceFeed);
   for (let read = 0; ; read += params.pageSize) {
     const rows = yield* page(traceFeed, 'org.dxos.type.traceMessage', read);
     let older = 0;

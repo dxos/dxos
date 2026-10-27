@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import { runInNewContext } from 'node:vm';
 import { describe, test } from 'vitest';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
+
 import { GMAIL_SOURCE, SYNC_OPERATION_KEY, readSpaceProgram } from './read-space.ts';
 
 type Row = Record<string, any>;
@@ -14,11 +16,14 @@ type Row = Record<string, any>;
  * Runs the program the way the code-mode Effect dialect does (a generator body with the dialect's
  * bindings in scope), against in-memory stand-ins for the space.
  */
-const evaluate = (
+const evaluate = async (
   program: string,
   space: { mailbox: Row[]; mailboxFeed: Row[]; traceFeed: Row[]; triggers: Row[] },
+  { failPulls = 0 }: { failPulls?: number } = {},
 ) => {
   const printed: string[] = [];
+  const pulled: string[] = [];
+  let failures = failPulls;
   // State lives under `state` so the builder's own `skip`/`limit` methods cannot shadow its values.
   const query = (state: Row = {}): Row => ({
     state,
@@ -44,6 +49,16 @@ const evaluate = (
   const bindings = {
     Effect,
     Database: {
+      Service: Effect.succeed({
+        db: {
+          syncFeed: async (feed: Row) => {
+            if (failures-- > 0) {
+              throw new Error('Feed sync QueryRequest timed out');
+            }
+            pulled.push(feed.id);
+          },
+        },
+      }),
       query: (selection: Row) => ({ run: Effect.succeed(rowsFor(selection.state ?? { filter: selection })) }),
       load: () => Effect.succeed(space.mailbox[0]?.feedObject),
     },
@@ -55,8 +70,8 @@ const evaluate = (
     print: (value: string) => Effect.sync(() => printed.push(value)),
   };
   const run = runInNewContext(`Effect.gen(function* () {\n${program}\n})`, bindings);
-  Effect.runSync(run);
-  return JSON.parse(printed[0]);
+  await EffectEx.runPromise(run);
+  return { ...JSON.parse(printed[0]), pulled };
 };
 
 const SINCE = 1_000_000;
@@ -100,21 +115,21 @@ describe('readSpaceProgram', () => {
     ],
   };
 
-  test('reads every keyed mailbox message across pages', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 1_000 }), space);
+  test('reads every keyed mailbox message across pages', async ({ expect }) => {
+    const snapshot = await evaluate(readSpaceProgram({ since: SINCE, maxMessages: 1_000 }), space);
     expect(snapshot.mailboxFound).toBe(true);
     expect(snapshot.messages).toHaveLength(120);
     expect(snapshot.messages).toContainEqual({ gmailId: 'g7', subject: 'subject 7', sender: 'sender7@enron.com' });
   });
 
-  test('stops after maxMessages rows, counting rows without a Gmail key', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 50 }), space);
+  test('stops after maxMessages rows, counting rows without a Gmail key', async ({ expect }) => {
+    const snapshot = await evaluate(readSpaceProgram({ since: SINCE, maxMessages: 50 }), space);
     expect(snapshot.messages).toHaveLength(49);
     expect(snapshot.messages[0].gmailId).toBe('g119');
   });
 
-  test('reads mail sync events inside the window only', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10 }), space);
+  test('reads mail sync events inside the window only', async ({ expect }) => {
+    const snapshot = await evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10 }), space);
     expect(snapshot.events).toHaveLength(120);
     expect(snapshot.events.some((event: Row) => event.pid === 'old' || event.pid === 'other')).toBe(false);
     expect(snapshot.events).toContainEqual({
@@ -126,8 +141,13 @@ describe('readSpaceProgram', () => {
     });
   });
 
-  test('reports the remote timer trigger only', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10 }), space);
+  test('pulls both feeds before reading them, retrying a timed-out pull', async ({ expect }) => {
+    const snapshot = await evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10 }), space, { failPulls: 2 });
+    expect(snapshot.pulled).toEqual(['mailbox-feed', 'trace-feed']);
+  });
+
+  test('reports the remote timer trigger only', async ({ expect }) => {
+    const snapshot = await evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10 }), space);
     expect(snapshot.triggers).toEqual([{ id: 'sync', enabled: true }]);
   });
 });
