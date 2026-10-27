@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { dirname, relative } from 'node:path';
 import {
   type Plugin as VitePlugin,
   type RunnableDevEnvironment,
@@ -103,13 +104,18 @@ const readModuleRef = (value: unknown): string | undefined =>
 const toManifestTags = (tags: readonly Capability.AnyTag[] = []): Plugin.ManifestTag[] =>
   tags.map(({ identifier, arity }) => ({ identifier, arity }));
 
+export type PluginConfigPluginOptions = {
+  /** Restricts the plugin to one command, e.g. `'build'` for a library whose tests import the config. */
+  apply?: 'build' | 'serve';
+};
+
 /**
  * Evaluates every `dx.config.ts` defined with `Plugin.config` at build time and replaces it, for the
  * app, with its {@link Plugin.Manifest}: static JSON listing the modules for the target environment
  * and the URL of each body. Module bodies become their own chunks; bodies for other environments are
  * never emitted. In dev the config is re-evaluated on every load, so edits hot-reload.
  */
-export const pluginConfigPlugin = (): VitePlugin => {
+export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): VitePlugin => {
   let evaluator: Promise<RunnableDevEnvironment> | undefined;
   const getEvaluator = (root: string) =>
     (evaluator ??= (async () => {
@@ -134,6 +140,7 @@ export const pluginConfigPlugin = (): VitePlugin => {
   return {
     name: 'dx-plugin-config',
     enforce: 'pre',
+    apply,
     async load(id) {
       const file = id.split('?')[0];
       if (!CONFIG_FILE.test(file)) {
@@ -158,10 +165,20 @@ export const pluginConfigPlugin = (): VitePlugin => {
             ? 'workerd'
             : 'node';
 
+      // A library's dist serves every runtime and is re-bundled downstream: keep every module with its
+      // environments, and load each body through a static import a downstream bundler can follow.
+      const library = this.environment.mode === 'build' && Boolean(this.environment.config.build.lib);
+      const loaders: string[] = [];
       const chunkRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.
-      const toUrl = (moduleFile: string) => {
+      const toUrl = (moduleFile: string, specifier = `./${relative(dirname(file), moduleFile)}`) => {
         this.addWatchFile(moduleFile);
+        if (library) {
+          loaders.push(
+            `${JSON.stringify(specifier)}: () => import(${JSON.stringify(specifier.startsWith('.') ? moduleFile : specifier)})`,
+          );
+          return specifier;
+        }
         if (this.environment.mode !== 'build') {
           return `/@fs${moduleFile}`;
         }
@@ -171,7 +188,7 @@ export const pluginConfigPlugin = (): VitePlugin => {
       };
       const modules: Plugin.ManifestModule[] = [];
       for (const module of config.modules) {
-        if (!module || (module.environments && !module.environments.includes(target))) {
+        if (!module || (!library && module.environments && !module.environments.includes(target))) {
           continue;
         }
         // Both tags are `Symbol.for` keys, so they match the copy of the framework the config loaded.
@@ -192,7 +209,10 @@ export const pluginConfigPlugin = (): VitePlugin => {
           activatesOn: module.activatesOn,
           requires: toManifestTags(module.requires),
           provides: toManifestTags(module.provides),
-          ...(adapter && adapterFile ? { adapter: { url: toUrl(adapterFile), args: adapter.args } } : {}),
+          ...(adapter && adapterFile
+            ? { adapter: { url: toUrl(adapterFile, adapter.module), args: adapter.args } }
+            : {}),
+          ...(library && module.environments ? { environments: module.environments } : {}),
         });
       }
 
@@ -203,7 +223,7 @@ export const pluginConfigPlugin = (): VitePlugin => {
       );
       return [
         "import * as Plugin from '@dxos/app-framework/Plugin';",
-        `const plugin = Plugin.fromManifest(${json});`,
+        `const plugin = Plugin.fromManifest(${json}, {${loaders.join(', ')}});`,
         'export const { meta, make } = plugin;',
         'export default plugin;',
       ].join('\n');

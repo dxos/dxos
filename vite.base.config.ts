@@ -10,6 +10,7 @@ import { execFile } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import path, { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
@@ -1190,6 +1191,43 @@ const conditionalSubpathEntries = (cwd: string): Record<string, string> => {
 };
 
 /**
+ * Build entries for every `package.json` export or import whose source is `dx.config.ts`, named after
+ * the built target: a `Plugin.config` plugin declares its modules there, so the build adds that one
+ * entry and {@link dxConfigPlugin} emits each module body from it.
+ */
+const dxConfigEntries = (cwd: string): Record<string, string> => {
+  const pkgPath = join(cwd, 'package.json');
+  if (!existsSync(join(cwd, 'dx.config.ts')) || !existsSync(pkgPath)) {
+    return {};
+  }
+  const { exports, imports } = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  const entries: Record<string, string> = {};
+  for (const target of [...Object.values<any>(exports ?? {}), ...Object.values<any>(imports ?? {})]) {
+    const built = target?.import ?? target?.default;
+    if (target?.source === './dx.config.ts' && typeof built === 'string') {
+      entries[path.posix.basename(built).replace(/\.mjs$/, '')] = 'dx.config.ts';
+    }
+  }
+  return entries;
+};
+
+/**
+ * `pluginConfigPlugin` from the package's own `@dxos/app-framework`, which the repo root cannot
+ * resolve; build-only, so tests keep importing the authored config.
+ */
+const dxConfigPlugin = async (cwd: string): Promise<Plugin | undefined> => {
+  const pkgPath = join(cwd, 'node_modules/@dxos/app-framework/package.json');
+  const target = existsSync(pkgPath)
+    ? JSON.parse(readFileSync(pkgPath, 'utf8')).exports?.['./vite-plugin']?.import
+    : undefined;
+  if (typeof target !== 'string') {
+    throw new Error(`A Plugin.config package needs @dxos/app-framework built to build ${cwd}.`);
+  }
+  const { pluginConfigPlugin } = await import(pathToFileURL(join(path.dirname(pkgPath), target)).href);
+  return pluginConfigPlugin({ apply: 'build' });
+};
+
+/**
  * Single entry point for a DXOS library package's `vite.config.ts`.
  *
  * - Library JS → `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
@@ -1226,7 +1264,8 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         : [];
   // Per-condition subpaths are added to whatever the package declares, so a package gaining its
   // first condition needs no edit here.
-  const barrelEntries = conditionalSubpathEntries(process.cwd());
+  const barrelEntries = { ...conditionalSubpathEntries(process.cwd()), ...dxConfigEntries(process.cwd()) };
+  const hasDxConfigEntry = Object.values(barrelEntries).includes('dx.config.ts');
   // Derived first so an explicitly configured entry always wins.
   const resolvedEntry =
     Object.keys(barrelEntries).length > 0
@@ -1315,6 +1354,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       // After the log transform so it sees the final emitted chunk.
       ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
+      ...(hasDxConfigEntry ? [dxConfigPlugin(process.cwd())] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

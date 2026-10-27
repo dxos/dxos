@@ -698,7 +698,15 @@ export type ManifestModule = {
   provides: readonly ManifestTag[];
   /** Transform applied to what `url` exports, when the module's maker adapts a data module. */
   adapter?: { url: string; args?: unknown };
+  /** Runtimes the module loads in; present only in a library build, which serves every runtime. */
+  environments?: readonly Capability.Environment[];
 };
+
+/**
+ * Static loaders for a manifest's URLs, keyed by URL. A library build passes them so downstream
+ * bundlers (e.g. a worker's) can follow each body; an app build omits them and loads by URL.
+ */
+export type ManifestLoaders = Readonly<Record<string, () => Promise<unknown>>>;
 
 /**
  * Static description of a plugin, emitted at build time from its `dx.config.ts` for one target
@@ -706,28 +714,49 @@ export type ManifestModule = {
  */
 export type Manifest = Config2.Config & { modules: readonly ManifestModule[] };
 
-/** Builds a plugin from a build-time {@link Manifest}; each module body loads from its URL on activation. */
-export const fromManifest = <T = void>({
-  modules,
-  ...data
-}: Manifest): Pick<PluginConfig<T>, 'plugin' | 'meta' | 'make'> => {
+type ModuleBody = { default: (props: unknown) => Effect.Effect<any, Error, any> };
+type ModuleAdapter = { default: (loaded: unknown, args: unknown) => unknown };
+
+// Loaded by URL, so the module's shape is only known at runtime.
+const hasDefaultFunction = (value: unknown): boolean =>
+  typeof value === 'object' && value !== null && 'default' in value && typeof value.default === 'function';
+const isModuleBody = (value: unknown): value is ModuleBody => hasDefaultFunction(value);
+const isModuleAdapter = (value: unknown): value is ModuleAdapter => hasDefaultFunction(value);
+
+/**
+ * Builds a plugin from a build-time {@link Manifest}. Each module body loads on activation, through
+ * `loaders` when the build supplied static imports, otherwise from its URL.
+ */
+export const fromManifest = <T = void>(
+  { modules, ...data }: Manifest,
+  loaders: ManifestLoaders = {},
+): Pick<PluginConfig<T>, 'plugin' | 'meta' | 'make'> => {
   const meta = getMetaFromConfig(data);
   const toTags = (tags: readonly ManifestTag[]) =>
     tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
+  const load = (url: string) => loaders[url]?.() ?? import(/* @vite-ignore */ url);
   return {
     plugin: data.plugin,
     meta,
     make: fromModules<T>(
       meta,
-      modules.map(({ id, url, activatesOn, requires, provides, adapter }) =>
-        Capability.lazyModule(id, { activatesOn, requires: toTags(requires), provides: toTags(provides) }, async () => {
-          const loaded = await import(/* @vite-ignore */ url);
-          if (!adapter) {
-            return loaded;
-          }
-          const { default: adapt } = await import(/* @vite-ignore */ adapter.url);
-          return adapt(loaded, adapter.args);
-        }),
+      modules.map(({ id, url, activatesOn, requires, provides, adapter, environments }) =>
+        Capability.lazyModule(
+          id,
+          { activatesOn, requires: toTags(requires), provides: toTags(provides), environments },
+          async () => {
+            const loaded = await load(url);
+            if (!adapter) {
+              invariant(isModuleBody(loaded), `Module ${id} at ${url} has no default export.`);
+              return loaded;
+            }
+            const adapterModule = await load(adapter.url);
+            invariant(isModuleAdapter(adapterModule), `Adapter at ${adapter.url} has no default export.`);
+            const adapted = adapterModule.default(loaded, adapter.args);
+            invariant(isModuleBody(adapted), `Adapter at ${adapter.url} returned no module body.`);
+            return adapted;
+          },
+        ),
       ),
     ),
   };
