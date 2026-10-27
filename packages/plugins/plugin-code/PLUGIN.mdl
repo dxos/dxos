@@ -10,12 +10,12 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
   modules:
     - AppGraphBuilder: graph nodes for specs and code projects
     - BuildRunState: the state of the running build agent, from CodeEvents.Start
-    - CreateObject: create entries for Spec and CodeProject
+    - CreateObject: create entries for SpecDocument and CodeProject
     - NavigationTargetResolver: resolves a github: key to the spec or file it names
     - OperationHandler: the plugin's operations (importSpec, listLocalSpecs, the Coder tools)
     - PluginAsset: this document, served as the plugin's own spec
     - ReactSurface: the spec article and section surfaces
-    - Schema: the Spec and CodeProject types
+    - Schema: the SpecDocument and CodeProject types
     - Settings: repos to sync and build settings
     - SkillDefinition: the Coder skill
     - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (plugin-github spec/FILE-SYNC.mdl F-6)
@@ -75,7 +75,7 @@ type SpecDocument
 ```mdl
 type CodeProject
   desc: |
-    A coding project. Pairs a name with a Spec used to drive code generation
+    A coding project. Pairs a name with a SpecDocument used to drive code generation
     and the set of TypeScript source files that compose the plugin.
     Typename `org.dxos.type.codeProject`.
   fields:
@@ -155,14 +155,14 @@ component FileTree
 ```mdl
 component SpecArticle
   desc: |
-    Article surface for a Spec, laid out as an IDE page: the MDL editor beside a
+    Article surface for a SpecDocument, laid out as an IDE page: the MDL editor beside a
     panel of views (definitions graph, review, code, decisions, data model, API).
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
     reviewed item and links it to its code (F-16).
   props:
     role: string
-    subject?: Spec
+    subject?: SpecDocument
     content?: string            # static text, e.g. a bundled PLUGIN.mdl
     sourceKey?: string          # github: key of static content
     attendableId?: string
@@ -212,11 +212,11 @@ service Credentials
 service BuildAgent
   desc: |
     The remote EDGE service that runs the Claude Agent SDK to generate
-    Composer plugins from a Spec. Out of scope for this PR — phase 1 only
+    Composer plugins from a SpecDocument. Out of scope for this PR — phase 1 only
     declares the contract surface. Will live in `dxos/edge`.
   loading: lazy
   ops:
-    verify(spec: Spec) → { ok: bool, messages: string[] }
+    verify(spec: SpecDocument) → { ok: bool, messages: string[] }
     build(project: CodeProject) → { runId: string, status: string }
 ```
 
@@ -399,8 +399,8 @@ op runBuild
 op importSpec
   key: org.dxos.operation.code.importSpec
   desc: |
-    Links a spec file in a local checkout to a Spec, keyed by its source key;
-    returns the existing Spec when one already carries the key (F-14.6).
+    Links a spec file in a local checkout to a SpecDocument, keyed by its source key;
+    returns the existing SpecDocument when one already carries the key (F-14.6).
   input:
     key: string                 # github:<owner>/<repo>/<path>.mdl
   output: { spec: Ref<SpecDocument>, created: boolean }
@@ -414,8 +414,8 @@ op importSpec
 op importSpecFile
   key: org.dxos.operation.code.importSpecFile
   desc: |
-    The import of the `.mdl` FileMapping: creates a Spec for a new file, or applies the remote
-    change to Spec.content with TextMerge.applyAt as of the heads of the last sync.
+    The import of the `.mdl` FileMapping: creates a SpecDocument for a new file, or applies the remote
+    change to SpecDocument.content with TextMerge.applyAt as of the heads of the last sync.
   input: FileImportInput        # github:dxos/dxos/packages/plugins/plugin-github/spec/FILE-SYNC.mdl#FileMapping
   output: FileImportOutput
   effects: [echo:read, echo:write]
@@ -424,7 +424,7 @@ op importSpecFile
 ```mdl
 op exportSpecFile
   key: org.dxos.operation.code.exportSpecFile
-  desc: The export of the `.mdl` FileMapping: Spec.content as it stands, with the heads it was read at.
+  desc: The export of the `.mdl` FileMapping: SpecDocument.content as it stands, with the heads it was read at.
   input: FileExportInput
   output: FileExportOutput
   effects: [echo:read]

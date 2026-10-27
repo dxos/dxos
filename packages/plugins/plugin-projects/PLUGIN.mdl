@@ -17,9 +17,10 @@ template, which builds with the dev shell of a vite server.
 
 ## Extensions
 
-| Term   | URI                     |
-|--------|-------------------------|
-| `test` | `org.dxos.mdl.test@1.0` |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
 

@@ -82,9 +82,14 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, spec.id);
   const db = Obj.getDatabase(spec);
 
-  // The feature zoomed into; a focus that no longer resolves (deleted) falls back to the top level.
+  // The feature zoomed into; a focus that no longer resolves (deleted), or that has moved off this spec's tree, falls
+  // back to the top level, so a feature created there lands under the opened spec.
   const [focusFeature] = useQuery(focus ? db : undefined, focus ? Query.select(Filter.id(focus)) : nothing);
-  const zoomed = Feature.instanceOf(focusFeature) ? focusFeature : undefined;
+  const zoomed =
+    Feature.instanceOf(focusFeature) &&
+    Spec.getAncestry(Spec.getContainer(focusFeature)).some((ancestor) => ancestor.id === spec.id)
+      ? focusFeature
+      : undefined;
   const trail = useTrail(spec, zoomed);
 
   // The level's spec: the map's own, or the one breaking the zoomed feature down (none until a feature is added).

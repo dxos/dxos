@@ -84,29 +84,26 @@ export const getOwner = (spec: Spec): Feature.Feature | undefined => {
   return Feature.instanceOf(parent) ? parent : undefined;
 };
 
-/** Whether `spec` is the breakdown of `feature` or lies anywhere beneath it. */
-export const isWithin = (spec: Spec, feature: Feature.Feature): boolean => {
-  for (let current: Spec | undefined = spec, depth = 0; current && depth < 64; depth++) {
+/**
+ * The specs from `spec` up to the top-level one, each the container of the feature that owns the one before it. Stops
+ * at a spec already seen, so a cycle written by a concurrent move cannot loop.
+ */
+export const getAncestry = (spec: Spec | undefined): Spec[] => {
+  const chain: Spec[] = [];
+  const seen = new Set<string>();
+  for (let current = spec; current && !seen.has(current.id);) {
+    seen.add(current.id);
+    chain.push(current);
     const owner = getOwner(current);
-    if (!owner) {
-      return false;
-    }
-    if (owner.id === feature.id) {
-      return true;
-    }
-    current = getContainer(owner);
+    current = owner && getContainer(owner);
   }
-  return false;
+  return chain;
 };
 
+/** Whether `spec` is the breakdown of `feature` or lies anywhere beneath it. */
+export const isWithin = (spec: Spec, feature: Feature.Feature): boolean =>
+  getAncestry(spec).some((current) => getOwner(current)?.id === feature.id);
+
 /** The project that tracks the feature's work: its spec's, else the nearest one up the chain of specs. */
-export const findProject = (feature: Feature.Feature): Ref.Ref<Project.Project> | undefined => {
-  for (let spec = getContainer(feature), depth = 0; spec && depth < 64; depth++) {
-    if (spec.project) {
-      return spec.project;
-    }
-    const owner = getOwner(spec);
-    spec = owner && getContainer(owner);
-  }
-  return undefined;
-};
+export const findProject = (feature: Feature.Feature): Ref.Ref<Project.Project> | undefined =>
+  getAncestry(getContainer(feature)).find((spec) => spec.project)?.project;

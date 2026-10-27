@@ -10,7 +10,7 @@ import { SpecDocument } from '@dxos/types';
 
 import { Feature, FeatureOperation, FeatureSpec, Spec } from '#types';
 
-import { attach, ensureBreakdown } from './util.ts';
+import { attach, detach, ensureBreakdown } from './util.ts';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = FeatureOperation.ImportSpec.pipe(
   Operation.withHandler(
@@ -29,6 +29,16 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
       // The text is the spec's document: written over the one it holds, else held as a new one.
       const document = spec.document && (yield* Database.load(spec.document));
       if (document) {
+        // Re-keyed to this path, so the next import of it without a target finds this spec again.
+        Obj.update(document, (document) => {
+          const keys = Obj.getMeta(document).keys;
+          const index = keys.findIndex(({ source }) => source === Feature.SPEC_KEY_SOURCE);
+          if (index === -1) {
+            keys.push(key);
+          } else if (keys[index].id !== key.id) {
+            keys.splice(index, 1, key);
+          }
+        });
         const content = yield* Database.load(document.content);
         if (content.content !== text) {
           Obj.update(content, (content) => {
@@ -65,6 +75,11 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
         const source = FeatureSpec.getSource(path, id);
         const feature = existing.get(source);
         if (feature) {
+          // An explicit target takes the features its text declares, wherever they were moved to since.
+          if (specRef && Spec.getContainer(feature)?.id !== spec.id) {
+            detach(feature);
+            attach(spec, feature);
+          }
           // The name and description may have been rewritten by hand since; the spec owns only the requirements.
           if (JSON.stringify(feature.requirements ?? []) !== JSON.stringify(requirements)) {
             Obj.update(feature, (feature) => {

@@ -116,14 +116,19 @@ export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec
             featureRef(featureId),
             parentId ? featureRef(parentId) : undefined,
           ]);
-          if (!feature) {
+          // A parent that does not resolve moves nothing, rather than falling back to the map's own spec.
+          if (!feature || (parentId && !parent)) {
             return;
           }
           // A parent without a breakdown gets one: `CreateSpec` returns the one it has, else makes it.
-          const created = parent
-            ? await run(FeatureOperation.CreateSpec, { name: parent.target?.name ?? '', feature: parent })
-            : undefined;
-          const target = created ? await refOf(created.spec.id, Spec.instanceOf) : specRef;
+          let target = specRef;
+          if (parent) {
+            const created = await run(FeatureOperation.CreateSpec, {
+              name: parent.target?.name ?? '',
+              feature: parent,
+            });
+            target = created ? await refOf(created.spec.id, Spec.instanceOf) : undefined;
+          }
           if (target) {
             await run(FeatureOperation.Update, { feature, spec: target });
           }

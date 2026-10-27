@@ -176,6 +176,33 @@ feat F-1: Sync
   );
 });
 
+describe('FeatureOperation.ImportSpec into an explicit spec', () => {
+  const text = `
+\`\`\`mdl
+feat F-1: Sync
+  req F-1.1: Mail arrives within a minute.
+\`\`\`
+`;
+
+  it.effect('takes the features its text declares and re-keys the document to the new path', () =>
+    Effect.gen(function* () {
+      const first = yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, name: 'A' });
+      const target = yield* addSpec('B');
+      yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, spec: ref(target) });
+      const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
+      expect(Spec.getContainer(feature)?.id).toBe(target.id);
+      const [source] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter(({ id }) => id === first.spec);
+      expect(source?.features).toHaveLength(0);
+
+      yield* importSpec.handler({ path: 'packages/b/PLUGIN.mdl', text, spec: ref(target) });
+      const document = target.document && (yield* Database.load(target.document));
+      expect(document && Obj.getMeta(document).keys).toEqual([
+        { source: Feature.SPEC_KEY_SOURCE, id: 'packages/b/PLUGIN.mdl' },
+      ]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('FeatureOperation.AddDependency', () => {
   it.effect('is idempotent and refuses a cycle, naming it', () =>
     Effect.gen(function* () {
