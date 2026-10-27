@@ -6,6 +6,7 @@ import '../../../styles/graph.css';
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { randomLcg } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import type * as GraphModel from '@dxos/graph/GraphModel';
@@ -36,6 +37,20 @@ const WARMUP_MS = 500;
 /** Force projector that times each synchronous emit, which is the renderer's JS cost for that update. */
 class MeasuredForceProjector extends GraphForceProjector<TestNode> {
   readonly samples: { kind: ProjectorUpdateKind; ms: number }[] = [];
+
+  /**
+   * The force projector scatters new nodes with `Math.random`; swap in a generator seeded by the graph size
+   * while it lays them out, so every run at a size starts from the same positions.
+   */
+  override onUpdate(graph?: GraphModel.AnyData) {
+    const random = Math.random;
+    Math.random = randomLcg(graph?.nodes.length ?? 0);
+    try {
+      super.onUpdate(graph);
+    } finally {
+      Math.random = random;
+    }
+  }
 
   override emitUpdate(kind: ProjectorUpdateKind = 'topology') {
     const start = performance.now();

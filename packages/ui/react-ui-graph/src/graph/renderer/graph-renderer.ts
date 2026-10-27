@@ -623,6 +623,10 @@ const createEdgeShapes = <NodeData, EdgeData>(
   if (options.onLinkClick) {
     const click = document.createElementNS(SVG_NS, tag);
     click.classList.add(EDGE_CLICK_CLASS);
+    // Inline so the edge stroke rules (including per-color ones) can't make the hit area visible or thin.
+    click.style.stroke = 'transparent';
+    click.style.strokeWidth = '8px';
+    click.style.pointerEvents = 'stroke';
     click.addEventListener('click', (event: MouseEvent) => {
       // The group's datum is current even after a layout switch rebinds it.
       options.onLinkClick(select<SVGGElement, GraphLayoutEdge<NodeData, EdgeData>>(entry.group).datum(), event);

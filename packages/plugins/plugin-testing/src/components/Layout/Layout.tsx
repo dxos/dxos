@@ -207,7 +207,10 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                   </ScrollArea.Viewport>
                 </ScrollArea.Root>
               )}
-              {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
+              {/* An open popover with no kind (allowed by a partial initial state) renders as the base popover. */}
+              {(layout.popoverKind === undefined ||
+                layout.popoverKind === 'base' ||
+                layout.popoverKind === 'rename') && (
                 <Popover.Body>
                   <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                 </Popover.Body>
