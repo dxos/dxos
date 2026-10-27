@@ -804,7 +804,12 @@ export class EchoHost extends Resource {
    * Adopts a space root minted elsewhere, so a joining peer records the root the space already has
    * rather than minting a second one over it. Idempotent; the root must name this space.
    */
-  async adoptSpaceRoot(ctx: Context, spaceId: SpaceId, spaceRootUrl: AutomergeUrl): Promise<SpaceRootRefs> {
+  async adoptSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    spaceRootUrl: AutomergeUrl,
+    { fetchFromNetwork = false }: { fetchFromNetwork?: boolean } = {},
+  ): Promise<SpaceRootRefs> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
@@ -813,8 +818,9 @@ export class EchoHost extends Resource {
       return existing;
     }
 
-    // Local-only: a caller adopting a root it was merely told about must not block on the network.
-    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork: false });
+    // Local-only by default: a caller adopting a root it was merely told about must not block on the
+    // network. A root edge minted exists nowhere else, so that caller opts in to fetching it.
+    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork });
     const root = rootHandle?.doc();
     invariant(root && isSpaceRoot(root), 'Space root document must load.');
     invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);

@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Event, scheduleTask, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleepWithContext, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
@@ -193,6 +193,10 @@ const ANCHOR_RETRY_MAX = 30_000;
 /** Backoff bounds for reporting a space root to edge; replication normally lands well inside this. */
 const SPACE_ROOT_REPORT_RETRY_INITIAL = 500;
 const SPACE_ROOT_REPORT_RETRY_MAX = 30_000;
+
+/** Backoff bounds for asking edge to migrate a space it has not processed far enough to anchor yet. */
+const EDGE_MIGRATION_RETRY_INITIAL = 500;
+const EDGE_MIGRATION_RETRY_MAX = 8_000;
 
 @trackLeaks('open', 'close')
 export class DataSpaceManager extends Resource {
@@ -517,6 +521,15 @@ export class DataSpaceManager extends Resource {
    * space whose directory is not assigned yet depends on.
    */
   private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<boolean> {
+    // A root edge holds is how this member accepts a migration another member or edge started, so it
+    // is adopted whatever the flag says, and before a local mint could fork the space onto a second root.
+    if (!this._echoHost.getSpaceRootRefs(space.id)) {
+      const edgeRoot = await this._readEdgeSpaceRoot(space);
+      if (edgeRoot) {
+        return this._adoptEdgeSpaceRoot(ctx, space, edgeRoot);
+      }
+    }
+
     // Migrating a space is the opt-in behaviour, so without the flag a space keeps its control feed
     // and never grows a root. An explicit `migrateSpaceToRootDocument` call still forces it.
     if (!force && !this._automergeCredentials) {
@@ -599,9 +612,17 @@ export class DataSpaceManager extends Resource {
         return;
       }
       try {
-        await this._edgeHttpClient!.recordSpaceRoot(this._ctx, space.id, {
+        const { rootDocumentUrl } = await this._edgeHttpClient!.recordSpaceRoot(this._ctx, space.id, {
           rootDocumentUrl: refs.spaceRootDocUrl,
         });
+        if (rootDocumentUrl !== refs.spaceRootDocUrl) {
+          log.warn('edge holds a different space root than this device minted', {
+            spaceId: space.id,
+            local: refs.spaceRootDocUrl,
+            edge: rootDocumentUrl,
+          });
+          return;
+        }
         log('reported the space root to edge', { spaceId: space.id });
       } catch (err) {
         if (delay > SPACE_ROOT_REPORT_RETRY_MAX) {
@@ -645,6 +666,98 @@ export class DataSpaceManager extends Resource {
       store.subscribe(ctx, (credential) => space.inner.processDocumentCredential(credential));
       return true;
     }
+  }
+
+  /** The root edge holds for the space, or undefined if it has none or cannot be asked. */
+  private async _readEdgeSpaceRoot(space: DataSpace): Promise<AutomergeUrl | undefined> {
+    if (!this._edgeHttpClient) {
+      return undefined;
+    }
+
+    try {
+      const { rootDocumentUrl } = await this._edgeHttpClient.getSpaceRoot(this._ctx, space.id);
+      return rootDocumentUrl !== null && isValidAutomergeUrl(rootDocumentUrl) ? rootDocumentUrl : undefined;
+    } catch (err) {
+      // An edge without the lookup, or one that is unreachable, leaves the space as it is.
+      log('could not read the space root from edge', { spaceId: space.id, err });
+      return undefined;
+    }
+  }
+
+  /**
+   * Adopts a root edge minted and mirrors this device's credentials into its document.
+   * @returns Whether the space is anchored; false means retry, since the root may not have replicated.
+   */
+  private async _adoptEdgeSpaceRoot(ctx: Context, space: DataSpace, spaceRootUrl: AutomergeUrl): Promise<boolean> {
+    try {
+      const refs = await this._echoHost.adoptSpaceRoot(ctx, space.id, spaceRootUrl, { fetchFromNetwork: true });
+      log('adopted the space root held by edge', { spaceId: space.id, refs });
+      if (!this._isSpaceLive(space)) {
+        return false;
+      }
+      if (!(await this._mirrorCredentialsToDocument(space))) {
+        return false;
+      }
+      this.updated.emit();
+      return true;
+    } catch (err) {
+      log.warn('failed to adopt the space root held by edge', { spaceId: space.id, spaceRootUrl, err });
+      return false;
+    }
+  }
+
+  /**
+   * Has edge migrate the space onto a space root document it mints from the chain it holds, then
+   * adopts that root. Every member that asks, or later opens the space, gets the same root because
+   * edge records it once. Idempotent.
+   */
+  async migrateSpaceRootOnEdge(ctx: Context, spaceKey: PublicKey): Promise<AutomergeUrl> {
+    const space = this._spaces.get(spaceKey) ?? failedInvariant(`Space not found: ${spaceKey.toHex()}`);
+    invariant(this._edgeHttpClient, 'Migrating a space on edge requires an edge connection.');
+    invariant(this._isSpaceLive(space), 'Space must be open to migrate.');
+
+    let spaceRootUrl: AutomergeUrl | undefined;
+    let delay = EDGE_MIGRATION_RETRY_INITIAL;
+    while (spaceRootUrl === undefined) {
+      try {
+        const { rootDocumentUrl } = await this._edgeHttpClient.migrateSpaceRoot(ctx, space.id);
+        invariant(isValidAutomergeUrl(rootDocumentUrl), `Edge returned an invalid space root: ${rootDocumentUrl}`);
+        spaceRootUrl = rootDocumentUrl;
+      } catch (err) {
+        // Edge answers "not yet" until it has processed the control feed as far as the directory.
+        if (delay > EDGE_MIGRATION_RETRY_MAX) {
+          throw err;
+        }
+        log('edge cannot migrate the space yet, retrying', { spaceId: space.id, delay, err });
+        await sleepWithContext(ctx, delay);
+        delay *= 2;
+      }
+    }
+
+    const existing = this._echoHost.getSpaceRootRefs(space.id);
+    if (existing) {
+      // Already anchored, and so already mirroring: adopting again would subscribe the mirror twice.
+      invariant(
+        existing.spaceRootDocUrl === spaceRootUrl,
+        `Space ${space.id} is anchored on ${existing.spaceRootDocUrl}, but edge holds ${spaceRootUrl}.`,
+      );
+      return spaceRootUrl;
+    }
+
+    // Adoption waits on the root replicating from edge, so it is retried rather than failed on the first miss.
+    delay = EDGE_MIGRATION_RETRY_INITIAL;
+    while (!(await this._adoptEdgeSpaceRoot(ctx, space, spaceRootUrl))) {
+      invariant(delay <= EDGE_MIGRATION_RETRY_MAX, `Space root ${spaceRootUrl} did not replicate from edge.`);
+      await sleepWithContext(ctx, delay);
+      delay *= 2;
+    }
+    return spaceRootUrl;
+  }
+
+  /** The space root this device has adopted, if the space has migrated off its control feed. */
+  getSpaceRootUrl(spaceKey: PublicKey): AutomergeUrl | undefined {
+    const space = this._spaces.get(spaceKey);
+    return space && this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl;
   }
 
   /**
@@ -1007,10 +1120,22 @@ export class DataSpaceManager extends Resource {
         });
     };
 
-    // Subscribed for the space's lifetime rather than the caller's: a root named by an inviter can
+    // Subscribed on the manager's context rather than the caller's: a root named by an inviter can
     // replicate long after the invitation context is gone, and its state update is what retries.
-    const unsubscribeFromStateUpdate = dataSpace.stateUpdate.on(this._ctx, attemptAnchor);
-    dataSpace.preClose.append(async () => unsubscribeFromStateUpdate());
+    let unsubscribeFromStateUpdate = dataSpace.stateUpdate.on(this._ctx, attemptAnchor);
+    dataSpace.postOpen.append(async () => {
+      unsubscribeFromStateUpdate();
+      unsubscribeFromStateUpdate = dataSpace.stateUpdate.on(this._ctx, attemptAnchor);
+    });
+    dataSpace.preClose.append(async () => {
+      unsubscribeFromStateUpdate();
+      // Reopening is when a member accepts a migration started elsewhere, so an unanchored space asks
+      // edge again. An anchored one stays latched: its credential mirror is already subscribed.
+      if (!this._echoHost.getSpaceRootRefs(dataSpace.id)) {
+        anchored = false;
+        retryDelay = ANCHOR_RETRY_INITIAL;
+      }
+    });
 
     this._spaces.set(requirePublicKey(metadata.key), dataSpace);
     return dataSpace;
