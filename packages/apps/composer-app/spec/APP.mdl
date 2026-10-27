@@ -642,8 +642,7 @@ test QA-9: The guided tours
   status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/tour.spec.ts
   automated:
     - composer-e2e:tour.spec.ts#Tour tests › the global tour runs from the Home help companion and advances
-    - composer-e2e:tour.spec.ts#Tour tests › a document tour picks up steps contributed by other plugins
-    - composer-e2e:tour.spec.ts#Tour tests › a document tour reaches a control the toolbar has folded away
+    - composer-e2e:tour.spec.ts#Tour tests › a document tour picks up contributed steps, however the toolbar collapses
   given:
     - an identity exists and the app is on Home
   steps:
