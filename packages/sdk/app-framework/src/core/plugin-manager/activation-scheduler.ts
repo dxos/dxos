@@ -281,14 +281,19 @@ export class ActivationScheduler {
    * marked for reactivation when a provider returns.
    */
   deactivatePlugin(id: string): Effect.Effect<boolean, Error> {
-    return Effect.gen({ self: this }, function* () {
+    return Effect.suspend(() => {
       const plugin = this.#state.getPlugin(id);
-      if (!plugin) {
-        return false;
-      }
+      return plugin ? this.deactivateModules(plugin.modules) : Effect.succeed(false);
+    });
+  }
 
-      const modules = plugin.modules;
-
+  /**
+   * Deactivates the given modules. Active modules outside the set that require a singleton
+   * capability they provide are deactivated first (reverse activation order) and marked for
+   * reactivation when a provider returns.
+   */
+  deactivateModules(modules: readonly Plugin.PluginModule[]): Effect.Effect<boolean, Error> {
+    return Effect.gen({ self: this }, function* () {
       const dependents = this.#collectCapabilityDependents(modules);
       for (const dependent of dependents) {
         yield* this.#loader.deactivate(dependent);

@@ -38,9 +38,13 @@ const makeBody = <T>(initial: T) => {
   };
 };
 
-const startManager = (plugin: Plugin.Plugin) =>
+const startManager = (...plugins: Plugin.Plugin[]) =>
   Effect.gen(function* () {
-    const manager = PluginManager.make({ plugins: [plugin], enabled: [plugin.meta.profile.key], pluginLoader });
+    const manager = PluginManager.make({
+      plugins,
+      enabled: plugins.map((plugin) => plugin.meta.profile.key),
+      pluginLoader,
+    });
     yield* manager.start();
     yield* manager.activate(ActivationEvents.Idle);
     return manager;
@@ -229,6 +233,167 @@ describe('PluginManager.reload', () => {
       assert.isFalse(yield* manager.reload([moduleId('late'), 'org.dxos.plugin.unknown.module.x']));
       assert.strictEqual(runs, 0);
       assert.notInclude(manager.getActive(), moduleId('late'));
+    }),
+  );
+});
+
+const Extra = Capability.makeSingleton<{ extra: string }>()('org.dxos.test.reload.extra');
+const consumerMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.reloadConsumer'), name: 'Consumer' });
+
+/** A lazy plugin whose definition can be swapped, as a hot update of its entry file does. */
+const makeLazyPlugin = (initial: Plugin.PluginFactory<void>) => {
+  let definition = initial;
+  return {
+    plugin: Plugin.lazy(meta, () => Promise.resolve({ default: definition }))(),
+    set: (next: Plugin.PluginFactory<void>) => {
+      definition = next;
+    },
+  };
+};
+
+const valueModule = (
+  value: string,
+  log: string[],
+): ((builder: Plugin.PluginBuilder<void>) => Plugin.PluginBuilder<void>) =>
+  Plugin.addModule({
+    id: 'value',
+    provides: [Value],
+    activate: Effect.fnUntraced(function* () {
+      yield* Effect.addFinalizer(() => Effect.sync(() => log.push(`stop ${value}`)));
+      return [Capability.contribute(Value, { value })];
+    }),
+  });
+
+/** A definition contributing `Value` (logging its teardown), plus `Extra` when asked. */
+const definition = (value: string, log: string[], options: { extra?: boolean } = {}) =>
+  Plugin.make(
+    options.extra
+      ? Plugin.define(meta).pipe(
+          valueModule(value, log),
+          Plugin.addModule({
+            id: 'extra',
+            provides: [Extra],
+            activate: () => Effect.succeed([Capability.contribute(Extra, { extra: value })]),
+          }),
+        )
+      : Plugin.define(meta).pipe(valueModule(value, log)),
+  );
+
+/** Another plugin's module that requires the reloaded plugin's singleton. */
+const consumer = Plugin.make(
+  Plugin.define(consumerMeta).pipe(
+    Plugin.addModule({
+      id: 'derived',
+      requires: [Value],
+      provides: [Derived],
+      activate: Effect.fnUntraced(function* () {
+        const { value } = yield* Value;
+        return [Capability.contribute(Derived, { derived: `from ${value}` })];
+      }),
+    }),
+  ),
+);
+
+describe('PluginManager.reloadPlugin', () => {
+  it.effect('swaps in a new definition and re-runs dependents in other plugins', () =>
+    Effect.gen(function* () {
+      const log: string[] = [];
+      const lazy = makeLazyPlugin(definition('v1', log));
+      const manager = yield* startManager(lazy.plugin, consumer());
+      assert.strictEqual(manager.capabilities.get(Derived).derived, 'from v1');
+
+      lazy.set(definition('v2', log, { extra: true }));
+      assert.isTrue(yield* manager.reloadPlugin(meta.profile.key));
+      assert.deepStrictEqual(log, ['stop v1']);
+      assert.strictEqual(manager.capabilities.get(Value).value, 'v2');
+      assert.strictEqual(manager.capabilities.get(Extra).extra, 'v2');
+      assert.strictEqual(manager.capabilities.get(Derived).derived, 'from v2');
+      assert.lengthOf(manager.capabilities.getAll(Value), 1);
+    }),
+  );
+
+  it.effect('keeps modules the new definition reuses running', () =>
+    Effect.gen(function* () {
+      let runs = 0;
+      const shared = Capability.inlineModule('shared', { provides: [Value] }, () =>
+        Effect.sync(() => {
+          runs++;
+          return [Capability.contribute(Value, { value: 'shared' })];
+        }),
+      );
+      const extra = Capability.inlineModule('extra', { provides: [Extra] }, () =>
+        Effect.succeed([Capability.contribute(Extra, { extra: 'added' })]),
+      );
+      const lazy = makeLazyPlugin(Plugin.make(Plugin.define(meta).pipe(Plugin.addModule(shared))));
+      const manager = yield* startManager(lazy.plugin);
+      assert.strictEqual(runs, 1);
+
+      // Only the module list changed, as when the plugin's definition file alone is edited.
+      lazy.set(Plugin.make(Plugin.define(meta).pipe(Plugin.addModule(shared), Plugin.addModule(extra))));
+      assert.isTrue(yield* manager.reloadPlugin(meta.profile.key));
+      assert.strictEqual(runs, 1);
+      assert.strictEqual(manager.capabilities.get(Extra).extra, 'added');
+      assert.strictEqual(manager.capabilities.get(Value).value, 'shared');
+    }),
+  );
+
+  it.effect('unregisters modules the new definition dropped', () =>
+    Effect.gen(function* () {
+      const log: string[] = [];
+      const lazy = makeLazyPlugin(definition('v1', log, { extra: true }));
+      const manager = yield* startManager(lazy.plugin);
+      assert.strictEqual(manager.capabilities.get(Extra).extra, 'v1');
+
+      lazy.set(definition('v2', log));
+      assert.isTrue(yield* manager.reloadPlugin(meta.profile.key));
+      assert.lengthOf(manager.capabilities.getAll(Extra), 0);
+      assert.notInclude(
+        manager.getModules().map((module) => module.id),
+        moduleId('extra'),
+      );
+    }),
+  );
+
+  it.effect('keeps the running plugin when the new definition fails to load', () =>
+    Effect.gen(function* () {
+      const log: string[] = [];
+      let fail = false;
+      const plugin = Plugin.lazy(meta, (): Promise<{ default: Plugin.PluginFactory<void> }> =>
+        fail
+          ? Promise.reject(new FixtureError({ message: 'syntax error in edit' }))
+          : Promise.resolve({ default: definition('v1', log) }),
+      )();
+      const manager = yield* startManager(plugin);
+
+      fail = true;
+      const result = yield* manager.reloadPlugin(meta.profile.key).pipe(Effect.result);
+      assert.strictEqual(result._tag, 'Failure');
+      assert.strictEqual(manager.capabilities.get(Value).value, 'v1');
+      assert.deepStrictEqual(log, []);
+    }),
+  );
+
+  it.effect('replaces a disabled plugin without activating it', () =>
+    Effect.gen(function* () {
+      const log: string[] = [];
+      const lazy = makeLazyPlugin(definition('v1', log));
+      const manager = yield* startManager(lazy.plugin);
+      yield* manager.disable(meta.profile.key);
+
+      lazy.set(definition('v2', log));
+      assert.isTrue(yield* manager.reloadPlugin(meta.profile.key));
+      assert.lengthOf(manager.capabilities.getAll(Value), 0);
+
+      yield* manager.enable(meta.profile.key);
+      assert.strictEqual(manager.capabilities.get(Value).value, 'v2');
+    }),
+  );
+
+  it.effect('ignores a plugin that was never resolved', () =>
+    Effect.gen(function* () {
+      const lazy = makeLazyPlugin(definition('v1', []));
+      const manager = PluginManager.make({ plugins: [lazy.plugin], pluginLoader });
+      assert.isFalse(yield* manager.reloadPlugin(meta.profile.key));
     }),
   );
 });

@@ -21,14 +21,21 @@ const packageRoot = path.resolve(import.meta.dirname, '../../..');
 const coreDir = path.join(packageRoot, 'src/core');
 const workspaceRoot = searchForWorkspaceRoot(packageRoot);
 
-// The fixture is a tiny app on the real framework: a provider module (whose body imports a
-// helper) and a consumer that requires the provider's singleton, so an edit must cascade.
+// The fixture is a tiny app on the real framework: a lazy plugin whose definition lives in its own
+// file, with a provider module (whose body imports a helper) and a consumer that requires the
+// provider's singleton, so an edit must cascade.
 const files: Record<string, string> = {
   'index.html': '<!doctype html><html><body><script type="module" src="/main.ts"></script></body></html>',
+  'meta.ts': `
+    import { DXN } from '@dxos/keys';
+    import * as Plugin from '#core/plugin.ts';
+    export const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hot'), name: 'Hot' });
+  `,
   'capabilities.ts': `
     import * as Capability from '#core/capability.ts';
     export const Value = Capability.makeSingleton()('org.dxos.test.hot.value');
     export const Derived = Capability.makeSingleton()('org.dxos.test.hot.derived');
+    export const Extra = Capability.makeSingleton()('org.dxos.test.hot.extra');
     // Rebuilds the namespace, as app-toolkit's makers do; the update must still reach the body inside.
     const checked = (loader) => () => loader().then((module) => ({ ...module, default: module.default }));
     export const ValueModule = Capability.lazyModule('Value', { provides: [Value] }, checked(() => import('./value.ts')));
@@ -53,25 +60,48 @@ const files: Record<string, string> = {
   `,
   'main.ts': `
     import * as Effect from 'effect/Effect';
-    import { DXN } from '@dxos/keys';
     import * as Plugin from '#core/plugin.ts';
     import * as PluginManager from '#core/plugin-manager/index.ts';
     import { ActivationEvents } from '#common/index.ts';
-    import { Derived, DerivedModule, ValueModule } from './capabilities.ts';
+    import { Derived, Extra } from './capabilities.ts';
+    import { meta } from './meta.ts';
 
     window.__hot = { runs: [], loads: (window.__hot?.loads ?? 0) + 1 };
-    const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.hot'), name: 'Hot' });
-    const plugin = Plugin.make(Plugin.define(meta).pipe(Plugin.addModule(ValueModule), Plugin.addModule(DerivedModule)))();
+    const HotPlugin = Plugin.lazy(meta, () => import('./plugin.ts'));
     const manager = PluginManager.make({
-      plugins: [plugin],
+      plugins: [HotPlugin()],
       enabled: [meta.profile.key],
       pluginLoader: (id) => Effect.fail(new Error(id)),
     });
     Object.defineProperty(window.__hot, 'failed', { get: () => manager.getFailed().length > 0 });
     Object.defineProperty(window.__hot, 'derived', { get: () => manager.capabilities.getAll(Derived)[0]?.derived });
+    Object.defineProperty(window.__hot, 'extra', { get: () => manager.capabilities.getAll(Extra)[0]?.extra });
     await Effect.runPromise(Effect.andThen(manager.start(), manager.activate(ActivationEvents.Idle)));
   `,
 };
+
+/** The plugin definition; the plugin-level test adds a module to it. */
+const pluginDefinition = (options: { extra?: boolean } = {}) => `
+  import * as Effect from 'effect/Effect';
+  import * as Capability from '#core/capability.ts';
+  import * as Plugin from '#core/plugin.ts';
+  import { DerivedModule, Extra, ValueModule } from './capabilities.ts';
+  import { meta } from './meta.ts';
+  ${
+    options.extra
+      ? `const ExtraModule = Capability.inlineModule('Extra', { provides: [Extra] }, () =>
+           Effect.succeed([Capability.contribute(Extra, { extra: 'added' })]),
+         );`
+      : ''
+  }
+  export default Plugin.make(
+    Plugin.define(meta).pipe(
+      Plugin.addModule(ValueModule),
+      Plugin.addModule(DerivedModule),
+      ${options.extra ? 'Plugin.addModule(ExtraModule),' : ''}
+    ),
+  );
+`;
 
 const valueBody = (version: string) => `
   import * as Effect from 'effect/Effect';
@@ -105,6 +135,7 @@ describe.skipIf(!hasBrowser)('hot module replacement', { timeout: 120_000 }, () 
     await Promise.all([
       ...Object.entries(files).map(([file, content]) => write(file, content)),
       write('value.ts', valueBody('v1')),
+      write('plugin.ts', pluginDefinition()),
     ]);
 
     server = await createServer({
@@ -173,6 +204,16 @@ describe.skipIf(!hasBrowser)('hot module replacement', { timeout: 120_000 }, () 
     await new Promise((resolve) => setTimeout(resolve, 500));
     await write('value.ts', valueBody('v3'));
     await waitForDerived('from v3-h2');
+    expect(await page.evaluate('window.__hot.loads')).toBe(1);
+  });
+
+  test('re-creates the plugin when its definition changes, keeping unchanged modules running', async ({ expect }) => {
+    const runs = await page.evaluate('window.__hot.runs.length');
+    await write('plugin.ts', pluginDefinition({ extra: true }));
+    await page.waitForFunction(`window.__hot?.extra === 'added'`, undefined, { timeout: 30_000 });
+    // The value and derived modules are the same module objects, so neither re-ran.
+    expect(await page.evaluate('window.__hot.runs.length')).toBe(runs);
+    expect(await page.evaluate('window.__hot.derived')).toBe('from v3-h2');
     expect(await page.evaluate('window.__hot.loads')).toBe(1);
   });
 });

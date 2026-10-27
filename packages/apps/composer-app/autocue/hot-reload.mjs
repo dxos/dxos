@@ -3,9 +3,9 @@
 //
 
 /**
- * Hot-reload a non-React plugin capability: edits to plugin-space's app-graph builder, made in a terminal on
- * screen, re-run that module in the running app and the navtree follows; an edit to the plugin definition
- * still reloads the page, for contrast.
+ * Hot-reload a plugin without reloading the page: edits to plugin-space's app-graph builder (a capability with no
+ * React in it), made in a terminal on screen, re-run that module and the navtree follows; edits to the plugin
+ * definition re-create the plugin in place, dropping and restoring that module.
  *
  * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
  * @app composer-app dev server (the HMR path is dev only), with the terminal stage beside it:
@@ -16,7 +16,7 @@
  *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --url http://localhost:4173 --out /tmp/hot-demo \
  *     --action-timeout 60000
  *
- * The take edits `EXTENSION` and `src/plugin.ts` for real; restore both afterwards with
+ * The take edits `EXTENSION` and `src/plugin.ts` for real; restore them afterwards with
  * `git checkout -- packages/plugins/plugin-space/src`. Before recording, set the settings section's `label` in
  * `EXTENSION` to the plain string `'Settings · v1'`, so the take starts from `v1`.
  *
@@ -31,6 +31,11 @@ const TERMINAL = 'http://localhost:4180';
 /** A helper of the app-graph builder module: the update stops at that module, which re-runs. */
 const EXTENSION_DIR = 'packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions';
 const EXTENSION = 'settings.ts';
+
+/** The plugin definition, and the line that adds the app-graph builder module to it. */
+const PLUGIN = 'packages/plugins/plugin-space/src/plugin.ts';
+const PLUGIN_FROM_EXTENSION = '../../../plugin.ts';
+const MODULE_LINE = 'Plugin.addModule(AppGraphBuilder),';
 
 /** The navtree row the settings section extension contributes. */
 const ROW = '[data-testid="spacePlugin.settings"]';
@@ -95,6 +100,19 @@ const hotEdit = async ({ demo, page }, { from, to, reached }) => {
   await demo.caption({
     value: `In the navtree ${elapsed} ms after Enter`,
     subtitle: 'Only the app-graph builder module re-ran: no page reload, nothing else restarted',
+  });
+  await page.waitForTimeout(BEAT * 2);
+};
+
+/** Captions how long a plugin-definition edit took to show, after checking the page did not reload. */
+const reportPluginEdit = async ({ demo, page }, pressed, outcome) => {
+  const elapsed = ((Date.now() - pressed) / 1000).toFixed(1);
+  if ((await page.evaluate(() => window.__hotDemoMarker)) !== true) {
+    throw new Error('the page reloaded');
+  }
+  await demo.caption({
+    value: `${outcome} ${elapsed} s after Enter`,
+    subtitle: 'The plugin was re-created in place: no page reload, its other modules kept running',
   });
   await page.waitForTimeout(BEAT * 2);
 };
@@ -176,27 +194,24 @@ export const steps = [
     },
   },
   {
-    name: 'Edit the plugin definition',
-    narration: 'An edit outside a capability module, such as the plugin definition, still reloads the whole page.',
+    name: 'Drop the module from the plugin',
+    narration: 'Edit the plugin definition: drop the app-graph builder. The plugin is re-created in place.',
     run: async ({ demo, page }) => {
-      await demo.caption({
-        value: 'For contrast: edit the plugin definition',
-        subtitle: 'src/plugin.ts is not a hot boundary yet, so the page reloads',
-      });
-      const navigated = page.waitForEvent('framenavigated', {
-        predicate: (frame) => frame === page.mainFrame(),
-        timeout: 60_000,
-      });
-      const pressed = await typeCommand(page, `echo '// edited' >> ../../../plugin.ts`);
-      await navigated;
-      await page.locator(ROW).first().waitFor({ state: 'visible', timeout: 120_000 });
-      const elapsed = ((Date.now() - pressed) / 1000).toFixed(1);
-      await showTerminal(page);
-      await demo.caption({
-        value: `Full page reload: ${elapsed} s until the navtree is back`,
-        subtitle: 'What a capability edit cost before this change',
-      });
-      await page.waitForTimeout(BEAT * 3);
+      await demo.caption({ value: 'Drop the app-graph builder from the plugin', subtitle: PLUGIN });
+      await demo.hover({ selector: ROW, label: 'Settings row' });
+      const pressed = await typeCommand(page, `sed -i "s|${MODULE_LINE}|// ${MODULE_LINE}|" ${PLUGIN_FROM_EXTENSION}`);
+      await page.locator(ROW).first().waitFor({ state: 'detached', timeout: 30_000 });
+      await reportPluginEdit({ demo, page }, pressed, 'The row is gone');
+    },
+  },
+  {
+    name: 'Restore the module',
+    narration: 'Put it back, and the plugin is re-created with it again. The page never reloaded.',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Put it back', subtitle: PLUGIN });
+      const pressed = await typeCommand(page, `sed -i "s|// ${MODULE_LINE}|${MODULE_LINE}|" ${PLUGIN_FROM_EXTENSION}`);
+      await page.locator(ROW).first().waitFor({ state: 'visible', timeout: 60_000 });
+      await reportPluginEdit({ demo, page }, pressed, 'The row is back');
     },
   },
 ];

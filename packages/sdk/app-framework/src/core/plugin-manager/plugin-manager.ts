@@ -295,6 +295,15 @@ export interface PluginManager {
   reload(moduleIds: readonly string[]): Effect.Effect<boolean, Error>;
 
   /**
+   * Re-creates a lazy plugin from its loader, with the options it was made with, and swaps it in
+   * place: if enabled, its modules and their singleton dependents are torn down and the new plugin's
+   * modules activate for every event that already fired. Hot module replacement calls this when the
+   * plugin's definition changes.
+   * @returns Whether a resolved plugin was replaced (and, if enabled, re-enabled).
+   */
+  reloadPlugin(id: string): Effect.Effect<boolean, Error>;
+
+  /**
    * Shuts down the manager by deactivating all active modules in reverse activation order,
    * clearing all capabilities, and resetting lifecycle bookkeeping.
    * Plugins, core, enabled, and modules remain intact so the manager can be reused.
@@ -599,6 +608,10 @@ class ManagerImpl implements PluginManager {
 
   reload(moduleIds: readonly string[]): Effect.Effect<boolean, Error> {
     return this._scheduler.reloadModules(moduleIds).pipe(this._withRuntime);
+  }
+
+  reloadPlugin(id: string): Effect.Effect<boolean, Error> {
+    return Deferred.await(this._state.initialized).pipe(Effect.andThen(this._catalog.reload(id)), this._withRuntime);
   }
 
   shutdown(): Effect.Effect<boolean, Error> {

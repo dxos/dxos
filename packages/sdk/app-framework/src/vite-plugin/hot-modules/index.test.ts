@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { findModuleLoaders, rewriteLoaders, wrapModuleBody } from './index.ts';
+import { acceptLoaderTargets, findModuleLoaders, rewriteLoaders, wrapModuleBody } from './index.ts';
 
 describe('findModuleLoaders', () => {
   test('finds loaders passed to module makers', async ({ expect }) => {
@@ -18,11 +18,18 @@ describe('findModuleLoaders', () => {
     ]);
   });
 
-  test('skips lazy components, plugin entries, assets and non-loader arrows', async ({ expect }) => {
+  test('finds plugin definitions loaded by Plugin.lazy', async ({ expect }) => {
+    const code = `export const make = Plugin.lazy(meta, () => import('#plugin'));`;
+    expect((await findModuleLoaders('/src/MarkdownPlugin.ts', code)).map(({ specifier }) => specifier)).toEqual([
+      '#plugin',
+    ]);
+  });
+
+  test('skips lazy components, dependencies, assets and non-loader arrows', async ({ expect }) => {
     const code = `
       const Panel = lazy(() => import('./Panel.tsx'));
       const Other = React.lazy(() => import('./Other.tsx'));
-      export const make = Plugin.lazy(meta, () => import('#plugin'));
+      register(() => import('some-package'));
       export const Doc = AppCapability.doc({ content: () => import('../../PLUGIN.mdl?raw') });
       register((props) => import('./with-params.ts'));
       register(() => import('./raw.ts?raw'));
@@ -39,6 +46,21 @@ describe('rewriteLoaders', () => {
       "a(() => import('./a.ts').then((module) => globalThis.__DX_HOT_MODULES__?.latest(module) ?? module)); " +
         "b(() => import('./b.ts').then((module) => globalThis.__DX_HOT_MODULES__?.latest(module) ?? module));",
     );
+  });
+});
+
+describe('acceptLoaderTargets', () => {
+  test('accepts each loaded file once, on the first line', async ({ expect }) => {
+    const code = `a(() => import('./a.ts'));\nb(() => import('./a.ts'));\nc(() => import('./c.ts'));`;
+    const accepted = acceptLoaderTargets(code, await findModuleLoaders('/src/index.ts', code));
+    const [first, ...rest] = accepted.split('\n');
+    expect(first).toMatch(/^if \(import\.meta\.hot\) \{ import\.meta\.hot\.accept\(\["\.\/a\.ts","\.\/c\.ts"\]/);
+    expect(first.endsWith("a(() => import('./a.ts'));")).toBe(true);
+    expect(rest).toEqual(code.split('\n').slice(1));
+  });
+
+  test('leaves a file without loaders unchanged', ({ expect }) => {
+    expect(acceptLoaderTargets('export const x = 1;', [])).toBe('export const x = 1;');
   });
 });
 

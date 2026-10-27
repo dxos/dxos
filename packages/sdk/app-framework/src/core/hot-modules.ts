@@ -16,10 +16,14 @@ export const HOT_KEY_EXPORT = '__dxHotKey';
 /** The subset of the plugin manager a hot update drives. */
 type Reloadable = {
   reload(moduleIds: readonly string[]): Effect.Effect<boolean, Error>;
+  reloadPlugin(id: string): Effect.Effect<boolean, Error>;
 };
 
 type FileEntry = {
+  /** Modules whose body is this file. */
   readonly moduleIds: Set<string>;
+  /** Lazy plugins whose definition is this file. */
+  readonly pluginIds: Set<string>;
   latest?: unknown;
 };
 
@@ -70,16 +74,24 @@ const update = (key: string, namespace: unknown): Promise<void> => {
     }
     entry.latest = namespace;
     const moduleIds = [...entry.moduleIds];
-    log.info('hot update', { file: key, modules: moduleIds });
+    const pluginIds = [...entry.pluginIds];
+    log.info('hot update', { file: key, modules: moduleIds, plugins: pluginIds });
     for (const ref of state.managers) {
       const manager = ref.deref();
       if (!manager) {
         state.managers.delete(ref);
         continue;
       }
-      await EffectEx.runPromise(manager.reload(moduleIds)).catch((error) =>
-        log.error('hot update failed', { file: key, error }),
-      );
+      for (const pluginId of pluginIds) {
+        await EffectEx.runPromise(manager.reloadPlugin(pluginId)).catch((error) =>
+          log.error('hot update failed', { file: key, plugin: pluginId, error }),
+        );
+      }
+      if (moduleIds.length > 0) {
+        await EffectEx.runPromise(manager.reload(moduleIds)).catch((error) =>
+          log.error('hot update failed', { file: key, error }),
+        );
+      }
     }
   });
   return state.queue;
@@ -97,20 +109,31 @@ export const register = (manager: Reloadable): void => {
   state.managers.add(new WeakRef(manager));
 };
 
+const entryFor = (namespace: unknown): FileEntry | undefined => {
+  const key = keyOf(namespace);
+  if (key === undefined) {
+    return undefined;
+  }
+  let entry = state.files.get(key);
+  if (!entry) {
+    entry = { moduleIds: new Set(), pluginIds: new Set() };
+    state.files.set(key, entry);
+  }
+  return entry;
+};
+
 /**
  * Records that a module loaded a body, so an update of that file re-runs the module. Bodies the dev
  * transform did not touch carry no key, so production builds pay one property check. A loader wrapper
  * that rebuilds the namespace must spread it, or the key is lost and its module never hot-reloads.
  */
 export const track = (namespace: unknown, moduleId: string | undefined): void => {
-  const key = keyOf(namespace);
-  if (key === undefined || moduleId === undefined) {
-    return;
+  if (moduleId !== undefined) {
+    entryFor(namespace)?.moduleIds.add(moduleId);
   }
-  let entry = state.files.get(key);
-  if (!entry) {
-    entry = { moduleIds: new Set() };
-    state.files.set(key, entry);
-  }
-  entry.moduleIds.add(moduleId);
+};
+
+/** Records that a lazy plugin was defined by a file, so an update of that file re-creates the plugin. */
+export const trackPlugin = (namespace: unknown, pluginId: string): void => {
+  entryFor(namespace)?.pluginIds.add(pluginId);
 };

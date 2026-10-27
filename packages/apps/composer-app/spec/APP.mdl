@@ -1007,12 +1007,12 @@ test QA-14: Bramble — Kai locks the Spring Blend
 
 test QA-16: Hot-reload a plugin capability
   desc: |
-    Dev-server demo of plugin-module hot replacement on a capability with no React in it: edits to
-    plugin-space's app-graph builder, made from a terminal floated over the app, re-run that module in
-    place and the navtree follows; an edit to the plugin definition still reloads the page, for contrast.
-    Recorded by `autocue/hot-reload.mjs` against `composer-app:serve`.
+    Dev-server demo of plugin hot replacement: edits to plugin-space's app-graph builder (a capability with
+    no React in it), made from a terminal floated over the app, re-run that module in place and the
+    navtree follows; edits to the plugin definition re-create the plugin in place. Recorded by
+    `autocue/hot-reload.mjs` against `composer-app:serve`.
   actors: human
-  status: passing           # 2026-10-22, recorded by autocue/hot-reload.mjs
+  status: passing           # 2026-10-27, recorded by autocue/hot-reload.mjs
   given:
     - the composer-app dev server is running
     - the space settings section's label in plugin-space's extensions/settings.ts reads "Settings · v1",
@@ -1027,10 +1027,12 @@ test QA-16: Hot-reload a plugin capability
     - name: Edit the node's icon colour
       do: Replace the section's emerald icon hue with rose.
       expect: the row's icon turns rose, and the page does not reload
-    - name: Edit the plugin definition
-      do: Append a comment to plugin-space's src/plugin.ts.
-      expect: the page reloads, and the navtree comes back after the boot
-      note: plugin.ts is not a hot boundary; reloading a whole plugin in place is not built yet.
+    - name: Drop the module from the plugin
+      do: Comment out `Plugin.addModule(AppGraphBuilder)` in plugin-space's src/plugin.ts.
+      expect: the Settings row disappears, and the page does not reload
+    - name: Restore the module
+      do: Uncomment the line again.
+      expect: the Settings row returns, and the page does not reload
 ```
 
 ## Changelog
@@ -1042,4 +1044,13 @@ decision D-1: QA-16 records plugin-module hot replacement on a non-React capabil
   for: user:dmytro
   affects: [QA-16]
   why: The user asked for a recording that shows a non-React capability reloading, since a React component change already hot-reloads.
+```
+
+```mdl
+decision D-2: QA-16 drops its full-reload contrast: a plugin-definition edit now re-creates the plugin in place, so the flow drops and restores a module instead.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmytro
+  affects: [QA-16]
+  why: The user asked for plugin definitions to hot-reload too, which removed the reload the old last step demonstrated.
 ```

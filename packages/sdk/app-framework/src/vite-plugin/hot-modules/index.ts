@@ -11,8 +11,15 @@ const HOT_RUNTIME_GLOBAL = '__DX_HOT_MODULES__';
 
 const SOURCE_FILE = /\.[cm]?[jt]sx?$/;
 
-/** Callees whose loader argument is a lazy component or plugin, not a module body. */
-const EXCLUDED_CALLEES = new Set(['lazy']);
+/**
+ * `lazy` names both `React.lazy(loader)`, whose target is a component (Fast Refresh's), and
+ * `Plugin.lazy(meta, loader)`, whose target is a plugin definition (ours); only the latter takes the
+ * loader after another argument.
+ */
+const LAZY_CALLEE = 'lazy';
+
+/** Relative files and package subpath imports (`#plugin`); anything else is a dependency. */
+const isLocalSpecifier = (specifier: string): boolean => specifier.startsWith('.') || specifier.startsWith('#');
 
 const calleeName = (callee: ESTree.Expression | ESTree.Super): string | undefined => {
   if (callee.type === 'Identifier') {
@@ -28,8 +35,8 @@ const calleeName = (callee: ESTree.Expression | ESTree.Super): string | undefine
 export type ModuleLoader = { specifier: string; start: number; end: number };
 
 /**
- * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule` and
- * every maker built on it. Specifiers with a query are assets.
+ * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule`, every
+ * maker built on it, and `Plugin.lazy`. Specifiers with a query are assets.
  */
 export const findModuleLoaders = async (filename: string, code: string): Promise<ModuleLoader[]> => {
   // Imported on use: this file is re-exported by the `vite-plugin` barrel, which non-Vite hosts (the CLI
@@ -39,18 +46,15 @@ export const findModuleLoaders = async (filename: string, code: string): Promise
   const loaders: ModuleLoader[] = [];
   new Visitor({
     CallExpression: (node) => {
-      const name = calleeName(node.callee);
-      if (name !== undefined && EXCLUDED_CALLEES.has(name)) {
-        return;
-      }
-      for (const argument of node.arguments) {
+      const firstLoaderArgument = calleeName(node.callee) === LAZY_CALLEE ? 1 : 0;
+      for (const argument of node.arguments.slice(firstLoaderArgument)) {
         if (
           argument.type === 'ArrowFunctionExpression' &&
           argument.params.length === 0 &&
           argument.body.type === 'ImportExpression' &&
           argument.body.source.type === 'Literal' &&
           typeof argument.body.source.value === 'string' &&
-          argument.body.source.value.startsWith('.') &&
+          isLocalSpecifier(argument.body.source.value) &&
           !argument.body.source.value.includes('?')
         ) {
           loaders.push({ specifier: argument.body.source.value, start: argument.body.start, end: argument.body.end });
@@ -76,6 +80,23 @@ export const rewriteLoaders = (code: string, loaders: readonly ModuleLoader[]): 
     );
 
 /**
+ * Makes a file that loads module bodies accept updates of them. Vite otherwise stamps every importer
+ * of an updated file, transitively, with a new timestamp, so the next import of this file (a re-created
+ * plugin's) would evaluate it again and every module it defines would read as changed. Bodies accept
+ * their own updates; one that does not (no module loaded it) lands here and is passed on up.
+ */
+export const acceptLoaderTargets = (code: string, loaders: readonly ModuleLoader[]): string => {
+  const specifiers = [...new Set(loaders.map(({ specifier }) => specifier))];
+  if (specifiers.length === 0) {
+    return code;
+  }
+  return (
+    `if (import.meta.hot) { import.meta.hot.accept(${JSON.stringify(specifiers)}, () => ` +
+    `import.meta.hot.invalidate('module body update not handled')); } ${code}`
+  );
+};
+
+/**
  * Wraps a module body so it is its own HMR boundary: the new version is handed to the
  * app-framework runtime, which re-runs every plugin module that loaded the file. A file no module
  * has loaded propagates the update instead, so a misidentified body behaves as if untouched.
@@ -97,7 +118,9 @@ export const wrapModuleBody = (code: string, key: string): string => {
 /**
  * Dev-server plugin that makes plugin modules hot-replaceable: editing a module body (the file a
  * `Capability.lazyModule` loader imports), or any file only it imports, re-runs that module and
- * its dependents in the running app instead of reloading the page.
+ * its dependents in the running app instead of reloading the page. Editing a plugin's definition
+ * (the file `Plugin.lazy` loads), or a file only it imports such as its module specs, re-creates
+ * that plugin in place.
  *
  * Bodies that are also React Fast Refresh boundaries are left to Fast Refresh.
  */
@@ -137,7 +160,7 @@ export const hotModulesPlugin = (): Plugin => {
             graph?.getModulesByFile(target)?.forEach((module) => graph.invalidateModule(module));
           }
         }
-        result = rewriteLoaders(result, loaders);
+        result = acceptLoaderTargets(rewriteLoaders(result, loaders), loaders);
       }
 
       if (bodies.has(file) && !code.includes('$RefreshReg$')) {
