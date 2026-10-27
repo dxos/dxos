@@ -62,7 +62,7 @@ Every EDGE mail sync run was killed at the 60s invocation deadline before it sav
       continues through `Operation.runAgain()`.
 - [x] **One run per trigger on EDGE** — the force-run endpoint, the cron tick and timer continuations
       skip a trigger that has an invocation in flight; a force-run answers 409 `Trigger already
-  running`, which `EdgeTriggerManager` counts as met (the client retries every other failure, so a
+running`, which `EdgeTriggerManager` counts as met (the client retries every other failure, so a
       lost response used to start a second run).
 - [x] **Demo** — `stories-inbox/MailboxSyncChain` (the `SyncRuns` module) runs the chain against a
       slowed mock JMAP account; `stories-inbox/autocue/mail-sync-chain.mjs` records it (QA-3).
