@@ -123,6 +123,11 @@
       "types": "./dist/types/src/types/InboxCapabilities.d.ts",
       "import": "./dist/lib/InboxCapabilities.mjs"
     },
+    "./InboxPermission": {
+      "source": "./src/types/InboxPermission.ts",
+      "types": "./dist/types/src/types/InboxPermission.d.ts",
+      "import": "./dist/lib/InboxPermission.mjs"
+    },
     "./InboxEvents": {
       "source": "./src/types/InboxEvents.ts",
       "types": "./dist/types/src/types/InboxEvents.d.ts",
@@ -284,6 +289,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/markdown": "workspace:*",
+    "@dxos/permission": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

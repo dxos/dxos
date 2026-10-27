@@ -10,13 +10,13 @@ import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
 import { LabelerOperation } from '#types';
 
-/** The mailbox toolbar entry that runs the labeller over the whole inbox. */
+/** The mailbox toolbar entry that triages the whole inbox: labels, priorities and tasks. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(InboxCapabilities.MailboxAction, {
       id: 'label',
-      label: 'Label messages',
-      icon: 'ph--tag--regular',
+      label: 'Triage inbox',
+      icon: 'ph--magic-wand--regular',
       createInvocation: (mailbox) => ({
         operation: LabelerOperation.LabelMailbox,
         input: { mailbox: Ref.make(mailbox) },

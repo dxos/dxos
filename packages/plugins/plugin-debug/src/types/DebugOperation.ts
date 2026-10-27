@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
+import * as MailSend from '@dxos/plugin-inbox/MailSend';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 
 /**
@@ -234,3 +235,21 @@ export const CreateSpaceFromTemplate = Operation.make({
     available: Schema.Array(SpaceTemplateSummary),
   }),
 }).pipe(Operation.mutation('write'));
+
+/** Connector id of the sample spaces' local mail account, which delivers nowhere. */
+export const SAMPLE_MAIL_CONNECTOR_ID = 'org.dxos.plugin-debug.connector.sampleMail';
+
+/**
+ * Sends a sample-space draft: there is no account behind a sample mailbox, so the message is
+ * delivered locally — it gets a provider id and the canonical sent tag, as a real send would.
+ */
+export const SendSampleMail = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.debug.sendSampleMail'),
+    name: 'Send sample mail',
+    description: "Delivers a sample mailbox's draft locally, as a real provider's send would.",
+    icon: 'ph--paper-plane-tilt--regular',
+  },
+  input: MailSend.Input,
+  output: MailSend.Output,
+});

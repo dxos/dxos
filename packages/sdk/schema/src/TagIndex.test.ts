@@ -143,6 +143,33 @@ describe('TagIndex (feed integration)', () => {
     await builder.close();
   });
 
+  test('taggedIdsAtom yields a new value for every write to an existing tag', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TagIndex.TagIndex] });
+    const db = await peer.createDatabase();
+    const tagIndex = db.add(TagIndex.make());
+    await db.flush();
+    const tags = TagIndex.bind(tagIndex);
+    const urgent = 'dxn:tag:urgent';
+    const ids = [EntityId.random(), EntityId.random(), EntityId.random()];
+
+    const registry = Registry.make();
+    const atom = TagIndex.taggedIdsAtom(tagIndex, urgent);
+    const unmount = registry.mount(atom);
+    // The first write creates the list; the later ones extend it in place, which must still yield a new
+    // value — a subscriber (React) compares by reference.
+    const writes = [...ids.map((id) => () => tags.setTag(urgent, id)), () => tags.unsetTag(urgent, ids[0])];
+    const values: (readonly string[])[] = [];
+    for (const write of writes) {
+      write();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      values.push(registry.get(atom));
+    }
+    unmount();
+
+    expect(values.map((value) => value.length)).toEqual([1, 2, 3, 2]);
+    expect(new Set(values).size).toBe(values.length);
+  });
+
   // Regression for DX-984: setTag/unsetTag must use push/splice (in-place), not spread-replace.
   // Spread-replace causes O(n) Automerge ops per call → O(n²) total → multi-MiB documents.
   test('setTag emits O(1) Automerge ops per append', async ({ expect }) => {

@@ -251,7 +251,9 @@ export type EdgeAiService =
   | 'deepseek'
   | 'typesafe'
   /** TypeSafe's System One wire, answered by Workers AI's `typesafe/jev` on EDGE's Cloudflare account. */
-  | 'workers-ai/typesafe';
+  | 'workers-ai/typesafe'
+  /** Cloudflare's Clairic extraction model on Workers AI, on EDGE's Cloudflare account. */
+  | 'workers-ai/clairic';
 
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
