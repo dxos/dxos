@@ -37,6 +37,7 @@ export const addHeadings =
       {
         label: ['heading.label', { ns: translationKey }],
         icon: 'ph--text-h--regular',
+        placement: { collapse: 0 },
         iconOnly: true,
         variant: 'dropdownMenu',
         applyActive: true,

@@ -127,8 +127,8 @@ const createMarkdownActions = ({
   return Atom.make((get) => {
     // Subscribe to state changes.
     const stateSnapshot = get(state);
-    // Lists, blocks and image carry collapse ranks, so a narrow plank folds them before contributed actions (comments,
-    // recording) that a tour or a user reaches for.
+    // Headings, lists, blocks and image carry collapse ranks, so a narrow plank folds them before formatting and the
+    // contributed actions (comments, recording, search, view mode) that a tour or a user reaches for.
     return MenuBuilder.make()
       .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
       .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
