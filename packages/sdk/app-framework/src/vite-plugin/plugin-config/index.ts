@@ -105,22 +105,25 @@ const toManifestTags = (tags: readonly Capability.AnyTag[] = []): Plugin.Manifes
   tags.map(({ identifier, arity }) => ({ identifier, arity }));
 
 /**
- * Drops the module-body attribute from a `dx.config.ts` served as authored (tests, storybook): browsers
- * reject an unknown import `type`, and only the build-time evaluator needs it.
+ * `code` with the module-body attribute dropped from each marked import, or `null` if it has none.
+ * `ast` is `code` parsed as ESTree; browsers reject an unknown import `type`, and only the build-time
+ * evaluator needs it.
  */
+export const stripModuleBodyAttributes = (code: string, ast: unknown): string | null => {
+  let out = code;
+  for (const { start, end, specifier, marked } of findModuleBodyImports(ast).reverse()) {
+    if (marked && typeof specifier === 'string') {
+      out = out.slice(0, start) + `import(${JSON.stringify(specifier)})` + out.slice(end);
+    }
+  }
+  return out === code ? null : out;
+};
+
+/** Applies {@link stripModuleBodyAttributes} to every `dx.config.ts` served as authored (tests, storybook). */
 export const moduleBodyAttributePlugin = (): VitePlugin => ({
   name: 'dx-plugin-config:module-body-attribute',
   transform(code, id) {
-    if (!CONFIG_FILE.test(id.split('?')[0])) {
-      return null;
-    }
-    let out = code;
-    for (const { start, end, specifier, marked } of findModuleBodyImports(this.parse(code)).reverse()) {
-      if (marked && typeof specifier === 'string') {
-        out = out.slice(0, start) + `import(${JSON.stringify(specifier)})` + out.slice(end);
-      }
-    }
-    return out === code ? null : out;
+    return CONFIG_FILE.test(id.split('?')[0]) ? stripModuleBodyAttributes(code, this.parse(code)) : null;
   },
 });
 

@@ -1238,11 +1238,27 @@ const loadAppFrameworkVitePlugin = async () => {
 
 /**
  * Strips the module-body import attribute from `dx.config.ts`, which browsers reject. Added to every
- * browser-hosted test project, since any of them may load a plugin's config as authored; a no-op
- * before app-framework is first built (nothing a build that early can host loads a config).
+ * browser-hosted test project, since any of them may load a plugin's config as authored. Loads
+ * app-framework only on the first config it meets: packages built before app-framework's own
+ * dependencies cannot import it, and never load a config.
  */
-const dxModuleAttributePlugin = async (): Promise<Plugin | undefined> =>
-  (await loadAppFrameworkVitePlugin())?.moduleBodyAttributePlugin();
+const dxModuleAttributePlugin = (): Plugin => {
+  let vitePlugin: ReturnType<typeof loadAppFrameworkVitePlugin> | undefined;
+  return {
+    name: 'dx-module-attribute',
+    async transform(code, id) {
+      if (!/\/dx\.config\.ts$/.test(id.split('?')[0])) {
+        return null;
+      }
+      vitePlugin ??= loadAppFrameworkVitePlugin();
+      const loaded = await vitePlugin;
+      if (!loaded) {
+        throw new Error(`Build @dxos/app-framework to serve ${id}.`);
+      }
+      return loaded.stripModuleBodyAttributes(code, this.parse(code));
+    },
+  };
+};
 
 /**
  * `pluginConfigPlugin` (build only, so tests keep importing the authored config) and
