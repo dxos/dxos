@@ -1284,7 +1284,7 @@ export class SqlPlanCompiler {
     const rowEdges = this.#rowEdges(ws);
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt, d.heads AS heads, COALESCE(d.version, d.heads) AS versionHeads, m.queuePosition AS queuePosition,
-      CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
+      CASE WHEN m.queueId != '' THEN d.snapshot END AS documentJson,
       ${groupColumns}, ${rowEdges ? sql`re.edges` : sql`NULL`} AS edges, ${manifests ? sql`mf.manifest` : sql`NULL`} AS manifest
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
       ${rowEdges ? sql`LEFT JOIN ${this.#ref(rowEdges)} re ON re.root = w.recordId` : sql``}

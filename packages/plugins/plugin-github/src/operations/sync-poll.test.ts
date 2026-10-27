@@ -34,6 +34,8 @@ type FakeGitHub = {
   pageSize: number;
   /** A delta page that answers 404, to interrupt a run midway. */
   failPage?: number;
+  /** The repository GitHub serves; `REPO` unless set. */
+  repo?: GitHubApi.GitHubRepo;
   /** What `/orgs/dxos` answers; 404 (a user-owned repository) unless set. */
   orgStatus?: number;
   requests: string[];
@@ -66,8 +68,9 @@ const fakeFetch =
     const ifNoneMatch = request.headers.get('if-none-match');
 
     if (url.pathname === '/repos/dxos/composer') {
-      const etag = etagOf(REPO);
-      return ifNoneMatch === etag ? new Response(null, { status: 304 }) : Response.json(REPO, { headers: { etag } });
+      const repo = server.repo ?? REPO;
+      const etag = etagOf(repo);
+      return ifNoneMatch === etag ? new Response(null, { status: 304 }) : Response.json(repo, { headers: { etag } });
     }
     if (url.pathname === '/repos/dxos/composer/milestones') {
       return Response.json([]);
@@ -400,9 +403,30 @@ describe('plugin-github polling sync (spec/SYNC.mdl)', () => {
       repo.description = 'rewritten';
     });
 
+    // The pending edit is merged against a fresh, conditional read of the repository before it is pushed.
     const { result, requests } = await poll();
-    expect(requests).toEqual(['GET /repos/dxos/composer/issues', 'PATCH /repos/dxos/composer']);
+    expect(requests).toEqual([
+      'GET /repos/dxos/composer',
+      'GET /repos/dxos/composer/issues',
+      'PATCH /repos/dxos/composer',
+    ]);
     expect(result).toMatchObject({ notModified: true, pushed: { repos: 1, issues: 0 } });
+  });
+
+  test('a GitHub description edit made since the last read is not overwritten by a local one', async ({ expect }) => {
+    const { repo, github, poll } = await setup();
+    github.items = [issue(1, '2026-10-01T10:00:00Z')];
+    await poll();
+    await poll();
+    github.repo = { ...REPO, description: 'edited on GitHub' };
+    Obj.update(repo, (repo) => {
+      repo.description = 'edited in Composer';
+    });
+
+    const { requests } = await poll();
+
+    expect(requests).not.toContain('PATCH /repos/dxos/composer');
+    expect(repo.description).toBe('edited on GitHub');
   });
 
   test('settled checks are re-read on the hourly schedule, since a re-run does not move updated_at', async ({

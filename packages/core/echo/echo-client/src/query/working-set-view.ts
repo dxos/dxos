@@ -119,6 +119,15 @@ export class WorkingSetView {
     return this.coreById(id)?.getObjectStructure() !== undefined;
   }
 
+  /**
+   * Whether local evaluation can return `id` now: its body is held and its strong dependencies are satisfied. A held
+   * object whose closure is still resolving is left out of local results, so its remote answer must stand.
+   */
+  surfaces(id: string): boolean {
+    const core = this.coreById(id);
+    return core?.getObjectStructure() !== undefined && this._database.areStrongDepsSatisfied(core);
+  }
+
   /** The live end of `id`'s convergence-key merge redirects here: a merged-away loser stands for its survivor. */
   survivorId(id: string): string {
     return EntityId.isValid(id)
