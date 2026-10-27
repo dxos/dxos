@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// Pure and dependency-free so `generate-wiki.ts` runs under plain `node` without a build.
+// Pure and dependency-free so `scripts/generate-wiki.ts` runs under plain `node` without a build.
 import type { Wiki, WikiArea, WikiFeature, WikiPage } from './model.ts';
 
 /** A `feature` block of the feature map, with the `### <area>` it sits under. */

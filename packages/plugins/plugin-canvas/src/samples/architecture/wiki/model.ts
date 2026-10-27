@@ -32,7 +32,7 @@ export const WikiArea = Schema.Struct({
 });
 export type WikiArea = Schema.Schema.Type<typeof WikiArea>;
 
-/** The wiki as `generate-wiki.ts` writes it to `wiki.json`. */
+/** The wiki as `scripts/generate-wiki.ts` writes it to `wiki.json`. */
 export const Wiki = Schema.Struct({
   /** The feature map's opening paragraph. */
   intro: Schema.String,

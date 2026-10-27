@@ -7,7 +7,7 @@ architecture drawings, and a deck presents the feature map area by area. Nothing
 `architecture-wiki` routine (`agents/routines/architecture-wiki.md`) regenerates it from the specs.
 
 - Code: `partial.ts` (objects), `wiki.ts` (page, index and deck content), `model.ts` (the `wiki.json` schema),
-  `generate.ts` (specs → wiki data, pure), `generate-wiki.ts` (the CLI that writes `wiki.json`).
+  `generate.ts` (specs → wiki data, pure), `scripts/generate-wiki.ts` (the CLI that writes `wiki.json`).
 - Requires: [Architecture](../CONTENT.md) — `drawings` (`composer` on the front page; `composer`, `echo-model`,
   `composer-plugin`, `composer-framework` under the areas `AREA_DIAGRAMS` names).
 - Provides: `index`, `pages.<spec path>`, `deck`

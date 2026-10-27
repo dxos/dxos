@@ -10,7 +10,7 @@ import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import { SPEC_LINK, Wiki, type WikiArea, type WikiFeature, type WikiPage } from './model.ts';
 import wiki from './wiki.json?raw';
 
-/** The wiki as last generated from the repository's specs (`generate-wiki.ts`). */
+/** The wiki as last generated from the repository's specs (`scripts/generate-wiki.ts`). */
 export const WIKI: Wiki = Schema.decodeUnknownSync(Wiki)(JSON.parse(wiki));
 
 /** Each page's document, by spec path, and the drawings an area heading embeds, by area name. */

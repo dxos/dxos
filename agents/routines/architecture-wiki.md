@@ -35,7 +35,7 @@ You are in the Claude Code cloud sandbox: read `.agents/skills/cloud-sandbox/SKI
 `packages/plugins/plugin-canvas/src/samples/architecture/wiki/CONTENT.md`.
 
 1. `git fetch origin main` and start from `origin/main`.
-2. Run `node packages/plugins/plugin-canvas/src/samples/architecture/wiki/generate-wiki.ts`. It prints the area and
+2. Run `node packages/plugins/plugin-canvas/scripts/generate-wiki.ts`. It prints the area and
    page counts and any spec FEATURES.mdl cites that does not exist.
 3. `git diff --stat -- packages/plugins/plugin-canvas/src/samples/architecture/wiki/wiki.json`. No change → reply
    "wiki current" and stop.
