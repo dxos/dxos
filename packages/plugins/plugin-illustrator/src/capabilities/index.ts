@@ -32,7 +32,6 @@ export const Migrations = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'tauri'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
@@ -43,9 +42,7 @@ export const RefitState = Capability.lazyModule(
   () => import('./refit-state.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['browser', 'node', 'tauri'],
-});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 // Browser-only: the variant supplies the React article/card components that render a drawing.
 export const SvgVariant = Capability.lazyModule(
   'IllustratorSvgVariant',
@@ -55,6 +52,16 @@ export const SvgVariant = Capability.lazyModule(
     environments: ['browser', 'tauri'],
   },
   () => import('./svg-variant.ts'),
+);
+// Headless hosts (EDGE) never fire the start event a rendered surface sends, so this loads at startup.
+export const HeadlessSvgVariant = Capability.lazyModule(
+  'IllustratorHeadlessSvgVariant',
+  {
+    provides: [IllustratorCapabilities.VariantProvider],
+    activatesOn: ActivationEvents.Startup,
+    environments: ['node', 'workerd'],
+  },
+  () => import('./headless-svg-variant.ts'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

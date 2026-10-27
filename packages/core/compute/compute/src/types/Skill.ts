@@ -201,6 +201,23 @@ export const getKey = (skill: Skill): string => {
 };
 
 /**
+ * `first`, then each skill of `second` whose key (its URI when it has none) is not yet present, so
+ * a fork and the registry skill it customizes count as one. Returns `first` itself when nothing is added.
+ */
+export const union = (first: Skill[], second: readonly Skill[]): Skill[] => {
+  const keyOf = (skill: Skill) => Obj.getMeta(skill).key ?? Obj.getURI(skill);
+  const keys = new Set(first.map(keyOf));
+  const added: Skill[] = [];
+  for (const skill of second) {
+    if (!keys.has(keyOf(skill))) {
+      keys.add(keyOf(skill));
+      added.push(skill);
+    }
+  }
+  return added.length === 0 ? first : [...first, ...added];
+};
+
+/**
  * Get the registry version for a skill, if any.
  */
 export const getVersion = (skill: Skill): string | undefined => Obj.getMeta(skill).version;

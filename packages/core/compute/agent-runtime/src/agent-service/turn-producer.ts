@@ -68,6 +68,6 @@ export const makeAiSessionTurnProducer: MakeTurnProducer = ({ feed, runtime, ins
   EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime, instructions })).pipe(
     Effect.map((session) => ({
       runTurn: (params: TurnRequest) => session.createRequest(params),
-      getSkills: () => session.context.getSkills(),
+      getSkills: () => session.skills,
     })),
   );

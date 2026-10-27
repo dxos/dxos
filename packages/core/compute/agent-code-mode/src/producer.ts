@@ -68,7 +68,7 @@ export const makeCodeModeTurnProducer =
     EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime, instructions })).pipe(
       Effect.map((session): TurnProducer => ({
         runTurn: (params) => runCodeModeTurn({ session, feed, instructions, params, options }),
-        getSkills: () => session.context.getSkills(),
+        getSkills: () => session.skills,
       })),
     );
 
@@ -111,7 +111,7 @@ const runCodeModeTurn = ({
 
     yield* request.begin({
       history,
-      skills: session.context.getSkills(),
+      skills: yield* Effect.promise(() => session.getSkills()),
       objects: session.context.getObjects(),
       instructions,
       prompt: params.prompt,
@@ -123,7 +123,7 @@ const runCodeModeTurn = ({
     const runIteration = (turn: number) =>
       Effect.gen(function* () {
         yield* Effect.promise(() => session.context.sync());
-        const skills = session.context.getSkills();
+        const skills = yield* Effect.promise(() => session.getSkills());
         // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
         const mcps = yield* AiSession.connectMcpServers(
           params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],

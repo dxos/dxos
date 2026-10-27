@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
 import * as Skill from './Skill.ts';
@@ -86,5 +87,18 @@ export const make = ({
     skills,
     objects,
     commands,
+  });
+};
+
+/** The skills the instructions name, loaded; a ref that does not resolve on this host is logged and left out. */
+export const loadSkills = async (instructions: readonly Instructions[]): Promise<Skill.Skill[]> => {
+  const refs = instructions.flatMap(({ skills }) => skills);
+  const loaded = await Promise.all(refs.map((ref) => ref.tryLoad()));
+  return loaded.flatMap((skill, index) => {
+    if (!skill) {
+      log.warn('unresolved instructions skill', { uri: refs[index].uri });
+      return [];
+    }
+    return [skill];
   });
 };

@@ -129,7 +129,8 @@ export const ListSkills = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.listSkills'),
     name: 'List agent skills',
-    description: "Lists the skills bound to the agent's conversation and whether each is customized.",
+    description:
+      "Lists the skills the agent's conversation runs with (its bindings and its instructions' skills) and whether each is customized.",
     icon: 'ph--blueprint--regular',
   },
   services: [Database.Service],

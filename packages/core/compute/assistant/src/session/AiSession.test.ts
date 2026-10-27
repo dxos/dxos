@@ -5,10 +5,14 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
+import * as AiContext from './AiContext.ts';
 import * as AiSession from './AiSession.ts';
 import * as SessionLink from './SessionLink.ts';
 
@@ -230,6 +234,41 @@ describe('AiSession.Session rewind', () => {
 
       const history = yield* Effect.promise(() => session.getHistory());
       expect(history.map((message) => message.id)).toEqual([first.id, answer.id, retry.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('AiSession.Session.getSkills', () => {
+  const TestLayer = TestDatabaseLayer({
+    types: [AiContext.Binding, Instructions.Instructions, Skill.Skill, Text.Text],
+  });
+
+  it.effect('adds the instructions skills to the bound ones, re-read on every call', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const bound = db.add(Skill.make({ key: 'com.example.skill.bound', name: 'Bound' }));
+      const preset = db.add(Skill.make({ key: 'com.example.skill.preset', name: 'Preset' }));
+      const instructions = db.add(Instructions.make({ skills: [Ref.make(bound), Ref.make(preset)] }));
+      const feed = db.add(Feed.make());
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [Ref.make(bound)], removed: [] },
+          objects: { added: [], removed: [] },
+        }),
+      ]);
+
+      const runtime = yield* Effect.context<Database.Service>();
+      const session = new AiSession.Session({ feed, runtime, instructions: [instructions] });
+      yield* Effect.promise(() => session.open());
+
+      const skills = yield* Effect.promise(() => session.getSkills());
+      expect(skills.map((skill) => skill.name)).toEqual(['Bound', 'Preset']);
+      expect(yield* Effect.promise(() => session.getSkills())).toBe(skills);
+
+      Obj.update(instructions, (instructions) => {
+        instructions.skills = [Ref.make(bound)];
+      });
+      expect((yield* Effect.promise(() => session.getSkills())).map((skill) => skill.name)).toEqual(['Bound']);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

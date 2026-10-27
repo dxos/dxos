@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import * as Agent from '@dxos/assistant/Agent';
+import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { AgentOperation } from '#types';
@@ -22,8 +24,13 @@ const handler: Operation.WithHandler<typeof AgentOperation.ListSkills> = AgentOp
       }
 
       const binder = yield* openBinder(chat);
+      // What a turn runs with: the chat's bindings plus its instructions' skills (see `AiSession.getSkills`).
+      const instructions = chat.instructions
+        ? yield* Database.load(chat.instructions).pipe(Effect.orElseSucceed(() => undefined))
+        : undefined;
+      const preset = instructions ? yield* Effect.promise(() => Instructions.loadSkills([instructions])) : [];
       return {
-        skills: binder.getSkills().map((skill) => {
+        skills: Skill.union(binder.getSkills(), preset).map((skill) => {
           // A skill resolved from the registry has no database; one in the space is an editable copy.
           const customized = Obj.getDatabase(skill) !== undefined;
           return {
