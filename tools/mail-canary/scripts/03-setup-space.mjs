@@ -7,13 +7,13 @@
 // once Gmail is bound in Composer (README, step 03); the CLI cannot bind the mailbox and its sync yet.
 //
 //   node scripts/03-setup-space.mjs create <hub access code>   # profile, identity, space, recovery phrase
-//   node scripts/03-setup-space.mjs verify <space id>          # mailbox, trace feed and one enabled sync trigger
+//   MAIL_CANARY_RECOVERY_PHRASE=... node scripts/03-setup-space.mjs verify <space id>   # mailbox, trace feed, one sync trigger
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { execFileSync } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { appendFileSync, mkdtempSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,10 +47,15 @@ Created space "${SPACE_NAME}" for ${canaryAccount()} on preview.
 
 ${recoveryCode}
 
-Next: bind Gmail in Composer (README, step 03), then run: node scripts/03-setup-space.mjs verify ${space.id}`);
-} else if (command === 'verify' && argument) {
-  const reader = new SpaceReader({ spaceId: argument, home: homedir(), profile: PROFILE });
-  const exit = await Effect.runPromiseExit(reader.snapshot({ since: Date.now() - 86_400_000, maxMessages: 0 }));
+Next: bind Gmail in Composer (README, step 03), then run verify ${space.id} with the phrase set.`);
+} else if (command === 'verify' && argument && process.env.MAIL_CANARY_RECOVERY_PHRASE) {
+  // Signs in fresh, as the nightly does, so it reads what EDGE holds rather than a local replica.
+  const reader = new SpaceReader({ spaceId: argument, home: mkdtempSync(join(tmpdir(), 'mail-canary-')) });
+  const exit = await Effect.runPromiseExit(
+    reader
+      .login(process.env.MAIL_CANARY_RECOVERY_PHRASE)
+      .pipe(Effect.andThen(reader.snapshot({ since: Date.now() - 86_400_000, maxMessages: 0 }))),
+  );
   if (Exit.isFailure(exit)) {
     console.error(String(exit.cause));
     process.exit(1);
@@ -62,6 +67,8 @@ Next: bind Gmail in Composer (README, step 03), then run: node scripts/03-setup-
     process.exit(1);
   }
 } else {
-  console.error('usage: 03-setup-space.mjs create <hub access code> | verify <space id>');
+  console.error(
+    'usage: 03-setup-space.mjs create <hub access code> | verify <space id> (with MAIL_CANARY_RECOVERY_PHRASE set)',
+  );
   process.exit(1);
 }

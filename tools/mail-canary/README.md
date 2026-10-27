@@ -71,7 +71,8 @@ no date check, so it would pull the whole pool in.
 
 ```bash
 node scripts/03-setup-space.mjs create <hub access code>   # follow the link the hub emails
-node scripts/03-setup-space.mjs verify <space id>          # after binding Gmail
+MAIL_CANARY_RECOVERY_PHRASE=$(op read op://eng-dev/network.dxos.mail-canary/RECOVERY_PHRASE) \
+  node scripts/03-setup-space.mjs verify <space id>        # after binding Gmail
 ```
 
 `create` makes a `mail-canary` dx profile on preview, signs up the test address, creates the space and
@@ -79,7 +80,9 @@ prints its id (variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase (secret
 `MAIL_CANARY_RECOVERY_PHRASE`) once; keep both in `eng-dev/network.dxos.mail-canary` (`SPACE_ID`,
 `RECOVERY_PHRASE`). Then, in Composer on preview, sign in as the test account, open
 "Mail canary" and add a Gmail connection with the defaults; the CLI cannot bind a mailbox yet.
-`verify` checks the space has a mailbox, a trace feed and one enabled remote sync trigger.
+`verify` signs in fresh with the recovery phrase, as the nightly does, and checks the space has a mailbox, a
+trace feed and one enabled remote sync trigger. It needs WebSockets to EDGE, which the cloud sandbox's proxy
+blocks: run it on a laptop.
 
 ### 04 Nightly check
 
