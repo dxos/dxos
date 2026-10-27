@@ -380,10 +380,7 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
     <Mosaic.Tile {...tileProps} data={data} asChild>
       <Card.Root grid border={false} classNames='dx-attention-surface overflow-hidden rounded-md'>
         {DraftMessage.instanceOf(message) ? (
-          // The composer isn't rail-aligned; it spans the whole tile.
-          <div className='col-span-full'>
-            <DraftTile id={id} message={message} />
-          </div>
+          <DraftTile id={id} message={message} />
         ) : (
           <MessageTile id={id} message={message} />
         )}
@@ -968,14 +965,18 @@ const DraftTile = ({ id, message }: DraftTileProps) => {
     return <MessageTile id={id} message={live} />;
   }
 
+  // The composer isn't rail-aligned, so it spans the whole tile; a sent draft above is a read message,
+  // whose rows subgrid onto the tile's rails and so must not sit inside this wrapper.
   return (
-    <EditMessage
-      message={live}
-      extensions={extensions}
-      onSend={onSend}
-      title={t('draft-message.title')}
-      onDelete={mailbox && onDelete ? handleDelete : undefined}
-    />
+    <div className='col-span-full'>
+      <EditMessage
+        message={live}
+        extensions={extensions}
+        onSend={onSend}
+        title={t('draft-message.title')}
+        onDelete={mailbox && onDelete ? handleDelete : undefined}
+      />
+    </div>
   );
 };
 

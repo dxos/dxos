@@ -219,7 +219,7 @@ export const steps = [
       await page
         .locator(`${REQUEST} [data-testid="assistant.request.preview"]`)
         .first()
-        .evaluate((element) => element.scrollIntoView({ block: 'end', behavior: 'smooth' }));
+        .evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
       await caption(demo, 'The reply it will send, under the request');
       await page.waitForTimeout(BEAT * 3);
     },

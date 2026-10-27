@@ -412,6 +412,21 @@ describe('worker sandbox', () => {
       expect(output).toEqual(`stored ${TASK_TYPENAME} open owner Ada`);
     }, 60_000);
 
+    test('passes an object where the operation expects a reference to it, as that reference', async () => {
+      const { runWith } = await setup();
+
+      const output = await runWith(
+        EffectDialect,
+        `
+        const owner = yield* Database.add(Obj.make((yield* Database.resolve('${PERSON_DXN}')), { name: 'Ada' }));
+        const task = yield* Database.add(Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Write the docs', status: 'open' }));
+        const result = yield* Operation.invoke((yield* Database.resolve('${FILE_KEY}')), { object: task, owner });
+        yield* print(result.received);
+      `,
+      );
+      expect(output).toEqual(`stored ${TASK_TYPENAME} open owner Ada`);
+    }, 60_000);
+
     test('reports a failing effect as a failed tool call', async () => {
       const { runWith } = await setup();
       const output = await runWith(EffectDialect, "yield* Effect.fail(new Error('nope'));");
