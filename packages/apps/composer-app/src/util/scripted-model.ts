@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Operation from '@dxos/compute/Operation';
+import * as CommunitySpace from '@dxos/plugin-debug/CommunitySpace';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 const { reasoning, text, toolCall } = ScriptedLanguageModel;
@@ -53,7 +54,18 @@ export const countTurnsSincePrompt = (prompt: Prompt.Prompt, toolName: string): 
  */
 const TURN_DELAY = '250 millis';
 
+/** Opening of the `TriageMessages` prompt, which quotes the one message it asks about. */
+const TRIAGE_PROMPT = 'You triage messages posted in a community chat channel';
+
+/** Paces triage so each task lands on its own beat in the project, as a live model would. */
+const TRIAGE_DELAY = '900 millis';
+
 const generate: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
+  // The Community support template's routine: answer from the template's own script.
+  if (request.text.includes(TRIAGE_PROMPT)) {
+    return { delay: TRIAGE_DELAY, parts: [text(JSON.stringify(CommunitySpace.TriageScript.answer(request.text)))] };
+  }
+
   // Titles, summaries and other side calls offer no tools; answer them rather than emitting a call
   // nobody can dispatch.
   if (!request.tools.includes(QUERY_TOOL)) {

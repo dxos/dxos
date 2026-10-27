@@ -247,6 +247,35 @@ test QA-6: Triage a Discord channel into a project
         "Docs: Write a guide to customizing storage"
 ```
 
+```mdl
+test QA-7: Triage a community channel into a project in Composer
+  desc: |
+    The same triage in the app: a space from plugin-debug's Community support template holds a synced #general
+    channel and a Community project whose "Triage #general" routine runs `TriageMessages` on the channel's feed.
+    Running it fills the project's Tasks: a "Reply to" task with a drafted reply per question, and a task per piece
+    of work. The app runs with the scripted model (`?model=scripted`), which answers from the template's script.
+  actors: human
+  status: unverified        # driven by plugin-projects/autocue/community-triage.mjs
+  given:
+    - Composer is open on localhost with `?model=scripted`, and plugin-debug is enabled
+    - a "Community support" space from the Community support template
+  steps:
+    - name: Open the synced channel
+      do: Open Channels → #general.
+      expect: the eight messages show, oldest first, from Maya to Jun
+    - name: Open the project's tasks
+      do: Open Projects → Community, then its Tasks tab.
+      expect: the task list is empty
+    - name: Run the triage routine
+      do: Run the "Triage #general" routine.
+      expect: |
+        nine tasks fill in one message at a time: "Reply to Maya", "Reply to Ivo" and "Reply to Sana" with their
+        drafted replies, and six work tasks; the greetings file nothing
+    - name: Open a drafted reply
+      do: Click "Reply to Ivo".
+      expect: the task opens beside the list, its description leading with the drafted reply
+```
+
 ## Changelog
 
 ```mdl
@@ -266,4 +295,13 @@ decision D-2: An answer is drafted and filed as a "Reply to" task for a person t
   why: A reply posted in a public channel cannot be taken back, and the model may answer wrongly.
   rejected:
     - Post replies directly: a wrong answer reaches the community before anyone sees it.
+```
+
+```mdl
+decision D-3: QA-7 runs the same triage inside Composer, from a space whose routine is a feed trigger on the synced channel. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmytro@braneframe.com
+  affects: [QA-7]
+  why: The project's tasks are meant to be seen in the app, and a routine on the channel's feed is the trigger D-1 names.
 ```

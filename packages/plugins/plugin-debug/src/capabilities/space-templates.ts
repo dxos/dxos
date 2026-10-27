@@ -5,6 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import {
+  CommunitySpace,
   DemoSpace,
   FieldstoneSpace,
   IncidentSpace,
@@ -24,6 +25,7 @@ export default [
   StockfishSpace.makeTemplate(),
   WorkerSpace.makeTemplate(),
   WeatherSpace.makeTemplate(),
+  CommunitySpace.makeTemplate(),
   IncidentSpace.makeTemplate(),
   ReviewSpace.makeTemplate(),
   FieldstoneSpace.makeTemplate(),
