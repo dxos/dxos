@@ -80,13 +80,15 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common.ts';
 import { InvitationsProxy } from '../invitations/index.ts';
-import { BootCacheServices } from '../services/boot-cache/index.ts';
 import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
 
 const INITIALIZATION_RETRY_BASE_MS = 1_000;
 const INITIALIZATION_RETRY_MAX_MS = 30_000;
+
+/** Hands a space the working set a boot cache persisted for it, once. */
+export type TakeWorkingSet = (spaceId: string) => WorkingSetRow[] | undefined;
 
 /**
  * Returns the {@link Space} that owns the given object, or `undefined`.
@@ -188,6 +190,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     private _data: SpaceData,
     private readonly _echoClient: EchoClient,
     private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
+    private readonly _takeWorkingSet?: TakeWorkingSet,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -499,8 +502,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       } else {
         log.warn('no automerge root found for space', { spaceId: this.id });
       }
-      const seed =
-        this._clientServices instanceof BootCacheServices ? this._clientServices.takeWorkingSet(this.id) : undefined;
+      const seed = this._takeWorkingSet?.(this.id);
       if (seed) {
         this._db.seedWorkingSet(seed);
       }

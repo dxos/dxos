@@ -52,7 +52,8 @@ import { type JsonKeyOptions, type MaybePromise, markMilestone } from '@dxos/uti
 
 import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge/index.ts';
 import { type MeshProxy } from '../mesh/mesh-proxy.ts';
-import type { BootCacheOptions, BootCacheServices, IFrameManager, Shell, ShellManager } from '../services/index.ts';
+import type { BootCacheOptions, BootCacheServices } from '../services/boot-cache/index.ts';
+import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
 import { createRpcBlobStore } from './rpc-blob-store.ts';
@@ -434,8 +435,7 @@ export class Client {
     performance.mark('client.initialize:called');
     markMilestone('client.initializing');
     log('initializing client');
-    const { BootCacheServices, BootCacheStore, createClientServices, IFrameManager, ShellManager } =
-      await import('../services/index.ts');
+    const { createClientServices, IFrameManager, ShellManager } = await import('../services/index.ts');
     const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
       await import('@dxos/protocols/buf/dxos/config_pb');
     performance.mark('client.initialize:imports-loaded');
@@ -479,8 +479,12 @@ export class Client {
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
-    if (this._options.bootCache && BootCacheStore.isAvailable()) {
-      this._bootCache = new BootCacheServices(provider, this._options.bootCache);
+    if (this._options.bootCache) {
+      // Loaded only when asked for, so a client without it carries none of it at boot.
+      const { BootCacheServices, BootCacheStore } = await import('../services/boot-cache/index.ts');
+      if (BootCacheStore.isAvailable()) {
+        this._bootCache = new BootCacheServices(provider, this._options.bootCache);
+      }
     }
     this._services = this._bootCache ?? provider;
     performance.mark('client.initialize:services-created');
@@ -610,7 +614,14 @@ export class Client {
 
     const mesh = new MeshProxy(this._services, this._effectRuntime);
     const halo = new HaloProxy(this._services, this._effectRuntime);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._effectRuntime);
+    const bootCache = this._bootCache;
+    const spaces = new SpaceList(
+      this._config,
+      this._services,
+      this._echoClient,
+      this._effectRuntime,
+      bootCache && ((spaceId) => bootCache.takeWorkingSet(spaceId)),
+    );
 
     const shell = this._shellManager
       ? new Shell({
