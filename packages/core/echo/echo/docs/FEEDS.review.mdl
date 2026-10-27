@@ -1,38 +1,35 @@
 ---
 spec: github:dxos/dxos/packages/core/echo/echo/docs/FEEDS.mdl
-commit: caacb31de6bcee8329a90cafeed41a9a5fcff44a
-date: 2026-10-26
+commit: 8fc06bb23281340e0d94b129e8ecadbf34aed846
+date: 2026-10-27
 by: agent:claude-code
 ---
 
 # Review: Feeds
 
-The spec states that the code does not implement this design yet. The code agrees: the feed layer has
-no branches. The code has the base that the spec describes in "What exists":
+The code implements forks, the first phase of the design [D-2]. Each item states its branch in
+`@meta`, the first item of a branch flags its fork point, and `Feed.readBranch` gives the view of one
+branch. The index has a branch column, the index mode is main or all, and a scope filters by branch
+before the limit. A read with no branch filter covers only the main branch.
 
-- A `Feed` is an append log of ECHO objects.
-- `Obj.update` appends the full object again by id.
-- `FeedProtocol.Block` holds the fields that the spec names, and the `position` for each space and
-  namespace.
-- Soft fork (`Feed.PARENT_KEY`, `Feed.history`) gives a lineage for each item in one feed.
+These parts are missing:
 
-All the branch requirements are missing: removal, an index for each branch, heads, partial sync and
-retention for each branch. Indexing, retention and sync apply only to a full feed.
+- branch removal, and rewind as a branch
+- heads, retention and permissions for each branch, and branch owners
+- partial sync, and the time range of a scope.
 
-The trajectory design (#13782) is not on `main`. The `Thread` 0.3.0 comment feeds (#14206) are also not
-on `main`. Thus `Trajectory.Event` and `threadOpen` have no code in this checkout.
+Merge and close are a follow-up [D-2].
 
-Of 25 items: 1 done, 0 untested, 7 partial, 1 diverged, 16 missing. These three findings are the most
+Of 25 items: 4 done, 0 untested, 7 partial, 1 diverged, 13 missing. These three findings are the most
 important:
 
-- **Rewind is a separate mechanism.** [F-1.5] tells that a rewind is a branch and a removal. The code
-  does a rewind with `Feed.rewindFrom` and the `PARENT_KEY` lineage of each item. `Feed.history`
-  resolves this lineage when it reads.
-- **All options apply to a full feed.** `Feed.IndexingOptions`, `Feed.RetentionOptions`, `Feed.sync`
-  and `Scope.feed` take a feed and no smaller unit. Thus [F-2.1], [F-2.3] and [F-4.4] have no hook for
-  new code.
-- **The code will remove local order.** `Block.insertionId` is the only local order. It has the comment
-  `TODO(dmaretskyi): Remove. Use cursors.`. The local cursor API of #13782 is not on `main`.
+- **The host does not check the branch of an update.** The client refuses an update that moves an item
+  to a different branch [F-1.3]. A block from another client or from sync is not checked.
+- **Rewind is still a separate mechanism.** [F-1.5] tells that a rewind is a branch and a removal. The
+  code still uses `Feed.rewindFrom` and `PARENT_KEY`.
+- **A tombstone of a branch item has no branch.** On a feed that indexes only the main branch, the
+  index keeps the tombstone of a removed branch item as a deleted row of the main branch. A default read
+  does not show it, but a read with `deleted: 'include'` does.
 
 ## Extensions
 
@@ -50,22 +47,24 @@ verdict F-1.1: A Feed is an append log of ECHO objects.
 ```
 
 ```mdl
-verdict F-1.2: Soft fork gives a lineage for each item in one feed. There are no branch ids or fork points.
-  status: partial
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#PARENT_KEY, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#history]
-  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
-  note: |
-    The lineage needs no extra ECHO objects, as the requirement tells. `Feed.history` resolves one
-    head back through its ancestors. A branch has no id, no parent branch and no stored fork point.
-    The `Feed` object holds no map of branches.
+verdict F-1.2: Each item states its branch, a first item flags its fork point, and Feed.readBranch reads a branch with its ancestors.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#startBranch, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#readBranch, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+  walkthrough:
+    - Feed.append with fork makes the first item the first item of a new branch and puts all the items in it. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append
+    - startBranch writes the branch key and the fork key on the first item. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#startBranch
+    - readBranch gives the items of the ancestors up to each fork point, and then the items of the branch. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#readBranch
 ```
 
 ```mdl
-verdict F-1.3: Obj.update appends the full object again by id. The update limit for each branch is missing.
+verdict F-1.3: The client refuses an update that moves an item to a different branch; the host does not check it.
   status: partial
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#update]
-  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed.test.ts]
-  note: The upsert works. There are no branches, thus the feed cannot refuse an update on a different branch.
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#update, github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed-object-core.ts#FeedObjectCore.checkBranch, github:dxos/dxos/packages/core/echo/echo-client/src/errors.ts#FeedBranchMismatchError]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed-object-core.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+  note: |
+    The upsert and the branch limit work in the client. A different client, or a block from sync, is not
+    checked by the host or by the index.
 ```
 
 ```mdl
@@ -99,12 +98,17 @@ verdict F-1.7: No agent creates a branch.
 ```
 
 ```mdl
-verdict F-2.1: Indexing is on or off for a full feed. There is no main-only mode, and a query cannot have a scope of branches.
-  status: missing
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+verdict F-2.1: The index holds the main branch or all branches, and a branch scope filters before the limit. The time range is missing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#indexesAllBranches, github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.ts#buildQueueBranchCondition, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.test.ts]
+  walkthrough:
+    - IndexingOptions has a mode of all or main, and main is the default. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions
+    - The indexer skips the blocks of a branch unless the mode is all. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#indexesAllBranches
+    - Scope.feed takes branches, and the query puts the branch filter before the order and the limit. github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.ts#buildQueueBranchCondition
   note: |
-    `Feed.IndexingOptions` has no subset mode. `Scope.feed` takes only a feed URI. The index has no
-    branch column, thus a branch filter cannot run before `limit`.
+    A query can have a scope of a set of branches. The scope has no time range (`after`, `before`)
+    yet.
 ```
 
 ```mdl
@@ -165,9 +169,10 @@ verdict F-3.4: An object can have many sessions, each with its own feed.
 ```
 
 ```mdl
-verdict F-4.1: No read has a scope of one branch. Thus privacy by construction is not possible at this time.
-  status: missing
-  note: There are no branches for the scope of a default read. A feed read gives all items.
+verdict F-4.1: A read with no branch filter covers only the main branch.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.ts#queueBranchesOf, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.test.ts]
 ```
 
 ```mdl
@@ -183,9 +188,10 @@ verdict F-4.2: Each block names its writer. We did not find a fixed turn view or
 ```
 
 ```mdl
-verdict F-4.3: There is no branch to create.
-  status: missing
-  note: A soft fork costs one `PARENT_KEY` on an item that exists. But there is no branch record to count.
+verdict F-4.3: A new branch costs no record: its first item states it.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#startBranch]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
 ```
 
 ```mdl
@@ -232,8 +238,9 @@ verdict Feed: The two proposed members do not exist.
 ```
 
 ```mdl
-verdict Scope: Scope.feed exists, but it takes only a feed URI.
+verdict Scope: Scope.feed takes branches, but it has no time range.
   status: partial
   evidence: [github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
-  note: It has no `branches`, `after` or `before` options. Thus it pushes no filter into SQL before `limit`.
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.test.ts]
+  note: It has no `after` or `before` options.
 ```

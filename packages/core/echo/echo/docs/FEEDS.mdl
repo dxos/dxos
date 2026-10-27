@@ -8,7 +8,9 @@ version: 0.1.0
 
 Status: Rich agreed the requirements on 2026-10-25. This document also gives a review of the trajectory
 design (dxos/dxos#13782) and a counter-proposal. The counter-proposal is for discussion with Dima. The
-code does not implement this design yet. Rich and Dima reviewed the design on 2026-10-26. The decisions of
+code implements forks, the first phase [D-2]. Merge, close, heads and partial sync are not in the code.
+
+Rich and Dima reviewed the design on 2026-10-26. The decisions of
 that review are in the changelog ([D-2] to [D-20]).
 
 This document combines the previous design documents for feeds. The source documents are in
@@ -290,9 +292,12 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
 1. **Branch membership on the item.** Two keys in item `@meta`, next to `PARENT_KEY`:
    - `org.dxos.key.feed-branch`: the branch id. The branch id is the id of the first item of the
      branch. If the key is absent, the item is in the root branch.
-   - `org.dxos.key.feed-fork`, only on the first item of a branch: the parent branch and the fork item.
+   - `org.dxos.key.feed-fork`, only on the first item of a branch: the id of the fork item. The parent
+     branch is the branch of the fork item [D-22].
 
-   The branch id is the id of the base block of the branch [D-6]. The fork point is a flag [D-5].
+   The branch id is the id of the base block of the branch [D-6], which is the first item of the branch
+   [D-21]. The fork point is a flag [D-5]. `Feed.readBranch` gives the view of one branch: the items of
+   its ancestors up to each fork point, then its own items [D-23].
 
    Each item states its membership, as with the lineage of soft fork. Thus the system never
    misattributes a writer that did not see a fork. The truth replicates with the blocks that it
@@ -305,7 +310,8 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
 
 3. **Index by branch.** The indexer stores the branch id in a column on feed items (an `echo-sqlite`
    migration). The indexer obeys the index mode of the feed: all branches or the main branch [F-2.1],
-   [D-17]. `Scope.feed` (below) pushes the
+   [D-17]. A read of a branch that the index does not hold comes from the feed store [D-25]. A scope with
+   no branch filter reads only the main branch, and `'all'` reads all branches [D-24]. `Scope.feed` (below) pushes the
    branch filter and the time filter into SQL, thus `limit` applies after them. Newest first is an
    `orderBy`.
 
@@ -347,7 +353,7 @@ module Feed
 module Scope
   desc: Proposed member of the Scope module (item 3 above).
   api:
-    feed: (uri, { branches, after, before })  # pushes the branch filter and the time filter into SQL, thus `limit` applies after them.
+    feed: (uri, { branches, after, before })  # pushes the branch filter and the time filter into SQL, thus `limit` applies after them. No branches is main only; 'all' reads all branches.
 ```
 
 ## Questions for Dima
@@ -513,6 +519,64 @@ decision D-19: Approve [D-12].
 decision D-20: Approve [D-16].
   date: 2026-10-26
   by: user:richburdon
+```
+
+```mdl
+decision D-21: The base block of a branch is the first item of the branch, thus the branch id is the id of that item. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The block at the fork point in the parent cannot name the branch, because two branches can fork at the same item.
+```
+
+```mdl
+decision D-22: The fork-point flag is the `org.dxos.key.feed-fork` key on the first item of a branch; its value is the id of the fork item, and the parent branch is the branch of that item. Fills in [D-5].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The fork item already states its own branch, so a second copy of the parent branch id can only disagree with it.
+  rejected:
+    - Store the parent branch id and the fork item id in the key; two sources for one fact.
+```
+
+```mdl
+decision D-23: A read of a branch cuts each ancestor at its fork point by append order; `Feed.readBranch` does this over items the caller reads, and the scope filter selects by membership only.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: Append order is the order `Feed.history` already uses for soft forks, so the two reads agree.
+  rejected:
+    - A version vector of the parent branch in the fork record; more exact under concurrent writers, but nobody has decided it yet.
+```
+
+```mdl
+decision D-24: A feed scope with no branch filter reads only the main branch, in the index, in the feed store and in the unflushed writes of the client; `'all'` reads all branches, and a read of every feed of a space reads only their main branches. Fills in [F-4.1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1, F-2.1]
+  why: '[F-4.1] requires that a private branch never reaches a reader that did not ask for it.'
+```
+
+```mdl
+decision D-25: A feed whose index holds only the main branch serves a read of any other branch from the feed store, and a change of the index mode backfills or deletes the rows of the other branches. Fills in [D-10].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: A branch read on the default mode must not return nothing just because the index does not hold the branch.
+```
+
+```mdl
+decision D-26: The client rejects an append that moves an existing item to a different branch or fork point with `FeedBranchMismatchError`, and reverts such a change in a background update. The host does not check this yet. Fills in [D-12].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: The client object core is the one place that knows the branch already written for an item.
 ```
 
 ## Appendix: Extension Definitions
