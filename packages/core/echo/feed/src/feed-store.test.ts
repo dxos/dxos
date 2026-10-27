@@ -25,6 +25,9 @@ const TestLayer = SqliteClient.layer({
   filename: ':memory:',
 });
 
+/** A database of its own, so a replica does not read the rows of the store it replicates. */
+const ReplicaLayer = () => SqliteClient.layer({ filename: ':memory:' });
+
 // ActorIds.
 const ALICE = 'alice';
 
@@ -1624,21 +1627,48 @@ describe('FeedStore branches', () => {
       yield* append();
       const written = yield* read;
 
-      const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
-      yield* replica.migrate();
       // The local columns stay behind: the replica infers them again.
       const blocks = written.map(({ branch: _branch, insertionId: _insertionId, ...block }) => block);
-      yield* replica.append({ requestId: 'pull', spaceId, feedNamespace: namespace, blocks });
-      const { blocks: replicated } = yield* replica.query({
-        requestId: 'read',
-        spaceId,
-        feedNamespace: namespace,
-        query: { feedIds: [blocks[0].feedId ?? ''] },
-        position: -1,
-      });
+      const { blocks: replicated } = yield* Effect.gen(function* () {
+        const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
+        yield* replica.migrate();
+        yield* replica.append({ requestId: 'pull', spaceId, feedNamespace: namespace, blocks });
+        return yield* replica.query({
+          requestId: 'read',
+          spaceId,
+          feedNamespace: namespace,
+          query: { feedIds: [blocks[0].feedId ?? ''] },
+          position: -1,
+        });
+      }).pipe(Effect.provide(ReplicaLayer()));
       expect(replicated.map((block) => [blockId(block), block.branch])).toEqual(
         written.map((block) => [blockId(block), block.branch]),
       );
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a replica that receives a fork before its fork point still walks to its ancestors', () =>
+    Effect.gen(function* () {
+      const { spaceId, feedId, append, read } = yield* setup;
+      const a1 = yield* append();
+      const b1 = yield* append({ forkAt: blockId(a1) });
+      const written = (yield* read).map(({ branch: _branch, insertionId: _insertionId, ...block }) => block);
+      const [rootBlock, forkBlock] = written;
+
+      const walked = yield* Effect.gen(function* () {
+        const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
+        yield* replica.migrate();
+        yield* replica.append({ requestId: 'fork', spaceId, feedNamespace: namespace, blocks: [forkBlock] });
+        yield* replica.append({ requestId: 'root', spaceId, feedNamespace: namespace, blocks: [rootBlock] });
+        return yield* replica.walk({
+          spaceId,
+          feedNamespace: namespace,
+          feedId,
+          branch: blockId(b1),
+          direction: 'asc',
+        });
+      }).pipe(Effect.provide(ReplicaLayer()));
+      expect(walked.map(blockId)).toEqual([blockId(a1), blockId(b1)]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -1647,6 +1677,15 @@ describe('FeedStore branches', () => {
       const { append } = yield* setup;
       yield* append();
       const exit = yield* Effect.exit(append({ branch: '7@nobody' }));
+      expect(Exit.isFailure(exit)).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('refuses a fork at a block the feed does not hold', () =>
+    Effect.gen(function* () {
+      const { append } = yield* setup;
+      yield* append();
+      const exit = yield* Effect.exit(append({ forkAt: '7@nobody' }));
       expect(Exit.isFailure(exit)).toBe(true);
     }).pipe(Effect.provide(TestLayer)),
   );

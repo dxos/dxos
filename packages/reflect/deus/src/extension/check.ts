@@ -96,7 +96,7 @@ const lintQuestion = (body: string): string[] => {
     errors.push('Question is missing `status:` — open, answered or moot.');
   } else if (!QUESTION_STATUS_SET.has(status)) {
     errors.push(`Question \`status: ${status}\` must be open, answered or moot.`);
-  } else if (status === 'answered' && !fieldValue(body, 'answer')) {
+  } else if (status === 'answered' && !fieldText(body, 'answer')) {
     errors.push('An answered question needs an `answer:`.');
   }
   if (recipient !== undefined && !USER_REF.test(recipient)) {

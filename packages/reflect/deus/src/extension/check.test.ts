@@ -89,6 +89,12 @@ describe('mdl lint', () => {
       ).toEqual([]);
     });
 
+    test('answered question whose answer block is empty', ({ expect }) => {
+      expect(messages(block('question Q-1: Use X?\n  status: answered\n  answer: |\n  decisions: [D-1]'))).toEqual([
+        'An answered question needs an `answer:`.',
+      ]);
+    });
+
     test('answered question without an answer', ({ expect }) => {
       expect(messages(block('question Q-1: Use X?\n  status: answered'))).toEqual([
         'An answered question needs an `answer:`.',

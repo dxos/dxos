@@ -1138,6 +1138,18 @@ export class FeedStore {
         }
         if (inserted.length > 0) {
           yield* this.#noteBranchHead(feedPrivateId, block, branch, inserted[0].insertionId, predecessor);
+          // A synced fork can arrive before its fork point; once the fork point lands, give its branch row the base.
+          yield* sql`
+            UPDATE branches
+            SET baseBranchId = ${branch ?? ROOT_BRANCH_ROW}, forkInsertionId = ${inserted[0].insertionId}
+            WHERE feedPrivateId = ${feedPrivateId}
+              AND baseBranchId IS NULL AND forkInsertionId IS NULL AND branchId != ${ROOT_BRANCH_ROW}
+              AND EXISTS (
+                SELECT 1 FROM blocks
+                WHERE blocks.insertionId = branches.baseInsertionId
+                  AND blocks.prevSequence = ${block.sequence} AND blocks.prevActorId = ${block.actorId}
+              )
+          `;
         }
 
         if (!this.#options.assignPositions) {
@@ -1431,6 +1443,15 @@ export class FeedStore {
             const forkPoint = FeedProtocol.parseBlockId(msg.forkAt);
             if (forkPoint === undefined) {
               return yield* Effect.die(new Error(`Malformed fork point block id: ${msg.forkAt}`));
+            }
+            // A fork at a block the store does not hold would have no base, so no walk could reach its ancestors.
+            const held = yield* sql<{ insertionId: number }>`
+              SELECT insertionId FROM blocks
+              WHERE feedPrivateId = ${feedPrivateId}
+                AND sequence = ${forkPoint.sequence} AND actorId = ${forkPoint.actorId}
+            `;
+            if (held.length === 0) {
+              return yield* Effect.die(new Error(`Unknown fork point block: ${msg.forkAt}`));
             }
             predecessor = forkPoint;
             branch = FeedProtocol.formatBlockId(this.#options.localActorId, nextSequence);
