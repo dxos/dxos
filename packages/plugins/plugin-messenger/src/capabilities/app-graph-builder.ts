@@ -11,8 +11,10 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { MESSENGER_COMPANION, meta } from '#meta';
+import { meta } from '#meta';
 import { MessengerCapabilities, Notifications } from '#types';
+
+import { MESSENGER_COMPANION } from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

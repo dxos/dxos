@@ -4,4 +4,4 @@
 
 // @import-as-namespace
 
-export { COMMANDS_DIALOG } from '#meta';
+export { COMMANDS_DIALOG } from './constants.ts';

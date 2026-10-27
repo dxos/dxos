@@ -32,9 +32,10 @@ import {
   QuestionSurface,
   SpaceHomePrompt,
 } from '#containers';
-import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
+import { meta } from '#meta';
 import { ChatSurface } from '#types';
 
+import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG } from '../constants.ts';
 import {
   AssistantSettingsSurface,
   InvocationsSurface,

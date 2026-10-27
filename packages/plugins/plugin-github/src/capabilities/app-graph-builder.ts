@@ -12,8 +12,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { IMPORT_PULL_REQUEST_DIALOG, meta } from '#meta';
+import { meta } from '#meta';
 import { GitHubOperation } from '#types';
+
+import { IMPORT_PULL_REQUEST_DIALOG } from '../constants.ts';
 
 /**
  * Contributes "Import pull request" to the root, so the commands dialog carries it: a reviewer who

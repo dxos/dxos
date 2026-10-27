@@ -19,7 +19,9 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
-import { KEY_BINDING, meta } from '#meta';
+import { meta } from '#meta';
+
+import { KEY_BINDING } from '../../constants.ts';
 
 export type CommandsDialogContentProps = {
   selected?: string;

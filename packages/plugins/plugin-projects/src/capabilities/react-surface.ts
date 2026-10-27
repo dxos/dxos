@@ -21,10 +21,10 @@ import {
   ShowcaseArticle,
   ShowcaseCardContent,
 } from '#containers';
-import { MOVE_TASK_DIALOG } from '#meta';
 import { Feature, Showcase } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
+import { MOVE_TASK_DIALOG } from '../constants.ts';
 
 /** React surfaces contributed by plugin-projects — articles and cards for projects, features and showcases. */
 export default Capability.makeModule(() =>

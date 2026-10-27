@@ -36,9 +36,10 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 import * as Position from '@dxos/util/Position';
 
-import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
+import { meta } from '#meta';
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
+import { ASSISTANT_COMPANION_VARIANT } from '../constants.ts';
 import { currentChatRef } from '../util/current-chat.ts';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */

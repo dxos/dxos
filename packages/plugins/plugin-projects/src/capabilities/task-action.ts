@@ -13,8 +13,10 @@ import { Ref } from '@dxos/echo';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as TasksCapabilities from '@dxos/plugin-tasks/TasksCapabilities';
 
-import { MOVE_TASK_DIALOG, meta } from '#meta';
+import { meta } from '#meta';
 import { ProjectOperation } from '#types';
+
+import { MOVE_TASK_DIALOG } from '../constants.ts';
 
 const ASSIGN_GROUP = 'assign';
 

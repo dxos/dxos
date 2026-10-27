@@ -20,8 +20,10 @@ import { type Message } from '@dxos/types';
 
 import { type InvitationRenderer, NotificationsPanel } from '#components';
 import { loadLink } from '#materializer';
-import { MESSENGER_COMPANION, meta } from '#meta';
+import { meta } from '#meta';
 import { MessengerCapabilities } from '#types';
+
+import { MESSENGER_COMPANION } from '../../constants.ts';
 
 const renderInvitation: InvitationRenderer = ({ data, sender }) => (
   <Surface.Surface type={AppSurface.SpaceInvitation} data={{ ...data, sender }} limit={1} />

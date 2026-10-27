@@ -45,10 +45,11 @@ import { Message, Organization } from '@dxos/types';
 
 import { NotificationsPanel } from '#components';
 import { loadLink, makeSender, startInboxMaterializer } from '#materializer';
-import { MESSENGER_COMPANION } from '#meta';
 import * as MessengerPlugin from '#meta';
 import { translations } from '#translations';
 import { MessengerCapabilities, Notifications } from '#types';
+
+import { MESSENGER_COMPANION } from '../constants.ts';
 
 /** Stands in for EDGE: both clients' inboxes are routed through it. */
 const inboxRelay = new MemoryEdgeInbox();

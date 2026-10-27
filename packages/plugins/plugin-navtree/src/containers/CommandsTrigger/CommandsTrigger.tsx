@@ -10,7 +10,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 
-import { COMMANDS_DIALOG, meta } from '#meta';
+import { meta } from '#meta';
+
+import { COMMANDS_DIALOG } from '../../constants.ts';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
