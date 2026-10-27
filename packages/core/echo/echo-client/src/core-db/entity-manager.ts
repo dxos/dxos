@@ -84,9 +84,6 @@ const TRACE_LOADING = false;
 /** Ceiling on db update emissions per second while a bulk delivery keeps arriving. */
 const DB_UPDATE_MAX_FREQ = 10;
 
-/** A flush still waiting after this long logs which phase it is in and what is still unsent. */
-const FLUSH_STALL_WARN_MS = 10_000;
-
 /** A satisfaction request that will not change again without a new load. */
 const isSettled = (request: RefResolverRequest): boolean =>
   request.state === 'ready' || request.state === 'unavailable';
@@ -1312,41 +1309,25 @@ export class EntityManager implements IDatabaseBinding {
   }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, secondaryIndexes, updates });
     const watermark = this.#writeSequence;
-    let phase = 'creations';
-    const stalled = setTimeout(() => {
-      log.warn('flush stalled', {
-        spaceId: this._spaceId,
-        phase,
-        pendingDocumentCreations: this._pendingDocumentCreations.size,
-        ...this._repoProxy.getUnsavedCounts(),
-      });
-    }, FLUSH_STALL_WARN_MS);
-    try {
-      await this._waitForPendingCreations();
-      if (disk) {
-        phase = 'disk';
-        await this._repoProxy.flush({ disk: true });
-      }
+    await this._waitForPendingCreations();
+    if (disk) {
+      await this._repoProxy.flush({ disk: true });
+    }
 
-      if (indexes || secondaryIndexes) {
-        phase = 'indexes';
-        await runServiceCall(this._runtime, this._dataService, 'DataService.updateIndexes', { secondaryIndexes });
-        // Only a flush that pushed local changes to the host knows they reached the index.
-        if (disk) {
-          for (const [id, sequence] of this.#unindexedWrites) {
-            if (sequence <= watermark) {
-              this.#unindexedWrites.delete(id);
-            }
+    if (indexes || secondaryIndexes) {
+      await runServiceCall(this._runtime, this._dataService, 'DataService.updateIndexes', { secondaryIndexes });
+      // Only a flush that pushed local changes to the host knows they reached the index.
+      if (disk) {
+        for (const [id, sequence] of this.#unindexedWrites) {
+          if (sequence <= watermark) {
+            this.#unindexedWrites.delete(id);
           }
         }
       }
+    }
 
-      if (updates) {
-        phase = 'updates';
-        await this._updateScheduler.runBlocking();
-      }
-    } finally {
-      clearTimeout(stalled);
+    if (updates) {
+      await this._updateScheduler.runBlocking();
     }
   }
 

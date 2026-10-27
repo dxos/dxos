@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
 
@@ -215,68 +215,31 @@ describe('update-scheduler', () => {
     await expect(parked).resolves.toBeUndefined();
   });
 
-  // workerd throws from `setTimeout` outside a request (e.g. in a FinalizationRegistry callback), so a
-  // throttled runner can fail before claiming. That must neither wedge the scheduler nor raise.
-  describe('a runner refused its throttle timer', () => {
-    /** A scheduler whose next trigger waits out the throttle, and a ctx collecting what it raises. */
-    const throttled = async () => {
-      const errors: Error[] = [];
-      const ctx = new Context({ onError: (error) => void errors.push(error) });
-      const runs = { count: 0 };
-      const scheduler = new UpdateScheduler(
-        ctx,
-        async () => {
-          runs.count++;
-        },
-        { maxFrequency: 1 },
-      );
-      await scheduler.runBlocking(); // Consume the allowance.
-      return { ctx, errors, runs, scheduler };
-    };
+  // Cloudflare Workers throw from `setTimeout` outside a request, e.g. in a FinalizationRegistry callback.
+  test('a refused throttle timer does not wedge later runs', async ({ expect }) => {
+    const errors: Error[] = [];
+    const ctx = new Context({ onError: (error) => void errors.push(error) });
+    let runs = 0;
+    const scheduler = new UpdateScheduler(
+      ctx,
+      async () => {
+        runs++;
+      },
+      { maxFrequency: 1 },
+    );
+    await scheduler.runBlocking(); // Consume the allowance, so the next trigger waits out the throttle.
 
-    /** Runs `fn` while `setTimeout` throws as workerd's does outside a request, calling `onRefused` first. */
-    const withoutTimers = async (fn: () => Promise<void>, onRefused = () => {}) => {
-      const setTimeout = globalThis.setTimeout;
-      globalThis.setTimeout = (() => {
-        onRefused();
-        throw new Error('Disallowed operation called within global scope.');
-      }) as unknown as typeof globalThis.setTimeout;
-      try {
-        await fn();
-      } finally {
-        globalThis.setTimeout = setTimeout;
-      }
-    };
-
-    test('does not wedge later runs', async ({ expect }) => {
-      const { ctx, errors, runs, scheduler } = await throttled();
-      await withoutTimers(async () => {
-        scheduler.trigger();
-        await new Promise((resolve) => setImmediate(resolve)); // Let the runner give up.
-      });
-
-      await asyncTimeout(scheduler.runBlocking(), 1_000);
-      expect(runs.count).toEqual(2);
-      expect(errors).toEqual([]);
-      await ctx.dispose();
+    const refused = vi.spyOn(globalThis, 'setTimeout').mockImplementationOnce(() => {
+      throw new Error('Disallowed operation called within global scope.');
     });
+    scheduler.trigger();
+    await new Promise((resolve) => setImmediate(resolve)); // Let the runner reach its throttle.
+    expect(refused.mock.results[0]?.type).toBe('throw');
+    refused.mockRestore();
 
-    test('hands a runBlocking that parked on it a run of its own', async ({ expect }) => {
-      const { ctx, errors, runs, scheduler } = await throttled();
-      let parked: Promise<void> | undefined;
-      await withoutTimers(
-        async () => {
-          scheduler.trigger();
-          await new Promise((resolve) => setImmediate(resolve));
-        },
-        // Parks on the runner at the moment its timer is refused, before it gives up.
-        () => void (parked ??= scheduler.runBlocking()),
-      );
-
-      await asyncTimeout(parked!, 1_000);
-      expect(runs.count).toEqual(2);
-      expect(errors).toEqual([]);
-      await ctx.dispose();
-    });
+    await asyncTimeout(scheduler.runBlocking(), 1_000);
+    expect(runs).toBe(2);
+    expect(errors).toEqual([]);
+    await ctx.dispose();
   });
 });

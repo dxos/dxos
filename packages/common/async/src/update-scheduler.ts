@@ -20,11 +20,8 @@ export type UpdateSchedulerOptions = {
  */
 const TIME_PERIOD = 1_000;
 
-/** Outcome of a runner that gave up before claiming; its waiters must trigger again. */
-const UNCLAIMED = Symbol('unclaimed');
-
 /** A claimed run's error (or `undefined`). Resolves, never rejects — `runBlocking` re-throws it. */
-type RunResult = Promise<Error | undefined | typeof UNCLAIMED>;
+type RunResult = Promise<Error | undefined>;
 
 /**
  * Runs a non-reentrant callback at most once at a time, coalescing triggers (optionally rate-limited
@@ -92,17 +89,33 @@ export class UpdateScheduler {
     scheduleMicroTask(this._ctx, async () => {
       await this._currentTask; // Never rejects.
 
-      try {
-        await this._throttle();
-      } catch (err) {
-        // The throttle timer can be refused where the trigger came from (workerd throws from `setTimeout`
-        // outside a request, e.g. in a FinalizationRegistry callback). That is not a failure of the work,
-        // so nothing is raised: the work stays queued for the next trigger. Giving up `_scheduled` is what
-        // keeps later triggers and `runBlocking` from coalescing into this runner forever.
-        log.warn('update run could not wait out its throttle; left for the next trigger', { err });
-        this._scheduled = false;
-        this._runOutcome.wake(Promise.resolve(UNCLAIMED));
-        return;
+      // Rate limiting. Suspending before the claim is safe only because no other claimant exists.
+      if (this._params.maxFrequency) {
+        const now = performance.now();
+        const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - now;
+        // A forced trigger has already woken the skip; awaiting it anyway would still cost the
+        // microtask hops, and a forced run must claim exactly when an unthrottled one would.
+        if (delay > 0 && this._skipDelay.state !== TriggerState.RESOLVED) {
+          const skipDelay = this._skipDelay;
+          const { promise: delayed, resolve } = Promise.withResolvers<void>();
+          let timeoutId: ReturnType<typeof setTimeout>;
+          try {
+            timeoutId = setTimeout(resolve, delay);
+          } catch (err) {
+            // Cloudflare Workers refuse timers outside a request (a FinalizationRegistry callback); no
+            // `runBlocking` waits on this run, as one would have skipped the delay, so freeing the slot
+            // hands the work to the next trigger.
+            log.warn('update left for the next trigger: throttle timer refused', { err });
+            this._scheduled = false;
+            return;
+          }
+          const clearContext = this._ctx.onDispose(resolve);
+          // `runBlocking`/`forceTrigger` cut the delay short.
+          void skipDelay.wait().then(resolve);
+          await delayed;
+          clearTimeout(timeoutId);
+          clearContext();
+        }
       }
 
       if (this._ctx.disposed) {
@@ -145,38 +158,6 @@ export class UpdateScheduler {
     this._skipDelay.wake();
   }
 
-  /** Rate limiting. Suspending before the claim is safe only because no other claimant exists. */
-  private async _throttle(): Promise<void> {
-    if (!this._params.maxFrequency) {
-      return;
-    }
-    const delay = this._lastUpdateTime + TIME_PERIOD / this._params.maxFrequency - performance.now();
-    // A forced trigger has already woken the skip; awaiting it anyway would still cost the
-    // microtask hops, and a forced run must claim exactly when an unthrottled one would.
-    if (delay <= 0 || this._skipDelay.state === TriggerState.RESOLVED) {
-      return;
-    }
-    const skipDelay = this._skipDelay;
-    await new Promise<void>((resolve) => {
-      const timeoutId = setTimeout(() => {
-        clearContext();
-        resolve();
-      }, delay);
-
-      const clearContext = this._ctx.onDispose(() => {
-        clearTimeout(timeoutId);
-        resolve();
-      });
-
-      // `runBlocking`/`forceTrigger` cut the delay short.
-      void skipDelay.wait().then(() => {
-        clearTimeout(timeoutId);
-        clearContext();
-        resolve();
-      });
-    });
-  }
-
   /**
    * Waits for the current task to finish if it is running.
    * Does not schedule a new task, and does not wait for one that is merely scheduled.
@@ -197,18 +178,11 @@ export class UpdateScheduler {
     }
     this._observers++;
     try {
-      for (;;) {
-        // Triggering from here, with the delay skipped, never needs the timer an unclaimed runner lacked.
-        this.trigger();
-        this._skipDelay.wake();
-        const outcome = await this._runOutcome.wait();
-        if (outcome === UNCLAIMED) {
-          continue;
-        }
-        if (outcome !== undefined) {
-          throw outcome;
-        }
-        return;
+      this.trigger();
+      this._skipDelay.wake();
+      const error = await this._runOutcome.wait();
+      if (error !== undefined) {
+        throw error;
       }
     } finally {
       this._observers--;

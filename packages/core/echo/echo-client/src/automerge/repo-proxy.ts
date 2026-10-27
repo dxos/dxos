@@ -300,17 +300,6 @@ export class RepoProxy extends Resource {
     );
   }
 
-  /** What this client still holds back from the host, for diagnosing a stalled flush. */
-  getUnsavedCounts() {
-    return {
-      pendingUpdates: this._pendingUpdateIds.size,
-      inFlightUpdates: this._inFlightUpdateIds.size,
-      pendingCreations: this._pendingCreations.size,
-      failedCreations: this._failedCreations.size,
-      sendScheduled: this._sendUpdatesJob?.scheduled ?? false,
-    };
-  }
-
   /**
    * Waits until every pending document creation and update has been handed to the host, and with
    * `disk`, until the host has saved the documents this client wrote.
