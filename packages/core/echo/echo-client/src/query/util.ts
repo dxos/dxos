@@ -290,9 +290,11 @@ export const getTargetFeedBranchesForQuery = (
           const previous = feeds.get(scope.feedUri);
           feeds.set(
             scope.feedUri,
-            feeds.has(scope.feedUri) && (previous === undefined || branches === undefined)
-              ? undefined
-              : [...new Set([...(previous ?? []), ...(branches ?? [])])],
+            !feeds.has(scope.feedUri)
+              ? branches
+              : previous === undefined || branches === undefined
+                ? undefined
+                : [...new Set([...previous, ...branches])],
           );
         }
       }

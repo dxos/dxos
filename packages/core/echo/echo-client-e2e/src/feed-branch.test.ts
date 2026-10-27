@@ -140,6 +140,52 @@ describe('feed branches', () => {
     }).pipe(Effect.provide(Database.layer(db2)), EffectEx.runAndForwardErrors);
   });
 
+  // F-4.1: the base of a fork reads as a root item until the store names its branch, so no live root read may show it.
+  test('a live root read never shows the base of a fork', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make({ name: 'live' }));
+    const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+    await db.appendToFeed(feed, [a1]);
+
+    const query = db.query(
+      Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getFeedUri(feed)?.toString() ?? '')),
+    );
+    const seen = new Set<string>();
+    const unsubscribe = query.subscribe(() => query.results.forEach((item) => seen.add(item.name ?? '')), {
+      fire: true,
+    });
+    await db.forkFeed(feed, Obj.make(TestSchema.Person, { name: 'B1' }), { at: a1 });
+    await db.flush();
+
+    await expect.poll(() => query.results.map((item) => item.name)).toEqual(['A1']);
+    expect(seen.has('B1')).toBe(false);
+    unsubscribe();
+  });
+
+  // D-12: a removal is a write to the object, so its tombstone lands on the branch of the object.
+  test('a removed branch item leaves its branch', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'removal' }));
+      const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+      yield* Feed.append(feed, [a1]);
+      const b1 = Obj.make(TestSchema.Person, { name: 'B1' });
+      const branch = yield* Feed.fork(feed, [b1], { at: a1 });
+      yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'B2' })], { branch });
+      yield* Database.flush();
+
+      yield* Feed.remove(feed, [b1]);
+      yield* Database.flush();
+
+      const names = (items: readonly TestSchema.Person[]) => items.map((item) => item.name);
+      expect(names(yield* Feed.walk(feed, Filter.type(TestSchema.Person), { branch }).run)).toEqual(['A1', 'B2']);
+      expect(names(yield* Feed.query(feed, Filter.type(TestSchema.Person)).run)).toEqual(['A1']);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
   // F-4.1: a default read covers one branch, so a branch never reaches a reader that did not ask for it.
   test('a default feed read covers only the root branch, indexed or not', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person], assignQueuePositions: true });

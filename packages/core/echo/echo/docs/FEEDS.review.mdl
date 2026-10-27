@@ -94,13 +94,13 @@ verdict F-1.5: Rewind is a separate mechanism, not a branch plus removal.
 ```mdl
 verdict F-1.6: Branches have no owner.
   status: missing
-  note: There are no branches, thus there is no branch owner. We searched the Feed module and the feed store.
+  note: '`Feed.fork` creates branches, but neither the block, the branches table nor the Feed object records who owns a branch.'
 ```
 
 ```mdl
 verdict F-1.7: No agent creates a branch.
   status: missing
-  note: There are no feed branches for an agent to create.
+  note: '`Feed.fork` exists, but no agent calls it, and no code checks which device owns the base branch.'
 ```
 
 ```mdl

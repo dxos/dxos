@@ -198,7 +198,7 @@ type Block
     `prevSequence`, a timestamp and the encrypted payload.
   fields:
     position: only EDGE sets it, from one counter for each space and namespace. Thus you can compare positions across the feeds of a space.
-    insertionId: local to the device. #13782 shows it as local order (`Filter.feedCursor({ order: 'local' })`, `Feed.getLocalCursor`).
+    insertionId: local to the device. #13782 shows it as local order (`Filter.feedCursor({ order: 'local' })`, `Feed.getLocalCursor`); this spec names that field `positions` [D-55].
 ```
 
 - **Upsert.** `Obj.update` on a feed item appends the full object again under its id. The index keeps

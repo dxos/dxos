@@ -18,7 +18,7 @@ const SPEC = [
       '  answer: |',
       '    The core does nothing with a merge [D-3].',
       '    Merges are out of scope.',
-      '  decisions: [D-3, D-50]',
+      '  decisions: [D-3, D-50]  # see the review',
     ].join('\n'),
   ),
   fence(

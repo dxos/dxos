@@ -90,7 +90,7 @@ immediately the tip on your own device, and peers converge once positions land.
 Timestamps across peers are not trustworthy.
 
 Note that most consumers today re-sort by `created` after querying (e.g.
-[`SessionLoader`](../../../../../../packages/core/compute/assistant/src/session/SessionLoader.ts)).
+[`SessionStore`](../../../../../../packages/core/compute/assistant/src/session/SessionStore.ts)).
 Callers must pass items **in append order** to the resolver; sorting by
 `created` first would corrupt the walk.
 
@@ -271,10 +271,10 @@ const { items, shallow } = Feed.history(messages);
 ## Prior art
 
 - **Hard fork** already exists: `ForkChat` creates a new `Feed` and appends a
-  `SessionLink` cutoff; `SessionLoader.reifyHistory` splices the source feed's
+  `SessionLink` cutoff; `SessionStore.reifyHistory` splices the source feed's
   history back in at read time
   ([`fork-chat.ts`](../../../../../../packages/plugins/plugin-assistant/src/operations/fork-chat.ts),
-  [`SessionLoader.ts`](../../../../../../packages/core/compute/assistant/src/session/SessionLoader.ts)).
+  [`SessionStore.ts`](../../../../../../packages/core/compute/assistant/src/session/SessionStore.ts)).
   Soft fork is the same user intent without the copy, and the two are
   independent: a soft-forked feed can still be hard-forked.
 - **Feed deletion** is already a tombstone append (`{ id, '@deleted': true }`)
@@ -307,5 +307,5 @@ const { items, shallow } = Feed.history(messages);
   worth it once branch _switching_ is actually wanted.
 - `Scope.feed(uri, { branch })` query-plan push-down, so branch filtering
   precedes `limit` in the indexer.
-- Assistant chat wiring: a "revert to here" affordance plus `SessionLoader` /
+- Assistant chat wiring: a "revert to here" affordance plus `SessionStore` /
   `AiSession.getHistory` integration.

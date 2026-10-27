@@ -179,7 +179,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
   ['FeedService.deleteFromFeed'](request: FeedService.DeleteFromFeedRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
-        const { subspaceTag, spaceId, feedId, objectIds } = request;
+        const { subspaceTag, spaceId, feedId, objectIds, branches } = request;
         const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
         assertArgument(
           FeedProtocol.isWellKnownNamespace(feedNamespace),
@@ -188,10 +188,11 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         );
         await RuntimeProvider.runPromise(this.#runtime)(
           Effect.gen({ self: this }, function* () {
-            const messages = objectIds!.map((id) => ({
+            const messages = objectIds!.map((id, index) => ({
               spaceId: spaceId,
               feedId: feedId!,
               feedNamespace,
+              branch: branches?.[index] ?? null,
               data: EchoFeedCodec.encode({ id, '@deleted': true }),
             }));
 

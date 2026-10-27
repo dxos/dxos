@@ -1229,6 +1229,8 @@ export class FeedStore {
         SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM path ORDER BY depth DESC
       `;
 
+      // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
+      const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
       const sequence: Block[] = [];
       const onPath = new Set(path.map((row) => row.branchId));
       const forksAt = new Map<number, Block[]>();
@@ -1245,6 +1247,7 @@ export class FeedStore {
                 SELECT blocks.*, feeds.feedId, feeds.feedNamespace
                 FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
                 WHERE blocks.insertionId IN ${sql.in(bases.map((row) => row.baseInsertionId))}
+                ${notExpired}
                 ORDER BY blocks.insertionId ASC
               `;
         const forkOf = new Map(bases.map((row) => [row.baseInsertionId, row.forkInsertionId]));
@@ -1266,6 +1269,7 @@ export class FeedStore {
           SELECT blocks.*, feeds.feedId, feeds.feedNamespace
           FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
           WHERE blocks.feedPrivateId = ${feedPrivateId} AND blocks.branch IS ${branch} AND blocks.insertionId <= ${cutoff}
+          ${notExpired}
           ORDER BY blocks.insertionId ASC
         `;
         for (const block of blocks) {

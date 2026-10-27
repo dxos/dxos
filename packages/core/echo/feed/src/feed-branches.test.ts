@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as SqlClient from 'effect/sql/SqlClient';
+import * as TestClock from 'effect/testing/TestClock';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
@@ -167,7 +168,16 @@ describe('FeedStore branches', () => {
         context.store
           .walk({ spaceId: context.spaceId, feedNamespace: namespace, feedId: context.feedId, ...request })
           .pipe(Effect.map((blocks) => blocks.map((block) => names.get(blockId(block)))));
-      return { walk, branchB: blockId(b1), branchC: blockId(c1), a1: blockId(a1), b2: blockId(b2) };
+      return {
+        walk,
+        store: context.store,
+        spaceId: context.spaceId,
+        feedId: context.feedId,
+        branchB: blockId(b1),
+        branchC: blockId(c1),
+        a1: blockId(a1),
+        b2: blockId(b2),
+      };
     });
 
     it.effect('forward to the root branch gives only the root', () =>
@@ -199,6 +209,23 @@ describe('FeedStore branches', () => {
         expect(yield* walk({ direction: 'asc', branch: branchB, after: a1 })).toEqual(['b1', 'b2', 'b3']);
         expect(yield* walk({ direction: 'asc', forks: true, after: branchB })).toEqual(['a2', 'a3']);
         expect(yield* walk({ direction: 'asc', after: '9@nobody' })).toEqual([]);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('a walk hides blocks past the maxAge of the feed, as every other read does', () =>
+      Effect.gen(function* () {
+        const { walk, store, spaceId, feedId } = yield* tree;
+        expect(yield* walk({ direction: 'asc' })).toEqual(['a1', 'a2', 'a3']);
+        // Applied while no block has expired, so only the clock moving past them can hide one.
+        yield* TestClock.setTime(Date.now());
+        yield* store.setFeedOptions({
+          spaceId,
+          feedId,
+          feedNamespace: namespace,
+          options: { retention: { maxAge: 60_000 } },
+        });
+        yield* TestClock.setTime(Date.now() + 120_000);
+        expect(yield* walk({ direction: 'asc' })).toEqual([]);
       }).pipe(Effect.provide(TestLayer)),
     );
 

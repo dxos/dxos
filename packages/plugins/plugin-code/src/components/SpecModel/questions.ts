@@ -54,7 +54,7 @@ export const parseQuestions = (text: string): SpecQuestion[] =>
         [fields.get(name)?.inline, ...(fields.get(name)?.lines ?? [])].filter(Boolean).join(' ').trim() || undefined;
       // A list may be inline (`[a, b]`), wrapped over several lines, or written as `- a` items.
       const list = (name: string) =>
-        [fields.get(name)?.inline, ...(fields.get(name)?.lines ?? [])]
+        [valueOf(fields.get(name)?.inline), ...(fields.get(name)?.lines ?? [])]
           .join(',')
           .split(',')
           .map((value) => value.replace(/^[\s[-]+|[\s\]]+$/g, ''))
