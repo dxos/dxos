@@ -16,6 +16,7 @@ import * as Template from '@dxos/compute/Template';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { Text } from '@dxos/schema';
 import { Channel } from '@dxos/types';
 
@@ -147,6 +148,7 @@ describe('CustomizeSkill', () => {
           Skill.registryURI(GoalsSkill.key),
           Skill.registryURI(BrainSkill.key),
           Skill.registryURI(SkillManagerSkill.key),
+          Skill.registryURI(DatabaseSkill.key),
         ]);
         expect(yield* Database.load(Ref.make(copy)).pipe(Effect.option)).toMatchObject({ _tag: 'None' });
       },

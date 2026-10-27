@@ -10,6 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { type IdentityDid } from '@dxos/keys';
+import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentOperation, Mode } from '#types';
@@ -40,9 +41,14 @@ export const makeAgent = ({
       {
         name,
         instructions: instructions ?? baseInstructions(name),
-        skills: [ModesSkill.key, RelaySkill.key, GoalsSkill.key, BrainSkill.key, SkillManagerSkill.key].map((key) =>
-          Ref.fromURI(Skill.registryURI(key)),
-        ),
+        skills: [
+          ModesSkill.key,
+          RelaySkill.key,
+          GoalsSkill.key,
+          BrainSkill.key,
+          SkillManagerSkill.key,
+          DatabaseSkill.key,
+        ].map((key) => Ref.fromURI(Skill.registryURI(key))),
         ...(did ? { did } : {}),
         ...(keys ? { [Obj.Meta]: { keys } } : {}),
       },
