@@ -6,7 +6,7 @@
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { type Database, Ref, Relation } from '@dxos/echo';
+import { type Database, DXN, Obj, Ref, Relation } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
@@ -50,9 +50,17 @@ export const seed = (
         status: model.status,
         specs: [...model.specs],
         subfeatures: model.subfeatures.map((subfeature) => ({ ...subfeature })),
+        code: model.code.map((link) => ({ ...link })),
         project: Ref.make(project),
       }),
     );
+    // A model's link names the key only; the mnemonic comes from the object the seed creates.
+    const link = model.link ? DXN.tryMake(model.link) : undefined;
+    if (link) {
+      Obj.update(feature, (feature) => {
+        Obj.getMeta(feature).key = DXN.getName(link);
+      });
+    }
     objects.set(model.id, feature);
   }
 

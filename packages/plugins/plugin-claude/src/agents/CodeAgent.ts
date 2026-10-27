@@ -30,6 +30,7 @@ import * as Settings from '../types/Settings.ts';
 import * as State from '../types/State.ts';
 import * as AcpAgent from './AcpAgent.ts';
 import * as ComposerMcp from './ComposerMcp.ts';
+import * as McpProxy from './McpProxy.ts';
 import * as Protocol from './Protocol.ts';
 import * as Workspace from './Workspace.ts';
 
@@ -114,11 +115,16 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       string,
       { server: string; handle: ClaudeCapabilities.McpHandle; dispose: () => Promise<void> }
     >();
+    const proxies = new McpProxy.Proxies({
+      relay: () => helper()?.mcp,
+      serverId: randomToken,
+      reserved: [ComposerMcp.SERVER_NAME],
+    });
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
         await Promise.all([...served.values()].map(({ dispose }) => dispose()));
         served.clear();
-      }),
+      }).pipe(Effect.andThen(proxies.close())),
     );
     const composerTools = (
       chat: Chat.Chat,
@@ -228,6 +234,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
             }),
           ),
         ),
+      connections: (chat, servers, token) => proxies.offer(chat.id, servers, token),
       device: () => toPublicKey(manager.getAll(ClientCapabilities.Client).at(0)?.halo.device?.deviceKey)?.toHex(),
     };
 

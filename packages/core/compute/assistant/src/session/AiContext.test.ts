@@ -112,6 +112,76 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  test('a connection is on until the conversation turns it off, and the latest change survives a reopen', async ({
+    expect,
+  }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const [a, b, c] = yield* Effect.forEach([0, 1, 2], () => Database.add(Obj.make(TypeA, {})));
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.setConnection(Ref.make(a), false));
+      yield* Effect.promise(() => binder.setConnection(Ref.make(b), false));
+      yield* Effect.promise(() => binder.setConnection(Ref.make(b), true));
+      yield* Effect.promise(() => binder.close());
+
+      const reader = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => reader.open());
+      const states = reader.getConnections();
+      yield* Effect.promise(() => reader.close());
+
+      expect([a, b, c].map((connection) => AiContext.isConnectionOn(states, connection))).toEqual([false, true, true]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a built-in connection is off until turned on, and is bound by its key in every process', async ({ expect }) => {
+    // Each process makes its own copy of a built-in from code: same key, different object.
+    const builtin = () => Obj.make(TypeA, { [Obj.Meta]: { key: 'org.dxos.mcp.test' } });
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const here = builtin();
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      const before = AiContext.isConnectionOn(binder.getConnections(), here);
+      yield* Effect.promise(() => binder.setConnection(AiContext.connectionRef(here), true));
+      yield* Effect.promise(() => binder.close());
+
+      const states = yield* AiContext.boundConnections(feed);
+      expect(before).toBe(false);
+      expect(AiContext.isConnectionOn(states, builtin())).toBe(true);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a holding binder writes its connection changes when flushed', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = Feed.make();
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      const binder = new AiContext.Binder({ feed, runtime, hold: true });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.setConnection(Ref.make(a), false));
+      const held = AiContext.isConnectionOn(binder.getConnections(), a);
+      yield* Database.add(feed);
+      yield* Effect.promise(() => binder.flush());
+      yield* Effect.promise(() => binder.close());
+
+      const states = yield* AiContext.boundConnections(feed);
+      expect(held).toBe(false);
+      expect(AiContext.isConnectionOn(states, a)).toBe(false);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
   test('a holding binder resolves a registry skill bound by URI', async ({ expect }) => {
     const registered = Skill.make({ key: 'org.dxos.skill.registered', name: 'Registered' });
     await Effect.gen(function* () {

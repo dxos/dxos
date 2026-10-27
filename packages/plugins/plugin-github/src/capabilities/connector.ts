@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj } from '@dxos/echo';
 import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
@@ -14,7 +15,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_APP_PROVIDER_ID, GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { GITHUB_APP_PROVIDER_ID, GITHUB_MCP_ENDPOINT, GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
 import { GitHubApi } from '../services/index.ts';
 
 /**
@@ -89,11 +90,21 @@ const testAppConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
+/**
+ * Every 3 minutes: a poll of a quiet repository is one conditional request GitHub answers `304`
+ * without charging the rate limit, so polling this often costs at most 20 requests an hour per binding.
+ */
+const GITHUB_SYNC_CRON = '*/3 * * * *';
+
 const sync: ConnectorSpec.ConnectorEntry['sync'] = {
   operation: GitHubOperation.SyncGitHubRepositories,
   getTargets: GitHubOperation.GetGitHubRepositories,
   materializeTarget: GitHubOperation.MaterializeGitHubTarget,
   optionsSchema: GitHubOperation.SyncOptions,
+  // The interval belongs to this trigger; nothing on the binding mirrors it.
+  trigger: Trigger.specTimer(GITHUB_SYNC_CRON),
+  // Polls run on EDGE, where the sync operation is registered, so they continue with no client open.
+  remote: true,
 };
 
 /**
@@ -116,6 +127,7 @@ export default Capability.makeModule(
         source: GITHUB_SOURCE,
         label: 'GitHub',
         kind: 'user',
+        mcp: () => GITHUB_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.GITHUB,
           scopes: [],
@@ -129,6 +141,7 @@ export default Capability.makeModule(
         source: GITHUB_SOURCE,
         label: 'GitHub App',
         kind: 'app',
+        mcp: () => GITHUB_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.GITHUB,
           scopes: [],

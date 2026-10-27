@@ -4,7 +4,15 @@
 
 import { beforeEach, describe, test } from 'vitest';
 
-import { WORK_MARK_PREFIX, absoluteNow, getWorkMarks, markWork, resetWorkMarks } from './work-marks.ts';
+import {
+  MILESTONE_PREFIX,
+  WORK_MARK_PREFIX,
+  absoluteNow,
+  getWorkMarks,
+  markMilestone,
+  markWork,
+  resetWorkMarks,
+} from './work-marks.ts';
 
 describe('work marks', () => {
   beforeEach(() => {
@@ -35,6 +43,17 @@ describe('work marks', () => {
     ]);
     const entry = performance.getEntriesByName(`${WORK_MARK_PREFIX}late`, 'mark').at(-1);
     expect(entry && 'detail' in entry ? entry.detail : undefined).toEqual({ text: 'tools' });
+  });
+
+  test('a milestone is a work mark that DevTools draws as a marker across the timeline', ({ expect }) => {
+    markMilestone('worker.started', 'dedicated');
+    expect(getWorkMarks().map(({ name, detail }) => ({ name, detail }))).toEqual([
+      { name: `${MILESTONE_PREFIX}worker.started`, detail: 'dedicated' },
+    ]);
+    const entry = performance.getEntriesByName(`${WORK_MARK_PREFIX}${MILESTONE_PREFIX}worker.started`, 'mark').at(-1);
+    expect(entry && 'detail' in entry ? entry.detail : undefined).toMatchObject({
+      devtools: { dataType: 'marker', tooltipText: 'worker.started: dedicated' },
+    });
   });
 
   test('leaves marks written by others alone', ({ expect }) => {

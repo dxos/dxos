@@ -78,6 +78,9 @@ export const commentSync = (
   const { registry, stateAtom } = store;
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
+  // A replicated anchor can arrive before its thread; `getAnchors` skips it until the thread resolves, and the
+  // anchor query does not notify again when it does, so a thread arrival that resolves one re-reads the anchors.
+  const threads = db.query(Filter.type(Thread.Thread));
 
   // TODO(burdon): Externalize ECHO?
   // Get current anchors by combining query results with store drafts, scoped to the review branch so
@@ -150,10 +153,34 @@ export const commentSync = (
       subscribe: (sink) => {
         // Subscribe to both query changes and store state changes. `comments()` primes the initial read
         // itself (after this returns), so no manual first `sink()` is needed here.
-        const unsubQuery = query.subscribe(sink);
+        // The query reports which anchors exist, not edits to one, so each anchor is watched too: an anchor
+        // moved outside the editor (re-pointed after an agent's edit) must redraw.
+        let unsubAnchors: (() => void)[] = [];
+        const watchAnchors = () => {
+          unsubAnchors.forEach((unsubscribe) => unsubscribe());
+          unsubAnchors = query.results.map((anchor) => Relation.subscribe(anchor, sink));
+        };
+        const unsubQuery = query.subscribe(() => {
+          watchAnchors();
+          sink();
+        });
+        // After subscribing: a query exposes `results` only while it has a subscriber.
+        watchAnchors();
+        // Only when a thread's arrival changes which anchors resolve: every other thread change (each message the
+        // agent posts) re-reading the comments resets the editor's comment state mid-conversation.
+        let resolved = getAnchors().length;
+        const unsubThreads = threads.subscribe(() => {
+          const count = getAnchors().length;
+          if (count !== resolved) {
+            resolved = count;
+            sink();
+          }
+        });
         const unsubStore = registry.subscribe(stateAtom, sink);
         return () => {
+          unsubAnchors.forEach((unsubscribe) => unsubscribe());
           unsubQuery();
+          unsubThreads();
           unsubStore();
         };
       },

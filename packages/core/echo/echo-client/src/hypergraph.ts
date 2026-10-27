@@ -31,13 +31,11 @@ import { RequestImpl } from './core-db/ref-resolver-request.ts';
 import { getObjectCore, isEchoObject } from './echo-handler/index.ts';
 import { type DatabaseImpl } from './proxy-db/index.ts';
 import {
-  GraphQueryContext,
+  LocalQueryEngine,
   type QueryContext,
   QueryResultCache,
   QueryResultImpl,
-  type QuerySource,
-  RegistryQuerySource,
-  SpaceQuerySource,
+  type RemoteQuerySource,
 } from './query/index.ts';
 import { makeRegistry } from './registry/index.ts';
 
@@ -60,7 +58,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _registry: Registry.Registry;
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
-  private readonly _queryContexts = new Set<GraphQueryContext>();
+  private readonly _queryContexts = new Set<LocalQueryEngine>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   // Shares one QueryResult instance (and its subscription) across repeated calls with the same
@@ -68,8 +66,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   // normalizes scope and delegates here.
   //
   // Replaced (not mutated) on every database registration change: each `QueryResultImpl` embeds
-  // a `GraphQueryContext` snapshot of the database set at creation time. Active (subscribed)
-  // results stay valid because `_registerDatabase` pushes new sources into `_queryContexts`.
+  // a `LocalQueryEngine` snapshot of the database set at creation time. Active (subscribed)
+  // results stay valid because `_registerDatabase` adds the new database to `_queryContexts`.
   // Idle (unsubscribed) cached results would not receive those updates and would miss newly
   // registered databases, so we discard them on every topology change.
   #queryResultCache = new QueryResultCache();
@@ -119,7 +117,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
 
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addDatabase(database);
     }
     this.#queryResultCache = new QueryResultCache();
   }
@@ -834,7 +832,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   registerQuerySourceProvider(provider: QuerySourceProvider): void {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(provider.create());
+      context.addRemoteSource(provider.create());
     }
     this.#queryResultCache = new QueryResultCache();
   }
@@ -898,7 +896,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _createLiveObjectQueryContext(): QueryContext {
-    const context = new GraphQueryContext({
+    const context = new LocalQueryEngine({
+      registry: this._registry,
       onStart: () => {
         this._queryContexts.add(context);
       },
@@ -908,11 +907,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     });
 
     for (const database of this._databases.values()) {
-      context.addQuerySource(new SpaceQuerySource(database));
+      context.addDatabase(database);
     }
-    context.addQuerySource(new RegistryQuerySource(this._registry));
     for (const provider of this._querySourceProviders) {
-      context.addQuerySource(provider.create());
+      context.addRemoteSource(provider.create());
     }
 
     return context;
@@ -920,7 +918,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  create(): QuerySource;
+  create(): RemoteQuerySource;
 }
 
 type ObjectDiagnostic = {

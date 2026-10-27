@@ -14,6 +14,8 @@ import { meta } from '#meta';
 import { ChessPlugin } from '#plugin';
 import { ChessOperation } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), GamePlugin.make(), ChessPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ChessPlugin', () => {

@@ -49,9 +49,6 @@
       "path": "../../core/compute/agent-runtime"
     },
     {
-      "path": "../../core/compute/ai"
-    },
-    {
       "path": "../../core/compute/assistant"
     },
     {

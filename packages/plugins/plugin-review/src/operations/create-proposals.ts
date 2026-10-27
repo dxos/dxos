@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { computeDiffsWithCursors } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Feed, Obj, Relation } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
               sender: { role: 'assistant' },
               blocks: [{ _tag: 'proposal', text }],
             });
-            const thread = Thread.make({ name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
+            const thread = Thread.make({ name: 'Proposal', status: 'active' });
             const relation = Relation.make(AnchoredTo.AnchoredTo, {
               [Relation.Source]: thread,
               [Relation.Target]: object,
@@ -38,6 +38,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.CreateProposals> = 
             });
             yield* Database.add(thread);
             yield* Database.add(relation);
+            yield* Feed.append(yield* Database.load(thread.feed), [proposal]);
           }),
         ),
         { concurrency: 'unbounded' },

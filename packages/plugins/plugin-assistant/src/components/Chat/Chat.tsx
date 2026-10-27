@@ -420,15 +420,14 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
-  PropsWithChildren<{
-    companionTo?: Obj.Unknown;
-    /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
-    switcher?: ChatSwitcher;
-  }>;
+type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive' | 'customActions'> & {
+  companionTo?: Obj.Unknown;
+  /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
+  switcher?: ChatSwitcher;
+};
 
 const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
+  ({ attendableId, alwaysActive, customActions, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
@@ -437,11 +436,10 @@ const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
         {...menuActions}
         attendableId={attendableId}
         alwaysActive={alwaysActive}
+        customActions={customActions}
         {...Util.composableProps(props)}
         ref={forwardedRef}
-      >
-        {children}
-      </ActionToolbar>
+      />
     );
   },
 );
@@ -798,11 +796,27 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
   }, [chat, chatModel, db, tasks]);
   const open = drawer && available.includes(drawer) ? drawer : undefined;
 
-  const shownRef = useRef(open);
-  if (open) {
-    shownRef.current = open;
+  // Switching drawers closes the open one first, so the next slides in rather than swapping in place.
+  const [visible, setVisible] = useState(open);
+  const [requested, setRequested] = useState(open);
+  if (open !== requested) {
+    setRequested(open);
+    setVisible(visible && open ? undefined : open);
   }
-  const shown = open ?? shownRef.current ?? available[0];
+
+  // With animations off no `animationend` fires, so a switch with no close animation running completes at once.
+  const drawerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!visible && open && (drawerRef.current?.getAnimations().length ?? 0) === 0) {
+      setVisible(open);
+    }
+  }, [visible, open]);
+
+  const shownRef = useRef(visible);
+  if (visible) {
+    shownRef.current = visible;
+  }
+  const shown = visible ?? shownRef.current ?? available[0];
 
   const contextOpenedRef = useRef(false);
   if (open === 'context') {
@@ -811,13 +825,17 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
 
   return (
     <Collapsible.Root
-      open={open !== undefined}
+      open={visible !== undefined}
       onOpenChange={({ open }) => !open && setDrawer(undefined)}
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {available.length > 0 && (
-        <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+        <Collapsible.Content
+          ref={drawerRef}
+          className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'
+          onAnimationEnd={(event) => event.target === event.currentTarget && !visible && open && setVisible(open)}
+        >
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
           <div className='shrink-0 max-h-[40dvh] overflow-y-auto dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm'>
             {available.includes('tasks') && (
@@ -835,7 +853,7 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
       )}
       <NaturalChatPrompt
         {...props}
-        classNames={[open && 'rounded-t-none', classNames]}
+        classNames={[visible && 'rounded-t-none', classNames]}
         db={db}
         chat={chat}
         chatModel={chatModel}

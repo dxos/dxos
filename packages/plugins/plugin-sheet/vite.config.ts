@@ -20,6 +20,7 @@ export default defineConfig({
     'SheetRange': 'src/types/SheetRange.ts',
     'SheetUtil': 'src/types/SheetUtil.ts',
     'skills': 'src/skills/index.ts',
+    'LegacySheet': 'src/types/LegacySheet.ts',
     'Sheet': 'src/types/Sheet.ts',
     'SheetCapabilities': 'src/types/SheetCapabilities.ts',
     'SheetEvents': 'src/types/SheetEvents.ts',

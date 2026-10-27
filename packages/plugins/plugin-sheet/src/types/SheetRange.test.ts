@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import * as SheetRange from './SheetRange.ts';
 import { headerRanges } from './SheetRange.ts';
 
 describe('headerRanges', () => {
@@ -31,5 +32,22 @@ describe('headerRanges', () => {
 
   test('leaves a column with no values below its header unaligned', ({ expect }) => {
     expect(headerRanges({ A1: { value: 'Empty' } }, 'A1')).toEqual([{ range: 'A1', key: 'style', value: 'header' }]);
+  });
+});
+
+describe('cellBackgroundForRanges', () => {
+  test('the last valid highlight wins; other keys and unsafe values are ignored', ({ expect }) => {
+    const range = 'A@1';
+    expect(
+      SheetRange.cellBackgroundForRanges([
+        { range, key: SheetRange.highlightKey, value: '#ff0000' },
+        { range, key: SheetRange.alignKey, value: 'end' },
+        { range, key: SheetRange.highlightKey, value: 'oklch(70% 0.1 200)' },
+        { range, key: SheetRange.highlightKey, value: 'url(https://example.com/x.png)' },
+      ]),
+    ).toBe('oklch(70% 0.1 200)');
+    expect(
+      SheetRange.cellBackgroundForRanges([{ range, key: SheetRange.styleKey, value: 'highlight' }]),
+    ).toBeUndefined();
   });
 });

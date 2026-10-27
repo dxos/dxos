@@ -207,7 +207,8 @@ export class AutomergeDataSource implements IndexDataSource {
           });
 
           const docObjects = extractObjects ? (doc.objects ?? {}) : {};
-          const atSavedHeads = !this.#branchDocumentIds.has(documentId) && isSaved(docHeads, A.getHeads(doc));
+          const readHeads = A.getHeads(doc);
+          const atSavedHeads = !this.#branchDocumentIds.has(documentId) && isSaved(docHeads, readHeads);
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
@@ -225,6 +226,7 @@ export class AutomergeDataSource implements IndexDataSource {
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
               heads: atSavedHeads && backingJson(doc, structure, data) !== undefined ? docHeads : undefined,
+              version: readHeads,
             });
           }
 

@@ -7,7 +7,9 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -187,7 +189,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       const kanban = yield* Database.load(target);
       const binding = yield* Database.add(
         Cursor.makeExternal({
-          source: connection.accessToken,
+          source: Connection.getAccessToken(connection),
           target: Ref.make(kanban),
           externalId: remoteTarget.id,
           label: remoteTarget.name,
@@ -231,7 +233,11 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // 3. Sync: fans out over the connection's bindings and reconciles each bound board's cards.
     const result = await syncTrelloBoardHandler
       .handler({ connection: Ref.make(connection) })
-      .pipe(stubOperationService, Effect.provide(layer), EffectEx.runAndForwardErrors);
+      .pipe(
+        stubOperationService,
+        Effect.provide(Layer.merge(Trace.writerLayerNoop, layer)),
+        EffectEx.runAndForwardErrors,
+      );
     expect(result.pulled.added).toBe(1);
 
     // Board A's Kanban now carries its single card.
@@ -248,6 +254,61 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // Sync stamped success on the binding.
     expect(binding.lastTick).toBeDefined();
     expect(binding.lastError).toBeUndefined();
+  });
+
+  test('reports a sync meter for the bound board, with the card total known before any card is counted', async ({
+    expect,
+  }) => {
+    const trelloApi = await import('../services/trello-api.ts');
+    const remoteCards: TrelloCard[] = ['card-a1', 'card-a2', 'card-a3'].map((id) => ({
+      id,
+      name: id,
+      desc: '',
+      closed: false,
+      idList: 'list-a1',
+      pos: 0,
+      url: '',
+      shortUrl: '',
+      dateLastActivity: '2026-04-29T00:00:00Z',
+    }));
+    vi.mocked(trelloApi.fetchCards).mockImplementationOnce(() => Effect.succeed(remoteCards));
+
+    const { db, connection } = await setup();
+    const layer = Database.layer(db);
+    const binding = await bindTarget(db, connection, { id: 'board-a', name: 'Board A' }).pipe(
+      EffectEx.runAndForwardErrors,
+    );
+    const kanban = await Database.load(binding.spec.target).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
+
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+              }
+            }
+          },
+        }),
+      ),
+    );
+
+    await syncTrelloBoardHandler
+      .handler({ connection: Ref.make(connection) })
+      .pipe(stubOperationService, Effect.provide(Layer.merge(traceLayer, layer)), EffectEx.runAndForwardErrors);
+
+    expect(statusUpdates.every((update) => update.progress?.key === Progress.createSyncKey(kanban))).toBe(true);
+    const firstTotal = statusUpdates.findIndex((update) => update.progress?.total === remoteCards.length);
+    const firstCounted = statusUpdates.findIndex((update) => (update.progress?.current ?? 0) > 0);
+    expect(firstTotal).toBeGreaterThanOrEqual(0);
+    expect(firstTotal).toBeLessThan(firstCounted);
+    const counts = statusUpdates.flatMap((update) =>
+      update.progress?.current === undefined ? [] : [update.progress.current],
+    );
+    expect(counts.at(-1)).toBe(remoteCards.length);
+    expect(statusUpdates.at(-1)?.message).toBe(Progress.STATUS_COMPLETE);
   });
 
   test('failing fetch on a board writes lastError on its binding', async ({ expect }) => {
@@ -281,7 +342,12 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // One invocation for the account; it fails because board B did.
     const outcome = await syncTrelloBoardHandler
       .handler({ connection: Ref.make(connection) })
-      .pipe(stubOperationService, Effect.provide(layer), Effect.result, EffectEx.runAndForwardErrors);
+      .pipe(
+        stubOperationService,
+        Effect.provide(Layer.merge(Trace.writerLayerNoop, layer)),
+        Effect.result,
+        EffectEx.runAndForwardErrors,
+      );
     expect(outcome._tag).toBe('Failure');
 
     // Board A still synced, and board B carries the reason.

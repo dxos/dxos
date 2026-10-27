@@ -11,20 +11,19 @@ export default Config2.make({
     name: 'Presenter',
     author: 'DXOS',
     description: trim`
-      Transform existing workspace objects into interactive presentation slideshows without
-      duplicating content. Markdown documents are split into slides on horizontal \`---\`
-      separators and rendered with Reveal.js, giving authors a familiar authoring surface
-      with full Markdown syntax. Collections can optionally be presented slide-by-slide,
-      with each member object rendered by its own plugin surface.
+      Build slide decks from the objects in your workspace without duplicating content. A
+      Presentation is an ordered list of sections, each a markdown slide written in place or a
+      link to any other object, and appears in the navtree as a folder of slides that can be
+      reordered by dragging. Objects without a dedicated slide surface still render as a title
+      slide.
 
-      Activate presentation mode for any supported object via the action menu or the
-      Shift+Cmd+P (macOS) / Shift+Alt+P (Windows/Linux) keyboard shortcut. The presenter
-      opens in a solo fullscreen layout managed by the Deck plugin, keeping the rest of the
-      workspace undisturbed.
+      Press F, or use the toolbar, to present a deck fullscreen on its own plank. Arrow keys
+      step through slides, Escape exits fullscreen, and a pager overlay appears on pointer
+      movement. Each viewer keeps their own place in a deck across reloads.
 
-      Navigation controls and a page-number indicator are shown during collection
-      slideshows. Pressing Escape exits fullscreen and returns to the originating document
-      or collection view. All navigation is keyboard-accessible.
+      Any markdown document can also be previewed as a deck from its Presenter companion, split
+      into slides on horizontal \`---\` separators, and presented with Shift+Cmd+P (macOS) /
+      Shift+Alt+P (Windows/Linux).
 
       Collaboration is inherent: because slides are backed by live ECHO objects, edits made
       by any peer in the workspace are immediately reflected in an open presentation without
@@ -33,6 +32,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-presenter',
     icon: { key: 'ph--presentation--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
-    tags: ['alpha'],
+    tags: ['beta'],
   },
 });

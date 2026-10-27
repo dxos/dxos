@@ -12,6 +12,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { DeckPlugin } from '#plugin';
 import { DeckCapabilities } from '#types';
 
+await Harness.preload({ plugins: [DeckPlugin()] });
+
 describe('LayoutOperation.UpdateDrawer', () => {
   test('toggles, sets, and clamps the persisted drawer state', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });

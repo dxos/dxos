@@ -7,6 +7,7 @@ import { type FeatureModel } from './feature.ts';
 const feature = (props: Pick<FeatureModel, 'id' | 'name' | 'status'> & Partial<FeatureModel>): FeatureModel => ({
   specs: [],
   subfeatures: [],
+  code: [],
   dependsOn: [],
   tasks: [],
   showcases: [],
@@ -41,6 +42,22 @@ export const SAMPLE_FEATURES: FeatureModel[] = [
     status: 'prototype',
     dependsOn: ['tokens'],
     specs: ['packages/plugins/plugin-inbox/PLUGIN.mdl#F-3', 'packages/plugins/plugin-inbox/PLUGIN.mdl#F-6'],
+    link: 'dxn:org.dxos.plugin.inbox.feature.providerSync',
+    code: [
+      {
+        path: 'packages/plugins/plugin-inbox/src/sync/gmail-sync.test.ts',
+        line: 24,
+        kind: 'suite',
+        symbol: 'Gmail sync',
+      },
+      {
+        path: 'packages/plugins/plugin-inbox/src/sync/history.test.ts',
+        line: 41,
+        kind: 'test',
+        symbol: 'fetches only the history since the last sync',
+      },
+      { path: 'packages/plugins/plugin-inbox/src/sync/analytics.ts', line: 12, kind: 'code', symbol: 'trackSyncRun' },
+    ],
     subfeatures: [
       { name: 'Gmail', status: 'prototype' },
       { name: 'IMAP', status: 'planned' },

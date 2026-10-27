@@ -134,7 +134,7 @@ endpoint calling the agent API), or only extends the agent that the shared servi
 ## Today
 
 What is built (dxos/dxos#13887, dxos/edge#1279), set up from the agent's **Discord** companion and prototyped in the
-`stories-agent` `AgentDiscord` stories:
+`stories-agent` `DiscordAgent` stories:
 
 - **Connect Discord** signs in with the `discord-user` connector (OAuth `identify` + `guilds`) and lists the servers the
   user administers; **Install** (or **Reinstall**, to grant permissions added since) opens the bot's install link.

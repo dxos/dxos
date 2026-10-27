@@ -91,6 +91,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./LegacySheet": {
+      "source": "./src/types/LegacySheet.ts",
+      "types": "./dist/types/src/types/LegacySheet.d.ts",
+      "import": "./dist/lib/LegacySheet.mjs"
+    },
     "./Sheet": {
       "source": "./src/types/Sheet.ts",
       "types": "./dist/types/src/types/Sheet.d.ts",
@@ -130,6 +135,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "LegacySheet": [
+        "dist/types/src/types/LegacySheet.d.ts"
+      ],
       "Sheet": [
         "dist/types/src/types/Sheet.d.ts"
       ],
@@ -199,6 +207,8 @@
     "codemirror-lang-spreadsheet": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",

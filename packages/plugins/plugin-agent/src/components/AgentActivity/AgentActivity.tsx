@@ -13,7 +13,6 @@ import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
@@ -85,6 +84,8 @@ const AgentActivityToolbar = ({
     () =>
       MenuBuilder.make()
         .root({ label: ['activity-actions.label', { ns: meta.profile.key }] })
+        // The panel's name leads and takes the free space, which keeps the actions at the end.
+        .text('title', { label: ['activity-companion.label', { ns: meta.profile.key }] })
         .action(
           'refresh',
           {
@@ -107,20 +108,7 @@ const AgentActivityToolbar = ({
     [running, connectable, busy, onStart, onStop, onRefresh],
   );
 
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  return (
-    <ActionToolbar
-      {...menuActions}
-      attendableId={attendableId}
-      alwaysActive={attendableId === undefined}
-      // The panel's name leads and takes the free space, which keeps the actions at the end.
-      start={
-        <>
-          <Toolbar.Text>{t('activity-companion.label')}</Toolbar.Text>
-        </>
-      }
-    />
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />;
 };
 
 AgentActivityToolbar.displayName = 'AgentActivity.Toolbar';

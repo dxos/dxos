@@ -449,7 +449,8 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  async close(): Promise<void> {
+  /** @param ctx Passed to the repo proxy's close, which reads the close reason from it. */
+  async close(ctx?: Context): Promise<void> {
     this.#rejectOpenedUntilReopen();
     // A closed manager can be reopened (the database re-runs `openWithSpaceState`), and that path
     // creates a core for every inline object in the directory — so cores and handles surviving the
@@ -468,7 +469,7 @@ export class EntityManager implements IDatabaseBinding {
     this.#objectsForLocalCommit.clear();
     this.#unindexedWrites.clear();
     this._objectsForNextUpdate.clear();
-    await this._repoProxy.close();
+    await this._repoProxy.close(ctx);
   }
 
   /** Whether the lifetime a load started in has ended — closed, or already replaced by a reopen. */

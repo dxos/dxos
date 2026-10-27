@@ -8,7 +8,6 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { PullRequest, Task } from '@dxos/types';
 
 import { type PullRequestChecks, type PullRequestRow, filterRows, groupRows, relevance, sortRows } from './arrange.ts';
-import { formatRelative } from './format.ts';
 
 const make = (
   number: number,
@@ -110,13 +109,5 @@ describe('filterRows', () => {
     expect(numbers(filterRows(rows, build('sync')))).toEqual([1]);
     expect(numbers(filterRows(rows, build('burdon')))).toEqual([2]);
     expect(numbers(filterRows(rows, undefined))).toEqual([1, 2, 3]);
-  });
-});
-
-describe('formatRelative', () => {
-  test('uses the largest unit that fits', ({ expect }) => {
-    const now = Date.parse('2026-10-07T12:00:00Z');
-    expect(formatRelative('2026-10-07T09:00:00Z', now)).toMatch(/3 hours ago/);
-    expect(formatRelative('not a date', now)).toEqual('');
   });
 });

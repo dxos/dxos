@@ -148,7 +148,73 @@ const run = (fixture: Fixture, query: Query.Any) =>
 const names = (fixture: Fixture, ids: readonly string[]) =>
   ids.map((id) => Object.entries(fixture.ids).find(([, value]) => value === id)?.[0] ?? id);
 
+const TAG = DXN.make('org.dxos.type.tag', '0.1.0');
+
+/** Tasks carrying tags: as a reference, as a legacy bare URI, and naming a tag the space does not hold. */
+const seedTags = Effect.gen(function* () {
+  const sqlClient = yield* SqlClient.SqlClient;
+  const meta = new EntityMetaIndex(sqlClient);
+  const bodies = new ObjectSnapshotIndex(sqlClient);
+  yield* meta.migrate();
+  yield* bodies.migrate();
+  yield* new ReverseRefIndex(sqlClient).migrate();
+
+  const spaceId = SpaceId.random();
+  const ids = Object.fromEntries(
+    ['tag', 'byRef', 'byLegacyUri', 'missingTag', 'untagged'].map((name) => [name, EntityId.random()]),
+  ) as Fixture['ids'];
+  const doc = (id: EntityId, type: URI.URI, tags?: unknown[]): IndexerObject => {
+    const meta: Record<string, unknown> = tags ? { [ATTR_META]: { keys: [], tags } } : {};
+    return {
+      spaceId,
+      documentId: `doc-${id}`,
+      queueId: null,
+      queueNamespace: null,
+      queuePosition: null,
+      recordId: null,
+      createdAt: 1000,
+      updatedAt: 2000,
+      data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...meta },
+      heads: [`heads-${id}`],
+    };
+  };
+  const objects = [
+    doc(ids.tag, TAG),
+    doc(ids.byRef, TASK, [{ '/': EID.make({ entityId: ids.tag }) }]),
+    doc(ids.byLegacyUri, TASK, [EID.make({ entityId: ids.tag })]),
+    doc(ids.missingTag, TASK, [{ '/': EID.make({ entityId: EntityId.random() }) }]),
+    doc(ids.untagged, TASK),
+  ];
+  yield* meta.update(objects);
+  yield* meta.lookupRecordIds(objects);
+  yield* bodies.update(objects);
+  return { spaceId, ids } satisfies Fixture;
+});
+
 describe('SqlPlanCompiler', () => {
+  it.effect('tags are strong dependencies, stored as references or legacy bare URIs', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seedTags;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const tasks = yield* run(fixture, Query.select(Filter.type(TASK)).from(scope));
+      // A task naming a tag the space does not hold is withheld; a legacy bare URI does not break the query.
+      expect(
+        names(
+          fixture,
+          tasks.rows.map((row) => row.objectId),
+        ).sort(),
+      ).toEqual(['byLegacyUri', 'byRef', 'untagged']);
+
+      const tagged = yield* run(fixture, Query.select(Filter.tag(EID.make({ entityId: fixture.ids.tag }))).from(scope));
+      expect(
+        names(
+          fixture,
+          tagged.rows.map((row) => row.objectId),
+        ).sort(),
+      ).toEqual(['byLegacyUri', 'byRef']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('selects a type and filters on properties, excluding deleted and cascade-deleted rows', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;

@@ -6,6 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Progress from '@dxos/app-toolkit/Progress';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -131,6 +133,42 @@ describe('calendar sync against a mock Google Calendar API', () => {
     expect(newEvents).toBe(7);
     expect((await queryFeedEvents(db, calendar)).length).toBe(7);
   });
+
+  test('reports a running count of synced events with no total', async ({ expect }) => {
+    // The sync windows against the wall clock, so the fixture must be laid out around it too.
+    const now = new Date();
+    const { db, calendar, connection } = await seedCalendarBinding(builder);
+    const dataset = generateCalendarDataset({ count: 7, now });
+
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+              }
+            }
+          },
+        }),
+      ),
+    );
+
+    const { newEvents } = await EffectEx.runPromise(
+      syncConnection(connection, { pageSize: 2 }).pipe(Effect.provide(services(db, dataset, traceLayer))),
+    );
+
+    const counts = statusUpdates
+      .map((update) => update.progress?.current)
+      .filter((current): current is number => current !== undefined);
+    expect(newEvents).toBe(7);
+    expect(counts.at(-1)).toBe(newEvents);
+    expect(statusUpdates.every((update) => update.progress?.total === undefined)).toBe(true);
+    expect(statusUpdates.at(-1)?.message).toBe(Progress.STATUS_COMPLETE);
+    expect(statusUpdates.every((update) => update.progress?.key === Progress.createSyncKey(calendar))).toBe(true);
+    expect(statusUpdates[0]?.message).toBe('Syncing Test');
+  });
 });
 
 /** Seeds a Calendar bound to a remote Google calendar, mirroring what `MaterializeCalendarTarget` builds. */
@@ -146,7 +184,9 @@ const seedCalendarBinding = async (builder: EchoTestBuilder, { max }: { max?: st
   const connection = db.add(
     Connection.make({ connectorId: GOOGLE_CALENDAR_CONNECTOR_ID, accessToken: Ref.make(accessToken) }),
   );
-  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(calendar), max }));
+  const binding = db.add(
+    Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(calendar), max }),
+  );
   await db.flush({ indexes: true });
   return { db, calendar, connection, binding };
 };
@@ -166,9 +206,14 @@ const syncConnection = (connection: Connection.Connection, props: Omit<SyncCalen
 const queryFeedEvents = (db: Database.Database, calendar: Calendar.Calendar) =>
   db.query(Query.select(Filter.type(Event.Event)).from(Scope.feed(Feed.getFeedUri(calendar.feed.target!)!))).run();
 
-const services = (db: Database.Database, dataset: Parameters<typeof GoogleCalendarApi.mock>[0]) =>
+const services = (
+  db: Database.Database,
+  dataset: Parameters<typeof GoogleCalendarApi.mock>[0],
+  traceLayer: Layer.Layer<Trace.TraceService> = Trace.writerLayerNoop,
+) =>
   Layer.mergeAll(
     GoogleCalendarApi.mock(dataset),
+    traceLayer,
     Database.layer(db),
     InboxResolver.Live.pipe(Layer.provide(Database.layer(db))),
   );

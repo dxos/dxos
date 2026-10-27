@@ -1308,6 +1308,10 @@ const refine = (
   return { commands: reranked[0].candidate.commands, chosen: reranked[0], ranked: reranked };
 };
 
-/** The chosen layout's scene commands; see {@link layout} for the candidates and verdicts. */
+/**
+ * The chosen layout's scene commands; see {@link layout} for the candidates and verdicts.
+ * @deprecated Mermaid input is deprecated; write the semantic DSL and use `Dsl.compile`, which still
+ * searches this engine's placements internally.
+ */
 export const compile = async (source: string, options: CompileOptions = {}): Promise<Scene.Command[]> =>
   (await layout(source, options)).commands;

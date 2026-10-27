@@ -60,7 +60,11 @@ const useViewMarkers = (subject: Map.Map): MapCapabilities.MarkerSet => {
     [objects, view?.projection.pivotFieldId, view?.projection.fields],
   );
 
-  return { markers, selection: typeUri ? { contextId: typeUri, mode: 'multi' } : undefined };
+  // The map's own `coordinates` are its tour route, as [lng, lat] pairs like every GeoPoint.
+  const [coordinates] = useObject(subject, 'coordinates');
+  const tour = useMemo(() => coordinates?.map(([lng, lat]) => ({ lat, lng })), [coordinates]);
+
+  return { markers, tour, selection: typeUri ? { contextId: typeUri, mode: 'multi' } : undefined };
 };
 
 /** Built-in provider plotting a {@link Map.Map}'s view rows. */

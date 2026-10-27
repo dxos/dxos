@@ -41,6 +41,8 @@ export type Player = Schema.Schema.Type<typeof Player>;
 export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
+    /** A one-line summary of the game's state, written by its variant (chess writes the current FEN). */
+    description: Schema.optional(Schema.String),
     players: Schema.mutable(Schema.Array(Player))
       .annotate({ description: 'Players in the game.' })
       .pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
@@ -49,6 +51,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
       .pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
+    Annotation.DescriptionAnnotation.set('description'),
     Annotation.IconAnnotation.set({ icon: 'ph--sword--regular', hue: 'indigo' }),
     CardAnnotation.set(true),
     // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
@@ -87,21 +90,25 @@ export const GameRef = <S extends Type.AnyObj>(_variantType: S) =>
  * `TicTacToe.State`) lives as its own ECHO object alongside the Game.
  *
  * @param name Optional display name shown in the graph node and Properties form.
+ * @param description Optional one-line summary of the game's state.
  * @param variant Variant-specific state object (e.g. `Chess.State`, `TicTacToe.State`).
  * @param players Optional initial players; copied into a mutable array on the Game.
  * @returns A new `Game` object with `variant` stored as a Ref.
  */
 export const make = ({
   name,
+  description,
   players,
   variant,
 }: {
   name?: string;
+  description?: string;
   players?: ReadonlyArray<Player>;
   variant: Obj.Unknown;
 }): Game => {
   return Obj.make(Game, {
     name,
+    description,
     players: players ? [...players] : [],
     variant: Ref.make(variant),
   });

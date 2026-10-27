@@ -3,6 +3,7 @@
 //
 
 export * as TranscriptionPlugin from './TranscriptionPlugin.ts';
+export * from './whistle/index.ts';
 export * from '#operations';
 export * from '#skills';
 export * from '#types';

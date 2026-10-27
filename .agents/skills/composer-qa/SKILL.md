@@ -31,10 +31,10 @@ drives the same tests for a video rather than a verdict.
 addressing scheme:
 
 ```bash
-node tools/claude/plugins/dxos/scripts/list-tests.mjs                 # every test, numbered
-node tools/claude/plugins/dxos/scripts/list-tests.mjs markdown QA-1   # exactly one
-node tools/claude/plugins/dxos/scripts/list-tests.mjs --suites        # every suite, with tags
-node tools/claude/plugins/dxos/scripts/list-tests.mjs --tag nightly   # the tests a tag selects
+pnpm deus qa list                  # every test, numbered
+pnpm deus qa list markdown QA-1    # exactly one
+pnpm deus qa list --suites         # every suite, with tags
+pnpm deus qa list --tag nightly    # the tests a tag selects
 ```
 
 Read each test in full before starting: `given`, all three stages, and every `note` — a `note` is
@@ -63,7 +63,7 @@ moon run composer-app:serve-qa -- --port "$QA_PORT" --strictPort --host 127.0.0.
 SERVER_PID=$!
 ```
 
-`serve-qa` sets `DX_DEBUG_PORT=true`, which mints a session as the app boots and starts the port
+`serve-qa` sets `DX_DEBUG_PORT=true` (plain `serve` defaults to it too), which mints a session as the app boots and starts the port
 from `main.tsx`; without `DX_DEBUG_PORT_SESSION` the id lands in `temp/debug-port.json`
 (`{ session, pid, port, url }`) and in the server log as `Debug port session: <uuid>`. The first
 start builds the app's dependency graph, which takes minutes on a cold worktree; wait until
