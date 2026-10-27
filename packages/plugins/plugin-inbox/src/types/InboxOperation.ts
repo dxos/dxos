@@ -17,6 +17,7 @@ import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Actor, Event, Message, type Person } from '@dxos/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
+import * as InboxPermission from './InboxPermission.ts';
 import * as Mailbox from './Mailbox.ts';
 
 export const AddMailbox = Operation.make({
@@ -68,6 +69,42 @@ export const DraftEmail = Operation.make({
   }),
   services: [Database.Service],
 }).pipe(Operation.visible);
+
+/**
+ * Replies to a message and sends the reply through the mailbox's mail provider. Declares the
+ * send-email permission, so an agent is asked before it sends anything.
+ */
+export const SendReply = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.inbox.sendReply'),
+    name: 'Send an email reply',
+    description:
+      'Replies to an email and sends the reply from the mailbox. The reply is threaded under the original message.',
+    icon: 'ph--paper-plane-tilt--regular',
+  },
+  input: Schema.Struct({
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotate({
+      description: 'Mailbox the message is in; the reply is sent from it.',
+    }),
+    message: Ref.Ref(Message.Message).annotate({
+      description: 'The message to reply to.',
+    }),
+    body: Schema.String.annotate({
+      description: 'The body of the reply, as plain text.',
+    }),
+  }),
+  output: Schema.Struct({
+    /** The sent reply, as a draft object now tagged sent. */
+    replyDXN: Schema.String,
+    /** The provider's id for the sent message. */
+    sentMessageId: Schema.String,
+  }),
+  services: [Capability.Service, Database.Service],
+}).pipe(
+  Operation.visible,
+  Operation.annotate(Operation.RequiresAnnotation, [InboxPermission.SendEmailRequirement]),
+  Operation.annotate(Operation.ConsentPreviewAnnotation, { field: 'body', label: 'Reply' }),
+);
 
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({

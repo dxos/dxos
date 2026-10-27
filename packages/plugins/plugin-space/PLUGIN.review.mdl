@@ -1,0 +1,597 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-space/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SpacePlugin
+
+Most of the space lifecycle, object, schema and collection-path machinery exists, and the operations
+the agent surface uses are well tested: `AddObject`, `AddType`, `AddRelation`, `RemoveObjects`,
+`RemoveAllObjects` and `Create` all have unit tests. Collection paths and the type-section path are
+tested in `util/`. The spec has drifted from the code in several places. `AddSchema` is now `AddType`,
+and `Reset` is `RemoveAllObjects`. That operation keeps the properties and root collection and
+garbage-collects the rest; it does not create a new epoch or truncate feeds. `AddObject` no longer
+navigates or takes `hidden`/`targetNodeId`. `Open`/`Close` open and close the SDK space; they do not
+navigate. `Join` opens the join dialog instead of redeeming the code.
+
+Several items have no implementation. `DuplicateObject` fails with "not yet implemented", and
+`CollectionOperation.Create` is declared with no handler (collections are created through a
+`CreateObjectEntry` and `AddObject`). Nothing runs migrations on a `SetupMigration` event. Presence
+state (`viewersByObject` / `viewersByIdentity`) is initialized and read by `SpacePresence`, but nothing
+in the plugin ever writes to it. `CollectionArticle` sets `draggable={false}`, so there is no reorder.
+`CollectionSection` and `RecordArticle` are simpler than the spec's components. No automated test runs
+join, export/import, or the view field delete/restore round trip.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict SpaceForm: The schema has name, icon, hue, edgeReplication and origin, plus private and template.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceSchema.ts#SpaceForm]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.test.ts]
+  note: The extra `private` and `template` fields are not in the spec.
+```
+
+```mdl
+verdict SpacePluginOptions: The options type has the four spec fields plus joinSpaceKeyProp and invitationUrlHandler.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceSchema.ts#SpacePluginOptions, github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/helpers.ts#makeCreateInvitationUrl]
+  note: '`helpers.test.ts` tests only `makeCreateJoinUrl`. The invitation URL built from these options is not tested.'
+```
+
+```mdl
+verdict ObjectViewerProps: The type exists, but no code ever creates a value of it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceSchema.ts#ObjectViewerProps]
+  note: The shape matches. `SpacePresence` reads it from `viewersByObject`, which nothing populates (see F-8.1).
+```
+
+```mdl
+verdict PluginState: The state is split into persisted State and EphemeralState with the spec's fields, but the viewer maps are never written.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceSchema.ts#PluginState, github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceCapabilities.ts#StateSchema, github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceCapabilities.ts#SpaceEphemeralState]
+  note: |
+    `spaceNames` and `enabledEdgeReplication` are persisted. `sdkMigrationRunning`, `navigableCollections` and the
+    viewer maps are ephemeral, along with extra merge-preview fields. `capabilities/state.ts` initializes the viewer
+    maps, and no module updates them.
+```
+
+```mdl
+verdict CollectionArticle: Renders the collection as a filterable tile stack with drag disabled; it has no reorder.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/CollectionArticle/CollectionArticle.tsx#CollectionArticle]
+  note: '`Mosaic.Stack` is rendered with `draggable={false}` and a search filter. There is no reorder, and add or remove happens through tile actions and operations. No story or test.'
+```
+
+```mdl
+verdict CollectionSection: Renders only the collection name; there is no list or expand state.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/CollectionSection/CollectionSection.tsx#CollectionSection]
+  note: The component is a one-line name row with a placeholder TODO. It has no `expanded` state and no `toggleExpand`.
+```
+
+```mdl
+verdict RecordArticle: Shows the object card, related prompts and related objects; it has no save or discard.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/RecordArticle/RecordArticle.tsx#RecordArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/RecordArticle/RecordArticle.stories.tsx]
+  note: The card content comes from the `CardContent` surface and edits live. There is no form with `save()`/`discard()` actions.
+```
+
+```mdl
+verdict RelatedArticle: The companion lists objects related by references and relations, with a type filter.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/RelatedArticle/RelatedArticle.tsx#RelatedArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/RelatedArticle/RelatedArticle.stories.tsx]
+```
+
+```mdl
+verdict ObjectFormDialog: Picks a type for a target and fills a new object, in draft or live mode.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/ObjectFormDialog/ObjectFormDialog.tsx#ObjectFormDialog, github:dxos/dxos/packages/plugins/plugin-space/src/operations/open-object-form.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/ObjectFormDialog/ObjectFormDialog.stories.tsx, github:dxos/dxos/packages/plugins/plugin-space/src/operations/open-object-form.test.ts]
+```
+
+```mdl
+verdict CreateSpaceDialog: The dialog creates a space from the SpaceForm.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/CreateSpaceDialog/CreateSpaceDialog.tsx#CreateSpaceDialog]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/CreateSpaceDialog/CreateSpaceDialog.stories.tsx]
+```
+
+```mdl
+verdict ImportSpaceDialog: Takes a file, invokes ImportSpace and switches to the new space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/ImportSpaceDialog/ImportSpaceDialog.tsx#ImportSpaceDialog]
+  note: No story or test.
+```
+
+```mdl
+verdict JoinDialog: Accepts an invitation code and joins the space.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/JoinDialog/JoinDialog.tsx#JoinDialog]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/JoinDialog/JoinDialog.stories.tsx]
+```
+
+```mdl
+verdict MembersContainer: Shows the member list, invitations and adding members.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/MembersContainer/MembersContainer.tsx#MembersContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/MembersContainer/MembersContainer.stories.tsx]
+```
+
+```mdl
+verdict SpaceSettingsContainer: Edits name, icon, hue and EDGE replication; member management is in MembersContainer instead.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.tsx#SpaceSettingsContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SpaceSettingsContainer/SpaceSettingsContainer.stories.tsx]
+  note: The panel has no member management. The spec's description places it here.
+```
+
+```mdl
+verdict SchemaContainer: Lists the space's type names; there is no way to add a schema here.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SchemaContainer/SchemaContainer.tsx#SchemaContainer]
+  note: It renders a read-only list of typenames, takes `space` rather than `db`, and has no add action, story or test.
+```
+
+```mdl
+verdict ViewEditor: Edits a View's query and fields, deleting through DeleteField.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/ViewEditor/ViewEditor.tsx#ViewEditor]
+  note: The component wraps the react-ui-form view editor. No story or test.
+```
+
+```mdl
+verdict SpacePresence: Renders online members viewing the object from viewersByObject, which is never populated.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx#SpacePresence]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.stories.tsx]
+  note: The avatar cluster exists. In the app it always shows nobody, because no code writes viewer state (see F-8.1).
+```
+
+```mdl
+verdict SyncStatus: The indicator combines sync state, EDGE status and the save tracker, with a save-failure toast.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx#SyncStatus]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/components/SyncStatus/status.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/components/SyncStatus/save-tracker.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.stories.tsx]
+  note: It reads client-wide state and takes no `space` prop.
+```
+
+```mdl
+verdict SpaceOperation.Create: Creates the space with its properties, root collection, an optional template and callbacks.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.test.ts]
+  walkthrough:
+    - The operation takes the SpaceForm and returns id, subject and space. github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#Create
+    - The handler creates the space, sets replication, adds the root collection and applies the template. github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.ts
+```
+
+```mdl
+verdict SpaceOperation.Join: Opens the join dialog prefilled with the code; the dialog redeems it.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#Join, github:dxos/dxos/packages/plugins/plugin-space/src/operations/join.ts]
+  note: The handler fails with `NoIdentityError` when there is no identity, and otherwise invokes `UpdateDialog` for `JOIN_DIALOG`. It does not accept the invitation itself. Untested.
+```
+
+```mdl
+verdict SpaceOperation.Open: Calls space.open(); it does not navigate.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/open.ts]
+  note: The spec says it navigates the layout. The handler only opens the SDK space. Untested.
+```
+
+```mdl
+verdict SpaceOperation.Close: Calls space.close(); it does not change navigation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/close.ts]
+  note: The handler closes the SDK space. It has no layout effect. Untested.
+```
+
+```mdl
+verdict SpaceOperation.Share: Returns space.share() for the given type, auth method, multi-use and target.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#Share, github:dxos/dxos/packages/plugins/plugin-space/src/operations/share.ts]
+  note: Matches the spec. No test.
+```
+
+```mdl
+verdict SpaceOperation.Rename: Opens the rename popover anchored at the caller.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/rename.ts]
+  note: Matches the spec. No test.
+```
+
+```mdl
+verdict SpaceOperation.AddObject: Adds or instantiates an object and files it, but has no hidden or navigation inputs and no subject output.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#AddObject, github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-object.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-object.test.ts]
+  note: |
+    The target is an object or a ref, never a database; the database comes from `Database.Service`. With no
+    target, `DefaultParent` files the object. The input accepts a JSON draft. The output is `{ id, object }`, and
+    the handler never navigates.
+```
+
+```mdl
+verdict SpaceOperation.RemoveObjects: Removes entities, by object or ref, and returns the undo data.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#RemoveObjects, github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-objects.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-objects.test.ts]
+  note: The input also takes `refs` for remote callers.
+```
+
+```mdl
+verdict SpaceOperation.RestoreObjects: Re-adds entities, re-inserts them at their indices and reopens the active ones.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/restore-objects.ts, github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/undo-mappings.ts]
+  note: Wired as the undo of RemoveObjects. No test invokes it.
+```
+
+```mdl
+verdict SpaceOperation.AddSchema: Implemented as AddType (same key); it takes a live type or JSON Schema and persists a Type.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#AddType, github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-type.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-type.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-type-app.test.ts]
+  note: Named `AddType`. The database comes from `Database.Service`. The output is `{ id, object, notified }`, with no `schema` field.
+```
+
+```mdl
+verdict SpaceOperation.AddRelation: Creates a typed relation between two objects or refs.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#AddRelation, github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-relation.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-relation.test.ts]
+  note: The database comes from `Database.Service`. A remote caller can pass `typename` instead of `schema`.
+```
+
+```mdl
+verdict SpaceOperation.DeleteField: Deletes a field projection and returns field, props and index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#DeleteField, github:dxos/dxos/packages/plugins/plugin-space/src/operations/delete-field.ts]
+  note: '`view` is a `Ref<View>`. No test.'
+```
+
+```mdl
+verdict SpaceOperation.RestoreField: Sets the field projection back at its index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#RestoreField, github:dxos/dxos/packages/plugins/plugin-space/src/operations/restore-field.ts]
+  note: No test.
+```
+
+```mdl
+verdict SpaceOperation.ImportSpace: Imports the archive through client.spaces.import with optional tags.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#ImportSpace, github:dxos/dxos/packages/plugins/plugin-space/src/operations/import-space.ts]
+  note: The CLI `space import` command has its own test. The operation has none.
+```
+
+```mdl
+verdict SpaceOperation.ExportSpace: Exports the archive and downloads it as a blob.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#ExportSpace, github:dxos/dxos/packages/plugins/plugin-space/src/operations/export-space.ts]
+  note: No test.
+```
+
+```mdl
+verdict SpaceOperation.Snapshot: Serializes the database or a query to a JSON Blob.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#Snapshot, github:dxos/dxos/packages/plugins/plugin-space/src/operations/snapshot.ts]
+  note: No test. The handler casts `db` to `any` to check for `DatabaseImpl`.
+```
+
+```mdl
+verdict SpaceOperation.Migrate: Runs the SDK migration if one is required, then the registered migrations; returns their result.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#Migrate, github:dxos/dxos/packages/plugins/plugin-space/src/operations/migrate.ts]
+  note: No test.
+```
+
+```mdl
+verdict SpaceOperation.Reset: Implemented as RemoveAllObjects, which keeps properties and the root collection and garbage-collects the rest; it creates no epoch.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/SpaceOperation.ts#RemoveAllObjects, github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-all-objects.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-all-objects.test.ts]
+  note: |
+    The input is void, and the space comes from `Database.Service`. The output is `{ objectIds }`. The handler
+    empties the root collection, calls `retainObjects` and `runGarbageCollection`. No feeds are truncated.
+```
+
+```mdl
+verdict SpaceOperation.GetShareLink: Creates a multi-use delegated invitation and returns its URL, optionally copied to the clipboard.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/get-share-link.ts, github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/helpers.ts#makeCreateInvitationUrl]
+  note: The link is always an invitation URL, with the target passed to the invitation. No test.
+```
+
+```mdl
+verdict CollectionOperation.Create: Declared, but no handler is registered.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/CollectionOperation.ts#Create]
+  note: |
+    `SpaceOperationHandlerSet` has no entry for it, and no other package handles `org.dxos.operation.space.createCollection`.
+    Collections are created through the `CreateObjectEntry` in `capabilities/create-object.ts`, which invokes `AddObject`.
+```
+
+```mdl
+verdict F-1.1: Create builds a space with a root collection; the graph builder lists it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.test.ts]
+```
+
+```mdl
+verdict F-1.2: Join opens the dialog, and the dialog redeems the code.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/join.ts, github:dxos/dxos/packages/plugins/plugin-space/src/containers/JoinDialog/JoinDialog.tsx#JoinDialog]
+  walkthrough:
+    - The operation checks for an identity and opens the join dialog with the code. github:dxos/dxos/packages/plugins/plugin-space/src/operations/join.ts
+    - The dialog accepts the invitation and navigates to the space. github:dxos/dxos/packages/plugins/plugin-space/src/containers/JoinDialog/JoinDialog.tsx#JoinDialog
+  note: The story renders the dialog. No test completes a join.
+```
+
+```mdl
+verdict F-1.3: Open and close call the SDK, and closed spaces show their cached name from spaceNames.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/open.ts, github:dxos/dxos/packages/plugins/plugin-space/src/operations/close.ts, github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/spaces-available.ts]
+  note: '`spaces.test.ts` tests the pending and resting predicates, not the cached-name label.'
+```
+
+```mdl
+verdict F-1.4: Removing everything keeps properties and the root collection and garbage-collects the rest; it creates no new epoch.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-all-objects.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-all-objects.test.ts]
+  note: The result is permanent, as the spec says. The mechanism is `retainObjects` plus garbage collection, not an epoch with truncated feeds.
+```
+
+```mdl
+verdict F-2.1: Share creates the invitation; the URL from shareableLinkOrigin is built by GetShareLink and MembersContainer.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/share.ts, github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/helpers.ts#makeCreateInvitationUrl]
+  note: No test covers the invitation URL.
+```
+
+```mdl
+verdict F-2.2: MembersContainer renders SpaceMemberList with the members.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/MembersContainer/MembersContainer.tsx#MembersContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/MembersContainer/MembersContainer.stories.tsx]
+```
+
+```mdl
+verdict F-2.3: The members panel and Share both offer single-use and multi-use invitations.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/MembersContainer/MembersContainer.tsx#MembersContainer, github:dxos/dxos/packages/plugins/plugin-space/src/operations/share.ts]
+  note: No test creates an invitation of either kind.
+```
+
+```mdl
+verdict F-2.4: GetShareLink returns an invitation URL for the space or a target.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/get-share-link.ts]
+  note: The link is an invitation, not a plain object link. No test.
+```
+
+```mdl
+verdict F-3.1: The create dialog offers registered types, but a collection target offers only collection-item types.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/ObjectFormDialog/ObjectFormDialog.tsx#ObjectFormDialog]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/ObjectFormDialog/ObjectFormDialog.stories.tsx]
+  note: Options are limited to `createObjectEntries` and, for a collection, to types tagged `Collection.ItemTag`. That is not "all registered schema types".
+```
+
+```mdl
+verdict F-3.2: AddObject adds the object to the target collection but never navigates.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-object.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-object.test.ts]
+  note: Navigation happens in the create-object flow (`OpenObjectForm` with `navigable`), not in AddObject.
+```
+
+```mdl
+verdict F-3.3: RemoveObjects returns the undo data, and RestoreObjects reverses it through the undo mapping.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-objects.ts, github:dxos/dxos/packages/plugins/plugin-space/src/operations/restore-objects.ts, github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/undo-mappings.ts]
+  note: '`remove-objects.test.ts` checks the indices. No test runs the restore.'
+```
+
+```mdl
+verdict F-3.4: DuplicateObject fails with "not yet implemented".
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/duplicate-object.ts]
+  note: The handler returns a `SpaceOperationError`, and the definition carries a TODO noting it is unused.
+```
+
+```mdl
+verdict F-4.1: Schema contributions are registered with the client by plugin-client, so every space sees them.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-client/src/capabilities/schema-defs.ts]
+  note: The registration lives in plugin-client and consumes `AppCapabilities.Schema` contributions. No test in plugin-space covers it.
+```
+
+```mdl
+verdict F-4.2: AddType persists the type in the space database.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-type.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-type.test.ts]
+```
+
+```mdl
+verdict F-4.3: SchemaContainer lists the space's types, but it cannot add one.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SchemaContainer/SchemaContainer.tsx#SchemaContainer]
+  note: New types are created through the Type `CreateObjectEntry` in the create dialog, not from this container. Untested.
+```
+
+```mdl
+verdict F-5.1: Collection is an ECHO type holding an ordered array of refs.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Collection.ts#Collection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/util/collection-path.test.ts]
+```
+
+```mdl
+verdict F-5.2: CollectionArticle renders the contents, but drag is disabled.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/CollectionArticle/CollectionArticle.tsx#CollectionArticle]
+  note: The stack is passed `draggable={false}`, and the collection graph nodes also set `draggable: false`. No reorder. Untested.
+```
+
+```mdl
+verdict F-5.3: CollectionOperation.Create has no handler.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/types/CollectionOperation.ts#Create]
+  note: Collections are created through the create-object entry and `AddObject`. The operation itself is unimplemented.
+```
+
+```mdl
+verdict F-5.4: resolveCollectionObjectPath walks to the root collection and is used by URL resolution and the resolver.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/util/collection-path.ts#resolveCollectionObjectPath, github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/navigation-target-resolver.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/util/collection-path.test.ts]
+```
+
+```mdl
+verdict F-5.5: The resolver orders the collection, type-section and database paths, with the database path last.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/capabilities/navigation-target-resolver.ts, github:dxos/dxos/packages/plugins/plugin-space/src/util/type-section-path.ts#resolveTypeSectionPath]
+  note: |
+    A type's own path comes before the collection path, and a view's type path comes before the database path.
+    Neither is in the spec. `type-section-path.test.ts` tests the section lookup, but no test covers the
+    resolver's ordering.
+```
+
+```mdl
+verdict F-6.1: Nothing runs migrations on a SetupMigration event.
+  status: missing
+  note: |
+    Searched plugin-space and the sdk packages for `SetupMigration`: no matches. Migrations run only through the
+    on-demand `Migrate` action in `app-graph-builder/extensions/spaces.ts`. `spaces-available.ts` only backfills the
+    version annotation.
+```
+
+```mdl
+verdict F-6.2: Migrate migrates to the given or latest version and returns the migrations' result.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/migrate.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-6.3: ExportSpace exports the archive through space.internal.export.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/export-space.ts]
+  note: No test of the operation.
+```
+
+```mdl
+verdict F-6.4: ImportSpace creates a new space from the archive with optional tags.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/import-space.ts]
+  note: No test of the operation.
+```
+
+```mdl
+verdict F-7.1: DeleteField removes the projection and returns field, props and index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/delete-field.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-7.2: RestoreField sets the projection back at its index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/restore-field.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-7.3: ViewEditor edits the query and fields through the shared view editor.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/ViewEditor/ViewEditor.tsx#ViewEditor]
+  note: No story or test.
+```
+
+```mdl
+verdict F-8.1: No code tracks viewers; SpacePresence reads maps that stay empty.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SpacePresence/SpacePresence.tsx#SpacePresence]
+  note: |
+    Grepped plugin-space for writes to `viewersByObject` and `viewersByIdentity`. Only the initial empty values
+    in `capabilities/state.ts` and test fixtures exist. No attention subscription feeds them.
+```
+
+```mdl
+verdict F-8.2: SyncStatus shows sync health and unsaved or failing saves.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/SyncStatus/SyncStatus.tsx#SyncStatus]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/components/SyncStatus/status.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/components/SyncStatus/save-tracker.test.ts]
+```
+
+```mdl
+verdict F-8.3: Nothing updates viewersByObject or viewersByIdentity when a peer starts or stops attending.
+  status: missing
+  note: Same search as F-8.1. The ephemeral state is initialized and never written.
+```
+
+```mdl
+verdict T-1: create.test runs Create, but checks only replication and origin, not the name or the graph.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.test.ts]
+  note: No test asserts the returned name or that the space appears in the navigation graph.
+```
+
+```mdl
+verdict T-2: No test runs a join through an invitation.
+  status: missing
+  note: No test file in plugin-space or composer-app e2e drives `Join` or `JoinDialog`.
+```
+
+```mdl
+verdict T-3: remove-objects.test checks the removal indices; no test restores.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-objects.test.ts]
+  note: The add step and the RestoreObjects step are not exercised.
+```
+
+```mdl
+verdict T-4: No test round-trips export and import.
+  status: missing
+  note: The CLI `space export` and `space import` commands have separate tests, but none exports and then imports through the operations.
+```
+
+```mdl
+verdict T-5: add-type.test persists the type; the type picker is not checked.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-type.test.ts]
+  note: Nothing asserts that the new type appears in the create-object dialog.
+```
+
+```mdl
+verdict T-6: No test deletes and restores a view field.
+  status: missing
+  note: No test references `DeleteField` or `RestoreField`.
+```
+
+```mdl
+verdict QA-1: Unit tests cover create, add and remove one at a time; nothing runs the flow or the restore.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/create.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-object.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/operations/remove-objects.test.ts]
+  note: No test chains the steps or runs RestoreObjects. No Playwright spec covers the flow (composer-app has only startup and perf specs).
+```
+
+```mdl
+verdict QA-2: Each step is unit-tested alone; no test chains register-schema-then-relate.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-type.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/operations/add-relation.test.ts]
+  note: '`add-type.test.ts` and `add-relation.test.ts` cover each operation alone. No test chains them as the QA test does.'
+```

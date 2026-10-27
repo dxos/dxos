@@ -1,0 +1,92 @@
+---
+id: org.dxos.spec.features
+name: DSL.Features
+version: 1.0
+extends:
+  - org.dxos.spec.core
+  - org.dxos.spec.changelog
+---
+
+The feature map dialect. A feature map is the top of the chain that turns intent into working code:
+
+| Layer       | Artifact                          | Who writes it            | What it says                         |
+| ----------- | --------------------------------- | ------------------------ | ------------------------------------ |
+| Feature map | `FEATURES.mdl`, `feature` blocks  | a person, or an agent    | what the product should do, and why  |
+| Spec        | `PLUGIN.mdl`, `SPEC.mdl`          | agent, reviewed in a PR  | how one package meets the feature    |
+| Review      | `<SPEC>.review.mdl`, `verdict`s   | agent (spec-review)      | how far the code meets each spec item |
+| Tasks       | `TASKS.md` beside the spec        | agent                    | the work that closes each gap        |
+| Code        | sources and tests                 | agent                    | the behaviour                        |
+| Result      | the re-run review, the feature's status | agent             | that the feature now holds           |
+
+A feature is a goal state ("Feeds drop entries older than their retention"); it names the spec items
+that state it and does not restate them. Its status is authored, and `deus features check` derives a
+second status from the reviews of the items it cites, so a claim the code does not support shows up
+as a warning. The shape matches plugin-projects' `Feature` (`org.dxos.type.feature`), so a map can be
+loaded into a project's feature board.
+
+A feature map is a spec: every change adds a decision to its `## Changelog`, so the map records who
+asked for each feature and who moved its status.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `feature` | `org.dxos.mdl.feature@1.0` |
+
+## Statuses
+
+| Status        | Meaning                                              | Derived from the reviews when      |
+| ------------- | ---------------------------------------------------- | ---------------------------------- |
+| `planned`     | Wanted; no work started.                             | every cited item is `missing`      |
+| `in-progress` | Partly built: some of what it cites works, some not. | any mix that is not one of these   |
+| `prototype`   | It works but is not relied on: nothing tests it.     | every item is `done` or `untested` |
+| `operational` | It works and tests hold it.                          | every item is `done`               |
+| `failing`     | It was operational and does not work now.            | never; a person or a QA run sets it |
+
+An item with no verdict makes the derived status `unreviewed`, and the check compares nothing.
+
+## Spec references
+
+`specs:` lists repo-relative paths. A path alone cites every reviewable item of the spec; `#<id>`
+cites one block, and a `feat` with `req` items stands for its requirements.
+
+```text
+packages/core/echo/feed/SPEC.mdl          # the whole spec
+packages/core/echo/feed/SPEC.mdl#F-1      # feat F-1, judged through F-1.1, F-1.2, ...
+packages/core/echo/feed/SPEC.mdl#F-2.3    # one requirement
+packages/core/echo/feed/SPEC.mdl#trim     # an op, type or component
+```
+
+## Checks
+
+`deus features check` reports, per feature, `<id> <status> <derived> <done>/<items> done`, then:
+
+- **errors** — an unknown status, a feature that cites no spec, a spec or item that does not exist,
+  a `depends` on a feature not on the map, and a dependency cycle;
+- **warnings** — a status the reviews do not support, a spec with no review or one that changed after
+  its review's commit, a feature `blocked` by a planned or failing dependency, one `operational`
+  ahead of a dependency, and an `in-progress` feature with no `## <feature id>` section in a
+  `TASKS.md` beside its spec ("no work planned": a gap nobody has planned to close).
+
+`deus features tasks <id>` prints the open items of one feature, each with its verdict and the first
+sentence of the verdict's note, as the start of that `TASKS.md` section.
+
+## Definitions
+
+```mdl
+ext feature
+  uri: org.dxos.mdl.feature@1.0
+  desc: |
+    A goal state of the product. The identifier is a stable kebab-case id, dotted by area
+    (`echo.feed-retention`); the inline prose is the feature's name.
+  fields:
+    status: planned | in-progress | prototype | operational | failing
+    specs: RefList          # repo-relative spec paths, each optionally #<item id>
+    depends?: RefList       # ids of features this one needs first; the graph has no cycles
+    note?: Prose            # why the feature matters, or what is left
+  syntax: |
+    feature echo.feed-retention: Feeds drop old entries
+      status: planned
+      specs: [packages/core/echo/feed/SPEC.mdl#F-1, packages/core/echo/feed/SPEC.mdl#F-2]
+      depends: [echo.feed-store]
+```

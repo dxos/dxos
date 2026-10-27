@@ -52,7 +52,9 @@ body (`clef`, `clef-flash`, `jev-*`). No new route, transport or setting per mod
 **The default is a setting; pinning stays in code.** `Model.defaultDecisionModel` is an alias, not a
 model: the resolver swaps it for the model the plugin settings select, read per resolution so a change
 applies to the next decision. A consumer that needs a specific model still names it; one that just
-needs "a decision model" (plugin-labeler) asks for the alias and follows the user's choice.
+needs "a decision model" (plugin-labeler) asks for the alias and follows the user's choice. Unset, the
+alias is Clef on Workers AI: it runs on EDGE's Cloudflare account, so it answers for every signed-in
+user with no key connected, where jev on TypeSafe's API depends on the platform key or a BYOK key.
 
 **A direct endpoint needs a key, over HTTPS.** The `endpoint` setting bypasses EDGE, so there is no
 platform key behind it; a space with none connected fails with an `AuthenticationError`

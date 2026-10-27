@@ -31,6 +31,7 @@ type Archived = {
   'status'?: string;
   'specs'?: string[];
   'project'?: { '/': string };
+  'parent'?: { '/': string };
   '@relationSource'?: string;
   '@relationTarget'?: string;
   '@meta'?: { keys?: Array<{ source: string; id: string }> };
@@ -64,7 +65,8 @@ describe('Worker template', () => {
       expect(countOf('type.instructions')).toBe(1);
       expect(countOf('type.taskSet')).toBe(1);
       expect(countOf('type.task:')).toBe(3);
-      expect(countOf('type.feature:')).toBe(4);
+      // Four features, and the endpoint's two subfeatures.
+      expect(countOf('type.feature:')).toBe(6);
       expect(countOf('type.spec:')).toBe(1);
       // The URL and the response body are what the run produces, so the space ships no documents.
       expect(countOf('type.document')).toBe(0);
@@ -81,7 +83,8 @@ describe('Worker template', () => {
       const objects: Archived[] = JSON.parse(json).objects;
       const ofType = (typename: string) => objects.filter((object) => object['@type']?.includes(typename));
       const [project] = ofType('type.project');
-      const features = ofType('type.feature:');
+      const all = ofType('type.feature:');
+      const features = all.filter((feature) => !feature.parent);
       const tasks = ofType('type.task:');
 
       expect(features.map((feature) => feature.name)).toEqual([
@@ -95,6 +98,9 @@ describe('Worker template', () => {
       expect(features.map((feature) => feature.specs)).toEqual(
         ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
       );
+      // The endpoint's parts are features of their own beneath it.
+      const subfeatures = all.filter((feature) => feature.parent?.['/'] === `echo:///${features[0].id}`);
+      expect(subfeatures.map((feature) => feature.name)).toEqual(['JSON greeting', 'UTC time']);
 
       // Each feature needs the one before it.
       const dependsOn = ofType('relation.dependsOn');
