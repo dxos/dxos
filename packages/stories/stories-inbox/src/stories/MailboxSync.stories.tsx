@@ -22,6 +22,7 @@ import * as GooglePlugin from '@dxos/plugin-google/GooglePlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
+import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
 import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
@@ -83,6 +84,7 @@ const DECORATORS = [
       // `Mailbox` resolves its connector-auth providers from the registry, so without one registered
       // the toolbar offers no Connect action.
       GooglePlugin.make(),
+      JmapPlugin.make(),
       AssistantPlugin.make(),
       PreviewPlugin.make(),
       ProgressPlugin.make(),

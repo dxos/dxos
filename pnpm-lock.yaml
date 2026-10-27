@@ -22523,6 +22523,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
+      '@dxos/plugin-jmap':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-jmap
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
