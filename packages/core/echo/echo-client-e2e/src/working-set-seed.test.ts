@@ -11,6 +11,7 @@ import { Obj } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { deferHandlers, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
@@ -30,7 +31,7 @@ describe('working set seed', () => {
 
   afterEach(async () => {
     await builder.close();
-    await Effect.runPromise(Scope.close(scope, Exit.void));
+    await EffectEx.runPromise(Scope.close(scope, Exit.void));
   });
 
   test('a seeded database opens, shows and edits objects before the host answers', async ({ expect }) => {
@@ -58,8 +59,8 @@ describe('working set seed', () => {
     expect(shown.title).toBe('task-1');
 
     // Written against the seeded bytes, held until the host is reachable.
-    Obj.update(shown, (task) => {
-      task.title = 'edited before the host answered';
+    Obj.update(shown, (shown) => {
+      shown.title = 'edited before the host answered';
     });
     expect(seeded.getObjectById<TestSchema.Task>(tasks[1].id)?.title).toBe('edited before the host answered');
 
@@ -95,7 +96,7 @@ const openWithHeldHost = async (
   db: DatabaseImpl,
   reachable: Promise<void>,
 ): Promise<{ client: EchoClient; database: DatabaseImpl }> => {
-  const [dataService, queryService, feedService] = await Effect.runPromise(
+  const [dataService, queryService, feedService] = await EffectEx.runPromise(
     Effect.all([
       makeInProcessClient(DataService.Rpcs, deferHandlers(DataService.Rpcs, peer.host.dataService, reachable)),
       makeInProcessClient(QueryService.Rpcs, deferHandlers(QueryService.Rpcs, peer.host.queryService, reachable)),

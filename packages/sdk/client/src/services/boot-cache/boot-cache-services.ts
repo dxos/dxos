@@ -19,7 +19,7 @@ import { type ExportWorkingSetOptions, type WorkingSetRow } from '@dxos/echo-cli
 import { log } from '@dxos/log';
 import { markMilestone } from '@dxos/util';
 
-import { type BootSnapshot, BootCacheStore, type RecordedStreams } from './boot-cache-store.ts';
+import { BootCacheStore, type BootSnapshot, type RecordedStreams } from './boot-cache-store.ts';
 
 /** Streams the client waits on to open, whose last message stands for the whole state. */
 const LATEST_STREAMS = [

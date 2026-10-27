@@ -18,6 +18,7 @@ export {
   type BindOptions,
   type BranchStore,
   type DecodedAutomergePrimaryValue,
+  type ExportWorkingSetOptions,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
   type ItemsUpdatedEvent,
@@ -25,7 +26,6 @@ export {
   META_NAMESPACE,
   type ObjectCoreOptions,
   type SpaceDocumentHeads,
-  type ExportWorkingSetOptions,
   type WorkingSetRow,
   objectIsUpdated,
 } from './core-db/index.ts';
