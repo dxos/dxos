@@ -187,6 +187,7 @@ const readStickyFlag = (param: string, key: string): boolean => {
 const BOOT_CACHE = readStickyFlag('boot-cache', 'dxos.composer.boot-cache');
 
 /** A boot-cached client starts its worker once the page is idle rather than at load; needs {@link BOOT_CACHE}. */
+// TODO(dmaretskyi): Slated for removal unless a larger app shows a gain: on the seeded perf space it cut ~0.3 s of blocking but delayed the account node ~3.3 s, with no gain to first content.
 const DEFER_WORKER = BOOT_CACHE && readStickyFlag('defer-worker', 'dxos.composer.defer-worker');
 
 /** The longest a deferred worker waits for the page to go idle. */
