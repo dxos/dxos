@@ -8,7 +8,7 @@
  * @mdl packages/plugins/plugin-magazine/PLUGIN.mdl test QA-3
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  *
- * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
+ * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/docs/SHOWCASE.md.
  */
 
 import { SHORT_MS, fromTemplate, scroll, showcase, visible } from '../../../../tools/autocue/showcase/steps.mjs';
