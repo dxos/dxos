@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import { useEffect, useState } from 'react';
+
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 import { type SourceKey } from '#sync';
 
@@ -13,7 +14,16 @@ import { type SourceKey } from '#sync';
 const DEFAULT_REF = 'main';
 
 /** A file GitHub did not serve: `status` is the HTTP status, or undefined when the request never completed. */
-export class GitHubFetchError extends Data.TaggedError('GitHubFetchError')<{ url: string; status?: number }> {}
+export class GitHubFetchError extends BaseError.extend('GitHubFetchError', 'GitHub did not serve the file.') {
+  readonly url: string;
+  readonly status: number | undefined;
+
+  constructor(context: { url: string; status?: number }, options?: BaseErrorOptions) {
+    super({ context, ...options });
+    this.url = context.url;
+    this.status = context.status;
+  }
+}
 
 /** The raw URL of a key's file at `ref`; raw.githubusercontent.com serves CORS and has no API rate limit. */
 export const gitHubRawUrl = ({ owner, repo, path }: SourceKey, ref = DEFAULT_REF): string =>
@@ -26,11 +36,11 @@ export const gitHubRawUrl = ({ owner, repo, path }: SourceKey, ref = DEFAULT_REF
 export const fetchGitHubText = (url: string): Effect.Effect<string, GitHubFetchError> =>
   Effect.tryPromise({
     try: (signal) => fetch(url, { signal }),
-    catch: () => new GitHubFetchError({ url }),
+    catch: (cause) => new GitHubFetchError({ url }, { cause }),
   }).pipe(
     Effect.flatMap((response) =>
       response.ok
-        ? Effect.tryPromise({ try: () => response.text(), catch: () => new GitHubFetchError({ url }) })
+        ? Effect.tryPromise({ try: () => response.text(), catch: (cause) => new GitHubFetchError({ url }, { cause }) })
         : Effect.fail(new GitHubFetchError({ url, status: response.status })),
     ),
   );
