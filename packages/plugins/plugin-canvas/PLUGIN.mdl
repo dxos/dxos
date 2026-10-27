@@ -18,9 +18,9 @@ This plugin is the ECHO host between two specs it builds on:
 
 ## Extensions
 
-| Term   | URI                        |
-|--------|----------------------------|
-| `test` | `org.dxos.mdl.test@1.0`    |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `test`     | `org.dxos.mdl.test@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
