@@ -159,6 +159,7 @@
       "import": "./dist/lib/vite-plugin.mjs"
     },
     "./vite-plugin/hot-modules": {
+      "source": "./src/vite-plugin/hot-modules/index.ts",
       "types": "./dist/types/src/vite-plugin/hot-modules/index.d.ts",
       "import": "./dist/lib/vite-plugin/hot-modules.mjs"
     }
