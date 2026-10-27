@@ -35,6 +35,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common.ts';
 import { InvitationsProxy } from '../invitations/index.ts';
+import { type WorkingSetSource } from '../services/boot-cache/index.ts';
 import { SpaceProxy } from './space-proxy.ts';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -262,6 +263,16 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   private get _spaces() {
     return this.get();
+  }
+
+  /**
+   * The spaces as boot-cache sources, in list order.
+   * @internal
+   */
+  _workingSetSources(): WorkingSetSource[] {
+    return this.get()
+      .filter((space): space is SpaceProxy => space instanceof SpaceProxy)
+      .map((space) => ({ id: space.id, exportWorkingSet: (options) => space._exportWorkingSet(options) }));
   }
 
   async create(meta?: SpaceProperties, options?: CreateSpaceOptions): Promise<Space> {

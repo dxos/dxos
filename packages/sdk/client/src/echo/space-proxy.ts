@@ -36,7 +36,14 @@ import {
   warnAfterTimeout,
 } from '@dxos/debug';
 import { Filter, Obj } from '@dxos/echo';
-import { type DatabaseImpl, type EchoClient, type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
+import {
+  type DatabaseImpl,
+  type EchoClient,
+  type EchoDatabase,
+  type ExportWorkingSetOptions,
+  type SpaceSyncState,
+  type WorkingSetRow,
+} from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -73,6 +80,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common.ts';
 import { InvitationsProxy } from '../invitations/index.ts';
+import { BootCacheServices } from '../services/boot-cache/index.ts';
 import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
@@ -491,6 +499,11 @@ export class SpaceProxy implements Space, CustomInspectable {
       } else {
         log.warn('no automerge root found for space', { spaceId: this.id });
       }
+      const seed =
+        this._clientServices instanceof BootCacheServices ? this._clientServices.takeWorkingSet(this.id) : undefined;
+      if (seed) {
+        this._db.seedWorkingSet(seed);
+      }
       await this._db.open(ctx);
     } catch (err) {
       // Left set, a failed open would also block the reopen path, which requires a closed database.
@@ -525,6 +538,14 @@ export class SpaceProxy implements Space, CustomInspectable {
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
     );
+  }
+
+  /**
+   * The open database's working set as boot-cache rows; empty until the database is open.
+   * @internal
+   */
+  _exportWorkingSet(options: ExportWorkingSetOptions): WorkingSetRow[] {
+    return this._databaseOpen ? this._db.exportWorkingSet(options) : [];
   }
 
   /**
