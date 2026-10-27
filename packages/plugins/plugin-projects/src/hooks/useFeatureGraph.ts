@@ -33,6 +33,9 @@ const sourceOf = <R extends Relation.Unknown>(relation: R): Relation.SourceOf<R>
 
 const DONE: ReadonlySet<Task.Status> = new Set(['done', 'duplicate', 'cancelled']);
 
+/** A task someone is working on now; a feature with one is active, whatever its status. */
+const ACTIVE: ReadonlySet<Task.Status> = new Set(['started', 'review']);
+
 export type FeatureGraph = {
   /** The scoped features, joined with their relations. */
   features: readonly FeatureModel[];
@@ -81,6 +84,8 @@ export const useFeatureGraph = (
     () => [...new Map([...members, ...dependencies, ...dependents].map((feature) => [feature.id, feature])).values()],
     [members, dependencies, dependents],
   );
+  // Subfeatures name their parent rather than the parent listing them, so they are found among the space's features.
+  const allFeatures = useQuery(scope && db, Filter.type(Feature.Feature));
   // Tasks and showcases matter only for the scope's own cards; a neighbour is shown by its name and status.
   const implementsTasks = useQuery(scope && db, scopeQuery.targetOf(Feature.Implements));
   const demonstrates = useQuery(scope && db, scopeQuery.targetOf(Showcase.Demonstrates));
@@ -129,17 +134,22 @@ export const useFeatureGraph = (
         const input: FeatureGraphInput = {
           features: features.filter(Feature.instanceOf).map((feature) => {
             const snapshot = get(Obj.atom(feature));
-            const { id, name, description, status, specs, subfeatures, code } = snapshot;
+            const { id, name, description, requirements, status, specs, parent, code } = snapshot;
             return {
               id,
               name,
               description,
+              requirements,
               status,
               specs,
-              subfeatures: subfeatures ?? [],
+              parent: parent && entityId(parent.uri),
               link: Feature.getLink(snapshot),
               code,
             };
+          }),
+          children: allFeatures.flatMap((feature) => {
+            const { id, name, status, parent } = get(Obj.atom(feature));
+            return parent ? [[{ id, name, status }, entityId(parent.uri)] as const] : [];
           }),
           dependsOn: edges,
           implementedBy: implementsTasks.flatMap((relation) => {
@@ -155,6 +165,7 @@ export const useFeatureGraph = (
                   id: task.id,
                   title: task.title,
                   done: task.status !== undefined && DONE.has(task.status),
+                  active: task.status !== undefined && ACTIVE.has(task.status),
                   milestone: milestone?.name,
                 },
                 entityId(Relation.getTargetURI(relation)),
@@ -174,7 +185,7 @@ export const useFeatureGraph = (
         const models = buildFeatureModels(input);
         return { features: models, lookup: makeFeatureLookup(models) };
       }),
-    [features, edges, implementsTasks, demonstrates, specObjects],
+    [features, allFeatures, edges, implementsTasks, demonstrates, specObjects],
   );
   return useAtomValue(graphAtom);
 };

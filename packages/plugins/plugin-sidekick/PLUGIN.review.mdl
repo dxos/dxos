@@ -1,0 +1,356 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-sidekick/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SidekickPlugin
+
+Only the plugin skeleton is built. It registers two schemas, a skill and one article surface. The
+skill `org.dxos.skill.sidekick` carries instructions that describe profiles, the journal, email
+and voice tolerance, but it exposes no tools (`toolDefinitions({ operations: [] })`). It does not
+compose the database, markdown, agent or inbox skills the spec lists. Nothing creates an Agent, a
+chat, a queue, a journal, a memory document or a profile. The dashboard renders all five sections
+with hard-coded empty data. Phase 2 (email, comment threads) is not started.
+
+The biggest divergence is in the types. `types/Profile.ts#Profile` and `types/Sidekick.ts#Profile`
+both declare the typename `org.dxos.type.sidekick.profile` at 0.1.0 with different fields, and both
+are registered in `capabilities/schema.ts`. The surface binds to `Sidekick.Profile` (agent plus
+journal refs), not to Agent objects that carry the sidekick skill. The only test checks that the
+schema module activates.
+
+Of 50 items: 0 done, 6 untested, 10 partial, 4 diverged, 30 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Profile: Profile has the spec's fields, but document is Ref<Obj.Unknown> and the typename collides with Sidekick.Profile.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/types/Profile.ts#Profile, github:dxos/dxos/packages/plugins/plugin-sidekick/src/types/Profile.ts#make]
+  note: |
+    `make` defaults the three flags to false and stamps `lastUpdated`. `types/Sidekick.ts` declares a second class with the
+    same typename `org.dxos.type.sidekick.profile` and version, and both are registered. No test creates a Profile.
+```
+
+```mdl
+verdict SidekickProperties: No SidekickProperties; Sidekick.Profile holds agent, journal and journalEnabled but no profiles record.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/types/Sidekick.ts#Profile]
+  note: The per-agent `profiles: Record<string, Profile>` map does not exist. The config is its own ECHO object, not data stored alongside AgentProperties.
+```
+
+```mdl
+verdict SidekickArticle: The article lays out the five sections with empty literal data and reads nothing from its subject.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/containers/SidekickArticle/SidekickArticle.tsx#SidekickArticle]
+  note: It ignores `subject` (`_sidekick`) and passes `[]` to every list. It has no journal entry, profiles, actions or navigation, and no story or test.
+```
+
+```mdl
+verdict DayAhead: DayAhead renders a summary string prop; it takes no JournalEntry.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/components/DayAhead.tsx#DayAhead]
+  note: The props are `{ summary }`, not `entry`. Nothing derives the summary or items. No test.
+```
+
+```mdl
+verdict ActionItems: ActionItems renders checkable items and calls onToggle.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/components/ActionItems.tsx#ActionItems]
+  note: Items are a local `ActionItem` type, not `TaskItem`. The story has no play test.
+```
+
+```mdl
+verdict ProfileGrid: ProfileGrid renders cards with name, tag and update count in a masonry grid.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/components/ProfileGrid.tsx#ProfileGrid]
+  note: It takes `ProfileCardData` and `onSelect(id)`, not `Profile` and `onNavigate(DXN)`. No story or test.
+```
+
+```mdl
+verdict ProfileSummary: ProfileSummary renders a summary string and an open button.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/components/ProfileSummary.tsx#ProfileSummary]
+  note: It takes `summary` and `onOpen`, not a Profile. No test.
+```
+
+```mdl
+verdict Permissions: Permissions renders autoRespond, createDraft and researchEnabled toggles per entry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/components/Permissions.tsx#Permissions]
+  note: It reports `onUpdate(profileId, field, value)`; nothing writes the change to a Profile. No test.
+```
+
+```mdl
+verdict SidekickSkill: The skill is registered with instructions but composes no other skills and exposes no tools.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts, github:dxos/dxos/packages/plugins/plugin-sidekick/src/capabilities/skill-definition.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/plugin.test.ts]
+  note: |
+    `tools: Skill.toolDefinitions({ operations: [] })`. None of the database, agent, markdown or inbox operations listed in
+    the spec are composed. `agentCanEnable: true` lets an agent turn it on. The test only checks module activation.
+```
+
+```mdl
+verdict F-1.1: Nothing creates an Agent with the sidekick skill.
+  status: missing
+  note: Searched plugin-sidekick for `Agent.make` or a CreateObjectEntry; the plugin adds only assets, a surface, schemas, a skill and translations.
+```
+
+```mdl
+verdict F-1.2: No code fills an agent spec with a template that includes the user name.
+  status: missing
+  note: The skill's instruction template takes only a `getContext` input; no agent spec is created.
+```
+
+```mdl
+verdict F-1.3: No chat is created or linked.
+  status: missing
+  note: Searched plugin-sidekick; no Chat creation.
+```
+
+```mdl
+verdict F-1.4: No queue is created.
+  status: missing
+  note: Searched plugin-sidekick; no queue or feed creation.
+```
+
+```mdl
+verdict F-1.5: No journal is created; Sidekick.Profile only has a ref slot for one.
+  status: missing
+  note: `Sidekick.make` takes a journal ref from its caller, and nothing calls it.
+```
+
+```mdl
+verdict F-1.6: No memory document is created.
+  status: missing
+  note: Searched plugin-sidekick.
+```
+
+```mdl
+verdict F-2.1: The instructions say to create "Profile: {personName}" documents, but the skill has no tools to do it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: Only the prompt exists. Any create would rely on tools from other skills the agent has enabled.
+```
+
+```mdl
+verdict F-2.2: The instructions say to link the profile by relation; nothing adds it as an artifact.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: The prompt says to link via a relation and does not mention artifacts. There is no code.
+```
+
+```mdl
+verdict F-2.3: The instructions say to update profiles on new information; no code does it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: Prompt only.
+```
+
+```mdl
+verdict F-2.4: The instructions say to tag each Person with a category; no code suggests tags.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: The prompt says "Tag each Person" (apply), not "suggest". There is no TagAdd tool in the skill.
+```
+
+```mdl
+verdict F-3.1: Nothing creates the user profile document on initialization.
+  status: missing
+  note: There is no initialization path; the prompt only says to maintain one.
+```
+
+```mdl
+verdict F-3.2: The instructions name the character assessment and goals sections; no document template exists.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: Prompt only.
+```
+
+```mdl
+verdict F-3.3: The instructions tell the agent to ask clarifying questions about goals.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: This is prompt behaviour. No eval exercises it.
+```
+
+```mdl
+verdict F-3.4: The instructions say to update the goals section; no tool or code does it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: Prompt only.
+```
+
+```mdl
+verdict F-4.1: Nothing creates or updates a JournalEntry.
+  status: missing
+  note: The prompt describes it, but the skill has no journal tools and the plugin no journal code.
+```
+
+```mdl
+verdict F-4.2: The instructions ask for markdown task lists; no code writes entries.
+  status: missing
+  note: Searched plugin-sidekick for JournalEntry writes; none.
+```
+
+```mdl
+verdict F-4.3: The dashboard's Day Ahead gets no data from any JournalEntry.
+  status: missing
+  note: `SidekickArticle` renders `<DayAhead />` with no props.
+```
+
+```mdl
+verdict F-5.1: The dashboard surface binds to Sidekick.Profile objects, not to Agents with the sidekick skill.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/capabilities/react-surface.ts]
+  note: '`AppSurface.object(AppSurface.Article, Sidekick.Profile)`. No test renders it.'
+```
+
+```mdl
+verdict F-5.2: Day Ahead renders but receives no summary.
+  status: missing
+  note: `<DayAhead />` gets no props in `SidekickArticle`.
+```
+
+```mdl
+verdict F-5.3: Action Items renders an empty literal list.
+  status: missing
+  note: '`<ActionItems items={[]} />`; nothing aggregates tasks.'
+```
+
+```mdl
+verdict F-5.4: People renders an empty literal list.
+  status: missing
+  note: '`<ProfileGrid profiles={[]} />`; nothing queries persons or profiles.'
+```
+
+```mdl
+verdict F-5.5: Your Profile renders with no excerpt.
+  status: missing
+  note: `<ProfileSummary />` gets no props.
+```
+
+```mdl
+verdict F-5.6: Permissions toggles exist but render an empty literal list and write nothing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/components/Permissions.tsx#Permissions, github:dxos/dxos/packages/plugins/plugin-sidekick/src/containers/SidekickArticle/SidekickArticle.tsx#SidekickArticle]
+  note: '`<Permissions entries={[]} />` with no `onUpdate`. No test.'
+```
+
+```mdl
+verdict F-6.1: No chat companion is linked; the plugin creates no chat.
+  status: missing
+  note: Searched plugin-sidekick for a companion or Chat reference.
+```
+
+```mdl
+verdict F-6.2: No voice input; useVoiceInput is not used anywhere in plugins.
+  status: missing
+  note: Searched `packages/plugins` for `useVoiceInput`; no matches.
+```
+
+```mdl
+verdict F-6.3: The instructions tell the agent to tolerate transcription errors.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/skills/sidekick-skill.ts]
+  note: This is prompt behaviour. No eval exercises it.
+```
+
+```mdl
+verdict F-7.1: No email reading or classification (Phase 2).
+  status: missing
+  note: The skill composes no inbox operations.
+```
+
+```mdl
+verdict F-7.2: No email drafting (Phase 2).
+  status: missing
+  note: The prompt mentions drafts; no inbox tools are composed.
+```
+
+```mdl
+verdict F-7.3: No auto-respond gating; Profile.autoRespond is never read.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sidekick/src/types/Profile.ts#Profile]
+  note: The flag exists on the type, but no code reads it. The prompt says to draft only for authorized contacts.
+```
+
+```mdl
+verdict F-7.4: No draft review flow (Phase 2).
+  status: missing
+  note: Searched plugin-sidekick.
+```
+
+```mdl
+verdict F-7.5: No action-item extraction from messages (Phase 2).
+  status: missing
+  note: Prompt only; no code.
+```
+
+```mdl
+verdict F-8.1: No comment-thread monitoring (Phase 2).
+  status: missing
+  note: Searched plugin-sidekick.
+```
+
+```mdl
+verdict F-8.2: No comment-thread responses (Phase 2).
+  status: missing
+  note: Searched plugin-sidekick.
+```
+
+```mdl
+verdict T-1: No test initializes a sidekick agent.
+  status: missing
+  note: `plugin.test.ts` checks module activation only.
+```
+
+```mdl
+verdict T-2: No test or eval creates a person profile.
+  status: missing
+  note: Searched plugin-sidekick and assistant-evals.
+```
+
+```mdl
+verdict T-3: No test or eval covers person tagging.
+  status: missing
+  note: Searched plugin-sidekick and assistant-evals.
+```
+
+```mdl
+verdict T-4: No test or eval covers user profile maintenance.
+  status: missing
+  note: Searched plugin-sidekick and assistant-evals.
+```
+
+```mdl
+verdict T-5: No test or eval covers journal entry creation.
+  status: missing
+  note: Searched plugin-sidekick and assistant-evals.
+```
+
+```mdl
+verdict T-6: No test renders the dashboard.
+  status: missing
+  note: Only `ActionItems.stories.tsx` exists, with no play test.
+```
+
+```mdl
+verdict T-7: No test or eval covers voice-transcribed input.
+  status: missing
+  note: Searched plugin-sidekick and assistant-evals.
+```
+
+```mdl
+verdict QA-1: Manual QA only; nothing creates a sidekick Agent, and the surface binds to Sidekick.Profile.
+  status: missing
+  note: No automation runs it. `plugin.test.ts` checks only that the schema module activates.
+```

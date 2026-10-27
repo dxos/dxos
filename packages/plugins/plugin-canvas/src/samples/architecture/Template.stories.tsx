@@ -19,6 +19,7 @@ import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
+import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import { CanvasPlugin } from '#plugin';
@@ -37,7 +38,7 @@ import {
 
 type StoryArgs = {
   /** The template document opened as the article. */
-  document?: 'Composer' | 'DXOS' | 'EDGE';
+  document?: 'Composer' | 'DXOS' | 'EDGE' | 'ECHO design';
   /** Opens the template's ECHO presentation instead of a document. */
   deck?: boolean;
   /** The diagram stories' drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
@@ -55,6 +56,7 @@ const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
     MarkdownPlugin.make(),
     MermaidPlugin.make(),
     PresenterPlugin.make(),
+    SheetPlugin.make(),
   ],
   onInit: async ({ space }) => {
     await EffectEx.runPromise(SampleSpace.applyTo(definition, space));
@@ -121,7 +123,7 @@ type Story = StoryObj<typeof meta>;
 
 const documentArgs: Pick<Story, 'decorators' | 'argTypes'> = {
   decorators: withTemplate,
-  argTypes: { document: { control: 'inline-radio', options: ['Composer', 'DXOS', 'EDGE'] } },
+  argTypes: { document: { control: 'inline-radio', options: ['Composer', 'DXOS', 'EDGE', 'ECHO design'] } },
 };
 
 /** The Composer document, which links DXOS and EDGE and embeds the Composer architecture. */
@@ -148,6 +150,9 @@ export const Dxos: Story = { ...documentArgs, args: { document: 'DXOS' } };
 
 /** The EDGE document, embedding the EDGE architecture. */
 export const Edge: Story = { ...documentArgs, args: { document: 'EDGE' } };
+
+/** The ECHO design document: eight chapters embedding three ECHO diagrams and the benchmarks sheet. */
+export const EchoDesign: Story = { ...documentArgs, args: { document: 'ECHO design' } };
 
 /** The ECHO deck, presented: types, the CRDT, spaces, queries, feeds, replication, migration and agents. */
 export const Echo: Story = {

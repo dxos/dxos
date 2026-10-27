@@ -1,0 +1,126 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-doctor/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: DoctorPlugin
+
+The `queryComposerLogs` operation is fully built: the schema in `DoctorOperation.ts` matches the spec's input
+and output, the handler reads the IndexedDB store through `readLogRows`, and the pure engine `runQuery` does
+filtering, projection, grouping, aggregation and clamping. `log-query.test.ts` exercises the engine well, but
+nothing tests the handler or the IndexedDB reader (the handler carries a TODO for an end-to-end test), and
+nothing tests that the skill offers the tool. The one real divergence is in F-1.9: when the handler exits the
+cursor early at `limit`, `runQuery` sees exactly `limit` rows and reports `truncated: false` even when the store
+has more. The plugin also ships a diagnostics panel and providers that the spec does not describe.
+
+Of 13 items: 9 done, 1 untested, 2 partial, 0 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict queryComposerLogs: The operation, its schema and its handler match the spec; the engine is tested, the IDB handler is not.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/types/DoctorOperation.ts#QueryComposerLogs, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/query-composer-logs.ts, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#runQuery, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-reader.ts#readLogRows]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+  walkthrough:
+    - The operation declares the input filters, aggregation options and the result shape. github:dxos/dxos/packages/plugins/plugin-doctor/src/types/DoctorOperation.ts#QueryComposerLogs
+    - The handler walks the store with a cursor and stops early on a plain tail-of-N query. github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/query-composer-logs.ts
+    - The reader opens the composer-logs IndexedDB store read-only. github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-reader.ts#readLogRows
+    - The engine filters, projects, groups and clamps the parsed rows. github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#runQuery
+  note: Only `runQuery` is under test; `query-composer-logs.ts` has a TODO for an end-to-end test once a fake IDB is available.
+```
+
+```mdl
+verdict F-1.1: The Doctor skill lists queryComposerLogs as its only tool.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/skills/doctor-skill.ts, github:dxos/dxos/packages/plugins/plugin-doctor/src/capabilities/skill-definition.ts]
+  note: No test loads the skill and checks the tools it offers.
+```
+
+```mdl
+verdict F-1.2: Filter tokens are normalized and parsed with parseFilter, and groups OR via shouldLog.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#normalizeFilterToken, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#parseFilterGroup]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+```
+
+```mdl
+verdict F-1.3: messageRegex tests record.m, grep tests the JSON line, and both must pass.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#runQuery]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+```
+
+```mdl
+verdict F-1.4: since and until are inclusive and accept ISO, epoch ms and digit-only strings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#parseTime]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+```
+
+```mdl
+verdict F-1.5: select projects entries and sample buckets.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#projectRecord]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+```
+
+```mdl
+verdict F-1.6: groupBy returns groups sorted by count, capped at topK, with no entries.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#runQuery, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#getGroupKey]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+```
+
+```mdl
+verdict F-1.7: firstLast buckets carry ISO first and last timestamps from record.t.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#runQuery]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+```
+
+```mdl
+verdict F-1.8: format=pretty renders the query-logs.mjs formatLine layout.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#formatPrettyLine]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+```
+
+```mdl
+verdict F-1.9: Caps are clamped, but the early-exit read path loses the truncated flag.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#clampLimit, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#clampTopK, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.ts#clampSampleSize, github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/query-composer-logs.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+  note: |
+    `runQuery` clamps to 1000/1000/25 and sets `truncated` when it drops rows or groups. But for an unfiltered
+    query the handler stops the cursor once it has `limit` rows, so `runQuery` never sees the rest and returns
+    `truncated: false` although the store had more. No test exercises the hard caps themselves.
+```
+
+```mdl
+verdict T-1: The engine test groups by level, checks the sort and that entries is undefined.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+  note: Runs against `runQuery` with in-memory rows, not the IDB-backed operation.
+```
+
+```mdl
+verdict T-2: topK capping is tested with groupBy file, not groupBy message.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-doctor/src/operations/internal/log-query.test.ts]
+  note: '`topK caps groups and sets truncated` covers the length and truncated clauses, but groups by file; no test groups by message or checks the count order between the first two groups at topK.'
+```
+
+```mdl
+verdict QA-1: No automation runs the QA test through the assistant.
+  status: missing
+  note: No e2e or AssistantTestLayer test invokes `queryComposerLogs`; searched `*.test.ts` and Playwright specs for the operation name.
+```

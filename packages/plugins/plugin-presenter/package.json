@@ -102,6 +102,16 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./Presentation": {
+      "source": "./src/types/Presentation.ts",
+      "types": "./dist/types/src/types/Presentation.d.ts",
+      "import": "./dist/lib/Presentation.mjs"
+    },
+    "./PresenterCapabilities": {
+      "source": "./src/types/PresenterCapabilities.ts",
+      "types": "./dist/types/src/types/PresenterCapabilities.d.ts",
+      "import": "./dist/lib/PresenterCapabilities.mjs"
+    },
     "./PresenterEvents": {
       "source": "./src/types/PresenterEvents.ts",
       "types": "./dist/types/src/types/PresenterEvents.d.ts",
@@ -117,10 +127,15 @@
       "types": "./dist/types/src/PresenterPlugin.d.ts",
       "import": "./dist/lib/PresenterPlugin.mjs"
     },
-    "./Presentation": {
-      "source": "./src/types/Presentation.ts",
-      "types": "./dist/types/src/types/Presentation.d.ts",
-      "import": "./dist/lib/Presentation.mjs"
+    "./PresenterSettings": {
+      "source": "./src/types/PresenterSettings.ts",
+      "types": "./dist/types/src/types/PresenterSettings.d.ts",
+      "import": "./dist/lib/PresenterSettings.mjs"
+    },
+    "./PresenterSurface": {
+      "source": "./src/types/PresenterSurface.ts",
+      "types": "./dist/types/src/types/PresenterSurface.d.ts",
+      "import": "./dist/lib/PresenterSurface.mjs"
     },
     "./SlideEditorViewState": {
       "source": "./src/types/SlideEditorViewState.ts",
@@ -144,11 +159,20 @@
       "Presentation": [
         "dist/types/src/types/Presentation.d.ts"
       ],
+      "PresenterCapabilities": [
+        "dist/types/src/types/PresenterCapabilities.d.ts"
+      ],
       "PresenterEvents": [
         "dist/types/src/types/PresenterEvents.d.ts"
       ],
       "PresenterOperation": [
         "dist/types/src/types/PresenterOperation.d.ts"
+      ],
+      "PresenterSettings": [
+        "dist/types/src/types/PresenterSettings.d.ts"
+      ],
+      "PresenterSurface": [
+        "dist/types/src/types/PresenterSurface.d.ts"
       ],
       "SlideViewState": [
         "dist/types/src/types/SlideViewState.d.ts"
@@ -172,6 +196,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -219,7 +244,6 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/diagram": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
