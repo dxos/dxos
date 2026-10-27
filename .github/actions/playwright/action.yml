@@ -78,7 +78,7 @@ runs:
             # that one against the bundle's lists, still without `apt-get update`.
             if ! "${install[@]}" --no-download >/dev/null; then
               source="snapshot, plus packages it lacked"
-              timeout --kill-after=15 240 "${install[@]}" >/dev/null
+              timeout --kill-after=15 240 "${install[@]}" -o Acquire::http::Timeout=30 -o Acquire::Retries=3 >/dev/null
             fi
           fi
           timeout 240 pnpm exec playwright install "$BROWSER"
