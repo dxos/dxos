@@ -18,6 +18,7 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - Schema: the Spec and CodeProject types
     - Settings: repos to sync and build settings
     - SkillDefinition: the Coder skill
+    - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (plugin-github spec/FILE-SYNC.mdl F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
 ```
@@ -407,6 +408,26 @@ op importSpec
     - CodeOperationError: not a spec key, no checkout of the repository, or no such file
   effects: [fs, echo:write]
   requires: [github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl#FileSystem]
+```
+
+```mdl
+op importSpecFile
+  key: org.dxos.operation.code.importSpecFile
+  desc: |
+    The import of the `.mdl` FileMapping: creates a Spec for a new file, or applies the remote
+    change to Spec.content with TextMerge.applyAt as of the heads of the last sync.
+  input: FileImportInput        # github:dxos/dxos/packages/plugins/plugin-github/spec/FILE-SYNC.mdl#FileMapping
+  output: FileImportOutput
+  effects: [echo:read, echo:write]
+```
+
+```mdl
+op exportSpecFile
+  key: org.dxos.operation.code.exportSpecFile
+  desc: The export of the `.mdl` FileMapping: Spec.content as it stands, with the heads it was read at.
+  input: FileExportInput
+  output: FileExportOutput
+  effects: [echo:read]
 ```
 
 ```mdl
@@ -1272,6 +1293,15 @@ decision D-26: Git is reached through new read-only `git` queries on the FileSys
   affects: [F-17.4]
   why: The dev route already runs git, while the desktop app would need a new shell scope for git.
   rejected: Reading `.git` objects directly, which needs packfile and zlib decoding in the page.
+```
+
+```mdl
+decision D-27: Specs in a GitHub repository that plugin-github syncs as files are mapped by the module SpecFileMapping, with op:importSpecFile and op:exportSpecFile; the mapping is registered at Startup so a sync on EDGE finds it. It sits beside SpecSync, which keeps syncing local checkouts.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [importSpecFile, exportSpecFile]
+  why: plugin-github's file sync owns detection, merging and commits, and asks the plugin that owns a format only to import and export it; op:importSpec already names the local-checkout import.
 ```
 
 ---

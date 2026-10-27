@@ -17,6 +17,7 @@ on:
     paths:
       - .github/actions/workspace-snapshot/**
       - .github/actions/setup/action.yml
+      - .github/actions/playwright/action.yml
       - .github/workflows/workspace-image.yml
   workflow_dispatch:
 
@@ -100,6 +101,18 @@ jobs:
         uses: ./.github/actions/setup
         with:
           prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      # As the browser jobs install them: from the snapshot's bundle when mounted, from the network otherwise.
+      # webkit needs the most system packages, chromium the fewest.
+      - name: Playwright (chromium)
+        uses: ./.github/actions/playwright
+        with:
+          browser: chromium
+
+      - name: Playwright (webkit)
+        uses: ./.github/actions/playwright
+        with:
+          browser: webkit
 
       - name: Build
         run: moon exec --on-failure continue :build || true

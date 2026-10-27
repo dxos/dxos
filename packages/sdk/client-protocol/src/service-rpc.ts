@@ -408,6 +408,43 @@ export const makeHandlersFromRpc = (rpc: ClientServicesRpc): Partial<ClientServi
 };
 
 /**
+ * Rewrites one stream rpc of a {@link makeDeferredClientServicesRpc} surface; `live` is the call against
+ * the resolved services, which starts only once they are reachable.
+ */
+export type DeferredStreamInterceptor = (
+  payload: unknown,
+  live: Stream.Stream<unknown, unknown>,
+) => Stream.Stream<unknown, unknown>;
+
+/**
+ * Builds a {@link ClientServicesRpc} whose every call waits for `resolve` and then runs against the rpc
+ * it yields, so a provider can hand out its surface before the services behind it are reachable.
+ * `resolve` is re-run per call, so a provider that replaces its rpc on reconnect stays current.
+ */
+export const makeDeferredClientServicesRpc = (
+  resolve: Effect.Effect<ClientServicesRpc, unknown>,
+  interceptors: Partial<Record<string, DeferredStreamInterceptor>> = {},
+): ClientServicesRpc => {
+  // Keyed by the prefixed tag, like the rpc clients this stands in for; the methods are addressed
+  // dynamically from the rpc groups, so their per-method types cannot be expressed statically.
+  const target = (rpc: ClientServicesRpc, tag: string) =>
+    (rpc as unknown as Record<string, (payload: unknown) => unknown>)[tag];
+  const deferred: Record<string, (payload: unknown) => unknown> = {};
+  for (const [tag, rpcDef] of ClientServicesRpcs.requests) {
+    if (RpcSchema.isStreamSchema(rpcDef.successSchema)) {
+      const live = (payload: unknown) =>
+        Stream.unwrap(Effect.map(resolve, (rpc) => target(rpc, tag)(payload) as Stream.Stream<unknown, unknown>));
+      const intercept = interceptors[tag];
+      deferred[tag] = intercept ? (payload) => intercept(payload, live(payload)) : live;
+    } else {
+      deferred[tag] = (payload) =>
+        Effect.flatMap(resolve, (rpc) => target(rpc, tag)(payload) as Effect.Effect<unknown, unknown>);
+    }
+  }
+  return deferred as unknown as ClientServicesRpc;
+};
+
+/**
  * Derives the Promise/{@link PbStream} shaped {@link ClientServices} from an effect-native
  * {@link ClientServicesRpc}. Retained for consumers not yet migrated to the effect surface.
  */

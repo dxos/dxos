@@ -126,7 +126,7 @@ export class WorkingSetQueryExecutor {
   }
 
   private _execPlan(plan: QueryPlan.Plan, ws: WorkingSetItem[]): WorkingSetItem[] | null {
-    for (const step of plan.steps) {
+    for (const step of deletedChecksLast(plan.steps)) {
       const result = this._execStep(step, ws);
       if (result === null) {
         return null;
@@ -649,6 +649,31 @@ export class WorkingSetQueryExecutor {
 
 /** Matches the host executor and `DeletionResolver`, so a child resolves the same on both sides. */
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
+
+/**
+ * Moves each deletion filter past the property filters right after it. Both keep or drop an item on its
+ * own, so the order is free; the planner puts the deletion check first, which ran it (a dependency walk)
+ * on every loaded object a wildcard select returned rather than on the few the filters keep.
+ */
+const deletedChecksLast = (steps: readonly QueryPlan.Step[]): readonly QueryPlan.Step[] => {
+  if (!steps.some((step, index) => step._tag === 'FilterDeletedStep' && steps[index + 1]?._tag === 'FilterStep')) {
+    return steps;
+  }
+  const reordered: QueryPlan.Step[] = [];
+  let pending: QueryPlan.Step[] = [];
+  for (const step of steps) {
+    if (step._tag === 'FilterDeletedStep') {
+      pending.push(step);
+    } else if (step._tag === 'FilterStep' && pending.length > 0) {
+      reordered.push(step);
+    } else {
+      reordered.push(...pending, step);
+      pending = [];
+    }
+  }
+  reordered.push(...pending);
+  return reordered;
+};
 
 /** `childOf` verdicts by object id, indexed by the depth budget they were judged with. */
 type ChildOfMemo = Map<EntityId, boolean[]>;

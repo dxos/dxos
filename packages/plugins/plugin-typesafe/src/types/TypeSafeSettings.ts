@@ -58,6 +58,23 @@ export const Settings = Schema.Struct({
       description: 'System One endpoint override.',
     }),
   ),
+  /**
+   * Calls Clairic directly at this URL instead of through EDGE — for a local proxy to Workers AI, or an
+   * EDGE without the Clairic route. Sent no credential: the endpoint authenticates upstream itself.
+   */
+  extractionEndpoint: Schema.optional(
+    Schema.String.check(
+      Schema.makeFilter(
+        (value) =>
+          value.trim().length === 0 ||
+          isAllowedEndpoint(value.trim()) ||
+          'Must be an https URL (http only for localhost).',
+      ),
+    ).annotate({
+      title: 'Extraction endpoint',
+      description: 'Clairic endpoint override.',
+    }),
+  ),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

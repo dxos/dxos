@@ -23,6 +23,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
+import { consentGuard } from '../util/consent-guard.ts';
 import { ChatModel } from './chat-model.ts';
 import { ChatModelRecorder } from './testing/chat-model-recorder.ts';
 import { makeSpaceLayer, makeTestRuntime } from './testing/harness.ts';
@@ -119,7 +120,7 @@ const setup = Effect.fn(function* ({ skills = [] }: { skills?: Skill.Skill[] } =
     observableRegistry: registry,
   });
   // Same options the chat model resolves with, so this is the session it drives rather than a rival.
-  const agent = yield* AgentService.getSession(chat, { location: 'local' });
+  const agent = yield* AgentService.getSession(chat, { location: 'local', guard: yield* consentGuard(chat) });
   const recorder = new ChatModelRecorder(registry, chatModel, { agentRunning: agent.running });
   yield* Effect.addFinalizer(() => Effect.sync(() => recorder.dispose()));
   return { chat, feed, chatModel, recorder };

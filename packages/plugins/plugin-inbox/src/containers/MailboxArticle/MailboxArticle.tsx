@@ -38,6 +38,7 @@ import {
   InboxStack,
   type InboxStackActionHandler,
   type InboxStackItem,
+  type InboxStackSection,
   type MessageTagsFamily,
   isMessageGroup,
 } from '#components';
@@ -219,8 +220,18 @@ export const MailboxArticle = ({
     return applyPostFilters(result, mailbox, searchQuery);
   }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
+  // Triage's priority bands regroup the list once any message carries one; until then it stays in date order.
+  const priorityRanks = usePriorityRanks(db, tagIndex);
+  const { items: rankedItems, getSection } = useMemo(
+    () => groupByPriority(items, priorityRanks),
+    [items, priorityRanks],
+  );
+
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
-  const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
+  const messages = useMemo(
+    () => rankedItems.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])),
+    [rankedItems],
+  );
 
   // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
   // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
@@ -360,7 +371,9 @@ export const MailboxArticle = ({
         <Status.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
-            items={items}
+            items={rankedItems}
+            getSection={getSection}
+            animateReorder
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
@@ -387,6 +400,69 @@ export const MailboxArticle = ({
 };
 
 MailboxArticle.displayName = 'MailboxArticle';
+
+/** Each message's priority band, as its index in {@link SystemTags.PRIORITY_TAGS}. */
+const usePriorityRanks = (
+  db: Database.Database | undefined,
+  tagIndex: TagIndex.TagIndex | undefined,
+): ReadonlyMap<string, number> => {
+  // One hook pair per band, in band order; `PRIORITY_TAGS` is a fixed tuple, so the call order is stable.
+  const urgent = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityUrgent'));
+  const high = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityHigh'));
+  const normal = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityNormal'));
+  const low = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityLow'));
+  return useMemo(() => {
+    const ranks = new Map<string, number>();
+    [urgent, high, normal, low].forEach((ids, rank) => {
+      for (const id of ids) {
+        // A message somehow in two bands sits in the more pressing one.
+        if (!ranks.has(id)) {
+          ranks.set(id, rank);
+        }
+      }
+    });
+    return ranks;
+  }, [urgent, high, normal, low]);
+};
+
+/** The heading for messages no triage has reached yet. */
+const UNTRIAGED_SECTION = { id: 'untriaged', label: 'Not triaged', hue: 'neutral' } as const;
+
+/**
+ * Orders entries by priority band (a conversation by its most pressing message), keeping each band
+ * in query order, and names the band each entry sits under. With no message in any band the list is
+ * returned as-is, ungrouped.
+ */
+const groupByPriority = (
+  items: InboxStackItem[],
+  ranks: ReadonlyMap<string, number>,
+): { items: InboxStackItem[]; getSection?: (item: InboxStackItem) => InboxStackSection | undefined } => {
+  if (ranks.size === 0) {
+    return { items };
+  }
+  const untriaged = SystemTags.PRIORITY_TAGS.length;
+  const rankOf = (item: InboxStackItem): number =>
+    Math.min(
+      untriaged,
+      ...(isMessageGroup(item) ? item.messages : [item]).map((message) => ranks.get(message.id) ?? untriaged),
+    );
+  const ranked = items.map((item) => ({ item, rank: rankOf(item) }));
+  // `Array.prototype.sort` is stable, so each band keeps the query's date order.
+  ranked.sort((left, right) => left.rank - right.rank);
+  const counts = new Map<number, number>();
+  for (const { rank } of ranked) {
+    counts.set(rank, (counts.get(rank) ?? 0) + 1);
+  }
+  const sections = new Map<number, InboxStackSection>(
+    [...counts].map(([rank, count]) => {
+      const id = SystemTags.PRIORITY_TAGS[rank];
+      const band = id ? SystemTags.SystemTag[id] : UNTRIAGED_SECTION;
+      return [rank, { id: band.id, label: band.label, hue: band.hue, count }];
+    }),
+  );
+  const sectionOf = new Map(ranked.map(({ item, rank }) => [item, sections.get(rank)]));
+  return { items: ranked.map(({ item }) => item), getSection: (item) => sectionOf.get(item) };
+};
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
