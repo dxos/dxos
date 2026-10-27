@@ -73,8 +73,8 @@ const PARENT_TASK = 'Build the World Clock plugin';
 /** A beat for the viewer to read a card or a result. */
 const LINGER = 2_500;
 
-/** A plugin card in the registry list, by its display name. */
-const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
+/** A plugin card in the registry list, by its key: earlier takes leave other World Clocks listed under their own keys. */
+const card = (key) => `[data-testid="pluginList.${key}"]`;
 
 const SPACE_TAB = '[data-testid="spacePlugin.space"]';
 
@@ -103,6 +103,52 @@ const parentDone = ({ page }) =>
     },
     { tab: SPACE_TAB, title: PARENT_TASK },
   );
+
+/** The key the template minted for this take's project, read from its "Write the plugin" task. */
+const projectKey = ({ page }) =>
+  page.evaluate(async (tab) => {
+    const spaceId = document.querySelector(tab)?.dataset.value?.split('/').pop();
+    const tasks = await dxos
+      .spaces(spaceId)
+      .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task')))
+      .run();
+    const suffix = tasks.map((task) => task.description?.match(/worldClock[0-9a-f]{6}/)?.[0]).find(Boolean);
+    if (!suffix) {
+      throw new Error('no task names the plugin key');
+    }
+    return `org.example.plugin.${suffix}`;
+  }, SPACE_TAB);
+
+const REGISTRY_TAB = '[data-testid="pluginRegistry.registry"]';
+
+const OPEN_SIDEBAR = 'button:visible:has-text("Open sidebar")';
+
+/**
+ * Opens Plugins → Registry, clicking only what is not already showing: Plugins toggles its sidebar shut, and a
+ * collapsed sidebar's items still read as visible, so the sidebar is checked by its "Open sidebar" button.
+ */
+const openRegistry = async ({ demo, page }) => {
+  const visible = (selector) =>
+    page
+      .locator(selector)
+      .first()
+      .isVisible()
+      .catch(() => false);
+  if (await visible(OPEN_SIDEBAR)) {
+    await demo.click({ selector: OPEN_SIDEBAR, label: 'Open sidebar' });
+    await page.waitForTimeout(500);
+  }
+  if (!(await visible(REGISTRY_TAB))) {
+    await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
+    await page.waitForTimeout(1_000);
+  }
+  await page.locator(REGISTRY_TAB).first().waitFor({ state: 'visible', timeout: 15_000 });
+  await demo.click({ selector: `${REGISTRY_TAB} >> nth=0`, label: 'Registry' });
+};
+
+/** Whether the plugin with this key is installed. */
+const installed = ({ page }, key) =>
+  page.evaluate((key) => composer.plugins().some((plugin) => plugin.id === key), key);
 
 /** Whether this profile's identity was bound by an earlier take. */
 const bound = ({ page }) =>
@@ -198,7 +244,7 @@ export const steps = [
     // Nothing was loaded by URL: the private registry lists the plugin, and installing it (which also enables it) is
     // the reader's click.
     name: 'Install World Clock from the registry',
-    done: ({ page }) => page.evaluate((name) => composer.plugins().some((plugin) => plugin.name === name), PLUGIN_NAME),
+    done: async (context) => installed(context, await projectKey(context)),
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'World Clock appears in Plugins → Registry; install it',
@@ -210,18 +256,15 @@ export const steps = [
           await demo.click({ selector: `button:has-text("${label}") >> nth=0`, label });
         }
       }
-      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-      await page.waitForTimeout(1_000);
-      const registryTab = '[data-testid="pluginRegistry.registry"]';
-      await page.locator(registryTab).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await demo.click({ selector: `${registryTab} >> nth=0`, label: 'Registry' });
-      const plugin = page.locator(card(PLUGIN_NAME)).first();
+      await openRegistry({ demo, page });
+      const key = await projectKey({ page });
+      const plugin = page.locator(card(key)).first();
       await plugin.waitFor({ state: 'visible', timeout: 60_000 });
       await plugin.scrollIntoViewIfNeeded();
-      await demo.hover({ selector: `${card(PLUGIN_NAME)} >> nth=0`, label: PLUGIN_NAME });
+      await demo.hover({ selector: `${card(key)} >> nth=0`, label: PLUGIN_NAME });
       await page.waitForTimeout(LINGER);
-      await demo.click({ selector: `${card(PLUGIN_NAME)} >> nth=0 >> button:has-text("Install")`, label: 'Install' });
-      await page.waitForFunction((name) => composer.plugins().some((plugin) => plugin.name === name), PLUGIN_NAME, {
+      await demo.click({ selector: `${card(key)} >> nth=0 >> button:has-text("Install")`, label: 'Install' });
+      await page.waitForFunction((key) => composer.plugins().some((plugin) => plugin.id === key), key, {
         timeout: 60_000,
       });
       await page.waitForTimeout(LINGER);
@@ -245,23 +288,21 @@ export const steps = [
         value: "Open World Clock's specification from the registry",
         subtitle: 'the PLUGIN.mdl the template seeded, shipped in the bundle',
       });
-      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-      const registryTab = '[data-testid="pluginRegistry.registry"]';
-      await page.locator(registryTab).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await demo.click({ selector: `${registryTab} >> nth=0`, label: 'Registry' });
-      const plugin = page.locator(card(PLUGIN_NAME)).first();
+      await openRegistry({ demo, page });
+      const key = await projectKey({ page });
+      const plugin = page.locator(card(key)).first();
       await plugin.waitFor({ state: 'visible', timeout: 60_000 });
       await plugin.scrollIntoViewIfNeeded();
-      await demo.click({ selector: `${card(PLUGIN_NAME)} >> nth=0 >> button:has-text("Details")`, label: 'Details' });
-      const openSpec = 'span:text-is("Open Specification")';
+      await demo.click({ selector: `${card(key)} >> nth=0 >> button:has-text("Details")`, label: 'Details' });
+      const openSpec = 'button:text-is("Open Specification")';
       await page.locator(openSpec).first().waitFor({ state: 'visible', timeout: 30_000 });
       await page.waitForTimeout(LINGER);
       await demo.click({ selector: `${openSpec} >> nth=0`, label: 'Open Specification' });
       const spec = page.locator('[data-testid="spec-article.spec"]').first();
       await spec.waitFor({ state: 'visible', timeout: 30_000 });
-      // The seeded text, not just any spec: its plugin name and component come from the template.
+      // The seeded text, not just any spec: its component comes from the template and its id is this project's key.
       await page
-        .locator('[data-testid="spec-article.spec"]:has-text("WorldClockPlugin"):has-text("ClocksArticle")')
+        .locator(`[data-testid="spec-article.spec"]:has-text("ClocksArticle"):has-text("${key}")`)
         .first()
         .waitFor({ state: 'visible', timeout: 30_000 });
       await demo.caption({
