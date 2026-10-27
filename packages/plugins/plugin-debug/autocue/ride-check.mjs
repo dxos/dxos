@@ -20,19 +20,19 @@ const FEATURE = 'Go / no-go';
 const SUBFEATURE = 'Gust rule — warn above 30 km/h';
 
 /** Kept in step with `ride-check/architecture.dx`; flow scripts take no imports. */
-const DIAGRAM = `diagram flow=right
+const DIAGRAM = `diagram flow=down
 node Browser "Rider's browser"
 group worker "Cloudflare Worker" {
   node Page "Page · DXOS UI"
-  node Api "GET /api/forecast"
+  node Api "GET /api/forecast" right-of Page
 }
-group cards "Feature cards" {
+node Meteo "Open-Meteo" right-of Api
+group cards "Feature cards" below worker {
   node Verdict "Go / no-go"
-  node Hourly "Hourly forecast"
-  node Window "Best window"
-  node Daylight "Daylight"
+  node Hourly "Hourly forecast" right-of Verdict
+  node Window "Best window" right-of Hourly
+  node Daylight "Daylight" right-of Window
 }
-node Meteo "Open-Meteo"
 edge Browser -> Page "opens"
 edge Page -> Api "fetch"
 edge Api -> Meteo "forecast"
@@ -91,6 +91,11 @@ export const steps = [
     name: 'Prep (off camera): dismiss notices, hide help panels',
     setup: true,
     run: async ({ demo, page }) => {
+      // A cold dev server transforms modules on first request, so the sidebar can take minutes.
+      await page
+        .locator('[data-testid="treeView.appSettings"]')
+        .first()
+        .waitFor({ state: 'visible', timeout: 300_000 });
       const notice = page.locator(
         '[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))',
       );
@@ -191,11 +196,13 @@ export const steps = [
       if (problems.length > 0) {
         throw new Error(`the diagram did not draw: ${JSON.stringify(problems)}`);
       }
+      // A new drawing lands in the space's Drawings collection, not on the project.
+      await demo.click({ selector: '[data-testid="deck.sidebar"] :text-is("Drawings") >> nth=0', label: 'Drawings' });
       await demo.click({
-        selector:
-          '[data-testid="deck.sidebar"] [data-testid="spacePlugin.object"]:has-text("Ride Check architecture") >> nth=0',
+        selector: '[data-testid="deck.plank"] :text-is("Ride Check architecture") >> nth=0',
         label: 'Ride Check architecture',
       });
+      await closeCompanion(page);
       await page.waitForFunction(
         () =>
           [...document.querySelectorAll('[data-testid="deck.plank"] :is(svg, canvas)')].some(
@@ -214,11 +221,29 @@ export const steps = [
       await demo.click({ selector: PROJECT_NODE, label: PROJECT });
       await openFeatures(demo, page);
       await demo.click({ selector: `${CARD} [data-testid="feature-card.menu"] button >> nth=0`, label: FEATURE });
-      await demo.click({ selector: '[data-testid="feature-card.edit"] >> nth=0', label: 'Edit' });
-      await demo.click({ selector: `${CARD} [data-testid="subfeature-editor.add"]`, label: 'Add subfeature' });
-      await demo.type({ selector: `${CARD} [data-testid="subfeature-editor.2.name"]`, text: SUBFEATURE });
+      await demo.click({ selector: '[data-testid="feature-card.open"] >> nth=0', label: 'Open' });
+      // Subfeatures are edited in the feature's article; the card only counts them.
+      const editor = '[data-testid="deck.plank"] [data-testid="subfeature-editor"]';
+      await page.locator(editor).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await demo.click({
+        selector: `${editor} [data-testid="subfeature-editor.add"] >> nth=0`,
+        label: 'Add subfeature',
+      });
+      const name = `${editor} [data-testid="subfeature-editor.2.name"]`;
+      await page.locator(name).first().waitFor({ state: 'visible', timeout: 5_000 });
+      await page.keyboard.type(SUBFEATURE, { delay: 40 });
       await page.keyboard.press('Enter');
-      await demo.click({ selector: `${CARD} [data-testid="feature-card.done"]`, label: 'Done' });
+      await page.waitForFunction(
+        (text) =>
+          [
+            ...document.querySelectorAll(
+              '[data-testid="deck.plank"] input, [data-testid="deck.plank"] [contenteditable]',
+            ),
+          ].some((element) => (element.value ?? element.textContent ?? '').includes(text)) ||
+          document.querySelector('[data-testid="deck.plank"]')?.textContent?.includes(text),
+        SUBFEATURE,
+        { timeout: 5_000 },
+      );
       await page.waitForTimeout(BEAT * 2);
     },
   },
