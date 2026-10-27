@@ -176,9 +176,9 @@ const main = async () => {
   // Verify with a GET through the public URL rather than trusting the PUT: a HEAD can answer from a different
   // cache entry than the body a viewer downloads, and a wrong type or truncated body is invisible until then.
   const head = await fetch(url, { method: 'GET' });
-  // The CDN compresses text (HTML, JSON) on the way out, dropping its length, ETag and ranges, so text is checked by
-  // its decoded body; media and archives, which can be large, are checked by headers without downloading them.
-  const text = /^(text\/|application\/(json|x-ndjson))/.test(contentType);
+  // The CDN compresses text (HTML, JSON, SVG) on the way out, dropping its length, ETag and ranges, so text is checked
+  // by its decoded body; media and archives, which can be large, are checked by headers without downloading them.
+  const text = /^(text\/|application\/(json|x-ndjson)|image\/svg\+xml)/.test(contentType);
   const downloaded = text ? Buffer.from(await head.arrayBuffer()) : undefined;
   if (!text) {
     await head.body?.cancel();
