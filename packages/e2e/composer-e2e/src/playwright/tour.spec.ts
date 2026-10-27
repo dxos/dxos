@@ -47,8 +47,6 @@ test.describe('Tour tests', () => {
     await Support.startFromCompanion(host.page);
     await Support.walk(host.page, DOCUMENT_TOUR);
 
-    // The toolbar folds controls out of the row as the plank narrows, and which one goes depends on a pixel
-    // budget no tour can see, so the same walk has to hold once a step's target is in the overflow menu.
     await host.page.setViewportSize({ width: 1200, height: 800 });
     await expect(host.page.getByTestId('editor.toolbar.viewMode')).toBeHidden();
     await Support.startFromCompanion(host.page);

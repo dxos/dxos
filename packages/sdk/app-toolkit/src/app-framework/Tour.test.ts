@@ -78,8 +78,7 @@ describe('matchers', () => {
 describe('toolbarStep', () => {
   const step = Tour.toolbarStep('editor.toolbar.viewMode', { title: 'Modes', description: 'Switch mode.' });
 
-  /** Stands in for the document `before` reads: where the control is, and whether the ⋮ menu is open. */
-  const stub = ({ at, expanded = false }: { at: 'row' | 'menu' | 'nowhere'; expanded?: boolean }) => {
+  const stubToolbarDocument = ({ at, expanded = false }: { at: 'row' | 'menu' | 'nowhere'; expanded?: boolean }) => {
     const clicks: string[] = [];
     const overflow = {
       getAttribute: (name: string) => (name === 'aria-expanded' ? String(expanded) : null),
@@ -97,19 +96,19 @@ describe('toolbarStep', () => {
   });
 
   test('opens the menu when the toolbar has folded the control away', async ({ expect }) => {
-    const clicks = stub({ at: 'nowhere' });
+    const clicks = stubToolbarDocument({ at: 'nowhere' });
     await step.before?.(null as any);
     expect(clicks).toEqual(['overflow']);
   });
 
   test('leaves the menu open when the control is in it', async ({ expect }) => {
-    const clicks = stub({ at: 'menu', expanded: true });
+    const clicks = stubToolbarDocument({ at: 'menu', expanded: true });
     await step.before?.(null as any);
     expect(clicks).toEqual([]);
   });
 
   test('closes a menu an earlier step opened over the control', async ({ expect }) => {
-    const clicks = stub({ at: 'row', expanded: true });
+    const clicks = stubToolbarDocument({ at: 'row', expanded: true });
     await step.before?.(null as any);
     expect(clicks).toEqual(['overflow']);
   });

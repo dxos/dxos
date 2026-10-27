@@ -50,7 +50,6 @@ const MINIMAL_PDF =
 /** The message `seedAttachment` attached the PDF to, so the play function opens that one. */
 let attachedMessageId: string | undefined;
 
-/** Appends a feed message carrying a PDF attachment. */
 const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) => {
   const feed = await mailbox.feed.tryLoad();
   if (!feed) {
@@ -58,8 +57,6 @@ const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) =
   }
   const bytes = new TextEncoder().encode(MINIMAL_PDF);
   const blob = db.add(Blob.make({ type: 'application/pdf', size: bytes.byteLength, data: Blob.inlineData(bytes) }));
-  // The attachment goes into the feed entry itself: a feed message is immutable, so one mutated after the
-  // fact keeps its attachment only on the instance that was mutated, and any later decode drops it.
   const message = Message.make({
     created: new Date().toISOString(),
     sender: { name: 'Accounts' },

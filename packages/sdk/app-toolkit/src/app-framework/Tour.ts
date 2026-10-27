@@ -32,8 +32,7 @@ export type Step = {
 
 /**
  * A step pointing at a toolbar control, which a narrow toolbar may have folded into its overflow (⋮)
- * menu. The control keeps its test id there, so the step only has to open the menu to reach it —
- * which also keeps the tour independent of how the toolbar ranks its controls for collapse.
+ * menu. The control keeps its test id there, so the step only has to open the menu to reach it.
  *
  * A control that collapses as part of a group is one level further in, since a group becomes a
  * submenu whose items resolve only once it opens; the step is then skipped rather than reached.
@@ -46,11 +45,11 @@ export const toolbarStep = (testId: string, step: Omit<Step, 'target' | 'before'
     before: () => {
       const overflow = document.querySelector<HTMLElement>(`[data-testid="${TOOLBAR_OVERFLOW_TESTID}"]`);
       const element = document.querySelector(target);
-      if (!element) {
+      const folded = !element;
+      const menuCoversRow =
+        !!element && !element.closest('[role="menu"]') && overflow?.getAttribute('aria-expanded') === 'true';
+      if (folded || menuCoversRow) {
         overflow?.click();
-      } else if (!element.closest('[role="menu"]') && overflow?.getAttribute('aria-expanded') === 'true') {
-        // The control is in the row, so a menu an earlier step opened only covers it.
-        overflow.click();
       }
     },
   };

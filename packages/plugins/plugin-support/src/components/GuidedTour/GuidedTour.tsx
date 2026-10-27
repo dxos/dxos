@@ -76,8 +76,18 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
-  // Ids already stepped over, so a target that stays missing ends the tour rather than looping on it.
-  const skipped = useRef(new Set<string>());
+  const skippedStepIds = useRef(new Set<string>());
+  const resumePastUnreachableStep = (index: number, stepId: string): boolean => {
+    const next = tourSteps[index + 1];
+    if (!next || skippedStepIds.current.has(stepId)) {
+      return false;
+    }
+    skippedStepIds.current.add(stepId);
+    log.warn('skipping a tour step whose target never appeared', { stepId });
+    resumeAt.current = next.id;
+    return true;
+  };
+
   const tour = Tour.useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
@@ -98,12 +108,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
       const ended = index < 0 ? undefined : steps[index];
       if (ended && !resolveTarget(ended.target)()) {
         const stepId = lastStepId.current!;
-        const next = tourSteps[index + 1];
-        // One unreachable step must not cost the steps after it: resume at the next one, still running.
-        if (next && !skipped.current.has(stepId)) {
-          skipped.current.add(stepId);
-          log.warn('skipping a tour step whose target never appeared', { stepId });
-          resumeAt.current = next.id;
+        if (resumePastUnreachableStep(index, stepId)) {
           return;
         }
 
@@ -125,7 +130,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
 
   useEffect(() => {
     if (!running) {
-      skipped.current.clear();
+      skippedStepIds.current.clear();
     }
   }, [running]);
 
