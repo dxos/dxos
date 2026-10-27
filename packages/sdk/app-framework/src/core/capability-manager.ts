@@ -62,8 +62,7 @@ export const expandContributions = (
   );
 
 /**
- * Options for creating a capability manager.
- * @internal
+ * Options for creating a capability manager; not tagged internal because the public {@link make} takes it.
  */
 export type CapabilityManagerOptions = {
   registry: Registry.AtomRegistry;

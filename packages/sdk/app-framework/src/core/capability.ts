@@ -382,8 +382,8 @@ export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]]
 /**
  * Brand symbol carried by every {@link Contribution}. Exported only so the manager layer
  * ({@link CapabilityManager.isContribution}) can detect contributions at runtime — not part of
- * the plugin-authoring API.
- * @internal
+ * the plugin-authoring API. Not tagged internal: `stripInternal` would drop it from the declarations
+ * while the {@link Contribution} brand still names it.
  */
 export const ContributionTypeId: unique symbol = Symbol.for('@dxos/app-framework/Contribution');
 export type ContributionTypeId = typeof ContributionTypeId;
