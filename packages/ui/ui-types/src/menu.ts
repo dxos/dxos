@@ -11,6 +11,9 @@ import { type ClassNameValue } from './theme.ts';
 /** Horizontal region of a toolbar row. */
 export type ToolbarZone = 'start' | 'end';
 
+/** Test id of the overflow (⋮) menu's trigger, so anything reaching a collapsed action can open it. */
+export const TOOLBAR_OVERFLOW_TESTID = 'toolbar.overflow';
+
 /** Where a toolbar item or named group goes; menus ignore it. */
 export type ToolbarPlacement = {
   /** Left or right of its row (default `start`). */

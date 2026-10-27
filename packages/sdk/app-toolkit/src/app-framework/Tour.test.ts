@@ -96,21 +96,21 @@ describe('toolbarStep', () => {
     delete (globalThis as any).document;
   });
 
-  test('opens the menu when the toolbar has folded the control away', ({ expect }) => {
+  test('opens the menu when the toolbar has folded the control away', async ({ expect }) => {
     const clicks = stub({ at: 'nowhere' });
-    step.before?.(null as any);
+    await step.before?.(null as any);
     expect(clicks).toEqual(['overflow']);
   });
 
-  test('leaves the menu open when the control is in it', ({ expect }) => {
+  test('leaves the menu open when the control is in it', async ({ expect }) => {
     const clicks = stub({ at: 'menu', expanded: true });
-    step.before?.(null as any);
+    await step.before?.(null as any);
     expect(clicks).toEqual([]);
   });
 
-  test('closes a menu an earlier step opened over the control', ({ expect }) => {
+  test('closes a menu an earlier step opened over the control', async ({ expect }) => {
     const clicks = stub({ at: 'row', expanded: true });
-    step.before?.(null as any);
+    await step.before?.(null as any);
     expect(clicks).toEqual(['overflow']);
   });
 });

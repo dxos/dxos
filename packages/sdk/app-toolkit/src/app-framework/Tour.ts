@@ -6,8 +6,8 @@
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Obj, Type } from '@dxos/echo';
-import { TOOLBAR_OVERFLOW_TESTID } from '@dxos/react-ui-menu';
 import type * as Tour from '@dxos/react-ui/Tour';
+import { TOOLBAR_OVERFLOW_TESTID } from '@dxos/ui-types';
 import * as Position from '@dxos/util/Position';
 
 import type * as Translations from '../app/Translations.ts';

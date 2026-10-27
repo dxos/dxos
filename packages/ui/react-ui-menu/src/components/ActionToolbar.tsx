@@ -31,13 +31,14 @@ import {
   type ClassNameValue,
   type DropdownMenuItemGroupProperties,
   type ToggleGroupMenuItemGroupProperties,
+  TOOLBAR_OVERFLOW_TESTID,
   type ToolbarPlacement,
   type ToolbarZone,
 } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { TOOLBAR_OVERFLOW_ID, TOOLBAR_OVERFLOW_TESTID, defaultOverflowGroup } from '../builder.ts';
+import { TOOLBAR_OVERFLOW_ID, defaultOverflowGroup } from '../builder.ts';
 import { type ActionGraphProps, useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
