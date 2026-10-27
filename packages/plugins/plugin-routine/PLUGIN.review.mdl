@@ -1,0 +1,351 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-routine/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: AutomationPlugin (plugin-routine)
+
+The spec describes the earlier AutomationPlugin. The package has since moved to a Routine model.
+Triggers belong to a `Routine` and are edited inside `RoutineForm`/`RoutineArticle`, and the only
+space-settings surface is `RoutineSettings`, which toggles `triggersDisabled`. `AutomationPanel`,
+`FunctionsPanel` and `RoutineProperties` exist nowhere in the repo, and `TriggerEditor` is now
+`TriggerSection`/`TriggerForm`. The engine side holds up. `TriggerRuntimeController` drives the
+per-space `TriggerDispatcher` from the kill switch. The dispatcher (in `@dxos/compute-runtime`)
+handles timer, feed and subscription triggers and skips `remote` ones. `layer-specs.ts` merges
+operation handlers, skills and toolkits and contributes `FeedTraceSink` through `makeRoutingSink`.
+Force-run is now `RunRoutine`: it routes a remote trigger to the trigger manager, but runs a local
+routine's runnable directly rather than through `TriggerDispatcher.invokeTrigger`.
+`CreateTriggerFromTemplate` exists but has no test, wires `trigger.runnable` (not `function`) and
+navigates to the routines settings path. All the UI scenarios (T-1 to T-5) are missing.
+
+Of 45 items: 9 done, 12 untested, 4 partial, 8 diverged, 12 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict TriggerTemplate: A union of { type: timer, cron } and { type: feed, feed } as specified.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/types/Routine.ts#TriggerTemplate]
+  note: `feed` is `Schema.Any` rather than a Feed ref. No test uses the template.
+```
+
+```mdl
+verdict AutomationPanel: No AutomationPanel exists; triggers are edited per Routine and the space settings surface only toggles the kill switch.
+  status: missing
+  note: Searched packages/ for AutomationPanel: no matches. `RoutineSettings` (the `space-settings-automation` article) renders a single enable switch for `triggersDisabled`, with no trigger list, force-run or cursor reset.
+```
+
+```mdl
+verdict TriggerEditor: No standalone TriggerEditor; trigger fields are a TriggerSection inside RoutineForm.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/TriggerEditor/TriggerEditor.tsx#TriggerSection, github:dxos/dxos/packages/plugins/plugin-routine/src/components/TriggerEditor/TriggerEditor.tsx#TriggerForm, github:dxos/dxos/packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx#RoutineForm]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/TriggerEditor/TriggerKindSelector.stories.tsx, github:dxos/dxos/packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.stories.tsx]
+  note: The `TriggerEditor/` module exports a trigger form schema, `applyTriggerValues` (which writes onto a Routine's trigger) and `TriggerSection`; there is no component taking `db`, `trigger`, `types`, `tags`, `readonlySpec`, `onSave` and `onCancel`.
+```
+
+```mdl
+verdict FunctionsPanel: No FunctionsPanel exists.
+  status: missing
+  note: Searched packages/ for FunctionsPanel and for a PersistentOperation list surface in plugin-routine; none found.
+```
+
+```mdl
+verdict TemplateEditor: A Ref<Text> Handlebars/XML editor, exported for reuse and used by plugin-script.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/TemplateEditor/TemplateEditor.tsx#TemplateEditor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/TemplateEditor/TemplateEditor.stories.tsx]
+  note: Downstream plugins import it from `@dxos/plugin-routine/TemplateEditor`, not `/components`.
+```
+
+```mdl
+verdict RoutineProperties: No RoutineProperties surface exists.
+  status: missing
+  note: `react-surface.ts` contributes RoutineSettings, RoutineArticle, RoutineCard, RoutineTraceCompanion and SkillArticle; nothing on ObjectProperties for a Routine.
+```
+
+```mdl
+verdict CreateTriggerFromTemplate: Builds a trigger from the template, wires a script's operation, adds it and opens the routines settings.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/types/RoutineOperation.ts#CreateTriggerFromTemplate, github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-trigger-from-template.ts]
+  walkthrough:
+    - The operation declares db, template, enabled, scriptName and input. github:dxos/dxos/packages/plugins/plugin-routine/src/types/RoutineOperation.ts#CreateTriggerFromTemplate
+    - The handler sets the spec from the template, adds the trigger and navigates. github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-trigger-from-template.ts
+  note: Wires `trigger.runnable`, not `trigger.function`; output is void as specified. No test invokes it.
+```
+
+```mdl
+verdict RunPromptInNewChat: Declared here and handled in plugin-assistant, but takes instructions (string or Instructions ref) and returns { object: Chat }.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/types/RoutineOperation.ts#RunPromptInNewChat, github:dxos/dxos/packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts]
+  note: The input field is `instructions: string | Ref<Instructions>`, not `prompt: string | RoutineRef`, and the output wraps the Chat as `object`. No test invokes it.
+```
+
+```mdl
+verdict F-1.1: Triggers are created as part of a Routine in RoutineForm, not in an AutomationPanel.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/TriggerEditor/TriggerEditor.tsx#applyTriggerValues, github:dxos/dxos/packages/plugins/plugin-routine/src/containers/RoutineArticle/RoutineArticle.tsx#RoutineArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.stories.tsx]
+  note: No AutomationPanel; `applyTriggerValues` creates or updates the routine's trigger from the form values.
+```
+
+```mdl
+verdict F-1.2: A trigger's spec and input are edited in the routine's form; its action is the routine's, not the trigger's function.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.tsx#RoutineForm, github:dxos/dxos/packages/plugins/plugin-routine/src/components/TriggerEditor/TriggerEditor.tsx#applyTriggerValues]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.stories.tsx]
+  note: The runnable is chosen on the Routine (`spec.kind === 'runnable'`), so "edit a trigger's function" has no direct counterpart.
+```
+
+```mdl
+verdict F-1.3: A trigger is cleared from its routine via TriggerSection's onClear; there is no trigger list to delete from.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/TriggerEditor/TriggerEditor.tsx#TriggerSection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/RoutineForm/RoutineForm.stories.tsx]
+  note: Deletion is scoped to a routine's single trigger (RoutineForm notes multiple triggers are a TODO). No test checks the object leaves space.db.
+```
+
+```mdl
+verdict F-1.4: Each trigger's enabled state is toggled inline in the routine's trigger section.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/components/TriggerEditor/TriggerEditor.tsx#TriggerSection, github:dxos/dxos/packages/plugins/plugin-routine/src/containers/RoutineArticle/RoutineArticle.tsx#RoutineArticle]
+  note: No test flips the toggle.
+```
+
+```mdl
+verdict F-1.5: No panel filters triggers by an object context.
+  status: missing
+  note: With AutomationPanel gone, nothing lists triggers filtered to an object; RoutineTraceCompanion shows runs, not triggers.
+```
+
+```mdl
+verdict F-2.1: The controller starts the space's dispatcher when triggersDisabled is unset or false.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/trigger-runtime-controller.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/trigger-runtime-controller.test.ts]
+```
+
+```mdl
+verdict F-2.2: The controller stops the dispatcher when triggersDisabled is true.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/trigger-runtime-controller.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/trigger-runtime-controller.test.ts]
+```
+
+```mdl
+verdict F-2.3: A pending transition fiber is interrupted before the next one starts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/trigger-runtime-controller.ts]
+  note: The tests check the start/stop sequence and de-duplication, but none asserts that an in-flight transition is interrupted.
+```
+
+```mdl
+verdict F-2.3a: The local dispatcher filters out triggers with remote set.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts#TriggerDispatcher]
+  note: The query results are filtered with `!t.remote`; `trigger-dispatcher.test.ts` never sets `remote`.
+```
+
+```mdl
+verdict F-2.4: Enabled timer triggers fire on their cron schedule.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts#TriggerDispatcher]
+  tests: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.test.ts]
+```
+
+```mdl
+verdict F-2.5: Feed triggers process new feed items past their cursor.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts#TriggerDispatcher, github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/feed-position.ts]
+  tests: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.test.ts, github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/feed-position.test.ts]
+```
+
+```mdl
+verdict F-2.6: Subscription triggers fire on matching object mutations.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts#TriggerDispatcher]
+  tests: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.test.ts]
+```
+
+```mdl
+verdict F-3.1: Force-run is RunRoutine from the routine's toolbar, not a per-trigger button in AutomationPanel.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/containers/RoutineArticle/RoutineArticle.tsx#RoutineArticle, github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.test.ts]
+  note: Run is offered for any routine with a spec and a trigger, with no check of the timer kind, `enabled` or `triggersDisabled`.
+```
+
+```mdl
+verdict F-3.2: A local run invokes the routine's runnable directly, not TriggerDispatcher.invokeTrigger.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.test.ts]
+  note: For a non-remote trigger the handler builds the payload with `createInvocationPayload` and calls `Operation.invoke` (or schedules RunInstructions); the dispatcher is bypassed.
+```
+
+```mdl
+verdict F-3.3: A remote trigger is force-run through the trigger manager, whose EDGE implementation posts forceRunCronTrigger.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.ts, github:dxos/dxos/packages/core/compute/compute-runtime/src/TriggerManager.ts#layer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.test.ts, github:dxos/dxos/packages/core/compute/compute-runtime/src/TriggerManager.test.ts]
+  walkthrough:
+    - RunRoutine hands a remote trigger to Trigger.ManagerService. github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.ts
+    - The manager routes a remote trigger to the EDGE seam that issues the HTTP force-run. github:dxos/dxos/packages/core/compute/compute-runtime/src/TriggerManager.ts#layer
+```
+
+```mdl
+verdict F-3.4: Cursor reset exists in the trigger manager but has no control in this plugin.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.ts#resetFeedCursor, github:dxos/dxos/packages/core/compute/compute-runtime/src/TriggerManager.ts#layer]
+  tests: [github:dxos/dxos/packages/core/compute/compute-runtime/src/triggers/trigger-dispatcher.test.ts]
+  note: `resetFeedCursor` is tested in the dispatcher suite; no plugin-routine surface offers it (it was AutomationPanel's `handleResetCursor`).
+```
+
+```mdl
+verdict F-4.1: Contributed OperationHandler sets are merged reactively into one OperationHandlerProvider.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/layer-specs.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/layer-specs.test.ts]
+```
+
+```mdl
+verdict F-4.2: A space-affinity spec feeds the merged handlers into the space's operation registry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/layer-specs.ts]
+  note: `OperationsToRegistrySpec` does this; no test resolves an operation from a space registry.
+```
+
+```mdl
+verdict F-4.3: RegistrySync instantiates each SkillDefinition contribution into the skill registry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/registry-sync.ts]
+  note: No test covers RegistrySync.
+```
+
+```mdl
+verdict F-4.4: The OpaqueToolkit provider merges AppCapabilities.Toolkit contributions.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/layer-specs.ts]
+  note: `OpaqueToolkitSpec` merges the toolkits after ensuring skills; untested.
+```
+
+```mdl
+verdict F-5.1: Trigger execution traces are written to the space's trace feed by FeedTraceSink.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/compute-runtime/src/FeedTraceSink.ts#makeRoutingSink, github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/layer-specs.ts]
+  tests: [github:dxos/dxos/packages/core/compute/compute-runtime/src/FeedTraceSink.test.ts]
+```
+
+```mdl
+verdict F-5.2: The plugin contributes Capabilities.TraceSink built with FeedTraceSink.makeRoutingSink.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/layer-specs.ts, github:dxos/dxos/packages/core/compute/compute-runtime/src/FeedTraceSink.ts#makeRoutingSink]
+  note: The contribution is not exercised by any plugin-routine test.
+```
+
+```mdl
+verdict F-6.1: The handler adds the trigger through SpaceOperation.AddObject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-trigger-from-template.ts]
+  note: Hidden because Trigger is not a user type rather than by an explicit flag. No test.
+```
+
+```mdl
+verdict F-6.2: The named script's operation is wired to trigger.runnable, not trigger.function.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-trigger-from-template.ts]
+  note: The Trigger type has no `function` field; it is `runnable` (`Trigger.ts` in @dxos/compute). Untested.
+```
+
+```mdl
+verdict F-6.3: A timer template sets Trigger.specTimer(cron).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-trigger-from-template.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-6.4: A feed template sets Trigger.specFeed(feed).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-trigger-from-template.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-6.5: The handler opens the space's routines settings path.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-trigger-from-template.ts, github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/app-graph-builder.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/app-graph-builder.test.ts]
+  note: It navigates to `getRoutinesSettingsPath` (tested to match the panel the graph builds), which shows only the kill switch rather than a trigger list; the navigation itself is untested.
+```
+
+```mdl
+verdict T-1: Not automated; the panel it drives does not exist.
+  status: missing
+  note: No AutomationPanel and no test of a "New Trigger" flow.
+```
+
+```mdl
+verdict T-2: Not automated.
+  status: missing
+  note: No test saves a new trigger through a panel.
+```
+
+```mdl
+verdict T-3: Not automated.
+  status: missing
+  note: No test edits a trigger row.
+```
+
+```mdl
+verdict T-4: Not automated.
+  status: missing
+  note: No test flips a trigger's enabled toggle.
+```
+
+```mdl
+verdict T-5: No test force-runs a local timer trigger through TriggerDispatcher.invokeTrigger from the UI.
+  status: missing
+  note: `run-routine.test.ts` runs a routine's runnable directly; the dispatcher's own manual-invocation tests do not go through the plugin.
+```
+
+```mdl
+verdict T-6: The controller test toggles the dispatcher with the kill switch but does not assert the interrupt.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/trigger-runtime-controller.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/trigger-runtime-controller.test.ts]
+  note: Checks the dispatcher's `enabled` state follows `triggersDisabled`; no assertion that an in-flight fiber is interrupted.
+```
+
+```mdl
+verdict T-7: No test invokes CreateTriggerFromTemplate with a timer.
+  status: missing
+  note: Searched the package and compute-runtime tests for CreateTriggerFromTemplate.
+```
+
+```mdl
+verdict T-8: No test invokes CreateTriggerFromTemplate with a feed.
+  status: missing
+  note: As for T-7.
+```
+
+```mdl
+verdict QA-1: Running a routine is tested; creating one through createAutomation is only checked for its template list.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.ts, github:dxos/dxos/packages/plugins/plugin-routine/src/operations/create-routine.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-routine/src/operations/run-routine.test.ts, github:dxos/dxos/packages/plugins/plugin-routine/src/capabilities/create-object.test.ts]
+  note: `run-routine.test.ts` builds routines with a helper, not the `createAutomation` op, and checks no trace message.
+```
+
+```mdl
+verdict QA-2: No automated test creates a timer trigger from a template.
+  status: missing
+  note: The test is marked blocked in the spec; nothing invokes CreateTriggerFromTemplate.
+```

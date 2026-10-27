@@ -4,26 +4,48 @@
 
 import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
+import * as Semaphore from 'effect/Semaphore';
 
-import { AiService } from '@dxos/ai';
+import { AiService, ExtractionModel } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { Tagging, TagIndex } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { Message, Task, TaskSet } from '@dxos/types';
 
 import { LabelerOperation } from '#types';
 
 import { LABELER_TAG_SOURCE, LabelerTag, type LabelerTagId } from '../constants.ts';
+import { EXTRACTION_MODEL, TaskFields, extractionState, toTasks } from '../extraction.ts';
+import { findOrCreateInboxProject } from '../inbox-project.ts';
 import {
   DECISION_MODEL,
   DEFAULT_MIN_CONFIDENCE,
+  type Priority,
   TriageQuestions,
   labelQuestions,
   messageState,
   toVerdict,
 } from '../questions.ts';
+
+/** The system tag each priority band is applied as. */
+const PRIORITY_TAG: Record<Priority, SystemTags.PriorityTagId> = {
+  urgent: 'priorityUrgent',
+  high: 'priorityHigh',
+  normal: 'priorityNormal',
+  low: 'priorityLow',
+};
+
+/** A task's priority for a message's band; `Task` names the middle band `medium`. */
+const TASK_PRIORITY: Record<Priority, Task.Task['priority']> = {
+  urgent: 'urgent',
+  high: 'high',
+  normal: 'medium',
+  low: 'low',
+};
 
 /** Finds-or-creates one of this plugin's own tags, keyed so a second run reuses it. */
 const findOrCreateLabelerTag = (db: Pick<Database.Database, 'query' | 'add'>, id: LabelerTagId) =>
@@ -43,7 +65,7 @@ const findOrCreateLabelerTag = (db: Pick<Database.Database, 'query' | 'add'>, id
  */
 const handler = LabelerOperation.LabelMailbox.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ mailbox: mailboxRef, batchLimit, minConfidence }) {
+    Effect.fnUntraced(function* ({ mailbox: mailboxRef, batchLimit, minConfidence, tasks: extractTasks = true }) {
       const limit = Math.min(
         batchLimit ?? LabelerOperation.DEFAULT_LABEL_MAILBOX_BATCH_LIMIT,
         LabelerOperation.MAX_LABEL_MAILBOX_BATCH_LIMIT,
@@ -73,11 +95,19 @@ const handler = LabelerOperation.LabelMailbox.pipe(
       const criteria = Object.fromEntries(tags.map((tag, index) => [tagUris[index], tag.label]));
 
       const needsReplyTag = yield* Effect.promise(() => findOrCreateLabelerTag(db, 'needsReply'));
-      const urgentTag = yield* Effect.promise(() => findOrCreateLabelerTag(db, 'urgent'));
       const needsReplyUri = Obj.getURI(needsReplyTag).toString();
-      const urgentUri = Obj.getURI(urgentTag).toString();
-      // A message carrying any tag this run could apply has been labelled already.
-      const applied = new Set([needsReplyUri, urgentUri, ...tagUris]);
+      const priorityUris = Object.fromEntries(
+        yield* Effect.forEach(
+          Object.entries(PRIORITY_TAG),
+          Effect.fnUntraced(function* ([priority, id]) {
+            const tag = yield* Effect.promise(() => SystemTags.findOrCreateSystemTag(db, id));
+            return [priority, Obj.getURI(tag).toString()] as const;
+          }),
+        ),
+      );
+      // A message carrying a priority has been triaged already; one labelled before priorities existed
+      // is triaged again, which only adds its band.
+      const applied = new Set(Object.values(priorityUris));
 
       const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
       const pending = messages
@@ -93,6 +123,19 @@ const handler = LabelerOperation.LabelMailbox.pipe(
           message: message ?? mailbox.name ?? 'Mailbox',
           progress: { key: progressKey, current, total: pending.length },
         });
+
+      // Created on the first task, so a run that extracts nothing leaves no empty project behind. One
+      // permit: messages are answered concurrently, and each would otherwise create its own project.
+      let taskSet: TaskSet.TaskSet | undefined;
+      const projectLock = yield* Semaphore.make(1);
+      const ensureTaskSet = () =>
+        Effect.gen(function* () {
+          if (!taskSet) {
+            const project = yield* findOrCreateInboxProject(mailbox);
+            taskSet = project.taskSet ? yield* Database.load(project.taskSet) : undefined;
+          }
+          return taskSet;
+        }).pipe(projectLock.withPermits(1));
 
       log.info('label: start', {
         mailbox: Obj.getURI(mailbox),
@@ -124,12 +167,60 @@ const handler = LabelerOperation.LabelMailbox.pipe(
           if (verdict.needsReply) {
             Tagging.set(message, needsReplyUri, { index });
           }
-          if (verdict.urgent) {
-            Tagging.set(message, urgentUri, { index });
+          Tagging.set(message, priorityUris[verdict.priority], { index });
+
+          // Only a message asking something of the recipient is read for tasks, and only once.
+          const extracted = Mailbox.getExtractedObjectIds(mailbox, message.id).length > 0;
+          const tasks =
+            extractTasks && !extracted && verdict.needsReply
+              ? yield* ExtractionModel.extract(TaskFields, {
+                  state: extractionState(message),
+                  referenceDate: message.created.slice(0, 10),
+                }).pipe(
+                  Effect.map(({ answers }) => toTasks(answers)),
+                  Effect.provide(AiService.extractionModel(EXTRACTION_MODEL)),
+                  // A failed extraction (or no extraction model) leaves the message labelled; tasks are
+                  // a bonus, not the run.
+                  Effect.catch((error) =>
+                    Effect.sync(() => {
+                      log.warn('label: extraction failed', { subject: context.subject, error });
+                      return [];
+                    }),
+                  ),
+                )
+              : [];
+          if (tasks.length > 0) {
+            const target = yield* ensureTaskSet();
+            const created = yield* Effect.forEach(tasks, (task) =>
+              Database.add(
+                Task.make({
+                  title: task.title,
+                  status: 'todo',
+                  priority: TASK_PRIORITY[verdict.priority],
+                  description: describeSource(message, task.due),
+                  artifacts: [Ref.make(message)],
+                }),
+              ),
+            );
+            if (target) {
+              for (const task of created) {
+                TaskSet.addTaskToSet(target, task);
+              }
+            }
+            Mailbox.recordExtraction(
+              mailbox,
+              message.id,
+              created.map((task) => task.id),
+            );
           }
 
           reportStatus((processed += 1), context.subject);
-          return { labelled: labelUri !== undefined, needsReply: verdict.needsReply, urgent: verdict.urgent };
+          return {
+            labelled: labelUri !== undefined,
+            needsReply: verdict.needsReply,
+            urgent: verdict.urgent,
+            tasks: tasks.length,
+          };
         }),
         { concurrency: LabelerOperation.LABEL_MAILBOX_CONCURRENCY },
       ).pipe(Effect.provide(AiService.decisionModel(DECISION_MODEL)));
@@ -138,14 +229,23 @@ const handler = LabelerOperation.LabelMailbox.pipe(
       const labelled = count((result) => result.labelled);
       const needsReply = count((result) => result.needsReply);
       const urgent = count((result) => result.urgent);
+      const tasks = verdicts.reduce((sum, result) => sum + result.tasks, 0);
 
       yield* Database.flush();
-      log.info('label: done', { processed, labelled, needsReply, urgent, skipped });
+      log.info('label: done', { processed, labelled, needsReply, urgent, tasks, skipped });
 
-      return { processed, labelled, needsReply, urgent, skipped };
+      return { processed, labelled, needsReply, urgent, tasks, skipped };
     }),
   ),
   Operation.opaqueHandler,
 );
+
+/** Where a task came from, in words: the email and who sent it (the task's artifact references it). */
+const describeSource = (message: Message.Message, due: string | undefined): string => {
+  const sender = message.sender?.name ?? message.sender?.email ?? 'unknown';
+  const address = message.sender?.email && message.sender.name ? ` <${message.sender.email}>` : '';
+  const subject = message.properties?.subject ?? '(no subject)';
+  return `From "${subject}" by ${sender}${address}.${due ? ` Due ${due}.` : ''}`;
+};
 
 export default handler;

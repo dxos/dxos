@@ -39,6 +39,9 @@ const QUERY_ROWS = 1000;
 /** Boxes listed to the model; past this it sees counts, which is enough to pick a remove filter. */
 const LISTED_NODES = 120;
 
+/** The judge needs the gist, not every box; Clef's latency grows with input (2.5k tokens ≈ 1.4 s, 0.7k ≈ 0.5 s). */
+const JUDGE_LISTED_NODES = 30;
+
 /** The judge's probability, at or above which the command counts as done. */
 const DONE_THRESHOLD = 0.5;
 
@@ -256,7 +259,11 @@ export const run = Effect.fn('CodeGraphCommand.run')(function* (
         stop = 'done';
         break;
       }
-      const [judgeTime, verdict] = yield* judge({ command, graph: describeGraph(graph), lastTurn: report }).pipe(
+      const [judgeTime, verdict] = yield* judge({
+        command,
+        graph: describeGraph(graph, JUDGE_LISTED_NODES),
+        lastTurn: report,
+      }).pipe(
         Effect.map((done) => ({ done })),
         Effect.catch((error) => Effect.succeed({ done: 1, error: String(error) })),
         Effect.timed,
@@ -388,7 +395,7 @@ const apply = (graph: CodeGraph.CodeGraph, action: Action, budget: number): Effe
   );
 
 /** The graph as the model sees it: counts, then one line per box, in shorthand. */
-export const describeGraph = (graph: CodeGraph.CodeGraph): string => {
+export const describeGraph = (graph: CodeGraph.CodeGraph, listed = LISTED_NODES): string => {
   if (graph.nodes.length === 0) {
     return 'The graph is empty.';
   }
@@ -396,8 +403,8 @@ export const describeGraph = (graph: CodeGraph.CodeGraph): string => {
   for (const { kind } of graph.nodes) {
     kinds.set(kind, (kinds.get(kind) ?? 0) + 1);
   }
-  const lines = graph.nodes.slice(0, LISTED_NODES).map(({ id, kind }) => `- ${Iri.compact(id)} (${kind})`);
-  const more = graph.nodes.length > LISTED_NODES ? [`- … and ${graph.nodes.length - LISTED_NODES} more`] : [];
+  const lines = graph.nodes.slice(0, listed).map(({ id, kind }) => `- ${Iri.compact(id)} (${kind})`);
+  const more = graph.nodes.length > listed ? [`- … and ${graph.nodes.length - listed} more`] : [];
   return [
     `The graph has ${graph.nodes.length} boxes (${[...kinds].map(([kind, count]) => `${count} ${kind}`).join(', ')}) and ${graph.edges.length} arrows:`,
     ...lines,

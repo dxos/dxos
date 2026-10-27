@@ -6,6 +6,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Role from '@dxos/app-framework/Role';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,7 +17,7 @@ import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useManager } from '@dxos/react-ui-attention';
 import * as Panel from '@dxos/react-ui/Panel';
-import { DraftMessage, Message as MessageType } from '@dxos/types';
+import { DraftMessage, Message as MessageType, type Task } from '@dxos/types';
 
 import {
   ConversationStack,
@@ -336,6 +338,7 @@ export const MessageArticle = ({
       items={orderedMessages}
       summaries={summaries}
       conversationSummary={conversationSummary}
+      renderTask={renderTask}
       mailbox={mailbox}
       options={optionsAtom}
       expanded={expanded}
@@ -368,6 +371,15 @@ export const MessageArticle = ({
 };
 
 MessageArticle.displayName = 'MessageArticle';
+
+/**
+ * An object shown beside the one it relates to; the tasks plugin renders a task here as a row with its
+ * actions. Role identity is structural, so this names the same NSID the provider does.
+ */
+const Related: Role.Role<{ subject: Task.Task }> = Role.make('org.dxos.role.related');
+
+/** A task extracted from the message, rendered by whichever plugin serves the role. */
+const renderTask = (task: Task.Task) => <Surface.Surface type={Related} data={{ subject: task }} limit={1} />;
 
 type UseMessageExpansionProps = {
   messageIds: readonly string[];

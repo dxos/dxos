@@ -34,4 +34,5 @@ export const handlers = OperationHandlerSet.lazy([
   FeatureOperation.CreateShowcase.pipe(Operation.lazyHandler(() => import('./feature/create-showcase.ts'))),
   FeatureOperation.GetFeatures.pipe(Operation.lazyHandler(() => import('./feature/get-features.ts'))),
   FeatureOperation.ImportLinks.pipe(Operation.lazyHandler(() => import('./feature/import-links.ts'))),
+  FeatureOperation.ImportSpec.pipe(Operation.lazyHandler(() => import('./feature/import-spec.ts'))),
 ]);

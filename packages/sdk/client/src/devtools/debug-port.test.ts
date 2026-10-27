@@ -4,7 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { assertLoopbackOrigin, resolveDebugPortOrigin } from './debug-port.ts';
+import {
+  DEBUG_PORT_RECONNECT_MAX_MS,
+  DEBUG_PORT_RECONNECT_MS,
+  assertLoopbackOrigin,
+  nextReconnectDelay,
+  resolveDebugPortOrigin,
+} from './debug-port.ts';
 
 describe('assertLoopbackOrigin', () => {
   // The port evaluates whatever the server sends, so this check is the boundary that keeps a
@@ -47,5 +53,15 @@ describe('assertLoopbackOrigin', () => {
 
   test('the default origin passes its own check', () => {
     expect(assertLoopbackOrigin(resolveDebugPortOrigin()).hostname).toBe('127.0.0.1');
+  });
+});
+
+describe('nextReconnectDelay', () => {
+  test('doubles from the base interval up to the ceiling', () => {
+    const delays = [DEBUG_PORT_RECONNECT_MS];
+    while (delays.length < 6) {
+      delays.push(nextReconnectDelay(delays[delays.length - 1]));
+    }
+    expect(delays).toEqual([2_000, 4_000, 8_000, 16_000, DEBUG_PORT_RECONNECT_MAX_MS, DEBUG_PORT_RECONNECT_MAX_MS]);
   });
 });
