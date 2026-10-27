@@ -1,0 +1,139 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-debug/assets/timeline/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Timeline
+
+The spec was written from built code (D-2), and most of it holds. `Sheet.Chart` is its own object owned by
+the sheet, with a tested migration from inline charts. The timeline is `Timeline` in `react-ui-plot`,
+wrapped by plugin-sheet's `TimelineChart`. Its pure helpers (event parsing, scales, category grouping,
+filter matching) have unit tests; the interactive parts (selection, ⌘-click solo, scale animation) do not.
+The Presenter space replaces `{{timeline}}` with the chart's EID and is tested. The biggest gap is F-3: a
+presented deck renders an `echo:` embed inside the slide layout, not over the whole viewport, and the deck's
+key handler has no embed mode that limits it to Escape. Neither scenario has an automated test. The
+`Chart` type also carries fields the spec omits (`today`, `fontSize`). Of 15 items: 6 done, 4 untested,
+2 partial, 0 diverged, 3 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Chart: Sheet.Chart has the sheet ref back, name, range, type, header and timeline settings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#Chart, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#ChartProperties, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#ChartType]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/migrations.test.ts]
+```
+
+```mdl
+verdict TimelineSettings: The settings struct has every field the spec lists, plus today and fontSize.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#TimelineSettings]
+  note: No test reads or writes the settings; `copyChartProperties` copies its lists when a chart is made. The code adds `today` and `fontSize`, which the spec does not name.
+```
+
+```mdl
+verdict F-1.1: A sheet owns its charts as refs, each chart refs its sheet, and removing the chart drops the ref.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#addChart, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#removeChart, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#Sheet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/migrations.test.ts]
+```
+
+```mdl
+verdict F-1.2: The sheet 0.1.0 to 0.2.0 migration turns inline charts into owned Chart objects.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/migrations.ts#sheetCharts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/migrations.test.ts]
+```
+
+```mdl
+verdict F-1.3: ChartArticle is contributed for the article, section and slide roles.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/containers/ChartArticle/ChartArticle.tsx#ChartArticle]
+  walkthrough:
+    - The surface filters match a Chart in the Article, Section and Slide roles. github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/react-surface.ts
+    - The container sizes a section to 16:9 and hides the toolbars in a slide. github:dxos/dxos/packages/plugins/plugin-sheet/src/containers/ChartArticle/ChartArticle.tsx#ChartArticle
+  note: No test or story mounts the chart in each role.
+```
+
+```mdl
+verdict F-2.1: Each row becomes one event with time, category, title, description and image.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.ts#toTimelineEvents]
+  tests: [github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.test.ts]
+```
+
+```mdl
+verdict F-2.2: The spine and the three scales exist and the scale change animates; only the scale maths is tested.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.ts#timelineFraction, github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.ts#evenFraction, github:dxos/dxos/packages/ui/react-ui-plot/src/components/Timeline/Timeline.tsx#Timeline]
+  tests: [github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.test.ts]
+  note: `timeline.test.ts` covers the log, linear and compact fractions. The spine position and the scale transition (`TRANSITION_MS` in `Timeline.tsx`) have no test.
+```
+
+```mdl
+verdict F-2.3: Categories group by path and toggle from tags, with ⌘- or Ctrl-click to solo one.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.ts#groupCategories, github:dxos/dxos/packages/ui/react-ui-plot/src/components/Timeline/Timeline.tsx#Timeline]
+  note: `groupCategories` and `categoryLabel` are unit-tested, but the tag toggle and the modifier-click solo in `Timeline.tsx` are not.
+```
+
+```mdl
+verdict F-2.4: Click or the arrow keys select an event and show its card; Escape unselects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-plot/src/components/Timeline/Timeline.tsx#Timeline]
+  note: The key handler in `Timeline.tsx` handles ArrowUp/ArrowDown and Escape; the stories have no play function and no test drives it.
+```
+
+```mdl
+verdict F-2.5: A status-bar filter narrows the events and shows matched of total.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.ts#matchesTimelineFilter, github:dxos/dxos/packages/plugins/plugin-sheet/src/components/ChartCompanion/TimelineChart.tsx#TimelineChart]
+  tests: [github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.test.ts]
+  walkthrough:
+    - The matcher compares text against title, description, category and date. github:dxos/dxos/packages/ui/react-ui-plot/src/util/timeline.ts#matchesTimelineFilter
+    - The chart keeps the filter text, counts the matches and shows them in its status bar. github:dxos/dxos/packages/plugins/plugin-sheet/src/components/ChartCompanion/TimelineChart.tsx#TimelineChart
+```
+
+```mdl
+verdict F-3.1: An echo embed renders the object's slide surface, but inside the slide layout, not over the whole viewport.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/EmbeddedSurface.tsx#EmbeddedSurface]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx]
+  note: |
+    `EmbeddedSurface` resolves the `echo:` URI and mounts the object's Slide surface, and `MarkdownSlide.test.tsx`
+    checks the embed markup. The embed grows to fill the slide below its text (`layouts.tsx`); no code lays it over
+    the whole viewport.
+```
+
+```mdl
+verdict F-3.2: The deck has no embed mode; its key handler acts on arrows, Space and f whatever the slide holds.
+  status: missing
+  note: `Deck.tsx`'s `handleKeyDown` checks only editable targets and toolbars, and `PresentationShell` captures Escape only to leave fullscreen. Nothing detects a showing embed or hands it the keys.
+```
+
+```mdl
+verdict F-4.1: The Presenter space replaces {{timeline}} with the chart's EID.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/samples/presenter/partial.ts#Partial, github:dxos/dxos/packages/plugins/plugin-debug/src/samples/presenter/partial.ts#makeEvents]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/samples/presenter/PresenterSpace.test.ts]
+```
+
+```mdl
+verdict T-1: No test opens a timeline chart of the fixture and checks the lanes or hidden future events.
+  status: missing
+  note: `TimelineSpace.test.ts` and `PresenterSpace.test.ts` check only the built objects; the Timeline stories have no play function.
+```
+
+```mdl
+verdict T-2: No test presents a deck with an embedded chart.
+  status: missing
+  note: `PresentationArticle.stories.tsx` exercises Escape in fullscreen, but no story or test embeds a chart or checks that arrow keys move the chart's selection.
+```

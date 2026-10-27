@@ -400,12 +400,13 @@ export const useWindow = ({
   });
 
   const announced = useRef<string>('');
-  const state = `${visible.first}:${visible.last}:${first}:${last}:${count}`;
+  // The viewport is part of the key so the report taken before the first measurement is re-announced once it lands.
+  const state = `${visible.first}:${visible.last}:${first}:${last}:${count}:${placement.viewport}`;
   if (onChange && announced.current !== state) {
     announced.current = state;
-    // In render rather than an effect, so a readout never lags the frame it describes by one.
-    const scroller = scrollerRef.current;
-    const viewport = (axis === 'block' ? scroller?.clientHeight : scroller?.clientWidth) ?? 0;
+    // In render rather than an effect, so a readout never lags the frame it describes by one. The viewport is the
+    // ResizeObserver's last reading: a DOM read here would force a layout mid-commit.
+    const viewport = placement.viewport;
     const extent = windowExtentOf(placement, first, last);
     queueMicrotask(() =>
       onChange({

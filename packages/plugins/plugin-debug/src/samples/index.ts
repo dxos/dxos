@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * as DemoSpace from './demo/DemoSpace.ts';
 export * as FieldstoneSpace from './fieldstone/FieldstoneSpace.ts';
 export * as IncidentSpace from './incident/IncidentSpace.ts';
 export * as PresenterSpace from './presenter/PresenterSpace.ts';

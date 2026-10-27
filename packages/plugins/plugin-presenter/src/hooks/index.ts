@@ -12,3 +12,6 @@ export * from './useDocumentDeck.ts';
 export * from './useDeckTheme.ts';
 export * from './slideEditorSync.ts';
 export * from './useObjectOptions.ts';
+export * from './useSpeakerNotes.ts';
+export * from './useSlideLabel.ts';
+export * from './useElapsed.ts';

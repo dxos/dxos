@@ -27,8 +27,10 @@ export type FeatureEditing = {
   addToProject: (featureId: string) => void;
   /** Takes the feature off its project; the feature itself is kept. */
   removeFromProject: (featureId: string) => void;
-  /** Creates a planned feature, on the project when there is one; resolves to its id. */
-  createFeature: (name: string) => Promise<string | undefined>;
+  /** Creates a planned feature under `parentId`, else on the project when there is one; resolves to its id. */
+  createFeature: (name: string, parentId?: string) => Promise<string | undefined>;
+  /** Makes the feature a subfeature of `parentId`. */
+  setParent: (featureId: string, parentId: string) => void;
 };
 
 /**
@@ -112,10 +114,15 @@ export const useFeatureEditing = (db: Database.Database | undefined, project?: P
         void featureRef(featureId).then(
           (feature) => feature && run(FeatureOperation.Update, { feature, project: null }),
         ),
-      createFeature: async (name) => {
-        const result = await run(FeatureOperation.Create, { name, project: projectRef });
+      createFeature: async (name, parentId) => {
+        const parent = parentId ? await featureRef(parentId) : undefined;
+        const result = await run(FeatureOperation.Create, parent ? { name, parent } : { name, project: projectRef });
         return result?.feature.id;
       },
+      setParent: (featureId, parentId) =>
+        void Promise.all([featureRef(featureId), featureRef(parentId)]).then(
+          ([feature, parent]) => feature && parent && run(FeatureOperation.Update, { feature, parent }),
+        ),
     };
   }, [db, project, invokePromise]);
 };

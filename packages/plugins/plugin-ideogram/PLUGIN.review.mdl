@@ -1,0 +1,86 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-ideogram/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: IdeogramPlugin
+
+The connector and the `/generate` client are built and unit-tested: the token form trims and rejects a
+blank key, the request nests fields under `image_request`, sends `Api-Key` through the edge CORS proxy,
+raises `MissingCredentialError` before any request and `GenerationError` on non-2xx. The main gap is
+the response mapping: `mapIdeogramResponse` keeps url, prompt, seed, model and request metadata, but
+drops `resolution`, `style_type` and `is_image_safe`, which the spec and T-3 require. Both modules
+activate on `ConnectorEvents.Start` / `StudioEvents.Start` rather than `SetupConnectors` / `Startup`.
+QA-1 is only reached by a live, key-gated integration test of the client.
+
+Of 7 items: 4 done, 0 untested, 3 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict IdeogramConnector: The token form trims, rejects a blank key and returns an AccessToken with a Connection.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/capabilities/connector.ts#createIdeogramConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict IdeogramImageGenerationService: The /generate call and errors match; the mapping drops resolution, style type and image-safety.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-service.ts#makeIdeogramGenerationService, github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-client.ts#generateWithIdeogram, github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-mapping.ts#mapIdeogramResponse]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-mapping.test.ts]
+  walkthrough:
+    - The service exposes a synchronous generate that hands the request and key to the client. github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-service.ts#makeIdeogramGenerationService
+    - The client builds the image_request body, sends Api-Key through the CORS proxy and raises typed errors. github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-client.ts#generateWithIdeogram
+    - The mapper turns data entries with a url into image/png variants with a Generation record. github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-mapping.ts#mapIdeogramResponse
+  note: |
+    `mapIdeogramResponse` maps url, prompt, seed, model (default `V_2`), `requestId` and `createdAt`, but never
+    `resolution`, `style_type` or `is_image_safe`, and it drops url-less entries. The spec's `metadata` bag is
+    flattened into `generation.requestId` / `generation.createdAt`.
+```
+
+```mdl
+verdict T-1: A unit test submits a token and checks the AccessToken, Connection and reference.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict T-2: A unit test checks that a blank token throws.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict T-3: Tests check the body, header and url mapping, but not resolution or isImageSafe, which are not mapped.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-mapping.ts#mapIdeogramResponse]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-mapping.test.ts]
+  note: |
+    The mocked-fetch test checks two variants, the `image_request` body and the `Api-Key` header; the mapping test checks
+    url and seed. No assertion covers `resolution` or `isImageSafe`, since the mapper does not produce them.
+```
+
+```mdl
+verdict T-4: A unit test checks MissingCredentialError with no request made.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-mapping.test.ts]
+```
+
+```mdl
+verdict QA-1: Only the generate step runs in automation, against the client, and the live test is skipped without a key.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-client.ts#generateWithIdeogram]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-client.integration.test.ts]
+  note: |
+    The live test calls `generateWithIdeogram` and is skipped unless the API key env var is set. Nothing runs the connect
+    step, the Artifact creation or the studio `Generate` operation.
+```

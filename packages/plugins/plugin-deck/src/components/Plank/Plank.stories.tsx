@@ -65,7 +65,7 @@ const DefaultStory = () => {
   const personNode = useNode(person, 'ph--user--regular');
 
   return (
-    <div className='flex h-full gap-3 p-3 dx-deck-surface'>
+    <div className='flex h-full gap-3 p-trim-md dx-deck-surface'>
       <Plank node={organizationNode} classNames={PLANK_CLASSNAMES} />
       <Plank node={personNode} classNames={PLANK_CLASSNAMES} />
     </div>
@@ -94,7 +94,7 @@ const BreadcrumbStory = () => {
   const [organization] = useMemo(() => [Organization.make({ name: random.company.name() })], []);
   const node = useNode(organization, 'ph--building-office--regular');
   return (
-    <div className='flex h-full p-3 dx-deck-surface'>
+    <div className='flex h-full p-trim-md dx-deck-surface'>
       <Plank
         node={node}
         classNames={[PLANK_CLASSNAMES, 'w-[40rem]']}
@@ -132,7 +132,7 @@ const BreadcrumbDepthStory = () => {
   const sessionsNode = useNode(sessions, 'ph--building-office--regular');
   const chatNode = useNode(chat, 'ph--building-office--regular');
   return (
-    <div className='flex flex-col h-full gap-3 p-3 dx-deck-surface'>
+    <div className='flex flex-col h-full gap-3 p-trim-md dx-deck-surface'>
       <div data-testid='depth-0' className='flex'>
         <Plank node={pluginNode} classNames={[PLANK_CLASSNAMES, 'w-[40rem]']} breadcrumbs={[]} />
       </div>
