@@ -110,6 +110,71 @@ describe('ObjectSnapshotIndex', () => {
   );
 
   it.effect(
+    'merges keys a path label holds literally in SQL, and keys it cannot in JS, with the same result',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      const id = EntityId.random();
+      const full: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: 1,
+        data: { id, [ATTR_TYPE]: TYPE_PERSON, 'a.b': 0, 'kept': 'k' },
+      };
+      yield* metaIndex.update([full]);
+      yield* metaIndex.lookupRecordIds([full]);
+      invariant(full.recordId !== null);
+      yield* store.update([full]);
+
+      const pathSafe = { id, 'a.b': 1, 'x[0]': 2, '$ ремонт 🚀': 3 };
+      yield* store.update([{ ...full, updatedAt: 2, data: pathSafe }]);
+      const unsafe = { id, 'q"uote': 4, 'back\\slash': 5, 'a.b': undefined };
+      yield* store.update([{ ...full, updatedAt: 3, data: unsafe }]);
+
+      const [stored] = yield* store.querySnapshotsJSON([full.recordId]);
+      expect(stored.snapshot).toEqual(JSON.parse(JSON.stringify({ ...full.data, ...pathSafe, ...unsafe })));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'reads a snapshot an older build stored as JSON text after the migration',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const sql = yield* SqlClient.SqlClient;
+      const metaIndex = new EntityMetaIndex(sql);
+      yield* metaIndex.migrate();
+
+      const data = { id: EntityId.random(), [ATTR_TYPE]: TYPE_PERSON, name: 'ремонт' };
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: 1,
+        data,
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      invariant(object.recordId !== null);
+      yield* store.update([object]);
+      yield* sql`UPDATE objectSnapshot SET snapshot = ${JSON.stringify(data)} WHERE recordId = ${object.recordId}`;
+
+      const [snapshot] = yield* store.querySnapshotsJSON([object.recordId]);
+      expect(snapshot.snapshot).toEqual(data);
+      const [stored] = yield* store.querySnapshotsJSONB([object.recordId]);
+      expect(Jsonb.decode(stored.jsonb)).toEqual(data);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'stores a partial block as is when there is no prior snapshot',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();

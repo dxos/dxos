@@ -271,8 +271,17 @@ export class ObjectSnapshotIndex implements Index {
             INSERT INTO objectSnapshot ${sql.insert(row)}
             ON CONFLICT (recordId) DO UPDATE SET heads = excluded.heads, version = excluded.version, bytes = excluded.bytes
           `;
-        for (const merge of mergeExpressions(sql, pending[index].object.data)) {
-          yield* sql`UPDATE objectSnapshot SET snapshot = ${merge} WHERE recordId = ${row.recordId}`;
+        const data = pending[index].object.data;
+        if (Object.keys(data).every(isPathSafeKey)) {
+          for (const merge of mergeExpressions(sql, data)) {
+            yield* sql`UPDATE objectSnapshot SET snapshot = ${merge} WHERE recordId = ${row.recordId}`;
+          }
+        } else {
+          const [stored] = yield* sql<{
+            snapshot: StoredBlob;
+          }>`SELECT snapshot FROM objectSnapshot WHERE recordId = ${row.recordId}`;
+          const merged = encodeSnapshot({ ...decodeSnapshot(stored.snapshot), ...data });
+          yield* sql`UPDATE objectSnapshot SET snapshot = ${merged} WHERE recordId = ${row.recordId}`;
         }
       }
     }),
@@ -285,10 +294,19 @@ export type ObjectSnapshot = { recordId: number; jsonb: Uint8Array; version: str
 /** An object's JSONB with the heads it was read at, and its document's bytes when the host stored them. */
 export type ObjectBacking = { recordId: number; jsonb: Uint8Array; heads: string[]; bytes?: Uint8Array };
 
-/** SQLite drivers hand a BLOB back as a `Uint8Array` (node, wa-sqlite) or an `ArrayBuffer` (Durable Object storage). */
-type StoredBlob = Uint8Array | ArrayBuffer;
+/**
+ * A stored snapshot. SQLite drivers hand a BLOB back as a `Uint8Array` (node, wa-sqlite) or an `ArrayBuffer`
+ * (Durable Object storage); a string is JSON text from a build older than migration `0005_snapshot_jsonb` that wrote
+ * to this store after it was migrated (a rollback, then a roll forward).
+ */
+type StoredBlob = Uint8Array | ArrayBuffer | string;
 
-const toUint8Array = (blob: StoredBlob): Uint8Array => (blob instanceof Uint8Array ? blob : new Uint8Array(blob));
+const toUint8Array = (blob: StoredBlob): Uint8Array =>
+  typeof blob === 'string'
+    ? (Jsonb.encode(JSON.parse(blob)) ?? failedInvariant('a stored snapshot always encodes'))
+    : blob instanceof Uint8Array
+      ? blob
+      : new Uint8Array(blob);
 
 const encodeSnapshot = (data: Obj.JSON): Uint8Array =>
   Jsonb.encode(data) ?? failedInvariant('an object always encodes');
@@ -300,11 +318,17 @@ const MERGE_PAIRS_PER_STATEMENT = 20;
  * Expressions that apply a partial object's keys to `snapshot` with object-spread semantics: each present key
  * replaces its prior value whole, and a key whose value `JSON.stringify` would drop removes the prior one.
  */
+/**
+ * Whether a key can be written as a quoted SQLite JSON path label, which takes every character literally up to the
+ * closing `"` and has no escape for one; `\\` is merged in JS too, since only newer SQLite reads it literally.
+ */
+const isPathSafeKey = (key: string): boolean => !key.includes('"') && !key.includes('\\');
+
 const mergeExpressions = (sql: SqlClient.SqlClient, data: Record<string, unknown>): Statement.Fragment[] => {
   const sets: Statement.Fragment[] = [];
   const removes: Statement.Fragment[] = [];
   for (const [key, value] of Object.entries(data)) {
-    const path = `$.${JSON.stringify(key)}`;
+    const path = `$."${key}"`;
     const encoded = Jsonb.encode(value);
     if (encoded === undefined) {
       removes.push(sql`${path}`);
@@ -321,7 +345,7 @@ const mergeExpressions = (sql: SqlClient.SqlClient, data: Record<string, unknown
 
 /** A stored snapshot as the object it encodes. */
 export const decodeSnapshot = (blob: StoredBlob): Obj.JSON => {
-  const value = Jsonb.decode(toUint8Array(blob));
+  const value = typeof blob === 'string' ? JSON.parse(blob) : Jsonb.decode(toUint8Array(blob));
   if (!isObjectJson(value)) {
     throw new TypeError('objectSnapshot row does not hold an object');
   }

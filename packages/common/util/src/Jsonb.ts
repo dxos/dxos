@@ -110,6 +110,18 @@ let idle: Writer | undefined;
 const encoder = new TextEncoder();
 
 /** Whether a string holds a character a `TEXT` element must not carry raw: the quote, the backslash or a C0 control. */
+/**
+ * Sets `key` as an own property, as `JSON.parse` does: a plain assignment of `__proto__` would replace the
+ * object's prototype with stored data instead.
+ */
+const setOwn = (object: Record<string, unknown>, key: string, value: unknown): void => {
+  if (key === '__proto__') {
+    Object.defineProperty(object, key, { value, enumerable: true, writable: true, configurable: true });
+  } else {
+    object[key] = value;
+  }
+};
+
 const needsEscape = (text: string): boolean => {
   for (let index = 0; index < text.length; index++) {
     const code = text.charCodeAt(index);
@@ -121,6 +133,8 @@ const needsEscape = (text: string): boolean => {
 };
 
 /** A surrogate half without its partner, which UTF-8 cannot encode. */
+const NON_ASCII = /[\u0080-\uffff]/g;
+
 const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
 
 /** Headers are written with this many size bytes reserved, then compacted once the payload size is known. */
@@ -233,8 +247,14 @@ class Writer {
   /** {@link #string} for text with characters past ASCII. */
   #unicode(text: string): void {
     if (LONE_SURROGATE.test(text)) {
-      // A lone surrogate has no UTF-8 form; `TEXTJ` keeps it as the `\uXXXX` escape `JSON.stringify` writes.
-      this.#ascii(ElementType.TextJ, JSON.stringify(text).slice(1, -1));
+      // A lone surrogate has no UTF-8 form, so `TEXTJ` carries the whole string as JSON escapes: `#ascii` writes
+      // one byte per code unit, which every character past ASCII would overflow.
+      this.#ascii(
+        ElementType.TextJ,
+        JSON.stringify(text)
+          .slice(1, -1)
+          .replace(NON_ASCII, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`),
+      );
       return;
     }
     const type = needsEscape(text) ? ElementType.TextRaw : ElementType.Text;
@@ -444,10 +464,10 @@ class Reader {
           const key = this.key(this.type, this.start, this.end);
           if (topLevel && this.#skipMapping?.has(key)) {
             this.#mapping = undefined;
-            object[key] = this.value(this.end, end);
+            setOwn(object, key, this.value(this.end, end));
             this.#mapping = this.#mapObject;
           } else {
-            object[key] = this.value(this.end, end);
+            setOwn(object, key, this.value(this.end, end));
           }
           cursor = this.end;
         }

@@ -145,6 +145,8 @@ describe('Jsonb', () => {
       'ремонт 設計 🚀',
       'q"\\\t\n\u0001/',
       '\ud800 lone',
+      '\ud800 ремонт 🚀',
+      '設\udc00 é',
       'x'.repeat(70_000),
       [1, undefined, () => 1, NaN, Infinity],
       { a: undefined, b: () => 1, c: null, d: { e: [] } },
@@ -163,6 +165,18 @@ describe('Jsonb', () => {
       );
       expect(Jsonb.decode(bytes ?? new Uint8Array())).toEqual(JSON.parse(JSON.stringify(value)));
     }
+  });
+
+  test('decodes a __proto__ key as an own property, as JSON.parse does', ({ expect }) => {
+    const text = '{"__proto__": {"polluted": true}, "id": "a"}';
+    const decoded = Jsonb.decode(jsonb(text));
+    if (typeof decoded !== 'object' || decoded === null) {
+      throw new Error('expected an object');
+    }
+    expect(decoded).toEqual(JSON.parse(text));
+    expect(Object.getPrototypeOf(decoded)).toBe(Object.prototype);
+    expect(Object.hasOwn(decoded, '__proto__')).toBe(true);
+    expect(Reflect.get(decoded, 'polluted')).toBeUndefined();
   });
 
   test('encodes nothing where JSON.stringify writes nothing', ({ expect }) => {
