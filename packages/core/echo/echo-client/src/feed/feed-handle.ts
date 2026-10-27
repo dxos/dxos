@@ -109,6 +109,8 @@ export class FeedHandle {
   readonly #writtenHere = new Map<EntityId, WeakRef<FeedObjectCore>>();
   /** Written cores the feed service has not acknowledged, held strongly because nothing else may carry the write. */
   readonly #unacknowledged = new Set<FeedObjectCore>();
+  /** Fork bases the store has not yet given a branch; until it does they would read as root items, so no query sees them. */
+  readonly #pendingForks = new Set<FeedObjectCore>();
 
   /**
    * Settles when the last send does: each send starts after the one before it, because the store orders
@@ -227,7 +229,9 @@ export class FeedHandle {
     });
 
     if (this.#endpointClosed) {
-      this.#addOptimistic(cores);
+      if (!hidden) {
+        this.#addOptimistic(cores);
+      }
       // Revert first: the capture above cleared each core's dirty flag and left a pending-append
       // token, so leaving without it would drop the write AND leave `reconcile` preferring the
       // never-sent local state over every inbound block for the life of the handle.
@@ -269,12 +273,11 @@ export class FeedHandle {
         requestedBranch: `fork at ${at}`,
       });
     }
-    // Kept out of queries until the store names its branch: until then it would read as a root item.
     const [core] = this.#registerItemsForAppend([base], { markWritten: false });
+    // Published by `#sendAppendBatches` once a send, this one or a retry, confirms the base block.
+    this.#pendingForks.add(core);
     core.requestFork(at);
     await this.#appendCores([core], { hidden: true });
-    this.#markWritten(core);
-    this.#addOptimistic([core]);
     const branch = core.branch;
     invariant(branch !== undefined, 'fork: the base block was not written; it is retried in the background');
     return branch;
@@ -354,7 +357,11 @@ export class FeedHandle {
   }
 
   /** Add newly-tracked core entities to the held objects and notify subscribers. */
-  #addOptimistic(cores: FeedObjectCore[]): void {
+  #addOptimistic(allCores: FeedObjectCore[]): void {
+    const cores = allCores.filter((core) => !this.#pendingForks.has(core));
+    if (cores.length === 0) {
+      return;
+    }
     let added = false;
     for (const core of cores) {
       if (!this.#objects.has(core.entity.id)) {
@@ -373,7 +380,9 @@ export class FeedHandle {
     this.#markWritten(core);
     this.#dirtyCores.add(core);
     this.#appendScheduler.trigger();
-    this.localWrite.emit([core.entity]);
+    if (!this.#pendingForks.has(core)) {
+      this.localWrite.emit([core.entity]);
+    }
   }
 
   /**
@@ -394,6 +403,11 @@ export class FeedHandle {
   }
 
   #markWritten(core: FeedObjectCore): void {
+    if (this.#pendingForks.has(core)) {
+      // Still held strongly, since only this handle carries the unsent write.
+      this.#unacknowledged.add(core);
+      return;
+    }
     const id = EntityId.make(core.entity.id);
     if (this.#writtenHere.get(id)?.deref() !== core) {
       this.#writtenHere.set(id, new WeakRef(core));
@@ -483,6 +497,11 @@ export class FeedHandle {
         );
         chunk.forEach(({ core, token }, index) => {
           core.confirmAppend(token, blocks?.[index], predecessors?.[index]);
+          if (this.#pendingForks.has(core) && core.branch !== undefined) {
+            this.#pendingForks.delete(core);
+            this.#markWritten(core);
+            this.#addOptimistic([core]);
+          }
           if (core.acknowledged) {
             this.#unacknowledged.delete(core);
           }
