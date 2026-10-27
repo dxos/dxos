@@ -6,7 +6,7 @@
  * Triage an unsorted inbox with one click, see every request become a task in a project, then hand the most
  * urgent one to the agent, which drafts the reply and asks before it sends.
  *
- * @mdl packages/plugins/plugin-labeler/PLUGIN.mdl test QA-2
+ * @mdl packages/plugins/plugin-inbox/docs/TRIAGE.mdl test QA-2
  * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 5180`.
  *   Triage asks Jev through EDGE and Clairic through EDGE's `/ai/generate/workers-ai/clairic` route; until that
  *   route is deployed, pass `extractionEndpoint` (below) pointing at a loopback proxy to Workers AI.
@@ -16,9 +16,9 @@
 /** Clairic endpoint override for an EDGE without the route; empty uses EDGE. */
 const EXTRACTION_ENDPOINT = process.env.AUTOCUE_EXTRACTION_ENDPOINT ?? '';
 
-const SUBTITLE = 'plugin-labeler/PLUGIN.mdl · QA-2';
+const SUBTITLE = 'plugin-inbox/docs/TRIAGE.mdl · QA-2';
 const TEMPLATE = 'org.dxos.plugin-debug.template.triage';
-const PLUGINS = ['org.dxos.plugin.debug', 'org.dxos.plugin.labeler', 'org.dxos.plugin.typesafe'];
+const PLUGINS = ['org.dxos.plugin.debug', 'org.dxos.plugin.typesafe'];
 const AGENT_TIMEOUT = 300_000;
 const BEAT = 1_200;
 

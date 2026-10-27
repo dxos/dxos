@@ -26,12 +26,13 @@ export const Inbox = {
     }
     await page.getByLabel('API token').fill(token);
     await page.getByTestId('save-button').click();
-    // Once the connection is bound the toolbar swaps the connect button for a sync button.
-    await page.getByTestId('inbox.mailbox.sync').waitFor();
+    // The ⋮ menu (which holds sync) can render before binding, so wait on the connect button leaving.
+    await page.getByTestId('connectorPlugin.connect').waitFor({ state: 'detached' });
   },
 
   /** Trigger a client-side sync. */
   sync: async (page: Page) => {
+    await page.getByTestId('inbox.mailbox.more').click();
     await page.getByTestId('inbox.mailbox.sync').click();
   },
 

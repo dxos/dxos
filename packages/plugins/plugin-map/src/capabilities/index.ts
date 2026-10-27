@@ -35,6 +35,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.map.role.map',
+    'org.dxos.plugin.map.role.world',
     'org.dxos.role.article',
     'org.dxos.role.formInput',
     'org.dxos.role.objectProperties',

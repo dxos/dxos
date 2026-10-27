@@ -31,6 +31,7 @@ import {
   type ClassNameValue,
   type DropdownMenuItemGroupProperties,
   type ToggleGroupMenuItemGroupProperties,
+  TOOLBAR_OVERFLOW_TESTID,
   type ToolbarPlacement,
   type ToolbarZone,
 } from '@dxos/ui-types';
@@ -422,7 +423,7 @@ const OverflowMenuTrigger = ({ menu, actions, testId }: ItemProps<{ actions: Men
   return (
     <ActionMenu {...menu} actions={actions}>
       <Button.Root
-        data-testid={testId ?? 'toolbar.overflow'}
+        data-testid={testId ?? TOOLBAR_OVERFLOW_TESTID}
         icon='ph--dots-three-vertical--regular'
         iconOnly
         variant='ghost'

@@ -115,7 +115,8 @@ bare id with no `echo:` scheme, which is the single most common way these calls 
 
 **Prefer echoing back what you were given.** Tool results carry refs already in envelope form —
 pass that value straight through instead of rebuilding it. Only construct an envelope when all
-you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + id}`.
+you hold is a bare 26-character object id, and then write `{"/": "echo:///" + id}`. Never prefix
+a value that already starts with `echo:`; that produces `echo:///echo://…`, which is rejected.
 
 ## The shape of a project
 

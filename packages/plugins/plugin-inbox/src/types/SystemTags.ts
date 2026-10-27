@@ -88,8 +88,8 @@ export const SystemTag = {
     label: 'Spam',
     hue: 'red',
   },
-  // Priority bands, applied locally by triage (plugin-labeler); a message carries at most one. The
-  // mailbox list groups by them, so the vocabulary lives here rather than in the plugin that applies it.
+  // Priority bands, applied locally by triage (`TriageMailbox`); a message carries at most one. The
+  // mailbox list groups by them, so the vocabulary lives with the other system tags.
   priorityUrgent: {
     id: 'priority-urgent',
     label: 'Urgent',

@@ -28,7 +28,7 @@ const label = (value: string, confidence?: number, probability = 1): NonNullable
   confidence,
 });
 
-describe('labeler questions', () => {
+describe('triage questions', () => {
   test('the space tags become the choice criteria, asked alongside the two fixed questions', ({ expect }) => {
     const { decisions } = labelQuestions({ Receipts: 'Receipts' });
 
