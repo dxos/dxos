@@ -235,8 +235,12 @@ export const steps = [
         selector: '[data-testid="projectsPlugin.artifacts"] :is(button,a,[role="button"],[data-scope="card"]) >> nth=0',
         label: 'Diagram',
       });
-      // The canvas editor renders its shapes as DOM, so a fixed beat lets it lay out.
-      await page.waitForTimeout(BEAT * 2);
+      // The canvas editor renders its shapes as DOM; a label the agent must have drawn says it has laid out.
+      await page
+        .locator('[data-testid="deck.plank"]')
+        .getByText('Open-Meteo', { exact: false })
+        .first()
+        .waitFor({ state: 'visible', timeout: 30_000 });
       await closeCompanion(page);
       await page.waitForTimeout(BEAT * 4);
     },
