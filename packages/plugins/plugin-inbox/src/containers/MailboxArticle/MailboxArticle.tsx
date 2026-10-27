@@ -8,6 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -25,6 +26,7 @@ import {
   ActionToolbar,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
+  TOOLBAR_OVERFLOW_ID,
   graphActions,
   isToolbarAction,
   useMenuBuilder,
@@ -53,6 +55,7 @@ import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
+import { MAILBOX_MENU_DISPOSITION } from '../../constants.ts';
 import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
 import { buildSearchSelection, getSearchText, messageMatchesQuery } from '../../util/index.ts';
 import { InitializeMailbox } from './InitializeMailbox.tsx';
@@ -636,24 +639,6 @@ const useMailboxActions = (
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
         )
-        .subgraph((builder) => {
-          if (extractActions.length > 0) {
-            return builder.group(
-              'extract',
-              {
-                label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
-                icon: 'ph--magic-wand--regular',
-                iconOnly: true,
-                variant: 'dropdownMenu',
-              },
-              (group) => {
-                for (const item of extractActions) {
-                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
-                }
-              },
-            );
-          }
-        })
         .action(
           'composeEmail',
           {
@@ -679,9 +664,34 @@ const useMailboxActions = (
         );
       }
 
+      // Mailbox-wide jobs (sync, analyze, extract) share the trailing ⋮ menu so the toolbar row stays
+      // with the per-view controls; other contributed toolbar actions (Connect) keep their place in the row.
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
+        .menu(
+          TOOLBAR_OVERFLOW_ID,
+          (menu) => {
+            const jobs = graphActions(graph, get, nodeId, {
+              filter: (action) => AppGraphNode.hasDisposition(action, MAILBOX_MENU_DISPOSITION),
+              rootId: TOOLBAR_OVERFLOW_ID,
+            });
+            menu.subgraph(jobs);
+            if (extractActions.length > 0) {
+              if (jobs.nodes.length > 0) {
+                menu.separator('line');
+              }
+              for (const item of extractActions) {
+                menu.action(
+                  `extract-${item.id}`,
+                  { label: item.label, icon: 'ph--magic-wand--regular' },
+                  item.onSelect,
+                );
+              }
+            }
+          },
+          'inbox.mailbox.more',
+        )
         .build();
     },
     [
