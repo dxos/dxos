@@ -650,6 +650,24 @@ export const runMailSync = (
     // Start pipeline
     //
 
+    // One wall-clock budget across additions and reconciles, so neither can run the clock past it alone.
+    // At least one item per run, so a chain of runs always progresses however slow each item is.
+    let kept = 0;
+    const withinBudget = <A, E, R>(self: Stream.Stream<A, E, R>): Stream.Stream<A, E, R> =>
+      self.pipe(
+        Stream.takeWhileEffect(() =>
+          Clock.currentTimeMillis.pipe(
+            Effect.map((nowMs) => {
+              outOfTime ||= kept > 0 && nowMs - startedMs >= timeBudgetMs;
+              if (!outOfTime) {
+                kept += 1;
+              }
+              return !outOfTime;
+            }),
+          ),
+        ),
+      );
+
     // The provider yields two raw streams; the harness owns everything generic. The add-only head —
     // dedup on foreignId/key, then cap at `maxMessages` (counting survivors into `taken`, which tells a
     // truncated run → re-run from an exhausted one → complete backfill), then the provider decode into an
@@ -670,15 +688,7 @@ export const runMailSync = (
         (item) => item.foreignId,
         (item) => item.key,
       ),
-      // At least one message per run, so a chain of runs always progresses however slow each one is.
-      Stream.takeWhileEffect(() =>
-        Clock.currentTimeMillis.pipe(
-          Effect.map((nowMs) => {
-            outOfTime = taken > 0 && nowMs - startedMs >= timeBudgetMs;
-            return !outOfTime;
-          }),
-        ),
-      ),
+      withinBudget,
       // The meter advances here, on the messages the run keeps, not at retrieval: fetches run ahead of
       // the cap, and a message fetched past it is fetched again, and would be counted again, by the next
       // run of the chain. An estimate that was low is raised to the count rather than drawn past full.
@@ -696,7 +706,7 @@ export const runMailSync = (
 
     // Additions and reconciles converge into the shared email tail → single commit. `dedup`/`bound`/
     // `decode` are add-only (a retag targets an already-committed message), so they run before the merge.
-    yield* Stream.merge(inserts, reconciles).pipe(
+    yield* Stream.merge(inserts, reconciles.pipe(withinBudget)).pipe(
       EmailStage.processAttachments(),
       // TODO(wittjosiah): Not compatible with edge compute — reaches `Capability.Service`
       //   (`InboxCapabilities.ObjectExtractor`) and invokes `Operation.ExtractMessage`, neither of
@@ -817,7 +827,8 @@ export const runMailSync = (
     // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
     Cursor.extendRange(binding, extent);
 
-    // Running out of time is a cap like any other: state stays put and the next run resumes the window.
+    // Running out of time is a cap like any other: state stays put and the next run resumes the window,
+    // replaying any reconciles this run did not reach from the unadvanced token.
     const capped = taken >= maxMessages || outOfTime;
     // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
     // and more remain. Both signals mean "re-run", but only `!capped` advances state.
