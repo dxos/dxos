@@ -1,6 +1,6 @@
 ---
 spec: github:dxos/dxos/packages/plugins/plugin-zen/PLUGIN.mdl
-commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+commit: a1525e4662630a9fde7049bcfb51424acc5f82eb
 date: 2026-10-27
 by: agent:claude-code
 ---
@@ -14,7 +14,8 @@ Two divergences come from one design choice: `MixerEngine.updateLayer` rebuilds 
 change, so neither live AudioParam ramps (F-4.4) nor in-place sample muting (F-5.3) happen, though
 the generator and player both have code for them.
 
-Of 36 items: 0 done, 25 untested, 0 partial, 2 diverged, 9 missing. Findings:
+Of 39 items: 0 done, 27 untested, 1 partial, 2 diverged, 9 missing. The sleep fade (F-6.1) fades over
+10 s instead of 30 s. Findings:
 
 - **No behavioural tests.** `MixerEngine`, `BinauralGenerator` and `useCountdown` could be tested
   with a fake AudioContext and fake timers; none are.
@@ -156,13 +157,12 @@ verdict F-3.2: stop stops all sources, disconnects the master gain and closes th
 ```
 
 ```mdl
-verdict F-3.3: A countdown shows when timed, fadeOut ramps linearly from 10 s, and playback stops at 0.
+verdict F-3.3: A countdown shows when timed and playback stops at 0.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/hooks/useCountdown.ts#useCountdown, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/hooks/useCountdown.ts#useCountdown]
   walkthrough:
     - useCountdown ticks remaining seconds down once a second. github:dxos/dxos/packages/plugins/plugin-zen/src/hooks/useCountdown.ts#useCountdown
-    - Mixer starts the fade at 10 s and stops the engine at 0. github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer
-    - fadeOut linearly ramps the master gain to zero. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut
+    - Mixer stops the engine and the countdown when remaining reaches 0. github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer
   note: No test.
 ```
 
@@ -220,6 +220,32 @@ verdict F-5.3: Muting a sample layer stops and drops its node rather than silenc
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.updateLayer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/player.ts#SamplePlayer]
   note: `SamplePlayer.muted` can silence in place, but a mute toggle goes through `updateLayer`, which stops the player and does not start the replacement while muted.
+```
+
+```mdl
+verdict F-6.1: The master gain ramps linearly to zero at the stop, but over the last 10 s, not 30 s.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut]
+  walkthrough:
+    - Mixer calls fadeOut with the remaining seconds once remaining falls to FADE_OUT_SECONDS (10). github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer
+    - fadeOut ramps the master gain linearly to zero over that time. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut
+  note: |
+    The fade window is a local constant of 10 s, not 30 s; a Dream shorter than 10 s fades over its whole
+    length, but one of 10 to 30 s does not. No test.
+```
+
+```mdl
+verdict F-6.2: Stop closes the AudioContext at once and resets the fade flag; no ramp runs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.stop]
+  note: No test.
+```
+
+```mdl
+verdict F-6.3: The fade effect returns early when the Dream is not timed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer]
+  note: No test.
 ```
 
 ```mdl
