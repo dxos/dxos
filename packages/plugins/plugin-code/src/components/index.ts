@@ -11,6 +11,7 @@ export * from './DecisionLog/index.ts';
 export * from './DefinitionGraph/index.ts';
 export * from './FileTree/index.ts';
 export * from './LatticeGraph/index.ts';
+export * from './QuestionPanel/index.ts';
 export * from './CodeView/index.ts';
 export * from './ReviewPanel/index.ts';
 export * from './SpecChangelog/index.ts';

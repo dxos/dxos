@@ -85,6 +85,26 @@ const lintDecision = (body: string): string[] => {
   return errors;
 };
 
+const QUESTION_STATUSES = new Set(['open', 'answered', 'moot']);
+
+/** Checks a `question` block (`lang/question.mdl`): a known status, and an answer once it is answered. */
+const lintQuestion = (body: string): string[] => {
+  const errors: string[] = [];
+  const status = fieldValue(body, 'status');
+  const recipient = fieldValue(body, 'to');
+  if (!status) {
+    errors.push('Question is missing `status:` — open, answered or moot.');
+  } else if (!QUESTION_STATUSES.has(status)) {
+    errors.push(`Question \`status: ${status}\` must be open, answered or moot.`);
+  } else if (status === 'answered' && !fieldValue(body, 'answer')) {
+    errors.push('An answered question needs an `answer:`.');
+  }
+  if (recipient !== undefined && !USER_REF.test(recipient)) {
+    errors.push(`\`to: ${recipient}\` must be \`user:<handle>\`.`);
+  }
+  return errors;
+};
+
 /** One fenced `mdl` block: its type, identifier and title from the header line, and the body below it. */
 export type MdlBlock = {
   type: string;
@@ -113,6 +133,7 @@ export const parseMdlBlocks = (text: string): MdlBlock[] =>
  * Checks:
  *   - Unknown block types (first body line of ```mdl blocks) → error
  *   - `decision` attribution (`by:` / `for:` actor prefixes) → error
+ *   - `question` status, and an `answer:` on an answered question → error
  *   - (future) Missing required fields → error
  *   - (future) Unresolved cross-references → error
  */
@@ -130,6 +151,10 @@ export const lintMdl = (text: string): Diagnostic[] => {
     } else if (type === 'decision') {
       for (const message of lintDecision(body)) {
         diagnostics.push({ from, to, severity: 'error', source: 'mdl/decision', message });
+      }
+    } else if (type === 'question') {
+      for (const message of lintQuestion(body)) {
+        diagnostics.push({ from, to, severity: 'error', source: 'mdl/question', message });
       }
     }
   }

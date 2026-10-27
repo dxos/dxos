@@ -48,6 +48,7 @@ import {
   type DecisionModel,
   DefinitionGraph,
   type DefinitionModel,
+  QuestionPanel,
   ReviewPanel,
   buildChangelogGraph,
   citedFiles,
@@ -79,13 +80,14 @@ import {
 } from './useSpecSources.ts';
 
 /** What the panel beside the spec shows. */
-const VIEWS = ['definitions', 'review', 'code', 'decisions', 'data', 'api'] as const;
+const VIEWS = ['definitions', 'review', 'questions', 'code', 'decisions', 'data', 'api'] as const;
 
 type View = (typeof VIEWS)[number];
 
 const VIEW_ICON: Record<View, string> = {
   definitions: 'ph--tree-structure--regular',
   review: 'ph--seal-check--regular',
+  questions: 'ph--question--regular',
   code: 'ph--file-code--regular',
   decisions: 'ph--graph--regular',
   data: 'ph--database--regular',
@@ -257,6 +259,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       }
     }, []);
 
+    const showDecision = useCallback((id: string) => {
+      setSelectedDecision(id);
+      setView('decisions');
+    }, []);
+
     const showCode = useCallback((target: SourceKey) => {
       setCodeTarget(target);
       setView('code');
@@ -319,11 +326,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             viewRef.current = editor;
             return { destroy: () => viewRef.current === editor && (viewRef.current = undefined) };
           }),
-          decisions.length > 0 &&
-            decisionGutter(decisions, (id) => {
-              setSelectedDecision(id);
-              setView('decisions');
-            }),
+          decisions.length > 0 && decisionGutter(decisions, showDecision),
           review &&
             reviewGutter(review, {
               onSelect: (id) => {
@@ -350,7 +353,21 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open, readLatest, baseText, fold],
+      [
+        identity,
+        space,
+        spec?.id,
+        target,
+        themeMode,
+        readOnly,
+        decisions,
+        showDecision,
+        review,
+        open,
+        readLatest,
+        baseText,
+        fold,
+      ],
     );
 
     const syncEntry = spec ? sync.specs[spec.id] : undefined;
@@ -535,6 +552,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                         onOpenCode={(target) => void open(target)}
                         read={read}
                       />
+                    )}
+                    {view === 'questions' && (
+                      <QuestionPanel content={text} onReveal={reveal} onSelectDecision={showDecision} />
                     )}
                     {view === 'code' &&
                       (codeTarget ? (

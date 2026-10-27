@@ -78,6 +78,42 @@ describe('mdl lint', () => {
     });
   });
 
+  describe('question', () => {
+    test('open question', ({ expect }) => {
+      expect(messages(block('question Q-1: Use X?\n  to: user:alice\n  status: open'))).toEqual([]);
+    });
+
+    test('answered question with an answer', ({ expect }) => {
+      expect(
+        messages(block('question Q-1: Use X?\n  status: answered\n  answer: |\n    Use X.\n  decisions: [D-1]')),
+      ).toEqual([]);
+    });
+
+    test('answered question without an answer', ({ expect }) => {
+      expect(messages(block('question Q-1: Use X?\n  status: answered'))).toEqual([
+        'An answered question needs an `answer:`.',
+      ]);
+    });
+
+    test('missing status', ({ expect }) => {
+      expect(messages(block('question Q-1: Use X?'))).toEqual([
+        'Question is missing `status:` — open, answered or moot.',
+      ]);
+    });
+
+    test('unknown status', ({ expect }) => {
+      expect(messages(block('question Q-1: Use X?\n  status: closed'))).toEqual([
+        'Question `status: closed` must be open, answered or moot.',
+      ]);
+    });
+
+    test('recipient must be a user', ({ expect }) => {
+      expect(messages(block('question Q-1: Use X?\n  to: alice\n  status: open'))).toEqual([
+        '`to: alice` must be `user:<handle>`.',
+      ]);
+    });
+  });
+
   describe('changelog change', () => {
     const decision = (id: string, prose: string, extra = '') =>
       block(`decision ${id}: ${prose}\n  date: 2026-10-20\n  by: user:bob${extra}`);
