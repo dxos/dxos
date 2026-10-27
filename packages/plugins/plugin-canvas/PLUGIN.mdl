@@ -5,8 +5,16 @@ version: 0.1.0
 ---
 
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
-plugin as a drawing variant (`dxos.org/scene/1`). A drawing is a scene graph stored in ECHO as one record
-per scene, node and link; a frame holds a child scene that opens in place and can show its contents live.
+plugin as a drawing variant (`dxos.org/scene/1`). A drawing is stored in ECHO as one record per View,
+node and link; a `view` node opens a child View in place and can show its contents live.
+
+This plugin is the ECHO host between two specs it builds on:
+
+- `org.dxos.plugin.illustrator` (github:dxos/dxos/packages/plugins/plugin-illustrator/PLUGIN.mdl) — the
+  `Drawing` type, the variant contract and the converters this plugin registers with.
+- `org.dxos.ui.react-ui-canvas` (github:dxos/dxos/packages/ui/react-ui-canvas/SPEC.mdl) — the engine:
+  its Ontology, types, operations and features are the canvas's model, and this spec does not restate
+  them.
 
 ## Extensions
 
@@ -185,4 +193,10 @@ decision D-2: plugin-canvas registers the hybrid conversion as an illustrator `C
   why: The illustrator's Convert operation already resolves variants and files the result, so a per-pair converter reuses it rather than duplicating it.
   rejected:
     - A separate plugin-canvas import operation, which would offer a second, conflicting menu action.
+```
+
+```mdl
+decision D-3: plugin-canvas builds on `org.dxos.plugin.illustrator` and `org.dxos.ui.react-ui-canvas`, and its spec references both rather than restating them.
+  date: 2026-10-27
+  by: user:richburdon
 ```
