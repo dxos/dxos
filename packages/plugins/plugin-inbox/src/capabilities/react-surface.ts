@@ -33,8 +33,16 @@ import { getSubscriptionsId } from '../paths.ts';
 import { isAttachmentRef } from './app-graph-builder.ts';
 import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx';
 
-const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
-  Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
+/** A draft that has gone out: it reads as part of its conversation, and must not be offered for sending again. */
+const isSentDraft = (subject: unknown): boolean =>
+  DraftMessage.instanceOf(subject) && typeof subject.properties?.sentMessageId === 'string';
+
+const isUnsentDraft = (subject: unknown): subject is Message.Message =>
+  DraftMessage.instanceOf(subject) && !isSentDraft(subject);
+
+/** A message read in its conversation: any message but a draft still being written. */
+const isReadableMessage = (subject: unknown): subject is Message.Message =>
+  Obj.instanceOf(Message.Message, subject) && (!DraftMessage.instanceOf(subject) || isSentDraft(subject));
 
 /** A single non-draft message or a non-empty conversation (thread) of them. */
 export default Capability.makeModule(() =>
@@ -64,7 +72,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'draftMessage',
-        filter: AppSurface.subject(AppSurface.Article, DraftMessage.instanceOf),
+        filter: AppSurface.subject(AppSurface.Article, isUnsentDraft),
         component: EditMessageArticle,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
@@ -72,8 +80,8 @@ export default Capability.makeModule(() =>
         id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
-          AppSurface.subject(AppSurface.Article, isNonDraftMessage),
-          AppSurface.subject(AppSurface.Section, isNonDraftMessage),
+          AppSurface.subject(AppSurface.Article, isReadableMessage),
+          AppSurface.subject(AppSurface.Section, isReadableMessage),
         ),
         component: MessageArticleSurface,
         props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),

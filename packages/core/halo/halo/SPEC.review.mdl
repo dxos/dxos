@@ -1,0 +1,88 @@
+---
+spec: github:dxos/dxos/packages/core/halo/halo/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Halo
+
+All three namespace modules exist as `// @import-as-namespace` files re-exported from `index.ts`, and
+every member the spec lists is declared with the stated shape. `Identity` and `Space` are Effect
+service tags with current-value Streams and Effect verbs; `Invitation` holds types and flow verbs
+with no tag. The code is a superset: `Identity` adds recovery credentials, EDGE identity, service
+access, API tokens and an atom, and `Info` / `Member` carry extra optional fields. `halo-e2e`
+exercises the modules through the client adapter.
+
+Of 3 items: 1 done, 0 untested, 2 partial, 0 diverged, 0 missing. Findings:
+
+- **`Space.updateMemberRole` / `removeMember` are untested.** `halo-e2e/invitations.test.ts` notes
+  that removal does not converge in the in-memory harness, so it is skipped.
+- **`Identity.recover` has no e2e test.** Recovery needs EDGE, which the harness lacks.
+- **The spec trails the code.** `Identity` exports a dozen members the spec does not list
+  (`createRecoveryCredential`, `credentials`, `grantServiceAccess`, `createApiToken`, ...).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Identity: Every listed member exists; recover is not exercised and the module exports more than the spec lists.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#Service,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#Info,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#DeviceInfo,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#identity,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#devices,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#invitations,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#create,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#recover,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#share,
+     github:dxos/dxos/packages/core/halo/halo/src/Identity.ts#join]
+  tests: [github:dxos/dxos/packages/core/halo/halo-e2e/src/identity.test.ts, github:dxos/dxos/packages/core/halo/halo-e2e/src/invitations.test.ts]
+  note: |
+    `create`, `updateProfile`, `identity`, `devices` and device invitations are tested in halo-e2e; `recover`
+    (and the recovery-credential verbs) are not. `Info` also carries `identityKey` and `data`, `DeviceInfo` adds
+    `os`, `platform` and `presence`, and recovery, credential, EDGE-identity and API-token members are unspecified.
+```
+
+```mdl
+verdict Space: Every listed member exists and most are tested; updateMemberRole and removeMember are not.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/core/halo/halo/src/Space.ts#Service,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#Member,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#Info,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#spaces,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#members,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#create,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#updateMemberRole,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#removeMember,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#exportSpace,
+     github:dxos/dxos/packages/core/halo/halo/src/Space.ts#importSpace]
+  tests: [github:dxos/dxos/packages/core/halo/halo-e2e/src/spaces.test.ts, github:dxos/dxos/packages/core/halo/halo-e2e/src/invitations.test.ts]
+  note: |
+    `create`, `waitReady`, `setEdgeReplication`, `exportSpace`/`importSpace` and space invitations are tested.
+    `updateMemberRole` and `removeMember` are skipped in halo-e2e (comment in invitations.test.ts: removal re-keys
+    the space and does not converge in the harness). `Member` adds `identityKey`, `displayName` and `data`.
+```
+
+```mdl
+verdict Invitation: Types and the four flow verbs exist with no service tag, and flows are tested end to end.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/halo/halo/src/Invitation.ts#Flow,
+     github:dxos/dxos/packages/core/halo/halo/src/Invitation.ts#Event,
+     github:dxos/dxos/packages/core/halo/halo/src/Invitation.ts#ShareOptions,
+     github:dxos/dxos/packages/core/halo/halo/src/Invitation.ts#authenticate,
+     github:dxos/dxos/packages/core/halo/halo/src/Invitation.ts#cancel,
+     github:dxos/dxos/packages/core/halo/halo/src/Invitation.ts#events,
+     github:dxos/dxos/packages/core/halo/halo/src/Invitation.ts#code]
+  tests: [github:dxos/dxos/packages/core/halo/halo-e2e/src/invitations.test.ts]
+  note: Event adds `connected` and `authenticating` states beyond the spec's summary.
+```

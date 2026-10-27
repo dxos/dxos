@@ -1,0 +1,47 @@
+---
+id: org.dxos.fixture.features.map
+name: Feature map fixture
+version: 0.1.0
+---
+
+A fixture feature map for `deus features`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `feature` | `org.dxos.mdl.feature@1.0` |
+
+## Features
+
+```mdl
+feature listing: Listing
+  status: operational
+  specs: [packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl#F-1]
+```
+
+```mdl
+feature greeting: Greeting
+  status: operational
+  specs: [packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl#Greet]
+  depends: [listing]
+```
+
+```mdl
+feature listing-next: Export, planned
+  status: planned
+  specs: [packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl#F-2]
+```
+
+```mdl
+feature export: Export, claimed in progress
+  status: in-progress
+  specs: [packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl#F-2.1]
+  depends: [nobody]
+```
+
+```mdl
+feature ghost: Cites nothing that exists
+  status: shiny
+  specs: [packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl#F-9, packages/reflect/deus/src/cli/__fixtures__/features/NOPE.mdl]
+```

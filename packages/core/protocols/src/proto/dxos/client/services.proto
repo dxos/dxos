@@ -217,6 +217,9 @@ message Space {
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
 
+  /// URL of the space root document this device has adopted; absent while the space is still on its control feed.
+  optional string space_root_url = 12;
+
   Metrics metrics = 21;
 }
 

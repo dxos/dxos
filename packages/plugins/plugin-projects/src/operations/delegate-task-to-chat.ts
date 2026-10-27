@@ -10,6 +10,9 @@ import * as Option from 'effect/Option';
 import { SessionConfig } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -18,9 +21,12 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Task } from '@dxos/types';
 import { concat } from '@dxos/util';
 
@@ -49,7 +55,7 @@ const FINISHED: ReadonlySet<string> = new Set(['done', 'review', 'cancelled', 'd
 const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat> =
   ProjectOperation.DelegateTaskToChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ tasks: taskRefs, harness: requestedHarness }) {
+      Effect.fnUntraced(function* ({ tasks: taskRefs, harness: requestedHarness, openCompanion = false }) {
         // A chat delegating nothing has no subject; the schema cannot say so (see the operation's
         // input), so the invariant is where an empty list stops.
         invariant(taskRefs.length > 0, 'Expected at least one task to delegate.');
@@ -108,6 +114,13 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         if (project) {
           Chat.linkCompanion({ chat, subject: project });
           Chat.seedSession(chat, project.session);
+          // The project's instructions say how its tasks are worked; the binding below brings their skills
+          // and context, but only the chat's own `instructions` ref reaches the system prompt.
+          if (project.instructions) {
+            Obj.update(chat, (chat) => {
+              chat.instructions = project.instructions;
+            });
+          }
         }
 
         // Every new chat names its agent, so the agent service never has to guess from an unset field.
@@ -141,7 +154,10 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
           });
         }
 
-        yield* bindDelegationContext(chat, project);
+        // What a task was made from (an email, a document) is context the agent works from, and the
+        // object the reader is most likely looking at when they hand the task over.
+        const sources = yield* taskSources(tasks);
+        yield* bindDelegationContext(chat, project, sources);
         yield* Database.flush();
 
         // Several tasks leave the chat unnamed, and its opening prompt never passes through the chat
@@ -157,13 +173,25 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // The project's companion shows the delegated chat, so opening the Assistant beside the ledger
         // lands on the session holding the tasks rather than on a fresh, empty one. Best-effort like the
         // opening turn below: the delegation is durable either way.
-        if (project) {
+        // The same for each source object, so the companion beside the email a task came from shows the
+        // session too — and, when opening the companion, for whatever the reader is looking at, since
+        // that is the plank it opens beside.
+        const attended = openCompanion ? yield* attendedObjects : [];
+        for (const companionTo of [...(project ? [project] : []), ...sources, ...attended]) {
           const selected = yield* Operation.invoke(AssistantOperation.SetCurrentChat, {
-            companionTo: project,
+            companionTo,
             chat,
           }).pipe(Effect.exit);
           if (Exit.isFailure(selected)) {
             log.warn('delegated chat was not made the companion chat', { cause: Cause.pretty(selected.cause) });
+          }
+        }
+        if (openCompanion) {
+          const opened = yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
+            subject: Attention.linkedSegment(Assistant.COMPANION_VARIANT),
+          }).pipe(Effect.exit);
+          if (Exit.isFailure(opened)) {
+            log.warn('assistant companion did not open', { cause: Cause.pretty(opened.cause) });
           }
         }
 
@@ -180,18 +208,18 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // layers are `orDie`), which a failure channel handler never sees.
         const prompt =
           harness === SessionConfig.COMPOSER_HARNESS
-            ? OPENING_PROMPT
+            ? yield* renderOpeningPrompt(tasks)
             : renderDelegationBrief({
                 tasks,
                 project,
                 context: project ? yield* projectContext(project) : undefined,
               });
-        // Another agent's brief is the system writing on the reader's behalf, so it shows as context
-        // rather than as words the reader typed.
+        // The brief is the system writing on the reader's behalf, so it shows as context rather than as
+        // words the reader typed.
         const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
           chat,
           prompt,
-          ...(harness !== SessionConfig.COMPOSER_HARNESS && { disposition: 'synthetic' as const }),
+          disposition: 'synthetic',
         }).pipe(Effect.exit);
         if (Exit.isFailure(started)) {
           log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
@@ -203,15 +231,44 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
   );
 
 /**
- * References the tasklist rather than restating the tasks: they are already bound to the chat, and
- * a copy in the prompt is one the reader can edit into disagreeing with the original.
+ * Composer's opening prompt: the tasks by address, so the agent starts from them rather than finding
+ * them, and fenced to exactly these — a project's other tasks sit one hop away and are not this
+ * session's to work. Its first line is all the collapsed brief shows in the chat.
  */
-const OPENING_PROMPT = concat`
-  You have been assigned tasks to work on in this session.
-  Read all tasks, then work on them sequentially.
-  This may require you to read, update, or create artifacts associated with the project.
-  Update the tasklist as you work on each task, and mark tasks ready for review as you complete them.
+const OPENING_PROMPT = 'You have been assigned the tasks below.';
+
+const SCOPE_PROMPT = concat`
+  Work on these tasks only: the project may hold others, and they are not yours, so do not read,
+  change, or act on them. Work on your tasks in order. This may require you to read, update, or
+  create artifacts associated with the project. Mark each task ready for review as you complete it.
 `;
+
+/** Added when the tasks came from objects (an email), which are bound to the chat beside them. */
+const SOURCES_PROMPT = concat`
+  Each task names the object it was made from. Those objects are bound to this chat, so their
+  content is already in your context; address them, and the tasks, by the URIs given here rather than
+  exploring the space or building a URI from an id.
+`;
+
+/** One line per task: its title, its URI, and the URIs of the objects it was made from. */
+const renderOpeningPrompt = Effect.fnUntraced(function* (tasks: readonly Task.Task[]) {
+  const entries = yield* Effect.forEach(tasks, (task) =>
+    Effect.gen(function* () {
+      const sources = yield* Effect.forEach(task.artifacts ?? [], (ref) => Database.load(ref).pipe(Effect.option));
+      const uris = sources.flatMap((source) => (Option.isSome(source) ? [Obj.getURI(source.value)] : []));
+      const from = uris.length > 0 ? `; made from ${uris.join(', ')}` : '';
+      return { line: `- ${JSON.stringify(task.title)}: ${Obj.getURI(task)}${from}`, hasSources: uris.length > 0 };
+    }),
+  );
+  const hasSources = entries.some((entry) => entry.hasSources);
+  return [
+    OPENING_PROMPT,
+    ...entries.map((entry) => entry.line),
+    '',
+    SCOPE_PROMPT,
+    ...(hasSources ? ['', SOURCES_PROMPT] : []),
+  ].join('\n');
+});
 
 /**
  * The agent the chat runs on: the one asked for, else the person's default agent while it is
@@ -258,7 +315,11 @@ const currentActor = Effect.gen(function* () {
  * contributed subject-context provider: that operation requires `Registry.Service`, and declaring it
  * makes this one unresolvable on a host that does not provide it.
  */
-const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, project: Project.Project | undefined) {
+const bindDelegationContext = Effect.fnUntraced(function* (
+  chat: Chat.Chat,
+  project: Project.Project | undefined,
+  sources: readonly Obj.Unknown[],
+) {
   const feed = yield* Database.load(chat.feed);
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
@@ -268,8 +329,43 @@ const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, proj
   // their text, so those refs are bound too.
   const bindings = project ? yield* projectBindings(project) : { skills: [], objects: [] };
   const skills = [...DELEGATION_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))), ...bindings.skills];
-  const objects = project ? [Ref.make(project), ...bindings.objects] : [];
+  const objects = [
+    ...(project ? [Ref.make(project), ...bindings.objects] : []),
+    ...sources.map((source) => Ref.make(source)),
+  ];
   yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind({ skills, objects })));
+});
+
+/**
+ * The objects behind the attended graph nodes and their ancestors (a message open beside its mailbox
+ * attends `…/mailbox/message`, and the companion opens on the mailbox plank).
+ */
+const attendedObjects = Effect.gen(function* () {
+  const attention = yield* Capability.getOption(AttentionCapabilities.Attention);
+  const appGraph = yield* Capability.getOption(AppCapabilities.AppGraph);
+  if (Option.isNone(attention) || Option.isNone(appGraph)) {
+    return [];
+  }
+  const ids = attention.value.getCurrent().flatMap((id) => {
+    const segments = id.split('/');
+    return segments.map((_, index) => segments.slice(0, index + 1).join('/'));
+  });
+  const objects = new Map<string, Obj.Unknown>();
+  for (const id of ids) {
+    const node = AppGraph.getNode(appGraph.value.graph, id);
+    if (Option.isSome(node) && Obj.isObject(node.value.data)) {
+      objects.set(node.value.data.id, node.value.data);
+    }
+  }
+  return [...objects.values()];
+});
+
+/** The objects the tasks record as made from (their `artifacts`), deduped; one that no longer loads is skipped. */
+const taskSources = Effect.fnUntraced(function* (tasks: readonly Task.Task[]) {
+  const refs = tasks.flatMap((task) => task.artifacts ?? []);
+  const loaded = yield* Effect.forEach(refs, (ref) => Database.load(ref).pipe(Effect.option));
+  const byId = new Map(loaded.flatMap((object) => (Option.isSome(object) ? [[object.value.id, object.value]] : [])));
+  return [...byId.values()];
 });
 
 /** `Project.contextBindings` needs the instructions ref resolved, which a fresh load guarantees. */

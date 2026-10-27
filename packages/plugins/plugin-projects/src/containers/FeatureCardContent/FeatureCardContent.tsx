@@ -23,11 +23,7 @@ export const FeatureCardContent = ({ subject }: FeatureCardContentProps) => {
       <FeatureCard.Body>
         <FeatureCard.Description />
         <FeatureCard.Tags />
-        <FeatureCard.SubfeatureCount />
-        <FeatureCard.TaskCount />
-        <FeatureCard.TestCount />
-        <FeatureCard.ShowcaseLead />
-        <FeatureCard.DependencyCount />
+        <FeatureCard.Summary />
       </FeatureCard.Body>
     </FeatureCard.Provider>
   ) : null;

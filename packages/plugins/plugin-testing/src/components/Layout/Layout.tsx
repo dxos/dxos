@@ -26,6 +26,7 @@ import * as DragHandle from '@dxos/react-ui/DragHandle';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
 import * as Popover from '@dxos/react-ui/Popover';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
@@ -65,6 +66,17 @@ const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDism
     </Toast.Root>
   );
 };
+
+/**
+ * The theme plugin's providers wrap `children` only, so the dialog and popover portals rendered beside
+ * them bind the icon registry and the shared translations themselves; without them every icon is blank
+ * and every string renders as its raw key.
+ */
+const PortalProviders = ({ children }: PropsWithChildren<{}>) => (
+  <Theme.IconRegistryProvider>
+    <Theme.TranslationsProvider>{children}</Theme.TranslationsProvider>
+  </Theme.IconRegistryProvider>
+);
 
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -158,54 +170,70 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
               {children}
             </Main.Root>
 
-            <DialogRoot
-              modal={layout.dialogBlockAlign !== 'end'}
-              open={layout.dialogOpen}
-              onOpenChange={({ open: nextOpen }) => updateState({ dialogOpen: nextOpen })}
-            >
-              {/* The dialog surface renders its own Content, which carries the placement and scrim. */}
-              <Surface.Surface
-                type={AppSurface.Dialog}
-                data={layout.dialogContent}
-                limit={1}
-                fallback={ErrorFallback}
-                placeholder={<div />}
-              />
-            </DialogRoot>
+            <PortalProviders>
+              <DialogRoot
+                modal={layout.dialogBlockAlign !== 'end'}
+                open={layout.dialogOpen}
+                onOpenChange={({ open: nextOpen }) => updateState({ dialogOpen: nextOpen })}
+              >
+                {/* The dialog surface renders its own Content, which carries the placement and scrim. */}
+                <Surface.Surface
+                  type={AppSurface.Dialog}
+                  data={layout.dialogContent}
+                  limit={1}
+                  fallback={ErrorFallback}
+                  placeholder={<div />}
+                />
+              </DialogRoot>
+            </PortalProviders>
 
-            <Popover.Content>
-              <Popover.Body>
-                {/* `border={false}`: the popover content already draws the surface and its border,
-                        so a bordered card inside it reads as a second frame. Matches the deck's popover. */}
+            {/* Mirrors the deck's popover: a card is the unpadded content, sized by `dx-card-popover`, since a
+                `Popover.Body` would seat it in its gutter grid and clip it to the popover's minimum width. */}
+            <PortalProviders>
+              <Popover.Content classNames={layout.popoverKind === 'card' ? 'p-0 rounded-md' : undefined}>
                 {layout.popoverKind === 'card' && (
-                  <Card.Root grid border={false} classNames='dx-card-popover rounded-md'>
-                    <Card.Header>
-                      {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
-                      <DragHandle.DragHandle />
-                      {layout.popoverTitle ? (
-                        <Card.Title>{Theme.toLocalizedString(layout.popoverTitle, t)}</Card.Title>
-                      ) : (
-                        <span />
-                      )}
-                      <Card.Action system='close' onClick={handleClose} />
-                    </Card.Header>
-                    {layout.popoverContent ? (
-                      <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
-                    ) : (
-                      // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
-                      <Card.Body classNames='min-h-8'>
-                        <Card.Row>
-                          <Card.Text variant='muted'>No preview available.</Card.Text>
-                        </Card.Row>
-                      </Card.Body>
-                    )}
-                  </Card.Root>
+                  <ScrollArea.Root
+                    width='thin'
+                    classNames='dx-card-popover dx-card-min-width overflow-hidden rounded-md'
+                  >
+                    <ScrollArea.Viewport>
+                      {/* `border={false}`: the popover content already draws the surface and its border,
+                          so a bordered card inside it reads as a second frame. */}
+                      <Card.Root grid border={false} classNames='rounded-md'>
+                        <Card.Header>
+                          {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
+                          <DragHandle.DragHandle />
+                          {layout.popoverTitle ? (
+                            <Card.Title>{Theme.toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                          ) : (
+                            <span />
+                          )}
+                          <Card.Action system='close' onClick={handleClose} />
+                        </Card.Header>
+                        {layout.popoverContent ? (
+                          <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
+                        ) : (
+                          // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
+                          <Card.Body classNames='min-h-8'>
+                            <Card.Row>
+                              <Card.Text variant='muted'>No preview available.</Card.Text>
+                            </Card.Row>
+                          </Card.Body>
+                        )}
+                      </Card.Root>
+                    </ScrollArea.Viewport>
+                  </ScrollArea.Root>
                 )}
-                {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
-                  <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
+                {/* An open popover with no kind (allowed by a partial initial state) renders as the base popover. */}
+                {(layout.popoverKind === undefined ||
+                  layout.popoverKind === 'base' ||
+                  layout.popoverKind === 'rename') && (
+                  <Popover.Body>
+                    <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
+                  </Popover.Body>
                 )}
-              </Popover.Body>
-            </Popover.Content>
+              </Popover.Content>
+            </PortalProviders>
           </Popover.Root>
         </Dnd.Root>
         {layout.toasts.map((toast) => (

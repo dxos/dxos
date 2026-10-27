@@ -1,0 +1,185 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-atproto/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: AtprotoPlugin
+
+The publish core is solid and tested: `publishObject`, `unpublishObject`, `computeStatus` and the
+hash-based drift check run against the mock `AtprotoRepo` in `publish.test.ts`, and the companion
+appears only for annotated objects in a space with an atproto connection (`whenPublishable` in the
+graph builder, reactive through the connection query atom). The UI has drifted from the spec in two
+places: the companion's status has five states (`unknown`, `ineligible`, `ready`, `published`,
+`outOfDate`) rather than three, and fields carry Published / Mirrored / Private tags rather than
+globe/lock markers. The PDS browser picks an account by typing a handle (defaulting to the connected
+account) rather than choosing from a connection selector, and it shows raw JSON only for unmapped
+collections. Import is implemented but no test exercises it, and the QA tests and scenario T-1 have
+no automation; the companion graph builder has no unit test.
+
+Of 20 items: 5 done, 7 untested, 2 partial, 3 diverged, 3 missing (T-1, QA-1, QA-2).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict AtprotoPublication: Relation from Connection to the object with all six fields, plus an optional publishedValues snapshot.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/types/AtprotoPublication.ts#AtprotoPublication]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.test.ts]
+  note: Adds `publishedValues` (per-field display snapshot) beyond the spec's fields.
+```
+
+```mdl
+verdict F-1.1: The companion node and surface both require an AtprotoRecordAnnotation on the object's type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-atproto/src/capabilities/react-surface.ts]
+  walkthrough:
+    - The graph builder's `whenPublishable` matcher adds the companion only for annotated objects. github:dxos/dxos/packages/plugins/plugin-atproto/src/capabilities/app-graph-builder.ts
+    - The surface filter also checks `getRecordAnnotation` and the `atproto` companion variant. github:dxos/dxos/packages/plugins/plugin-atproto/src/capabilities/react-surface.ts
+  note: No test drives the graph builder or the surface filter.
+```
+
+```mdl
+verdict F-1.2: The companion matcher requires an atproto Connection in the object's database.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-atproto/src/connection.ts#isAtprotoConnection]
+  note: "`whenPublishable` queries `Connection` objects and filters with `isAtprotoConnection`; no test exercises it."
+```
+
+```mdl
+verdict F-1.3: The matcher reads the connection query through `get(...atom)`, so it re-evaluates when connections change.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/capabilities/app-graph-builder.ts]
+  note: Reactive by construction; no test adds or removes a connection and checks the companion.
+```
+
+```mdl
+verdict F-2.1: Fields are listed with Published / Mirrored / Private tags, not globe and lock markers.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.tsx#AtprotoCompanion, github:dxos/dxos/packages/plugins/plugin-atproto/src/annotation.ts#getFieldPublishFlags]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/annotation.test.ts, github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.stories.tsx]
+  note: |
+    The companion renders a table of nested fields, each with a text `Tag` (Published, Mirrored or Private) and a
+    Diverged tag, from `getFieldPublishFlags`. There is a third visibility (`mirror`) the spec does not describe.
+```
+
+```mdl
+verdict F-2.2: Private fields are rendered muted and their values are not computed or shown.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.tsx#AtprotoCompanion]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.stories.tsx]
+  note: Values are resolved only for non-private leaves; the stories render a private field (smoke-tested via `ts-test-storybook`).
+```
+
+```mdl
+verdict F-3.1: Status has five states (unknown, ineligible, ready, published, outOfDate), not three.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#deriveDisplayStatus, github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#computeStatus]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.test.ts]
+  note: |
+    `computeStatus` yields the spec's three states, but the companion shows `deriveDisplayStatus`, which splits
+    "Not published" into `ready`/`ineligible` and adds `unknown` when eligibility cannot be verified (offline).
+```
+
+```mdl
+verdict F-3.2: The first publish shows a confirmation banner; re-publishes run directly.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/AtprotoCompanion/AtprotoCompanion.tsx#AtprotoCompanion]
+  note: "`handlePublish` sets `confirming` when there is no publication; no story or test clicks Publish."
+```
+
+```mdl
+verdict F-3.3: publishObject calls repo.putRecord and unpublishObject calls repo.deleteRecord through the AtprotoRepo service.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#publishObject, github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#unpublishObject, github:dxos/dxos/packages/plugins/plugin-atproto/src/services/AtprotoRepo.ts#Service]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.test.ts]
+```
+
+```mdl
+verdict F-3.4: computeStatus compares hashRecord(encodeRecord(object)) against publishedHash.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#computeStatus, github:dxos/dxos/packages/plugins/plugin-atproto/src/hash.ts#hashRecord]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.test.ts]
+```
+
+```mdl
+verdict F-3.5: Publish stamps { source: 'atproto', id: uri } on the object's meta keys.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#publishObject, github:dxos/dxos/packages/plugins/plugin-atproto/src/foreign-key.ts#atprotoForeignKey]
+  note: "`bindPublication` calls `stampForeignKey`; `publish.test.ts` never asserts the object's foreign keys."
+```
+
+```mdl
+verdict F-4.1: A PDS singleton node is added to the system group at position 100 only when an atproto connection exists.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-atproto/src/pds.ts#PDS_URL_KEY]
+  note: Position 100 sits between Database (0) and Devtools (Infinity); no test exercises the extension.
+```
+
+```mdl
+verdict F-4.2: The browser takes a typed handle, defaulting to the first connected atproto account; there is no connection selector.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx#PdsBrowser]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.stories.tsx]
+  note: |
+    The toolbar is a handle `Input` plus Browse button; `defaultHandle` comes from the first atproto `AccessToken`'s
+    account. Any public repo can be browsed by handle, which the spec does not describe.
+```
+
+```mdl
+verdict F-4.3: Collections come from describeRepo and mapped ones get a seal-check badge from getMappedCollections.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx#PdsBrowser, github:dxos/dxos/packages/plugins/plugin-atproto/src/schema-map.ts#getMappedCollections]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.stories.tsx]
+  note: The story seeds a mapped and an unmapped collection in the mock repo.
+```
+
+```mdl
+verdict F-4.4: Records list for any collection, but raw JSON is shown only for unmapped collections.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx#PdsBrowser]
+  tests: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.stories.tsx]
+  note: A record in a mapped collection shows the decoded card and Import button instead of its JSON; there is no way to see its raw value.
+```
+
+```mdl
+verdict F-4.5: A mapped record decodes via Panproto into an in-memory object shown in a card surface, with Import.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx#PdsBrowser]
+  note: The preview runs the policy's `onImport` enrichment too. The story has no play function that selects a record.
+```
+
+```mdl
+verdict F-4.6: importRecord adds the object with the atproto foreign key and binds an in-sync AtprotoPublication when the repo is a connected account.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#importRecord, github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx#PdsBrowser]
+  walkthrough:
+    - The browser's Import handler passes the connection only when the active handle is a connected account. github:dxos/dxos/packages/plugins/plugin-atproto/src/containers/PdsBrowser/PdsBrowser.tsx#PdsBrowser
+    - importRecord decodes, stamps foreign keys and binds the publication with the hash of the re-encoded object. github:dxos/dxos/packages/plugins/plugin-atproto/src/publish.ts#importRecord
+  note: Implemented, but no test calls `importRecord`; a record from a non-connected handle gets the foreign key only, not a publication.
+```
+
+```mdl
+verdict T-1: No automated test toggles a connection and checks the companion.
+  status: missing
+  note: "`AtprotoCompanion.stories.tsx` renders `WithoutConnection` and `Unpublished` separately, but nothing exercises the graph builder's offer of the companion."
+```
+
+```mdl
+verdict QA-1: Manual QA against a real PDS; no automation.
+  status: missing
+  note: "`publish.test.ts` covers the publish, drift and unpublish steps against the mock repo, but not the companion UI or a real PDS."
+```
+
+```mdl
+verdict QA-2: Manual QA against a real PDS; no automation.
+  status: missing
+  note: No test drives the PDS browser or `importRecord`.
+```

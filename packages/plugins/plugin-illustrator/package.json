@@ -56,6 +56,17 @@
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/plugin.mjs"
     },
+    "#svg-variant": {
+      "source": {
+        "workerd": "./src/capabilities/svg-variant.node.ts",
+        "node": "./src/capabilities/svg-variant.node.ts",
+        "default": "./src/capabilities/svg-variant.ts"
+      },
+      "types": "./dist/types/src/capabilities/svg-variant.d.ts",
+      "workerd": "./dist/lib/svg-variant/node.mjs",
+      "node": "./dist/lib/svg-variant/node.mjs",
+      "default": "./dist/lib/svg-variant.mjs"
+    },
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
