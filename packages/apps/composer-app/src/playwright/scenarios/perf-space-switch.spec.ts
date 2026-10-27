@@ -20,6 +20,12 @@ const SPACES = (process.env.DX_PERF_SWITCH_SPACES ?? '')
 /** The tab's counters that move while it brings objects in. */
 const OBJECT_LOAD_COUNTERS = ['echo.objectDocumentsLoaded', 'echo.snapshotObjects', 'echo.queryRecomputes'];
 
+/** Passes to run (`DX_PERF_SWITCH_PASSES`, comma-separated): `cold`, `warm`, `revisit`, `reindex`; all by default. */
+const PASSES = (process.env.DX_PERF_SWITCH_PASSES ?? 'cold,warm,revisit,reindex').split(',').map((pass) => pass.trim());
+
+/** Past the worker's idle-document eviction delay (`EVICT_IDLE_DELAY`, 30 s). */
+const EVICTION_IDLE_MS = 45_000;
+
 /** The counters that move while the worker indexes. */
 const INDEX_COUNTERS = ['echo.indexPasses', 'echo.indexedObjects'];
 
@@ -89,28 +95,64 @@ defineScenario({
     await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
     await waitForReady(page);
     await waitForSpacesReady(page, 120_000);
+    // Boot navigates twice, and a switch landing between the two is overwritten, so an unanswered one is sent again.
+    const switchSettled = async (workspace: string) => {
+      for (let attempt = 0; ; attempt++) {
+        await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', { subject: `root/${workspace}` });
+        try {
+          await page.waitForURL(new RegExp(`/w/${workspace}`), { timeout: 15_000 });
+          return;
+        } catch (error) {
+          if (attempt >= 7) {
+            throw error;
+          }
+        }
+      }
+    };
     for (const spaceId of SPACES) {
-      await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', { subject: `root/${spaceId}` });
-      await page.waitForURL(new RegExp(`/w/${spaceId}`), { timeout: 120_000 });
+      await switchSettled(spaceId);
       await waitForCountersQuiet(page, INDEX_COUNTERS, { timeoutMs: 15 * 60_000, quietMs: 15_000, pollMs: 1_000 });
     }
     // The measured boot reopens the last workspace, which would leave the first stage's space warm.
-    await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', { subject: 'root/dxos:settings' });
-    await page.waitForURL(/\/w\/dxos:settings/, { timeout: 120_000 });
+    await switchSettled('dxos:settings');
   },
   fixture: async ({ page, budget }) => {
     // Every space ready before the first switch, so a stage times the switch rather than space activation.
     await waitForSpacesReady(page, budget);
   },
   stages: async ({ page, stage, budget }) => {
-    for (const pass of ['cold', 'warm']) {
+    const switchTo = async (spaceId: string) => {
+      await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', { subject: `root/${spaceId}` });
+      await page.waitForURL(new RegExp(`/w/${spaceId}`), { timeout: budget });
+    };
+
+    // Cold and warm, then a revisit once the worker has evicted the idle documents, as a day of switching does.
+    for (const pass of ['cold', 'warm', 'revisit'].filter((pass) => PASSES.includes(pass))) {
+      if (pass === 'revisit') {
+        await page.waitForTimeout(EVICTION_IDLE_MS);
+      }
       for (const [index, spaceId] of SPACES.entries()) {
         await stage(`${pass}-${index + 1}`, async () => {
-          await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', { subject: `root/${spaceId}` });
-          await page.waitForURL(new RegExp(`/w/${spaceId}`), { timeout: budget });
+          await switchTo(spaceId);
           await waitForCountersQuiet(page, OBJECT_LOAD_COUNTERS, { timeoutMs: budget, quietMs: 1_000 });
         });
       }
     }
+
+    if (!PASSES.includes('reindex')) {
+      return;
+    }
+    // Replication keeps a busy space's index catching up; dropping the snapshot cursor, as migration 0009 did,
+    // makes that catch-up the same size every run. The switch's own writes start the pass.
+    await stage('reindex', async () => {
+      await page.evaluate(`dxos.client.services.services.DevtoolsHost.runSqliteQuery({
+        query: "DELETE FROM indexCursor WHERE indexName = 'objectSnapshot' AND sourceName = 'automerge'",
+      })`);
+      await switchTo(SPACES[0]);
+      await waitForCountersQuiet(page, [...OBJECT_LOAD_COUNTERS, ...INDEX_COUNTERS], {
+        timeoutMs: 10 * 60_000,
+        quietMs: 2_000,
+      });
+    });
   },
 });
