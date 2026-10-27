@@ -134,7 +134,7 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
       expect: |
         the spec opens beside the plugin with its definitions sidebar listing the `Zone` and `Clock` types, the
         `ClocksArticle` component and feature F-1, and its text is the `PLUGIN.mdl` the template seeded
-        (`WORLD_CLOCK_SPEC` in `src/templates/composer-plugin.ts`)
+        (`worldClockSpec` in `src/templates/composer-plugin.ts`, with the key the project was given)
       note: |
         The spec reaches the registry only through the published bundle: `dx.config.ts` names it with `spec`, and the
         plugin contributes its text as a `pluginAsset`. Open Specification is absent when either is missing.
@@ -258,4 +258,16 @@ decision D-3: World Clock is published under the key `org.example.plugin.worldCl
   for: user:dmaretskyi
   affects: [QA-2]
   why: The registry attaches a spec to the plugin whose key matches the asset's `pluginId`, and the spec names that key.
+```
+
+```mdl
+decision D-4: Each project from the template gets its own plugin key, `org.example.plugin.worldClock` and six random hex digits, which the task text and the spec's `id` both carry. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-3
+  why: Registry keys are global, so the fixed key was claimed by its first publisher and refused to every later one as "owned by another identity".
+  rejected:
+    - Let the agent pick a key: the spec's `id` would then differ from the text the template seeded.
 ```

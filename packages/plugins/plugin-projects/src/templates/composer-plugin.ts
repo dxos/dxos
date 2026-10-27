@@ -87,8 +87,17 @@ export const readGuide = (how: string): TaskSeed => ({
   estimate: 'xs',
 });
 
-/** The key the plugin is published under; the spec's `id` names it too. */
-export const PLUGIN_KEY = 'org.example.plugin.worldClock';
+/** Stands for the plugin's key in the task text until {@link makeComposerPlugin} mints one per project. */
+export const PLUGIN_KEY_SLOT = '{{pluginKey}}';
+
+/**
+ * A key no other publisher holds: registry keys are global, so a fixed one is claimed by its first publisher and
+ * refused to everyone after.
+ */
+export const mintPluginKey = (): string => {
+  const suffix = Array.from(crypto.getRandomValues(new Uint8Array(3)), (byte) => byte.toString(16).padStart(2, '0'));
+  return `org.example.plugin.worldClock${suffix.join('')}`;
+};
 
 const FENCE = '```';
 
@@ -96,8 +105,8 @@ const FENCE = '```';
  * The plugin's spec, seeded by the template and shipped in the bundle, so Plugins → Registry → Open Specification
  * shows the same text the project started from.
  */
-export const WORLD_CLOCK_SPEC = `---
-id: ${PLUGIN_KEY}
+export const worldClockSpec = (key: string): string => `---
+id: ${key}
 name: WorldClockPlugin
 version: 0.1.0
 ---
@@ -161,8 +170,8 @@ feat F-1: World Clock
 ${FENCE}
 `;
 
-/** Ships {@link WORLD_CLOCK_SPEC} with the bundle, as the guide's "Ship a spec" section does. */
-const SHIP_SPEC = ` Use the key \`${PLUGIN_KEY}\`. Write this \`PLUGIN.mdl\` beside \`dx.config.ts\` exactly as given, set \`spec: 'PLUGIN.mdl'\` in \`dx.config.ts\`, and ship it as the guide's "Ship a spec" section shows: \`Plugin.addModule(AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: () => import('../PLUGIN.mdl?raw'), mimeType: 'application/x-mdl' }))\` and a \`src/raw.d.ts\` declaring \`*?raw\`. Plugins → Registry shows it as the plugin's specification.\n\n\`${FENCE}markdown\n${WORLD_CLOCK_SPEC}\`${FENCE}`;
+/** Ships {@link worldClockSpec} with the bundle, as the guide's "Ship a spec" section does. */
+const SHIP_SPEC = ` Use the key \`${PLUGIN_KEY_SLOT}\`. Write this \`PLUGIN.mdl\` beside \`dx.config.ts\` exactly as given, set \`spec: 'PLUGIN.mdl'\` in \`dx.config.ts\`, and ship it as the guide's "Ship a spec" section shows: \`Plugin.addModule(AppCapability.pluginAsset({ pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: () => import('../PLUGIN.mdl?raw'), mimeType: 'application/x-mdl' }))\` and a \`src/raw.d.ts\` declaring \`*?raw\`. Plugins → Registry shows it as the plugin's specification.\n\n\`${FENCE}markdown\n${worldClockSpec(PLUGIN_KEY_SLOT)}\`${FENCE}`;
 
 /** The plugin itself; `folder` is where its files go and `build` the sentence that says where it is served from. */
 export const writePlugin = (folder: string, build: string, extra = ''): TaskSeed => ({
@@ -267,8 +276,10 @@ ${IDS}`,
 };
 
 /** The parent task and its four subtasks, each subtask depending on the one before it. */
-const makeTasks = (steps: ReadonlyArray<TaskSeed>): Task.Task => {
-  const subtasks = steps.map((step) => Task.make({ ...step, status: 'todo' }));
+const makeTasks = (steps: ReadonlyArray<TaskSeed>, pluginKey: string): Task.Task => {
+  const subtasks = steps.map((step) =>
+    Task.make({ ...step, description: step.description?.replaceAll(PLUGIN_KEY_SLOT, pluginKey), status: 'todo' }),
+  );
   for (const [index, task] of subtasks.entries()) {
     if (index > 0) {
       Obj.update(task, (task) => {
@@ -280,8 +291,11 @@ const makeTasks = (steps: ReadonlyArray<TaskSeed>): Task.Task => {
   return Task.make({ ...PARENT, status: 'todo', subtasks: subtasks.map((task) => Ref.make(task)) });
 };
 
-/** The "Composer Plugin" template for one variant: a chat builds a TypeScript plugin and offers it back to load. */
-export const makeComposerPlugin = (variant: Variant): ProjectCapabilities.Template => ({
+/**
+ * The "Composer Plugin" template for one variant: a chat builds a TypeScript plugin and offers it back to load.
+ * Each project gets its own plugin key from `mintKey`.
+ */
+export const makeComposerPlugin = (variant: Variant, mintKey = mintPluginKey): ProjectCapabilities.Template => ({
   id: 'org.dxos.project.composerPlugin',
   label: 'Composer Plugin',
   icon: 'ph--puzzle-piece--regular',
@@ -296,7 +310,7 @@ export const makeComposerPlugin = (variant: Variant): ProjectCapabilities.Templa
       });
       const taskSet = project.taskSet?.target;
       if (taskSet) {
-        TaskSet.addTaskToSet(taskSet, makeTasks(variant.steps));
+        TaskSet.addTaskToSet(taskSet, makeTasks(variant.steps, mintKey()));
       }
 
       return project;

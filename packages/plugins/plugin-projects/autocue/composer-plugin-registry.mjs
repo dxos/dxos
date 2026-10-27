@@ -104,15 +104,22 @@ const parentDone = ({ page }) =>
     { tab: SPACE_TAB, title: PARENT_TASK },
   );
 
+/** Whether this profile's identity was bound by an earlier take. */
+const bound = ({ page }) =>
+  page.evaluate((key) => localStorage.getItem(key) === globalThis.dxos?.client.halo.identity.get()?.did, BOUND_KEY);
+
 export const steps = [
   step('Prep (off camera): clear the last take'),
   {
     // The sandbox's account token and the private registry both need an account; a `test+` email binds one.
     name: 'Prep (off camera): bind the identity to an EDGE account',
     setup: true,
-    done: ({ page }) =>
-      page.evaluate((key) => localStorage.getItem(key) === globalThis.dxos?.client.halo.identity.get()?.did, BOUND_KEY),
-    run: async ({ page }) => {
+    done: bound,
+    run: async (context) => {
+      const { page } = context;
+      if (await bound(context)) {
+        return;
+      }
       const identity = await page.evaluate(() => {
         const current = globalThis.dxos.client.halo.identity.get();
         const hex = Array.from(current.identityKey.data, (byte) => byte.toString(16).padStart(2, '0')).join('');
@@ -133,7 +140,8 @@ export const steps = [
       await page.evaluate(([key, did]) => localStorage.setItem(key, did), [BOUND_KEY, identity.identityDid]);
       // The client caches its EDGE credential from before the binding.
       await page.reload({ timeout: 120_000 });
-      await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 180_000 });
+      // The space tab, not a plank: the clear step closes every plank.
+      await page.locator(SPACE_TAB).first().waitFor({ state: 'visible', timeout: 180_000 });
       await page.waitForTimeout(BIND_SETTLE);
     },
   },
@@ -171,7 +179,7 @@ export const steps = [
     name: 'Wait for the agent to publish the plugin',
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'The assistant builds World Clock in a Sandbox and publishes it privately',
+        value: 'The assistant builds World Clock and publishes it privately',
         subtitle: 'the sandbox it creates gets DX_API_TOKEN for this account',
       });
       // Polled from here, not with `waitForFunction`: its predicate cannot await, and a returned promise is truthy.

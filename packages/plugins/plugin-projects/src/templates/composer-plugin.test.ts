@@ -14,13 +14,14 @@ import { Text } from '@dxos/schema';
 import { Task, TaskSet } from '@dxos/types';
 
 import {
-  PLUGIN_KEY,
+  PLUGIN_KEY_SLOT,
   type Variant,
-  WORLD_CLOCK_SPEC,
   composerPlugin,
   desktopVariant,
   makeComposerPlugin,
+  mintPluginKey,
   registryVariant,
+  worldClockSpec,
 } from './composer-plugin.ts';
 
 const COMMIT = '0123456789abcdef0123456789abcdef01234567';
@@ -49,13 +50,15 @@ describe('Composer Plugin project template', () => {
     await builder.close();
   });
 
+  const KEY = 'org.example.plugin.worldClock0a1b2c';
+
   const scaffold = async (variant: Variant = desktopVariant(TOOLCHAIN)) => {
     const { db } = await builder.createDatabase({
       types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
     });
     const project = db.add(
       await EffectEx.runPromise(
-        makeComposerPlugin(variant)
+        makeComposerPlugin(variant, () => KEY)
           .scaffold({})
           .pipe(Effect.provideService(Database.Service, Database.makeService(db))),
       ),
@@ -150,11 +153,20 @@ describe('Composer Plugin project template', () => {
     const taskSet = await project.taskSet?.load();
     const parent = await taskSet?.tasks[0].load();
     const write = (await parent?.subtasks?.[1].load())?.description ?? '';
-    expect(WORLD_CLOCK_SPEC.startsWith(`---\nid: ${PLUGIN_KEY}\n`)).toBe(true);
-    expect(write).toContain(`\`\`\`\`markdown\n${WORLD_CLOCK_SPEC}\`\`\`\``);
-    expect(write).toContain(`Use the key \`${PLUGIN_KEY}\``);
+    expect(worldClockSpec(KEY).startsWith(`---\nid: ${KEY}\n`)).toBe(true);
+    expect(write).toContain(`\`\`\`\`markdown\n${worldClockSpec(KEY)}\`\`\`\``);
+    expect(write).toContain(`Use the key \`${KEY}\``);
+    expect(write).not.toContain(PLUGIN_KEY_SLOT);
     expect(write).toContain("spec: 'PLUGIN.mdl'");
     expect(write).toContain('AppCapability.pluginAsset');
+  });
+
+  test('mints a camelCase plugin key no earlier project holds', ({ expect }) => {
+    const keys = new Set(Array.from({ length: 20 }, () => mintPluginKey()));
+    expect(keys.size).toBe(20);
+    for (const key of keys) {
+      expect(key).toMatch(/^org\.example\.plugin\.worldClock[0-9a-f]{6}$/);
+    }
   });
 
   test('is offered in a browser only with a toolchain and an EDGE', ({ expect }) => {
