@@ -54,9 +54,9 @@ node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resu
   writes it to `.secrets/mail-canary-gmail.env`. It uses EDGE dev's Google OAuth client (1Password
   `eng-dev/com.google`, section `dev`), which lists `http://127.0.0.1:53682/` as an authorized
   redirect; run it on a machine with a browser. If that client's consent screen is External and in
-  testing mode, the refresh token expires after 7 days. Store the refresh token in section
-  `mail-canary` (`GMAIL_REFRESH_TOKEN`), where a cloud session reads it through `gmail.env.tpl`, and
-  all three values in the CI secrets.
+  testing mode, the refresh token expires after 7 days. Store the refresh token in 1Password
+  `eng-dev/network.dxos.mail-canary` (`REFRESH_TOKEN`), where a cloud session reads it through
+  `gmail.env.tpl`, and all three values in the CI secrets.
 - An import puts each message in the mailbox without sending it: archived, never spam, labelled
   `enron-pool` and nothing else, dated by its `Date` header. In the trial, check the dates are the
   shifted ones (not 2001, not today); `purge` then trashes it.
@@ -76,7 +76,8 @@ node scripts/03-setup-space.mjs verify <space id>          # after binding Gmail
 
 `create` makes a `mail-canary` dx profile on preview, signs up the test address, creates the space and
 prints its id (variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase (secret
-`MAIL_CANARY_RECOVERY_PHRASE`) once. Then, in Composer on preview, sign in as the test account, open
+`MAIL_CANARY_RECOVERY_PHRASE`) once; keep both in `eng-dev/network.dxos.mail-canary` (`SPACE_ID`,
+`RECOVERY_PHRASE`). Then, in Composer on preview, sign in as the test account, open
 "Mail canary" and add a Gmail connection with the defaults; the CLI cannot bind a mailbox yet.
 `verify` checks the space has a mailbox, a trace feed and one enabled remote sync trigger.
 
