@@ -95,10 +95,11 @@ export const openCredentialsDocument = async (
   ctx: Context,
   echoHost: EchoHost,
   spaceId: SpaceId,
+  { timeout }: { timeout?: number } = {},
 ): Promise<CredentialsDocumentStore> => {
   const open = async (url: AutomergeUrl): Promise<CredentialsDocumentStore> => {
     // The lease is held by the store: it writes credentials for as long as the space is open.
-    const lease = await echoHost.loadDoc<CredentialsDocument>(ctx, url);
+    const lease = await echoHost.loadDoc<CredentialsDocument>(ctx, url, { timeout });
     invariant(lease, 'Credentials document must load.');
     return store(lease);
   };

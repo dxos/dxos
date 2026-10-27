@@ -5,12 +5,13 @@
 import { getHeads } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as SqlClient from 'effect/sql/SqlClient';
 import * as SqlError from 'effect/sql/SqlError';
 import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Aggregate, Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory, EchoFeedCodec, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
@@ -349,6 +350,41 @@ describe('EchoHost trace indexing', () => {
   });
 });
 
+describe('EchoHost feed indexing', () => {
+  // Regression: every pass a feed append started re-read the heads of every document and every
+  // cursor, though an append changes no document (UI lag trace, 2026-10-26).
+  test('a pass started by feed appends alone does not rescan documents', async () => {
+    const { host, runtime, spaceId, saveDocs } = await setup();
+    await saveDocs(200);
+    await host.updateIndexes();
+    const update = vi.spyOn(host.indexEngine, 'update');
+    const documentScans = () => update.mock.calls.filter(([, source]) => source.sourceName === 'automerge').length;
+    const feedScans = () => update.mock.calls.filter(([, source]) => source.sourceName !== 'automerge').length;
+
+    const feedId = EntityId.random();
+    for (let index = 0; index < 20; index++) {
+      const scansBefore = feedScans();
+      await RuntimeProvider.runPromise(runtime)(
+        host.feedStore.appendLocal([
+          {
+            spaceId,
+            feedId,
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+            data: EchoFeedCodec.encode({ id: EntityId.random() }),
+          },
+        ]),
+      );
+      await expect.poll(feedScans).toBeGreaterThan(scansBefore);
+    }
+    expect(documentScans()).toBe(0);
+
+    // A document saved after the appends is still indexed by the next background pass.
+    const scansBefore = documentScans();
+    await saveDocs();
+    await expect.poll(documentScans).toBeGreaterThan(scansBefore);
+  });
+});
+
 describe('EchoHost query service', () => {
   test('a one-shot query stream ends after its first result', async () => {
     const { host, spaceId, saveObject } = await setup();
@@ -413,6 +449,78 @@ describe('EchoHost query service', () => {
 
     releaseBatch.wake();
     await batch;
+  });
+
+  test('queries run one at a time and report only their own evaluation time', async ({ expect }) => {
+    const STALL_MS = 200;
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    let running = 0;
+    let overlapped = false;
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      overlapped ||= running > 0;
+      running++;
+      try {
+        if (this.queryId === 'slow') {
+          await sleep(STALL_MS);
+        }
+        return await execQuery.call(this);
+      } finally {
+        running--;
+      }
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const run = (queryId: string) =>
+      EffectEx.runPromise(
+        Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, queryId))),
+      );
+    const [slow, queued] = await Promise.all([run('slow'), run('queued')]);
+
+    expect(overlapped).toBe(false);
+    expect(Option.getOrThrow(slow).executionTime).toBeGreaterThanOrEqual(STALL_MS);
+    // Queued behind the stalled query, yet charged only for its own run.
+    expect(Option.getOrThrow(queued).executionTime).toBeLessThan(STALL_MS / 2);
+  });
+
+  test('a query closed while queued behind a batch is skipped', async ({ expect }) => {
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    const slowStarted = new Trigger();
+    const releaseSlow = new Trigger();
+    onTestFinished(() => {
+      releaseSlow.wake();
+    });
+    const executed: string[] = [];
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      executed.push(this.queryId);
+      if (this.queryId === 'slow') {
+        slowStarted.wake();
+        await releaseSlow.wait();
+      }
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const slow = EffectEx.runPromise(
+      Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'slow'))),
+    );
+    const queued = Effect.runFork(
+      Stream.runDrain(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'queued'))),
+    );
+    await slowStarted.wait();
+    await EffectEx.runPromise(Fiber.interrupt(queued));
+    releaseSlow.wake();
+    await slow;
+    await host.queryService.awaitQueryUpdates();
+
+    expect(executed).toEqual(['slow']);
   });
 
   test('a one-shot id lookup cancelled before it runs is never executed', async () => {

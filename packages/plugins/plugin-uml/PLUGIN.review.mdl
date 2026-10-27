@@ -1,0 +1,94 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-uml/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: UmlPlugin
+
+The class shape is built: `ClassNode` is a canvas node type with a name (stored as `label`) and
+line-per-member attribute and method compartments, seeded with "Class", "id: string" and
+"save(): void", and contributed to plugin-canvas with `LinesField` editors. The canvas model has a
+hollow `triangle` end marker. The UML skill is registered as a skill definition.
+
+Of 9 items: 2 done, 5 untested, 0 partial, 1 diverged, 1 missing. `ClassNodeView` shares the `UmlSkill`
+fence, so the tool does not list it; `ClassNodeView.tsx` renders the three compartments, untested beyond its story. Findings:
+
+- **The skill no longer leads with mermaid.** `UmlSkill` tells the agent to emit semantic diagram
+  statements to `DrawingOperation.Draw` and score them; the mermaid `Generate` path is marked
+  deprecated, unlike the spec's description.
+- **Interaction is untested.** Double-click editing, the properties panel and the triangle marker
+  have no tests; `plugin.test.ts` checks only that `translations` activates.
+- **F-3.1 is unverified.** No test checks that the skill is present when the plugin is on and absent when it is off.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ClassNode: A canvas node of type class with label, attributes and methods.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/types/ClassNode.ts#ClassNode, github:dxos/dxos/packages/plugins/plugin-uml/src/types/ClassNode.ts#spec]
+  tests: [github:dxos/dxos/packages/plugins/plugin-uml/src/types/ClassNode.test.ts]
+  note: The class name is the node's `label`, not a `name` field.
+```
+
+```mdl
+verdict UmlSkill: The skill draws semantic statements with DrawingOperation.Draw; mermaid Generate is deprecated.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/skills/UmlSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/skill-definition.ts]
+  note: The spec says the agent emits a mermaid classDiagram compiled by Generate; the instructions now use Draw and Score and mark Generate deprecated.
+```
+
+```mdl
+verdict F-1.1: The class node type is contributed to plugin-canvas's NodeType, giving a Class palette tool.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/class-node-type.ts, github:dxos/dxos/packages/plugins/plugin-uml/src/types/ClassNode.ts#spec]
+  note: plugin.test.ts asserts the module does not activate in Node; no test checks the palette.
+```
+
+```mdl
+verdict F-1.2: A new class has "Class", "id: string" and "save(): void" as placeholders.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/types/ClassNode.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-uml/src/types/ClassNode.test.ts]
+```
+
+```mdl
+verdict F-1.3: Compartments are declared as parts, with members edited one per line.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/types/ClassNode.ts#spec, github:dxos/dxos/packages/plugins/plugin-uml/src/components/ClassNodeView/ClassNodeView.tsx#ClassNodeView]
+  note: ClassNode.test.ts checks line splitting via partValues, but no test double-clicks a compartment.
+```
+
+```mdl
+verdict F-1.4: The schema and LinesField editors let the properties panel edit name and members.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/class-node-type.ts]
+  note: No test opens the properties panel.
+```
+
+```mdl
+verdict F-2.1: Link markers include a hollow triangle, drawn filled with the canvas colour.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#Marker, github:dxos/dxos/packages/ui/react-ui-canvas/src/components/SceneLayer/SceneLayer.tsx]
+  note: No test renders a triangle end marker.
+```
+
+```mdl
+verdict F-3.1: The skill is contributed as a SkillDefinition while the plugin is active.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/index.ts#SkillDefinition, github:dxos/dxos/packages/plugins/plugin-uml/src/capabilities/skill-definition.ts]
+  note: No test checks the skill's presence or absence.
+```
+
+```mdl
+verdict QA-1: Not automated.
+  status: missing
+  note: Manual and unverified; no Playwright spec or story play function drives the canvas class tool.
+```

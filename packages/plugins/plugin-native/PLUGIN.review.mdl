@@ -1,0 +1,220 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-native/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: NativePlugin
+
+The three native features exist: the spotlight listener, the OTA updater and the Ollama sidecar all live in
+`src/capabilities/` and do roughly what the spec says. Nothing in the package is tested — there is no test
+file or story in `plugin-native` — so every implemented item is `untested` and every scenario is `missing`.
+
+The update types moved to `@dxos/app-toolkit/AppUpdate` (shared with plugin-pwa) and grew a `dev` status,
+which is the biggest divergence: a dev-server build on a supported platform reports `dev`, not
+`unsupported` (UpdateStatus, F-2.4, T-5). The three "ops" are methods on the `UpdateManager` capability, not
+operations. The Ollama sidecar activates on `ActivationEvents.Startup` and spawns lazily on first use, not on
+`AssistantEvents.SetupAiServiceProviders` (F-3.1).
+
+Of 26 items: 0 done, 16 untested, 1 partial, 3 diverged, 6 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Settings: An empty settings struct, persisted through KvsStore.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/settings.ts]
+  note: `Schema.Struct({})` matches the empty spec; no test exercises the settings module.
+```
+
+```mdl
+verdict UpdateStatus: The status union lives in app-toolkit and adds a dev kind the spec does not list.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/app/AppUpdate.ts#Status]
+  note: |
+    `AppUpdate.Status` has every spec literal plus `dev` (a supported platform served by a dev server).
+    plugin-native only re-exports it from `types/Update.ts`.
+```
+
+```mdl
+verdict UpdateState: The state is a discriminated union carrying the spec's per-kind fields.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/app/AppUpdate.ts#Status, github:dxos/dxos/packages/sdk/app-toolkit/src/app/AppUpdate.ts#Progress]
+  note: |
+    Modelled as one union (`Status`) rather than a struct with optional fields; `progress.unit` is
+    `'bytes' | 'entries'` because the web platform shares it. No test.
+```
+
+```mdl
+verdict NativeSettings: The updates row exists but the component takes no settings props.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/containers/NativeSettings/NativeSettings.tsx#NativeSettings, github:dxos/dxos/packages/sdk/app-toolkit/src/ui/hooks/useUpdateRow.tsx#useUpdateRow]
+  walkthrough:
+    - The container reads the UpdateManager capability and renders one Updates field. github:dxos/dxos/packages/plugins/plugin-native/src/containers/NativeSettings/NativeSettings.tsx#NativeSettings
+    - The shared hook holds the pending state and maps each status to a description and Check / Update / Relaunch button. github:dxos/dxos/packages/sdk/app-toolkit/src/ui/hooks/useUpdateRow.tsx#useUpdateRow
+  note: |
+    Status, pending state and the three actions match, via the shared `useUpdateRow`. The `settings` and
+    `onSettingsChange` props do not exist (the component takes none). No test or story.
+```
+
+```mdl
+verdict CheckForUpdate: Implemented as UpdateManager.check, not as an operation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts]
+  note: |
+    `manager.check` sets checking, then up-to-date / available / failed, and no-ops when OTA is disabled
+    (`SUPPORTS_OTA` plus the port check). It is a capability method, not an `Operation.make`. No test.
+```
+
+```mdl
+verdict InstallUpdate: Implemented as UpdateManager.install, streaming byte progress, without relaunch.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts]
+  note: `doInstall` streams Started/Progress events to the atom and ends in ready or failed; it returns early with no cached pending update. A capability method, not an operation. No test.
+```
+
+```mdl
+verdict RelaunchApp: Implemented as UpdateManager.apply, which saves unsaved changes before relaunching.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts, github:dxos/dxos/packages/plugins/plugin-native/src/unsaved-changes.ts#saveBeforeLeaving]
+  note: `apply` calls `relaunchSaved`, which relaunches only after unsaved changes are saved, else shows a toast. Not an operation. No test.
+```
+
+```mdl
+verdict F-1.1: An open event invokes LayoutOperation.Open with the decoded payload.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/spotlight-listener.ts]
+  note: The `'open'` case decodes with `Schema.decodeUnknownSync(LayoutOperation.Open.input)`. No test.
+```
+
+```mdl
+verdict F-1.2: A switch-workspace event invokes LayoutOperation.SwitchWorkspace with the decoded payload.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/spotlight-listener.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.3: The main window is shown and focused after handling.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/spotlight-listener.ts]
+  note: `show()` and `setFocus()` run after the switch, also after an unknown operation (only a thrown error skips them). No test.
+```
+
+```mdl
+verdict F-1.4: An unknown operation logs a warning and dispatches nothing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/spotlight-listener.ts]
+  note: The default branch calls `log.warn('Unknown spotlight operation')`; the window is still shown. No test.
+```
+
+```mdl
+verdict F-1.5: A payload that fails to decode is logged and nothing is dispatched.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/spotlight-listener.ts]
+  note: `decodeUnknownSync` throws before the invoke and `log.catch` records it. No test.
+```
+
+```mdl
+verdict F-2.1: A detached fiber checks at once and repeats hourly, but stops once an update is ready.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts, github:dxos/dxos/packages/plugins/plugin-native/src/constants.ts#TAURI_LOCALHOST_PORTS]
+  note: `Effect.repeat` with `Schedule.fixed(Duration.hours(1))` runs `while` the action returns true, so it stops after an update installs. No test.
+```
+
+```mdl
+verdict F-2.2: After a background download, a Relaunch toast appears and the status is ready.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts]
+  note: `doInstall` sets ready and the background action invokes `LayoutOperation.AddToast` with an infinite duration and a relaunch action. No test.
+```
+
+```mdl
+verdict F-2.3: A thrown check sets failed with a formatted error string.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts]
+  note: `safeCheck` catches and `formatError` returns the string or `Error.message`. No test.
+```
+
+```mdl
+verdict F-2.4: A dev-server build disables the updater but reports dev, not unsupported, on a supported platform.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts, github:dxos/dxos/packages/plugins/plugin-native/src/constants.ts#TAURI_LOCALHOST_PORTS]
+  note: |
+    `disabledStatus` is `{ kind: 'dev' }` when the platform is in `SUPPORTS_OTA`, and `unsupported` only for
+    other platforms. The code comments say this is deliberate; the spec still says unsupported.
+```
+
+```mdl
+verdict F-2.5: The module finalizer interrupts the update fiber.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/updater.ts]
+  note: `Effect.addFinalizer(() => Fiber.interrupt(fiber))`. No test.
+```
+
+```mdl
+verdict F-3.1: Ollama spawns as a shell command on port 21434, lazily on first use, not on SetupAiServiceProviders.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/ollama.ts#OllamaSidecarLive, github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/index.ts#Ollama]
+  note: |
+    The module activates on `ActivationEvents.Startup` (the index comment explains why), and the process
+    spawns when the managed runtime first forces `OllamaSidecar`. It is `Command.create('ollama')`, not a
+    Tauri sidecar binary.
+```
+
+```mdl
+verdict F-3.2: The sidecar resolver is contributed as an AiModelResolver.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/ollama.ts]
+  note: `OllamaSidecarModelResolver` is contributed under `AppCapabilities.AiModelResolver` at activation, before the process runs. No test.
+```
+
+```mdl
+verdict F-3.3: Teardown disposes the runtime, whose layer finalizer kills the process.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/ollama.ts#OllamaSidecarLive]
+  note: The module finalizer calls `runtime.dispose()`; the scoped layer's finalizer calls `child.kill()`. No test.
+```
+
+```mdl
+verdict T-1: No automated test runs the spotlight open flow.
+  status: missing
+  note: plugin-native has no test files or stories.
+```
+
+```mdl
+verdict T-2: No automated test runs the unknown-operation flow.
+  status: missing
+  note: plugin-native has no test files or stories.
+```
+
+```mdl
+verdict T-3: No automated test runs the update check transitions.
+  status: missing
+  note: plugin-native has no test files; app-toolkit has no test for the update row either.
+```
+
+```mdl
+verdict T-4: No automated test runs the failed-check flow.
+  status: missing
+  note: plugin-native has no test files.
+```
+
+```mdl
+verdict T-5: No automated test runs the dev-server flow, and the code reports dev rather than unsupported.
+  status: missing
+  note: plugin-native has no test files; see F-2.4 for the status divergence.
+```
+
+```mdl
+verdict QA-1: The QA test is manual and marked blocked; no automation runs it.
+  status: missing
+  note: Needs a Tauri desktop build with a real pending release; nothing automated exists.
+```

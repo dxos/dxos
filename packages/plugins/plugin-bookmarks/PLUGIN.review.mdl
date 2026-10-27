@@ -1,0 +1,181 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-bookmarks/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: BookmarksPlugin
+
+The plugin implements every feature the spec names: the `Bookmark` type with its label and icon
+annotations, `AddFromSnapshot` and `Summarize` operations, the plugin-crx page action, article and
+card surfaces, and unanchored comments. The snapshot mapping is well tested in `Bookmark.test.ts`,
+and the surfaces have stories. Nothing exercises the operations themselves, the page-action
+contribution or the comment config, so most behavioural items are `untested`.
+
+The one real divergence is the excerpt rule: `Bookmark.fromSnapshot` prefers `selection.text` over
+`hints.ogDescription`, the reverse of F-2.1 and of the `Bookmark` type comment; the tests pin the
+code's order. The page action also adds a third context (`picker`) the spec does not list.
+
+Of 20 items: 7 done, 7 untested, 0 partial, 2 diverged, 4 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Bookmark: The ECHO type has every field the spec lists, with summary as a Ref to Text.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.ts#Bookmark]
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.test.ts]
+```
+
+```mdl
+verdict F-1.1: The schema capability registers Bookmark (and Text) with the schema module.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/index.ts#Schema, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/schema.ts]
+  note: No test activates the plugin and checks the registered schema.
+```
+
+```mdl
+verdict F-1.2: LabelAnnotation names `title` and IconAnnotation sets the bookmark icon.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.ts#Bookmark]
+  note: The annotations are present on the schema; no test reads the label or icon back.
+```
+
+```mdl
+verdict F-2.1: AddFromSnapshot creates the Bookmark and returns its id, but the excerpt prefers the selection over ogDescription.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/BookmarkOperation.ts#AddFromSnapshot, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/operations/add-from-snapshot.ts, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.ts#fromSnapshot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.test.ts]
+  walkthrough:
+    - The operation declares `{ snapshot, target }` in and `{ id }` out. github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/BookmarkOperation.ts#AddFromSnapshot
+    - fromSnapshot maps the snapshot fields onto a new Bookmark. github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.ts#fromSnapshot
+    - The handler adds the object through SpaceOperation.AddObject on the target's space and returns its id. github:dxos/dxos/packages/plugins/plugin-bookmarks/src/operations/add-from-snapshot.ts
+  note: |
+    `fromSnapshot` computes `excerpt` as `selection.text.slice(0, 280) ?? hints.ogDescription`, the reverse of the spec's
+    `ogDescription ?? selection`. The code comment and the test "excerpt prefers the picked/selected text over
+    og:description" make this deliberate, so the spec is stale. The handler writes via `SpaceOperation.AddObject`
+    (by `target.spaceId`), not straight into `target`.
+```
+
+```mdl
+verdict F-2.2: A snapshot with no hints and no selection still yields a Bookmark titled with the tab title.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.ts#fromSnapshot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.test.ts]
+```
+
+```mdl
+verdict F-3.1: The "Add bookmark" page action is contributed, but with an extra `picker` context.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/page-action.ts, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/index.ts#PageActionProvider]
+  note: |
+    URL patterns, the `snapshot` extractor and the `AddFromSnapshot` operation match. `contexts` is
+    `['popup', 'page', 'picker']`, where the spec lists only popup and page. No test checks the contribution
+    (`plugin-crx/src/page-actions.test.ts` uses its own fixture).
+```
+
+```mdl
+verdict F-3.2: The action targets all http(s) URLs with the popup context, so the extension can list it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/page-action.ts]
+  note: Display in the extension popup is plugin-crx behaviour; nothing tests the bookmark action appearing there.
+```
+
+```mdl
+verdict F-4.1: The article panel shows title, image, excerpt, summary and an open-source action.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/containers/BookmarkArticle/BookmarkArticle.tsx#BookmarkArticle, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/containers/BookmarkArticle/BookmarkArticle.stories.tsx]
+  note: The open-source control is the toolbar action plus a clickable URL line, not a button in the panel body.
+```
+
+```mdl
+verdict F-4.2: The card renders title, excerpt and image when present.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.tsx#BookmarkCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/containers/BookmarkCard/BookmarkCard.stories.tsx]
+```
+
+```mdl
+verdict F-4.3: The toolbar is built with MenuBuilder and has summarize and open-source actions with the stated disabling.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/containers/BookmarkArticle/BookmarkArticle.tsx#BookmarkArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/containers/BookmarkArticle/BookmarkArticle.stories.tsx]
+  note: Summarize is also disabled when the URL is not http(s), in addition to while running.
+```
+
+```mdl
+verdict F-5.1: Summarize fetches via the CRX render-proxy with EDGE fallback, extracts text, generates markdown and stores a Text.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/BookmarkOperation.ts#Summarize, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/util/fetch-page.ts#fetchPage, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/util/extract-readable-text.ts#extractReadableText, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/operations/summarize.ts]
+  walkthrough:
+    - The operation declares a Bookmark ref in and a Text ref out. github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/BookmarkOperation.ts#Summarize
+    - fetchPage tries the extension render-proxy and falls back to the EDGE CORS proxy. github:dxos/dxos/packages/plugins/plugin-bookmarks/src/util/fetch-page.ts#fetchPage
+    - extractReadableText strips markup to plain text. github:dxos/dxos/packages/plugins/plugin-bookmarks/src/util/extract-readable-text.ts#extractReadableText
+    - The handler runs an AiRequest, adds a Text with the reply and returns its ref. github:dxos/dxos/packages/plugins/plugin-bookmarks/src/operations/summarize.ts
+  note: Only `extractReadableText` has a test; the operation and `fetchPage` are not exercised.
+```
+
+```mdl
+verdict F-5.2: The handler sets bookmark.summary to the new Text and the article renders it via Summary.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/operations/summarize.ts, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/components/Summary/Summary.tsx#Summary]
+  note: No test runs Summarize and checks the linked ref or the rendered markdown.
+```
+
+```mdl
+verdict F-5.3: Failures surface through the invoker's error notification and the bookmark is only updated after success.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/containers/BookmarkArticle/BookmarkArticle.tsx#BookmarkArticle, github:dxos/dxos/packages/plugins/plugin-bookmarks/src/operations/summarize.ts]
+  note: The toast comes from `notify.error` on `invokePromise`; `Obj.update` runs last, so a failure leaves the bookmark unmodified. Not tested.
+```
+
+```mdl
+verdict F-6.1: CommentConfig is contributed for the Bookmark typename with `comments: unanchored`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/capabilities/comment-config.ts]
+  note: No test checks that the comments companion is offered for a Bookmark.
+```
+
+```mdl
+verdict F-6.2: Anchored comments into the summary are a declared follow-up and are not built.
+  status: missing
+  note: The spec marks this as a follow-up; `comment-config.ts` registers unanchored comments only.
+```
+
+```mdl
+verdict T-1: The "prefers og hints" test checks title, excerpt, image and favicon from hints.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.test.ts]
+```
+
+```mdl
+verdict T-2: The "falls back to tab title and selection text" test checks title, 280-char excerpt and unset image.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-bookmarks/src/types/Bookmark.test.ts]
+```
+
+```mdl
+verdict T-3: No test invokes AddFromSnapshot against a database.
+  status: missing
+  note: Searched the plugin and `packages/` for tests of `AddFromSnapshot`; only `fromSnapshot` is tested.
+```
+
+```mdl
+verdict QA-1: No automation runs the save-and-summarize round-trip.
+  status: missing
+  note: No e2e or integration test invokes `addFromSnapshot` and `summarize` in sequence.
+```
+
+```mdl
+verdict QA-2: No automation checks the extension popup lists the action.
+  status: missing
+  note: Manual registration check; no crx e2e covers it.
+```

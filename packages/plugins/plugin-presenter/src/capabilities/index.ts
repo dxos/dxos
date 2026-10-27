@@ -12,6 +12,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { PresenterCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['browser', 'node', 'tauri'],
@@ -37,6 +38,9 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.slide'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
+  provides: [PresenterCapabilities.Settings],
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

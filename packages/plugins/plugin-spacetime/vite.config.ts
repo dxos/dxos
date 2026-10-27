@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     SpacetimePlugin: 'src/SpacetimePlugin.ts',
+    SpacetimePresets: 'src/SpacetimePresets.ts',
     plugin: 'src/plugin.tsx',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
