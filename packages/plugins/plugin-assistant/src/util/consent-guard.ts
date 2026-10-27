@@ -42,10 +42,11 @@ const pending = new Map<string, Pending>();
 const allowed = new Map<string, Set<string>>();
 
 /**
- * One guard per chat: the agent service reuses a session only under the same guard, so a fresh guard
- * per call would restart the agent process on every prompt.
+ * One guard per chat and database: the agent service reuses a session only under the same guard, so a
+ * fresh guard per call would restart the agent process on every prompt; a new database gets a new guard,
+ * since the guard writes through the one it captured.
  */
-const guards = new Map<string, Process.Guard>();
+const guards = new Map<string, { readonly db: Database.Database; readonly guard: Process.Guard }>();
 
 const deny = (op: Operation.Definition.Any, message: string, context: Record<string, unknown> = {}) =>
   Effect.die(new Operation.OperationDeniedError({ message, context: { key: op.meta.key, ...context } }));
@@ -63,9 +64,10 @@ export const consentTitle = (op: Operation.Definition.Any): string =>
  */
 export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, never, Database.Service> =>
   Effect.gen(function* () {
+    const { db } = yield* Database.Service;
     const existing = guards.get(chat.id);
-    if (existing) {
-      return existing;
+    if (existing?.db === db) {
+      return existing.guard;
     }
     // Captured so the check can write to the chat's feed from inside the agent process, which holds no
     // database of its own for this space.
@@ -106,7 +108,7 @@ export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, neve
           }
         }),
     };
-    guards.set(chat.id, guard);
+    guards.set(chat.id, { db, guard });
     return guard;
   });
 

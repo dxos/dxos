@@ -99,7 +99,7 @@ test QA-1: Label an inbox from the toolbar
     - plugin-labeler is enabled
   steps:
     - name: Run the labeller
-      do: Open the mailbox and choose "Label messages" from the toolbar menu.
+      do: Open the mailbox and choose "Triage inbox" from the toolbar's magic-wand menu.
       invoke: org.dxos.operation.labeler.labelMailbox
       expect: progress reports the mailbox, then messages show tags
     - name: Check a request
@@ -109,7 +109,7 @@ test QA-1: Label an inbox from the toolbar
       do: Open a payment receipt.
       expect: it carries the user's "Receipts" tag and not "Needs reply"
     - name: Run it again
-      do: Choose "Label messages" a second time.
+      do: Choose "Triage inbox" a second time.
       invoke: org.dxos.operation.labeler.labelMailbox
       expect: the run reports every message skipped and no tag changes
 ```
@@ -203,4 +203,13 @@ decision D-6: The urgency and needs-reply questions name marketing and automated
   for: user:dmaretskyi
   affects: [F-1.1]
   why: Asked plainly, Jev rated a conference promotion ending tonight as urgent and needing a reply.
+```
+
+```mdl
+decision D-7: QA-1 runs the labeller through "Triage inbox", the toolbar action's current name. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-1]
+  why: The action was renamed from "Label messages" when it took on priority and extraction, so the old step named a menu item that no longer exists.
 ```
