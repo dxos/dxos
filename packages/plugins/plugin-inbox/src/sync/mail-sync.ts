@@ -46,6 +46,9 @@ import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, t
 export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) =>
   Obj.getURI(mailbox, { prefer: 'absolute' }).toString() + '#sync';
 
+/** Sync meter label, shared by the run and the pending meter it replaces so the handover keeps the text. */
+export const createSyncLabel = (mailbox: Mailbox.Mailbox) => `Syncing ${mailbox.name ?? 'mailbox'}`;
+
 /**
  * Wall-clock time a run spends taking new messages before it stops and requests `Operation.runAgain()`.
  * EDGE kills an invocation at 60s, and a killed run never saves its position, so the next run re-fetches
@@ -507,7 +510,7 @@ export const runMailSync = (
     // The phase leads, so the meter says what is happening before it says what to: sync and analyze
     // run against the same mailbox and both meters read `message`, and a name-first label truncated
     // away the only part that told them apart.
-    const syncLabel = `Syncing ${mailbox.name ?? 'mailbox'}`;
+    const syncLabel = createSyncLabel(mailbox);
     let progressCurrent = 0;
     let progressTotal: number | undefined;
     type StatusPatch = {

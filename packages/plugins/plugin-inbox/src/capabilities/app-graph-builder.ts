@@ -26,7 +26,7 @@ import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { createSyncProgressKey } from '#sync';
+import { createSyncProgressKey, withPendingSyncMonitor } from '#sync';
 import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants.ts';
@@ -540,7 +540,8 @@ export default Capability.makeModule(
             return [
               {
                 id: 'sync',
-                data: () => Binding.sync(mailbox),
+                data: () =>
+                  withPendingSyncMonitor(mailbox, Option.getOrUndefined(progressRegistry), Binding.sync(mailbox)),
                 properties: {
                   label: ['sync-mailbox.label', { ns: meta.profile.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
