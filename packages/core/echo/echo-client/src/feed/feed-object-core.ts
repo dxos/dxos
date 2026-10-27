@@ -4,7 +4,7 @@
 
 import { Entity } from '@dxos/echo';
 import { EchoFeedCodec, type FeedBlockRef } from '@dxos/echo-protocol';
-import { type AnyProperties, change, getMetaChecked } from '@dxos/echo/internal';
+import { type AnyProperties, change, getMetaChecked, setFeedBlockKeys } from '@dxos/echo/internal';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { FeedBranchMismatchError } from '../errors.ts';
@@ -48,17 +48,15 @@ const compareBlocks = (inbound: FeedBlockRef, current: FeedBlockRef | undefined)
   return 'newer';
 };
 
-/** An object's branch membership as its keys state it; `undefined` where a key is absent (the main branch, no fork). */
-export type BranchKeys = { branch: string | undefined; fork: string | undefined };
+/** An object's branch as its key states it; `branch` is `undefined` on the root branch. */
+export type BranchKeys = { branch: string | undefined };
 
-/** Reads the raw key ids, so a malformed id still compares unequal to every other branch. */
+/** Reads the raw key id, so a malformed id still compares unequal to every other branch. */
 export const branchKeysOf = (entity: Entity.Unknown): BranchKeys => ({
   branch: Entity.getKeys(entity, FeedProtocol.KEY_FEED_BRANCH).at(0)?.id,
-  fork: Entity.getKeys(entity, FeedProtocol.KEY_FEED_FORK).at(0)?.id,
 });
 
-const sameBranch = (left: BranchKeys, right: BranchKeys): boolean =>
-  left.branch === right.branch && left.fork === right.fork;
+const sameBranch = (left: BranchKeys, right: BranchKeys): boolean => left.branch === right.branch;
 
 /** What reconciling an inbound block would do, decided from its block reference alone. */
 type Classification = 'ignore' | 'reposition' | 'apply';
@@ -122,6 +120,12 @@ export class FeedObjectCore {
    */
   #branch: BranchKeys | undefined;
 
+  /**
+   * The block a fork the object is the base of starts at, until the store confirms the write that carries it. Kept
+   * here rather than on the entity, so a retried write still forks and a later update does not fork again.
+   */
+  #fork: { at: string; token: number | undefined } | undefined;
+
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
     const ref = EchoFeedCodec.blockOfKeys([
@@ -161,11 +165,37 @@ export class FeedObjectCore {
       this.restoreBranch();
     }
     this.#branch ??= branchKeysOf(this.entity);
-    const json = Entity.toJSON(this.entity) as Record<string, unknown>;
+    const entityJson = Entity.toJSON(this.entity) as Record<string, unknown>;
     const token = ++this.#nextToken;
+    // Only one write carries the fork, so an edit while it is in flight does not start a second branch.
+    const unsentFork = this.#fork?.token === undefined ? this.#fork : undefined;
+    const json = unsentFork ? EchoFeedCodec.withForkAt(entityJson, unsentFork.at) : entityJson;
+    if (unsentFork) {
+      unsentFork.token = token;
+    }
     this.#pending = { token, confirmed: false };
     this.#dirty = false;
     return { json, token, rejected };
+  }
+
+  /** The id of the block the core reflects; `undefined` until the store reports one. */
+  get blockId(): string | undefined {
+    return this.#applied === undefined ? undefined : blockIdOf(this.#applied);
+  }
+
+  /** The branch of the object; `undefined` on the root branch or before its first write. */
+  get branch(): string | undefined {
+    return this.#branch?.branch;
+  }
+
+  /** Whether the object was ever written, so it has a branch a fork would move it off. */
+  get written(): boolean {
+    return this.#applied !== undefined || this.#pending !== undefined;
+  }
+
+  /** Makes the next write of the object the base block of a new branch that forks at block `at`. */
+  requestFork(at: string): void {
+    this.#fork = { at, token: undefined };
   }
 
   /**
@@ -183,9 +213,7 @@ export class FeedObjectCore {
     return new FeedBranchMismatchError({
       objectId: this.entity.id,
       branch: this.#branch.branch,
-      fork: this.#branch.fork,
       requestedBranch: requested.branch,
-      requestedFork: requested.fork,
     });
   }
 
@@ -202,15 +230,12 @@ export class FeedObjectCore {
         const keys = getMetaChecked(mutable as AnyProperties).keys;
         for (let index = keys.length - 1; index >= 0; index--) {
           const source = keys[index].source;
-          if (source === FeedProtocol.KEY_FEED_BRANCH || source === FeedProtocol.KEY_FEED_FORK) {
+          if (source === FeedProtocol.KEY_FEED_BRANCH) {
             keys.splice(index, 1);
           }
         }
         if (branch.branch !== undefined) {
           keys.push({ source: FeedProtocol.KEY_FEED_BRANCH, id: branch.branch });
-        }
-        if (branch.fork !== undefined) {
-          keys.push({ source: FeedProtocol.KEY_FEED_FORK, id: branch.fork });
         }
       });
     } finally {
@@ -223,7 +248,16 @@ export class FeedObjectCore {
    * reflects that block from here on; without one it keeps preferring its state until an ordered
    * block supersedes it. A no-op once a newer capture replaced this one.
    */
-  confirmAppend(token: number, blockId: string | undefined): void {
+  confirmAppend(token: number, blockId: string | undefined, predecessor?: string | null): void {
+    const forked = this.#fork?.token === token;
+    if (forked) {
+      this.#fork = undefined;
+      // The base block of a branch names the branch, so the object continues it from here on.
+      if (blockId !== undefined) {
+        this.#branch = { branch: blockId };
+        this.restoreBranch();
+      }
+    }
     if (this.#pending?.token !== token) {
       // A write a newer capture superseded still landed: its block is ours and older than the pending state, so
       // an echo of it must be recognised as such rather than read as a newer block from elsewhere.
@@ -241,6 +275,8 @@ export class FeedObjectCore {
     this.#pending = undefined;
     this.#applied = EchoFeedCodec.blockOfKeys([{ source: FeedProtocol.KEY_FEED_BLOCK, id: blockId }]);
     this.#appliedToken = token;
+    // The store echoes this block as already applied, so the keys it would stamp on a read are stamped here.
+    this.#stampBlock(blockId, predecessor ?? undefined, forked);
   }
 
   /**
@@ -248,6 +284,9 @@ export class FeedObjectCore {
    * clears the pending slot if it still holds this write (a newer capture may have superseded it).
    */
   revertCapture(token: number): void {
+    if (this.#fork?.token === token) {
+      this.#fork.token = undefined;
+    }
     if (this.#pending?.token === token) {
       this.#pending = undefined;
     }
@@ -281,8 +320,9 @@ export class FeedObjectCore {
       } finally {
         this.#applyingRemote = false;
       }
-      // The store is the authority on which branch it accepted the object on.
+      // The store is the authority on which branch it accepted the object on, and the block keys it stamped.
       this.#branch = branchKeysOf(this.entity);
+      setFeedBlockKeys(this.entity, undefined);
       this.#applied = ref;
       this.#positionFloor = undefined;
       this.#pending = undefined;
@@ -319,6 +359,21 @@ export class FeedObjectCore {
       return newerPosition ? 'apply' : 'ignore';
     }
     return order === 'newer' ? 'apply' : 'ignore';
+  }
+
+  /**
+   * Stamps the keys the store would stamp on a read of the block it wrote: its id, its predecessor,
+   * the fork flag of a base block and the branch. Hidden rather than in `@meta.keys`, so a confirmed
+   * write does not notify subscribers a second time.
+   */
+  #stampBlock(blockId: string, predecessor: string | undefined, fork: boolean): void {
+    const branch = this.#branch?.branch;
+    setFeedBlockKeys(this.entity, [
+      { source: FeedProtocol.KEY_FEED_BLOCK, id: blockId },
+      ...(branch !== undefined ? [{ source: FeedProtocol.KEY_FEED_BRANCH, id: branch }] : []),
+      ...(predecessor !== undefined ? [{ source: FeedProtocol.KEY_FEED_PREV, id: predecessor }] : []),
+      ...(predecessor !== undefined && fork ? [{ source: FeedProtocol.KEY_FEED_FORK, id: predecessor }] : []),
+    ]);
   }
 
   #setPosition(position: number | undefined): void {

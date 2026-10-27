@@ -203,38 +203,32 @@ describe('FeedObjectCore', () => {
   });
 
   test('a write that states another branch is rejected', ({ expect }) => {
-    const forkPoint = Obj.make(TestSchema.Person, { name: 'fork point' });
-    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
-    Feed.startBranch(entity, forkPoint);
-    const core = new FeedObjectCore(stamped(entity, { actorId: 'a', sequence: 1 }), () => {});
+    const entity = withBranch(Obj.make(TestSchema.Person, { name: 'v1' }), '3@a');
+    const core = new FeedObjectCore(stamped(entity, { actorId: 'a', sequence: 3 }), () => {});
 
-    const sameBranch = Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' });
-    Feed.startBranch(sameBranch, forkPoint);
+    const sameBranch = withBranch(Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' }), '3@a');
     expect(core.checkBranch(sameBranch)).toBeUndefined();
 
-    const onMain = Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' });
-    expect(core.checkBranch(onMain)).toBeInstanceOf(FeedBranchMismatchError);
+    const onRoot = Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' });
+    expect(core.checkBranch(onRoot)).toBeInstanceOf(FeedBranchMismatchError);
 
-    const refork = Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' });
-    Feed.startBranch(refork, Obj.make(TestSchema.Person, { name: 'elsewhere' }));
-    expect(core.checkBranch(refork)).toBeInstanceOf(FeedBranchMismatchError);
+    const elsewhere = withBranch(Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' }), '7@b');
+    expect(core.checkBranch(elsewhere)).toBeInstanceOf(FeedBranchMismatchError);
     core.dispose();
   });
 
-  test('a local edit of the branch keys is reverted at capture and reported', ({ expect }) => {
-    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
-    Feed.setBranch(entity, Obj.make(TestSchema.Person, { name: 'branch' }).id);
-    const branch = Feed.getBranch(entity);
-    const core = new FeedObjectCore(stamped(entity, { actorId: 'a', sequence: 1 }), () => {});
+  test('a local edit of the branch key is reverted at capture and reported', ({ expect }) => {
+    const entity = withBranch(Obj.make(TestSchema.Person, { name: 'v1' }), '3@a');
+    const core = new FeedObjectCore(stamped(entity, { actorId: 'a', sequence: 3 }), () => {});
 
     Obj.update(entity, (entity) => {
       entity.name = 'v2';
     });
-    Feed.setBranch(entity, undefined);
+    withBranch(entity, undefined);
     const { json, rejected } = core.captureForAppend();
     expect(rejected).toBeInstanceOf(FeedBranchMismatchError);
-    expect(Feed.getBranch(entity)).toEqual(branch);
-    expect(EchoFeedCodec.branchOf(json)).toEqual(branch);
+    expect(Feed.getBranch(entity)).toEqual('3@a');
+    expect(EchoFeedCodec.writeIntentOf(json)).toEqual({ branch: '3@a' });
     expect(entity.name).toEqual('v2');
     core.dispose();
   });
@@ -242,14 +236,58 @@ describe('FeedObjectCore', () => {
   test('a new object takes its branch from its first write', ({ expect }) => {
     const entity = Obj.make(TestSchema.Person, { name: 'v1' });
     const core = new FeedObjectCore(entity, () => {});
-    Feed.setBranch(entity, Obj.make(TestSchema.Person, { name: 'branch' }).id);
+    withBranch(entity, '3@a');
     expect(core.captureForAppend().rejected).toBeUndefined();
 
-    Feed.setBranch(entity, undefined);
+    withBranch(entity, undefined);
     expect(core.captureForAppend().rejected).toBeInstanceOf(FeedBranchMismatchError);
     core.dispose();
   });
+
+  test('a fork asks the store for a base block until a write lands, then continues the new branch', ({ expect }) => {
+    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
+    const core = new FeedObjectCore(entity, () => {});
+    core.requestFork('0@a');
+
+    const first = core.captureForAppend();
+    expect(EchoFeedCodec.writeIntentOf(first.json)).toEqual({ forkAt: '0@a' });
+    // A failed write is captured again, and still forks.
+    core.revertCapture(first.token);
+    const retry = core.captureForAppend();
+    expect(EchoFeedCodec.writeIntentOf(retry.json)).toEqual({ forkAt: '0@a' });
+    expect(Feed.getBranch(entity)).toBeUndefined();
+
+    core.confirmAppend(retry.token, '4@a', '0@a');
+    expect(core.branch).toEqual('4@a');
+    // The keys a read of the block would carry are stamped at once.
+    expect(Feed.getBranch(entity)).toEqual('4@a');
+    expect(Feed.getBlockId(entity)).toEqual('4@a');
+    expect(Feed.isFork(entity)).toBe(true);
+    expect(Feed.getPredecessor(entity)).toEqual('0@a');
+
+    Obj.update(entity, (entity) => {
+      entity.name = 'v2';
+    });
+    expect(EchoFeedCodec.writeIntentOf(core.captureForAppend().json)).toEqual({ branch: '4@a' });
+    core.dispose();
+  });
 });
+
+/** Sets, or with `undefined` removes, the branch key of an object, as a writer or the store would. */
+const withBranch = <T extends Obj.Any>(obj: T, branch: string | undefined): T => {
+  Obj.update(obj, (obj) => {
+    const keys = Obj.getMeta(obj).keys;
+    for (let index = keys.length - 1; index >= 0; index--) {
+      if (keys[index].source === FeedProtocol.KEY_FEED_BRANCH) {
+        keys.splice(index, 1);
+      }
+    }
+    if (branch !== undefined) {
+      keys.push({ source: FeedProtocol.KEY_FEED_BRANCH, id: branch });
+    }
+  });
+  return obj;
+};
 
 /** Stamps an object's `@meta` the way a store stamps an object it decoded from a block. */
 const stamped = <T extends Obj.Any>(obj: T, ref: FeedBlockRef): T => {

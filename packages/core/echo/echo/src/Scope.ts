@@ -55,6 +55,13 @@ export type FeedScopeOptions = {
    * included — read them with `Feed.readBranch` over the whole feed.
    */
   branches?: ReadonlyArray<string | null> | 'all';
+
+  /**
+   * Reads the feed as a walk along the path from the root branch to `branch`, in local order; select
+   * with {@link Filter.feedCursor} to start after a local cursor and order with `Order.natural` for the
+   * direction. `forks` also gives the base item of each branch that forks at a block the walk gives.
+   */
+  walk?: { branch?: string | null; forks?: boolean };
 };
 
 /**
@@ -67,6 +74,14 @@ export type FeedScopeOptions = {
  * ```ts
  * db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri)));
  * db.query(Query.select(Filter.everything()).from(Scope.feed(feedUri, { branches: [null] })));
+ *
+ * // Walk the root branch and then the branch, 50 items at a time.
+ * db.query(
+ *   Query.select(Filter.feedCursor({ begin: cursor, positions: 'local' }))
+ *     .from(Scope.feed(feedUri, { walk: { branch } }))
+ *     .orderBy(Order.natural('asc'))
+ *     .limit(50),
+ * );
  * ```
  *
  * @performance O(1); builds a scope node.
@@ -77,4 +92,12 @@ export const feed = (feedUri: string, options?: FeedScopeOptions): QueryAST.Feed
   ...(options?.branches === undefined
     ? {}
     : { branches: options.branches === 'all' ? ('all' as const) : [...options.branches] }),
+  ...(options?.walk === undefined
+    ? {}
+    : {
+        walk: {
+          ...(options.walk.branch !== undefined ? { branch: options.walk.branch } : {}),
+          ...(options.walk.forks !== undefined ? { forks: options.walk.forks } : {}),
+        },
+      }),
 });

@@ -149,15 +149,26 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         );
         return RuntimeProvider.runPromise(this.#runtime)(
           Effect.gen({ self: this }, function* () {
-            const messages = (objects ?? []).map((encoded) => ({
-              spaceId: spaceId,
-              feedId: feedId!,
-              feedNamespace,
-              data: EchoFeedCodec.encode(JSON.parse(encoded) as ObjectJSON),
-            }));
+            const messages = (objects ?? []).map((encoded) => {
+              const object: ObjectJSON = JSON.parse(encoded);
+              return {
+                spaceId: spaceId,
+                feedId: feedId!,
+                feedNamespace,
+                ...EchoFeedCodec.writeIntentOf(object),
+                data: EchoFeedCodec.encode(object),
+              };
+            });
 
             const blocks = yield* this.#feedStore.appendLocal(messages);
-            return { blocks: blocks.map((block) => EchoFeedCodec.blockId(block.actorId, block.sequence)) };
+            return {
+              blocks: blocks.map((block) => EchoFeedCodec.blockId(block.actorId, block.sequence)),
+              predecessors: blocks.map((block) =>
+                block.prevActorId !== null && block.prevSequence !== null
+                  ? EchoFeedCodec.blockId(block.prevActorId, block.prevSequence)
+                  : null,
+              ),
+            };
           }),
         );
       },

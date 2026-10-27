@@ -69,7 +69,7 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
     case 'timestamp':
       return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
     case 'feed-cursor':
-      return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end })})`;
+      return `Filter.feedCursor(${JSON.stringify({ begin: filter.begin, end: filter.end, positions: filter.positions })})`;
     case 'child-of':
       return `Filter.childOf([${filter.parents.map((p) => JSON.stringify(p)).join(', ')}], { transitive: ${filter.transitive} })`;
     case 'mnemonic':

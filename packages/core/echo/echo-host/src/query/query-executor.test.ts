@@ -93,31 +93,34 @@ describe('QueryExecutor', () => {
     onTestFinished(() => dispose());
     const spaceId = SpaceId.random();
     const feedId = EntityId.random();
-    const branch = EntityId.random();
-    const names = ['main-1', 'branch-1', 'main-2', 'branch-2'];
-    const { indexEngine, feedStore } = await RuntimeProvider.runPromise(runtime)(
+    const { indexEngine, feedStore, branch } = await RuntimeProvider.runPromise(runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         const indexEngine = new IndexEngine(sql);
         yield* indexEngine.migrate();
         const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
         yield* feedStore.migrate();
-        yield* feedStore.appendLocal(
-          names.map((name) => ({
-            spaceId,
-            feedId,
-            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
-            data: EchoFeedCodec.encode({
-              id: EntityId.random(),
-              [ATTR_TYPE]: DXN.make('com.example.type.item', '0.1.0'),
-              name,
-              ...(name.startsWith('branch')
-                ? { [ATTR_META]: { keys: [{ source: KEY_FEED_BRANCH, id: branch }] } }
-                : {}),
-            }),
-          })),
-        );
-        return { indexEngine, feedStore };
+        const append = (name: string, intent: { branch?: string; forkAt?: string } = {}) =>
+          feedStore
+            .appendLocal([
+              {
+                spaceId,
+                feedId,
+                feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+                data: EchoFeedCodec.encode({
+                  id: EntityId.random(),
+                  [ATTR_TYPE]: DXN.make('com.example.type.item', '0.1.0'),
+                  name,
+                }),
+                ...intent,
+              },
+            ])
+            .pipe(Effect.map(([block]) => EchoFeedCodec.blockId(block.actorId, block.sequence)));
+        const main1 = yield* append('main-1');
+        const branch = yield* append('branch-1', { forkAt: main1 });
+        yield* append('main-2');
+        yield* append('branch-2', { branch });
+        return { indexEngine, feedStore, branch };
       }),
     );
     const executor = new QueryExecutor({

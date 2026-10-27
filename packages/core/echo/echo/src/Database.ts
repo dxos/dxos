@@ -269,6 +269,19 @@ export interface Database extends Queryable {
   appendToFeed(feed: Feed.Feed, entities: Entity.Unknown[], opts?: WriteOptions): Promise<void>;
 
   /**
+   * Appends `base` as the base block of a new branch of the feed, with the fork point `at` (an item,
+   * at the block it was read from, or a block id) as its predecessor. Resolves to the id of the new
+   * branch, the block id of the base, once the base is written.
+   *
+   * @performance Async; one append of one entity.
+   */
+  forkFeed(
+    feed: Feed.Feed,
+    base: Entity.Unknown,
+    opts: { at: Entity.Unknown | Entity.Snapshot | string },
+  ): Promise<string>;
+
+  /**
    * Removes entities from a feed.
    *
    * @performance Async; O(n) in entities, deleted by id in one batch.

@@ -45,7 +45,7 @@ export class RepoClosedError extends BaseError.extend(
 }
 
 /**
- * A write would move a feed object to a different branch, or re-point the fork of the branch it starts. A feed
+ * A write would move a feed object to a different branch, or fork from an object already written. A feed
  * accepts an update of an object only on the branch of the object; a change on another branch is a fork (F-1.3).
  */
 export class FeedBranchMismatchError extends BaseError.extend(
@@ -56,9 +56,7 @@ export class FeedBranchMismatchError extends BaseError.extend(
     context: {
       objectId: string;
       branch: string | undefined;
-      fork: string | undefined;
       requestedBranch: string | undefined;
-      requestedFork: string | undefined;
     },
     options?: BaseErrorOptions,
   ) {

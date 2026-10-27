@@ -103,6 +103,11 @@ export const InsertIntoFeedResponse = Schema.Struct({
    * absent from a store that does not stamp block ids.
    */
   blocks: Schema.optional(mutableArray(Schema.String)),
+  /**
+   * Id of the predecessor of each block in {@link blocks}, `null` for the first block of a feed: the
+   * head of its branch, or the fork point of a base block. Lets a writer stamp what a read would.
+   */
+  predecessors: Schema.optional(mutableArray(Schema.NullOr(Schema.String))),
 });
 export interface InsertIntoFeedResponse extends Schema.Schema.Type<typeof InsertIntoFeedResponse> {}
 

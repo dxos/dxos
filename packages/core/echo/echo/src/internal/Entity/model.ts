@@ -19,6 +19,7 @@ import {
   ATTR_SELF_URI_LEGACY,
   type ATTR_TYPE,
   EntityKind,
+  FeedBlockKeysId,
   KindId,
   ObjectBranchId,
   ObjectDatabaseId,
@@ -41,6 +42,7 @@ export {
   ATTR_DELETED,
   ATTR_SELF_URI,
   ATTR_SELF_URI_LEGACY,
+  FeedBlockKeysId,
   ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
@@ -62,6 +64,7 @@ export interface InternalObjectProps {
   readonly [MetaId]?: EntityMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
+  readonly [FeedBlockKeysId]?: readonly ForeignKey[];
   readonly [ObjectBranchId]?: string;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;

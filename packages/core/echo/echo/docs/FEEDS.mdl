@@ -8,9 +8,9 @@ version: 0.1.0
 
 Status: Rich agreed the requirements on 2026-10-25. This document also gives a review of the trajectory
 design (dxos/dxos#13782) and a counter-proposal. The counter-proposal is for discussion with Dima. The
-code implements forks, the first phase [D-2], with an earlier form of the design ([D-21], [D-22]).
-The design below replaces that form ([D-27] to [D-39]). Merge, close, heads and partial sync are not
-in the code.
+code implements forks, the first phase [D-2]: the fork flag on the block, the inferred branch, the
+branches table and the walk. `Feed.heads`, `Feed.branches`, partial sync, merge and close are not in the
+code.
 
 Rich and Dima reviewed the design on 2026-10-26. The decisions of
 that review are in the changelog ([D-2] to [D-20]).
@@ -393,16 +393,22 @@ type BranchId
 ```mdl
 type FeedItemMeta
   desc: |
-    The `feed` section of the `@meta` of a feed item that the decoder stamps when it reads a block, as it
-    stamps the position. The payload does not store it [D-53]. `fork` copies the fork flag of the block.
-    `branch` is the inferred branch: the block id of the block for a base block, else the branch of its
-    predecessor [D-51].
+    The foreign keys in `@meta.keys` of a feed item that the decoder stamps when it reads a block, as it
+    stamps the position [D-62]. The payload does not store them [D-53]. `feed-fork` is the fork flag of
+    the block. `feed-branch` is the inferred branch: the block id of the block for a base block, else the
+    branch of its predecessor [D-51].
 
     The fork flag tells the same fact as "`branch` is the block id of this block" [D-44]. The flag is
     necessary data, because the writer sets it before the block id exists.
+
+    A live object that this client wrote gets the same keys when the store confirms the write. The
+    client keeps them in a hidden property, not in `@meta.keys`, thus the write does not notify the
+    subscribers two times [D-66].
   fields:
-    fork?: true          # the block is the base of a new branch; its predecessor is the fork point
-    branch?: BranchId    # the inferred branch; absent for the root branch [D-36]
+    org.dxos.key.feed-block: BlockId      # the block the item was read from
+    org.dxos.key.feed-branch?: BranchId   # the inferred branch; absent for the root branch [D-36]
+    org.dxos.key.feed-fork?: BlockId      # present on a base block: the fork point, its predecessor
+    org.dxos.key.feed-prev?: BlockId      # the predecessor of the block; absent for the first block
 ```
 
 ```mdl
@@ -410,19 +416,20 @@ module Feed
   desc: The members of the Feed module for branches. `Feed.branches` and `Feed.heads` are not built yet.
   api:
     BranchId: Schema<BranchId>                                                     # opaque branded string; see type:BranchId.
-    append: (feed, items, { branch?: BranchId, parent? }) => Effect<void>         # continues `branch`, or the root branch when absent.
-    fork: (feed, items, { at: Item | BlockId }) => Effect<BranchId>               # items[0] is the base block; the predecessor is `at` [D-39].
+    LocalCursor: Schema<LocalCursor>                                               # opaque branded string; see type:LocalCursor.
+    append: (feed, items, { branch?: BranchId, parent? }) => Effect<void>         # continues `branch`, or the root branch when absent [D-63].
+    fork: (feed, items, { at: Item | BlockId }) => Effect<BranchId>               # items[0] is the base block; the predecessor is `at` [D-39], [D-63].
     getBranch: (item) => BranchId | undefined                                     # undefined for a root item.
     isFork: (item) => boolean                                                     # true on a base block.
     getBlockId: (item) => BlockId | undefined                                     # `<sequence>@<actorId>` of the block it was read from.
     getPredecessor: (item) => BlockId | undefined                                 # the predecessor block; undefined for the first block.
     readBranch: (itemsInAppendOrder, branch?: BranchId) => { items, shallow }     # ancestors up to each fork point, then the branch.
     query: (feed, filter, { branches?: (BranchId | null)[] | 'all' }) => QueryResult   # no branches reads the root only [D-24].
+    walk: (feed, filter, { branch?, begin?, forks?, order?: 'asc' | 'desc', limit? }) => QueryResult  # a wrapper of the core walk query [D-58].
+    getLocalCursor: (item) => LocalCursor | undefined                             # the walk resumes after this item.
     IndexingOptions: { enabled: boolean, mode?: 'all' | 'main' }                  # mode absent is 'main' [D-10].
     branches: Record<BranchId, { removed?, retention?, name? }>                   # not built; only branch policy, never membership or heads.
     heads: (feed, { since?: LocalCursor }) => { branch: BranchId, head: LocalCursor }[]  # not built; reads table:branches [D-45].
-    walk: (feed, filter, { branch?, begin?, forks?, order?: 'asc' | 'desc', limit? }) => QueryResult  # a wrapper of the core walk query [D-58].
-    getLocalCursor: (item) => LocalCursor | undefined                             # the walk resumes after this item.
 ```
 
 ```mdl
@@ -595,15 +602,14 @@ table blocks: One block (one version of one item) of a feed, in local append ord
 table branches: One branch of a feed. The store keeps it as blocks arrive; it is not replicated [D-45].
   store: feed store (feed_migrations)
   columns:
-    feedPrivateId: INTEGER NOT NULL REFERENCES feeds(feedPrivateId)
-    branchId: TEXT NOT NULL                           # the BranchId: the block id of the base block
+    feedPrivateId: INTEGER NOT NULL                   # the feeds row; no foreign key, since the table is derived from the blocks
+    branchId: TEXT NOT NULL                           # the BranchId: the block id of the base block; '' for the root branch [D-64]
     baseBranchId?: TEXT                               # the branch this branch forks from; NULL for the root branch [D-49]
     baseInsertionId: INTEGER NOT NULL                 # local order of the base block
     forkInsertionId?: INTEGER                         # local order of the fork point (the predecessor of the base block); NULL for the root
     headInsertionId: INTEGER NOT NULL                 # local order of the newest block of the branch
     headSequence: INTEGER NOT NULL                    # with headActorId, the block id of the head: the predecessor of the next continuation
     headActorId: TEXT NOT NULL
-    headPosition?: INTEGER                            # EDGE position of the head; NULL until EDGE acknowledges it
   key: (feedPrivateId, branchId)
   indexes:
     - idx_branches_feedPrivateId_head(feedPrivateId, headInsertionId): the heads that moved since a cursor, without a scan [F-2.2]
@@ -710,6 +716,7 @@ question Q-4: How does the sync protocol carry the fork flag?
   to: user:dmaretskyi
   status: open
   affects: [F-1.2, F-2.3]
+  note: The code carries it as an optional `fork` field of `FeedProtocol.Block`, which EDGE keeps once it updates `@dxos/feed` [D-65].
 ```
 
 ## Changelog
@@ -1199,6 +1206,51 @@ decision D-61: The start of a walk is the existing exclusive field `begin` of `F
   for: user:dmaretskyi
   affects: [F-5.5]
   why: `begin` already excludes the item that it names, and a second name for the same bound needs a rename of every caller or a shim.
+```
+
+```mdl
+decision D-62: The decoder stamps the block id, the inferred branch, the fork flag (as the fork point) and the predecessor as foreign keys in `@meta.keys`, as it stamps the position, and not as a `feed` section of `@meta`. Fills in [D-53].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The store already stamps the position and the block id as foreign keys, and `@meta` has no other section a feed owns.
+```
+
+```mdl
+decision D-63: A writer asks for a continuation with the branch key on the item, and for a fork with an `org.dxos.key.feed-fork-at` key that only `Feed.fork` writes; the host reads both and strips them, and `Feed.fork` appends the base alone first, so the rest continue the branch it returns. Fills in [D-39] and [D-54].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-1.3]
+  why: An update of a read item carries the stamped branch and so continues it, but a stamped fork flag must not fork again; the branch id of the rest exists only after the base is written.
+```
+
+```mdl
+decision D-64: The branches table names the root branch `''`, not `NULL`, and keeps no head position. Fills in [D-45].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2]
+  why: A key column with `NULL` is not unique in SQLite, and the head position changes when EDGE orders a block, which no reader of the table needs yet.
+```
+
+```mdl
+decision D-65: Until [Q-4] is answered, the fork flag travels as an optional `fork` field of `FeedProtocol.Block`; a store that does not know the field drops it, and its blocks stay on the root branch. Fills in [D-51].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-2.3]
+  why: An optional field keeps old and new peers compatible, and EDGE gets it with the next update of `@dxos/feed`.
+```
+
+```mdl
+decision D-66: The append response gives the predecessor of each block it wrote, and the client stamps the keys of a read of that block on its own live object in a hidden property, which the `Feed` getters read first; a newer block from the store clears it. Fills in [D-62].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  why: The client ignores the echo of its own block, so without this a walk could not resume after an item this device wrote; in `@meta.keys` the stamp would notify subscribers a second time for each write.
 ```
 
 ## Appendix: Extension Definitions

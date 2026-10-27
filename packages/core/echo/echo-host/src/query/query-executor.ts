@@ -173,6 +173,12 @@ type QueryItem = {
 
   recordId?: number;
 
+  /**
+   * The place of the item on a walk, which the natural order of a walk scope sorts by: its index in
+   * the walk, negated on a backward walk so that a descending order keeps the walk order.
+   */
+  walkIndex?: number;
+
   backing?: { heads: readonly string[]; json: string };
 
   /** Heads of the document the item was read at, which the row ships as its version. */
@@ -1231,7 +1237,14 @@ export class QueryExecutor extends Resource {
         storeFeeds.set(feedId, { spaceId, feedNamespace });
       }
     };
+    // A walk reads the branch tree of the store, which the index does not hold.
+    const walkRefs = extractQueueRefs(extractFeedScopes(this.#uncompiledPlan).filter((scope) => scope.walk)) ?? [];
     for (const spaceId of spaceIds) {
+      for (const ref of walkRefs) {
+        if (ref.spaceId === spaceId && !storeFeeds.has(ref.queueId)) {
+          await addStoreFeed(spaceId, ref.queueId);
+        }
+      }
       const options = await this.#listFeedOptions(spaceId);
       if (this.#allFeedsSpaces.has(spaceId)) {
         for (const [feedId, feedOptions] of options) {
@@ -1343,6 +1356,78 @@ export class QueryExecutor extends Resource {
     return items;
   }
 
+  /**
+   * The items of a walk of one feed after the cursor of `range`, in walk order, each once at its latest
+   * block on the walk. The direction is the natural order the query asks for.
+   */
+  async #walkFeed(scope: QueryAST.FeedScope, range: QueryPlan.SelectStep['feedCursorRange']): Promise<QueryItem[]> {
+    const feedStore = this.#feedStore;
+    const ref = extractQueueRefs([scope])?.[0];
+    const feed = ref === undefined ? undefined : this.#storeFeeds.get(ref.queueId);
+    if (!feedStore || ref === undefined || feed === undefined) {
+      return [];
+    }
+    if (range?.end !== undefined || range?.positions === 'edge') {
+      throw new QueryError({
+        message: 'A walk starts after a local cursor and has no end cursor.',
+        context: { query: null },
+      });
+    }
+    const direction = walkDirection(this.#uncompiledPlan);
+    const blocks = await this._runInRuntime(
+      feedStore.walk({
+        spaceId: feed.spaceId,
+        feedNamespace: feed.feedNamespace,
+        feedId: ref.queueId,
+        ...(scope.walk?.branch !== undefined ? { branch: scope.walk.branch } : {}),
+        ...(range?.begin ? { after: parseLocalCursor(range.begin) } : {}),
+        direction,
+        forks: scope.walk?.forks === true,
+      }),
+    );
+
+    // Each item once, at the place of its latest block: the last one emitted forward, the first backward.
+    const latest = new Map<string, { index: number; insertionId: number; data: Obj.JSON | null }>();
+    const decoded = blocks.map((block) => EchoFeedCodec.decodeBlock(block));
+    decoded.forEach((data, index) => {
+      if (typeof data.id !== 'string') {
+        return;
+      }
+      const insertionId = blocks[index].insertionId ?? 0;
+      const previous = latest.get(data.id);
+      // A partial block (a removal tombstone) keeps the body of the block before it, as the index does.
+      const merged = data[ATTR_TYPE] === undefined && previous?.data ? { ...previous.data, ...data } : data;
+      if (previous === undefined || insertionId > previous.insertionId) {
+        latest.set(data.id, { index, insertionId, data: isObjectJSON(merged) ? merged : null });
+      }
+    });
+
+    return [...latest.entries()]
+      .sort(([, left], [, right]) => left.index - right.index)
+      .flatMap(([objectId, { index, data }]): QueryItem[] => {
+        if (data === null || !EntityId.isValid(objectId)) {
+          return [];
+        }
+        const block = blocks[index];
+        return [
+          {
+            objectId: EntityId.make(objectId),
+            spaceId: feed.spaceId,
+            queueId: ref.queueId,
+            queueNamespace: feed.feedNamespace,
+            documentId: null,
+            doc: null,
+            data,
+            rank: 1,
+            createdAt: block.timestamp,
+            updatedAt: block.timestamp,
+            position: block.position,
+            walkIndex: direction === 'desc' ? -index : index,
+          },
+        ];
+      });
+  }
+
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     const trace = ExecutionTrace.makeEmpty();
     for (const step of plan.steps) {
@@ -1427,6 +1512,20 @@ export class QueryExecutor extends Resource {
       details: JSON.stringify(step.selector),
       beginTs: performance.now(),
     };
+
+    const walkScopes = scopedQueues.filter((scope) => scope.walk !== undefined);
+    if (walkScopes.length > 0) {
+      if (scopedQueues.length > 1 || execSpaceScopes.length > 0) {
+        throw new QueryError({ message: 'A walk reads one feed scope alone.', context: { query: null } });
+      }
+      const walked = await this.#walkFeed(walkScopes[0], step.feedCursorRange);
+      // The walk itself is the window, so the selector applies without the cursor range the walk consumed.
+      const selected = selectStoreItems({ ...step, feedCursorRange: undefined, feedScan: undefined }, walked);
+      workingSet.push(...(step.limit === undefined ? selected : selected.slice(0, step.limit)));
+      trace.documentsLoaded += walked.length;
+      trace.objectCount = workingSet.length;
+      return { workingSet, trace };
+    }
 
     // A feed with indexing disabled has no index rows, so its items come from the store, selected here.
     const isStoreFeed = (scope: QueryAST.FeedScope) => {
@@ -2401,6 +2500,10 @@ export class QueryExecutor extends Resource {
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
     switch (order.kind) {
       case 'natural': {
+        if (a.walkIndex !== undefined && b.walkIndex !== undefined) {
+          const comparison = a.walkIndex - b.walkIndex;
+          return order.direction === 'desc' ? -comparison : comparison;
+        }
         // Code-unit order, not `localeCompare`: the feed scan pushes this ordering into SQLite's
         // `ORDER BY objectId`, which collates BINARY, and an entity id may be lower-case (the
         // format check is case-insensitive). Under a locale collation the two would disagree on a
@@ -3193,6 +3296,21 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
     ...(range.end ? { before: parseCursor(range.end, BEFORE_FIRST_POSITION) } : {}),
     ...(step.limit !== undefined ? { limit: step.limit } : {}),
   };
+};
+
+/** The block id a local cursor (`<branch>|<block>`) resumes after; the start sentinel `''` names none. */
+const parseLocalCursor = (cursor: string): string => cursor.slice(cursor.indexOf('|') + 1);
+
+/**
+ * The direction of a walk: the natural order the plan asks for, ascending when it asks for none. A
+ * walk has no other order, since its natural order is the walk itself.
+ */
+const walkDirection = (plan: QueryPlan.Plan): 'asc' | 'desc' => {
+  const orders = plan.steps.flatMap((step) => (step._tag === 'OrderStep' ? step.order : []));
+  if (orders.some((order) => order.kind !== 'natural')) {
+    throw new QueryError({ message: 'A walk accepts only the natural order.', context: { query: null } });
+  }
+  return orders[0]?.kind === 'natural' ? orders[0].direction : 'asc';
 };
 
 /** A cursor's position, or `unsatisfiable` when it does not name one. */

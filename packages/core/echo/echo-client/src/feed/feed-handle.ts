@@ -23,9 +23,10 @@ import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
+import { FeedProtocol, RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type FeedService } from '@dxos/protocols/rpc';
 
+import { FeedBranchMismatchError } from '../errors.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { FeedCoreRegistry } from './feed-core-registry.ts';
 import { FeedObjectCore } from './feed-object-core.ts';
@@ -213,8 +214,10 @@ export class FeedHandle {
    * second core. Throws `FeedBranchMismatchError` when that update states a different branch.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
-    const cores = this.#registerItemsForAppend(items);
+    await this.#appendCores(this.#registerItemsForAppend(items));
+  }
 
+  async #appendCores(cores: FeedObjectCore[]): Promise<void> {
     const batch = cores.map((core) => {
       // Captured explicitly below — don't let the background scheduler also flush this core.
       this.#dirtyCores.delete(core);
@@ -247,6 +250,35 @@ export class FeedHandle {
     } finally {
       this.#inFlight.delete(sendPromise);
     }
+  }
+
+  /**
+   * Appends `base` as the base block of a new branch that forks at block `at`, and resolves to the id of
+   * the branch, the block id of the base, once the store has written it. Throws `FeedBranchMismatchError`
+   * when `base` was already written, since a fork cannot move an object off its branch.
+   */
+  async fork(base: Entity.Unknown, at: string): Promise<string> {
+    const existing = this.#cores.get(EntityId.make(base.id));
+    if (existing?.written) {
+      throw new FeedBranchMismatchError({
+        objectId: base.id,
+        branch: existing.branch,
+        requestedBranch: `fork at ${at}`,
+      });
+    }
+    const [core] = this.#registerItemsForAppend([base]);
+    core.requestFork(at);
+    await this.#appendCores([core]);
+    const branch = core.branch;
+    invariant(branch !== undefined, 'fork: the base block was not written; it is retried in the background');
+    return branch;
+  }
+
+  /** The id of the block an item was read from, or that this handle wrote it to; `undefined` before either. */
+  blockIdOf(item: Entity.Unknown | Entity.Snapshot): string | undefined {
+    return (
+      Entity.getKeys(item, FeedProtocol.KEY_FEED_BLOCK).at(0)?.id ?? this.#cores.get(EntityId.make(item.id))?.blockId
+    );
   }
 
   /**
@@ -419,7 +451,7 @@ export class FeedHandle {
     for (let i = 0; i < batch.length; i += FEED_APPEND_BATCH_SIZE) {
       const chunk = batch.slice(i, i + FEED_APPEND_BATCH_SIZE);
       try {
-        const { blocks } = await runServiceCall(
+        const { blocks, predecessors } = await runServiceCall(
           this._runtime,
           this._service,
           'FeedService.insertIntoFeed',
@@ -432,7 +464,7 @@ export class FeedHandle {
           { timeout: RPC_TIMEOUT },
         );
         chunk.forEach(({ core, token }, index) => {
-          core.confirmAppend(token, blocks?.[index]);
+          core.confirmAppend(token, blocks?.[index], predecessors?.[index]);
           if (core.acknowledged) {
             this.#unacknowledged.delete(core);
           }

@@ -486,11 +486,7 @@ const isOnBranches = (object: Entity.Unknown, branches: ReadonlyArray<string | n
   if (branches === undefined) {
     return true;
   }
-  if (Feed.isMain(object)) {
-    return branches.includes(null);
-  }
-  const branch = Feed.getBranch(object);
-  return branch !== undefined && branches.includes(branch);
+  return branches.includes(Feed.getBranch(object) ?? null);
 };
 
 const matchesTail = (tail: FeedTail, handle: FeedHandle, object: Entity.Unknown): boolean =>

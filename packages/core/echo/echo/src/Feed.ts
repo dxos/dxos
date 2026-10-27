@@ -12,16 +12,17 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { KEY_FEED_BRANCH, KEY_FEED_FORK, KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
+import { KEY_FEED_BLOCK, KEY_FEED_BRANCH, KEY_FEED_FORK, KEY_FEED_PREV, KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
 import * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
-import type * as Filter from './Filter.ts';
+import * as Filter from './Filter.ts';
 import * as internal from './internal/index.ts';
 import * as Obj from './Obj.ts';
+import * as Order from './Order.ts';
 import * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
 import * as Scope from './Scope.ts';
@@ -182,15 +183,35 @@ export interface AppendOptions {
    */
   parent?: Entity.Unknown | Entity.Snapshot | EntityId;
 
-  /** Branch the appended items join; omit for the main branch. */
+  /** The branch the appended items continue; omit for the root branch. */
   branch?: BranchId;
+}
 
+/**
+ * Options for {@link fork}.
+ */
+export interface ForkOptions {
   /**
-   * Starts a new branch at this item of the parent branch: the first appended item becomes the
-   * branch's first item (its id is the branch id) and the whole batch joins the branch.
-   * Cannot be combined with `branch`.
+   * The fork point: the item (at the block it was read from) or the block id that the new branch
+   * continues from. Its branch is the parent of the new branch.
    */
-  fork?: Entity.Unknown | Entity.Snapshot | EntityId;
+  at: Entity.Unknown | Entity.Snapshot | BlockId;
+}
+
+/**
+ * Options for {@link walk}.
+ */
+export interface WalkOptions {
+  /** The branch the walk ends on; omit for the root branch, or for the branch of `begin` on a backward walk. */
+  branch?: BranchId | null;
+  /** Starts after this item; read it off the last item of a page with {@link getLocalCursor}. */
+  begin?: LocalCursor;
+  /** Also gives the base item of each branch that forks at a block the walk gives. */
+  forks?: boolean;
+  /** `asc` walks from the root base to the branch; `desc` walks back to the root base. Defaults to `asc`. */
+  order?: 'asc' | 'desc';
+  /** The page size. */
+  limit?: number;
 }
 
 /**
@@ -334,14 +355,9 @@ export const append = (
           if (options?.parent !== undefined && items.length > 0) {
             setParent(items[0], options.parent);
           }
-          invariant(
-            options?.branch === undefined || options.fork === undefined,
-            'append: pass branch or fork, not both',
-          );
-          const branch =
-            options?.fork !== undefined && items.length > 0 ? startBranch(items[0], options.fork) : options?.branch;
-          if (branch !== undefined) {
-            items.forEach((item) => setBranch(item, branch));
+          if (options?.branch !== undefined) {
+            const branch = options.branch;
+            items.forEach((item) => setBranchKey(item, branch));
           }
           return db.appendToFeed(feed, items, { origin });
         }),
@@ -540,89 +556,118 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
 //
 
 /**
- * Foreign-key source for the branch an item belongs to; absent means the main branch.
- * Every item of a branch states it, so a writer that has not seen a fork is never misattributed.
+ * The id of a branch: the block id (`<sequence>@<actorId>`) of the base block of the branch, as an
+ * opaque string. The root branch has no id; scopes and the index name it `null`.
  */
-export const BRANCH_KEY = KEY_FEED_BRANCH;
+export const BranchId = Schema.String.pipe(Schema.brand('@dxos/echo/Feed/BranchId'));
+export type BranchId = Schema.Schema.Type<typeof BranchId>;
+
+/** The id of a block within its feed, `<sequence>@<actorId>`. */
+export type BlockId = string;
 
 /**
- * Foreign-key source, on a branch's first item only, naming the item of the parent branch that the
- * branch forks at. The parent branch is the branch of that item.
+ * The position of a walk on one device: the branch the walk is on and the last block it gave. Read it
+ * off an item with {@link getLocalCursor}; another device cannot use it.
  */
-export const FORK_KEY = KEY_FEED_FORK;
+export const LocalCursor = Schema.String.pipe(Schema.brand('@dxos/echo/Feed/LocalCursor'));
+export type LocalCursor = Schema.Schema.Type<typeof LocalCursor>;
 
-/** A branch id: the id of the branch's first item. The main branch has no id. */
-export type BranchId = EntityId;
+// A live object this client wrote carries the keys of its latest block hidden, so they never notify.
+const keyOf = (item: Entity.Unknown | Entity.Snapshot, source: string): string | undefined =>
+  (internal.getFeedBlockKeys(item) ?? internal.getKeys(item, source)).find((key) => key.source === source)?.id;
 
-/** Tri-state read of an id-valued key, so a malformed id never reads as "absent". */
-const readIdKey = (item: Entity.Unknown | Entity.Snapshot, source: string): { present: boolean; id?: EntityId } => {
-  const id = internal.getKeys(item, source).at(0)?.id;
-  if (id === undefined) {
-    return { present: false };
-  }
-  return EntityId.isValid(id) ? { present: true, id } : { present: true };
-};
-
-const toId = (value: Entity.Unknown | Entity.Snapshot | EntityId): EntityId =>
-  typeof value === 'string' ? value : value.id;
-
-const writeIdKey = (item: Entity.Unknown, source: string, id: EntityId | undefined): void => {
+const setBranchKey = (item: Entity.Unknown, branch: BranchId): void => {
   internal.change(item, (mutable) => {
-    internal.deleteKeys(mutable, source);
-    if (id !== undefined) {
-      internal.getMetaChecked(mutable).keys.push(internal.foreignKey(source, id));
-    }
+    internal.deleteKeys(mutable, KEY_FEED_BRANCH);
+    internal.getMetaChecked(mutable).keys.push(internal.foreignKey(KEY_FEED_BRANCH, branch));
   });
 };
 
 /**
- * The branch an item belongs to, or `undefined` for the main branch (and for a malformed stored id,
- * which {@link readBranch} excludes from every branch).
+ * The branch of an item, as the store inferred it from the block the item was read from; `undefined`
+ * on the root branch.
  *
  * @performance O(k) in the item foreign-key count.
  */
-export const getBranch = (item: Entity.Unknown | Entity.Snapshot): BranchId | undefined =>
-  readIdKey(item, BRANCH_KEY).id;
-
-/** True when the item is on the main branch. */
-export const isMain = (item: Entity.Unknown | Entity.Snapshot): boolean => !readIdKey(item, BRANCH_KEY).present;
-
-/**
- * The item of the parent branch that a branch forks at, read from the branch's first item;
- * `undefined` on every other item.
- *
- * @performance O(k) in the item foreign-key count.
- */
-export const getForkPoint = (item: Entity.Unknown | Entity.Snapshot): EntityId | undefined =>
-  readIdKey(item, FORK_KEY).id;
-
-/**
- * Sets (or, with `undefined`, clears) the branch of an item. Call before appending the item;
- * {@link append}'s `branch` option does this for you.
- */
-export const setBranch = (item: Entity.Unknown, branch: BranchId | undefined): void =>
-  writeIdKey(item, BRANCH_KEY, branch);
-
-/**
- * Makes `item` the first item of a new branch that forks at `forkPoint`, and returns the branch id
- * (the id of `item`). Call before appending the item; {@link append}'s `fork` option does this for you.
- */
-export const startBranch = (item: Entity.Unknown, forkPoint: Entity.Unknown | Entity.Snapshot | EntityId): BranchId => {
-  writeIdKey(item, BRANCH_KEY, item.id);
-  writeIdKey(item, FORK_KEY, toId(forkPoint));
-  return item.id;
+export const getBranch = (item: Entity.Unknown | Entity.Snapshot): BranchId | undefined => {
+  const branch = keyOf(item, KEY_FEED_BRANCH);
+  return branch === undefined ? undefined : BranchId.make(branch);
 };
 
 /**
- * Returns what a read of one branch sees: the items of its ancestors up to each fork point, then the
- * items of the branch itself. Omit `branch` for the main branch.
+ * True when the item was read from the base block of a branch: its fork flag is set, and its
+ * predecessor is the fork point.
  *
- * A feed appended as `A1, A2, A3, B1(fork A2), A4, B2` reads `A1, A2, A3, A4` on main and
+ * @performance O(k) in the item foreign-key count.
+ */
+export const isFork = (item: Entity.Unknown | Entity.Snapshot): boolean => keyOf(item, KEY_FEED_FORK) !== undefined;
+
+/**
+ * The id of the block the item was read from; `undefined` on an item the store has not echoed yet.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getBlockId = (item: Entity.Unknown | Entity.Snapshot): BlockId | undefined => keyOf(item, KEY_FEED_BLOCK);
+
+/**
+ * The id of the predecessor of the block the item was read from: the head of its branch when it was
+ * written, or the fork point of a base block; `undefined` on the first block of a feed.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getPredecessor = (item: Entity.Unknown | Entity.Snapshot): BlockId | undefined =>
+  keyOf(item, KEY_FEED_PREV);
+
+/**
+ * The cursor a walk resumes after this item; `undefined` on an item the store has not echoed yet.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getLocalCursor = (item: Entity.Unknown | Entity.Snapshot): LocalCursor | undefined => {
+  const block = getBlockId(item);
+  return block === undefined ? undefined : LocalCursor.make(`${getBranch(item) ?? ''}|${block}`);
+};
+
+/**
+ * Starts a new branch: the first item is appended as the base block of the branch, with the fork
+ * point `at` as its predecessor, and the rest continue the branch. Returns the id of the branch, the
+ * block id of its base, once the base is written.
+ *
+ * @example
+ * ```ts
+ * const branch = yield* Feed.fork(feed, [reply], { at: message });
+ * yield* Feed.append(feed, [followUp], { branch });
+ * ```
+ *
+ * @performance Async; one append for the base, then one for the rest.
+ */
+export const fork = (
+  feed: Feed,
+  items: Entity.Unknown[],
+  options: ForkOptions,
+): Effect.Effect<BranchId, never, Database.Service> =>
+  Effect.gen(function* () {
+    const { db } = yield* Database.Service;
+    const [base, ...rest] = items;
+    invariant(base !== undefined, 'fork: pass at least the base item');
+    const branch = BranchId.make(yield* Effect.promise(() => db.forkFeed(feed, base, { at: options.at })));
+    if (rest.length > 0) {
+      yield* append(feed, rest, { branch });
+    }
+    return branch;
+  }).pipe(Effect.withSpan('Feed.fork'), Database.withSpaceId);
+
+/**
+ * Returns what a read of one branch sees: the items of its ancestors up to each fork point, then the
+ * items of the branch itself. Omit `branch` for the root branch.
+ *
+ * A feed appended as `A1, A2, A3, B1(fork at A2), A4, B2` reads `A1, A2, A3, A4` on the root branch and
  * `A1, A2, B1, B2` on branch `B1`.
  *
- * `items` must be in **append order**, as for {@link history}. The read is `shallow` when a first
- * item or a fork point is missing from `items` or malformed; the branch's own items are still
- * returned. A first item with no fork point starts a branch with no ancestors.
+ * `items` must be in **append order**, as read from the feed with `branches: 'all'`. The read is
+ * `shallow` when the base of a branch or its fork point is missing from `items` (a base or fork point
+ * that was updated is read at its latest block, which is not the one the branch names); the branch's
+ * own items are still returned. A walk ({@link walk}) reads blocks, so it has no such gap.
  *
  * @performance O(n) in items; one pass to group them and one walk up the branch's ancestors.
  */
@@ -630,17 +675,17 @@ export const readBranch = <T extends Entity.Unknown | Entity.Snapshot>(
   items: readonly T[],
   branch?: BranchId,
 ): History<T> => {
-  const indexById = new Map<EntityId, number>();
+  const indexByBlock = new Map<BlockId, number>();
   const byBranch = new Map<BranchId | undefined, number[]>();
   items.forEach((item, index) => {
-    indexById.set(item.id, index);
-    const key = readIdKey(item, BRANCH_KEY);
-    if (key.present && key.id === undefined) {
-      return;
+    const block = getBlockId(item);
+    if (block !== undefined) {
+      indexByBlock.set(block, index);
     }
-    const members = byBranch.get(key.id) ?? [];
+    const key = getBranch(item);
+    const members = byBranch.get(key) ?? [];
     members.push(index);
-    byBranch.set(key.id, members);
+    byBranch.set(key, members);
   });
 
   const resolve = (target: BranchId | undefined): { indices: number[]; shallow: boolean } => {
@@ -648,18 +693,12 @@ export const readBranch = <T extends Entity.Unknown | Entity.Snapshot>(
     if (target === undefined) {
       return { indices: own, shallow: false };
     }
-    const firstIndex = indexById.get(target);
-    if (firstIndex === undefined || getBranch(items[firstIndex]) !== target) {
-      return { indices: own, shallow: true };
-    }
-    const fork = readIdKey(items[firstIndex], FORK_KEY);
-    if (!fork.present) {
-      return { indices: own, shallow: false };
-    }
-    // A fork point at or after the first item is a cycle or a forward reference; requiring it to be
-    // strictly earlier also makes each step up the tree move to an earlier first item, so the walk ends.
-    const forkIndex = fork.id === undefined ? undefined : indexById.get(fork.id);
-    if (forkIndex === undefined || forkIndex >= firstIndex) {
+    const baseIndex = indexByBlock.get(target);
+    const forkPoint = baseIndex === undefined ? undefined : keyOf(items[baseIndex], KEY_FEED_FORK);
+    // A fork point at or after the base is a cycle or a forward reference; requiring it to be strictly
+    // earlier also makes each step up the tree move to an earlier base, so the walk ends.
+    const forkIndex = forkPoint === undefined ? undefined : indexByBlock.get(forkPoint);
+    if (baseIndex === undefined || forkIndex === undefined || forkIndex >= baseIndex) {
       return { indices: own, shallow: true };
     }
     const parent = resolve(getBranch(items[forkIndex]));
@@ -668,6 +707,42 @@ export const readBranch = <T extends Entity.Unknown | Entity.Snapshot>(
 
   const { indices, shallow } = resolve(branch);
   return { items: indices.map((index) => items[index]), shallow };
+};
+
+/**
+ * Walks a feed along the path from the root branch to `branch`, in local order: a wrapper of the
+ * walk query, which reads the same as
+ *
+ * ```ts
+ * Database.query(
+ *   Query.select(Filter.and(filter, Filter.feedCursor({ begin, positions: 'local' })))
+ *     .from(Scope.feed(feedUri, { walk: { branch, forks } }))
+ *     .orderBy(Order.natural(order))
+ *     .limit(limit),
+ * );
+ * ```
+ *
+ * A forward walk gives each branch on the path up to the fork point of the next; a backward walk
+ * goes from `begin` (or the head of `branch`) back to the root base. Each item comes once, at its
+ * latest block on the path. Resume with {@link getLocalCursor} of the last item of a page.
+ *
+ * @performance O(1) to build; a page reads the blocks of the path after the cursor.
+ */
+export const walk = <F extends Filter.Any>(
+  feed: Feed,
+  filter: F,
+  options: WalkOptions = {},
+): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service> => {
+  const feedUri = getFeedUri(feed);
+  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+  const select =
+    options.begin === undefined
+      ? filter
+      : Filter.and(filter, Filter.feedCursor({ begin: options.begin, positions: 'local' }));
+  const query = Query.select(select)
+    .from(Scope.feed(feedUri.toString(), { walk: { branch: options.branch, forks: options.forks } }))
+    .orderBy(Order.natural(options.order ?? 'asc'));
+  return Database.query(options.limit === undefined ? query : query.limit(options.limit));
 };
 
 /**

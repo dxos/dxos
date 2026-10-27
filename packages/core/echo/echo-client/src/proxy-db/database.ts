@@ -781,6 +781,19 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#emitFeedAppend(feed, entities, opts?.origin);
   }
 
+  async forkFeed(
+    feed: Feed.Feed,
+    base: Entity.Unknown,
+    opts: { at: Entity.Unknown | Entity.Snapshot | string },
+  ): Promise<string> {
+    const handle = this.#getFeedHandle(feed);
+    const at = typeof opts.at === 'string' ? opts.at : handle.blockIdOf(opts.at);
+    invariant(at !== undefined, 'fork: the fork point has no block yet; flush it first');
+    const branch = await handle.fork(base, at);
+    this.#emitFeedAppend(feed, [base], undefined);
+    return branch;
+  }
+
   async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
     await this.removeFeedItemsByIds(
       feed,

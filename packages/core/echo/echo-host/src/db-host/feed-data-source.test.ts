@@ -182,22 +182,16 @@ describe('FeedDataSource', () => {
         feedNamespace: data,
         options: { indexing: { enabled: true, mode: 'all' } },
       });
-      const branch = EntityId.random();
-      const block = (feedId: string, onBranch: boolean) => ({
+      const block = (feedId: string, forkAt?: FeedProtocol.Block) => ({
         spaceId,
         feedId,
         feedNamespace: data,
-        data: EchoFeedCodec.encode({
-          id: EntityId.random(),
-          ...(onBranch ? { '@meta': { keys: [{ source: FeedProtocol.KEY_FEED_BRANCH, id: branch }] } } : {}),
-        }),
+        data: EchoFeedCodec.encode({ id: EntityId.random() }),
+        ...(forkAt ? { forkAt: EchoFeedCodec.blockId(forkAt.actorId, forkAt.sequence) } : {}),
       });
-      yield* feedStore.appendLocal([
-        block(mainOnly, false),
-        block(mainOnly, true),
-        block(allBranches, false),
-        block(allBranches, true),
-      ]);
+      const [mainRoot, allRoot] = yield* feedStore.appendLocal([block(mainOnly), block(allBranches)]);
+      const [, allFork] = yield* feedStore.appendLocal([block(mainOnly, mainRoot), block(allBranches, allRoot)]);
+      const branch = EchoFeedCodec.blockId(allFork.actorId, allFork.sequence);
 
       source.beginPass();
       const result = yield* source.getChangedObjects(Context.default(), [], { limit: 50 });
