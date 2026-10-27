@@ -4,15 +4,22 @@ name: Object share links
 version: 0.1.0
 ---
 
-Share one Composer object the way a document is shared in Google Docs. Every object has a **Share** button. It opens a dialog, and **Copy link** makes a URL. Whoever opens the URL lands on that object. A browser with no identity gets one on the spot, and a non-member joins the space in the background. The guest replicates only the shared object and the objects it needs, not the whole space.
+Share one Composer object as you share a document in Google Docs. Each object has a **Share** button. The button opens a dialog, and **Copy link** makes a URL. The URL opens that object.
 
-While the guest joins, the object's plank shows a read-only **first look** of the object. EDGE serves it in one HTTP request, before the guest has an identity. The live object replaces it in the same plank once the space opens.
+A browser with no identity gets an identity immediately. A guest that is not a member joins the space in the background. The guest replicates only the shared object and the objects that it needs, not the full space.
 
-The feature spans four places: plugin-space (`org.dxos.plugin.space`, [F-2] there) owns the dialog, the link and its handler; the client SDK carries the scope through the join; the ECHO host enforces it and answers queries before indexing; EDGE's db-service serves the first look.
+While the guest joins, the plank of the object shows a read-only **first look** of the object. EDGE serves the first look in one HTTP request, before the guest has an identity. When the space opens, the live object replaces the first look in the same plank.
+
+The feature has four parts:
+
+- plugin-space (`org.dxos.plugin.space`, [F-2] there) owns the dialog, the link and the link handler.
+- The client SDK sends the scope through the join.
+- The ECHO host enforces the scope, and it answers queries before the index reads the documents.
+- The db-service of EDGE serves the first look.
 
 ## Extensions
 
-The following extension dialects are used in this document. Each extension is defined in the Appendix or resolved via its URI.
+This document uses the extension dialects that follow. The Appendix defines each extension, or its URI identifies it.
 
 | Term       | URI                         |
 |------------|-----------------------------|
@@ -25,11 +32,15 @@ The following extension dialects are used in this document. Each extension is de
 
 ## Diagrams
 
-### Making and opening a link
+### Make a link and open it
 
-The inviter writes a delegated invitation and its scope to the space's control feed, which EDGE's `SpaceStateMachine` reads. The guest's share-link handler then does three things at once. It asks EDGE for the first look, signed with the invitation's guest key. It opens the plank. It starts the join, which redeems the invitation at EDGE and hands the scope to the guest's own ECHO host.
+The inviter writes a delegated invitation and its scope to the control feed of the space. The `SpaceStateMachine` of EDGE reads that feed. Then the share-link handler of the guest does these three steps at the same time:
 
-![The inviter's share dialog calls the ShareObject op, which delegates an invitation and its scope to EDGE's SpaceStateMachine; the guest's share-link handler reads the first look from EDGE's shared-objects route (grant from the state machine, objects from the Indexer), shows it in the plank, and joins through the join route, passing the sync scope to its scope guard.](diagrams/share-flow.dx.svg)
+1. It asks EDGE for the first look, and it signs the request with the guest key of the invitation.
+2. It opens the plank.
+3. It starts the join. The join redeems the invitation at EDGE and gives the scope to the ECHO host of the guest.
+
+![The share dialog of the inviter calls the ShareObject op. The op delegates an invitation and its scope to the SpaceStateMachine of EDGE. The share-link handler of the guest reads the first look from the shared-objects route of EDGE. The route gets the grant from the state machine and the objects from the Indexer. The handler shows the first look in the plank. It joins through the join route and gives the sync scope to its scope guard.](diagrams/share-flow.dx.svg)
 
 ```diagram
 diagram flow=right
@@ -62,11 +73,11 @@ edge Client -> Join "redeem"
 edge Client -> Guard "syncScope"
 ```
 
-### Opening a link, in order
+### The sequence to open a link
 
-The inviter's half runs once, when **Copy link** is pressed. On the guest, the first look and the join start together; the first look normally lands while the join is still running.
+The steps of the inviter run one time, when the user clicks **Copy link**. On the guest, the first look and the join start at the same time. Usually, the first look arrives while the join continues.
 
-![The share dialog calls the ShareObject op, which sends the invitation and then its DelegatedInvitationScope to EDGE's SpaceStateMachine. On the guest, in parallel: the handler reads the shared objects from EDGE's route, which takes a grant from the state machine and reads the Indexer, and hands the first look to the plank; and the handler joins with the sync scope, redeeming the invitation and passing the scope to the scope guard. The live object then replaces the first look.](diagrams/open-sequence.dx.svg)
+![The share dialog calls the ShareObject op, and the op sends the invitation and its DelegatedInvitationScope to the SpaceStateMachine of EDGE. On the guest, two sequences run at the same time. In the first sequence, the handler reads the shared objects from the route and gives the first look to the plank. The route gets a grant from the state machine and reads the Indexer. In the second sequence, the handler joins with the sync scope, and the join redeems the invitation and gives the scope to the scope guard. Then the live object replaces the first look.](diagrams/open-sequence.dx.svg)
 
 ```diagram
 diagram kind=sequence
@@ -96,11 +107,11 @@ fragment par "first look" {
 edge Client sends Plank "live object replaces the first look"
 ```
 
-### Queries before indexing
+### Queries before the index reads a document
 
-A document the host has saved but the index has never read is answered from disk. The host records each save. It asks the index whether it has ever read that document, and keeps the ones it has not. A query over a space with such documents runs its uncompiled plan and reads them from disk. Once an index pass has read them, the query runs again from the index.
+The host can save a document before the index reads it. The host answers a query on such a document from the disk. The host records each save. It asks the index if the index read that document before, and it keeps a list of the documents that the index did not read. A query of a space with such documents runs its uncompiled plan and reads those documents from the disk. After an index pass reads them, the query runs again from the index.
 
-![AutomergeHost reports each stored document to EchoHost, which asks IndexEngine whether it has read it and records the unread ones in UnindexedDocuments; QueryService hands each query its space's unread documents, and QueryExecutor reads those from AutomergeHost and the rest from the index; a finished pass re-runs the queries.](diagrams/query-before-index.dx.svg)
+![AutomergeHost tells EchoHost when it stores a document. EchoHost asks IndexEngine if it read the document, and it records each unread document in UnindexedDocuments. QueryService gives each query the unread documents of its space. QueryExecutor reads those documents from AutomergeHost and the other documents from the index. A completed pass runs the queries again.](diagrams/query-before-index.dx.svg)
 
 ```diagram
 diagram flow=down
@@ -130,12 +141,12 @@ edge Engine -> Service "pass done: re-run"
 
 ```mdl
 type SharePayload
-  desc: What a share link carries in its `share` query parameter, as base64url of deflate-raw JSON; decoding refuses more than 256 KiB inflated. It names no object: the link's path does (F-1.1).
+  desc: The data that a share link holds in its `share` query parameter. The encoding is base64url of deflate-raw JSON. The decoder refuses data that is more than 256 KiB after inflation. The payload does not name an object. The path of the link names the object (F-1.1).
   fields:
     version: 1
     spaceId: SpaceId
-    invitation?: Invitation         # the invitation's fields as plain JSON, not an InvitationEncoder code, since the payload is already encoded; absent for a restricted link
-    plugins: string[]               # plugins that render the scope's types, core plugins left out
+    invitation?: Invitation         # the fields of the invitation as plain JSON, not as an InvitationEncoder code. A restricted link has no invitation.
+    plugins: string[]               # the plugins that render the types of the scope, without the core plugins
     objects: ObjectId[]             # the scope
 ```
 
@@ -156,7 +167,7 @@ type DelegatedInvitationScope
 
 ```mdl
 type ReadSharedObjectsRequest
-  desc: The body of EDGE's shared-objects route. `signature` is an Ed25519 signature, by the invitation's guest key, of the SHA-256 digest of `dxos.shared-objects:<spaceId>:<invitationId>:<issuedAt>`.
+  desc: The body of the shared-objects route of EDGE. `signature` is an Ed25519 signature of the SHA-256 digest of `dxos.shared-objects:<spaceId>:<invitationId>:<issuedAt>`. The guest key of the invitation makes the signature.
   fields:
     invitationId: string
     issuedAt: number                # milliseconds since the epoch
@@ -165,11 +176,11 @@ type ReadSharedObjectsRequest
 
 ```mdl
 type SharedObject
-  desc: One object of a first look, as EDGE's index last read it. Only database objects stored in Automerge documents are served; a feed object is not.
+  desc: One object of a first look, as the index of EDGE read it last. EDGE serves only database objects that Automerge documents hold. EDGE does not serve feed objects.
   fields:
     id: ObjectId
     documentId: string
-    objectJson: string              # the object's JSON, in the format `Obj.toJSON` writes
+    objectJson: string              # the JSON of the object, in the format that `Obj.toJSON` writes
     heads: string[]
 ```
 
@@ -177,35 +188,35 @@ type SharedObject
 
 ```mdl
 service SharedObjectsRoute
-  desc: EDGE db-service route `POST /spaces/:spaceId/shared-objects` (clients call it under `/db`). It is unauthenticated; the request proves it holds the invitation's guest key.
+  desc: The route `POST /spaces/:spaceId/shared-objects` of the EDGE db-service. Clients call it under `/db`. The route has no authentication. The request proves that the caller has the guest key of the invitation.
   ops:
     readSharedObjects(spaceId: SpaceId, request: ReadSharedObjectsRequest) → { objects: SharedObject[] }
   errors:
-    401: the signature is outside ±5 minutes of EDGE's clock, or does not verify against the invitation's guest key
-    403: the invitation is cancelled, expired, spent, not `KNOWN_PUBLIC_KEY`, or shares no objects
-    404: EDGE has not seen the invitation yet; the response carries Retry-After
+    401: the signature is more than 5 minutes from the clock of EDGE, or the guest key of the invitation does not verify it
+    403: the invitation is cancelled, expired or spent, its authentication is not `KNOWN_PUBLIC_KEY`, or it shares no objects
+    404: EDGE does not have the invitation at this time, and the response has a Retry-After header
 ```
 
 ```mdl
 service EdgeHttpClient
-  desc: The client SDK's EDGE HTTP client, gaining the first-look read.
+  desc: The EDGE HTTP client of the client SDK. It gets an operation that reads the first look.
   ops:
     readSharedObjects(spaceId: SpaceId, request: ReadSharedObjectsRequest) → { objects: SharedObject[] }
 ```
 
 ```mdl
 service EchoHost
-  desc: The ECHO host gains a per-space sync scope.
+  desc: The ECHO host gets a sync scope for each space.
   ops:
     setSpaceSyncScope(spaceId: SpaceId, objectIds: string[]) → void
-  note: Its `syncScopeExtended` event reports objects the guest created, which the client persists to the space metadata.
+  note: Its `syncScopeExtended` event identifies the objects that the guest created. The client stores these objects in the space metadata.
 ```
 
 ## Operations
 
 ```mdl
 op Spaces.join
-  desc: Joins a space through an invitation. With `syncScope` the space replicates only those objects' documents, from the first replication round.
+  desc: Joins a space with an invitation. With `syncScope`, the space replicates only the documents of those objects, from the first replication round.
   input:
     invitation: Invitation | string
     syncScope?: { objectIds: string[] }
@@ -214,7 +225,7 @@ op Spaces.join
 
 ```mdl
 op Space.extendSyncScope
-  desc: Adds objects to a partially replicated space's scope and releases their documents; a no-op for a full member.
+  desc: Adds objects to the scope of a partially replicated space and releases their documents. For a full member, it does nothing.
   input:
     objectIds: string[]
   output: void
@@ -225,176 +236,176 @@ op Space.extendSyncScope
 ```mdl
 feat F-1: The link
 
-  req F-1.1: A share link is the object's shareable path plus a `share` query parameter holding a SharePayload. The path alone names the object the link opens (`<typeSlug>+<objectId>`), so a member opens it through the existing URL projection and the payload carries no second copy of it.
+  req F-1.1: A share link is the shareable path of the object, with a `share` query parameter that holds a SharePayload. Only the path names the object that the link opens (`<typeSlug>+<objectId>`). Thus a member opens it through the usual URL projection, and the payload does not hold the name of the object again.
 
   req F-1.2:
-    when: the link is made with general access set to anyone with the link
-    then: the payload carries a delegated, multi-use invitation authenticated by a known public key, with the role chosen in the dialog, as protobuf JSON holding the same fields as an invitation code and never its auth code or the host's identity
+    when: the user makes the link with general access set to anyone with the link
+    then: the payload holds a delegated invitation for many uses, with authentication by a known public key and the role from the dialog. The invitation is protobuf JSON with the same fields as an invitation code. It does not hold the auth code or the identity of the host.
 
-  req F-1.3: The scope is the object; every object reachable through its references or through ECHO links in its text, breadth-first and within the space, up to 64 objects; the space properties; and each scoped object's strong dependencies (its parent and a type stored in the space), whose own references are not followed.
+  req F-1.3: The scope contains the object and each object that its references or the ECHO links in its text can reach. The walk is breadth-first, stays in the space and stops at 64 objects. The scope also contains the space properties and the strong dependencies of each scoped object: its parent and a type that the space stores. The scope does not follow the references of these dependencies.
 
-  req F-1.4: The payload names the plugins whose schema modules register the scope's types, minus the core plugins.
+  req F-1.4: The payload names the plugins with the schema modules that register the types of the scope. It does not name the core plugins.
 
   req F-1.5:
-    when: the invitation is delegated with shared objects
-    then: the inviter writes a DelegatedInvitationScope credential to the control feed after the invitation's own credential, signed by the same identity
+    when: the inviter delegates an invitation with shared objects
+    then: the inviter writes a DelegatedInvitationScope credential to the control feed after the credential of the invitation. The same identity signs the two credentials.
 ```
 
 ```mdl
-feat F-2: Opening the link
+feat F-2: Open the link
 
-  req F-2.1: A member lands on the object through URL projection; the handler only enables missing plugins and extends the member's sync scope when it is itself a partial guest.
+  req F-2.1: A member gets to the object through URL projection. The handler only enables the plugins that are missing. It extends the sync scope of the member only when the member is a partial guest.
 
-  req F-2.2: A non-member joins with `syncScope` set to the payload's objects, with no dialog, and lands on the object.
+  req F-2.2: A guest that is not a member joins with `syncScope` set to the objects of the payload. The guest sees no dialog and gets to the object.
 
-  req F-2.3: A browser with no identity gets one from onboarding, with no welcome screen; the share-link handler waits for it and never creates one itself.
+  req F-2.3: A browser with no identity gets one from onboarding, without a welcome screen. The share-link handler waits for that identity and does not make an identity.
 
-  req F-2.4: The handler returns once it has started the first look and enabled the link's plugins, so URL projection opens the object's plank at once; the identity wait, the join and opening the object run detached.
+  req F-2.4: The handler returns after it starts the first look and enables the plugins of the link. Thus URL projection opens the plank of the object immediately. The wait for the identity, the join and the open operation of the object run in detached fibers.
 
-  req F-2.5: While the join runs, navigation presence reports the space and its shared object as existing, so the plank is not declared missing before the space opens.
+  req F-2.5: While the join runs, navigation presence shows the space and its shared object as present. Thus the plank does not show that the object is missing before the space opens.
 
-  req F-2.6: A browser that has never run Composer starts with only the core plugins and those the link names, and creates its own spaces only once the shared space is ready.
+  req F-2.6: A browser that did not run Composer before starts with only the core plugins and the plugins that the link names. It makes its spaces only after the shared space is ready.
 
-  req F-2.7: Opening a share link makes the shared object the whole view: the navigation sidebar collapses at once, the companion closes once the link's plank is in its deck, and no toast or progress bar announces the join. None of this waits on, or delays, the first look.
+  req F-2.7: A share link makes the shared object the full view. The navigation sidebar collapses immediately. The companion closes when the deck has the plank of the link. No toast or progress bar shows the join. None of these steps waits for the first look or delays it.
 ```
 
 ```mdl
 feat F-3: Partial sync
 
-  req F-3.1: A space joined with a scope stores it as its SpaceSyncScope and re-applies it to the ECHO host on every start, before the data pipeline runs.
+  req F-3.1: A space that the guest joined with a scope stores the scope as its SpaceSyncScope. Each time the space starts, it applies the scope to the ECHO host again, before the data pipeline runs.
 
-  req F-3.2: On every directory change the host splits the linked and branch documents into in scope (a document holding a scoped object, or a branch of one) and out of scope; the space root, its anchors and the in-scope documents form the space's document list.
+  req F-3.2: On each directory change, the host divides the linked documents and the branch documents into two groups. A document is in scope when it holds a scoped object or it is a branch of such a document. All other documents are out of scope. The document list of the space has the space root, its anchors and the documents in scope.
 
-  req F-3.3: An out-of-scope document is quarantined with reason `out-of-scope` before the list is published, so it is never loaded, requested, accepted, served or advertised; inbound classical-sync changes to it are dropped.
+  req F-3.3: The host quarantines each document out of scope with the reason `out-of-scope` before it publishes the list. Thus the host does not load, request, accept, serve or advertise that document. The host ignores the classical-sync changes to it that come from other peers.
 
   req F-3.4:
-    when: the scope grows, by Space.extendSyncScope or because the guest created an object
-    then: the newly scoped documents are released from quarantine and fetched, a client that asked for one while it was out of scope receives it, and the extension is persisted
+    when: the scope increases, through Space.extendSyncScope or because the guest made an object
+    then: the host releases the new scoped documents from quarantine and fetches them. A client that asked for one of these documents while it was out of scope gets it. The client stores the extension.
 
-  req F-3.5: Only the guest's own client enforces the scope. EDGE and other members serve any document of the space to any member.
+  req F-3.5: Only the client of the guest enforces the scope. EDGE and the other members serve each document of the space to each member.
 ```
 
 ```mdl
 feat F-4: First look
 
   req F-4.1:
-    when: a share link carrying an invitation is opened
-    then: the app reads the scope's objects from EDGE through EdgeHttpClient.readSharedObjects before the guest has an identity, signing with the invitation's guest key through WebCrypto, retrying up to 4 times
+    when: the user opens a share link that holds an invitation
+    then: the app reads the objects of the scope from EDGE through EdgeHttpClient.readSharedObjects, before the guest has an identity. It signs with the guest key of the invitation through WebCrypto. If the read fails, it tries again a maximum of 4 times.
 
-  req F-4.2: The object's pending plank asks the `PendingArticle` surface role for a stand-in; plugin-space answers for a share link with the decoded first look through the `ObjectPreview` role.
+  req F-4.2: The pending plank of the object asks the `PendingArticle` surface role for a stand-in. For a share link, plugin-space gives the decoded first look through the `ObjectPreview` role.
 
-  req F-4.3: A first look is keyed by its space and object ids, so it is found both while the plank keeps the URL's `<type>+<id>` id and after the plank moves to the object's canonical node id.
+  req F-4.3: The key of a first look is its space id and its object id. Thus the plank finds the first look with the `<type>+<id>` id of the URL. It also finds the first look after it moves to the canonical node id of the object.
 
-  req F-4.4: Markdown renders a first look read-only and laid out as its article, with the article's toolbar row (inert) and fold gutter, so the text does not move when the article replaces it; a type with no preview of its own shows the object's name.
+  req F-4.4: Markdown shows a first look as read-only text, with the layout of its article: the toolbar row (inert) and the fold gutter. Thus the text does not move when the article replaces it. A type without a preview shows the name of the object.
 
-  req F-4.5: References inside a first look resolve only to other objects of the same first look.
+  req F-4.5: References in a first look resolve only to the other objects of that first look.
 
-  req F-4.6: The live object replaces the first look in the same plank once the space opens and its article has rendered: the plank keeps the first look over the article until then, so it never shows empty between the two, and neither the plank nor the first look remounts.
+  req F-4.6: When the space opens and its article renders, the live object replaces the first look in the same plank. Until then, the plank keeps the first look on top of the article. Thus the plank is not empty at any time between the two, and the plank and the first look do not mount again.
 
-  req F-4.7: A failed read loses only the first look; the join and the live object are unaffected.
+  req F-4.7: If the read fails, the guest loses only the first look. The join and the live object do not change.
 
-  req F-4.8: While the plank waits, its heading shows the first look's title and icon (`AppSurface.usePendingHeading`) instead of a loading title, so the heading does not change when the live object arrives.
+  req F-4.8: While the plank waits, its heading shows the title and the icon of the first look (`AppSurface.usePendingHeading`), not a temporary title. Thus the heading does not change when the live object arrives.
 ```
 
 ```mdl
 feat F-5: The shared-objects route
 
-  req F-5.1: The route answers only for an invitation that is live (not cancelled, expired or spent) and uses `KNOWN_PUBLIC_KEY` authentication, after verifying the request's signature against that invitation's stored guest key.
+  req F-5.1: The route answers only for a live invitation (not cancelled, expired or spent) that uses `KNOWN_PUBLIC_KEY` authentication. First, it verifies the signature of the request against the stored guest key of that invitation.
 
-  req F-5.2: EDGE's invitation processor records each invitation's issuer and stores each DelegatedInvitationScope under the `invitation-scope` storage key; a scope applies only when its issuer is the invitation's issuer.
+  req F-5.2: The invitation processor of EDGE records the issuer of each invitation. It stores each DelegatedInvitationScope with the `invitation-scope` storage key. A scope applies only when its issuer is the issuer of the invitation.
 
-  req F-5.3: The route answers with the scope's objects only, as SharedObject rows read from the index by one `Indexer.readObjects` call, so it costs one hop to the state machine and one to the indexer. It reads only objects stored in Automerge documents; a feed object in the scope is left out.
+  req F-5.3: The route answers with only the objects of the scope, as SharedObject rows. One `Indexer.readObjects` call reads these rows from the index. Thus the route makes one call to the state machine and one call to the indexer. It reads only objects that Automerge documents hold, and it does not serve a feed object of the scope.
 
-  req F-5.4: An EDGE that predates DelegatedInvitationScope passes it through untouched and answers the route with 404, so EDGE and the client deploy in either order.
+  req F-5.4: An EDGE version from before DelegatedInvitationScope keeps that credential without a change, and it answers the route with 404. Thus you can deploy EDGE and the client in the two possible sequences.
 ```
 
 ```mdl
-feat F-6: Queries before indexing
+feat F-6: Queries before the index reads a document
 
-  req F-6.1: No query waits for indexing.
+  req F-6.1: No query waits for the index.
 
-  req F-6.2: Each saved document is classified by asking the index whether it has ever read it; a document the index has read is answered from its rows.
+  req F-6.2: The host classifies each saved document. It asks the index if the index read that document before. For a document that the index read, the query uses the rows of the index.
 
-  req F-6.3: Wildcard and type selects over a space with documents the index has never read run the uncompiled plan and read up to 64 such documents per select from disk.
+  req F-6.3: In a space with documents that the index did not read, wildcard selects and type selects run the uncompiled plan. Each select reads a maximum of 64 such documents from the disk.
 
-  req F-6.4: A just-saved document invalidates only the live queries its objects' types and ids can affect, and a finished index pass re-runs them from the index.
+  req F-6.4: When the host saves a document, it invalidates only the live queries that the types and ids of its objects can change. A completed index pass runs these queries again from the index.
 ```
 
 ## Acceptance
 
 ```mdl
 scenario T-1: A guest replicates only the scope
-  given: a space with ten documents, one of which links to another
-  when: a client joins with a sync scope of the linking document
+  given: a space with ten documents, and one document links to a different document
+  when: a client joins with a sync scope of the document with the link
   then:
-    - the guest holds the two documents and the space properties, and none of the other eight
-    - extending the scope to a third document delivers it
+    - the guest holds the two documents and the space properties, and none of the other eight documents
+    - an extension of the scope to a third document delivers that document
 ```
 
 ```mdl
-scenario T-2: The route serves only the scope, to the guest key
-  given: a delegated invitation with a scope of one object, in a space of two
-  when: a request signed with the invitation's guest key reads the route
+scenario T-2: The route serves only the scope, and only to the guest key
+  given: a delegated invitation with a scope of one object, in a space with two objects
+  when: a request signed with the guest key of the invitation reads the route
   then:
-    - the answer holds the scoped object and not the other
-    - a request signed with another key gets 401
-    - a request issued ten minutes ago gets 401
+    - the answer holds the scoped object and not the other object
+    - a request signed with a different key gets 401
+    - a request that the client issued ten minutes before gets 401
 ```
 
 ```mdl
-scenario T-3: EDGE verifies a client-signed scope credential
-  given: a DelegatedInvitationScope signed by an identity through its device chain
-  when: EDGE verifies it, as the buf credential and as the plain object
+scenario T-3: EDGE verifies a scope credential that a client signed
+  given: a DelegatedInvitationScope that an identity signed through its device chain
+  when: EDGE verifies it as the buf credential and as the plain object
   then:
-    - both verify
+    - the two verifications pass
 ```
 
 ```mdl
-scenario T-4: A query reads a document the index has not read
-  given: an empty index and a saved document holding a typed object
-  when: a type, a wildcard and a count query run under the compiled executor
+scenario T-4: A query reads a document that the index did not read
+  given: an empty index and a saved document that holds a typed object
+  when: a type query, a wildcard query and a count query run under the compiled executor
   then:
-    - each answers with the object
+    - each query answers with the object
 ```
 
 ```mdl
-scenario T-5: Signing in the browser verifies against the sodium key
-  given: an invitation's guest keypair as libsodium writes it
+scenario T-5: A signature from the browser verifies against the sodium key
+  given: the guest keypair of an invitation, as libsodium writes it
   when: the first look signs a challenge through WebCrypto
   then:
-    - the signature verifies against the guest public key
+    - the guest public key verifies the signature
 ```
 
 ## Measured
 
-Five fresh browsers each way, headless, against EDGE preview. The route was answered in the browser from preview's query endpoint, one EDGE round trip for the same objects, because it is not deployed there yet.
+We did five runs with new browsers for each row, headless, against EDGE preview. Preview does not have the route at this time. Thus the browser answered the route from the query endpoint of preview, with one EDGE round trip for the same objects.
 
-| From opening the link to | Range       | Median |
+| Time from the link to    | Range       | Median |
 |--------------------------|-------------|--------|
 | First look on screen     | 5.2–5.7 s   | 5.5 s  |
 | Live document, with it   | 14.9–18.0 s | 16.9 s |
 | Live document, without   | 14.8–19.0 s | 16.0 s |
 
-The first look lands 0.5–0.9 s after Composer itself starts, so it moves with boot time. The guest's index holds 6 objects after opening the link (2 documents, their 2 texts, the root collection and the space properties) against the owner's 23.
+The first look arrives 0.5–0.9 s after Composer starts. Thus the boot time changes the time of the first look. After the guest opens the link, its index holds 6 objects: 2 documents, their 2 texts, the root collection and the space properties. The index of the owner holds 23 objects.
 
 ## Security
 
-The scope limits what the guest's own client stores. It is not access control.
+The scope limits the data that the client of the guest stores. The scope is not access control.
 
-- **EDGE does not guard documents.** The guest is admitted as a full member. EDGE's Subduction replicator serves every document of the space to any member, and its collection replies list every document id. A modified client, or the same identity on another device, obtains the whole space.
-- **The first look is the one EDGE read that is limited to the scope.** The route serves only the objects the inviter's own credential names.
-- **The link is a bearer secret.** It holds the invitation's guest keypair in the query string, which reaches the Composer Worker and its logs. It lasts as long as the invitation, and closing the dialog does not revoke it.
-- **Viewer is not enforced.** The role is recorded on the member credential, but nothing checks it on a write. The dialog says so when Viewer is selected.
+- **EDGE does not guard documents.** EDGE admits the guest as a full member. The Subduction replicator of EDGE serves each document of the space to each member, and its collection replies list each document id. A modified client, or the same identity on a different device, can get the full space.
+- **The first look is the only EDGE read that the scope limits.** The route serves only the objects that the credential of the inviter names.
+- **The link is a bearer secret.** Its query string holds the guest keypair of the invitation. The query string goes to the Composer Worker and its logs. The link is valid while the invitation is valid. The link stays valid when the user closes the dialog.
+- **Viewer is not enforced.** The member credential records the role, but no check examines the role when a member writes. The dialog shows this information when the user selects Viewer.
 
 ## Open questions
 
-- EDGE enforcement: a per-member document allowlist, read from the DelegatedInvitationScope, in the Subduction replicator's fetch authorization and its collection replies.
-- Peers: mesh replication consulting the same scope before it advertises a document.
-- The scope is fixed when the link is made: a child added later, rows a view selects, and comment threads attached by relation are not in it.
-- Feed objects: the scope walk, the scope guard and the route all work on objects stored in Automerge documents, so a feed object a shared object references is neither replicated nor served.
-- An in-memory client for the guest, with no Automerge, indexer or worker, in place of the first look, the scope guard and queries before indexing; it serves a Viewer link alone unless it can upgrade to the full client when the guest edits.
-- Moving the `share` parameter from the query string into the URL fragment.
-- Revocation: cancelling the invitation stops new joins, but does not remove a guest who already joined.
+- EDGE enforcement: a list of permitted documents for each member, from the DelegatedInvitationScope. The Subduction replicator uses the list in its fetch authorization and its collection replies.
+- Peers: mesh replication can examine the same scope before it advertises a document.
+- The scope is fixed when the user makes the link. It does not contain a child that a user adds after the link, the rows that a view selects, or the comment threads that a relation attaches.
+- Feed objects: the scope walk, the scope guard and the route operate only on objects that Automerge documents hold. Thus no client replicates or serves a feed object that a shared object references.
+- An in-memory client for the guest, without Automerge, an indexer or a worker. It can replace the first look, the scope guard and the queries before the index reads the documents. It can serve only a Viewer link, unless it can change to the full client when the guest edits.
+- Move the `share` parameter from the query string into the URL fragment.
+- Revocation: when the inviter cancels the invitation, no new guest can join. But a guest that joined before stays in the space.
 
 ## Changelog
 
