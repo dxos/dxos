@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -43,25 +45,15 @@ export const RefitState = Capability.lazyModule(
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
-// Browser-only: the variant supplies the React article/card components that render a drawing.
+// Read by the drawing surfaces and by the drawing skill's operations; a headless entry (`#svg-variant`)
+// leaves out the React article/card components.
 export const SvgVariant = Capability.lazyModule(
   'IllustratorSvgVariant',
   {
     provides: [IllustratorCapabilities.VariantProvider],
-    activatesOn: IllustratorEvents.Start,
-    environments: ['browser', 'tauri'],
+    activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
   },
-  () => import('./svg-variant.ts'),
-);
-// Headless hosts (EDGE) never fire the start event a rendered surface sends, so this loads at startup.
-export const HeadlessSvgVariant = Capability.lazyModule(
-  'IllustratorHeadlessSvgVariant',
-  {
-    provides: [IllustratorCapabilities.VariantProvider],
-    activatesOn: ActivationEvents.Startup,
-    environments: ['node', 'workerd'],
-  },
-  () => import('./headless-svg-variant.ts'),
+  () => import('#svg-variant'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

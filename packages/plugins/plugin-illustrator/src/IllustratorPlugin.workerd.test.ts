@@ -32,6 +32,12 @@ describe('IllustratorPlugin in workerd', () => {
     expect(commands.length).toBeGreaterThan(0);
   });
 
+  // The drawing operations resolve their variant through this module, which a browser build pairs with React surfaces.
+  test('loads the SVG variant without its surfaces', async ({ expect }) => {
+    const module = await import('#svg-variant');
+    expect(module.default).toBeDefined();
+  });
+
   test('exports the legacy sketch type', ({ expect }) => {
     expect(Type.getTypename(LegacySketch.Sketch)).toBe('org.dxos.type.sketch');
   });

@@ -10,7 +10,8 @@ import { SVG_SCHEMA } from '@dxos/diagram';
 import { SvgBuilder } from '#model';
 import { IllustratorCapabilities } from '#types';
 
-/** The SVG variant without its article and card, so the drawing operations run where nothing renders. */
+// The SVG variant a headless entry (node, and workerd via the `#svg-variant` condition) contributes: the
+// builder the drawing operations apply, without the article and card that render it.
 const variant: IllustratorCapabilities.DrawingVariant = {
   id: SVG_SCHEMA,
   label: 'svg',
