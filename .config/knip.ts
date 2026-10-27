@@ -57,6 +57,8 @@ const entryTargets = (target: unknown): string[] => {
 const AUXILIARY_ENTRY = [
   // `tst` is tstyche: a type-level test, run by the `test-types` task, imported by nothing.
   'src/**/*.{test,spec,tst}.{ts,tsx}',
+  // Run by `vitest bench`, imported by nothing.
+  'src/**/*.bench.{ts,tsx}',
   // Solid and Lit storybooks use their own suffix so the react storybook does not pick them up.
   'src/**/*.{stories,solid-stories,lit-stories}.{ts,tsx}',
   'src/**/*.eval.{ts,tsx}',

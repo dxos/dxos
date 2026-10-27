@@ -3304,7 +3304,12 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           queueId: row.queueId !== '' ? row.queueId : undefined,
           queueNamespace: row.queueNamespace !== '' ? row.queueNamespace : undefined,
           rank: row.rank,
-          documentJsonb: row.documentJsonb ?? undefined,
+          documentJsonb:
+            row.documentJsonb === null
+              ? undefined
+              : row.documentJsonb instanceof Uint8Array
+                ? row.documentJsonb
+                : new Uint8Array(row.documentJsonb),
           groupKey: row.groupKey ?? undefined,
           groupCount: row.groupCount ?? undefined,
           heads: row.heads !== null ? JSON.parse(row.heads) : undefined,

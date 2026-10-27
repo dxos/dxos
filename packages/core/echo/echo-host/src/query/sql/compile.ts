@@ -66,8 +66,8 @@ export type CompiledRow = {
   rank: number;
   createdAt: number | null;
   updatedAt: number | null;
-  /** The feed row's snapshot as SQLite JSONB, verbatim from the index. */
-  documentJsonb: Uint8Array | null;
+  /** The feed row's snapshot as SQLite JSONB, verbatim from the index; an `ArrayBuffer` where the driver returns BLOBs so. */
+  documentJsonb: Uint8Array | ArrayBuffer | null;
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
   groupCount: number | null;

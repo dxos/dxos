@@ -269,7 +269,7 @@ for (const count of COUNTS) {
       'interop: full-text index change feed',
       async () => {
         const fixture = await getFixture();
-        const source = new IndexedObjectSource(fixture.sql);
+        const source = new IndexedObjectSource(new ObjectSnapshotIndex(fixture.sql));
         let total = 0;
         let cursors: Parameters<IndexedObjectSource['getChangedObjects']>[1] = [];
         while (true) {

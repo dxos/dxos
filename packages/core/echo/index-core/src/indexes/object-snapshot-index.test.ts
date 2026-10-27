@@ -65,6 +65,74 @@ describe('ObjectSnapshotIndex', () => {
   );
 
   it.effect(
+    'merges a partial block onto the prior snapshot as an object spread would',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const sql = yield* SqlClient.SqlClient;
+      const metaIndex = new EntityMetaIndex(sql);
+      yield* metaIndex.migrate();
+
+      const id = EntityId.random();
+      const base = { spaceId: SpaceId.random(), queueId: EntityId.random(), queueNamespace: 'data', documentId: null };
+      const full: IndexerObject = {
+        ...base,
+        recordId: null,
+        createdAt: null,
+        updatedAt: 1,
+        data: { id, [ATTR_TYPE]: TYPE_PERSON, body: { x: 1, y: 2 }, kept: 'k', dropped: 1 },
+      };
+      yield* metaIndex.update([full]);
+      yield* metaIndex.lookupRecordIds([full]);
+      invariant(full.recordId !== null);
+      yield* store.update([full]);
+
+      // Enough keys to span several merge statements, a nested value that must replace rather than deep-merge,
+      // an explicit null that must stay, a dropped value that must remove, and a key that needs quoting in a path.
+      const many = Object.fromEntries(Array.from({ length: 45 }, (_, index) => [`k${index}`, index]));
+      const patch = {
+        id,
+        '@deleted': true,
+        'body': { z: 3 },
+        'nothing': null,
+        'dropped': undefined,
+        'we"ird\\key': 'q',
+        ...many,
+      };
+      yield* store.update([{ ...full, updatedAt: 2, data: patch }]);
+
+      const [stored] = yield* store.querySnapshotsJSON([full.recordId]);
+      expect(stored.snapshot).toEqual(JSON.parse(JSON.stringify({ ...full.data, ...patch })));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'stores a partial block as is when there is no prior snapshot',
+    Effect.fnUntraced(function* () {
+      const { store } = yield* migrated();
+      const metaIndex = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* metaIndex.migrate();
+
+      const object: IndexerObject = {
+        spaceId: SpaceId.random(),
+        queueId: EntityId.random(),
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: 1,
+        data: { 'id': EntityId.random(), '@deleted': true },
+      };
+      yield* metaIndex.update([object]);
+      yield* metaIndex.lookupRecordIds([object]);
+      invariant(object.recordId !== null);
+      yield* store.update([object]);
+
+      const [stored] = yield* store.querySnapshotsJSON([object.recordId]);
+      expect(stored.snapshot).toEqual(object.data);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'converts snapshots stored as JSON text when migrating to JSONB',
     Effect.fnUntraced(function* () {
       const { store } = yield* migrated();

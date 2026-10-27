@@ -10,10 +10,12 @@ import type * as Statement from 'effect/sql/Statement';
 
 import type { Obj } from '@dxos/echo';
 import { ATTR_TYPE } from '@dxos/echo/internal';
+import { failedInvariant } from '@dxos/invariant';
 import * as Jsonb from '@dxos/util/Jsonb';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { chunkArray, chunkRows } from '../utils.ts';
+import { type EntityMeta } from './entity-meta-index.ts';
 import type { Index, IndexerObject } from './interface.ts';
 
 /**
@@ -146,6 +148,42 @@ export class ObjectSnapshotIndex implements Index {
     });
   }
 
+  /**
+   * How many snapshots belong to records stamped past `version` in `objectMeta`. A record's snapshot row is
+   * written in the transaction that stamps its counter, so a counter without one names a deleted record.
+   */
+  countStampedSince(version: number): Effect.Effect<number, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const [row] = yield* this.#sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM objectMeta AS m
+        JOIN objectSnapshot AS s ON s.recordId = m.recordId
+        WHERE m.version > ${version}
+      `;
+      return row?.count ?? 0;
+    });
+  }
+
+  /** Up to `limit` snapshots of records stamped past `version`, decoded, with their meta, in stamp order. */
+  readStampedSince(
+    version: number,
+    limit: number,
+  ): Effect.Effect<readonly { meta: EntityMeta; snapshot: Obj.JSON }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const rows = yield* this.#sql<EntityMeta & { snapshot: StoredBlob }>`
+        SELECT m.*, s.snapshot
+        FROM objectMeta AS m
+        JOIN objectSnapshot AS s ON s.recordId = m.recordId
+        WHERE m.version > ${version}
+        ORDER BY m.version
+        LIMIT ${limit}
+      `;
+      // The row is handed on as the meta, snapshot column and all: copying it without that column costs more
+      // than the decode on wide meta rows.
+      return rows.map((row) => ({ meta: row, snapshot: decodeSnapshot(row.snapshot) }));
+    });
+  }
+
   /** Delete snapshot rows by record id. Used by garbage collection. */
   deleteByRecordIds = Effect.fn('ObjectSnapshotIndex.deleteByRecordIds')(
     (recordIds: readonly number[]): Effect.Effect<void, SqlError.SqlError> =>
@@ -174,52 +212,45 @@ export class ObjectSnapshotIndex implements Index {
 
       // A partial block carries no `@type`/body — notably the `{ id, '@deleted': true }` tombstone
       // appended by `Feed.remove`. Feed blocks are stored wholesale, so such a block is merged onto
-      // the prior snapshot below to retain the body and type while layering the new marker;
-      // otherwise the upsert would replace the full snapshot with the bare partial and the client
-      // could not hydrate the deleted object (`Obj.fromJSON` needs `@type` to decode). Only those
-      // blocks need the prior row, so the common case reads nothing at all.
+      // the prior snapshot to retain the body and type while layering the new marker; otherwise the
+      // upsert would replace the full snapshot with the bare partial and the client could not hydrate
+      // the deleted object (`Obj.fromJSON` needs `@type` to decode).
       // TODO(wittjosiah): Generalise to field-level LWW once partial-update blocks exist
       // (see `EchoFeedCodec.encode` and `EntityMetaIndex.update`).
       const isPartialBlock = ({ object }: { object: IndexerObject }) =>
         (object.data as Record<string, unknown>)[ATTR_TYPE] === undefined;
-      const partial = pending.filter(isPartialBlock).map(({ recordId }) => recordId);
-      const prior = new Map<number, StoredBlob>();
-      for (const chunk of chunkArray(partial)) {
-        const rows = yield* sql<{
-          recordId: number;
-          snapshot: StoredBlob;
-        }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
-        for (const row of rows) {
-          prior.set(row.recordId, row.snapshot);
-        }
-      }
 
       const rows = pending.map(({ recordId, object }) => {
-        const existing = prior.get(recordId);
-        const merged =
-          isPartialBlock({ object }) && existing !== undefined
-            ? { ...decodeSnapshot(existing), ...object.data }
-            : object.data;
         const version = object.version ?? object.heads;
         return {
           recordId,
-          snapshot: JSON.stringify(merged),
+          snapshot: encodeSnapshot(object.data),
           heads: object.heads ? JSON.stringify(object.heads) : null,
           version: version ? JSON.stringify(version) : null,
           bytes: object.heads && object.bytes ? object.bytes : null,
         };
       });
+      const partial = new Set(pending.flatMap((entry, index) => (isPartialBlock(entry) ? [index] : [])));
 
-      // `sql.insert` binds plain values only, so the rows are spelled out to route each snapshot through `jsonb()`,
-      // which encodes in C what `JSON.stringify` produced natively.
-      for (const chunk of chunkRows(rows)) {
-        const values = chunk.map(
-          (row) => sql`(${row.recordId}, jsonb(${row.snapshot}), ${row.heads}, ${row.version}, ${row.bytes})`,
-        );
+      for (const chunk of chunkRows(rows.filter((_, index) => !partial.has(index)))) {
         yield* sql`
-            INSERT INTO objectSnapshot (recordId, snapshot, heads, version, bytes) VALUES ${sql.join(', ', false)(values)}
+            INSERT INTO objectSnapshot ${sql.insert(chunk)}
             ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, version = excluded.version, bytes = excluded.bytes
           `;
+      }
+
+      // A partial block is stored as is where there is no prior row; otherwise each of its keys replaces the
+      // prior value in place, as an object spread would, without reading the row back. Re-applying the keys to a
+      // row the insert just wrote is a no-op, so the merge needs no branch on which case occurred.
+      for (const index of partial) {
+        const row = rows[index];
+        yield* sql`
+            INSERT INTO objectSnapshot ${sql.insert(row)}
+            ON CONFLICT (recordId) DO UPDATE SET heads = excluded.heads, version = excluded.version, bytes = excluded.bytes
+          `;
+        for (const merge of mergeExpressions(sql, pending[index].object.data)) {
+          yield* sql`UPDATE objectSnapshot SET snapshot = ${merge} WHERE recordId = ${row.recordId}`;
+        }
       }
     }),
   );
@@ -235,6 +266,35 @@ export type ObjectBacking = { recordId: number; jsonb: Uint8Array; heads: string
 type StoredBlob = Uint8Array | ArrayBuffer;
 
 const toUint8Array = (blob: StoredBlob): Uint8Array => (blob instanceof Uint8Array ? blob : new Uint8Array(blob));
+
+const encodeSnapshot = (data: Obj.JSON): Uint8Array =>
+  Jsonb.encode(data) ?? failedInvariant('an object always encodes');
+
+/** Key/value pairs per `jsonb_set` call, which bounds the statement's variables well under SQLite's limit. */
+const MERGE_PAIRS_PER_STATEMENT = 20;
+
+/**
+ * Expressions that apply a partial object's keys to `snapshot` with object-spread semantics: each present key
+ * replaces its prior value whole, and a key whose value `JSON.stringify` would drop removes the prior one.
+ */
+const mergeExpressions = (sql: SqlClient.SqlClient, data: Record<string, unknown>): Statement.Fragment[] => {
+  const sets: Statement.Fragment[] = [];
+  const removes: Statement.Fragment[] = [];
+  for (const [key, value] of Object.entries(data)) {
+    const path = `$.${JSON.stringify(key)}`;
+    const encoded = Jsonb.encode(value);
+    if (encoded === undefined) {
+      removes.push(sql`${path}`);
+    } else {
+      sets.push(sql`${path}`, sql`jsonb(${encoded})`);
+    }
+  }
+  const join = sql.join(', ', false);
+  return [
+    ...chunkArray(sets, MERGE_PAIRS_PER_STATEMENT * 2).map((pairs) => sql`jsonb_set(snapshot, ${join(pairs)})`),
+    ...chunkArray(removes, MERGE_PAIRS_PER_STATEMENT).map((paths) => sql`jsonb_remove(snapshot, ${join(paths)})`),
+  ];
+};
 
 /** A stored snapshot as the object it encodes. */
 export const decodeSnapshot = (blob: StoredBlob): Obj.JSON => {

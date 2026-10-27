@@ -84,6 +84,230 @@ export const readTopLevelString = (bytes: Uint8Array, key: string): string | und
   return isString(reader.type) ? reader.string(reader.type, reader.start, reader.end) : undefined;
 };
 
+/**
+ * Encodes a value as SQLite JSONB with the semantics of `JSON.stringify`: `toJSON` is honoured, `undefined` and
+ * functions are dropped from objects and become `null` in arrays, and non-finite numbers become `null`. Returns
+ * `undefined` where `JSON.stringify` would (a bare `undefined` or function).
+ */
+export const encode = (value: unknown): Uint8Array | undefined => {
+  // One writer serves every call, so its buffer is grown once rather than per object; a `toJSON` that encodes
+  // re-enters here while the writer is busy, and gets a fresh one.
+  const writer = idle ?? new Writer();
+  idle = undefined;
+  try {
+    writer.reset();
+    return writer.value(value, false) ? writer.finish() : undefined;
+  } finally {
+    idle = writer.capacity <= RETAINED_CAPACITY ? writer : undefined;
+  }
+};
+
+/** A writer grown past this by one large object is dropped rather than kept for the next call. */
+const RETAINED_CAPACITY = 1024 * 1024;
+
+let idle: Writer | undefined;
+
+const encoder = new TextEncoder();
+
+/** Whether a string holds a character a `TEXT` element must not carry raw: the quote, the backslash or a C0 control. */
+const needsEscape = (text: string): boolean => {
+  for (let index = 0; index < text.length; index++) {
+    const code = text.charCodeAt(index);
+    if (code < 0x20 || code === 0x22 || code === 0x5c) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/** A surrogate half without its partner, which UTF-8 cannot encode. */
+const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+
+/** Headers are written with this many size bytes reserved, then compacted once the payload size is known. */
+const RESERVED_HEADER = 5;
+
+class Writer {
+  #bytes = new Uint8Array(64 * 1024);
+  #length = 0;
+
+  get capacity(): number {
+    return this.#bytes.length;
+  }
+
+  reset(): void {
+    this.#length = 0;
+  }
+
+  finish(): Uint8Array {
+    return this.#bytes.slice(0, this.#length);
+  }
+
+  /** Writes `value`; returns false, writing nothing, where `JSON.stringify` would omit it. */
+  value(value: unknown, inArray: boolean): boolean {
+    if (value !== null && typeof value === 'object' && typeof Reflect.get(value, 'toJSON') === 'function') {
+      value = Reflect.apply(Reflect.get(value, 'toJSON'), value, []);
+    }
+    switch (typeof value) {
+      case 'string':
+        this.#string(value);
+        return true;
+      case 'number':
+        if (!Number.isFinite(value)) {
+          this.#byte(ElementType.Null);
+        } else {
+          // JSONB types a number by its text: digits alone are an `INT`, whatever their magnitude.
+          const text = JSON.stringify(value);
+          this.#ascii(/[.eE]/.test(text) ? ElementType.Float : ElementType.Int, text);
+        }
+        return true;
+      case 'boolean':
+        this.#byte(value ? ElementType.True : ElementType.False);
+        return true;
+      case 'bigint':
+        throw new TypeError('JSONB: cannot encode a bigint');
+      case 'object':
+        if (value === null) {
+          this.#byte(ElementType.Null);
+        } else if (Array.isArray(value)) {
+          const header = this.#open();
+          for (const element of value) {
+            if (!this.value(element, true)) {
+              this.#byte(ElementType.Null);
+            }
+          }
+          this.#close(header, ElementType.Array);
+        } else {
+          const header = this.#open();
+          for (const key of Object.keys(value)) {
+            const start = this.#length;
+            this.#string(key);
+            if (!this.value(Reflect.get(value, key), false)) {
+              this.#length = start;
+            }
+          }
+          this.#close(header, ElementType.Object);
+        }
+        return true;
+      default:
+        if (inArray) {
+          this.#byte(ElementType.Null);
+          return true;
+        }
+        return false;
+    }
+  }
+
+  #string(text: string): void {
+    const length = text.length;
+    this.#reserve(length * 3 + 9);
+    const bytes = this.#bytes;
+    // One scan writes an all-ASCII string straight into the buffer and classifies it; anything else falls back.
+    let header = 0;
+    if (length > 11) {
+      header = this.#open();
+    }
+    const payload = length > 11 ? header + RESERVED_HEADER : this.#length + 1;
+    let raw = false;
+    for (let index = 0; index < length; index++) {
+      const code = text.charCodeAt(index);
+      if (code >= 0x80) {
+        this.#length = length > 11 ? header : this.#length;
+        this.#unicode(text);
+        return;
+      }
+      if (code < 0x20 || code === 0x22 || code === 0x5c) {
+        raw = true;
+      }
+      bytes[payload + index] = code;
+    }
+    const type = raw ? ElementType.TextRaw : ElementType.Text;
+    if (length > 11) {
+      this.#length = payload + length;
+      this.#close(header, type);
+    } else {
+      bytes[this.#length] = (length << 4) | type;
+      this.#length += 1 + length;
+    }
+  }
+
+  /** {@link #string} for text with characters past ASCII. */
+  #unicode(text: string): void {
+    if (LONE_SURROGATE.test(text)) {
+      // A lone surrogate has no UTF-8 form; `TEXTJ` keeps it as the `\uXXXX` escape `JSON.stringify` writes.
+      this.#ascii(ElementType.TextJ, JSON.stringify(text).slice(1, -1));
+      return;
+    }
+    const type = needsEscape(text) ? ElementType.TextRaw : ElementType.Text;
+    const header = this.#open();
+    this.#length += encoder.encodeInto(text, this.#bytes.subarray(this.#length)).written;
+    this.#close(header, type);
+  }
+
+  /** An element whose payload is ASCII: a number's text, or an already-escaped string. */
+  #ascii(type: number, text: string): void {
+    this.#reserve(text.length + 9);
+    this.#header(type, text.length);
+    for (let index = 0; index < text.length; index++) {
+      this.#bytes[this.#length++] = text.charCodeAt(index);
+    }
+  }
+
+  #byte(type: number): void {
+    this.#reserve(1);
+    this.#bytes[this.#length++] = type;
+  }
+
+  /** Reserves a header ahead of a payload whose size is not yet known; returns where it starts. */
+  #open(): number {
+    this.#reserve(RESERVED_HEADER);
+    const start = this.#length;
+    this.#length += RESERVED_HEADER;
+    return start;
+  }
+
+  /** Writes the smallest header for the payload written since {@link #open}, moving the payload up to meet it. */
+  #close(start: number, type: number): void {
+    const payload = start + RESERVED_HEADER;
+    const size = this.#length - payload;
+    const headerSize = size <= 11 ? 1 : size <= 0xff ? 2 : size <= 0xffff ? 3 : 5;
+    if (headerSize < RESERVED_HEADER) {
+      this.#bytes.copyWithin(start + headerSize, payload, this.#length);
+    }
+    this.#length = start;
+    this.#header(type, size);
+    this.#length += size;
+  }
+
+  #header(type: number, size: number): void {
+    const bytes = this.#bytes;
+    if (size <= 11) {
+      bytes[this.#length++] = (size << 4) | type;
+    } else if (size <= 0xff) {
+      bytes[this.#length++] = (12 << 4) | type;
+      bytes[this.#length++] = size;
+    } else if (size <= 0xffff) {
+      bytes[this.#length++] = (13 << 4) | type;
+      bytes[this.#length++] = size >> 8;
+      bytes[this.#length++] = size & 0xff;
+    } else {
+      bytes[this.#length++] = (14 << 4) | type;
+      bytes[this.#length++] = size >>> 24;
+      bytes[this.#length++] = (size >> 16) & 0xff;
+      bytes[this.#length++] = (size >> 8) & 0xff;
+      bytes[this.#length++] = size & 0xff;
+    }
+  }
+
+  #reserve(count: number): void {
+    if (this.#length + count <= this.#bytes.length) {
+      return;
+    }
+    const grown = new Uint8Array(Math.max(this.#bytes.length * 2, this.#length + count));
+    grown.set(this.#bytes.subarray(0, this.#length));
+    this.#bytes = grown;
+  }
+}
+
 /** Whether the bytes start with a JSONB object header, which a JSON text column value never does. */
 export const isObject = (bytes: Uint8Array): boolean => bytes.length > 0 && (bytes[0] & 0x0f) === ElementType.Object;
 

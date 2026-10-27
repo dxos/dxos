@@ -132,6 +132,44 @@ describe('Jsonb', () => {
     expect(Jsonb.isObject(new TextEncoder().encode('{"a": 1}'))).toBe(false);
   });
 
+  test('encodes what SQLite reads back as JSON.stringify', ({ expect }) => {
+    const values: unknown[] = [
+      null,
+      0,
+      -0,
+      2 ** 53 - 1,
+      2 ** 53,
+      1e300,
+      -1.5e-7,
+      '',
+      'ремонт 設計 🚀',
+      'q"\\\t\n\u0001/',
+      '\ud800 lone',
+      'x'.repeat(70_000),
+      [1, undefined, () => 1, NaN, Infinity],
+      { a: undefined, b: () => 1, c: null, d: { e: [] } },
+      { date: new Date(0), nested: { toJSON: () => 'custom' } },
+    ];
+    for (let seed = 1; seed <= 300; seed++) {
+      values.push(randomValue(random(seed), 0));
+    }
+    for (const value of values) {
+      const bytes = Jsonb.encode(value);
+      expect(bytes).toBeDefined();
+      // Flag 8 asks SQLite to check every element, not just the outermost header.
+      expect(scalar('SELECT json_valid(?, 8) AS value', bytes ?? new Uint8Array())).toBe(1);
+      expect(JSON.parse(String(scalar('SELECT json(?) AS value', bytes ?? new Uint8Array())))).toEqual(
+        JSON.parse(JSON.stringify(value)),
+      );
+      expect(Jsonb.decode(bytes ?? new Uint8Array())).toEqual(JSON.parse(JSON.stringify(value)));
+    }
+  });
+
+  test('encodes nothing where JSON.stringify writes nothing', ({ expect }) => {
+    expect(Jsonb.encode(undefined)).toBeUndefined();
+    expect(Jsonb.encode(() => 1)).toBeUndefined();
+  });
+
   test('rejects truncated and trailing bytes', ({ expect }) => {
     const bytes = jsonb('{"a": [1, 2, 3]}');
     expect(() => Jsonb.decode(bytes.subarray(0, bytes.length - 1))).toThrow(SyntaxError);

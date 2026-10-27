@@ -833,7 +833,7 @@ export class IndexQuerySource implements RemoteQuerySource {
               ? await feedHandle.upsertFromJSON(json)
               : makeDecodedEntityLive(await Obj.fromJSON(json, options));
       } catch (err) {
-        const type = documentJsonb !== undefined ? Jsonb.readTopLevelString(documentJsonb, ATTR_TYPE) : json[ATTR_TYPE];
+        const type = documentJsonb !== undefined ? typenameOf(documentJsonb) : json[ATTR_TYPE];
         const typeDxn = typeof type === 'string' ? type : '<unknown>';
         if (!emittedSchemaValidationWarnings.has(typeDxn)) {
           emittedSchemaValidationWarnings.add(typeDxn);
@@ -967,3 +967,12 @@ const matchesDeletedOption = (object: Entity.Unknown, query: QueryAST.Query): bo
 /** Whether a row still carries its object body, in either encoding. */
 const hasDocument = (result: QueryService.QueryResult): boolean =>
   result.documentJson !== undefined || result.documentJsonb !== undefined;
+
+/** The type a row's JSONB names, or `undefined` when the bytes that just failed to decode cannot even yield that. */
+const typenameOf = (jsonb: Uint8Array): string | undefined => {
+  try {
+    return Jsonb.readTopLevelString(jsonb, ATTR_TYPE);
+  } catch {
+    return undefined;
+  }
+};
