@@ -72,6 +72,16 @@ export const skillRef = (
     }),
   );
 
+/**
+ * The skills a new conversation with the agent starts with: its voice and the skills its instructions name.
+ * Read once, when the conversation is made, so an edit to the instructions reaches the agent's next one;
+ * within a conversation the agent enables more itself.
+ */
+export const sessionSkills = Effect.fnUntraced(function* (agent: Agent.Agent) {
+  const instructions = yield* Database.load(agent.instructions).pipe(Effect.orDie);
+  return [yield* skillRef(agent, ConversationSkill.key), ...instructions.skills];
+});
+
 /** `Skill.registryURI` names a compiled skill as a DXN of its key. */
 const REGISTRY_PREFIX = 'dxn:';
 

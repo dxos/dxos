@@ -14,19 +14,22 @@ import { type Channel } from '@dxos/types';
 
 import { AgentChannels, AgentOperation } from '#types';
 
+import { sessionSkills } from './modes.ts';
+
 /** Loaded on demand: the context runtime is heavy and only needed when a conversation's chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
 
 type ContextBindings = { skills: Ref.Ref<Skill.Skill>[]; objects: Ref.Ref<Obj.Unknown>[] };
 
 /**
- * The skills and objects bound to the agent's current chat, so a conversation runs with the same
- * context as the agent's own chat; an agent without a chat contributes itself only.
+ * What a new conversation with the agent starts with: the skills of a new session ({@link sessionSkills}) and the
+ * objects bound to the agent's current chat, its working context; an agent without a chat contributes itself.
  */
 export const loadAgentBindings = Effect.fnUntraced(function* (agent: Agent.Agent) {
+  const skills = yield* sessionSkills(agent);
   const chat = yield* Agent.loadChat(agent);
   if (!chat) {
-    return { skills: [], objects: [Ref.make<Obj.Unknown>(agent)] } satisfies ContextBindings;
+    return { skills, objects: [Ref.make<Obj.Unknown>(agent)] } satisfies ContextBindings;
   }
 
   const feed = yield* Database.load(chat.feed);
@@ -34,7 +37,7 @@ export const loadAgentBindings = Effect.fnUntraced(function* (agent: Agent.Agent
   const AiContext = yield* Effect.promise(aiContextRuntime);
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
   return {
-    skills: binder.getSkills().map(Skill.makeRef),
+    skills,
     objects: binder
       .getObjects()
       .filter((object) => !Obj.instanceOf(Chat.Chat, object))

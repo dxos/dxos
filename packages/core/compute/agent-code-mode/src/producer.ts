@@ -103,10 +103,6 @@ const runCodeModeTurn = ({
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
 
     const history = yield* Effect.promise(() => session.getHistory());
-    // As `Session.createRequest` does: an edit to the instructions' skills takes effect on this turn.
-    yield* Effect.promise(() =>
-      session.context.syncInstructionSkills((instructions ?? []).flatMap(({ skills }) => skills)),
-    );
     // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
     let labelCall = labelEvalCall([]);
     const request = new AiRequest.Request({

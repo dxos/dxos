@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -35,12 +36,13 @@ export const makeAgent = ({
 }: MakeAgentProps): Effect.Effect<Agent.Agent, never, Database.Service> =>
   Effect.gen(function* () {
     // Bound by registry URI so the agent follows the compiled skills until `customizeSkill` forks one.
-    // The base skills only: each further skill comes with a mode (see `switchMode`).
+    // The base skills only: a mode adds more (see `switchMode`), and SkillManager lets the agent enable
+    // others partway through a conversation.
     const agent = yield* Agent.makeInitialized(
       {
         name,
         instructions: instructions ?? baseInstructions(name),
-        skills: [ModesSkill.key, RelaySkill.key, GoalsSkill.key, BrainSkill.key].map((key) =>
+        skills: [ModesSkill.key, RelaySkill.key, GoalsSkill.key, BrainSkill.key, SkillManagerSkill.key].map((key) =>
           Ref.fromURI(Skill.registryURI(key)),
         ),
         ...(did ? { did } : {}),

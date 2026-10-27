@@ -74,9 +74,8 @@ export type Options = {
   /** @effect/atom-react Registry for reactive state. */
   registry?: AtomRegistry.AtomRegistry;
   /**
-   * Instructions steering the conversation (typically the owning `Chat`'s): their text is rendered into
-   * the system prompt on every turn and their skills are bound at the start of each request. The session
-   * is feed-centric and cannot reach its chat, so these are passed in.
+   * Instructions steering the conversation (typically the owning `Chat`'s), rendered into the system
+   * prompt on every turn. The session is feed-centric and cannot reach its chat, so these are passed in.
    */
   instructions?: readonly Instructions.Instructions[];
 };
@@ -226,10 +225,6 @@ export class Session extends Resource {
       yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
       markWork('session.history-loaded');
-      // An edit to the instructions' skills since the last request takes effect on this one.
-      yield* Effect.promise(() =>
-        this.context.syncInstructionSkills(this.#instructions.flatMap(({ skills }) => skills)),
-      );
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
