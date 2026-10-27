@@ -48,9 +48,13 @@ const WORKER_QUERY = 'dx-worker';
 
 const WORKER_IMPORTER_RE = new RegExp(`[?&](worker_file|${WORKER_QUERY})(&|=|$)`);
 
-/** A plain file id the dev server can serve under its own URL: no query, not virtual, not pre-bundled. */
+/**
+ * A script the dev server can serve under its own URL: no query, not virtual, not pre-bundled. Other
+ * files (JSON, CSS, wasm) import nothing a condition could change, and Vite's transforms for them do
+ * not expect an extra query.
+ */
 const isTaggable = (id: string): boolean =>
-  isAbsolute(id) && !id.includes('?') && !id.startsWith('\0') && !id.includes('/node_modules/.vite/');
+  isAbsolute(id) && /\.[cm]?[jt]sx?$/.test(id) && !id.startsWith('\0') && !id.includes('/node_modules/.vite/');
 
 const packageJsonCache = new Map<string, { dir: string; imports: unknown } | null>();
 

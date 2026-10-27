@@ -181,6 +181,8 @@ describe('ModuleUrlPlugin', () => {
     const host = await server.transformRequest('/host.ts?worker_file&type=module');
     expect(host?.code).toContain('/realm.worker.ts?dx-worker');
     expect(host?.code).toContain('/label.ts?dx-worker');
+    // Only scripts are tagged: Vite's transforms for other files do not expect the query.
+    expect(host?.code).toMatch(/\/data\.json(?!\?dx-worker)/);
 
     // What a tagged module imports stays in the worker realm.
     const label = await server.transformRequest('/label.ts?dx-worker');
