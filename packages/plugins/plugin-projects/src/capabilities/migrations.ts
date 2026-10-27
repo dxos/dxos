@@ -67,17 +67,6 @@ type SpecsState = {
   migrated: Map<string, Feature.Feature>;
 };
 
-const states = new WeakMap<Database.Database, SpecsState>();
-
-const getState = (db: Database.Database): SpecsState => {
-  let state = states.get(db);
-  if (!state) {
-    state = { placements: new Map(), byProject: new Map(), byParent: new Map(), migrated: new Map() };
-    states.set(db, state);
-  }
-  return state;
-};
-
 /** The spec a feature moves into: its project's, its former parent's nested one, or the unplaced one. */
 const getContainer = async (db: Database.Database, state: SpecsState, placement: Placement): Promise<Spec.Spec> => {
   const { project, parent } = placement;
@@ -116,47 +105,59 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
 /**
  * `Feature` 0.2.0 → 0.3.0: features leave projects for specs. Each project's map becomes a spec that names the
  * project, each parent's subfeatures become the features of a spec the parent owns, and canvas positions move from the
- * feature onto its spec's layout.
+ * feature onto its spec's layout. The specs made so far are held per database in this migration's own closure.
  */
-export const featureSpecs = Migration.define({
-  from: LegacyFeature.FeatureV2,
-  to: Feature.Feature,
-  transform: async (from, { db }) => {
-    const [project, parent] = await Promise.all([from.project?.tryLoad(), from.parent?.tryLoad()]);
-    getState(db).placements.set(from.id, {
-      project: Obj.instanceOf(Project.Project, project) ? project : undefined,
-      parent: parent ? { id: parent.id, name: parent.name } : undefined,
-      position: from.position ? { x: from.position.x, y: from.position.y } : undefined,
-    });
-    const { name, description, requirements, status, specs, code } = from;
-    return { name, description, requirements, status, specs, code };
-  },
-  onMigration: async ({ object, db }) => {
-    const state = getState(db);
-    const placement = state.placements.get(object.id) ?? {};
-    state.migrated.set(object.id, object);
-
-    // Its own subfeatures may have migrated first and made the nested spec it now owns.
-    const nested = state.byParent.get(object.id);
-    if (nested) {
-      Obj.update(object, (object) => {
-        object.spec = Ref.make(nested);
-      });
+export const makeFeatureSpecs = (): Migration.ObjectMigration => {
+  const states = new WeakMap<Database.Database, SpecsState>();
+  const getState = (db: Database.Database): SpecsState => {
+    let state = states.get(db);
+    if (!state) {
+      state = { placements: new Map(), byProject: new Map(), byParent: new Map(), migrated: new Map() };
+      states.set(db, state);
     }
+    return state;
+  };
 
-    const container = await getContainer(db, state, placement);
-    Obj.update(container, (container) => {
-      container.features.push(Ref.make(object));
-      if (placement.position) {
-        container.layout ??= { positions: {} };
-        container.layout.positions[object.id] = placement.position;
+  return Migration.define({
+    from: LegacyFeature.FeatureV2,
+    to: Feature.Feature,
+    transform: async (from, { db }) => {
+      const [project, parent] = await Promise.all([from.project?.tryLoad(), from.parent?.tryLoad()]);
+      getState(db).placements.set(from.id, {
+        project: Obj.instanceOf(Project.Project, project) ? project : undefined,
+        parent: parent ? { id: parent.id, name: parent.name } : undefined,
+        position: from.position ? { x: from.position.x, y: from.position.y } : undefined,
+      });
+      const { name, description, requirements, status, specs, code } = from;
+      return { name, description, requirements, status, specs, code };
+    },
+    onMigration: async ({ object, db }) => {
+      const state = getState(db);
+      const placement = state.placements.get(object.id) ?? {};
+      state.migrated.set(object.id, object);
+
+      // Its own subfeatures may have migrated first and made the nested spec it now owns.
+      const nested = state.byParent.get(object.id);
+      if (nested) {
+        Obj.update(object, (object) => {
+          object.spec = Ref.make(nested);
+        });
       }
-    });
-  },
-});
+
+      const container = await getContainer(db, state, placement);
+      Obj.update(container, (container) => {
+        container.features.push(Ref.make(object));
+        if (placement.position) {
+          container.layout ??= { positions: {} };
+          container.layout.positions[object.id] = placement.position;
+        }
+      });
+    },
+  });
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(ClientCapabilities.Migration, [featureSubfeatures, featureSpecs]);
+    return Capability.contribute(ClientCapabilities.Migration, [featureSubfeatures, makeFeatureSpecs()]);
   }),
 );

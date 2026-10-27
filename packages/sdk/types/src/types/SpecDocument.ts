@@ -38,7 +38,7 @@ const DEFAULT_CONTENT = trim`
  * The document as stored before its rename, under the `org.dxos.type.spec` typename. Kept solely so
  * {@link migrations} can read existing data; never constructed.
  */
-export class LegacySpecDocument extends Type.makeObject<LegacySpecDocument>(DXN.make('org.dxos.type.spec', '0.1.0'))(
+export class Legacy extends Type.makeObject<Legacy>(DXN.make('org.dxos.type.spec', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     content: Ref.Ref(Text.Text),
@@ -48,7 +48,7 @@ export class LegacySpecDocument extends Type.makeObject<LegacySpecDocument>(DXN.
 /** `org.dxos.type.spec` 0.1.0 → `org.dxos.type.specDocument` 0.1.0: the same fields under the new typename. */
 export const migrations: Migration.Migration[] = [
   Migration.define({
-    from: LegacySpecDocument,
+    from: Legacy,
     to: SpecDocument,
     transform: async ({ name, content }) => ({ name, content }),
   }),

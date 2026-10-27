@@ -25,9 +25,9 @@ describe('SpecDocument migrations', () => {
     expect,
   }) => {
     const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
-    graph.registry.add([SpecDocument.LegacySpecDocument, SpecDocument.SpecDocument]);
+    graph.registry.add([SpecDocument.Legacy, SpecDocument.SpecDocument]);
     const legacy = db.add(
-      Obj.make(SpecDocument.LegacySpecDocument, {
+      Obj.make(SpecDocument.Legacy, {
         name: 'packages/a/PLUGIN.mdl',
         content: Ref.make(Text.make({ content: 'feat F-1: Sync' })),
       }),

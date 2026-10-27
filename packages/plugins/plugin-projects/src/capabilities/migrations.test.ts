@@ -12,7 +12,7 @@ import { SpecDocument } from '@dxos/types';
 
 import { Feature, LegacyFeature, Spec } from '#types';
 
-import { featureSpecs, featureSubfeatures } from './migrations.ts';
+import { featureSubfeatures, makeFeatureSpecs } from './migrations.ts';
 
 describe('feature migrations', () => {
   let builder: EchoTestBuilder;
@@ -85,7 +85,7 @@ describe('feature migrations', () => {
     );
     db.add(Obj.make(LegacyFeature.FeatureV2, { name: 'Loose', status: 'planned' }));
     await db.flush();
-    await db.runMigrations([featureSpecs]);
+    await db.runMigrations([makeFeatureSpecs()]);
 
     const features = await db.query(Filter.type(Feature.Feature)).run();
     const byName = (name: string) => features.find((feature) => feature.name === name);
