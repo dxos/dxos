@@ -566,6 +566,13 @@ export type BranchId = Schema.Schema.Type<typeof BranchId>;
 export type BlockId = string;
 
 /**
+ * The foreign-key sources a store stamps on an item from the block it was read from: its block id, its
+ * branch, its fork flag (as the fork point) and its predecessor. A copy of the item into another feed
+ * drops them, since that feed has none of those blocks or branches.
+ */
+export const BLOCK_KEYS: readonly string[] = [KEY_FEED_BLOCK, KEY_FEED_BRANCH, KEY_FEED_FORK, KEY_FEED_PREV];
+
+/**
  * The position of a walk on one device: the branch the walk is on and the last block it gave. Read it
  * off an item with {@link getLocalCursor}; another device cannot use it.
  */
