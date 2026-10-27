@@ -6113,9 +6113,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
-      '@dxos/sql-sqlite':
-        specifier: workspace:*
-        version: link:../../../common/sql-sqlite
       '@dxos/teleport':
         specifier: workspace:*
         version: link:../../mesh/teleport
@@ -6131,6 +6128,10 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+    devDependencies:
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
 
   packages/core/echo/echo-doc:
     dependencies:
