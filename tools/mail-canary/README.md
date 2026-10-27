@@ -53,8 +53,10 @@ node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resu
 - `auth` mints the canary's own grant (`gmail.modify`) with a browser consent as the test account and
   writes it to `.secrets/mail-canary-gmail.env`. It uses EDGE dev's Google OAuth client (1Password
   `eng-dev/com.google`, section `dev`), which lists `http://127.0.0.1:53682/` as an authorized
-  redirect; run it on a machine with a browser. If that client's consent screen is External and in
-  testing mode, the refresh token expires after 7 days. Store the refresh token in 1Password
+  redirect; run it on a machine with a browser. That client is External and In production, so the
+  refresh token has no fixed expiry; Google flags a time-limited grant only with `refresh_token_expires_in`,
+  which `auth` refuses. It still dies if revoked, unused for six months (the nightly uses it daily), or
+  when the test account's password changes; the nightly then fails with class `AUTH`. Store the refresh token in 1Password
   `eng-dev/network.dxos.mail-canary` (`REFRESH_TOKEN`), where a cloud session reads it through
   `gmail.env.tpl`, and all three values in the CI secrets.
 - An import puts each message in the mailbox without sending it: in the inbox, never spam, labelled

@@ -37,7 +37,11 @@ const AUTH_PORT = 53682;
 export const AUTH_REDIRECT_URI = `http://127.0.0.1:${AUTH_PORT}/`;
 
 const TokenResponse = Schema.Struct({ access_token: Schema.String });
-const CodeExchange = Schema.Struct({ refresh_token: Schema.optional(Schema.String) });
+const CodeExchange = Schema.Struct({
+  refresh_token: Schema.optional(Schema.String),
+  // Google sets it only when the user granted time-based access; an open-ended grant has none.
+  refresh_token_expires_in: Schema.optional(Schema.Number),
+});
 
 /** Mints an access token from the refresh token. */
 export const accessToken = ({ clientId, clientSecret, refreshToken }: GmailCredentials) =>
@@ -95,6 +99,12 @@ export const mintRefreshToken = ({
             const body = Schema.decodeUnknownSync(CodeExchange)(await exchange.json());
             if (!body.refresh_token) {
               throw new Error('Google returned no refresh token; revoke the app at myaccount.google.com and retry.');
+            }
+            if (body.refresh_token_expires_in !== undefined) {
+              const days = Math.round(body.refresh_token_expires_in / 86_400);
+              throw new Error(
+                `Google granted time-based access that ends in ${days} days; retry and grant ongoing access.`,
+              );
             }
             resolve(body.refresh_token);
           } catch (error) {

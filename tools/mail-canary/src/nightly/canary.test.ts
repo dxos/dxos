@@ -58,8 +58,14 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 2
     const output = (name: string, content: string) => writeFile(join(dirname(reportPath), name), content);
     if (Result.isFailure(result)) {
       const message = result.failure.message;
-      await output('summary.json', JSON.stringify({ ok: false, failureClasses: 'SETUP', error: message }));
-      await output('summary.md', `## Mail canary: could not run\n\n${message}\n`);
+      // A refresh token Google no longer honors (revoked, password changed, unused for six months).
+      const failureClasses = /invalid_grant/.test(message) ? 'AUTH' : 'SETUP';
+      await output('summary.json', JSON.stringify({ ok: false, failureClasses, error: message }));
+      const advice =
+        failureClasses === 'AUTH'
+          ? '\n\nThe Gmail grant is dead: rerun `02-import-pool.mjs auth` and update `REFRESH_TOKEN` and the CI secret.\n'
+          : '\n';
+      await output('summary.md', `## Mail canary: could not run\n\n${message}${advice}`);
       expect.fail(`the canary could not run: ${message}`);
       return;
     }
