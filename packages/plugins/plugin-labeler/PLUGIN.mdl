@@ -5,7 +5,7 @@ version: 0.1.0
 ---
 
 Triages a mailbox: labels each message with the space's own tags and a priority band by asking a
-decision model three questions per message, applying only the answers it is confident about, and
+decision model two questions per message (three when the space has tags of its own), applying only the answers it is confident about, and
 extracts what a message asks of the reader as tasks with an extraction model.
 
 ## Extensions
@@ -38,7 +38,7 @@ feat F-3: Run it over the inbox
   req F-3.1: A toolbar action, "Triage inbox", runs the labeller over the whole mailbox.
   req F-3.2: A cascade pass (`label`, after `contacts`) runs it as part of Analyze.
   req F-3.3: A message already carrying a priority band is skipped, so a re-run is cheap.
-  req F-3.4: A run is capped (default 50, max 200 messages) since each message costs one call.
+  req F-3.4: A run is capped (default 50, max 200 messages) since each message costs a decision call, and one that needs a reply an extraction call too.
 
 feat F-4: Extract what a message asks for as tasks
 
@@ -124,17 +124,18 @@ test QA-2: Triage an inbox, then let the agent answer the most urgent email
     - an identity exists
     - space: a space created from the "Inbox triage" template (plugin-debug), whose sample mailbox sends locally
     - plugin-labeler, plugin-typesafe and plugin-debug are enabled
+    - extraction reaches Clairic, through EDGE or the TypeSafe `extractionEndpoint` setting
   steps:
     - name: Start with an unsorted inbox
       do: Open the Inbox mailbox.
-      expect: nine unread messages in date order, none grouped or tagged
+      expect: nine unread messages in date order, none grouped or carrying a label or priority
     - name: Triage the inbox
       do: Choose "Triage inbox" from the toolbar's magic-wand menu.
       invoke: org.dxos.operation.labeler.labelMailbox
       expect: the list regroups under Urgent, High priority, Normal and Low priority, with the renewal alone under Urgent
     - name: Every request becomes a task
       do: Open the "Inbox tasks" project from the navtree and its Tasks tab.
-      expect: one task per request, each with its email's priority
+      expect: a task for each request the extraction model is confident about, each with its email's priority
     - name: Open the most urgent email
       do: Back in the inbox, open the message under Urgent.
       expect: the task extracted from it is listed under its body
@@ -212,4 +213,33 @@ decision D-7: QA-1 runs the labeller through "Triage inbox", the toolbar action'
   for: user:dmaretskyi
   affects: [QA-1]
   why: The action was renamed from "Label messages" when it took on priority and extraction, so the old step named a menu item that no longer exists.
+```
+
+```mdl
+decision D-8: High priority is an urgency rating at or above 0.9, or a needed reply with urgency at or above 0.5; Normal is a needed reply or urgency at or above 0.5; a reply is needed at probability 0.6 or more. Supersedes [D-3].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-3
+  affects: [F-2.3]
+  why: D-3's "a reply needed at 0.5" reads as a reply probability of 0.5; these are the thresholds `toPriority` and `toVerdict` apply.
+```
+
+```mdl
+decision D-9: The needs-reply question rules out marketing and automated mail; the urgency question rules out a sale or promotion ending. Supersedes [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-6
+  affects: [F-1.1]
+  why: The two questions carry separate exclusions, which D-6 stated as one.
+```
+
+```mdl
+decision D-10: QA-2 needs extraction to reach Clairic and expects a task only for each request the model is confident about; F-3.4 counts the extraction call a reply-needed message adds. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.4, QA-2]
+  why: Without a reachable extraction model triage still labels but files no tasks, and the confidence cut in D-4 can leave a request without one.
 ```
