@@ -16,13 +16,17 @@ import { createSyncLabel, createSyncProgressKey } from './mail-sync.ts';
  */
 export const PENDING_SYNC_TIMEOUT_MS = 70_000;
 
+/** Error a pending sync meter shows when no run took it over in time. */
+export const PENDING_SYNC_TIMEOUT_ERROR = 'Timed out: sync reported no progress';
+
 /**
  * Runs `sync` with the mailbox's sync meter showing from the moment sync is requested.
  *
  * The run registers the meter itself, but only when its first progress update reaches this client,
  * which for a run on EDGE is a round trip later. The run's own registration replaces this pending
  * entry under the same key; a superseded handle's `fail`/`remove` touch nothing, so the two never
- * fight. A meter the run never takes over clears after {@link PENDING_SYNC_TIMEOUT_MS}.
+ * fight. A meter the run never takes over fails after {@link PENDING_SYNC_TIMEOUT_MS}, and stays until
+ * dismissed, so a sync that never started reads as an error rather than silently vanishing.
  */
 export const withPendingSyncMonitor = <A, E, R>(
   mailbox: Mailbox.Mailbox,
@@ -45,9 +49,9 @@ export const withPendingSyncMonitor = <A, E, R>(
     yield* Effect.sleep(timeoutMs).pipe(
       Effect.andThen(
         Effect.sync(() => {
-          // A failed request keeps its error showing; only a still-pending meter is cleared.
+          // A failed request already shows its own error; a superseded handle's `fail` touches nothing.
           if (registry.snapshot().tasks.some((task) => task.name === key && task.status === 'running')) {
-            handle.remove();
+            handle.fail(PENDING_SYNC_TIMEOUT_ERROR);
           }
         }),
       ),
