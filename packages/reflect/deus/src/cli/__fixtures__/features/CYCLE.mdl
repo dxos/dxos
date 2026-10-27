@@ -1,0 +1,25 @@
+---
+id: org.dxos.fixture.features.cycle
+name: Cyclic feature map fixture
+version: 0.1.0
+---
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `feature` | `org.dxos.mdl.feature@1.0` |
+
+```mdl
+feature first: First
+  status: planned
+  specs: [packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl#F-1]
+  depends: [second]
+```
+
+```mdl
+feature second: Second
+  status: planned
+  specs: [packages/reflect/deus/src/cli/__fixtures__/features/SPEC.mdl#F-1]
+  depends: [first]
+```
