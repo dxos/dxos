@@ -3,7 +3,7 @@
 //
 
 import path from 'node:path';
-import { type ESTree, type Plugin, Visitor, parseSync } from 'vite';
+import { type ESTree, type Plugin } from 'vite';
 
 // Mirrors `core/hot-modules.ts`; duplicated because this file runs in node and must not pull in the runtime.
 const HOT_KEY_EXPORT = '__dxHotKey';
@@ -34,32 +34,47 @@ const calleeName = (callee: ESTree.Expression | ESTree.Super): string | undefine
 /** A `() => import('./x')` loader found in a file: the specifier and the span of its `import(...)`. */
 export type ModuleLoader = { specifier: string; start: number; end: number };
 
+const isNode = (value: unknown): value is ESTree.Node =>
+  typeof value === 'object' && value !== null && 'type' in value && typeof value.type === 'string';
+
+/** Every node below `root`, depth first. */
+function* walk(root: ESTree.Node): Generator<ESTree.Node> {
+  yield root;
+  for (const child of Object.values(root)) {
+    for (const item of Array.isArray(child) ? child : [child]) {
+      if (isNode(item)) {
+        yield* walk(item);
+      }
+    }
+  }
+}
+
 /**
  * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule`, every
  * maker built on it, and `Plugin.lazy`. Specifiers with a query are assets.
  */
-export const findModuleLoaders = (filename: string, code: string): ModuleLoader[] => {
-  const { program } = parseSync(filename, code);
+export const findModuleLoaders = (program: ESTree.Program): ModuleLoader[] => {
   const loaders: ModuleLoader[] = [];
-  new Visitor({
-    CallExpression: (node) => {
-      const firstLoaderArgument = calleeName(node.callee) === LAZY_CALLEE ? 1 : 0;
-      for (const argument of node.arguments.slice(firstLoaderArgument)) {
-        if (
-          argument.type === 'ArrowFunctionExpression' &&
-          argument.params.length === 0 &&
-          argument.body.type === 'ImportExpression' &&
-          argument.body.source.type === 'Literal' &&
-          typeof argument.body.source.value === 'string' &&
-          isLocalSpecifier(argument.body.source.value) &&
-          !argument.body.source.value.includes('?')
-        ) {
-          loaders.push({ specifier: argument.body.source.value, start: argument.body.start, end: argument.body.end });
-        }
+  for (const node of walk(program)) {
+    if (node.type !== 'CallExpression') {
+      continue;
+    }
+    const firstLoaderArgument = calleeName(node.callee) === LAZY_CALLEE ? 1 : 0;
+    for (const argument of node.arguments.slice(firstLoaderArgument)) {
+      if (
+        argument.type === 'ArrowFunctionExpression' &&
+        argument.params.length === 0 &&
+        argument.body.type === 'ImportExpression' &&
+        argument.body.source.type === 'Literal' &&
+        typeof argument.body.source.value === 'string' &&
+        isLocalSpecifier(argument.body.source.value) &&
+        !argument.body.source.value.includes('?')
+      ) {
+        loaders.push({ specifier: argument.body.source.value, start: argument.body.start, end: argument.body.end });
       }
-    },
-  }).visit(program);
-  return loaders;
+    }
+  }
+  return loaders.sort((left, right) => left.start - right.start);
 };
 
 /**
@@ -143,7 +158,9 @@ export const hotModulesPlugin = (): Plugin => {
       let result = code;
       if (code.includes('import(')) {
         const loaders: ModuleLoader[] = [];
-        for (const loader of findModuleLoaders(file, code)) {
+        // The plugin context's parser rather than Vite's export: the CLI bundles this barrel with Bun,
+        // which cannot follow a value import of Vite.
+        for (const loader of findModuleLoaders(this.parse(code))) {
           const resolved = await this.resolve(loader.specifier, file);
           const target = resolved?.id.split('?')[0];
           if (target === undefined || !SOURCE_FILE.test(target) || target.includes('/node_modules/')) {

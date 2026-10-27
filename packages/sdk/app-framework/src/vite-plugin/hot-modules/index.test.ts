@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import { parseSync } from 'vite';
 import { describe, test } from 'vitest';
 
-import { acceptLoaderTargets, findModuleLoaders, rewriteLoaders, wrapModuleBody } from './index.ts';
+import { acceptLoaderTargets, findModuleLoaders as findInProgram, rewriteLoaders, wrapModuleBody } from './index.ts';
+
+const findModuleLoaders = (filename: string, code: string) => findInProgram(parseSync(filename, code).program);
 
 describe('findModuleLoaders', () => {
   test('finds loaders passed to module makers', ({ expect }) => {

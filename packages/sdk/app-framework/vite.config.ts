@@ -19,9 +19,6 @@ export default defineConfig({
     'PluginManagerProvider': 'src/ui/components/PluginManager/index.ts',
     'Surface': 'src/ui/components/Surface/index.ts',
     'vite-plugin': 'src/vite-plugin/index.ts',
-    // Split out of `vite-plugin` because it imports Vite itself, which non-Vite hosts of the barrel
-    // (the CLI's Bun bundle) cannot resolve.
-    'vite-plugin/hot-modules': 'src/vite-plugin/hot-modules/index.ts',
     // Split out of `vite-plugin` so a runtime host can read the shared-package list without
     // pulling in Vite itself — the CLI registers the same set in bun's module registry.
     'vite-plugin/packages': 'src/vite-plugin/packages.ts',
