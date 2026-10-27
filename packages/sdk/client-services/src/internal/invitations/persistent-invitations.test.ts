@@ -81,6 +81,50 @@ describe('persistent invitations', () => {
     expect(peer.metadataStore.getInvitations()).toHaveLength(0);
   });
 
+  test('a restored multi-use invitation stays persisted after it admits a guest', async ({ expect }) => {
+    const signalContext = new MemorySignalManagerContext();
+    const host = new ServiceContext({ signalManager: new MemorySignalManager(signalContext) });
+    onTestFinished(() => host.destroy());
+    await host.open(new Context());
+    await host.createIdentity();
+    const [guest] = await Promise.all(
+      (await createPeers(1, async () => new MemorySignalManager(signalContext))).map(closeAfterTest),
+    );
+    await createIdentity(guest);
+
+    invariant(host.dataSpaceManager);
+    const space = await host.dataSpaceManager.createSpace(new Context());
+    await host.dataSpaceManager.waitUntilSpaceReady(space.key);
+    const invitation = await host.invitationsManager.createInvitation(new Context(), {
+      kind: Invitation_Kind.SPACE,
+      spaceKey: fromPublicKey(space.key),
+      authMethod: Invitation_AuthMethod.NONE,
+      persistent: true,
+      multiUse: true,
+    });
+    const { invitationId } = invitation.get();
+
+    await host.close();
+    await host.open(new Context());
+    await activateSpace(host, space.key);
+    await expect
+      .poll(() => host.invitationsManager.getCreatedInvitations().map((created) => created.invitationId))
+      .toEqual([invitationId]);
+
+    // Admitting a guest leaves a multi-use invitation in SUCCESS; it must still be hosted after the next restart.
+    const [hostResult, guestResult] = performInvitation({
+      host,
+      guest,
+      options: { kind: Invitation_Kind.SPACE, invitationId },
+    });
+    expect((await hostResult).error).toBeUndefined();
+    expect((await guestResult).error).toBeUndefined();
+
+    await host.close();
+    await host.open(new Context());
+    expect(host.metadataStore.getInvitations().map((saved) => saved.invitationId)).toEqual([invitationId]);
+  });
+
   test('a redeemed single-use invitation is removed from storage before the host reports success', async ({
     expect,
   }) => {

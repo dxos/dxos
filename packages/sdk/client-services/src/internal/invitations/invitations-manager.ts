@@ -39,9 +39,12 @@ import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from
 import { type InvitationsHandler, InvitationsHandlerService, createAdmissionKeypair } from './invitations-handler.ts';
 
 /**
- * Host states after which an invitation can no longer be redeemed.
+ * Whether a host invitation can no longer be redeemed; a multi-use invitation stays open after a SUCCESS.
  */
-const ENDED_STATES = [Invitation_State.SUCCESS, Invitation_State.CANCELLED, Invitation_State.EXPIRED];
+const hasEnded = ({ state, multiUse }: Invitation): boolean =>
+  state === Invitation_State.CANCELLED ||
+  state === Invitation_State.EXPIRED ||
+  (state === Invitation_State.SUCCESS && !multiUse);
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
@@ -131,7 +134,7 @@ export class InvitationsManager {
       const current = observableInvitation.get();
       this._createInvitations.delete(current.invitationId);
       this.removedCreated.emit(current);
-      if (current.persistent && (!restored || ENDED_STATES.includes(current.state))) {
+      if (current.persistent && (!restored || hasEnded(current))) {
         await this._safeDeleteInvitation(current);
       }
     });
