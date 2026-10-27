@@ -51,6 +51,64 @@ const lintDecision = (body: string): string[] => {
   return errors;
 };
 
+// A `feat` block's id, or a `req` line's id, wherever it is declared in the document.
+const FEATURE_ID = /^\s*(?:feat|req)\s+([\w.-]+)\s*:/gm;
+
+/** The feature and requirement ids a spec declares, which a `showcase` may cite. */
+const featureIds = (text: string): Set<string> => new Set([...text.matchAll(FEATURE_ID)].map((match) => match[1]));
+
+/**
+ * Checks a `showcase` (`lang/showcase.mdl`): it cites at least one feature or requirement, and only ones the
+ * document declares, so a renamed feature does not leave its showcases pointing at nothing.
+ */
+const lintShowcase = (body: string, declared: Set<string>): string[] => {
+  const cited = parseList(fieldValue(body, 'for'));
+  if (cited.length === 0) {
+    return ['Showcase is missing `for:` — name the features or requirements it shows.'];
+  }
+  return cited
+    .filter((id) => !declared.has(id))
+    .map((id) => `Showcase cites \`${id}\`, which this spec does not declare as a feat or req.`);
+};
+
+/** One `showcase` block: a non-normative example of features the spec declares (`lang/showcase.mdl`). */
+export type Showcase = {
+  id: string;
+  title: string;
+  /** Feature and requirement ids it shows. */
+  for: string[];
+  pr?: string;
+  video?: string;
+  image?: string;
+  note?: string;
+};
+
+/** Every `showcase` block of a spec, in document order. */
+export const parseShowcases = (text: string): Showcase[] =>
+  parseBlockHeaders(text)
+    .filter(({ type }) => type === 'showcase')
+    .map(({ id, body }) => {
+      const showcase: Showcase = {
+        id,
+        title: body
+          .split('\n')[0]
+          .replace(/^\w+\s+[^:]*:\s*/, '')
+          .trim(),
+        for: parseList(fieldValue(body, 'for')),
+      };
+      const pr = fieldValue(body, 'pr');
+      const video = fieldValue(body, 'video');
+      const image = fieldValue(body, 'image');
+      const note = fieldText(body, 'note');
+      return {
+        ...showcase,
+        ...(pr && { pr }),
+        ...(video && { video }),
+        ...(image && { image }),
+        ...(note && { note }),
+      };
+    });
+
 export type LintOptions = {
   /** Enables `mdl/ref` and `mdl/uses`, which need every other spec to resolve against. */
   index?: SpecIndex;
@@ -157,9 +215,11 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
  *   - `decision` attribution (`by:` / `for:` actor prefixes) → error
  *   - `mdl/block`: a second block header inside one fence, which every tool reads as body → error
  *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given → error
+ *   - `mdl/showcase`: a `showcase` citing no feature, or one the document does not declare → error
  */
 export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: LintOptions = {}): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
+  const declared = featureIds(text);
   for (const { type, from, to, body } of parseBlockHeaders(text)) {
     if (type && !KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
       diagnostics.push({
@@ -172,6 +232,10 @@ export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: 
     } else if (type === 'decision') {
       for (const message of lintDecision(body)) {
         diagnostics.push({ from, to, severity: 'error', source: 'mdl/decision', message });
+      }
+    } else if (type === 'showcase') {
+      for (const message of lintShowcase(body, declared)) {
+        diagnostics.push({ from, to, severity: 'error', source: 'mdl/showcase', message });
       }
     }
   }

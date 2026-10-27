@@ -1,0 +1,63 @@
+---
+id: org.dxos.spec.showcase
+name: DSL.Showcase
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The showcase dialect: one `showcase` block that links a feature of a spec to a recorded example of it
+working — the presentation a pull request produced when it implemented the feature. A showcase is
+**non-normative**: it shows what was built at one point in time, and never states what the system must
+do. When the code and a showcase disagree, the showcase is stale, not the code wrong; the requirements
+it cites stay the only authority.
+
+The block is the spec-file counterpart of plugin-projects' `Demonstrates` relation: in a space, the same deck is
+a presenter `Presentation`, made by `CreateShowcase`, that `Demonstrates` the same features.
+
+A spec groups its showcases in a `## Showcase` section, after the features and before
+`## Changelog`, opened with the sentence "The following are non-normative examples."
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `showcase` | `org.dxos.mdl.showcase@1.0` |
+
+## Model
+
+- **The identifier is `SC-<n>`**, numbered in the order showcases are added; the inline prose is what
+  the showcase shows, in one line.
+- **`for:`** lists the `feat` and `req` ids the showcase shows. It is required, and every id must be
+  declared in the same document, so a renamed feature cannot leave a showcase pointing at nothing.
+- **`pr:`** is the pull request that produced it, and **`video:`** / **`image:`** the published media,
+  as URLs. A spec names no file paths: the showcase's deck lives beside the spec as
+  `showcase/<SC-n>.md` by convention, so the id alone locates it.
+- **`note:`** says anything a reader needs to watch it fairly — a flag the recording needed, or a
+  behaviour since changed.
+- A showcase is not a spec item: no requirement depends on it, a spec review does not judge it, and
+  deleting one changes no requirement.
+- The deck is a Slidev presentation in plugin-presenter's format, built by the `showcase` skill
+  (`.agents/skills/showcase`) from the PR's summary, its autocue scripts and its media.
+
+## Definitions
+
+```mdl
+ext showcase
+  uri: org.dxos.mdl.showcase@1.0
+  desc: |
+    A non-normative example of features this spec declares: the presentation a pull request produced
+    when it implemented them. The identifier is `SC-<n>`; the inline prose is what it shows.
+  fields:
+    for: RefList                # feat and req ids of this document
+    pr?: URI                    # the pull request that produced it
+    video?: URI                 # the published recording
+    image?: URI                 # a published still, when there is no recording
+    note?: Prose                # what a viewer should know to read it fairly
+  inline-prose: true
+  syntax: |
+    showcase SC-1: A document is presented as slides and paged through.
+      for: [F-1, F-2.2]
+      pr: https://github.com/dxos/dxos/pull/14000
+      video: https://assets.composer.space/demos/2026-10-27-plugin-presenter.mp4
+```
