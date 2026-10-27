@@ -41,6 +41,17 @@ export class DependencyCycleError extends BaseError.extend(
   'The dependency would make the features depend on themselves.',
 ) {}
 
+/** The new parent is the feature itself or one of its subfeatures. */
+export class ParentCycleError extends BaseError.extend(
+  'ParentCycleError',
+  'A feature cannot be a subfeature of itself or of its own subfeatures.',
+) {}
+
+const DESCRIPTION =
+  'One or two short sentences: the ideal, what the feature does when complete, in the present tense. Not its current state.';
+
+const SPECS = 'The spec blocks the requirements came from, e.g. packages/plugins/plugin-inbox/PLUGIN.mdl#F-3.';
+
 export const Create = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.createFeature'),
@@ -48,16 +59,18 @@ export const Create = Operation.make({
     icon: 'ph--puzzle-piece--regular',
     description: trim`
       Creates a feature: a goal state the product should reach, such as "Compose & send works against Gmail".
-      Pass a project to list it on that project's features. Parts of a feature are subfeatures, set with the update
-      operation.
-      Specs stay in the repo; list their paths (e.g. packages/plugins/plugin-inbox/PLUGIN.mdl#F-3) in specs.
+      Pass a project to list it at the top of that project's feature map, or a parent to make it a subfeature of
+      another feature. Write the description as the ideal (what the feature does when complete, present tense),
+      never its current state. Give it requirements: one testable statement each. To build features from a spec,
+      use the import-spec-features operation instead, which extracts them from the spec's feat and req blocks.
     `,
   },
   services: [Database.Service],
   types: [Feature.Feature, Project.Project],
   input: Schema.Struct({
     name: Schema.String,
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String.annotate({ description: DESCRIPTION })),
+    requirements: Schema.optional(Schema.Array(Feature.Requirement)),
     status: Schema.optional(Feature.Status.annotate({ description: 'Defaults to planned.' })),
     key: Schema.optional(
       DXN.NameSchema.annotate({
@@ -65,9 +78,12 @@ export const Create = Operation.make({
           "The feature's meta.key, a dotted name such as network.dxos.team.features.mcp.codeMode. Code cites the feature as dxn:<key>#<mnemonic>.",
       }),
     ),
-    specs: Schema.optional(Schema.Array(Schema.String)),
+    specs: Schema.optional(Schema.Array(Schema.String).annotate({ description: SPECS })),
     project: Schema.optional(
-      Ref.Ref(Project.Project).annotate({ description: "Lists the new feature on this project's features." }),
+      Ref.Ref(Project.Project).annotate({ description: "Lists the new feature at the top of this project's map." }),
+    ),
+    parent: Schema.optional(
+      Ref.Ref(Feature.Feature).annotate({ description: 'Makes the new feature a subfeature of this one.' }),
     ),
   }),
   output: Schema.Struct({ feature: Type.getSchema(Feature.Feature) }),
@@ -79,11 +95,12 @@ export const Update = Operation.make({
     name: 'Update feature',
     icon: 'ph--pencil-simple--regular',
     description: trim`
-      Changes a feature's key, name, description, status, specs, subfeatures or project; fields left out are kept.
-      A project moves the feature onto that project's features; null takes it off any project.
-      Subfeatures are the feature's parts, each with its own status, and replace the whole list when given.
-      Set status when you observe it: in-progress when work starts, prototype when it works in a demo,
-      operational when people can rely on it, failing when it worked before and does not now.
+      Changes a feature's key, name, description, requirements, status, specs, parent or project; fields left out are
+      kept. Requirements replace the whole list when given. A project moves the feature to the top of that project's
+      map and a parent makes it that feature's subfeature; each clears the other, and null clears either.
+      Status says how far the feature has come, not whether anyone is working on it (that is read from its linked
+      tasks): planned until it works, prototype when it works in a demo, operational when people can rely on it,
+      failing when it worked before and does not now.
     `,
   },
   services: [Database.Service],
@@ -94,11 +111,12 @@ export const Update = Operation.make({
       Schema.NullOr(DXN.NameSchema).annotate({ description: "Sets the feature's meta.key; null removes it." }),
     ),
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String.annotate({ description: DESCRIPTION })),
+    requirements: Schema.optional(Schema.Array(Feature.Requirement)),
     status: Schema.optional(Feature.Status),
-    specs: Schema.optional(Schema.Array(Schema.String)),
-    subfeatures: Schema.optional(Schema.Array(Feature.Subfeature)),
+    specs: Schema.optional(Schema.Array(Schema.String).annotate({ description: SPECS })),
     project: Schema.optional(Schema.NullOr(Ref.Ref(Project.Project))),
+    parent: Schema.optional(Schema.NullOr(Ref.Ref(Feature.Feature))),
   }),
   output: Schema.Void,
 }).pipe(Operation.mutation('write'));
@@ -186,9 +204,11 @@ export const FeatureSummary = Schema.Struct({
   id: Schema.String,
   link: Schema.optional(Schema.String.annotate({ description: 'The DXN code cites the feature by in @feature tags.' })),
   name: Schema.String,
+  description: Schema.optional(Schema.String),
   status: Feature.Status,
+  requirements: Schema.Array(Feature.Requirement),
   specs: Schema.Array(Schema.String),
-  subfeatures: Schema.Array(Feature.Subfeature),
+  parent: Schema.optional(Schema.String.annotate({ description: 'Id of the feature this one is a subfeature of.' })),
   dependsOn: Schema.Array(Schema.String),
   tasks: Schema.Array(Schema.Struct({ id: Schema.String, title: Schema.String, status: Schema.optional(Task.Status) })),
   showcases: Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String })),
@@ -201,8 +221,9 @@ export const GetFeatures = Operation.make({
     name: "Get a project's features",
     icon: 'ph--puzzle-piece--regular',
     description: trim`
-      Reads the features listed on a project: each one's status, specs, subfeatures, the ids of the features it
-      depends on, the tasks linked to it and its showcases.
+      Reads the features of a project's map, its top-level features and every subfeature beneath them: each one's
+      description, status, requirements, parent, the ids of the features it depends on, the tasks linked to it and
+      its showcases.
     `,
   },
   services: [Database.Service],
@@ -210,6 +231,35 @@ export const GetFeatures = Operation.make({
   input: Schema.Struct({ project: Ref.Ref(Project.Project) }),
   output: Schema.Struct({ features: Schema.Array(FeatureSummary) }),
 }).pipe(Operation.mutation('none'));
+
+export const ImportSpec = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.importSpecFeatures'),
+    name: 'Import features from a spec',
+    icon: 'ph--file-arrow-down--regular',
+    description: trim`
+      Extracts features from the text of an .mdl spec: each feat block becomes a feature named by its title, with
+      the block's prose as its description and its req lines as its requirements. Pass the repo path of the spec,
+      which is recorded on each feature so importing again updates them rather than adding more. Pass a parent to
+      place the features beneath that feature, or a project to place them at the top of its map.
+      Review each description afterwards: it should state the ideal, not the current state.
+    `,
+  },
+  services: [Database.Service],
+  types: [Feature.Feature, Project.Project],
+  input: Schema.Struct({
+    path: Schema.String.annotate({
+      description: 'Repo path of the spec, e.g. packages/plugins/plugin-inbox/PLUGIN.mdl.',
+    }),
+    text: Schema.String.annotate({ description: 'The spec text.' }),
+    project: Schema.optional(Ref.Ref(Project.Project)),
+    parent: Schema.optional(Ref.Ref(Feature.Feature)),
+  }),
+  output: Schema.Struct({
+    created: Schema.Array(Schema.String).annotate({ description: 'Ids of the features added.' }),
+    updated: Schema.Array(Schema.String).annotate({ description: 'Ids of the features whose requirements changed.' }),
+  }),
+}).pipe(Operation.mutation('write'));
 
 export const ImportLinks = Operation.make({
   meta: {

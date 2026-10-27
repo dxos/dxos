@@ -10283,6 +10283,9 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10292,6 +10295,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/plugin-typesafe':
+        specifier: workspace:*
+        version: link:../plugin-typesafe
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -12330,6 +12336,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -20385,6 +20394,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      playwright:
+        specifier: 'catalog:'
+        version: 1.63.0
       react:
         specifier: ~19.2.7
         version: 19.2.7

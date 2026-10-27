@@ -143,7 +143,7 @@ export default Capability.makeModule(
         typesafe: { apiKey, endpoint },
         // Workers AI bills the platform Cloudflare account, so there is no vendor key to send.
         workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => WORKERS_AI_ENDPOINT },
-        defaultModel: () => settings()?.decisionModel ?? Model.typesafeJev.id,
+        defaultModel: () => settings()?.decisionModel ?? Model.cloudflareClef.id,
       }).pipe(Layer.provide(httpClient)),
       ClairicResolver.make({
         apiKey: Effect.succeed(undefined),

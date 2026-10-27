@@ -23,7 +23,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { bootLoaderPlugin, hotModulesPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
@@ -703,6 +703,9 @@ export default defineConfig((env) => ({
     react({ compiler: reactCompilerOptions, include: /\.[jt]sx$/, exclude: REACT_EXCLUDE }),
 
     isBundledDev && reactRefreshPreamble(react.preambleCode),
+
+    // Dev only: an edited plugin module re-runs in place instead of reloading the page.
+    hotModulesPlugin(),
 
     // Emit a `<script type="importmap">` into the production HTML mapping shared
     // bare specifiers (`react`, `effect`, `@dxos/client`, etc.) to dedicated chunk
