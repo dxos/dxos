@@ -8,7 +8,8 @@
  * `ride-check-redeploy.mjs`; the cut splices the two.
  *
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-10
- * @app composer-app dev server on :4173 (`DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve`)
+ * @app composer-app dev server on :4173 (`DX_DEV=true DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve`);
+ *   `DX_DEV` loads plugin-debug, whose template this is, since `dx-local.yml` pins `DX_ENVIRONMENT` to `local`
  *
  * The diagram is drawn through the Drawing skill's draw operation with `ride-check/architecture.dx`, the source the
  * agent's "Draw the architecture" task is asked to write, so the take does not wait on a model.
