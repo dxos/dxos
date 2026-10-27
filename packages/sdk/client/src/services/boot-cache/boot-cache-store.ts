@@ -6,7 +6,12 @@ import { type WorkingSetRow } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 
 const DATABASE = 'dxos-boot-cache';
-const VERSION = 1;
+
+/**
+ * The cache format's version, used as the IndexedDB version: bump it whenever the shape of what is stored
+ * changes, and every cache written before is discarded rather than read.
+ */
+export const BOOT_CACHE_VERSION = 1;
 const STORE = 'entries';
 const STREAMS_KEY = 'streams';
 const SPACE_PREFIX = 'space:';
@@ -46,8 +51,22 @@ const isSpaceEntry = (value: unknown): value is SpaceEntry =>
  * IndexedDB persistence for the boot cache: one entry for the recorded startup streams and one per space
  * for its working set, read back together in a single transaction.
  */
+export type BootCacheStoreOptions = {
+  /** IndexedDB database name. */
+  name?: string;
+  /** Format version; see {@link BOOT_CACHE_VERSION}. */
+  version?: number;
+};
+
 export class BootCacheStore {
+  readonly #name: string;
+  readonly #version: number;
   #db?: Promise<IDBDatabase>;
+
+  constructor({ name = DATABASE, version = BOOT_CACHE_VERSION }: BootCacheStoreOptions = {}) {
+    this.#name = name;
+    this.#version = version;
+  }
 
   static isAvailable(): boolean {
     return typeof indexedDB !== 'undefined';
@@ -110,12 +129,40 @@ export class BootCacheStore {
   }
 
   #open(): Promise<IDBDatabase> {
-    this.#db ??= new Promise<IDBDatabase>((resolve, reject) => {
-      const req = indexedDB.open(DATABASE, VERSION);
-      req.onupgradeneeded = () => req.result.createObjectStore(STORE);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
+    this.#db ??= this.#openVersion().catch(async (error) => {
+      // A cache written by a newer format cannot be opened at this one; it is discarded like an older one.
+      if (!(error instanceof DOMException && error.name === 'VersionError')) {
+        throw error;
+      }
+      await new Promise<void>((resolve, reject) => {
+        const req = indexedDB.deleteDatabase(this.#name);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+        // Another tab still holds it; booting without the cache beats waiting on that tab.
+        req.onblocked = () => reject(new Error('boot cache held open by another tab'));
+      });
+      return this.#openVersion();
     });
     return this.#db;
+  }
+
+  /** Opens at {@link BOOT_CACHE_VERSION}, dropping whatever an older version stored. */
+  #openVersion(): Promise<IDBDatabase> {
+    return new Promise<IDBDatabase>((resolve, reject) => {
+      const req = indexedDB.open(this.#name, this.#version);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (db.objectStoreNames.contains(STORE)) {
+          db.deleteObjectStore(STORE);
+        }
+        db.createObjectStore(STORE);
+      };
+      req.onsuccess = () => {
+        // Steps aside for another tab opening a different version, which would otherwise wait on this one.
+        req.result.onversionchange = () => req.result.close();
+        resolve(req.result);
+      };
+      req.onerror = () => reject(req.error);
+    });
   }
 }
