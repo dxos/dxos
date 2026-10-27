@@ -1,0 +1,245 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-video/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: VideoPlugin
+
+The data model, both operations and the article layout are built. `Video` (in `@dxos/types`) carries
+`transcript` and `summary` refs, `Transcribe` calls the EDGE `/transcription/video` endpoint and links a
+new `Text`, and `Summarize` runs `AiRequest` with a Sonnet model and links a summary. The article
+composes player, transcript and summary as separate surfaces with a tab strip and a regenerate action.
+The interaction model diverged from the spec: transcription and summarization run automatically when
+a surface opens (plus app-graph menu actions), not from a Transcribe/Summarize button; the summary
+editor is editable, not read-only; the tab does not switch to Summary on completion. Tests cover only
+pure helpers (embed URL parsing, YouTube utils, `Video.make`); no operation has a test.
+
+Of 28 items: 4 done, 8 untested, 7 partial, 3 diverged, 6 missing. Findings:
+
+- **No operation test.** `transcribeVideo` and `summarizeVideo` (T-3, T-4) have no test against a
+  stubbed endpoint or AI service.
+- **Triggers are automatic.** F-3.1, F-3.4 and F-4.1 describe user-triggered actions; the code
+  auto-runs from `TranscriptSection` / `SummarySection` effects.
+- **F-5.3 is missing.** Nothing switches the tab to Summary when summarization completes.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Text: Text is the @dxos/schema object type, referenced not redefined.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/schema/src/types/Text.ts#Text]
+  note: Referenced by the Video refs and both operations; no plugin test exercises it.
+```
+
+```mdl
+verdict Video: Video lives in @dxos/types with transcript and summary refs, but name and url are optional and a description field is added.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Video.ts#Video, github:dxos/dxos/packages/sdk/types/src/types/Video.ts#make]
+  tests: [github:dxos/dxos/packages/sdk/types/src/types/Video.test.ts]
+  note: Spec declares `name` and `url` required; the schema makes both optional and adds `description`.
+```
+
+```mdl
+verdict VideoArticle: The article composes player, transcript and summary surfaces with tabs, an Open Original action and regenerate.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/containers/VideoArticle/VideoArticle.tsx#VideoArticle]
+  note: |
+    `openOriginal` (http/https only), `tab` and `summarizing` state match. There is no `toolbar` slot
+    prop and no `onSummarized` event; summary regeneration is the only summarize action. No test renders it.
+```
+
+```mdl
+verdict TranscriptionService: The EDGE transcription endpoint is called directly by the transcribe handler; only response schemas are defined locally.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/operations/transcribe.ts#TranscriptionError, github:dxos/dxos/packages/plugins/plugin-video/src/operations/TranscriptionService.ts#TranscriptResponse]
+  note: |
+    No injectable service: the handler `fetch`es the pinned `https://dxos.network/transcription/video`
+    URL with `url` and `lang` (default "en") and throws `TranscriptionError` on non-2xx, success=false
+    or empty text. Not lazily loaded as a service, and untested.
+```
+
+```mdl
+verdict transcribeVideo: The Transcribe op loads the video, fetches the transcript, adds a Text and links it, adopting the title when the name is empty.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/types/VideoOperation.ts#Transcribe, github:dxos/dxos/packages/plugins/plugin-video/src/operations/transcribe.ts]
+  walkthrough:
+    - The operation declares the video ref and optional lang input and a transcript ref output. github:dxos/dxos/packages/plugins/plugin-video/src/types/VideoOperation.ts#Transcribe
+    - The handler fetches the EDGE endpoint, adds the Text and sets Video.transcript. github:dxos/dxos/packages/plugins/plugin-video/src/operations/transcribe.ts
+    - The handler set exposes it lazily on the ./operations subpath. github:dxos/dxos/packages/plugins/plugin-video/src/operations/index.ts#VideoOperationHandlerSet
+  note: Output is `{ transcript }` rather than a bare ref; `VideoNotFound` is not a declared error (load failure propagates). No test.
+```
+
+```mdl
+verdict summarizeVideo: The Summarize op runs AiRequest with a summarization prompt on Sonnet, adds a Text and links Video.summary.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/types/VideoOperation.ts#Summarize, github:dxos/dxos/packages/plugins/plugin-video/src/operations/summarize.ts]
+  walkthrough:
+    - The operation declares the video ref input, summary ref output and Database plus AiService requirements. github:dxos/dxos/packages/plugins/plugin-video/src/types/VideoOperation.ts#Summarize
+    - The handler loads the transcript, runs the AI request and links the new summary Text. github:dxos/dxos/packages/plugins/plugin-video/src/operations/summarize.ts
+  note: NoTranscript and SummarizationFailed are invariant/Error throws, not typed errors. No test.
+```
+
+```mdl
+verdict F-1.1: Video.make creates a Video with name and url.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Video.ts#make, github:dxos/dxos/packages/plugins/plugin-video/src/capabilities/create-object.ts]
+  tests: [github:dxos/dxos/packages/sdk/types/src/types/Video.test.ts]
+```
+
+```mdl
+verdict F-1.2: A new Video has no transcript.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Video.ts#make]
+  tests: [github:dxos/dxos/packages/sdk/types/src/types/Video.test.ts]
+```
+
+```mdl
+verdict F-2.1: The player renders an iframe whose src is derived from Video.url (YouTube, Vimeo, else raw).
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/components/VideoPlayer/VideoPlayer.tsx#VideoPlayer, github:dxos/dxos/packages/plugins/plugin-video/src/components/VideoPlayer/embed-url-parsers.ts#toEmbedUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-video/src/components/VideoPlayer/VideoPlayer.test.ts]
+```
+
+```mdl
+verdict F-2.2: An unembeddable URL is iframed raw; no fallback link is shown.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/components/VideoPlayer/embed-url-parsers.ts#toEmbedUrl]
+  note: |
+    `toEmbedUrl` falls back to the raw URL as the iframe src; only an absent URL shows an empty-state
+    icon. The fallback link role is filled by the toolbar's Open Original action, not by the player.
+```
+
+```mdl
+verdict F-3.1: Transcribe runs automatically when the transcript tab opens, and from a Transcribe menu action, without a lang.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/containers/TranscriptSection/TranscriptSection.tsx#TranscriptSection, github:dxos/dxos/packages/plugins/plugin-video/src/capabilities/app-graph-builder.ts]
+  note: |
+    There is no Transcribe button on VideoArticle; `TranscriptSection` auto-invokes the op for YouTube
+    URLs, and the app-graph contributes a list-item action. Neither passes `lang`.
+```
+
+```mdl
+verdict F-3.2: The handler GETs the transcription endpoint with url and lang and fails with TranscriptionError.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/operations/transcribe.ts#TranscriptionError]
+  note: No test stubs the endpoint.
+```
+
+```mdl
+verdict F-3.3: The handler adds a Text with the returned text and sets Video.transcript.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/operations/transcribe.ts]
+  note: Text is normalized (timestamp links joined, blank lines collapsed) before storing. No test.
+```
+
+```mdl
+verdict F-3.4: A pending indicator shows while transcribing, and a ref guard prevents re-entry; no trigger to disable.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/containers/TranscriptSection/TranscriptSection.tsx#TranscriptSection]
+  note: The pending state is shown in the transcript tab, not on VideoArticle; the app-graph Transcribe action is not disabled while a request runs.
+```
+
+```mdl
+verdict F-4.1: Summarize runs automatically once a non-empty transcript exists, and from regenerate gated on the transcript.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-video/src/containers/SummarySection/SummarySection.tsx#SummarySection,
+     github:dxos/dxos/packages/plugins/plugin-video/src/containers/VideoArticle/VideoArticle.tsx#VideoArticle]
+  walkthrough:
+    - SummarySection auto-invokes Summarize when the transcript has content and no summary exists. github:dxos/dxos/packages/plugins/plugin-video/src/containers/SummarySection/SummarySection.tsx#SummarySection
+    - VideoArticle's regenerate action invokes it manually, disabled without a transcript. github:dxos/dxos/packages/plugins/plugin-video/src/containers/VideoArticle/VideoArticle.tsx#VideoArticle
+  note: The user-triggered path exists only as regenerate (visible on the Summary tab) and the app-graph action, which is not gated. No test.
+```
+
+```mdl
+verdict F-4.2: The handler summarizes the transcript content via AiRequest.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/operations/summarize.ts]
+  note: Missing or empty transcript fails via invariant rather than a typed NoTranscript. No test.
+```
+
+```mdl
+verdict F-4.3: The handler adds a Text with the summary and sets Video.summary.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/operations/summarize.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-5.1: The Transcript/Summary tab strip is always shown below the player, not only when a text is set.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/containers/VideoArticle/VideoArticle.tsx#VideoArticle]
+  note: The tabs render unconditionally; each tab shows a pending or unsupported-URL state when its text is absent.
+```
+
+```mdl
+verdict F-5.2: The transcript renders read-only, but the summary editor is editable.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/components/Transcript/Transcript.tsx#Transcript, github:dxos/dxos/packages/plugins/plugin-video/src/components/Summary/Summary.tsx#Summary]
+  note: `Transcript` sets `readOnly: true`; `SummarySection` documents and renders an editable `Summary`. No test.
+```
+
+```mdl
+verdict F-5.3: Nothing switches the view to the Summary tab when summarization completes.
+  status: missing
+  note: `handleRegenerate` in VideoArticle only toggles `summarizing`; `tab` is changed only by the user.
+```
+
+```mdl
+verdict F-6.1: CommentConfig is contributed for Video with comments unanchored.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/capabilities/comment-config.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-6.2: Anchored comments into transcript or summary are not supported, as the spec notes.
+  status: missing
+  note: A declared follow-up; the comment-config module documents the same limitation.
+```
+
+```mdl
+verdict T-1: Video.test.ts creates a Video and asserts name, url and unset transcript.
+  status: done
+  tests: [github:dxos/dxos/packages/sdk/types/src/types/Video.test.ts]
+```
+
+```mdl
+verdict T-2: Embed src derivation is tested, but no test renders the iframe.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-video/src/components/VideoPlayer/embed-url-parsers.ts#toEmbedUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-video/src/components/VideoPlayer/VideoPlayer.test.ts]
+  note: `VideoPlayer.test.ts` checks `toEmbedUrl` only; the article-surface render step is not automated.
+```
+
+```mdl
+verdict T-3: No test runs transcribeVideo against a stubbed worker.
+  status: missing
+  note: No test file in plugin-video exercises the transcribe handler.
+```
+
+```mdl
+verdict T-4: No test runs the transcribe failure path.
+  status: missing
+  note: No test file exercises a non-2xx response.
+```
+
+```mdl
+verdict T-5: No test covers the transcript affordance, and the transcript is shown inline rather than as an open-target affordance.
+  status: missing
+  note: The transcript renders in the Transcript tab; nothing automates or offers opening the Text object.
+```
+
+```mdl
+verdict QA-1: The QA round-trip is not automated.
+  status: missing
+  note: An `actors: human` QA test; no Playwright or composer-qa automation runs it.
+```
