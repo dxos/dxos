@@ -25,9 +25,32 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The questions of the feeds spec: open questions first, answered ones with their answer and decisions. */
+// A fixed spec, so the assertions do not depend on which questions a living spec still has open.
+const SPEC = [
+  '# Spec',
+  '',
+  '```mdl',
+  'question Q-1: Which store holds the head?',
+  '  to: user:alice',
+  '  status: open',
+  '  options:',
+  '    - The branches table.',
+  '    - The blocks table.',
+  '```',
+  '',
+  '```mdl',
+  'question Q-2: How does sync carry the fork flag?',
+  '  status: answered',
+  '  answer: |',
+  '    As an optional field of the block.',
+  '  decisions: [D-51]',
+  '```',
+  '',
+].join('\n');
+
+/** Open questions first, answered ones with their answer and decisions. */
 export const Default: Story = {
-  args: { content: FEEDS_MDL, onReveal: fn(), onSelectDecision: fn() },
+  args: { content: SPEC, onReveal: fn(), onSelectDecision: fn() },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const cards = await waitFor(() => canvas.getAllByTestId('spec-question-card'));
@@ -40,6 +63,11 @@ export const Default: Story = {
     await userEvent.click(within(cards[0]).getByTestId('spec-question-card.reveal'));
     await expect(args.onReveal).toHaveBeenCalledWith(cards[0].dataset.question);
   },
+};
+
+/** The questions of the feeds spec. */
+export const Feeds: Story = {
+  args: { content: FEEDS_MDL, onReveal: fn(), onSelectDecision: fn() },
 };
 
 /** A spec with no questions. */
