@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { DiscordAdminOperation, DiscordAgentOperation, DiscordOperation } from '#types';
+import { DiscordAdminOperation, DiscordAgentOperation, DiscordOperation, ShowAndTellOperation } from '#types';
 
 export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
   DiscordOperation.GetDiscordChannels.pipe(Operation.lazyHandler(() => import('./get-discord-channels.ts'))),
@@ -22,4 +22,7 @@ export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
   DiscordAgentOperation.Reply.pipe(Operation.lazyHandler(() => import('./agent/reply.ts'))),
   DiscordAgentOperation.DirectMessage.pipe(Operation.lazyHandler(() => import('./agent/direct-message.ts'))),
   DiscordAgentOperation.React.pipe(Operation.lazyHandler(() => import('./agent/react.ts'))),
+  ShowAndTellOperation.FileLinks.pipe(Operation.lazyHandler(() => import('./show-and-tell/file-links.ts'))),
+  ShowAndTellOperation.ListLinks.pipe(Operation.lazyHandler(() => import('./show-and-tell/list-links.ts'))),
+  ShowAndTellOperation.EnableShowAndTell.pipe(Operation.lazyHandler(() => import('./show-and-tell/enable.ts'))),
 ]);

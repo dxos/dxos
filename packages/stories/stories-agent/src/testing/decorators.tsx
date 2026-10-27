@@ -19,6 +19,7 @@ import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import * as DiscordPlugin from '@dxos/plugin-discord/DiscordPlugin';
+import * as ShowAndTell from '@dxos/plugin-discord/ShowAndTell';
 import { translations as discordTranslations } from '@dxos/plugin-discord/translations';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
@@ -56,6 +57,7 @@ const TYPES: Type.AnyEntity[] = [
   AgentChannels.AgentChannels,
   AgentEmail.AgentEmail,
   DiscordChannel.DiscordChannel,
+  ShowAndTell.Entry,
 ];
 
 export type DecoratorsProps = {

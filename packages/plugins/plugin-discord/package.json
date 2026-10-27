@@ -115,6 +115,16 @@
       "import": "./dist/lib/DiscordTargetOptions.mjs"
     },
     "./package.json": "./package.json",
+    "./ShowAndTell": {
+      "source": "./src/types/ShowAndTell.ts",
+      "types": "./dist/types/src/types/ShowAndTell.d.ts",
+      "import": "./dist/lib/ShowAndTell.mjs"
+    },
+    "./ShowAndTellOperation": {
+      "source": "./src/types/ShowAndTellOperation.ts",
+      "types": "./dist/types/src/types/ShowAndTellOperation.d.ts",
+      "import": "./dist/lib/ShowAndTellOperation.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -144,6 +154,12 @@
       ],
       "DiscordTargetOptions": [
         "dist/types/src/types/DiscordTargetOptions.d.ts"
+      ],
+      "ShowAndTell": [
+        "dist/types/src/types/ShowAndTell.d.ts"
+      ],
+      "ShowAndTellOperation": [
+        "dist/types/src/types/ShowAndTellOperation.d.ts"
       ]
     }
   },

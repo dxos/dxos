@@ -48,7 +48,8 @@ export const make = (): Skill.Skill =>
 
         Pick what the request needs, and it may be somewhere other than where it came from: "tell Rich the agent is
         ready" is a direct message to Rich, perhaps with a 👍 on the request. Do one thing per intent, never post the
-        same text twice, and when you were not addressed, do nothing.
+        same text twice, and when you were not addressed (\`addressed: none\`), do nothing. \`addressed: curate\` marks a
+        message shared in a curated channel: it is for a curator skill to file, never to answer.
       `,
     }),
   });

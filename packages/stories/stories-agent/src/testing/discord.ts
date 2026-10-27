@@ -12,6 +12,7 @@ import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
 import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
+import * as ShowAndTellOperation from '@dxos/plugin-discord/ShowAndTellOperation';
 import { Channel } from '@dxos/types';
 
 import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
@@ -116,6 +117,30 @@ export const setupDiscordAgent = async ({
   }
 
   await attachChannels(db, agent, [channel]);
+  return { agent, channel };
+};
+
+/**
+ * The agent as the show-and-tell curator of the story's Discord channel (`channelId`): every link or attachment
+ * shared there is filed as a row, and "what did we do this week?" is answered from the rows. Without a channel id the
+ * agent is left in Support mode, as {@link setupDiscordAgent} leaves it.
+ */
+export const setupShowAndTellAgent = async (
+  props: SetupDiscordAgentProps,
+): Promise<{ agent: Agent.Agent; channel: Channel.Channel }> => {
+  const { agent, channel } = await setupDiscordAgent(props);
+  if (!props.channelId) {
+    log.warn('show-and-tell needs the Discord channel id (the channelId arg)');
+    return { agent, channel };
+  }
+  const { error } = await props.invoker.invokePromise(
+    ShowAndTellOperation.EnableShowAndTell,
+    { agent: Ref.make(agent), channel: Ref.make(channel), discordChannelId: props.channelId },
+    { spaceId: props.db.spaceId },
+  );
+  if (error) {
+    throw error;
+  }
   return { agent, channel };
 };
 

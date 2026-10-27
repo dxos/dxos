@@ -20,6 +20,7 @@ import {
   installFakeDiscordBot,
   setupAgent,
   setupDiscordAgent,
+  setupShowAndTellAgent,
   storyConfig,
   storyParameters,
 } from '../testing/index.ts';
@@ -88,6 +89,46 @@ export const Setup: Story = {
     ],
   },
   tags: ['!test'],
+};
+
+/**
+ * The show-and-tell curator, on a local EDGE stack like {@link Setup}: set `applicationId`, `guildId` and `channelId`
+ * (the demos channel) in the controls; setup curates that channel and puts the agent in Show-and-tell mode.
+ *
+ * Try:
+ * 1. Activity: **Connect channels** starts the bot.
+ * 2. Drop a link (or upload a recording) in the channel without mentioning the bot: it reacts 🗂️ and the row appears
+ *    in the space (the `Show-and-tell entry` type; open it as a table).
+ * 3. Ask "@Kai what did we do this week?": it answers in a thread, one line per person, from the rows.
+ */
+export const ShowAndTell: Story = {
+  ...Setup,
+  decorators: createDecorators<StoryArgs>(({ args }) => ({
+    config: storyConfig({ persistent: args.persistent }),
+    onReady: async ({ db, invoker }) => {
+      await setupShowAndTellAgent({
+        db,
+        invoker,
+        remote: true,
+        applicationId: args.applicationId,
+        guildId: args.guildId,
+        channelId: args.channelId,
+      });
+    },
+  })),
+  argTypes: {
+    persistent: { control: 'boolean' },
+    applicationId: { control: 'text' },
+    guildId: { control: 'text' },
+    channelId: { control: 'text' },
+  },
+  args: {
+    ...Setup.args,
+    layout: [
+      [companion('discord'), StoryRole.DiscordBot],
+      [companion('activity'), StoryRole.Conversation],
+    ],
+  },
 };
 
 let fakeBot: FakeDiscordBot | undefined;
