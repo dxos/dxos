@@ -667,11 +667,13 @@ describe('dedupStage with identity-enumerated items', () => {
     const feed = db.add(Feed.make());
     const target = db.add(Expando.make({ name: 'mailbox' }));
     const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100', min: '50' }));
-    // `already-60` sits deep in the feed, past the one-object seed tail, so only a lookup finds it.
+    // `already-60` sits between the oldest and newest objects, outside both one-object seed tails, so only
+    // the committed-identity lookup finds it.
     await EffectEx.runPromise(
       Feed.append(
         feed,
         [
+          ['oldest-55', 55],
           ['already-60', 60],
           ['filler-90', 90],
           ['filler-95', 95],
