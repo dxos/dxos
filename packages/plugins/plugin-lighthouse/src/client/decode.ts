@@ -168,7 +168,8 @@ export const toSession = (value: unknown): Session | undefined => {
     run,
     goal: asString(record.goal) ?? '',
     status,
-    busy: typeof record.busy === 'boolean' ? record.busy : status === 'starting' || status === 'running',
+    // A running session is busy even between turns, when /v1 reports `busy: false`.
+    busy: record.busy === true || status === 'starting' || status === 'running',
     budget: toBudget(legacyBudget ? legacyBudget.budget : record.budget),
     spent: toSpend(legacyBudget ? legacyBudget.spent : record.spent),
     ...(asString(record.model)
