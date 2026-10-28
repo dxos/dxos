@@ -68,6 +68,8 @@ type ChatThreadRootProps = PropsWithChildren<
     registry?: XmlWidgetRegistry;
     /** The block widget for an object embedded as a card (`![label](echo://…)`); the host's, since only it can render one. */
     objectImage?: WidgetDef<ObjectLinkProps>;
+    /** Editor extensions other plugins contribute, such as link chips; they apply to every message. */
+    extensions?: ComponentPropsWithoutRef<typeof MessageList.Root>['extensions'];
     /** The reader's identity hue, published to the DOM for the prompt frame's tokens. */
     userHue?: string;
     /** The reader's DID; prompts from anyone else turn on author avatars for the whole thread. */
@@ -101,6 +103,7 @@ const ChatThreadRoot = ({
   viewType,
   registry,
   objectImage,
+  extensions,
   getObjectLabel,
   userHue,
   userDid,
@@ -152,6 +155,7 @@ const ChatThreadRoot = ({
           renderer={renderer}
           registry={merged}
           objectImage={objectImage}
+          extensions={extensions}
           Chrome={MessageChrome}
           estimateSize={estimateRow}
           debug={debug}
