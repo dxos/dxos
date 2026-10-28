@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Annotation, type Migration as EchoMigration, Obj } from '@dxos/echo';
+import { Annotation, Migration as EchoMigration, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
@@ -69,9 +69,11 @@ export class Migrations {
       if (targetIndex > currentIndex) {
         const migrations = this.migrations.slice(currentIndex, targetIndex);
         for (const migration of migrations) {
-          const transaction = await space.db.beginMigration();
-          await migration.next({ space, migration: transaction });
-          await transaction.commit();
+          await space.db.runMigrations([
+            EchoMigration.defineTransaction(async (transaction) => {
+              await migration.next({ space, migration: transaction });
+            }),
+          ]);
           Obj.update(space.properties, (properties) => {
             Annotation.set(properties, MigrationVersionAnnotation, migration.version);
           });

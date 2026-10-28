@@ -25,7 +25,7 @@ export type TypeId = typeof TypeId;
  */
 export interface Migration {
   readonly [TypeId]: TypeId;
-  readonly kind: 'object' | 'rename' | 'content';
+  readonly kind: 'object' | 'rename' | 'content' | 'transaction';
 }
 
 /**
@@ -42,7 +42,10 @@ export const isMigration = (value: unknown): value is Migration => {
   // consumer can dispatch on.
   return (
     candidate[TypeId] === TypeId &&
-    (candidate.kind === 'object' || candidate.kind === 'rename' || candidate.kind === 'content')
+    (candidate.kind === 'object' ||
+      candidate.kind === 'rename' ||
+      candidate.kind === 'content' ||
+      candidate.kind === 'transaction')
   );
 };
 
@@ -438,12 +441,26 @@ export type CompactResult = {
 };
 
 /**
- * Structural changes to a database, staged and then committed atomically as a new space epoch.
+ * Options for {@link Transaction}.
+ */
+export type TransactionOptions = {
+  /**
+   * How {@link Transaction.commit} publishes the staged changes.
+   * - `replace` (default): builds a new space root and starts a new epoch with it. Peers adopt the new
+   *   root, so writes made to the old root after the transaction began are lost.
+   * - `update`: writes the changed links and inline objects into the current root in one atomic change.
+   *   No epoch is started, and concurrent writes to the root merge.
+   */
+  root?: 'replace' | 'update';
+};
+
+/**
+ * Structural changes to a database, staged and then committed atomically.
  *
- * Staged changes are not visible to queries; peers see them only once {@link Transaction.commit}
- * has replaced the space root. Use it for changes that an ordinary write cannot express: changing
- * an object's type in place, removing objects without a tombstone, or dropping document history.
- * For schema changes that a write can express, prefer {@link define} with `db.runMigrations`.
+ * Staged changes are not visible to queries until {@link Transaction.commit}. Use it for changes that
+ * an ordinary write cannot express: changing an object's type in place, removing objects without a
+ * tombstone, or dropping document history. For schema changes that a write can express, prefer
+ * {@link define}. Run it with `db.runMigrations` through {@link defineTransaction}, or directly:
  *
  * @example
  * ```ts
@@ -495,8 +512,48 @@ export interface Transaction {
   compact(ids?: readonly Obj.ID[]): CompactResult;
 
   /**
-   * Writes the staged changes and starts a new space epoch with them.
+   * Writes the staged changes as {@link TransactionOptions.root} selects.
    * The transaction cannot be used afterwards.
    */
   commit(): Promise<void>;
 }
+
+/**
+ * A migration that stages its changes in a {@link Transaction}, which the runner commits once `run` resolves.
+ */
+export interface TransactionMigration extends Migration {
+  readonly kind: 'transaction';
+  readonly options: TransactionOptions;
+  readonly run: (transaction: Transaction) => Promise<void>;
+}
+
+/**
+ * Narrows a migration to a {@link TransactionMigration}.
+ *
+ * @performance O(1).
+ */
+export const isTransactionMigration = (migration: Migration): migration is TransactionMigration =>
+  migration.kind === 'transaction';
+
+/**
+ * Define a migration that stages structural changes in a {@link Transaction}.
+ *
+ * @example
+ * ```ts
+ * const migration = Migration.defineTransaction(async (transaction) => {
+ *   transaction.delete(legacyId);
+ * });
+ * await db.runMigrations([migration]);
+ * ```
+ *
+ * @performance O(1) at definition time.
+ */
+export const defineTransaction = (
+  run: (transaction: Transaction) => Promise<void>,
+  options: TransactionOptions = {},
+): TransactionMigration => ({
+  [TypeId]: TypeId,
+  kind: 'transaction',
+  options,
+  run,
+});

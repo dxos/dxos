@@ -147,12 +147,6 @@ export interface EchoDatabase extends Database.Database {
    */
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
 
-  /**
-   * Starts staging structural changes that commit atomically as a new space epoch.
-   * Committing needs a database constructed with `createEpoch`.
-   */
-  beginMigration(): Promise<Migration.Transaction>;
-
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
   // `mergeBranch`/`deleteBranch`/`listBranches`/`getCurrentBranch`/`branch`). Client-only extras:
@@ -222,7 +216,7 @@ export type EchoDatabaseProps = {
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 
-  /** Starts a new space epoch whose root is the given document; enables {@link EchoDatabase.beginMigration}. */
+  /** Starts a new space epoch whose root is the given document; enables `beginMigration({ root: 'replace' })`. */
   createEpoch?: (rootUrl: string) => Promise<void>;
 };
 
@@ -983,6 +977,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await this.#runRenameMigration(migration);
       } else if (Migration.isContentMigration(migration)) {
         contentTypes.add(migration.type);
+      } else if (Migration.isTransactionMigration(migration)) {
+        const transaction = await this.beginMigration(migration.options);
+        await migration.run(transaction);
+        await transaction.commit();
       }
     }
     // Content steps run per type, after object migrations have moved objects onto the types they name.
@@ -1210,20 +1208,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getLoadedDocumentHandles();
   }
 
-  async beginMigration(): Promise<Migration.Transaction> {
-    const createEpoch = this.#createEpoch;
-    invariant(createEpoch, 'Database cannot create epochs.');
-    const root = this._entityManager.getSpaceRootDocHandle().doc();
-    invariant(root, 'Space root document not available.');
+  async beginMigration(options: Migration.TransactionOptions = {}): Promise<Migration.Transaction> {
+    invariant(options.root === 'update' || this.#createEpoch, 'Database cannot create epochs.');
     // Loaded on demand: migrations never run during boot.
     const { MigrationTransaction } = await import('./migration-transaction.ts');
     return new MigrationTransaction({
       repo: this._repo,
-      root,
+      rootHandle: this._entityManager.getSpaceRootDocHandle(),
       // spaceKey is deprecated but still written so older clients can resolve the owning space.
       access: { spaceId: this.spaceId, spaceKey: this.spaceKey.toHex() },
       flush: () => this.flush(),
-      createEpoch,
+      createEpoch: this.#createEpoch,
+      options,
     });
   }
 

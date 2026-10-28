@@ -33,13 +33,14 @@ import { migrateDocument } from '../util/migrate-document.ts';
 /** What a {@link MigrationTransaction} needs from the database it migrates. */
 export type MigrationTransactionProps = {
   repo: RepoProxy;
-  /** The space root document the transaction starts from. */
-  root: Doc<DatabaseDirectory>;
+  /** The current space root document. */
+  rootHandle: DocHandleProxy<DatabaseDirectory>;
   access: NonNullable<DatabaseDirectory['access']>;
-  /** Persists writes made outside the transaction before the root is replaced. */
+  /** Persists writes made outside the transaction before the root changes. */
   flush: () => Promise<void>;
-  /** Starts a new space epoch whose root is the given document. */
-  createEpoch: (rootUrl: string) => Promise<void>;
+  /** Starts a new space epoch whose root is the given document; required for `root: 'replace'`. */
+  createEpoch?: (rootUrl: string) => Promise<void>;
+  options: Migration.TransactionOptions;
 };
 
 type StagedChange = {
@@ -102,7 +103,7 @@ export class MigrationTransaction implements Migration.Transaction {
 
   compact(ids?: readonly EntityId[]): Migration.CompactResult {
     this.#assertOpen();
-    const links = this.#props.root.links ?? {};
+    const links = this.#root().links ?? {};
     const compacted: EntityId[] = [];
     const skipped: EntityId[] = [];
     for (const id of ids ?? Object.keys(links)) {
@@ -120,26 +121,29 @@ export class MigrationTransaction implements Migration.Transaction {
     this.#assertOpen();
     this.#committed = true;
 
-    const { repo, root, access } = this.#props;
-    const objects: Record<string, EntityStructure> = { ...root.objects };
-    const links: NonNullable<DatabaseDirectory['links']> = { ...root.links };
+    // Persist writes made outside the transaction first, so the root read below includes them.
+    await this.#props.flush();
+    const root = this.#root();
+    const objects = new Map<EntityId, EntityStructure | undefined>();
+    const links = new Map<EntityId, string | undefined>();
     for (const [id, change] of this.#changes) {
       if (change.deleted) {
-        delete objects[id];
-        delete links[id];
+        objects.set(id, undefined);
+        links.set(id, undefined);
         continue;
       }
 
-      const link = links[id]?.toString();
+      const link = root.links?.[id]?.toString();
       if (link == null) {
-        if (objects[id] != null) {
-          // Inline objects live in the root, which is rebuilt below; compaction does not apply.
+        const inline = root.objects?.[id];
+        if (inline != null) {
+          // Inline objects live in the root itself; compaction does not apply.
           if (change.structure) {
-            objects[id] = withStoredSystem(change.structure, objects[id]);
+            objects.set(id, withStoredSystem(change.structure, inline));
           }
         } else {
           invariant(change.structure);
-          links[id] = new A.RawString(await this.#createDocument({ [id]: change.structure }));
+          links.set(id, await this.#createDocument({ [id]: change.structure }));
         }
         continue;
       }
@@ -147,36 +151,52 @@ export class MigrationTransaction implements Migration.Transaction {
       const handle = await this.#find(link);
       const doc = handle.doc();
       invariant(doc, `Document not available: ${link}`);
-      const stored = doc.objects?.[id];
-      const structure = change.structure && withStoredSystem(change.structure, stored);
+      const structure = change.structure && withStoredSystem(change.structure, doc.objects?.[id]);
       if (change.compact) {
-        links[id] = new A.RawString(
-          await this.#createDocument(structure ? { [id]: structure } : { ...A.toJS(doc).objects }),
-        );
+        links.set(id, await this.#createDocument(structure ? { [id]: structure } : { ...A.toJS(doc).objects }));
       } else {
         invariant(structure);
         const migrated = migrateDocument(doc, this.#directory({ [id]: structure }));
-        const migratedHandle = repo.import<DatabaseDirectory>(A.save(migrated));
+        const migratedHandle = this.#props.repo.import<DatabaseDirectory>(A.save(migrated));
         await migratedHandle.whenReady();
         invariant(migratedHandle.url, 'Migrated document URL not available.');
-        links[id] = new A.RawString(migratedHandle.url);
+        links.set(id, migratedHandle.url);
       }
     }
 
-    const rootHandle = repo.create<DatabaseDirectory>({ ...this.#directory(objects), links, access });
+    if (this.#props.options.root === 'update') {
+      this.#props.rootHandle.change((doc: DatabaseDirectory) => {
+        applyChanges(doc, objects, links);
+      });
+      await this.#props.flush();
+      return;
+    }
+
+    const createEpoch = this.#props.createEpoch;
+    invariant(createEpoch, 'Database cannot create epochs.');
+    const next: DatabaseDirectory = {
+      ...this.#directory({ ...root.objects }),
+      links: { ...root.links },
+    };
+    applyChanges(next, objects, links);
+    const rootHandle = this.#props.repo.create<DatabaseDirectory>(next);
     await rootHandle.whenReady();
     invariant(rootHandle.url, 'Root document URL not available.');
-
-    await this.#props.flush();
-    await this.#props.createEpoch(rootHandle.url);
+    await createEpoch(rootHandle.url);
   }
 
   #assertOpen(): void {
     invariant(!this.#committed, 'Migration transaction already committed.');
   }
 
+  #root(): Doc<DatabaseDirectory> {
+    const root = this.#props.rootHandle.doc();
+    invariant(root, 'Space root document not available.');
+    return root;
+  }
+
   #isStored(id: EntityId): boolean {
-    const { links, objects } = this.#props.root;
+    const { links, objects } = this.#root();
     return links?.[id] != null || objects?.[id] != null;
   }
 
@@ -201,7 +221,7 @@ export class MigrationTransaction implements Migration.Transaction {
   }
 
   async #readStored(id: EntityId): Promise<EntityStructure | undefined> {
-    const { links, objects } = this.#props.root;
+    const { links, objects } = this.#root();
     const link = links?.[id]?.toString();
     if (link == null) {
       return objects?.[id];
@@ -228,6 +248,30 @@ export class MigrationTransaction implements Migration.Transaction {
     return { version: SpaceDocVersion.CURRENT, access: this.#props.access, objects };
   }
 }
+
+/** Writes staged objects and links into a root; `undefined` removes the entry. */
+const applyChanges = (
+  doc: DatabaseDirectory,
+  objects: ReadonlyMap<EntityId, EntityStructure | undefined>,
+  links: ReadonlyMap<EntityId, string | undefined>,
+): void => {
+  for (const [id, structure] of objects) {
+    if (structure) {
+      doc.objects ??= {};
+      doc.objects[id] = structure;
+    } else if (doc.objects) {
+      delete doc.objects[id];
+    }
+  }
+  for (const [id, url] of links) {
+    if (url) {
+      doc.links ??= {};
+      doc.links[id] = new A.RawString(url);
+    } else if (doc.links) {
+      delete doc.links[id];
+    }
+  }
+};
 
 /** Keeps the stored creation time: a migrated object was not created by the migration. */
 const withStoredSystem = (structure: EntityStructure, stored: EntityStructure | undefined): EntityStructure => {

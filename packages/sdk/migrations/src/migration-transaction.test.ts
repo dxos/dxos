@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Migration, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 describe('Migration.Transaction', () => {
@@ -90,6 +90,44 @@ describe('Migration.Transaction', () => {
     await expect
       .poll(async () => (await space.db.query(Filter.type(TestSchema.Expando)).run()).map(({ id }) => id))
       .toEqual([kept.id]);
+  });
+
+  test('root update writes links into the current root without a new epoch', async ({ expect }) => {
+    const space = await createSpace();
+    const task = space.db.add(Obj.make(TestSchema.Task, { title: 'Write tests' }));
+    const removed = space.db.add(Obj.make(TestSchema.Expando, { name: 'removed' }));
+    await space.db.flush();
+    const epochsBefore = await space.internal.getEpochs();
+
+    const migration = await space.db.beginMigration({ root: 'update' });
+    await migration.migrate(task.id, (json) =>
+      Obj.make(TestSchema.Expando, { id: json.id, label: String(json.title) }),
+    );
+    migration.delete(removed.id);
+    migration.add(Obj.make(TestSchema.Expando, { name: 'added' }));
+    await migration.commit();
+
+    await expect
+      .poll(async () =>
+        (await space.db.query(Filter.type(TestSchema.Expando)).run()).map(({ label, name }) => label ?? name).sort(),
+      )
+      .toEqual(['Write tests', 'added']);
+    expect(await space.db.query(Filter.type(TestSchema.Task)).run()).toHaveLength(0);
+    expect(await space.internal.getEpochs()).toHaveLength(epochsBefore.length);
+  });
+
+  test('runMigrations commits a transaction migration', async ({ expect }) => {
+    const space = await createSpace();
+    const removed = space.db.add(Obj.make(TestSchema.Expando, { name: 'removed' }));
+    await space.db.flush();
+
+    await space.db.runMigrations([
+      Migration.defineTransaction(async (transaction) => {
+        transaction.delete(removed.id);
+      }),
+    ]);
+
+    await expect.poll(() => space.db.query(Filter.type(TestSchema.Expando)).run()).toHaveLength(0);
   });
 
   test('a committed transaction cannot be reused', async ({ expect }) => {

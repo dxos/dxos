@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -2041,6 +2041,28 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+
+    // A root write can re-point a loaded object at another document (a migration committed in place),
+    // which no epoch switch will rebind.
+    for (const [objectId, url] of Object.entries(links)) {
+      const boundUrl = this._objects.get(objectId)?.handle?.url;
+      if (boundUrl != null && boundUrl !== url && isValidAutomergeUrl(url)) {
+        this.#rebindWhenReady(this._repoProxy.find<DatabaseDirectory>(url), objectId, this.#generation);
+      }
+    }
+  }
+
+  /** Rebinds a loaded object to the document its root link now names, once that document is ready. */
+  #rebindWhenReady(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle
+      .whenReady()
+      .then(() => {
+        if (this.#isStale(generation) || this._getLinkedDocumentUrl(objectId) !== handle.url) {
+          return;
+        }
+        this._rebindObjects(handle, [objectId]);
+      })
+      .catch((err) => log.catch(err));
   }
 
   private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
