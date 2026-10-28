@@ -877,7 +877,7 @@ feed selection as `local-partial`; a feed window stays remote-only.
 
 `markMilestone` (`@dxos/util`) writes `performance.mark('dxos:<name>')` with DevTools' `marker` data type,
 which draws a vertical line on the Performance timeline. Marks: `worker.spawned`, `worker.started`,
-`worker.services-ready`, `worker.session-ready`, `worker.connected`, `client.initializing`, `client.ready`,
+`worker.services-ready`, `worker.session-ready`, `worker.connected`, `client.initializing`, `client.ready`, `client.services-ready`,
 `identity.ready`, `network.started`, `network.connected`, `spaces.opening`, `spaces.loaded`, `spaces.ready`,
 `replication.connected` (per space), `indexing.started` and `indexing.caught-up`.
 
