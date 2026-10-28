@@ -82,7 +82,6 @@ import {
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
-import { MigrationTransaction } from './migration-transaction.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -152,7 +151,7 @@ export interface EchoDatabase extends Database.Database {
    * Starts staging structural changes that commit atomically as a new space epoch.
    * Committing needs a database constructed with `createEpoch`.
    */
-  beginMigration(): Migration.Transaction;
+  beginMigration(): Promise<Migration.Transaction>;
 
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
@@ -1211,11 +1210,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.getLoadedDocumentHandles();
   }
 
-  beginMigration(): MigrationTransaction {
+  async beginMigration(): Promise<Migration.Transaction> {
     const createEpoch = this.#createEpoch;
     invariant(createEpoch, 'Database cannot create epochs.');
     const root = this._entityManager.getSpaceRootDocHandle().doc();
     invariant(root, 'Space root document not available.');
+    // Loaded on demand: migrations never run during boot.
+    const { MigrationTransaction } = await import('./migration-transaction.ts');
     return new MigrationTransaction({
       repo: this._repo,
       root,

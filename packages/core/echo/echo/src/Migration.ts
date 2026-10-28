@@ -447,7 +447,7 @@ export type CompactResult = {
  *
  * @example
  * ```ts
- * const migration = space.db.beginMigration();
+ * const migration = await space.db.beginMigration();
  * await migration.migrate(contact.id, (json) => Obj.make(ContactV2, { id: json.id, name: String(json.name) }));
  * migration.add(Obj.make(Note, { title: 'Imported' }));
  * migration.delete(legacy.id);

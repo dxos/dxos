@@ -36,7 +36,7 @@ describe('Migration.Transaction', () => {
     const task = space.db.add(Obj.make(TestSchema.Task, { title: 'Write tests' }));
     await space.db.flush();
 
-    const migration = space.db.beginMigration();
+    const migration = await space.db.beginMigration();
     const found = await migration.migrate(task.id, (json) =>
       Obj.make(TestSchema.Expando, { id: json.id, label: String(json.title) }),
     );
@@ -55,7 +55,7 @@ describe('Migration.Transaction', () => {
 
   test('migrate skips objects that are not stored', async ({ expect }) => {
     const space = await createSpace();
-    const migration = space.db.beginMigration();
+    const migration = await space.db.beginMigration();
     const found = await migration.migrate(Obj.ID.random(), () => Obj.make(TestSchema.Expando, {}));
     expect(found).toBe(false);
   });
@@ -65,7 +65,7 @@ describe('Migration.Transaction', () => {
     const organization = Obj.make(TestSchema.Organization, { name: 'DXOS' });
     const person = Obj.make(TestSchema.Person, { name: 'Alice', employer: Ref.make(organization) });
 
-    const migration = space.db.beginMigration();
+    const migration = await space.db.beginMigration();
     migration.add(person);
     expect((await migration.get(organization.id))?.name).toBe('DXOS');
     await migration.commit();
@@ -82,7 +82,7 @@ describe('Migration.Transaction', () => {
     const removed = space.db.add(Obj.make(TestSchema.Expando, { name: 'removed' }));
     await space.db.flush();
 
-    const migration = space.db.beginMigration();
+    const migration = await space.db.beginMigration();
     migration.delete(removed.id);
     expect(await migration.get(removed.id)).toBeUndefined();
     await migration.commit();
@@ -94,7 +94,7 @@ describe('Migration.Transaction', () => {
 
   test('a committed transaction cannot be reused', async ({ expect }) => {
     const space = await createSpace();
-    const migration = space.db.beginMigration();
+    const migration = await space.db.beginMigration();
     await migration.commit();
     expect(() => migration.delete(Obj.ID.random())).toThrow();
   });

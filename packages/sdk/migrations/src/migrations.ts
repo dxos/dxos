@@ -69,7 +69,7 @@ export class Migrations {
       if (targetIndex > currentIndex) {
         const migrations = this.migrations.slice(currentIndex, targetIndex);
         for (const migration of migrations) {
-          const transaction = space.db.beginMigration();
+          const transaction = await space.db.beginMigration();
           await migration.next({ space, migration: transaction });
           await transaction.commit();
           Obj.update(space.properties, (properties) => {

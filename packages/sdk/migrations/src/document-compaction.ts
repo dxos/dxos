@@ -29,7 +29,7 @@ export const compactDocumentsEpochMigration = async (
 ): Promise<CompactDocumentsResult> => {
   invariant(space.state.get() === SpaceState.SPACE_READY, 'Space must be open and ready before compaction.');
 
-  const migration = space.db.beginMigration();
+  const migration = await space.db.beginMigration();
   const { compacted, skipped } = migration.compact(options.objectIds);
   await migration.commit();
 
