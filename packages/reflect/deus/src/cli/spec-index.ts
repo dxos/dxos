@@ -10,16 +10,16 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
-import { indexSpecs } from '../spec-index/index.ts';
+import { indexSpecs, isIndexedSpec } from '../spec-index/index.ts';
 import { git, lines } from './git.ts';
 
-const isSpec = (file: string): boolean => !file.endsWith('.review.mdl') && !file.includes('__fixtures__');
-
-/** Indexes every tracked `.mdl` spec under `root`, leaving out reviews and fixtures. */
+/** Indexes every tracked `.mdl` spec under `root`, leaving out what {@link isIndexedSpec} excludes. */
 export const buildSpecIndex = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const tracked = lines(yield* git(root, '-c', 'core.quotePath=false', 'ls-files', '--', '*.mdl')).filter(isSpec);
+  const tracked = lines(yield* git(root, '-c', 'core.quotePath=false', 'ls-files', '--', '*.mdl')).filter(
+    isIndexedSpec,
+  );
   const files = yield* Effect.forEach(tracked, (file) =>
     fs.readFileString(path.join(root, file)).pipe(
       Effect.map((text) => ({ path: file, text })),

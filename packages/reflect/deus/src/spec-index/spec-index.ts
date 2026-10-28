@@ -20,6 +20,10 @@ export type SpecIndex = {
   duplicates: Record<string, string[]>;
 };
 
+/** Whether the index holds a tracked `.mdl` path; `lang/examples/` is excluded because its files share one id. */
+export const isIndexedSpec = (path: string): boolean =>
+  !path.endsWith('.review.mdl') && !path.includes('__fixtures__') && !path.includes('/deus/lang/examples/');
+
 const specItems = (text: string): string[] => [
   ...new Set(parseMdlBlocks(text).flatMap(({ id, body }) => [...(id ? [id] : []), ...reqIds(body)])),
 ];

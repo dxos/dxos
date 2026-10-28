@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { indexSpecs } from './spec-index.ts';
+import { indexSpecs, isIndexedSpec } from './spec-index.ts';
 
 const spec = (id: string | undefined) =>
   [
@@ -42,5 +42,15 @@ describe('indexSpecs', () => {
   test('skips a file with no frontmatter id', ({ expect }) => {
     const index = indexSpecs([{ path: 'a/SPEC.mdl', text: spec(undefined) }]);
     expect(index).toEqual({ specs: {}, duplicates: {} });
+  });
+});
+
+describe('isIndexedSpec', () => {
+  test('keeps specs and dialects, leaves out reviews, fixtures and lang examples', ({ expect }) => {
+    expect(isIndexedSpec('packages/plugins/plugin-code/PLUGIN.mdl')).toBe(true);
+    expect(isIndexedSpec('packages/reflect/deus/lang/core.mdl')).toBe(true);
+    expect(isIndexedSpec('packages/plugins/plugin-code/PLUGIN.review.mdl')).toBe(false);
+    expect(isIndexedSpec('packages/reflect/deus/src/cli/__fixtures__/SPEC.mdl')).toBe(false);
+    expect(isIndexedSpec('packages/reflect/deus/lang/examples/chess-1.mdl')).toBe(false);
   });
 });
