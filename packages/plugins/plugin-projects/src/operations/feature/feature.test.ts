@@ -213,13 +213,17 @@ feat F-1: Sync
       const first = yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, name: 'A' });
       const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
       const { spec: target } = yield* createSpec.handler({ name: 'Sync', feature: ref(feature) });
-      yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, spec: ref(target) });
+      const changed = text.replace('within a minute', 'within ten seconds');
+      yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text: changed, spec: ref(target) });
       expect(Spec.getContainer(feature)?.id).toBe(first.spec);
       expect(target.features).toHaveLength(0);
-      // The source keeps its document, so deleting the feature cannot take it along with the breakdown.
-      const source = Spec.getContainer(feature);
-      const document = source?.document && (yield* Database.load(source.document));
-      expect(document && Obj.getParent(document)?.id).toBe(first.spec);
+      // The source keeps the path's one document, updated, so deleting the feature cannot take it with the breakdown.
+      const documents = yield* Database.query(Filter.type(SpecDocument.SpecDocument)).run;
+      expect(documents).toHaveLength(1);
+      expect(Obj.getParent(documents[0])?.id).toBe(first.spec);
+      expect(target.document).toBeUndefined();
+      const content = yield* Database.load(documents[0].content);
+      expect(content.content).toBe(changed);
     }).pipe(Effect.provide(testLayer())),
   );
 });
