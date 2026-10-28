@@ -376,6 +376,13 @@ pub fn run() {
                 let window_builder = window_builder.data_store_identifier([
                     0x61, 0x75, 0x74, 0x6f, 0x63, 0x75, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
                 ]);
+                // `TAURI_WEBDRIVER_PROXY` (an `http://host:port` CONNECT proxy) carries all of the webview's traffic, so a
+                // driver can keep a take off the network.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                let window_builder = match std::env::var("TAURI_WEBDRIVER_PROXY") {
+                    Ok(proxy) => window_builder.proxy_url(proxy.parse().expect("TAURI_WEBDRIVER_PROXY is a URL")),
+                    Err(_) => window_builder,
+                };
                 let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
