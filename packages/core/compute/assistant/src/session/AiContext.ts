@@ -278,20 +278,28 @@ export class Binder extends Resource {
       // new item is retried until it does or the wait runs out.
       const deadline = Date.now() + (external !== this.#readExternal ? EXTERNAL_WRITE_WAIT_MS : 0);
       let results: Binding[];
-      for (;;) {
-        try {
-          results = await this.#bindingsQuery.run();
-        } catch (error) {
-          // The query's live subscription already keeps the bindings current, so a re-read that fails
-          // (an index query timing out under load) costs freshness, not correctness — and a caller
-          // running this between agent turns would otherwise fail the whole agent process on it.
-          log.warn('bindings sync failed; keeping the current bindings', { error });
-          return;
-        }
-        if (results.length > this.#readItems || Date.now() >= deadline) {
+      try {
+        results = await this.#bindingsQuery.run();
+      } catch (error) {
+        // The query's live subscription already keeps the bindings current, so a re-read that fails
+        // (an index query timing out under load) costs freshness, not correctness — and a caller
+        // running this between agent turns would otherwise fail the whole agent process on it.
+        log.warn('bindings sync failed; keeping the current bindings', { error });
+        return;
+      }
+      while (results.length <= this.#readItems && Date.now() < deadline) {
+        await EffectEx.runPromise(Effect.sleep(EXTERNAL_WRITE_POLL_MS));
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
           break;
         }
-        await EffectEx.runPromise(Effect.sleep(EXTERNAL_WRITE_POLL_MS));
+        // A retry gets only the time left, so a slow index cannot hold the sync past the deadline; one that
+        // fails leaves the last read standing.
+        const retry = await this.#bindingsQuery.run({ timeout: remaining }).catch(() => undefined);
+        if (!retry) {
+          break;
+        }
+        results = retry;
       }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
