@@ -603,6 +603,14 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
   // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
   // and range table have no equivalent left.
   const model = useFeedModel(messages, { stops: 'prompt' });
+  // A feed query re-emits only when its set of ids changes, so an edit in place (a permission card
+  // recording its answer) reaches the row only through the object's own subscription.
+  useEffect(() => {
+    const unsubscribes = messages
+      .filter((message) => Obj.isObject(message))
+      .map((message) => Obj.subscribe(message, () => model.update(message.id)));
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+  }, [model, messages]);
   const streaming = useAtomValue(getChatModelState(chatModel).streaming);
   useEffect(() => {
     // The answer streams above any prompts still waiting for the agent, which end the thread.
