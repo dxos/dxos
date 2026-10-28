@@ -96,6 +96,11 @@
       "types": "./dist/types/src/types/AnimatorCapabilities.d.ts",
       "import": "./dist/lib/AnimatorCapabilities.mjs"
     },
+    "./AnimatorEvents": {
+      "source": "./src/types/AnimatorEvents.ts",
+      "types": "./dist/types/src/types/AnimatorEvents.d.ts",
+      "import": "./dist/lib/AnimatorEvents.mjs"
+    },
     "./AnimatorOperation": {
       "source": "./src/types/AnimatorOperation.ts",
       "types": "./dist/types/src/types/AnimatorOperation.d.ts",
@@ -115,6 +120,9 @@
       ],
       "AnimatorCapabilities": [
         "dist/types/src/types/AnimatorCapabilities.d.ts"
+      ],
+      "AnimatorEvents": [
+        "dist/types/src/types/AnimatorEvents.d.ts"
       ],
       "AnimatorOperation": [
         "dist/types/src/types/AnimatorOperation.d.ts"

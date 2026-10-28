@@ -18,6 +18,7 @@ export default defineConfig({
     translations: 'src/translations.ts',
     Animation: 'src/types/Animation.ts',
     AnimatorCapabilities: 'src/types/AnimatorCapabilities.ts',
+    AnimatorEvents: 'src/types/AnimatorEvents.ts',
     AnimatorOperation: 'src/types/AnimatorOperation.ts',
     AnimatorOperationHandlerSet: 'src/operations/AnimatorOperationHandlerSet.ts',
     types: 'src/types/index.ts',
