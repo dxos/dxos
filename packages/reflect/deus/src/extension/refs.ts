@@ -11,7 +11,8 @@ export type SpecRef = { id: string; item: string; from: number; to: number };
 export type Dependency = { id: string; via: 'uses' | 'dependsOn'; from: number; to: number };
 
 // The lookbehind rejects `github:org/repo/file.mdl#X` keys and URL fragments; the final `\w` drops a sentence period.
-const REF = /(?<![\w/:.#-])([a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+)#([\w$.-]*\w)/g;
+// Segments after the first may be camelCase, as plugin ids are (`org.dxos.plugin.fileSystem`).
+const REF = /(?<![\w/:.#-])([a-z][a-z0-9-]*(?:\.[a-zA-Z0-9-]+)+)#([\w$.-]*\w)/g;
 
 /**
  * Calls `visit` for each line of prose and of `mdl` fences, with the line's offset in the text.

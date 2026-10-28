@@ -23,6 +23,12 @@ describe('findSpecRefs', () => {
     expect(findSpecRefs('see org.a.b#Foo.').map(({ item }) => item)).toEqual(['Foo']);
   });
 
+  test('accepts camelCase segments of a plugin id', ({ expect }) => {
+    expect(findSpecRefs('the org.dxos.plugin.fileSystem#FileSystem service').map(({ id }) => id)).toEqual([
+      'org.dxos.plugin.fileSystem',
+    ]);
+  });
+
   test('ignores github keys and URLs', ({ expect }) => {
     expect(findSpecRefs('github:dxos/dxos/lang/review.mdl#X and https://dxos.org#top')).toEqual([]);
   });
