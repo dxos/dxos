@@ -17,7 +17,7 @@ type Handles = {
 };
 
 // Promises, not Effects: the update callback has to hand the browser one.
-const startTransition = (types: string[]) =>
+const startTransition = () =>
   Effect.try(() => {
     let signalCaptured = () => {};
     let settle = () => {};
@@ -32,7 +32,6 @@ const startTransition = (types: string[]) =>
         signalCaptured();
         return settled;
       },
-      types,
     });
     // A transition superseded by the next one rejects `ready` with an AbortError; its update still runs, so only the
     // animation was dropped.
@@ -53,16 +52,13 @@ const startTransition = (types: string[]) =>
  * captured. Keep the wrapped effect short: rendering is frozen until the callback settles, and the
  * browser abandons the transition after a few seconds.
  */
-export const withViewTransition = <A, E, R>(
-  effect: Effect.Effect<A, E, R>,
-  types: string[] = [],
-): Effect.Effect<A, E, R> =>
+export const withViewTransition = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
   Effect.suspend(() => {
     if (!canTransition()) {
       return effect;
     }
 
-    return Effect.option(startTransition(types)).pipe(
+    return Effect.option(startTransition()).pipe(
       Effect.flatMap(
         Option.match({
           onNone: () => effect,

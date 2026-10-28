@@ -74,24 +74,22 @@ export const applyActive = Effect.fnUntraced(function* (
   const changed =
     !sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments);
 
-  yield* Effect.sync(() => {
-    // The projection re-applies the same URL, so writing unconditionally would re-render every plank of
-    // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
-    // mounts its plank.
-    if (changed || scrollIntoView !== undefined) {
-      registry.update(ephemeralAtom, (current) => ({
-        ...current,
-        open: { ...current.open, [workspace]: { ...current.open[workspace], active, inactive, segments } },
-        ...(scrollIntoView !== undefined
-          ? { scrollIntoView: { id: scrollIntoView, ...(intent?.focus !== undefined ? { focus: intent.focus } : {}) } }
-          : {}),
-      }));
-    }
-    const stored = registry.get(stateAtom).decks[workspace];
-    if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
-      registry.update(stateAtom, (current) => updateActiveDeck(current, { companionPlanks, plankNames }));
-    }
-  });
+  // The projection re-applies the same URL, so writing unconditionally would re-render every plank of
+  // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
+  // mounts its plank.
+  if (changed || scrollIntoView !== undefined) {
+    registry.update(ephemeralAtom, (current) => ({
+      ...current,
+      open: { ...current.open, [workspace]: { ...current.open[workspace], active, inactive, segments } },
+      ...(scrollIntoView !== undefined
+        ? { scrollIntoView: { id: scrollIntoView, ...(intent?.focus !== undefined ? { focus: intent.focus } : {}) } }
+        : {}),
+    }));
+  }
+  const stored = registry.get(stateAtom).decks[workspace];
+  if (!sameList(stored?.companionPlanks, companionPlanks) || !sameMap(stored?.plankNames, plankNames)) {
+    registry.update(stateAtom, (current) => updateActiveDeck(current, { companionPlanks, plankNames }));
+  }
 
   return toAttend;
 });
