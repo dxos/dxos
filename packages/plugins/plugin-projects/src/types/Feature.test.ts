@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, PullRequest, SpecDocument, Task } from '@dxos/types';
 
@@ -32,7 +33,7 @@ describe('Feature', () => {
         Feature.Feature,
         Feature.DependsOn,
         Feature.Implements,
-        Showcase.Showcase,
+        Markdown.Document,
         Showcase.Demonstrates,
         Task.Task,
         Text.Text,
@@ -106,7 +107,8 @@ describe('Feature', () => {
     const task = db.add(Task.make({ title: 'Send through Gmail' }));
     db.add(Feature.makeDependsOn({ [Relation.Source]: compose, [Relation.Target]: tokens }));
     db.add(Feature.makeImplements({ [Relation.Source]: task, [Relation.Target]: compose }));
-    const showcase = db.add(Showcase.make({ name: 'Sending a reply', content: 'Reply from the inbox.' }));
+    // Any object can be the source; in the app it is a presenter deck, whose type this plugin cannot import.
+    const showcase = db.add(Markdown.make({ name: 'Sending a reply', content: 'Reply from the inbox.' }));
     db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: compose }));
     db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: task }));
     await db.flush();
@@ -119,7 +121,6 @@ describe('Feature', () => {
 
     const showcases = await db.query(Query.select(Filter.id(task.id)).targetOf(Showcase.Demonstrates).source()).run();
     expect(showcases.map((showcase) => showcase.id)).toEqual([showcase.id]);
-    expect((await showcase.content.load()).content).toBe('Reply from the inbox.');
   });
 
   test('an edge that would close a cycle is found with its path', async ({ expect }) => {

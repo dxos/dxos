@@ -567,7 +567,7 @@ const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
       {feature.showcases.map((showcase) => (
         <Card.Row
           key={showcase.id}
-          leading={<RowIcon icon='ph--presentation-chart--regular' />}
+          leading={<RowIcon icon='ph--presentation--regular' />}
           onClick={open({ type: 'object', id: showcase.id })}
         >
           <Card.Text truncate>{showcase.name}</Card.Text>

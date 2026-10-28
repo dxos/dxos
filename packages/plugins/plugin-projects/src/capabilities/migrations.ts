@@ -9,7 +9,7 @@ import * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { Feature, LegacyFeature, Spec } from '#types';
+import { Feature, LegacyFeature, Showcase, Spec } from '#types';
 
 /**
  * `Feature` 0.1.0 → 0.2.0: `in-progress` leaves the status (work is read from linked tasks), and each subfeature record
@@ -196,6 +196,10 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(ClientCapabilities.Migration, [featureSubfeatures, makeFeatureSpecs()]);
+    return Capability.contribute(ClientCapabilities.Migration, [
+      featureSubfeatures,
+      makeFeatureSpecs(),
+      Showcase.demonstratesMigration,
+    ]);
   }),
 );

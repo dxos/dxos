@@ -8,7 +8,7 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature, Showcase, Spec } from '#types';
+import { Feature, Spec } from '#types';
 
 export const translations = [
   {
@@ -53,16 +53,6 @@ export const translations = [
         'rename-object.label': 'Rename feature',
         'delete-object.label': 'Delete feature',
         'object-deleted.label': 'Feature deleted',
-      },
-      [Type.getTypename(Showcase.Showcase)]: {
-        'typename.label': 'Showcase',
-        'typename.label_zero': 'Showcases',
-        'typename.label_one': 'Showcase',
-        'typename.label_other': 'Showcases',
-        'object-name.placeholder': 'New showcase',
-        'rename-object.label': 'Rename showcase',
-        'delete-object.label': 'Delete showcase',
-        'object-deleted.label': 'Showcase deleted',
       },
       [meta.profile.key]: {
         'plugin.name': 'Projects',
@@ -154,10 +144,6 @@ export const translations = [
         'requirement-editor.text.label': 'Requirement',
         'requirement-editor.remove.label': 'Remove requirement',
         'feature-article.relations.label': 'Relations',
-        'showcase-article.targets.label': 'Demonstrates',
-        'showcase-article.artifacts.label': 'Artifacts',
-        'showcase-card.artifacts.label_one': '{{count}} artifact',
-        'showcase-card.artifacts.label_other': '{{count}} artifacts',
         'feature-map.mode.label': 'View',
         'feature-map.mode.canvas.label': 'Canvas',
         'feature-map.mode.kanban.label': 'Kanban',
