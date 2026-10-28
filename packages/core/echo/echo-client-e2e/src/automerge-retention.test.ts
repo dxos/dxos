@@ -148,9 +148,10 @@ describe('automerge object retention', { tags: ['memory'] }, () => {
 
     report('after collection', checkpoints, SCALE);
     expect(removed.alive).toBe(0);
-    // The client holds nothing for the space beyond its root document.
+    // The client holds nothing for the space in Automerge: its links-only root stays unloaded, read from JSON.
     expect(removed.stats?.loaded.client.objects).toBe(0);
-    expect(removed.stats?.loaded.client.documents).toBe(1);
+    expect(removed.stats?.loaded.client.documents).toBe(0);
+    expect(db.getSpaceRootDocHandle().state).toBe('passive');
     // A sanity ceiling on the heap, not the measurement: the objects cost something to hold, and
     // most of it comes back. See the file comment on why this is not a tight budget.
     expect(removed.heapUsed - baseline.heapUsed).toBeLessThan(held.heapUsed - baseline.heapUsed);
