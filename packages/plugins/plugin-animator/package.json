@@ -86,6 +86,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
     "./AnimatorPlugin": {
       "source": "./src/AnimatorPlugin.ts",
       "types": "./dist/types/src/AnimatorPlugin.d.ts",
@@ -131,6 +136,9 @@
       ],
       "AnimatorOperation": [
         "dist/types/src/types/AnimatorOperation.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
       ]
     }
   },

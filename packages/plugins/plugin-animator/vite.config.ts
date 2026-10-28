@@ -22,6 +22,7 @@ export default defineConfig({
     AnimatorEvents: 'src/types/AnimatorEvents.ts',
     AnimatorOperation: 'src/types/AnimatorOperation.ts',
     AnimatorOperationHandlerSet: 'src/operations/AnimatorOperationHandlerSet.ts',
+    testing: 'src/testing/index.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
