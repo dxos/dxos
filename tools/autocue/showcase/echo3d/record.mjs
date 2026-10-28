@@ -8,15 +8,17 @@
  * into ffmpeg. A live screencast drops frames, so camera moves would judder; this cannot.
  *
  *   node record.mjs [--out echo3d.mp4] [--fps 60] [--url http://localhost:7420] [--width 1920] [--height 1080]
- *     [--from blank] [--to company-fills] [--supersample 1]
+ *     [--from blank] [--to company-fills] [--supersample 1] [--holds holds.json]
  *
- * Each slide holds for HOLDS[id] seconds from the moment it is entered, then the next one starts. Sound is not
+ * Each slide holds for HOLDS[id] seconds from the moment it is entered, then the next one starts; `--holds` names a
+ * JSON file of `{ id: seconds }` that overrides them, so a voice-over can set its own pace. Sound is not
  * recorded: the page synthesises it live, so it would be laid in afterwards.
  */
 
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
@@ -31,6 +33,7 @@ const { values } = parseArgs({
     // Pixel density the page renders at; 2 renders at twice the size and scales down, smoothing edges, but thins
     // one-pixel lines (the lattice) and takes about four times as long.
     supersample: { type: 'string', default: '1' },
+    holds: { type: 'string' },
   },
 });
 
@@ -67,6 +70,9 @@ const HOLDS = {
   'company-fills': 10,
 };
 const DEFAULT_HOLD = 5;
+if (values.holds) {
+  Object.assign(HOLDS, JSON.parse(readFileSync(values.holds, 'utf8')));
+}
 
 const fps = Number(values.fps);
 const width = Number(values.width);
