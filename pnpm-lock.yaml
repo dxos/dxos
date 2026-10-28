@@ -8440,6 +8440,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      esbuild-wasm:
+        specifier: 'catalog:'
+        version: 0.28.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*

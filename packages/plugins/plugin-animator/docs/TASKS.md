@@ -1,6 +1,6 @@
 # plugin-animator — Tasks
 
-_Resume: Phase 2 built; next is the Phase 2 follow-ups below, then Phase 3. Uncommitted: none. Last: canvas stage contributed, `View.timeline` removed._
+_Resume: Phase 3a built (effects, overlays, screen text); next is Phase 3b, the spacetime stage. Uncommitted: none. Last: canvas stage binds and draws `2d` effects._
 
 ## Phase 0: Review and design
 
@@ -55,13 +55,38 @@ paths), design the plugin, and turn the approved design into an MDL spec.
 - [ ] Story for the article over the canvas stage, and storybook play tests (`AnimatorArticle`, react-ui-canvas
       `Animation`, plugin-canvas `EndCard`) — not run in this phase.
 - [ ] Dissolve plays as a fade until a stage can draw two shots at once.
-- [ ] Operation keys of the Phase 3+ operations (`effect.create`, `render`, …) still use the dotted form in PLUGIN.mdl;
-      rename to the verbNoun shape when built (D-22).
+- [x] Effect operation keys renamed to the verbNoun shape (D-29); `Render` keeps its single-word key.
 
-## Phase 3: 3D
+## Phase 3a: Effects and screen text
 
-- [ ] Spacetime stage (clock-driven Babylon render, annotations on `Model.Object`).
-- [ ] `3d` and `overlay` effect renderers; built-in packet flow, burst, conversations, merge.
+- [x] Renderer-neutral effect items in `@dxos/animation` (`Shape2D`, `Instance3D`, `OverlayItem` and their guards);
+      the canvas `Shape` extends `Shape2D`; `beatTimes` shared by the script compiler and screen text.
+- [x] Effect runtime in plugin-animator (`src/effects`): `EffectCore` (worker and in-process), `EffectHost`, the
+      effect worker entry (`@dxos/plugin-animator/effect-worker`), bindings sampled ahead from `StageDef.bind` (D-25),
+      keyed parameters, and `checkEffect`.
+- [x] Built-ins as installable sources: packet flow (`2d`, `3d`), burst (`2d`, `3d`), conversations and callout
+      (`overlay`); `InstallEffects`.
+- [x] Operations `CreateEffect`, `UpdateEffect`, `CheckEffect`, `PlaceEffect`, `InstallEffects`.
+- [x] Overlay layer above the stage, anchored through the stage's `StageProjection` (D-27).
+- [x] Screen text (F-8.3, F-8.5): captions with staggered lines, side title, image headline, curtain; beats and
+      `Shot.screen`; opacity computed from time (D-28).
+- [x] Canvas stage: `bind`, `2d` effects drawn through the shared `ShapeLayer` under the camera, projection reported.
+- [x] Story: `AnimatorArticle` `Effects` over the dots stage (packet flow, conversations, caption, side title,
+      curtain). Not run in this phase.
+
+### Phase 3a follow-ups
+
+- [ ] Export handshake with effects: `onFrameDrawn` should wait for the effect frame of the same `t` (Phase 4).
+- [ ] Effects in the article UI: an "Add effect" action, effect rows on the timeline, paused-effect warnings.
+- [ ] Canvas links bind as straight centre-to-centre lines; bind the routed path where the router can run headless.
+- [ ] Label morph (echo3d) belongs to the stage's labels (F-8.2), not to an effect; do it with Phase 3b.
+- [ ] Storybook play test for the `Effects` story and a check that the effect worker loads from the bundle.
+
+## Phase 3b: 3D
+
+- [ ] Spacetime stage (clock-driven Babylon render, annotations on `Model.Object`), implementing `bind`,
+      `onProjection` and an instanced-mesh layer for `3d` frames.
+- [ ] Merge as a 3D visual where the script beat alone is not enough.
 
 ## Phase 4: Export and studio
 

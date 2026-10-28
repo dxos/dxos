@@ -16,7 +16,7 @@ export const DEFAULT_FPS = 30;
 export const DEFAULT_SHOT_DURATION = 5;
 
 //
-// Effect (PLUGIN.mdl `type Effect`); schema only until the effect operations land (Phase 3).
+// Effect (PLUGIN.mdl `type Effect`).
 //
 
 export const EffectRenderer = Schema.Literals(['2d', '3d', 'overlay']);
@@ -37,6 +37,14 @@ export class Effect extends Type.makeObject<Effect>(DXN.make('org.dxos.type.anim
     Annotation.IconAnnotation.set({ icon: 'ph--sparkle--regular', hue: 'violet' }),
   ),
 ) {}
+
+export type MakeEffectProps = Pick<Effect, 'name' | 'description' | 'renderer' | 'source'> & {
+  params: Readonly<Record<string, unknown>>;
+};
+
+/** A new Effect at version 1; the parameter schema is copied so the stored object owns it. */
+export const makeEffect = ({ params, ...props }: MakeEffectProps): Effect =>
+  Obj.make(Effect, { ...props, params: JSON.parse(JSON.stringify(params)), version: 1 });
 
 /** An effect placed in a shot with its parameters. */
 export const EffectInstance = Schema.Struct({
@@ -74,9 +82,46 @@ export const Beat = Schema.Struct({
       remove: Schema.optional(Schema.Array(Schema.String)),
     }),
   ),
+  /** Replaces the caption on screen; an empty string clears it. Lines after the first fade in one by one. */
   caption: Schema.optional(Schema.String),
+  /** An image (URL) shown as the caption's headline in place of its first line. */
+  captionImage: Schema.optional(Schema.String),
+  /** The caption's colour (CSS); white when unset. */
+  captionColor: Schema.optional(Schema.String),
+  /** Replaces the side title (large, middle left); an empty string clears it. */
+  sideTitle: Schema.optional(Schema.String),
+  /** A full-frame curtain from the beat's start: fades to `color` over `fade`, holds for `hold`, and fades back. */
+  curtain: Schema.optional(
+    Schema.Struct({
+      color: Schema.optional(Schema.String),
+      fade: Schema.optional(Schema.Number),
+      hold: Schema.optional(Schema.Number),
+    }),
+  ),
 });
 export type Beat = Schema.Schema.Type<typeof Beat>;
+
+export const ScreenTextKind = Schema.Literals(['caption', 'side-title', 'curtain']);
+export type ScreenTextKind = Schema.Schema.Type<typeof ScreenTextKind>;
+
+/**
+ * Text or a curtain the animator draws above any stage from `at` for `duration` seconds (F-8.3, F-8.5): a caption
+ * (a headline, or `image`, then lines that fade in `stagger` seconds apart), a side title, or a curtain in `color`.
+ */
+export const ScreenText = Schema.Struct({
+  kind: ScreenTextKind,
+  at: Schema.Number,
+  duration: Schema.Number,
+  /** Lines separated by newlines. */
+  text: Schema.optional(Schema.String),
+  image: Schema.optional(Schema.String),
+  color: Schema.optional(Schema.String),
+  /** Seconds to fade in and to fade out. */
+  fade: Schema.optional(Schema.Number),
+  /** Seconds between a caption's lines appearing. */
+  stagger: Schema.optional(Schema.Number),
+});
+export type ScreenText = Schema.Schema.Type<typeof ScreenText>;
 
 export const TransitionKind = Schema.Literals(['cut', 'fade', 'dissolve']);
 export type TransitionKind = Schema.Schema.Type<typeof TransitionKind>;
@@ -107,6 +152,8 @@ export const Shot = Schema.Struct({
   effects: Schema.Array(EffectInstance),
   transition: Schema.optional(Transition),
   markers: Schema.optional(Schema.Array(Marker)),
+  /** Screen text placed by hand; a script's caption, side title and curtain beats add to it. */
+  screen: Schema.optional(Schema.Array(ScreenText)),
 });
 export type Shot = Schema.Schema.Type<typeof Shot>;
 

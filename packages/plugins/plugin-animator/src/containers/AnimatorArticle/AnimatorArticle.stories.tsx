@@ -11,6 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { BUILTIN_EFFECTS } from '#effects';
 import { translations } from '#translations';
 import { Animation, AnimatorCapabilities } from '#types';
 
@@ -45,8 +46,62 @@ const makeAnimation = () => {
   return Obj.make(Animation.Animation, { name: 'Dots', fps: 30, shots: [first, second] });
 };
 
-const DefaultStory = () => {
-  const animation = useMemo(() => makeAnimation(), []);
+/** A built-in effect as an object the story's shots can reference. */
+const builtin = (name: string) => {
+  const effect = BUILTIN_EFFECTS.find((effect) => effect.name === name);
+  if (!effect) {
+    throw new Error(`No built-in effect ${name}.`);
+  }
+  return Animation.makeEffect(effect);
+};
+
+/**
+ * One shot over linked dots with effects and screen text: packet flow along the links (2d), conversations beside the
+ * dots (overlay), a caption whose lines stagger in, a side title, and a curtain fading to black and back.
+ */
+const makeEffectsAnimation = () => {
+  const dots = makeDots(
+    [
+      { id: 'hub', label: 'Hub', x: 0, y: 0, color: '#8b5cf6' },
+      { id: 'a', label: 'A', x: -30, y: -20, color: '#f97316' },
+      { id: 'b', label: 'B', x: 30, y: -20, color: '#06b6d4' },
+      { id: 'c', label: 'C', x: 0, y: 32, color: '#22c55e' },
+    ],
+    [
+      { id: 'hub-a', from: 'hub', to: 'a' },
+      { id: 'hub-b', from: 'hub', to: 'b' },
+      { id: 'hub-c', from: 'hub', to: 'c' },
+    ],
+  );
+  const flow = builtin('Packet flow');
+  const conversations = builtin('Conversations');
+  const shot: Animation.Shot = {
+    ...Animation.makeShot(Ref.make(dots), 10),
+    effects: [
+      { id: 'flow', effect: Ref.make(flow), params: { count: 6, speed: 0.8, alert: 0.15, both: true }, seed: 1 },
+    ],
+    script: [
+      {
+        duration: 1,
+        caption: 'Spaces talk\nPackets flow along the links\nPeople and agents chat',
+        sideTitle: 'ECHO\nNetwork',
+      },
+      {
+        at: 2,
+        duration: 1,
+        effects: { add: [{ id: 'chat', effect: Ref.make(conversations), params: { rate: 2, max: 3 }, seed: 2 }] },
+      },
+      { at: 5, duration: 1, caption: '', sideTitle: '' },
+      { at: 7, duration: 1, curtain: { color: '#000000', fade: 0.75, hold: 0.5 } },
+    ],
+  };
+  return Obj.make(Animation.Animation, { name: 'Effects', fps: 30, shots: [shot] });
+};
+
+type StoryProps = { effects?: boolean };
+
+const DefaultStory = ({ effects }: StoryProps) => {
+  const animation = useMemo(() => (effects ? makeEffectsAnimation() : makeAnimation()), [effects]);
   return <AnimatorArticle role='article' attendableId='story' subject={animation} />;
 };
 
@@ -69,3 +124,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Effects: Story = { args: { effects: true } };

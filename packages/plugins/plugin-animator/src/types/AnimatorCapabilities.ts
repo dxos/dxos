@@ -6,7 +6,17 @@
 
 import type { ComponentType } from 'react';
 
-import type { AnimatableKind, Arranger, Clock, ScriptProperties } from '@dxos/animation';
+import type {
+  AnimatableKind,
+  Arranger,
+  Clock,
+  EffectStatus,
+  Instance3D,
+  OverlayItem,
+  ScriptProperties,
+  Shape2D,
+  Vec3,
+} from '@dxos/animation';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 
@@ -41,12 +51,36 @@ export type Sample = {
   camera?: Record<string, unknown>;
 };
 
-/** What one effect drew at one time; filled by the effect runtime in Phase 3. */
+/** What one effect drew at one time, in its renderer's item type (DESIGN.md §6). */
 export type EffectFrame = {
   instance: string;
-  renderer: Animation.EffectRenderer;
-  items: unknown[];
-};
+  /** Running, or paused by an error or the step budget, with the reason. */
+  status?: EffectStatus;
+  /** Mean milliseconds per step over the recent window. */
+  stepMs?: number;
+} & (
+  | { renderer: '2d'; items: Shape2D[] }
+  | { renderer: '3d'; items: Instance3D[] }
+  | { renderer: 'overlay'; items: OverlayItem[] }
+);
+
+/**
+ * A target as effects see it, in the stage's coordinates: a 2D stage sets `z` to 0. `radius` is the target's extent
+ * from its centre; `opacity` lets an effect fade with its target.
+ */
+export type BoundObject = { id: string; position: Vec3; radius: number; color?: string; opacity: number };
+
+/** A link between two targets as effects see it: its route as a polyline from `from` to `to`. */
+export type BoundLink = { id: string; from: string; to: string; points: Vec3[] };
+
+/** What effects may bind to in a stage at one time: its objects by id and its links. */
+export type StageBinding = { objects: Record<string, BoundObject>; links: BoundLink[] };
+
+/** A target projected to the screen: its centre and radius in pixels from the stage element's top left. */
+export type ProjectedAnchor = { x: number; y: number; radius: number };
+
+/** Where the stage drew its targets for one time, which overlay effects anchor to. */
+export type StageProjection = { t: number; anchors: Record<string, ProjectedAnchor> };
 
 /** A stage edit made at a time, which the animator writes as keys (F-2.5). */
 export type StageEdit = {
@@ -65,6 +99,8 @@ export type StageProps = {
   onFrameDrawn?: (t: number) => void;
   /** Reports an edit made at the sample's time; absent while the animation is not editable. */
   onEdit?: (edit: StageEdit) => void;
+  /** Reports where the targets are on screen once a frame is drawn, for the overlay layer above the stage. */
+  onProjection?: (projection: StageProjection) => void;
 };
 
 /** A stage: how one type of stage object is listed, scripted and drawn (DESIGN.md §7). */
@@ -79,6 +115,11 @@ export type StageDef = {
   renderers: Animation.EffectRenderer[];
   /** Arrangers a script's `layout` may name, by kind (F-3.3). */
   layouts?: Record<string, Arranger>;
+  /**
+   * The stage's targets and links at a sample, in the stage's coordinates, for effects to bind to. Pure of the view:
+   * the animator calls it ahead of time across a shot, and effects read it in a worker.
+   */
+  bind?: (stage: Obj.Unknown, sample: Sample) => StageBinding;
   /** The property names a script writes, where they differ from `position`, `scale` and `opacity`. */
   scriptProperties?: Partial<ScriptProperties>;
   /** Draws the stage at a time; sampled values apply to a view, never to the object. */

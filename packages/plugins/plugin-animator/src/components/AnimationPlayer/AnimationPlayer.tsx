@@ -4,9 +4,9 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { type Clock } from '@dxos/animation';
+import { type Clock, type ModuleCompiler } from '@dxos/animation';
 import { type Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { TimelineBar, useClock } from '@dxos/react-ui-animation';
@@ -16,21 +16,24 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { createEffectWorker, effectCompiler } from '#effects';
 import { meta } from '#meta';
 import {
   type CompiledShot,
   animationDuration,
-  captionAt,
   compileShot,
   locateShot,
   sampleTimeline,
+  screenAt,
+  screenSpans,
   shotSpans,
   stageContext,
 } from '#model';
 import { type Animation, AnimatorCapabilities } from '#types';
 
-/** No effect frames: effects are drawn from Phase 3. */
-const NO_EFFECTS: AnimatorCapabilities.EffectFrame[] = [];
+import { OverlayLayer } from '../OverlayLayer/index.ts';
+import { ScreenLayer } from '../ScreenLayer/index.ts';
+import { useEffectFrames } from './use-effect-frames.ts';
 
 export type AnimationPlayerProps = Util.ThemedClassName<{
   animation: Obj.Snapshot<Animation.Animation> | Animation.Animation;
@@ -38,13 +41,31 @@ export type AnimationPlayerProps = Util.ThemedClassName<{
   clock: Clock;
   /** An edit the stage made at a time in a shot; absent, the stage is shown read-only. */
   onEdit?: (shot: string, t: number, edit: AnimatorCapabilities.StageEdit) => void;
+  /** Compiles effect sources; esbuild-wasm by default. */
+  compileEffect?: ModuleCompiler;
+  /** The worker effects run in; the bundled effect worker by default, in-process when null. */
+  createEffectWorker?: (() => Worker) | null;
 }>;
+
+/** The same projection as before, by value, so a stage reporting every frame re-renders only on a move. */
+const sameProjection = (
+  previous: AnimatorCapabilities.StageProjection | undefined,
+  next: AnimatorCapabilities.StageProjection,
+) => previous !== undefined && JSON.stringify(previous.anchors) === JSON.stringify(next.anchors);
 
 /**
  * Plays an animation: the stage of the shot at the clock's time, sampled at the time in that shot, above the shots and
  * the timeline bar. The clock is the animation's; this view owns its play loop (F-6.1).
  */
-export const AnimationPlayer = ({ classNames, animation, stages, clock, onEdit }: AnimationPlayerProps) => {
+export const AnimationPlayer = ({
+  classNames,
+  animation,
+  stages,
+  clock,
+  onEdit,
+  compileEffect = effectCompiler,
+  createEffectWorker: createWorker = createEffectWorker,
+}: AnimationPlayerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const duration = animationDuration(animation.shots);
@@ -87,7 +108,23 @@ export const AnimationPlayer = ({ classNames, animation, stages, clock, onEdit }
     }
     return [...times].sort((left, right) => left - right);
   }, [compiled, located?.start]);
-  const caption = compiled && located ? captionAt(compiled.captions, located.local) : undefined;
+  const screen = useMemo(() => (shot ? screenSpans(shot) : []), [shot]);
+  const screenFrame = useMemo(() => screenAt(screen, located?.local ?? 0), [screen, located?.local]);
+  const effects = useEffectFrames({
+    shot,
+    compiled,
+    stage,
+    object,
+    t: located?.local ?? 0,
+    compile: compileEffect,
+    createWorker: createWorker ?? undefined,
+  });
+  const [projection, setProjection] = useState<AnimatorCapabilities.StageProjection>();
+  const handleProjection = useCallback(
+    (next: AnimatorCapabilities.StageProjection) =>
+      setProjection((previous) => (sameProjection(previous, next) ? previous : next)),
+    [],
+  );
 
   const handlePlayingChange = useCallback((next: boolean) => registry.set(clock.playing, next), [registry, clock]);
   const handleTimeChange = useCallback((next: number) => registry.set(clock.time, next), [registry, clock]);
@@ -110,16 +147,17 @@ export const AnimationPlayer = ({ classNames, animation, stages, clock, onEdit }
         ) : !StageComponent || !sample ? (
           <Message>{t('no-stage.message')}</Message>
         ) : (
-          <StageComponent stage={object} sample={sample} effects={NO_EFFECTS} clock={clock} onEdit={handleEdit} />
+          <StageComponent
+            stage={object}
+            sample={sample}
+            effects={effects}
+            clock={clock}
+            onEdit={handleEdit}
+            onProjection={handleProjection}
+          />
         )}
-        {caption && (
-          <div
-            className='absolute inset-x-0 bottom-4 flex justify-center pointer-events-none'
-            data-testid='animator.caption'
-          >
-            <span className='px-3 py-1 rounded-sm bg-base-surface text-fg'>{caption}</span>
-          </div>
-        )}
+        <OverlayLayer frames={effects} projection={projection} />
+        <ScreenLayer frame={screenFrame} />
       </div>
       {spans.length > 1 && (
         <Toolbar.Root classNames='shrink-0'>

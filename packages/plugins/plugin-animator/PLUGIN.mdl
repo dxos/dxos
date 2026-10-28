@@ -75,6 +75,7 @@ type Shot
     effects: EffectInstance[]
     transition?: Transition
     markers?: Marker[]
+    screen?: ScreenText[]           # screen text placed by hand; beats add more
 ```
 
 ```mdl
@@ -93,7 +94,28 @@ type Beat
     merge?: { from: string[], into: string }
     camera?: Record<string, unknown>
     effects?: { add?: EffectInstance[], remove?: string[] }
-    caption?: string
+    caption?: string                # replaces the caption; lines after the first stagger in; '' clears it
+    captionImage?: string           # an image URL in place of the caption's headline
+    captionColor?: string
+    sideTitle?: string              # replaces the side title; '' clears it
+    curtain?: { color?: string, fade?: number, hold?: number }   # fades to colour, holds, fades back
+```
+
+```mdl
+type ScreenText
+  desc: >
+    Text or a curtain the animator draws above any stage over a span of the shot: a caption (a headline, or an image in
+    its place, then lines fading in `stagger` seconds apart), a side title, or a full-frame curtain. Every opacity is a
+    function of the time, so an exported frame matches playback.
+  fields:
+    kind: caption | side-title | curtain
+    at: number
+    duration: number
+    text?: string                   # lines separated by newlines
+    image?: string
+    color?: string
+    fade?: number                   # seconds to fade in and out
+    stagger?: number                # seconds between a caption's lines
 ```
 
 ```mdl
@@ -161,12 +183,45 @@ type Sample
 ```mdl
 type EffectFrame
   desc: >
-    What one effect drew at one time: `Shape[]` for `2d`, `Instance3D[]` (primitive, position, scale, colour,
-    opacity) for `3d`, `OverlayItem[]` (anchored bubbles, cards, lines) for `overlay`.
+    What one effect drew at one time: `Shape2D[]` (circle, rect, path) for `2d`, `Instance3D[]` (sphere or cube,
+    position, scale, colour, opacity) for `3d`, `OverlayItem[]` (threads, cards, lines, text, each anchored to a
+    target or to a point of the frame) for `overlay`. The item types are renderer-neutral data in `@dxos/animation`.
   fields:
     instance: string                # EffectInstance id
     renderer: 2d | 3d | overlay
-    items: unknown[]
+    items: Shape2D[] | Instance3D[] | OverlayItem[]
+    status?: EffectStatus           # running, or paused by an error or the step budget
+    stepMs?: number
+```
+
+```mdl
+type StageBinding
+  desc: >
+    What effects bind to in a stage at one time, in the stage's coordinates (a 2D stage sets `z` to 0): its objects
+    by id and its links. The animator samples it across a shot ahead of time, so an effect reads it in a worker.
+  fields:
+    objects: Record<string, { id: string, position: Vec3, radius: number, color?: string, opacity: number }>
+    links: { id: string, from: string, to: string, points: Vec3[] }[]
+```
+
+```mdl
+type StageProjection
+  desc: Where a stage drew its targets for one time, in pixels from the stage's top left; overlay items anchor to it.
+  fields:
+    t: number
+    anchors: Record<string, { x: number, y: number, radius: number }>
+```
+
+```mdl
+type EffectReport
+  desc: What `CheckEffect` returns.
+  fields:
+    errors?: string[]               # compile or load errors; nothing else is reported with them
+    status?: EffectStatus
+    timing?: { meanMs: number, budgetMs: number }
+    deterministic?: boolean         # each time gave the same frame reached forward and backward
+    mismatch?: number               # the first time the two runs differed at
+    frames?: { t: number, items: number, summary: string }[]
 ```
 
 ## Capabilities
@@ -178,7 +233,9 @@ capability AnimatorCapabilities.Stage
     their animatable properties (from `AnimatableAnnotation`), names the layouts its scripts may use and the effect
     renderers it can draw, and renders the stage for a `Sample` and the frame's `EffectFrame`s. It applies samples to
     a view of its objects and never writes them to ECHO; it reports edits made at a time so the animator can key
-    them, and calls `onFrameDrawn(t)` once the frame for `t` is on screen.
+    them, and calls `onFrameDrawn(t)` once the frame for `t` is on screen. A stage that hosts effects implements
+    `bind(stage, sample)`, returning a `StageBinding`, and reports a `StageProjection` through `onProjection` once a
+    frame is drawn, which the animator's overlay layer anchors to.
   type: StageDef
   multi: true
 ```
@@ -264,59 +321,75 @@ op SetScript
 
 ```mdl
 op CreateEffect
-  key: org.dxos.operation.animator.effect.create
-  desc: Writes a new Effect's source and parameter schema, compiles it, and returns compile errors.
+  key: org.dxos.operation.animator.createEffect
+  desc: Writes a new Effect's source and parameter schema at version 1, compiles it, and returns compile errors.
   input:
     name: string
     description: string
     renderer: 2d | 3d | overlay
     source: string
     params: JsonSchema
-    target: Database | Collection
-  output: Ref<Effect>
+  output: { effect: Ref<Effect>, version: number, errors?: string[] }
   effects: [echo:write]
 ```
 
 ```mdl
 op UpdateEffect
-  key: org.dxos.operation.animator.effect.update
-  desc: Replaces an Effect's source or schema, bumps its version, recompiles, and returns compile errors.
+  key: org.dxos.operation.animator.updateEffect
+  desc: Replaces an Effect's source, schema or description, bumps its version, recompiles, and returns compile errors.
   input:
     effect: Ref<Effect>
     source?: string
     params?: JsonSchema
-  output: Ref<Effect>
+    description?: string
+  output: { effect: Ref<Effect>, version: number, errors?: string[] }
   effects: [echo:write]
 ```
 
 ```mdl
 op CheckEffect
-  key: org.dxos.operation.animator.effect.check
+  key: org.dxos.operation.animator.checkEffect
   desc: >
     Runs an Effect headless over a duration with given parameters; returns step timings, a determinism check (the
-    same time reached from two checkpoints) and a contact sheet of frames.
+    same time reached from two checkpoints) and a summary of what each frame drew. It binds to the given shot's
+    stage, or to a ring of four linked objects.
   input:
     effect: Ref<Effect>
     params: Record<string, unknown>
     duration: number
+    animation?: Ref<Animation>
+    shot?: string
+    seed?: number
   output: EffectReport
   effects: [echo:read]
 ```
 
 ```mdl
 op PlaceEffect
-  key: org.dxos.operation.animator.effect.place
-  desc: Adds an Effect to a shot with parameters and bindings to the shot's targets.
+  key: org.dxos.operation.animator.placeEffect
+  desc: >
+    Adds an Effect to a shot for its whole length, with parameters and bindings to the shot's targets; a binding left
+    unset binds every object or link.
   input:
     animation: Ref<Animation>
     shot: string
     effect: Ref<Effect>
     params: Record<string, unknown>
     seed?: number
-  output: Ref<Animation>
+  output: { animation: Ref<Animation>, instance: string }
   errors:
     RendererError: the shot's stage cannot draw the effect's renderer
   effects: [echo:write]
+```
+
+```mdl
+op InstallEffects
+  key: org.dxos.operation.animator.installEffects
+  desc: >
+    Adds the built-in effects (packet flow and burst, each for `2d` and `3d`, conversations and callout) to the space
+    as Effect objects, skipping any already there by name, and returns them all.
+  output: { effects: Ref<Effect>[] }
+  effects: [echo:read, echo:write]
 ```
 
 ```mdl
@@ -386,6 +459,8 @@ feat F-5: Effects
   req F-5.4: `3d` effects return instance lists, which the stage draws with instanced meshes; they own no Babylon nodes.
   req F-5.5: Numeric effect parameters are animatable on the shot's timeline.
   req F-5.6: Packet flow, burst, conversations and merge ship as built-in effects.
+  req F-5.7: An effect binds to a stage through `bind`, which the animator samples across the shot ahead of time, so an effect never reads the stage object.
+  req F-5.8: Overlay effects name the target they hang from; the animator places them through the stage's projection.
 ```
 
 ```mdl
@@ -666,6 +741,60 @@ decision D-24: The canvas stage receives each sample as held keys on its scene e
   affects: [F-2.3, F-4.2]
   why: Reusing the animated projection keeps hit testing, generators and the camera drawing the sampled scene without a second sampling path.
   rejected: Keeping `View.timeline` beside `Animation` as a second place animation lives.
+```
+
+```mdl
+decision D-25: Effects run in a worker as jobs over the shot: placed instances for the whole shot and script-added ones over their spans, each stepped in its own time from its span's start, with keyed parameters applied per step and bindings read from a `StageBinding` track the animator samples ahead at 30 per second from the stage's `bind` hook. Fills in [D-16].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [StageBinding, EffectFrame, AnimatorCapabilities.Stage, F-5.1, F-5.2, F-5.7]
+  why: The stage object cannot cross to a worker, and binding geometry sampled on a fixed grid keeps every time reading the same positions however it was reached.
+  rejected:
+    - Binding at the requested frame time only: a step would see geometry that depends on which frame was asked for, breaking determinism.
+    - Sampling the stage per step in the worker: needs the stage's object model there.
+```
+
+```mdl
+decision D-26: Effect output items are renderer-neutral data in `@dxos/animation`: `Shape2D` (the canvas generator's circle, rect and path, which the canvas `Shape` now extends), `Instance3D` and `OverlayItem`; one effect module may serve `2d` and `3d` by reading `ctx.renderer`. Fills in [D-16].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [EffectFrame, F-5.4, F-5.6]
+  why: The spacetime stage (3D) and the canvas stage both consume them without depending on each other, and the built-in packet flow and burst share one source across renderers.
+```
+
+```mdl
+decision D-27: Overlay items anchor to a target id (at an angle and gap beyond its projected radius) or to a point of the frame; a stage reports a `StageProjection` per drawn frame and the animator's overlay layer places items through it. Fills in [D-21].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [StageProjection, AnimatorCapabilities.Stage, F-5.8, F-8.4]
+  why: Only the mounted stage knows its camera and size, and keeping projection out of the worker keeps overlay effects deterministic.
+  rejected:
+    - A pure `project` function on the stage definition: it cannot see the live camera or element size.
+```
+
+```mdl
+decision D-28: Screen text is data on the shot: `ScreenText` spans placed by hand plus beats' `caption`, `captionImage`, `captionColor`, `sideTitle` and `curtain`, timed by the same beat times as the script, with every opacity computed from the time. Fills in [D-21].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Shot, Beat, ScreenText, F-8.3, F-8.5]
+  why: Beats already carry captions, so the other screen text reads the same way in a script, and opacity from time (not CSS transitions) makes export frames match playback.
+  rejected:
+    - A separate screen track of keys: text and curtains are spans, not interpolated values.
+```
+
+```mdl
+decision D-29: The effect operations take the verbNoun keys `createEffect`, `updateEffect`, `checkEffect` and `placeEffect`; `CheckEffect` binds to a named shot's stage or to a synthetic ring and reports frame summaries in place of a contact sheet; built-ins are installed into a space by `InstallEffects` as ordinary Effect objects. Fills in [D-22].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:CreateEffect, op:UpdateEffect, op:CheckEffect, op:PlaceEffect, op:InstallEffects, EffectReport, F-5.6]
+  why: The `operation-key-shape` lint rule rejects dotted keys; a summary per frame is readable by an agent where an image is not; installed built-ins are versioned and editable like any effect.
+  rejected:
+    - Seeding built-ins on first use: hidden writes to a space when an article opens.
 ```
 
 ## Appendix: Extension Definitions

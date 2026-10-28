@@ -37,6 +37,11 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
+    "#effects": {
+      "source": "./src/effects/index.ts",
+      "types": "./dist/types/src/effects/index.d.ts",
+      "default": "./dist/lib/effects.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -146,7 +151,8 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "esbuild-wasm": "catalog:"
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
