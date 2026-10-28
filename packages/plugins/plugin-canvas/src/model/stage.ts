@@ -21,7 +21,14 @@ import {
 } from '@dxos/animation';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { CAMERA_TARGET, type Node, OPACITY_PATH, type Point } from '@dxos/react-ui-canvas/headless';
+import {
+  CAMERA_TARGET,
+  type Node,
+  OPACITY_PATH,
+  type Point,
+  endpointNode,
+  sampleView,
+} from '@dxos/react-ui-canvas/headless';
 
 import { readViews, rootOf } from './content.ts';
 import { isSceneCanvas } from './view-node.ts';
@@ -144,4 +151,44 @@ export const stageEdits = (before: Timeline, after: Timeline, t: number): Animat
     edits.set(track.target, { ...edits.get(track.target), [track.property]: value });
   }
   return [...edits].map(([target, values]) => ({ target, values }));
+};
+
+/**
+ * The canvas's root-scene nodes and links at a sample, in scene coordinates, for effects to bind to (plugin-animator
+ * DESIGN.md §6): a node's radius is half its shorter side, and a link runs straight between the centres of the nodes
+ * it joins, so the binding needs no link router and stays React-free.
+ */
+export const canvasStageBinding = (
+  canvas: Drawing.Canvas,
+  sample: AnimatorCapabilities.Sample,
+): AnimatorCapabilities.StageBinding => {
+  if (!isSceneCanvas(canvas)) {
+    return { objects: {}, links: [] };
+  }
+  const root = rootOf(canvas.content);
+  const stored = root === undefined ? undefined : readViews(canvas.content)[root];
+  if (!stored) {
+    return { objects: {}, links: [] };
+  }
+  const scene = sampleView(stored, sampleToTimeline(sample), sample.t);
+  const objects: Record<string, AnimatorCapabilities.BoundObject> = {};
+  for (const node of Object.values(scene.nodes)) {
+    const opacity = restingValue(node, OPACITY_PATH);
+    objects[node.id] = {
+      id: node.id,
+      position: { x: node.center.x, y: node.center.y, z: 0 },
+      radius: Math.min(node.size.width, node.size.height) / 2,
+      opacity: typeof opacity === 'number' ? opacity : 1,
+    };
+  }
+  const links = Object.values(scene.links).flatMap((link) => {
+    const from = endpointNode(link.source);
+    const to = endpointNode(link.target);
+    const start = from === undefined ? undefined : objects[from];
+    const end = to === undefined ? undefined : objects[to];
+    return from !== undefined && to !== undefined && start && end
+      ? [{ id: link.id, from, to, points: [start.position, end.position] }]
+      : [];
+  });
+  return { objects, links };
 };

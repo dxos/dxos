@@ -11,7 +11,14 @@ import { BASE_ANIMATABLE, type RectNode, sampleCamera, sampleView } from '@dxos/
 import { Canvas } from '#types';
 
 import { readViews, rootOf, seedContent, writeViews } from './content.ts';
-import { CANVAS_LAYOUTS, CANVAS_SCRIPT_PROPERTIES, canvasStageTargets, sampleToTimeline, stageEdits } from './stage.ts';
+import {
+  CANVAS_LAYOUTS,
+  CANVAS_SCRIPT_PROPERTIES,
+  canvasStageBinding,
+  canvasStageTargets,
+  sampleToTimeline,
+  stageEdits,
+} from './stage.ts';
 
 const box = (x: number) => ({ z: 'a0', center: { x, y: 0 }, size: { width: 100, height: 50 } });
 
@@ -20,7 +27,8 @@ const makeCanvas = (): Drawing.Canvas => {
   const root = seedContent(content);
   const a: RectNode = { id: 'a', type: 'rect', label: 'A', ...box(0) };
   const b: RectNode = { id: 'b', type: 'rect', ...box(200), style: { opacity: 0.5 } };
-  writeViews(content, { [root]: { id: root, nodes: { a, b }, links: {} } });
+  const link = { id: 'ab', type: 'line' as const, z: 'a1', source: { node: 'a' }, target: { node: 'b' } };
+  writeViews(content, { [root]: { id: root, nodes: { a, b }, links: { ab: link } } });
   return Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content });
 };
 
@@ -34,6 +42,15 @@ describe('canvas stage', () => {
     expect(targets[0].properties).toContainEqual({ path: 'center', kind: 'point' });
     expect(targets[0].values).toMatchObject({ 'center': { x: 0, y: 0 }, 'style.opacity': 1 });
     expect(targets[1].values['style.opacity']).toBe(0.5);
+  });
+
+  test('effects bind to the sampled nodes and the links between them', ({ expect }) => {
+    const binding = canvasStageBinding(makeCanvas(), { t: 1, values: { a: { center: { x: 40, y: 10 } } } });
+    expect(binding.objects.a).toEqual({ id: 'a', position: { x: 40, y: 10, z: 0 }, radius: 25, opacity: 1 });
+    expect(binding.objects.b.opacity).toBe(0.5);
+    expect(binding.links).toEqual([
+      { id: 'ab', from: 'a', to: 'b', points: [binding.objects.a.position, binding.objects.b.position] },
+    ]);
   });
 
   test('a canvas of another renderer has no targets', ({ expect }) => {

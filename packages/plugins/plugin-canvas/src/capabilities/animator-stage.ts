@@ -11,7 +11,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { defaultNodeRegistry, nodeAnimatable } from '@dxos/react-ui-canvas/scene';
 
 import { CanvasStage } from '#containers';
-import { CANVAS_LAYOUTS, CANVAS_SCRIPT_PROPERTIES, canvasStageTargets } from '#model';
+import { CANVAS_LAYOUTS, CANVAS_SCRIPT_PROPERTIES, canvasStageBinding, canvasStageTargets } from '#model';
 
 // Keyed properties come from the built-in node schemas; a type only another plugin knows keys the shared ones.
 const stage: AnimatorCapabilities.StageDef = {
@@ -23,6 +23,8 @@ const stage: AnimatorCapabilities.StageDef = {
   renderers: ['2d', 'overlay'],
   layouts: { ...CANVAS_LAYOUTS },
   scriptProperties: CANVAS_SCRIPT_PROPERTIES,
+  bind: (object, sample) =>
+    Drawing.isCanvas(object) ? canvasStageBinding(object, sample) : { objects: {}, links: [] },
   component: CanvasStage,
 };
 
