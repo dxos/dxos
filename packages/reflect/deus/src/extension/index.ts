@@ -5,6 +5,7 @@
 export { mdl, mdlBlockDescription } from './language.ts';
 export {
   type ChangelogEntry,
+  type LintOptions,
   type MdlBlock,
   MISSING_DECISION,
   checkChangelogChange,

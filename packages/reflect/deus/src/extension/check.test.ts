@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { indexSpecs } from '../spec-index/index.ts';
 import {
   MISSING_DECISION,
   checkChangelogChange,
@@ -271,5 +272,106 @@ describe('parseMdlBlocks', () => {
       { type: 'feat', id: 'F-1', title: 'Start a call' },
     ]);
     expect(blocks[0].body).toBe('  fields:\n    name?: string\n');
+  });
+});
+
+describe('mdl references and dependencies', () => {
+  const other = (id: string, items: string) => ['---', `id: ${id}`, '---', '', block(items), ''].join('\n');
+  const index = indexSpecs([
+    { path: 'a/SPEC.mdl', text: other('org.test.alpha', 'feat F-1: One\n  req F-1.1: Do it') },
+    { path: 'b/SPEC.mdl', text: other('org.test.beta', 'feat G-1: Other') },
+    { path: 'c/SPEC.mdl', text: other('org.test.twice', 'feat T-1: Same') },
+    { path: 'd/SPEC.mdl', text: other('org.test.twice', 'feat T-1: Same') },
+  ]);
+  const spec = (body: string, frontmatter = 'id: org.test.self') => `---\n${frontmatter}\n---\n\n${body}\n`;
+  const uses = (id: string) => block(`uses ${id}: Why.`);
+  const lint = (text: string) => lintMdl(text, { index }).map(({ source, message }) => ({ source, message }));
+
+  test('unknown spec in a reference', ({ expect }) => {
+    expect(lint(spec('See org.test.nope#F-1.'))).toEqual([
+      { source: 'mdl/ref', message: 'Unknown spec `org.test.nope`.' },
+    ]);
+  });
+
+  test('missing item', ({ expect }) => {
+    expect(lint(spec(`${uses('org.test.alpha')}\nSee org.test.alpha#F-9.`))).toEqual([
+      { source: 'mdl/ref', message: '`org.test.alpha` has no item `F-9`.' },
+    ]);
+  });
+
+  test('item that exists', ({ expect }) => {
+    expect(lint(spec(`${uses('org.test.alpha')}\nSee org.test.alpha#F-1.1 and org.test.alpha#F-1.`))).toEqual([]);
+  });
+
+  test('reference to a spec that is not a dependency', ({ expect }) => {
+    expect(lint(spec('See org.test.alpha#F-1.'))).toEqual([
+      {
+        source: 'mdl/ref',
+        message: '`org.test.alpha` is not a dependency; add `uses org.test.alpha: …` under ## Dependencies.',
+      },
+    ]);
+  });
+
+  test('github key to a spec', ({ expect }) => {
+    const message = 'Refer to a spec by id (`<id>#<item>`), not by a github: key.';
+    expect(lint(spec('See github:dxos/dxos/a/SPEC.mdl#F-1 and github:dxos/dxos/a/SPEC.mdl.'))).toEqual([
+      { source: 'mdl/ref', message },
+      { source: 'mdl/ref', message },
+    ]);
+  });
+
+  test('github key to code is allowed', ({ expect }) => {
+    expect(lint(spec('See github:dxos/dxos/a/file.ts#Foo.'))).toEqual([]);
+  });
+
+  test('spec id declared by more than one file', ({ expect }) => {
+    const message = 'Spec id `org.test.twice` is declared by more than one file.';
+    expect(lint(spec(`${uses('org.test.twice')}\nSee org.test.twice#T-1.`))).toEqual([
+      { source: 'mdl/ref', message },
+      { source: 'mdl/ref', message },
+    ]);
+  });
+
+  test('uses of an unknown spec', ({ expect }) => {
+    expect(lint(spec(uses('org.test.nope')))).toEqual([
+      { source: 'mdl/uses', message: 'Unknown spec `org.test.nope`.' },
+    ]);
+  });
+
+  test('uses declared twice', ({ expect }) => {
+    expect(lint(spec(`${uses('org.test.alpha')}\n${uses('org.test.alpha')}`))).toEqual([
+      { source: 'mdl/uses', message: '`org.test.alpha` is declared twice.' },
+    ]);
+  });
+
+  test('uses of itself', ({ expect }) => {
+    expect(lint(spec(uses('org.test.self')))).toEqual([{ source: 'mdl/uses', message: 'A spec cannot use itself.' }]);
+  });
+
+  test('uses an id already in dependsOn', ({ expect }) => {
+    const text = spec(`${block('plugin P: x\n  dependsOn: [org.test.alpha]')}\n${uses('org.test.alpha')}`);
+    expect(lint(text)).toEqual([
+      { source: 'mdl/uses', message: '`org.test.alpha` is in dependsOn; do not repeat it under uses.' },
+    ]);
+  });
+
+  test('an id in dependsOn admits references to it', ({ expect }) => {
+    const text = spec(`${block('plugin P: x\n  dependsOn: [org.test.alpha]')}\nSee org.test.alpha#F-1.`);
+    expect(lint(text)).toEqual([]);
+  });
+
+  test('a reference to the spec itself is allowed', ({ expect }) => {
+    expect(lint(spec('See org.test.self#X.'))).toEqual([]);
+  });
+
+  test('a cycle is allowed', ({ expect }) => {
+    const first = spec(`${uses('org.test.beta')}\nSee org.test.beta#G-1.`, 'id: org.test.alpha');
+    const second = spec(`${uses('org.test.alpha')}\nSee org.test.alpha#F-1.`, 'id: org.test.beta');
+    expect(lint(first)).toEqual([]);
+    expect(lint(second)).toEqual([]);
+  });
+
+  test('emits no ref or uses diagnostics without an index', ({ expect }) => {
+    expect(lintMdl(spec(`${uses('org.test.nope')}\nSee org.test.nope#F-1 and github:a/b.mdl.`))).toEqual([]);
   });
 });

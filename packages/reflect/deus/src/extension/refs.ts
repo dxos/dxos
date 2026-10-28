@@ -13,19 +13,11 @@ export type Dependency = { id: string; via: 'uses' | 'dependsOn'; from: number; 
 // The lookbehind rejects `github:org/repo/file.mdl#X` keys and URL fragments; the final `\w` drops a sentence period.
 const REF = /(?<![\w/:.#-])([a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+)#([\w$.-]*\w)/g;
 
-const scan = (line: string, offset: number, refs: SpecRef[]): void => {
-  for (const match of line.matchAll(REF)) {
-    const from = offset + match.index;
-    refs.push({ id: match[1], item: match[2], from, to: from + match[0].length });
-  }
-};
-
 /**
- * Finds `<spec id>#<item>` references in prose and in `mdl` fences (comments included).
+ * Calls `visit` for each line of prose and of `mdl` fences, with the line's offset in the text.
  * Every other fenced block is skipped, since it holds code rather than spec text.
  */
-export const findSpecRefs = (text: string): SpecRef[] => {
-  const refs: SpecRef[] = [];
+export const scanSpecLines = (text: string, visit: (line: string, offset: number) => void): void => {
   let fence: { char: string; length: number; scan: boolean } | undefined;
   let offset = 0;
   for (const line of text.split('\n')) {
@@ -36,16 +28,40 @@ export const findSpecRefs = (text: string): SpecRef[] => {
       if (marker && marker[1][0] === fence.char && marker[1].length >= fence.length && info === '') {
         fence = undefined;
       } else if (fence.scan) {
-        scan(line, offset, refs);
+        visit(line, offset);
       }
     } else if (marker && !(marker[1][0] === '`' && info.includes('`'))) {
       fence = { char: marker[1][0], length: marker[1].length, scan: info === 'mdl' };
     } else {
-      scan(line, offset, refs);
+      visit(line, offset);
     }
     offset += line.length + 1;
   }
+};
+
+/** Finds `<spec id>#<item>` references in prose and in `mdl` fences (comments included). */
+export const findSpecRefs = (text: string): SpecRef[] => {
+  const refs: SpecRef[] = [];
+  scanSpecLines(text, (line, offset) => {
+    for (const match of line.matchAll(REF)) {
+      const from = offset + match.index;
+      refs.push({ id: match[1], item: match[2], from, to: from + match[0].length });
+    }
+  });
   return refs;
+};
+
+const GITHUB_SPEC_KEY = /github:[^\s`'")\]>,]*?\.mdl(?:#[\w$.-]*)?/g;
+
+/** Finds `github:` keys that point at a `.mdl` file, with the offsets of the whole key. */
+export const findSpecKeys = (text: string): { from: number; to: number }[] => {
+  const keys: { from: number; to: number }[] = [];
+  scanSpecLines(text, (line, offset) => {
+    for (const match of line.matchAll(GITHUB_SPEC_KEY)) {
+      keys.push({ from: offset + match.index, to: offset + match.index + match[0].length });
+    }
+  });
+  return keys;
 };
 
 /**

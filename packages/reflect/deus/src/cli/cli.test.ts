@@ -90,6 +90,22 @@ describe('deus lint', () => {
   });
 });
 
+describe('deus lint references', () => {
+  const dir = `${FIXTURES}lint-refs`;
+
+  test('lint reports mdl/ref in a spec', async ({ expect }) => {
+    const { exit, output } = await run(['lint', '--only', 'mdl/ref', `${dir}/SPEC.mdl`]);
+    expect(LintError.is(failure(exit))).toBe(true);
+    expect(output).toEqual([`${dir}/SPEC.mdl:7: error [mdl/ref]: Unknown spec \`org.dxos.fixture.nope\`.`]);
+  });
+
+  test('lint skips mdl/ref in review files', async ({ expect }) => {
+    const { exit, output } = await run(['lint', `${dir}/SPEC.review.mdl`]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output).toEqual([]);
+  });
+});
+
 describe('deus qa list', () => {
   test('lists the tests with their stage counts', async ({ expect }) => {
     const { exit, output } = await run(['qa', 'list', '--root', QA_LIST]);

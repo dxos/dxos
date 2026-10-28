@@ -4,7 +4,10 @@
 
 import { type Diagnostic } from '@codemirror/lint';
 
+import { frontmatter } from '../spec-index/parse.ts';
+import { type SpecIndex } from '../spec-index/spec-index.ts';
 import { BLOCK_TYPES } from './constants.ts';
+import { findSpecKeys, findSpecRefs, specDependencies } from './refs.ts';
 
 const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
 
@@ -107,16 +110,71 @@ export const parseMdlBlocks = (text: string): MdlBlock[] =>
     return { type, id, ...(title && { title }), body: newline === -1 ? '' : body.slice(newline + 1), from };
   });
 
+export type LintOptions = {
+  /** Enables `mdl/ref` and `mdl/uses`, which need every other spec to resolve against. */
+  index?: SpecIndex;
+  /** The spec's own id; defaults to the frontmatter `id`. */
+  selfId?: string;
+};
+
+const lintReferences = (text: string, index: SpecIndex, selfId: string | undefined): Diagnostic[] => {
+  const diagnostics: Diagnostic[] = [];
+  const report = (source: string, from: number, to: number, message: string) =>
+    diagnostics.push({ from, to, severity: 'error', source, message });
+  const dependencies = specDependencies(text);
+  const dependsOn = new Set(dependencies.filter(({ via }) => via === 'dependsOn').map(({ id }) => id));
+  const used = new Set<string>();
+  const duplicate = (id: string): string => `Spec id \`${id}\` is declared by more than one file.`;
+
+  for (const { id, via, from, to } of dependencies) {
+    if (via !== 'uses') {
+      continue;
+    }
+    if (id === selfId) {
+      report('mdl/uses', from, to, 'A spec cannot use itself.');
+    } else if (id in index.duplicates) {
+      report('mdl/ref', from, to, duplicate(id));
+    } else if (!(id in index.specs)) {
+      report('mdl/uses', from, to, `Unknown spec \`${id}\`.`);
+    } else if (used.has(id)) {
+      report('mdl/uses', from, to, `\`${id}\` is declared twice.`);
+    } else if (dependsOn.has(id)) {
+      report('mdl/uses', from, to, `\`${id}\` is in dependsOn; do not repeat it under uses.`);
+    }
+    used.add(id);
+  }
+
+  const dependencyIds = new Set(dependencies.map(({ id }) => id));
+  for (const { id, item, from, to } of findSpecRefs(text)) {
+    if (id === selfId) {
+      continue;
+    }
+    if (id in index.duplicates) {
+      report('mdl/ref', from, to, duplicate(id));
+    } else if (!(id in index.specs)) {
+      report('mdl/ref', from, to, `Unknown spec \`${id}\`.`);
+    } else if (!dependencyIds.has(id)) {
+      report('mdl/ref', from, to, `\`${id}\` is not a dependency; add \`uses ${id}: …\` under ## Dependencies.`);
+    } else if (!index.specs[id].items.includes(item)) {
+      report('mdl/ref', from, to, `\`${id}\` has no item \`${item}\`.`);
+    }
+  }
+
+  for (const { from, to } of findSpecKeys(text)) {
+    report('mdl/ref', from, to, 'Refer to a spec by id (`<id>#<item>`), not by a github: key.');
+  }
+  return diagnostics;
+};
+
 /**
  * Lints the text of a Spec .mdl document.
  *
  * Checks:
  *   - Unknown block types (first body line of ```mdl blocks) → error
  *   - `decision` attribution (`by:` / `for:` actor prefixes) → error
- *   - (future) Missing required fields → error
- *   - (future) Unresolved cross-references → error
+ *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given → error
  */
-export const lintMdl = (text: string): Diagnostic[] => {
+export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: LintOptions = {}): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
   for (const { type, from, to, body } of parseBlockHeaders(text)) {
     if (type && !KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
@@ -132,6 +190,9 @@ export const lintMdl = (text: string): Diagnostic[] => {
         diagnostics.push({ from, to, severity: 'error', source: 'mdl/decision', message });
       }
     }
+  }
+  if (index) {
+    diagnostics.push(...lintReferences(text, index, selfId));
   }
 
   return diagnostics;
