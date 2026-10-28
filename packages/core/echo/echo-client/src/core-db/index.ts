@@ -9,7 +9,6 @@ export * from './working-set-row.ts';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.
 export {
-  type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type DecodedAutomergePrimaryValue,
   type DocumentChanges,

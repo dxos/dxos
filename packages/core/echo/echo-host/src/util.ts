@@ -9,8 +9,12 @@ import { DXN } from '@dxos/keys';
 export const SLOW_WORK_MS = 1_000;
 
 /**
- * Assumes properties are at root.
+ * Finds an object of `typename` inlined in a space directory.
+ *
+ * @deprecated Inline directory objects are migrated into linked documents on space open; this only finds ones that
+ *   have not been migrated yet.
  */
+// TODO(dmaretskyi): Remove once every space has run the inline object migration.
 export const findInlineObjectOfType = (
   spaceDoc: DatabaseDirectory,
   typename: string,
