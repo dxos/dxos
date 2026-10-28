@@ -17,6 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
@@ -92,6 +93,10 @@ export const noteExternalBindingWrite = (): void => {
   externalBindingWrites++;
 };
 
+/** How long a sync after an external write waits for the index to return it: EDGE indexes a feed append asynchronously. */
+const EXTERNAL_WRITE_WAIT_MS = 5_000;
+const EXTERNAL_WRITE_POLL_MS = 250;
+
 const countBindingWrite = (feed: Feed.Feed): void => {
   bindingWrites.set(feed.id, (bindingWrites.get(feed.id) ?? 0) + 1);
 };
@@ -121,6 +126,10 @@ export class Binder extends Resource {
 
   /** {@link bindingWriteCount} at the last read of the bindings query. */
   #readWrites = 0;
+
+  /** `externalBindingWrites` and the number of binding items at the last read of the bindings query. */
+  #readExternal = 0;
+  #readItems = 0;
 
   /**
    * Keys of the refs the feed already binds, whether or not their targets resolve here: a registry
@@ -244,7 +253,9 @@ export class Binder extends Resource {
 
     // Process initial state before returning.
     this.#readWrites = bindingWriteCount(this._feed);
+    this.#readExternal = externalBindingWrites;
     const initialResults = await bindingsQuery.run();
+    this.#readItems = initialResults.length;
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
@@ -261,21 +272,33 @@ export class Binder extends Resource {
    */
   async sync(): Promise<void> {
     const writes = bindingWriteCount(this._feed);
+    const external = externalBindingWrites;
     if (this.#bindingsQuery && writes !== this.#readWrites) {
+      // A write noted from another process is in the feed but may not be indexed yet, so a read that returns no
+      // new item is retried until it does or the wait runs out.
+      const deadline = Date.now() + (external !== this.#readExternal ? EXTERNAL_WRITE_WAIT_MS : 0);
       let results: Binding[];
-      try {
-        results = await this.#bindingsQuery.run();
-      } catch (error) {
-        // The query's live subscription already keeps the bindings current, so a re-read that fails
-        // (an index query timing out under load) costs freshness, not correctness — and a caller
-        // running this between agent turns would otherwise fail the whole agent process on it.
-        log.warn('bindings sync failed; keeping the current bindings', { error });
-        return;
+      for (;;) {
+        try {
+          results = await this.#bindingsQuery.run();
+        } catch (error) {
+          // The query's live subscription already keeps the bindings current, so a re-read that fails
+          // (an index query timing out under load) costs freshness, not correctness — and a caller
+          // running this between agent turns would otherwise fail the whole agent process on it.
+          log.warn('bindings sync failed; keeping the current bindings', { error });
+          return;
+        }
+        if (results.length > this.#readItems || Date.now() >= deadline) {
+          break;
+        }
+        await EffectEx.runPromise(Effect.sleep(EXTERNAL_WRITE_POLL_MS));
       }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
       // Only after the update lands, so one that fails is retried by the next sync.
       this.#readWrites = writes;
+      this.#readExternal = external;
+      this.#readItems = results.length;
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
         // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
