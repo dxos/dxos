@@ -81,6 +81,18 @@ describe('spacetime stage', () => {
     const state = objectState(box, { opacity: 3, labelStyle: 'nonsense', position: { x: 1, y: 2, z: 3 } });
     expect(state).toMatchObject({ opacity: 1, labelStyle: 'plain', position: { x: 1, y: 2, z: 3 }, labelMorph: 1 });
   });
+
+  test('a binding of unkeyed objects is plain data the effect worker can be sent', ({ expect }) => {
+    const { scene, ball, box } = makeScene();
+    const binding = spacetimeStageBinding(scene, { t: 0, values: {} });
+    const copy = structuredClone(binding);
+    expect(copy.objects[box.id].position).toEqual({ x: 4, y: 0, z: 0 });
+    expect(copy.links[0].points).toEqual([
+      { x: 0, y: 0, z: 0 },
+      { x: 4, y: 0, z: 0 },
+    ]);
+    expect(structuredClone(objectState(ball)).scale).toEqual({ x: 2, y: 2, z: 2 });
+  });
 });
 
 describe('projection', () => {

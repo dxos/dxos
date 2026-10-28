@@ -81,7 +81,10 @@ export const spacetimeStageTargets = (scene: Scene.Scene): AnimatorCapabilities.
 
 const isNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
 
-/** `value` as a vec3, or `fallback` when it is not one. */
+/**
+ * `value` as a vec3, or a copy of `fallback` when it is not one; always a plain object, since the fallback is often an
+ * ECHO proxy, which cannot be posted to the effect worker.
+ */
 export const vec3Or = (value: unknown, fallback: Vec3): Vec3 =>
   typeof value === 'object' && value !== null && 'x' in value && 'y' in value && 'z' in value
     ? {
@@ -89,7 +92,7 @@ export const vec3Or = (value: unknown, fallback: Vec3): Vec3 =>
         y: isNumber(value.y) ? value.y : fallback.y,
         z: isNumber(value.z) ? value.z : fallback.z,
       }
-    : fallback;
+    : { x: fallback.x, y: fallback.y, z: fallback.z };
 
 const numberOr = (value: unknown, fallback: number): number => (isNumber(value) ? value : fallback);
 

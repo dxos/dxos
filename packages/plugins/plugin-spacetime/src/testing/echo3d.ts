@@ -127,8 +127,9 @@ const siloScene = () => {
   const vendor = sphere('SaaS', ORG_RADIUS, VIOLET, { x: offset, y: 0, z: 0 }, { opacity: 0.12, labelStyle: 'hero' });
   const data = sphere('Your data', 9, YELLOW, vendor.position);
   const teams = sphere('Your teams', 9, '#5b8def', org.position);
-  const owns = link(org, data, 1);
-  return { scene: makeScene('Silo', [org, vendor, data, teams], [owns]), org, vendor, data, teams, owns };
+  // From the solid teams sphere, not the shell around it, since packets fade with the objects at their ends.
+  const uses = link(teams, data, 1);
+  return { scene: makeScene('Silo', [org, vendor, data, teams], [uses]), org, vendor, data, teams, uses };
 };
 
 //
