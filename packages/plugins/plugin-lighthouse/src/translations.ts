@@ -37,6 +37,7 @@ export const translations = [
         ...metaTranslations,
         'plugin.name': 'Lighthouse',
         'view-mode.label': 'View',
+        'edit-goal.label': 'Edit goal',
         'mode-results.label': 'Results',
         'mode-graph.label': 'Graph',
         'mode-trace.label': 'Trace',

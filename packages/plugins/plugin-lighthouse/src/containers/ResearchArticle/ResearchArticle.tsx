@@ -26,6 +26,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import { Tag as TagChip } from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { type Entity, type Session } from '#client';
 import { ModelPanel, ResearchThread, ResultCard, SubjectGraph, TracePanel } from '#components';
@@ -150,6 +151,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   // Results (the ranked masonry), Graph (the subjects' neighbourhood) or Trace (the trajectory as a tree).
   const [mode, setMode] = useState<'results' | 'graph' | 'trace'>('results');
   const [showModel, setShowModel] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string>();
   const spaceId = db?.spaceId;
 
@@ -237,13 +239,21 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   const handleRun = useCallback(() => {
     setError(undefined);
     const connection = research.connection ?? (connections[0] ? Ref.make(connections[0]) : undefined);
-    if (!research.connection && connection) {
+    const goal = research.goal.trim() ? undefined : session?.goal;
+    if ((!research.connection && connection) || goal) {
       Obj.update(research, (research) => {
-        research.connection = connection;
+        if (!research.connection && connection) {
+          research.connection = connection;
+        }
+        // A Research opened on a session started elsewhere runs again with that session's goal.
+        if (goal) {
+          research.goal = goal;
+        }
       });
     }
+    setEditing(false);
     void invoke(LighthouseOperation.StartResearch, { research: Ref.make(research) });
-  }, [research, connections, invoke]);
+  }, [research, connections, session?.goal, invoke]);
 
   const handleSend = useCallback(
     async (text: string, options?: { model?: string }) => {
@@ -448,14 +458,30 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         <Layout.Grid cols={['24rem', 'fill']} classNames='h-full min-h-0'>
           <Layout.Flex column classNames='overflow-hidden border-e border-separator'>
             <Layout.Flex column gap='sm' classNames='p-trim-md border-b border-separator'>
-              <Form.Root
-                schema={ResearchFormSchema}
-                values={{ goal: snapshot.goal || session?.goal || '', budget }}
-                autoSave
-                onSave={handleSave}
-              >
-                <Form.Fields />
-              </Form.Root>
+              {snapshot.run && !editing ? (
+                // Once it has run, the goal is a line to read, not a field: the thread is where it is steered.
+                <Layout.Grid cols={['fill', 'min']} gap='sm' align='start'>
+                  <Typography.Text lines={4} classNames='text-sm whitespace-normal' data-testid='lighthouse.goal'>
+                    {snapshot.goal || session?.goal}
+                  </Typography.Text>
+                  <Button.Root
+                    variant='ghost'
+                    iconOnly
+                    icon='ph--pencil-simple--regular'
+                    label={t('edit-goal.label')}
+                    onClick={() => setEditing(true)}
+                  />
+                </Layout.Grid>
+              ) : (
+                <Form.Root
+                  schema={ResearchFormSchema}
+                  values={{ goal: snapshot.goal || session?.goal || '', budget }}
+                  autoSave
+                  onSave={handleSave}
+                >
+                  <Form.Fields />
+                </Form.Root>
+              )}
               <span className='text-xs text-fg-subtle'>{formatBudget(BUDGETS[budget])}</span>
               {engines && engines.length > 0 && (
                 <Collapsible.Root>
