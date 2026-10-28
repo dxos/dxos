@@ -313,6 +313,84 @@ describe('gmail tag push', () => {
     expect(tagHeadsOf(binding)).toEqual(baseAfterPull);
   });
 
+  test('a delta replayed after a failed push commits its messages once', async ({ expect }) => {
+    const base = generateGmailDataset({ count: 3, seed: 47, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+
+    let failPush = false;
+    const services = (dataset: GmailDataset) =>
+      Layer.mergeAll(
+        Layer.effect(
+          GoogleMailApi,
+          Effect.gen(function* () {
+            const inner = yield* GoogleMailApi;
+            return GoogleMailApi.of({
+              ...inner,
+              batchModifyMessages: (userId, ids, labels) =>
+                failPush
+                  ? Effect.fail(new GoogleApiError(503, 'Backend error.'))
+                  : inner.batchModifyMessages(userId, ids, labels),
+            });
+          }),
+        ).pipe(Layer.provide(GoogleMailApi.mock(dataset))),
+        ambientSyncServices(db),
+      );
+    // No dedup seed, so only the cursor's record of handled delta ids can stop the replay.
+    const run = (dataset: GmailDataset) =>
+      EffectEx.runPromise(
+        Effect.exit(runGoogleSync({ binding: Ref.make(binding), now, dedupSeedTail: 0 })).pipe(
+          Effect.provide(services(dataset)),
+        ),
+      );
+    const tokenOf = () => (binding.spec.kind === 'external' ? binding.spec.token : undefined);
+
+    await run({ ...base, historyId: '1000' });
+
+    // A local star gives the next runs something to push.
+    const message = await feedMessageFor(db, mailbox, base.messages[0].id);
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const starred = await Tag.findOrCreate(db, { key: SystemTags.systemTagKey('starred'), label: 'Starred' });
+    Tagging.set(message, Obj.getURI(starred).toString(), { index: tagIndex });
+    await db.flush({ indexes: true });
+
+    // An import keeping its original date, inside the synced range.
+    const imported = generateGmailDataset({
+      count: 1,
+      seed: 48,
+      start: subDays(now, 5),
+      end: subDays(now, 3),
+      idPrefix: 'imported',
+    }).messages[0];
+    const withImport = {
+      ...base,
+      messages: [...base.messages, imported],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: [imported.id] }],
+    };
+
+    // The push fails twice, so the token holds and both following runs read the same delta again.
+    failPush = true;
+    await run(withImport);
+    await run(withImport);
+    expect(tokenOf()).toBe('1000');
+    failPush = false;
+    await run(withImport);
+    expect(tokenOf()).not.toBe('1000');
+
+    const feed = mailbox.feed.target;
+    invariant(feed);
+    const feedUri = Feed.getFeedUri(feed);
+    invariant(feedUri);
+    const items = await db.query(Query.select(Filter.type(Message.Message)).from(Scope.feed(feedUri))).run();
+    const ids = items.flatMap((item) =>
+      Obj.getMeta(item)
+        .keys.filter((key) => key.source === GMAIL_SOURCE)
+        .map((key) => key.id),
+    );
+    expect(ids.filter((id) => id === imported.id)).toHaveLength(1);
+    expect(ids).toHaveLength(base.messages.length + 1);
+  });
+
   /**
    * Gmail records a client's own label write in the account history, so the run AFTER a push sees its
    * own change come back as a delta (verified live against a real account). The ordering rule absorbs
