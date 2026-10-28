@@ -165,9 +165,11 @@ component ResultArticle
 ```mdl
 component ResearchThread
   desc: >
-    The session's trajectory as the assistant ChatThread, as lighthouse's own web UI renders it: prompts, one
-    tool panel per answer with each tool call's results as pills under it, the report as pick rows; a
-    composer below sends follow-ups. A failed or stopped session ends with a Retry chip.
+    The session's trajectory as the assistant ChatThread, as lighthouse's own web UI renders it: prompts; one
+    run row per narration, collapsed to the narration, its call and result counts, failures and time, and
+    opened onto each call (tool, arguments, outcome, time, output or error) and the results it put into the
+    graph as pills; the report as pick rows. A vote's feedback prompt reads as one line naming the voted
+    results. A composer below sends follow-ups; a failed or stopped session ends with a Retry chip.
   props:
     messages: Message[]
     busy: boolean
@@ -497,4 +499,20 @@ decision D-13: The operation keys read verb-first (setStarred, sendFeedback, rea
   for: user:dmaretskyi
   affects: [op:KeepFinding, op:VoteFinding, op:ExtendFinding]
   why: The repository's operation-key rule requires a known verb; a plugin that fetches localhost raises the local network prompt, so it is enabled by the person, not by default.
+```
+
+```mdl
+decision D-14: The thread shows one run row per narration, as lighthouse's own web UI now does: collapsed to the narration, its call and result counts, failures and time; opened onto each call with its arguments, outcome, time and output or error, then its results as pills.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [ResearchThread]
+```
+
+```mdl
+decision D-15: A vote's feedback prompt reads in the thread as one line naming the voted results, instead of the results' JSON the server writes into it. Fills in [D-14].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResearchThread]
+  why: The prompt is written by lighthouse for the agent; the person only needs to see which results they voted on.
 ```
