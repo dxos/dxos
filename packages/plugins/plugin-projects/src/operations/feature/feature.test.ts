@@ -216,6 +216,10 @@ feat F-1: Sync
       yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, spec: ref(target) });
       expect(Spec.getContainer(feature)?.id).toBe(first.spec);
       expect(target.features).toHaveLength(0);
+      // The source keeps its document, so deleting the feature cannot take it along with the breakdown.
+      const source = Spec.getContainer(feature);
+      const document = source?.document && (yield* Database.load(source.document));
+      expect(document && Obj.getParent(document)?.id).toBe(first.spec);
     }).pipe(Effect.provide(testLayer())),
   );
 });
