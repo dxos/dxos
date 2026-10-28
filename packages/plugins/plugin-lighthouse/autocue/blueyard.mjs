@@ -28,8 +28,12 @@ const COMPANIES = ['IonQ', 'Privy', 'Protocol Labs', 'Castelion'];
 
 const BEAT = 2_500;
 
+/** The company step 4 opened, for the refocus that follows. */
+let opened;
+
 const PLANK = '[data-testid="deck.plank"]';
-const NODE = '[data-testid="lighthouse.graph.node"]';
+/** The article's graph cards; the companion's Relations graph reuses the same test id outside the plank. */
+const NODE = `${PLANK} [data-testid="lighthouse.graph.node"]`;
 const ROOT = `${NODE}[data-root]`;
 const RESULT = '[data-testid="lighthouse.result"]';
 const DETAIL = '[data-testid="lighthouse.detail"]';
@@ -141,6 +145,7 @@ export const steps = [
       if (!company) {
         throw new Error('no portfolio company with a logo on the graph');
       }
+      opened = company;
       const selector = `${NODE}[data-iri="${company.iri}"]`;
       await caption(demo, 4, `Open ${company.name}: its facts, where they came from, its relations`);
       await demo.click({ selector, label: company.name });
@@ -159,28 +164,40 @@ export const steps = [
     },
   },
   {
+    name: 'Refocus the graph on the company, then go back to BlueYard',
+    run: async ({ demo, page }) => {
+      const company = opened?.name;
+      const iri = opened?.iri;
+      const selector = `${NODE}[data-iri="${iri}"]`;
+      await caption(demo, 5, `Double-click: the graph refocuses on ${company ?? 'the company'}`);
+      await demo.hover({ selector, label: 'Double-click' });
+      await page.locator(selector).first().dblclick();
+      // The refocused neighbourhood is fetched live (~5 s) and replaces BlueYard's.
+      await page
+        .waitForFunction(
+          ([root, target]) => document.querySelector(root)?.getAttribute('data-iri') === target,
+          [ROOT, iri],
+          { timeout: 30_000 },
+        )
+        .catch(() => {});
+      await page.waitForTimeout(4_000);
+      await demo.sleep({ ms: 5_000 });
+      const back = `${PLANK} button[aria-label="Back to subjects"]`;
+      if (await visible(page.locator(back), 3_000)) {
+        await caption(demo, 5, 'Back to BlueYard');
+        await demo.click({ selector: back, label: 'Back to subjects' });
+        await page.waitForTimeout(3_000);
+        await demo.sleep({ ms: BEAT });
+      }
+    },
+  },
+  {
     name: 'Switch to the Results: the investments as cards',
     run: async ({ demo, page }) => {
-      await caption(demo, 5, 'Results: the funds, then the portfolio companies with their logos');
+      await caption(demo, 6, 'Results: the portfolio as cards, with their logos');
       await demo.click({ selector: view('Results'), label: 'Results' });
       await page.locator(RESULT).first().waitFor({ timeout: 30_000 });
       await demo.sleep({ ms: BEAT });
-      // The agent's picks lead, then the funds (no pictures); scroll to the first ranked company with a logo.
-      const index = await page.evaluate(
-        (selector) =>
-          [...document.querySelectorAll(selector)].findIndex(
-            (card) =>
-              !/PICK #/i.test(card.textContent) &&
-              [...card.querySelectorAll('img')].some((img) => img.complete && img.naturalWidth > 0),
-          ),
-        RESULT,
-      );
-      if (index > 0) {
-        await page
-          .locator(RESULT)
-          .nth(index)
-          .evaluate((element) => element.scrollIntoView({ block: 'start', behavior: 'smooth' }));
-      }
       await waitForImages(page, RESULT, 6);
       await demo.sleep({ ms: 5_000 });
     },
@@ -188,7 +205,7 @@ export const steps = [
   {
     name: 'Open the Trace briefly',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, 'Trace: every turn, call and page the research took');
+      await caption(demo, 7, 'Trace: every turn, call and page the research took');
       await demo.click({ selector: view('Trace'), label: 'Trace' });
       await page.locator('[data-testid="lighthouse.trace.row"]').first().waitFor({ timeout: 60_000 });
       await demo.sleep({ ms: 5_000 });
