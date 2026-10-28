@@ -14,6 +14,7 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
     - DrawingVariant: the canvas drawing variant and its article, for the illustrator
     - Migrations: the Scene type migrations
     - OperationHandler: the canvas operations
+    - PluginAsset: this document, served as the plugin's own spec
     - ReactSurface: the canvas properties panel of a drawing
     - Schema: the canvas generator types
     - SkillDefinition: the canvas generators skill
@@ -236,4 +237,20 @@ decision D-5: The `plugin CanvasPlugin` block lists the twelve modules plugin.ts
   by: agent:claude-code
   for: user:richburdon
   why: The plugin dialect requires `modules:` on every `plugin` block; reusing the prose keeps what the spec says about the engine unchanged.
+```
+
+```mdl
+decision D-6: The plugin's detail page links to this spec: dx.config.ts names `PLUGIN.mdl` as the plugin's spec.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-7: The plugin serves this document with a `PluginAsset` module, listed in the `plugin` block, and the package exports `./assets/PLUGIN.mdl`, as other plugins with a spec do. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The registry's open-spec action appears only when a plugin's asset module supplies the spec named by its profile.
 ```
