@@ -57,6 +57,7 @@ describe('SendReply operation', () => {
           DraftMessage.instanceOf(candidate),
         );
         expect(drafts).toHaveLength(1);
+        expect(drafts[0].properties?.sentMessageId).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -258,7 +258,16 @@ const handler = InboxOperation.TriageMailbox.pipe(
       const urgent = count((result) => result.urgent);
       const tasks = verdicts.reduce((sum, result) => sum + result.tasks, 0);
 
-      yield* Database.flush();
+      yield* Database.flush().pipe(
+        Effect.onError((cause) =>
+          Effect.sync(() =>
+            reportStatus(
+              processed,
+              Cause.hasInterruptsOnly(cause) ? Progress.STATUS_CANCELLED : Progress.STATUS_FAILED,
+            ),
+          ),
+        ),
+      );
       log.info('triage: done', { processed, labelled, needsReply, urgent, tasks, skipped });
       reportStatus(processed, Progress.STATUS_COMPLETE);
 

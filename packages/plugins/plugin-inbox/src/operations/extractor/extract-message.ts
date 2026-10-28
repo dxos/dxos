@@ -68,29 +68,67 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       };
       reportStatus(0);
 
-      const outcome = yield* dispatch(
-        { db, source: live ?? source, extractorId },
-        {
-          // Provenance relation only when the source is a live space-db object. Feed messages use
-          // the Mailbox-recorded association below instead (ECHO can't relate to queue items).
-          provenance: ({ source: from, object, extractorId: id, extractedAt, confidence }) =>
-            sourceIsLive
-              ? ExtractedFrom.make({
-                  [Relation.Source]: object,
-                  [Relation.Target]: from,
-                  extractorId: id,
-                  extractedAt,
-                  confidence,
-                })
-              : undefined,
-        },
-      ).pipe(
-        Effect.provide(
-          fromExtractors(extractors).pipe(
-            Layer.provideMerge(InboxResolver.Live),
-            Layer.provideMerge(Database.layer(db)),
+      const output = yield* Effect.gen(function* () {
+        const outcome = yield* dispatch(
+          { db, source: live ?? source, extractorId },
+          {
+            // Provenance relation only when the source is a live space-db object. Feed messages use
+            // the Mailbox-recorded association below instead (ECHO can't relate to queue items).
+            provenance: ({ source: from, object, extractorId: id, extractedAt, confidence }) =>
+              sourceIsLive
+                ? ExtractedFrom.make({
+                    [Relation.Source]: object,
+                    [Relation.Target]: from,
+                    extractorId: id,
+                    extractedAt,
+                    confidence,
+                  })
+                : undefined,
+          },
+        ).pipe(
+          Effect.provide(
+            fromExtractors(extractors).pipe(
+              Layer.provideMerge(InboxResolver.Live),
+              Layer.provideMerge(Database.layer(db)),
+            ),
           ),
-        ),
+        );
+
+        const result = outcome.result;
+
+        if (owningMailbox && result) {
+          // Apply tags. Requires a live message (Ref) — skipped for feed messages.
+          if (live && result.tags && result.tags.length > 0) {
+            for (const tag of result.tags) {
+              yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, tag, live, db));
+            }
+          }
+
+          // Record the message → extracted-object association on the Mailbox for feed messages
+          // (the relation path above only covers live space-db sources). Only top-level objects
+          // (no parent — e.g. the Trip, not its child Segment/Booking) are recorded, matching the
+          // dispatcher's provenance gating.
+          if (!sourceIsLive) {
+            const topLevelIds = [...result.created, ...(result.updated ?? [])]
+              .filter((object) => Obj.getParent(object) === undefined)
+              .map((object) => object.id);
+            Mailbox.recordExtraction(owningMailbox, source.id, topLevelIds);
+          }
+        }
+
+        // Flush (with index update) so a subsequent extraction's create-or-update queries — segment
+        // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
+        // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
+        // appending segments to the existing one.
+        yield* Database.flush({ indexes: true });
+
+        return {
+          extractorId: outcome.extractorId,
+          created: result?.created.length ?? 0,
+          updated: result?.updated?.length ?? 0,
+          summary: result?.summary,
+        };
+      }).pipe(
         // Only a terminal status ends the meter, so a run that stops early must still send one.
         Effect.onError((cause) =>
           Effect.sync(() =>
@@ -98,42 +136,8 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
           ),
         ),
       );
-
-      const result = outcome.result;
-
-      if (owningMailbox && result) {
-        // Apply tags. Requires a live message (Ref) — skipped for feed messages.
-        if (live && result.tags && result.tags.length > 0) {
-          for (const tag of result.tags) {
-            yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, tag, live, db));
-          }
-        }
-
-        // Record the message → extracted-object association on the Mailbox for feed messages
-        // (the relation path above only covers live space-db sources). Only top-level objects
-        // (no parent — e.g. the Trip, not its child Segment/Booking) are recorded, matching the
-        // dispatcher's provenance gating.
-        if (!sourceIsLive) {
-          const topLevelIds = [...result.created, ...(result.updated ?? [])]
-            .filter((object) => Obj.getParent(object) === undefined)
-            .map((object) => object.id);
-          Mailbox.recordExtraction(owningMailbox, source.id, topLevelIds);
-        }
-      }
-
-      // Flush (with index update) so a subsequent extraction's create-or-update queries — segment
-      // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
-      // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
-      // appending segments to the existing one.
-      yield* Database.flush({ indexes: true });
       reportStatus(1, Progress.STATUS_COMPLETE);
-
-      return {
-        extractorId: outcome.extractorId,
-        created: result?.created.length ?? 0,
-        updated: result?.updated?.length ?? 0,
-        summary: result?.summary,
-      };
+      return output;
     }),
   ),
 );
