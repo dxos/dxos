@@ -1074,15 +1074,6 @@ decision D-3: Editing a plugin's definition re-creates the plugin in place, with
 ```
 
 ```mdl
-decision D-4: A plugin's definition is its dx.config.ts, so QA-16 edits the module list there. Fills in [D-3].
-  date: 2026-10-28
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [QA-16]
-  why: Plugins are defined by Plugin.config in dx.config.ts; src/plugin.ts no longer exists.
-```
-
-```mdl
 decision D-4: QA-16 drops its full-reload contrast and instead drops and restores a module from plugin-space's definition. Fills in [D-3].
   date: 2026-10-27
   by: agent:claude-code
@@ -1099,4 +1090,13 @@ decision D-5: QA-9 covers a document tour on a plank narrow enough to fold a ste
   for: user:wittjosiah
   affects: [QA-9]
   why: A tour exercised at one window size passes or fails on a pixel budget it cannot see; #14053 broke the tour that way and the suite did not notice.
+```
+
+```mdl
+decision D-6: A plugin's definition is its dx.config.ts, so QA-16 edits the module list there. Fills in [D-3].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-16]
+  why: Plugins are defined by Plugin.config in dx.config.ts; src/plugin.ts no longer exists.
 ```

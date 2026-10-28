@@ -403,11 +403,24 @@ export const createConfig = ({
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
-    // Read from the workspace path: this package does not depend on app-framework, and its vite plugin
-    // is ESM-only.
-    const { moduleBodyAttributePlugin } = await import(
-      pathToFileURL(resolve(rootDir, 'packages/sdk/app-framework/dist/lib/vite-plugin.mjs')).href
-    );
+    // Read from the workspace path on the first config served: this package does not depend on
+    // app-framework, so a test run that never loads a config must not need it built.
+    let appFrameworkVitePlugin:
+      | Promise<{ stripModuleBodyAttributes: (code: string, ast: unknown) => string | null }>
+      | undefined;
+    const moduleBodyAttributePlugin = (): Plugin => ({
+      name: 'module-url-attribute',
+      async transform(code, id) {
+        if (!/\/dx\.config\.ts$/.test(id.split('?')[0])) {
+          return null;
+        }
+        appFrameworkVitePlugin ??= import(
+          pathToFileURL(resolve(rootDir, 'packages/sdk/app-framework/dist/lib/vite-plugin.mjs')).href
+        );
+        const { stripModuleBodyAttributes } = await appFrameworkVitePlugin;
+        return stripModuleBodyAttributes(code, this.parse(code));
+      },
+    });
 
     const finalConfig = mergeConfig(
       {
