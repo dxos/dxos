@@ -8,7 +8,9 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { findSpecRefs, specDependencies, specReferenceFilter } from '@dxos/deus/extension';
 import { type SpecIndex, frontmatter } from '@dxos/deus/spec-index';
 
-import { type SourceKey, findSourceKeys, resolveSpecRef } from '#sync';
+import { type SourceKey, findSourceKeys } from '#sync';
+
+import { resolveSpecRef } from './spec-ref.ts';
 
 /** A span of the spec that names another spec or file: openable, or broken with the reason. */
 export type SourceLink = { from: number; to: number } & ({ target: SourceKey } | { error: string });

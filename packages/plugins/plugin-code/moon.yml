@@ -21,11 +21,14 @@ tasks:
   # The spec index the viewer resolves `<spec id>#<item>` references through; named directly in the deps above since
   # a same-project `~:#prebuild` tag dep resolves to nothing for a tag-inherited task.
   prebuild-spec-index:
-    script: mkdir -p src/sync/gen && pnpm --filter @dxos/deus exec node --conditions=source bin/deus.ts index --out $projectRoot/src/sync/gen/spec-index.json
+    script: mkdir -p src/components/SpecEditor/gen && pnpm --filter @dxos/deus exec node --conditions=source bin/deus.ts index --out $projectRoot/src/components/SpecEditor/gen/spec-index.json
     inputs:
       - /**/*.mdl
+      # The indexer itself, so a change to it regenerates rather than restoring a stale index from cache.
+      - /packages/reflect/deus/src/**/*
+      - /packages/reflect/deus/bin/*
     outputs:
-      - src/sync/gen/spec-index.json
+      - src/components/SpecEditor/gen/spec-index.json
     tags:
       - prebuild
   check-module-structure:

@@ -59,23 +59,23 @@ import {
   DefinitionGraph,
   type DefinitionModel,
   ReviewPanel,
+  SPEC_INDEX,
   buildChangelogGraph,
   citedFiles,
   decisionGutter,
   parseReview,
+  pendingReveal,
   reviewGutter,
   sourceLinks,
 } from '#components';
 import { meta } from '#meta';
 import {
   type SourceKey,
-  SPEC_INDEX,
   findSourceKeys,
   formatSourceKey,
   getSpecKey,
   isSpecKey,
   parseSourceKey,
-  pendingReveal,
   reviewKeyOf,
 } from '#sync';
 import { CodeOperation } from '#types';
