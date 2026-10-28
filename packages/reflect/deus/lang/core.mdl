@@ -75,20 +75,20 @@ The linter verifies that all references resolve to a declared block.
 
 ### External References
 
-A block may name something outside its document by **source key**:
+A spec names a block of another spec as `<spec id>#<item>`, where the item is a block id or `req` id
+(`org.dxos.ui.react-ui-canvas#F-3.1`), and declares that spec under `## Dependencies` (below). A
+block may name code, or anything else outside the specs, by **source key**:
 `github:<owner>/<repo>/<path>[#<fragment>]`, with the path relative to the repository root.
 
 | Key names           | Example                                                        | Fragment            |
 | ------------------- | -------------------------------------------------------------- | ------------------- |
-| A block of a spec   | `github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database`   | Block or req id     |
 | A code symbol       | `github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make`   | Symbol (`A.b` ok)   |
 | A whole file        | `github:dxos/dxos/packages/apps/composer-app/vite.config.ts`   | none                |
 
-A spec writes keys inline to name blocks of other specs. It does not name the code that implements
-it: those links are annotations kept outside the spec (a review's `evidence:`, see `review.mdl`),
-and the spec viewer renders them as decorations beside the items they annotate. Tools resolve keys
-against a local checkout of the repository. A key is a location, not a version: it names whatever
-the checkout holds.
+A spec does not name the code that implements it: those links are annotations kept outside the
+spec (a review's `evidence:`, see `review.mdl`), and the spec viewer renders them as decorations
+beside the items they annotate. Tools resolve keys against a local checkout of the repository. A
+key is a location, not a version: it names whatever the checkout holds.
 
 ---
 
@@ -117,7 +117,9 @@ inline `ext` blocks for custom or experimental ones.
 ## Dependencies Section
 
 A spec lists the other specs it builds on under `## Dependencies`, after the opening prose and
-before `## Extensions`, one `uses` block per spec. The identifier is the depended-on spec's `id`;
+before `## Extensions`, one `uses` block per spec. A Composer plugin's runtime dependencies are the
+exception: they go in its `plugin` block's `dependsOn` (plugin dialect) and are never repeated under
+`uses`. The identifier is the depended-on spec's `id`;
 the inline prose is required and says what this spec takes from it.
 
 ```mdl
