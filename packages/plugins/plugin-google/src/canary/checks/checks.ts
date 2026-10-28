@@ -112,8 +112,6 @@ export type CheckOptions = {
 const MINUTE = 60_000;
 // An invocation may stay open this long before it counts as killed.
 const CLOSURE_GRACE_MS = 10 * MINUTE;
-/** How long a seeded copy may take to appear in the mailbox feed before C5 counts it missing. */
-export const ARRIVAL_GRACE_MS = 25 * MINUTE;
 // Slack on top of the sync's cron interval, to absorb scheduler jitter.
 const CADENCE_SLACK_MS = 2 * MINUTE;
 
@@ -198,9 +196,9 @@ export const runChecks = (
   for (const message of snapshot.messages) {
     synced.set(message.gmailId, [...(synced.get(message.gmailId) ?? []), message]);
   }
-  const due = seeded.filter((message) => now - message.insertedAt > ARRIVAL_GRACE_MS);
+  // The checks run once the wait for the copies is over, so a copy still absent is missing however new it is.
   const missingClass: FailureClass = failed.length > 0 || closure.length > 0 ? 'STALL' : 'DATA';
-  const arrival: Failure[] = due
+  const arrival: Failure[] = seeded
     .filter((message) => !synced.has(message.gmailId))
     .map((message) => ({ class: missingClass, gmailId: message.gmailId, message: 'seeded message not synced' }));
 

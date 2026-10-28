@@ -112,7 +112,7 @@ The checks count invocations of `GoogleMailSync`, paired by `pid`; an invocation
 | C2    | an invocation failed (a `runAgain` yield is not a failure)        | from the error |
 | C3    | none started for the cron interval (`MAIL_SYNC_CRON`) plus 2 min  | IDLE           |
 | C4    | the mail sync trigger is missing or disabled                      | OFF            |
-| C5    | a copy older than 25 minutes is not in the mailbox feed           | DATA, STALL    |
+| C5    | a copy is still not in the mailbox feed when the wait ends        | DATA, STALL    |
 | C6    | a Gmail message appears twice in the mailbox feed                 | DATA           |
 | C7    | a synced copy's subject or sender differs from Gmail's            | DATA           |
 

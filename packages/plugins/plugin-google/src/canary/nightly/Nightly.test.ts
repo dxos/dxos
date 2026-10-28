@@ -4,7 +4,6 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -12,26 +11,23 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { Nightly } from './Nightly.ts';
 
 describe('Nightly.run', () => {
-  test('refuses a sync timeout shorter than the arrival grace before seeding', async ({ expect }) => {
-    let rotated = false;
+  test('reports a copy still missing when the wait ends, however recently it was seeded', async ({ expect }) => {
+    const seeded = { gmailId: 'copy-1', insertedAt: Date.now(), subject: 'Re: forecast', sender: 'a@enron.com' };
     const nightly = new Nightly({
-      seeder: {
-        rotate: () => Effect.sync(() => (rotated = true)).pipe(Effect.as({ poolSize: 0, seeded: [], trashed: 0 })),
-      },
+      seeder: { rotate: () => Effect.succeed({ poolSize: 1, seeded: [seeded], trashed: 1 }) },
       space: { spaceId: 'space', snapshot: () => Effect.succeed({ invocations: [], messages: [], triggers: [] }) },
     });
 
-    const exit = await EffectEx.runPromise(
-      nightly
-        .run({
-          count: 1,
-          syncTimeout: Duration.minutes(10),
-          pollInterval: Duration.seconds(1),
-          window: Duration.hours(25),
-        })
-        .pipe(Effect.exit),
+    const report = await EffectEx.runPromise(
+      nightly.run({
+        count: 1,
+        syncTimeout: Duration.millis(50),
+        pollInterval: Duration.millis(10),
+        window: Duration.hours(25),
+      }),
     );
-    expect(Exit.isFailure(exit)).toBe(true);
-    expect(rotated).toBe(false);
+    const arrival = report.checks.find((check) => check.id === 'C5');
+    expect(arrival?.failures).toEqual([expect.objectContaining({ gmailId: 'copy-1' })]);
+    expect(report.syncMinutes).toBeUndefined();
   });
 });

@@ -42,12 +42,15 @@ const withEnd = (pid: string, end: Partial<NonNullable<Invocation['end']>>) =>
 
 const seeded: SeededMessage[] = [
   { gmailId: 'g1', insertedAt: SINCE, subject: 'Re: forecast', sender: 'phillip.allen@enron.com' },
-  { gmailId: 'g2', insertedAt: NOW - 5 * MINUTE, subject: 'Too new to judge', sender: 'a@enron.com' },
+  { gmailId: 'g2', insertedAt: NOW - 5 * MINUTE, subject: 'Re: travel', sender: 'a@enron.com' },
 ];
 
 const healthySnapshot = (): SpaceSnapshot => ({
   invocations: healthyInvocations(),
-  messages: [{ gmailId: 'g1', subject: 'Re:  forecast', sender: 'Phillip.Allen@enron.com' }],
+  messages: [
+    { gmailId: 'g1', subject: 'Re:  forecast', sender: 'Phillip.Allen@enron.com' },
+    { gmailId: 'g2', subject: 'Re: travel', sender: 'a@enron.com' },
+  ],
   triggers: [{ id: 'trigger-1', enabled: true }],
 });
 
@@ -103,13 +106,19 @@ describe('runChecks', () => {
     const missing = { ...healthySnapshot(), messages: [] };
     const arrival = (snapshot: SpaceSnapshot) =>
       runChecks(snapshot, seeded, { now: NOW, since: SINCE }).checks.find((check) => check.id === 'C5');
-    expect(arrival(missing)?.failures).toEqual([expect.objectContaining({ class: 'DATA', gmailId: 'g1' })]);
+    expect(arrival(missing)?.failures).toEqual([
+      expect.objectContaining({ class: 'DATA', gmailId: 'g1' }),
+      expect.objectContaining({ class: 'DATA', gmailId: 'g2' }),
+    ]);
 
     const invocations = healthyInvocations().map((invocation) => ({
       ...invocation,
       end: { key: KEY, outcome: 'failure' as const, error: 'RepoClosedError', timestamp: NOW },
     }));
-    expect(arrival({ ...missing, invocations })?.failures).toEqual([expect.objectContaining({ class: 'STALL' })]);
+    expect(arrival({ ...missing, invocations })?.failures).toEqual([
+      expect.objectContaining({ class: 'STALL', gmailId: 'g1' }),
+      expect.objectContaining({ class: 'STALL', gmailId: 'g2' }),
+    ]);
   });
 
   test('duplicates and content mismatches fail', ({ expect }) => {
@@ -118,6 +127,7 @@ describe('runChecks', () => {
       messages: [
         { gmailId: 'g1', subject: 'Re: forecast', sender: 'someone.else@enron.com' },
         { gmailId: 'g1', subject: 'Re: forecast', sender: 'someone.else@enron.com' },
+        healthySnapshot().messages[1],
       ],
     };
     expect(failedChecks(snapshot)).toEqual(['C6', 'C7']);
@@ -134,15 +144,15 @@ describe('runChecks', () => {
     expect(failedChecks(snapshot)).toEqual(['C6', 'C7']);
   });
 
-  test('a copy that arrived inside the grace period is still compared', ({ expect }) => {
-    const snapshot = {
-      ...healthySnapshot(),
-      messages: [
-        ...healthySnapshot().messages,
-        { gmailId: 'g2', subject: 'Too new to judge', sender: 'someone.else@enron.com' },
-      ],
-    };
-    expect(failedChecks(snapshot)).toEqual(['C7']);
+  test('a copy minutes old is judged like any other, missing or wrong', ({ expect }) => {
+    const [first] = healthySnapshot().messages;
+    expect(failedChecks({ ...healthySnapshot(), messages: [first] })).toEqual(['C5']);
+    expect(
+      failedChecks({
+        ...healthySnapshot(),
+        messages: [first, { gmailId: 'g2', subject: 'Re: travel', sender: 'someone.else@enron.com' }],
+      }),
+    ).toEqual(['C7']);
   });
 });
 

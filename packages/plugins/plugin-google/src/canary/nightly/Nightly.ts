@@ -5,8 +5,8 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
-import { ARRIVAL_GRACE_MS, type SpaceSnapshot, runChecks } from '../checks/index.ts';
-import { CanaryError } from '../errors.ts';
+import { type SpaceSnapshot, runChecks } from '../checks/index.ts';
+import { type CanaryError } from '../errors.ts';
 import { type CanaryMailboxError } from '../gmail/index.ts';
 import { type Seeder } from '../seed/index.ts';
 import { type CanarySpace } from '../space/index.ts';
@@ -43,12 +43,6 @@ export class Nightly {
     window,
   }: NightlyOptions): Effect.Effect<NightlyReport, CanaryMailboxError | CanaryError> {
     return Effect.gen({ self: this }, function* () {
-      // C5 judges only copies past the arrival grace, so a shorter wait would let a missing copy pass.
-      if (Duration.toMillis(syncTimeout) < ARRIVAL_GRACE_MS) {
-        return yield* new CanaryError({
-          message: `the sync timeout must be at least ${ARRIVAL_GRACE_MS / 60_000} minutes, the arrival grace`,
-        });
-      }
       const startedAt = new Date();
       const since = startedAt.getTime() - Duration.toMillis(window);
       const { poolSize, seeded, trashed } = yield* this.#seeder.rotate({ count, now: startedAt });
