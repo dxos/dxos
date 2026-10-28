@@ -31,7 +31,7 @@ slower, so leave the beats in. A line marked _(verify)_ makes a product claim th
 ## 6. Your competitors (`#competitors`)
 
 - Scale, however, has a way of rearranging the furniture.
-- Leaving was easier in theory, so every vendor dug a moat.
+- Leaving was easier. In theory. So every vendor dug a moat.
 
 ## 7. Many silos (`#spread`)
 
