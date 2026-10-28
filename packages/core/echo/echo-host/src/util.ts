@@ -19,8 +19,7 @@ export const findInlineObjectOfType = (
   spaceDoc: DatabaseDirectory,
   typename: string,
 ): [string, EntityStructure] | undefined => {
-  for (const id in spaceDoc.objects ?? {}) {
-    const obj = spaceDoc.objects![id];
+  for (const [id, obj] of Object.entries(spaceDoc.objects ?? {})) {
     const objType = EntityStructure.getTypeReference(obj);
     if (objType) {
       const uri = EncodedReference.toURI(objType);
