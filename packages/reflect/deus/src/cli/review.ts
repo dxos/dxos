@@ -94,10 +94,29 @@ export const reviewVerdicts = (text: string): Map<string, { status?: string; not
     }),
   );
 
-/** The string array literal after `dependsOn:` in a `dx.config.ts`; undefined when there is none. */
+/**
+ * The `dependsOn` array of the `plugin` object in a `dx.config.ts`, empty when the object has none; undefined when
+ * there is no `plugin` object. Comments are stripped first so a commented-out entry does not count.
+ */
 export const configDependsOn = (configText: string): string[] | undefined => {
-  const list = configText.match(/\bdependsOn:\s*\[([^\]]*)\]/)?.[1];
-  return list === undefined ? undefined : [...list.matchAll(/(['"`])(.*?)\1/g)].map((match) => match[2]);
+  const code = configText.replace(/(['"`])(?:\\.|(?!\1)[^\\])*\1|\/\/.*|\/\*[\s\S]*?\*\//g, (match) =>
+    match.startsWith('/') ? ' ' : match,
+  );
+  const start = code.match(/\bplugin\s*:\s*\{/);
+  if (!start) {
+    return undefined;
+  }
+  let depth = 0;
+  let end = code.length;
+  for (let index = start.index + start[0].length - 1; index < code.length; index++) {
+    depth += code[index] === '{' ? 1 : code[index] === '}' ? -1 : 0;
+    if (depth === 0) {
+      end = index;
+      break;
+    }
+  }
+  const list = code.slice(start.index, end).match(/\bdependsOn\s*:\s*\[([^\]]*)\]/)?.[1] ?? '';
+  return [...list.matchAll(/(['"`])(.*?)\1/g)].map((match) => match[2]);
 };
 
 /** Whether the source declares the name: a top-level declaration, a member, or an export list entry. */

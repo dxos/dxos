@@ -202,7 +202,14 @@ describe('review dependsOn', () => {
   test('configDependsOn parses the array', ({ expect }) => {
     expect(configDependsOn('plugin: {\n  dependsOn: [\'a.b\', "c.d"],\n}')).toEqual(['a.b', 'c.d']);
     expect(configDependsOn('plugin: { dependsOn: [] }')).toEqual([]);
-    expect(configDependsOn('plugin: {}')).toBeUndefined();
+    expect(configDependsOn('plugin: {}')).toEqual([]);
+    expect(configDependsOn("plugin: { key: 'x' }")).toEqual([]);
+    expect(configDependsOn("export default { name: 'x' }")).toBeUndefined();
+    expect(
+      configDependsOn(
+        "plugin: {\n  // dependsOn: ['old'],\n  dependsOn: [\n    'a',\n    // 'x',\n    'b', /* 'y' */\n  ],\n}",
+      ),
+    ).toEqual(['a', 'b']);
   });
 
   test('review check fails on a dependsOn mismatch judged done', async ({ expect }) => {
@@ -215,11 +222,19 @@ describe('review dependsOn', () => {
     ]);
   });
 
+  test('review check treats a config plugin without dependsOn as empty', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/plugin-deps-empty/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(
+      output.filter((line) => line.startsWith('error: ')).map((line) => line.replace(/^error: .*?:\d+: /, '')),
+    ).toEqual(['SamplePlugin dependsOn [org.example.plugin.a] differs from dx.config.ts []; judge it diverged']);
+  });
+
   test('review check passes when the mismatch is judged diverged, or the sets match', async ({ expect }) => {
-    for (const name of ['plugin-deps-diverged', 'plugin-deps']) {
+    for (const name of ['plugin-deps-diverged', 'plugin-deps', 'plugin-deps-noplugin']) {
       const { exit, output } = await run(['review', 'check', `${dir}/${name}/PLUGIN.review.mdl`]);
       expect(Exit.isSuccess(exit)).toBe(true);
-      expect(output.at(-1)).toMatch(/^1 verdicts for 1 items; 0 errors/);
+      expect(output.at(-1)).toMatch(/^1 verdicts for 1 items; 0 errors, /);
     }
   });
 });
