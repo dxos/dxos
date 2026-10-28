@@ -10,7 +10,7 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, directoryJson } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { type DataService } from '@dxos/protocols/rpc';
@@ -213,6 +213,29 @@ describe('DocumentsSynchronizer', () => {
     });
     await host.flush(Context.default());
     expect((await update).passive).toEqual(expect.objectContaining({ json: undefined }));
+  });
+
+  test('a passive update to a links-only directory carries the directory JSON', async () => {
+    const { host, synchronizer, next } = await setupPassive();
+    const root = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: SpaceId.random() },
+      links: {},
+    });
+    await host.flush(Context.default());
+    await synchronizer.addDocuments([{ documentId: root.documentId, heads: A.getHeads(root.doc()), passive: true }]);
+
+    const objectId = EntityId.random();
+    const update = next();
+    root.change((doc) => {
+      doc.links ??= {};
+      doc.links[objectId] = 'automerge:2';
+    });
+    await host.flush(Context.default());
+    const linked = await update;
+    expect(linked.passive?.directory).toBe(directoryJson(root.doc()));
+    expect(linked.passive?.json).toBeUndefined();
+    expect(linked.passive?.heads).toEqual(A.getHeads(root.doc()));
   });
 
   test('re-adding a document switches its mode', async () => {

@@ -121,6 +121,11 @@ export const DocumentUpdate = Schema.Struct({
       heads: mutableArray(Schema.String),
       json: Schema.optional(Schema.String),
       updatedAt: Schema.optional(Schema.Number),
+      /**
+       * The document read as a space directory that holds no inline objects (see `directoryJson` in
+       * `@dxos/echo-protocol`), so a client holding the space root unloaded routes objects from it.
+       */
+      directory: Schema.optional(Schema.String),
     }),
   ),
 });
@@ -131,6 +136,25 @@ export const UpdateRequest = Schema.Struct({
   updates: Schema.optional(mutableArray(DocumentUpdate)),
 });
 export interface UpdateRequest extends Schema.Schema.Type<typeof UpdateRequest> {}
+
+export const GetDirectorySnapshotRequest = Schema.Struct({
+  /** Automerge document id of a space directory (the space root). */
+  documentId: Schema.String,
+});
+export interface GetDirectorySnapshotRequest extends Schema.Schema.Type<typeof GetDirectorySnapshotRequest> {}
+
+/**
+ * A space directory the client can hold unloaded: its stored changes, the heads they are read at, and the
+ * directory's JSON at those heads. The bytes may be ahead of the heads, never behind. All fields are absent when
+ * the host does not store the document; `json` alone is absent when the directory cannot be shown as JSON (it
+ * holds inline objects or outgrew the size limit), and the client loads it instead.
+ */
+export const DirectorySnapshot = Schema.Struct({
+  heads: Schema.optional(mutableArray(Schema.String)),
+  bytes: Schema.optional(Schema.Uint8Array),
+  json: Schema.optional(Schema.String),
+});
+export interface DirectorySnapshot extends Schema.Schema.Type<typeof DirectorySnapshot> {}
 
 export const BatchedDocumentUpdates = Schema.Struct({
   updates: Schema.optional(mutableArray(DocumentUpdate)),
@@ -376,6 +400,14 @@ export class Rpcs extends RpcGroup.make(
    */
   Rpc.make('update', {
     payload: UpdateRequest,
+    error: serviceError,
+  }),
+  /**
+   * A space directory's stored changes and JSON, so the client shows it without loading Automerge.
+   */
+  Rpc.make('getDirectorySnapshot', {
+    payload: GetDirectorySnapshotRequest,
+    success: DirectorySnapshot,
     error: serviceError,
   }),
   Rpc.make('flush', {

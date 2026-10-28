@@ -2,12 +2,14 @@
 // Copyright 2021 DXOS.org
 //
 
+import { next as A, type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { BACKED_DIRECTORY_LIMIT, type DatabaseDirectory, directoryJson } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -16,9 +18,13 @@ import { toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
+import { sameHeads } from '../query/object-state.ts';
 import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 import { type IndexStatusTracker } from './index-status.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
+
+/** Bound on loading a space directory to read its JSON; a stored directory loads well within it. */
+const DIRECTORY_LOAD_TIMEOUT = 10_000;
 
 /** Space sync-state recomputations per second; the scheduler still runs a trailing pass, so the last state lands. */
 const SYNC_STATE_MAX_FREQ = 2;
@@ -170,6 +176,50 @@ export class DataServiceImpl implements DataService.Handlers {
       },
       catch: toServiceError,
     });
+  }
+
+  ['DataService.getDirectorySnapshot'](
+    request: DataService.GetDirectorySnapshotRequest,
+  ): Effect.Effect<DataService.DirectorySnapshot, Error> {
+    return Effect.tryPromise({
+      try: async () => {
+        const documentId = request.documentId as DocumentId;
+        // Heads before bytes: a save landing between the reads leaves the bytes ahead of the heads, which the
+        // client allows, never behind them.
+        const [heads] = await this._automergeHost.getStoredHeads([documentId]);
+        if (!heads) {
+          return {};
+        }
+        // Without JSON the client still gets the bytes and loads them, so a failed read costs speed, not the open.
+        const json = await this.#directoryJsonAt(documentId, heads).catch((err) => {
+          log.warn('directory JSON could not be read', { documentId, err });
+          return undefined;
+        });
+        const bytes = await this._automergeHost.readStoredChanges(documentId, { limit: BACKED_DIRECTORY_LIMIT });
+        return bytes ? { heads: [...heads], bytes, json } : {};
+      },
+      catch: toServiceError,
+    });
+  }
+
+  /** The directory's JSON at its stored heads: the stored copy when it was read at them, else read and stored. */
+  async #directoryJsonAt(documentId: DocumentId, heads: Heads): Promise<string | undefined> {
+    const stored = await this._spaceStateManager.readDirectorySnapshot(documentId);
+    if (stored && sameHeads(stored.heads, heads)) {
+      return stored.json;
+    }
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId, {
+      timeout: DIRECTORY_LOAD_TIMEOUT,
+    });
+    const doc = lease?.doc();
+    if (!doc || !A.hasHeads(doc, heads)) {
+      return undefined;
+    }
+    const json = directoryJson(sameHeads(A.getHeads(doc), heads) ? doc : A.view(doc, heads));
+    if (json !== undefined) {
+      await this._spaceStateManager.writeDirectorySnapshot(documentId, { heads, json });
+    }
+    return json;
   }
 
   ['DataService.flush'](request: DataService.FlushRequest): Effect.Effect<void, Error> {

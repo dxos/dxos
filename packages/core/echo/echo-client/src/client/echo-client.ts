@@ -351,15 +351,13 @@ export class EchoClient extends Resource {
         unsubscribe();
         resolve(db.getObjectDocumentId(objectId));
       };
-      const rootHandle = db._entityManager.getSpaceRootDocHandle();
-      const onChange = () => {
-        if (db.getObjectDocumentId(objectId) !== undefined) {
+      // Links reach a loaded root by its change events and a passive one by its JSON; both report here.
+      const unsubscribe = db.linksAdded.on((added) => {
+        if (added.includes(objectId)) {
           settle();
         }
-      };
-      const unsubscribe = () => rootHandle.off('change', onChange);
+      });
       const timer = setTimeout(settle, ROOT_LINK_WAIT_TIMEOUT);
-      rootHandle.on('change', onChange);
     });
   }
 }

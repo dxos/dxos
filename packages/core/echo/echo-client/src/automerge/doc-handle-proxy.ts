@@ -7,7 +7,7 @@ import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@auto
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
-import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
+import { BACKED_DIRECTORY_LIMIT, BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
 import { runInCommit } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -40,9 +40,10 @@ export type ClientDocHandleEvents<T> = {
   available: { handle: DocHandleProxy<T> };
   /**
    * A passive handle took a change from the host: what its document's one object now shows, read at
-   * `heads`. No `json` when the object cannot be shown without loading the document.
+   * `heads`. No `json` when the object cannot be shown without loading the document; `directory` is the
+   * document read as a space directory, set when it holds no inline objects.
    */
-  passive: { handle: DocHandleProxy<T>; heads: A.Heads; json?: string; updatedAt?: number };
+  passive: { handle: DocHandleProxy<T>; heads: A.Heads; json?: string; directory?: string; updatedAt?: number };
   /** A passive handle loaded its stored changes; emitted once, before the call that loaded it returns. */
   activated: { handle: DocHandleProxy<T> };
 };
@@ -571,7 +572,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    */
   _integratePassiveUpdate(
     mutation: Uint8Array | undefined,
-    passive: { heads: A.Heads; json?: string; updatedAt?: number } | undefined,
+    passive: { heads: A.Heads; json?: string; directory?: string; updatedAt?: number } | undefined,
   ): void {
     const held = this.#body;
     invariant(held?.kind === 'passive', 'Not a passive handle.');
@@ -580,10 +581,11 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       held.size += mutation.length;
     }
     const json = held.size <= BACKED_OBJECT_LIMIT ? passive?.json : undefined;
-    if (json !== undefined) {
-      held.heads = passive!.heads;
+    const directory = held.size <= BACKED_DIRECTORY_LIMIT ? passive?.directory : undefined;
+    if (passive && (json !== undefined || directory !== undefined)) {
+      held.heads = passive.heads;
     }
-    this.emit('passive', { handle: this, heads: held.heads, json, updatedAt: passive?.updatedAt });
+    this.emit('passive', { handle: this, heads: held.heads, json, directory, updatedAt: passive?.updatedAt });
   }
 
   /**

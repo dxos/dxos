@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { getHeads } from '@automerge/automerge';
+import { next as A, getHeads } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -14,9 +14,16 @@ import { describe, expect, onTestFinished, test, vi } from 'vitest';
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Aggregate, Filter, Query } from '@dxos/echo';
-import { type DatabaseDirectory, EchoFeedCodec, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import {
+  type DatabaseDirectory,
+  EchoFeedCodec,
+  EntityStructure,
+  SpaceDocVersion,
+  directoryJson,
+} from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
@@ -1180,6 +1187,62 @@ const idLookupRequest = (
 ): QueryService.QueryRequest => ({
   ...oneShotRequest(spaceId, queryId),
   query: JSON.stringify(Query.select(Filter.id(objectId)).from([{ _tag: 'space', spaceId }]).ast),
+});
+
+describe('EchoHost directory snapshots', () => {
+  const getSnapshot = (host: EchoHost, documentId: string) =>
+    EffectEx.runPromise(host.dataService['DataService.getDirectorySnapshot']({ documentId }));
+
+  test('serves a links-only directory as JSON at its stored heads, then from SQLite', async () => {
+    const { host, spaceId } = await setup();
+    const lease = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      links: { [EntityId.random()]: 'automerge:2' },
+    });
+    await host.flush(Context.default());
+
+    const loadDoc = vi.spyOn(host.automergeHost, 'loadDoc');
+    const first = await getSnapshot(host, lease.documentId);
+    expect(first.json).toBe(directoryJson(lease.doc()));
+    expect(first.heads).toEqual(getHeads(lease.doc()));
+    invariant(first.bytes, 'snapshot has no bytes');
+    expect(A.getHeads(A.loadIncremental(A.init(), first.bytes))).toEqual(first.heads);
+    const loads = loadDoc.mock.calls.length;
+
+    const second = await getSnapshot(host, lease.documentId);
+    expect(second.json).toBe(first.json);
+    expect(loadDoc.mock.calls.length).toBe(loads);
+
+    lease.change((doc) => {
+      doc.links ??= {};
+      doc.links[EntityId.random()] = 'automerge:3';
+    });
+    await host.flush(Context.default());
+    const third = await getSnapshot(host, lease.documentId);
+    expect(third.json).toBe(directoryJson(lease.doc()));
+    expect(third.heads).toEqual(getHeads(lease.doc()));
+  });
+
+  test('serves a directory with inline objects as bytes alone', async () => {
+    const { host, spaceId } = await setup();
+    const lease = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects: { [EntityId.random()]: EntityStructure.makeObject({ type: TEST_TYPE, data: {} }) },
+      links: {},
+    });
+    await host.flush(Context.default());
+
+    const snapshot = await getSnapshot(host, lease.documentId);
+    expect(snapshot.json).toBeUndefined();
+    expect(snapshot.bytes?.length).toBeGreaterThan(0);
+  });
+
+  test('serves nothing for a document it does not store', async () => {
+    const { host } = await setup();
+    expect(await getSnapshot(host, '2DrjgbFdhNzImM8Gjt9MeQJGGgV')).toEqual({});
+  });
 });
 
 const setup = async (

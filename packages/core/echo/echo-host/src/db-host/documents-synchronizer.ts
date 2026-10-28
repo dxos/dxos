@@ -7,7 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler, asyncTimeout } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory, backingJson } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, backingJson, directoryJson } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
@@ -293,7 +293,10 @@ export class DocumentsSynchronizer extends Resource {
       const update = await this._getPendingChanges(documentId);
       if (update) {
         updates.push(update);
-        bytes += (update.mutation?.byteLength ?? 0) + (update.passive?.json?.length ?? 0);
+        bytes +=
+          (update.mutation?.byteLength ?? 0) +
+          (update.passive?.json?.length ?? 0) +
+          (update.passive?.directory?.length ?? 0);
       }
     }
     if (this._pendingUpdates.size > 0) {
@@ -399,6 +402,8 @@ const passiveObject = (doc: A.Doc<DatabaseDirectory>): DataService.DocumentUpdat
     heads,
     json: entry && backingJson(doc, entry[1], objectStructureToJson(entry[0] as EntityId, entry[1])),
     updatedAt: lastChangeTime(doc, heads),
+    // Read without knowing which document is a space root: a client applies it only to the root it holds unloaded.
+    directory: entry ? undefined : directoryJson(doc),
   };
 };
 

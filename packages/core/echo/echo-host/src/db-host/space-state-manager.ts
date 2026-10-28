@@ -331,10 +331,42 @@ export class SpaceStateManager extends Resource {
   }
 
   private async _deleteSpace(spaceId: SpaceId): Promise<void> {
+    const rootId = this._rootBySpace.get(spaceId);
+    const shared =
+      rootId !== undefined && [...this._rootBySpace].some(([id, root]) => id !== spaceId && root === rootId);
     await RuntimeProvider.runPromise(this._runtime)(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DELETE FROM echo_spaces WHERE space_id = ${spaceId}`;
+        if (rootId !== undefined && !shared) {
+          yield* sql`DELETE FROM echo_directory_snapshots WHERE document_id = ${rootId}`;
+        }
+      }),
+    );
+  }
+
+  /** The directory JSON last stored for a space root, with the heads it was read at. */
+  async readDirectorySnapshot(documentId: DocumentId): Promise<DirectorySnapshotRow | undefined> {
+    const rows = await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        return yield* sql<{
+          heads: string;
+          json: string;
+        }>`SELECT heads, json FROM echo_directory_snapshots WHERE document_id = ${documentId}`;
+      }),
+    );
+    const [row] = rows;
+    return row ? { heads: JSON.parse(row.heads), json: row.json } : undefined;
+  }
+
+  async writeDirectorySnapshot(documentId: DocumentId, { heads, json }: DirectorySnapshotRow): Promise<void> {
+    const encodedHeads = JSON.stringify(heads);
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`INSERT INTO echo_directory_snapshots (document_id, heads, json) VALUES (${documentId}, ${encodedHeads}, ${json})
+          ON CONFLICT(document_id) DO UPDATE SET heads = excluded.heads, json = excluded.json`;
       }),
     );
   }
@@ -348,6 +380,9 @@ export type SpaceRootRefs = {
   spaceRootDocUrl: AutomergeUrl;
   credentialsDocUrl?: AutomergeUrl;
 };
+
+/** A space directory's JSON and the heads it was read at; see `directoryJson` in `@dxos/echo-protocol`. */
+export type DirectorySnapshotRow = { heads: readonly string[]; json: string };
 
 export class SpaceDocumentListUpdatedEvent {
   constructor(
