@@ -1423,6 +1423,31 @@ const isPlankLevelFocus = (): boolean => {
   return active instanceof HTMLElement && active.matches(Attention.ATTENDABLE_SELECTOR);
 };
 
+/** How long an entered workspace takes to fade in; the shell's transition clock (`--dx-main-transition-duration`). */
+const WORKSPACE_FADE_MS = 150;
+
+/**
+ * Fades the deck in when the workspace changes, as an opacity animation the compositor runs. A view transition did
+ * this before, and its full-window snapshots held WebKit's frames for longer than the switch itself.
+ */
+const useWorkspaceFade = (viewportRef: RefObject<HTMLDivElement | null>, workspace: string) => {
+  const reducedMotion = UiHooks.useReducedMotion();
+  const previousRef = useRef(workspace);
+  useLayoutEffect(() => {
+    if (previousRef.current === workspace) {
+      return;
+    }
+    previousRef.current = workspace;
+    if (reducedMotion || UiHooks.animationsDisabled()) {
+      return;
+    }
+    viewportRef.current?.animate([{ opacity: 0.4 }, { opacity: 1 }], {
+      duration: WORKSPACE_FADE_MS,
+      easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
+    });
+  }, [viewportRef, workspace, reducedMotion]);
+};
+
 export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
   const { overscroll, flatten } = useDeckSettings();
@@ -1443,6 +1468,7 @@ export const DeckPlanks = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
+  useWorkspaceFade(viewportRef, state.activeDeck);
 
   // The plank a scroll-into-view is currently travelling to, shared between the scroller and the fold
   // hysteresis so the two do not fight over focus mid-scroll. A ref, not state: it changes per scroll

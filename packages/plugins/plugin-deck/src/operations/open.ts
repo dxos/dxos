@@ -28,7 +28,6 @@ import {
   pushSubjectsToStack,
   resolveDetailOpen,
   updateActiveDeck,
-  withViewTransition,
 } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -49,7 +48,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         input.workspace && state.activeDeck !== input.workspace ? input.workspace : undefined,
       );
       if (workspaceToEnter) {
-        yield* withViewTransition(applyWorkspace(workspaceToEnter));
+        yield* applyWorkspace(workspaceToEnter);
       }
 
       // The same object can appear under several graph paths (two collections, or a collection and its
