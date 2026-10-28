@@ -93,7 +93,7 @@ slower, so leave the beats in. A line marked _(verify)_ makes a product claim th
 
 ## 20. The ECHO hypergraph (`#echo-spaces`)
 
-- ECHO, a hypergraph — if you'll forgive the word — gives teams private spaces.
+- ECHO, a hypergraph — if you'll forgive the word _(light chuckle)_ — gives teams private spaces.
 - Each draws on the sources it needs.
 
 ## 21. A graph of objects (`#objects`)
