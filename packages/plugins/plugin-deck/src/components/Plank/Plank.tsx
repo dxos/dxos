@@ -86,12 +86,6 @@ export type PlankProps = Util.ThemedClassName<{
 }>;
 
 /**
- * A higher-level deck pane bound to a graph {@link Node}: renders the node's sigil, title and content
- * Surface inside a {@link Pane}, and makes itself the node's attendable region. Toolbar controls
- * (close/solo/etc.) and framework surfaces (NavbarEnd/MenuFooter) are supplied by the container via
- * slots so this component stays free of capabilities/operations.
- */
-/**
  * False for the first commit after a plank changes subject, so its shell paints before the new article renders: the
  * article's render and layout cost more than the rest of the plank, and an open should show at once. A plank's first
  * subject renders at once: a newly mounted plank arrives with a whole new deck (a workspace switch), where a second
@@ -120,6 +114,12 @@ const useArticleReady = (id: string): boolean => {
   return readyId === id;
 };
 
+/**
+ * A higher-level deck pane bound to a graph {@link Node}: renders the node's sigil, title and content
+ * Surface inside a {@link Pane}, and makes itself the node's attendable region. Toolbar controls
+ * (close/solo/etc.) and framework surfaces (NavbarEnd/MenuFooter) are supplied by the container via
+ * slots so this component stays free of capabilities/operations.
+ */
 export const Plank = forwardRef<HTMLDivElement, PlankProps>(
   (
     {
