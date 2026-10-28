@@ -10,6 +10,8 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
+import { parseMdlBlocks } from '../extension/check.ts';
+import { specDependencies } from '../extension/refs.ts';
 import { frontmatter, reqs } from '../spec-index/parse.ts';
 import { ReviewCheckError } from './errors.ts';
 import { git } from './git.ts';
@@ -91,6 +93,12 @@ export const reviewVerdicts = (text: string): Map<string, { status?: string; not
       return id ? [[id, { status: blockField(body, 'status'), note: blockField(body, 'note') }] as const] : [];
     }),
   );
+
+/** The string array literal after `dependsOn:` in a `dx.config.ts`; undefined when there is none. */
+export const configDependsOn = (configText: string): string[] | undefined => {
+  const list = configText.match(/\bdependsOn:\s*\[([^\]]*)\]/)?.[1];
+  return list === undefined ? undefined : [...list.matchAll(/(['"`])(.*?)\1/g)].map((match) => match[2]);
+};
 
 /** Whether the source declares the name: a top-level declaration, a member, or an export list entry. */
 const declares = (source: string, name: string): boolean => {
@@ -256,6 +264,24 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
         if (!declares(yield* fs.readFileString(file), symbol.split('.').pop() ?? symbol)) {
           errors.push(`${at}: no declaration of ${symbol} in ${key.split('#')[0]} (walkthrough)`);
         }
+      }
+    }
+  }
+  // dx.config.ts is what the app loads, so a spec that lists other dependencies has diverged from the code.
+  const pluginBlock = specText ? parseMdlBlocks(specText).find(({ type }) => type === 'plugin') : undefined;
+  const configFile = specFile ? path.join(path.dirname(specFile), 'dx.config.ts') : undefined;
+  if (specText && pluginBlock && configFile && (yield* exists(configFile))) {
+    const config = configDependsOn(yield* fs.readFileString(configFile));
+    const declared = specDependencies(specText)
+      .filter(({ via }) => via === 'dependsOn')
+      .map(({ id }) => id);
+    const verdict = verdicts.find(({ id }) => id === pluginBlock.id);
+    if (config && verdict && blockField(verdict.body, 'status') !== 'diverged') {
+      const same = new Set(declared).size === new Set(config).size && declared.every((id) => config.includes(id));
+      if (!same) {
+        errors.push(
+          `${reviewPath}:${verdict.line}: ${pluginBlock.id} dependsOn [${declared.join(', ')}] differs from dx.config.ts [${config.join(', ')}]; judge it diverged`,
+        );
       }
     }
   }
