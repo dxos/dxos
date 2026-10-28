@@ -264,7 +264,7 @@ export const make = ({
   ): Promise<{ data?: O; error?: Error }> => {
     try {
       // Called from outside Effect, typically a UI handler: the operation should reach its effect without waiting on
-      // the render that handler started.
+      // the render that handler started. Processes it spawns keep the scheduler for their later alarms and events.
       const data = await EffectEx.runAndForwardErrors(
         invoke(op, ...args).pipe(Effect.provideService(Scheduler.Scheduler, promptScheduler)) as Effect.Effect<
           O,
