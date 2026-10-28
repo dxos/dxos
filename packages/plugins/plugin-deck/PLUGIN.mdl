@@ -759,7 +759,9 @@ scenario T-11: Desktop modifier-click appends
   then:
     - active deck becomes [A, B, C]
     - plank C is scrolled into view and attended
+```
 
+```mdl
 scenario T-11a: Card navigation always adds beside the card's plank (add)
   tags: [F-7]
   given: a card navigation dispatches Open({ subject: ['C'], disposition: 'add', pivotId: 'A' })
@@ -770,7 +772,9 @@ scenario T-11a: Card navigation always adds beside the card's plank (add)
   when: the deck is sliding [A, B] and the card lives in plank A
   then:
     - active deck becomes [A, C, B] (added beside its plank A, regardless of what is attended)
+```
 
+```mdl
 scenario T-11b: In-plank inline reference follows the deck (auto)
   tags: [F-7]
   given: an inline reference dispatches Open({ subject: ['C'], disposition: 'auto', pivotId: 'A' })

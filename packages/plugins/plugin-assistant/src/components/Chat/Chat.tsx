@@ -225,9 +225,15 @@ const ChatRoot = ({
         AssistantOperation.RespondToRequest,
         { chat, messageId, requestId, optionId },
         spaceId ? { spaceId } : undefined,
-      ).then(({ error }) => {
+      ).then(({ data, error }) => {
         if (error) {
           event.emit({ type: 'error', error });
+        } else if (data && !data.answered) {
+          // Otherwise the click looks like it did nothing.
+          event.emit({
+            type: 'error',
+            error: new Error('The assistant is no longer waiting for this answer. Ask it again to retry.'),
+          });
         }
       });
     });

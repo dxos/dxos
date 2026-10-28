@@ -957,7 +957,7 @@ verdict F-14.6: importSpec returns the Spec that has the key, or creates one fro
 verdict F-15.1: External blocks are dashed boxes with an edge, described from the other spec when known.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#externalDefinition, github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard]
-  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.test.ts]
   walkthrough:
     - externalDefinition makes a block for each named external spec, with its description when the text is known. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#externalDefinition
     - DefinitionCard draws an external block as a dashed box. github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard

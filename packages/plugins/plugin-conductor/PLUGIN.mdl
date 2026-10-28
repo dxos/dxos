@@ -445,7 +445,9 @@ test QA-1: Build and run a small compute graph
         No captured id exists — the create step has no `invoke` (see above) — so this resolves
         "QA Graph" by typename AND name — a name match alone would delete any object carrying it, and throws rather than removing anything when the name does not
         match, since `given` guarantees no pre-existing board carries it.
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Open a new compute circuit. Recorded light at 60 fps with no ident, captions or

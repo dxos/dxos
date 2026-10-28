@@ -4,22 +4,50 @@ name: SceneEngine
 version: 0.1.0
 ---
 
-The scene engine: an infinite, multi-depth diagram surface. A scene is typed nodes and typed links in
-one flat coordinate space; a node of type `scene` is a portal into another scene, which is what depth
-means. The engine lives here rather than in a plugin because it is UI with no ECHO dependency —
+The scene engine: an infinite, multi-depth diagram surface. A View is typed nodes and typed links in
+one flat coordinate space; a node of type `view` opens onto another View, which is what depth means.
+The engine lives here rather than in a plugin because it is UI with no ECHO dependency —
 `plugin-canvas` and `plugin-conductor` are thin variant hosts that supply a store, a registry and a
-projection. `docs/DESIGN.md` carries the reasoning and the numbered decisions this document cites;
-`docs/MIGRATION.md` the plan that brought canvas-editor and canvas-compute onto it.
+projection. This document is the authoritative model. `docs/DESIGN.md` carries the reasoning and the
+numbered decisions it cites, `docs/VIEWS.md` the reasoning behind Views, Objects and Tags, and
+`docs/ANIMATION.md` the timeline and generators.
 
 The seam that makes one surface serve every host is the **projection** (decision 11): the surface
-reads a positioned `Scene` and emits `Intent`s, and never writes a coordinate itself. A projection may
-apply, rewrite or reject each intent and then re-emits the scene. Freehand is the identity projection;
-constrained, dynamic and compute projections own a model of their own and position the scene from it.
+reads a positioned `View` and emits `Intent`s, and never writes a coordinate itself. A projection may
+apply, rewrite or reject each intent and then re-emits the View. Freehand is the identity projection;
+constrained, dynamic and compute projections own a model of their own and position the View from it.
 
-Status 2026-09-22: **implemented** through migration milestone M3. Node types are open (`NodeBase` plus
-what a type adds), the editor surface is a superset of the retired canvas editor minus auto layout, and
-`react-ui-canvas-compute` runs its shapes as node definitions over this engine. M4 (ECHO persistence,
-the `layout` intent and the plugin switch) is in flight; what M4 adds is marked below.
+Requirements marked **(planned)** are designed and not built.
+
+## Ontology
+
+The canvas has three concepts: the **View** and the **Object** (containers) and the **Tag**. Drawing order is the
+container tree. The word _scene_ means the drawn world (the scene layer, scene coordinates) or an
+animation's timeline over a View, never a container.
+
+| Term          | Definition                                                                                                                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Canvas**    | The surface. It shows one **root View** and navigates down from it; the navigation path always starts at the root.                                                                                                 |
+| **Node**      | A positioned element: a centre, a size, a type and a style. Every node lives in exactly one container.                                                                                                             |
+| **Link**      | A connection between two endpoints, each a node (and optional port) or a free point. A link lives in the container of its endpoints, not under its source node, since a link's source can change.                  |
+| **Container** | Anything that holds an ordered list of nodes and links: a View or an Object definition.                                                                                                                            |
+| **View**      | A `view` node and the contents record it opens: nodes and links with a layout. Drilling into a View makes it the canvas's current View. The root View is the one View no node contains.                            |
+| **Object**    | A reusable container definition (`ViewKind` `composite`), drawn wherever it is placed. An Object is not drilled into: it opens in **isolation** to edit its definition, and every placement redraws.              |
+| **Instance**  | A node that places an Object: the Object's contents scaled into the instance's box (`fit`), with per-instance `overrides`.                                                                                         |
+| **Group**     | What the Group command makes: an **anonymous Object** and one Instance of it in place of the selection. It joins the Objects library when it is **named** or **placed a second time**.                             |
+| **Tag**       | A label on any node, link, Instance or Object, many per element. A tag hides, locks or sets the opacity of everything it labels. It has no effect on drawing order. **(planned)**; until then, `Layer` does this. |
+| **Order**     | A container's children are an ordered list, drawn first at the back. Moving an element in the Views tree restacks it.                                                                                              |
+
+```
+Canvas   ─ shows ─▶ root View
+View     ─ contains (ordered) ─▶ Node | Link | View | Instance
+Object   ─ contains (ordered) ─▶ Node | Link | Instance          (no View inside an Object)
+Instance ─ places ─▶ Object
+Tag      ─ labels ─▶ Node | Link | Instance | Object             (many to many)
+```
+
+A View is a node that points at a separate contents record, so persistence keeps one record per
+View; merging the record into its node is an open question (`docs/VIEWS.md` §7).
 
 ## Extensions
 
@@ -32,6 +60,7 @@ the `layout` intent and the plugin switch) is in flight; what M4 adds is marked 
 | `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `rule`      | `org.dxos.mdl.rule@1.0`      |
 | `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -39,18 +68,50 @@ Effect `Schema` structures in `src/model/types.ts`; plain schemas, so a host wra
 type without changing a field (decision 3).
 
 ```mdl
-type Scene
+type View
   desc: >
-    One diagram: nodes and links keyed by id in a single flat coordinate space (decision 4). Bounds are
-    NEVER stored — they are derived from the content, padded and grown to the major grid (decision 6),
-    so a scene has no edges to run out of. `createViewSchema(nodes)` composes the schema from a
-    registry's node schemas; `OpenView` is the same over `NodeBase`, which is what the engine itself
-    can validate for a host it does not know the types of.
+    One container's contents: nodes and links keyed by id in a single flat coordinate space (decision 4).
+    The same record holds a View (`kind` absent or `view`) and an Object definition (`kind:
+    'composite'`). Bounds are NEVER stored — they are derived from the content, padded and grown to the
+    major grid (decision 6), so a View has no edges to run out of. `createViewSchema(nodes)` composes the
+    schema from a registry's node schemas; `OpenView` is the same over `NodeBase`, which is what the
+    engine itself can validate for a host it does not know the types of.
   fields:
     id: ViewId
     name?: string
     nodes: Record<NodeId, Node>
     links: Record<LinkId, Link>
+    kind?: ViewKind                   # 'view' | 'composite' (an Object definition)
+    anonymous?: boolean               # an Object made by Group, kept out of the library until named or placed again
+    layers?: Record<LayerId, Layer>   # replaced by document Tags (planned)
+    timeline?: Timeline               # docs/ANIMATION.md
+```
+
+```mdl
+type Layer
+  desc: >
+    A View's layer, as built: elements paint by their layer's `z`, then by their own, and a hidden layer
+    is neither drawn nor hit. A View with no layers has one, implicitly. Tags replace it (planned):
+    the layers migrate to tags on load, and drawing order moves to the container order.
+  fields:
+    id: LayerId
+    name: string
+    z: string
+    hidden?: boolean
+```
+
+```mdl
+type Tag
+  desc: >
+    (planned) A document-wide label. An element is hidden or locked when any of its tags is; its
+    opacity is the product of its tags' opacities and its own. A tag on an Object applies to every
+    placement of it; hiding one placement is an override, not a tag. A tag never orders anything.
+  fields:
+    id: TagId
+    name: string
+    hidden?: boolean
+    locked?: boolean
+    opacity?: number
 ```
 
 ```mdl
@@ -63,35 +124,38 @@ type NodeBase
     log, one `update` intent for both.
   fields:
     id: NodeId
-    type: NodeType                    # 'rect' | 'ellipse' | 'class' | 'note' | 'scene' | a host's own
-    z: string                         # fractional order key
+    type: NodeType                    # a built-in (below) or a host's own
+    z: string                         # fractional order key: the node's place in its container's order
     locked?: boolean                  # no intent moves, resizes or deletes it
     center: Point
     size: Size
     ports?: Port[]                    # absent: the type's definition supplies them (decision 12)
     style?: NodeStyle
+    tags?: TagId[]                    # (planned)
 ```
 
 ```mdl
 type BuiltinNode
   desc: >
-    The engine's own five, each `NodeBase` plus its own fields; `isRectNode`-style guards narrow to
-    them, sound because the registry maps one type name to one schema. A host's types are `NodeBase`
-    to the engine and render through their own `NodeDef.component`.
-  literals: RectNode | EllipseNode | ClassNode | TextNode | PortalNode
+    The engine's own types, each `NodeBase` plus its own fields; `isRectNode`-style guards narrow to
+    them, sound because the registry maps one type name to one schema. A host's types (a UML class, a
+    compute shape) are `NodeBase` to the engine and render through their own `NodeDef.component`.
+  literals: RectNode | EllipseNode | CloudNode | PolygonNode | PolylineNode | NoteNode | ViewNode | InstanceNode | PathNode | GeneratorNode | DiagramNode
   fields:
     RectNode: { label?: string }
     EllipseNode: { label?: string }       # inscribed in the frame; one port per side, at its centre
-    ClassNode: { name, attributes: string[], methods: string[] }   # UML compartments
-    TextNode: { text: string }
-    PortalNode: { scene: ViewId }        # renders the referenced scene scaled into this frame
+    NoteNode: { text: string }
+    ViewNode: { scene: ViewId, link? }    # opens the View it names, drawn live inside its frame; stored `frame` reads as `view`
+    InstanceNode: { composite: ViewId, overrides?, fit?: 'fit' | 'fill' | 'none' }   # places an Object
+    PathNode: { d: string, viewBox: Bounds, fill? }
+    GeneratorNode: { generator: string, params?, seed? }   # docs/ANIMATION.md §6
 ```
 
 ```mdl
 type NodeStyle
   desc: >
     Presentation a node carries; every field optional, the frame supplying the default look. `hue` is a
-    theme hue colouring fill, text and border together (never a raw colour), so a scene stays themed in
+    theme hue colouring fill, text and border together (never a raw colour), so a View stays themed in
     both modes.
   fields:
     hue?: string                      # a theme hue, annotated for the Form's hue picker
@@ -99,7 +163,7 @@ type NodeStyle
     fill?: boolean
     border?: boolean
     guide?: boolean                   # dashed and unfilled: an annotation, not content
-    fontSize?: number                 # text size in the node's own scene units; overrides the view's class
+    fontSize?: number                 # text size in the node's own scene units; overrides the canvas's class
     className?: string                # a host's own look
 ```
 
@@ -154,9 +218,9 @@ type Port
 ```mdl
 type Camera
   desc: >
-    The view's position over one scene: screen = (scene + {x, y}) * zoom. Per-view state in an atom,
-    never in the model (two views of one scene stay independent), clamped to MIN_ZOOM..MAX_ZOOM (1/32,
-    32). Coordinates are per-scene and local (decision 5) — a global (x, y, depth) compounds float error
+    The canvas's position over one View: screen = (scene + {x, y}) * zoom. Per-canvas state in an atom,
+    never in the model (two canvases on one View stay independent), clamped to MIN_ZOOM..MAX_ZOOM (1/32,
+    32). Coordinates are per-View and local (decision 5) — a global (x, y, depth) compounds float error
     through the compositor after a few levels.
   fields:
     x: number
@@ -169,7 +233,7 @@ type NodeDef
   desc: >
     A node type's definition: its schema, what it renders, where its ports are, how it may be
     manipulated, and how the palette presents it. Per type, never per instance, so the data stays small
-    and ports come for free. A host composes its registry (and with `createViewSchema` its scene
+    and ports come for free. A host composes its registry (and with `createViewSchema` its View
     schema) from the built-ins and its own — this is the whole of what "open node types" means.
   fields:
     type: NodeType
@@ -186,35 +250,55 @@ type NodeDef
     resizable?: boolean
     minSize?: Size
     maxSize?: Size
-    openable?: boolean                # double-click opens it (a portal drills in)
+    openable?: boolean                # double-click opens it (a View drills in)
 ```
 
 ```mdl
 type ViewStore
   desc: >
-    Scenes by id behind atoms, so a view subscribes to exactly the scene it shows. The seam that lets
-    persistence change without the surface noticing: `createMemoryStore` for stories and tests,
-    `createEchoStore(board)` over `CanvasBoard.layout` for a plugin (M4).
+    Views and Object definitions by id behind atoms, so a canvas subscribes to exactly the View it
+    shows. The seam that lets persistence change without the surface noticing: `createMemoryStore` for
+    stories and tests, plugin-canvas's ECHO-backed store for a drawing. Undo reads the store's past
+    through `versions` (Automerge heads over ECHO; absent, the atom's own snapshots are the heads).
   fields:
     views: Atom.Writable<Record<ViewId, View>>
     view: (id: ViewId) => Atom<View | undefined>
+    styles?: Atom.Writable<StyleMap>  # the drawing's style classes
+    isRoot?: (id: ViewId) => boolean  # a root of its own (a linked drawing's), kept when no node opens it
+    versions?: VersionedSource        # heads(), read(path, heads), write(path, value)
 ```
 
 ```mdl
 type Projection
   desc: >
-    The only thing the surface knows about the model (decision 11). It reads a positioned scene and
+    The only thing the surface knows about the model (decision 11). It reads a positioned View and
     receives intents; what an intent MEANS is the projection's business — freehand writes the
     coordinates, constrained rewrites them as cardinal constraints, dynamic keeps a graph and positions
-    rows from it, compute mirrors creates and links into a compute graph. `snapshot` is opaque and
-    identical (`===`) when nothing changed, which is how the view keeps an undo log without knowing what
-    the model is.
+    rows from it, compute mirrors creates and links into a compute graph. A projection with a model of
+    its own exposes it as `model`, versioned like the store, so undo patches both together.
   fields:
-    scene: Atom<Scene>
+    scene: Atom<View>
     apply: (intent: Intent) => void
-    capabilities: Capabilities        # move, resize, link, create, delete, update — each optional
-    snapshot: () => unknown
-    restore: (snapshot: unknown) => void
+    capabilities: Capabilities        # move, resize, link, create, delete, update, layout — each optional
+    model?: VersionedSource           # constraints, a graph: absent, the store is the whole model
+    restored?: () => void             # after undo or redo, so a mirror (a compute graph) catches up
+    constrain?: (intent: Intent) => Intent | undefined    # what apply would make of it, for previews
+    lattice?: LatticeSpec
+```
+
+```mdl
+type CanvasHistory
+  desc: >
+    The canvas's undo log. Every committed edit is one entry of field-level patches between the store's
+    heads before and after it, so undo writes back only what the edit wrote and a concurrent edit to
+    another field survives. `createLocalHistory` keeps two stacks in memory; a host with Composer's
+    `HistoryTracker` records each commit there instead, so gestures, agents and MCP share one log.
+  fields:
+    commit: (change: () => void, options?: { mergeKey? }) => boolean   # a commit inside another joins it
+    undo: () => boolean
+    redo: () => boolean
+    state: Atom<{ canUndo, canRedo }>
+    connect: () => () => void         # follow the host's history
 ```
 
 ```mdl
@@ -232,28 +316,29 @@ barrel. Rendering is DOM with the camera as one CSS transform, SVG for the link 
 ```mdl
 component Canvas
   desc: >
-    The surface: one scene under a camera, with the palette, toolbar, breadcrumbs and control frame
-    around it. Owns the pointer state machine, the key table, navigation between depths and the undo
-    log; owns NO model — every change leaves through `projection.apply`.
+    The surface: one View under a camera, with the palette, toolbar, breadcrumbs, control frame and
+    inspector panels around it. Owns the pointer state machine, the key table and navigation between
+    depths; commands live in a React-free `CanvasController` organised by aspect (selection, editing,
+    tools, time, navigation, look). Owns NO model — every change leaves through `projection.apply`,
+    inside a `history.commit`.
   props:
     store: ViewStore
-    root: ViewId
-    nodes?: NodeRegistry              # defaults to the built-in five
+    root: ViewId                      # the root View
+    nodes?: NodeRegistry              # defaults to the built-ins
     links?: LinkRegistry
-    createProjection?: (options) => Projection     # per scene; freehand by default
+    createProjection?: (options) => Projection     # per View; freehand by default
     projection?: Projection           # a host-owned one instead, shared with its panels
-    atoms?: CanvasAtoms            # externally owned view state (two views, a persisted camera)
+    history?: CanvasHistory | CreateHistory        # local by default
+    atoms?: CanvasAtoms               # externally owned canvas state (two canvases, a persisted camera)
     grid?: number                     # minor spacing in scene px (16)
-    liveDepth?: number                # nested levels that may mount live (decision 10)
-    showPalette?: boolean
-    showToolbar?: boolean
     readonly?: boolean
-    overlay?: ReactNode               # extra layers in scene coordinates (e.g. compute's Bullets)
+    inspectors?: InspectorMode
   state:
     camera: Camera
-    path: ViewId[]                   # root to the scene being edited; its length is the depth
+    path: ViewId[]                    # root to the View being edited; its length is the depth
+    isolated?: ViewId                 # the Object open in isolation
     selection: Set<ElementId>         # nodes and links together
-    hover, point, tool, linkType, snap, debug, drag, editing, history, undo, clipboard
+    hover, point, tool, linkType, snap, debug, drag, editing, clipboard
   layout: |
     ┌─ scene-view ────────────────────────────────┐
     │ [toolbar]                       [breadcrumbs]│
@@ -269,12 +354,12 @@ component Canvas
 ```mdl
 component SceneLayer
   desc: >
-    The nodes and links of one scene, and — for a portal node — the child scene rendered live inside it
-    at the portal's scale, which is what makes depth continuous rather than a page change. Below
-    `liveDepth` a portal draws a preview instead; a portal being drilled into renders plain, as the
-    child will look once entered.
+    The nodes and links of one View in their container order, and — for a `view` node — the child View
+    rendered live inside it at the node's scale, which is what makes depth continuous rather than a page
+    change; an Instance draws its Object's contents the same way. Below `liveDepth` a View node draws a
+    preview instead; one being drilled into renders plain, as the child will look once entered.
   props:
-    scene: Scene
+    scene: View
     registry: NodeRegistry
     zoom: number                      # camera zoom × the portal scales above it
     depth: number
@@ -284,7 +369,7 @@ component SceneLayer
 ```mdl
 component ControlFrame
   desc: >
-    Everything drawn about the selection rather than in the scene: the selection outline, eight resize
+    Everything drawn about the selection rather than in the View: the selection outline, eight resize
     handles, the hover border, ports, the rubber band of a link drag, the marquee, a spline's control
     points and the midpoint dots that add one, and the provisional frame a create gesture will land in.
     Handles draw above ports, so a handle wins at a side centre.
@@ -335,8 +420,45 @@ component GeometryField
 
 ```mdl
 component Breadcrumbs
-  desc: The path from the root to the scene being edited; a click drills out to that level.
+  desc: >
+    The path from the root View to the View being edited; a click drills out to that level. An Object
+    in isolation reads `Objects › <name>`.
   props: { path: ViewId[], store }
+```
+
+```mdl
+component ViewsInspector
+  desc: >
+    The Views panel (`Canvas.Views`): the whole hierarchy under the root — Views, their nodes and links
+    (links under their container), and inside each Instance its Object's contents, read-only there.
+    Built on `@dxos/react-ui-list`'s Tree, with state keyed by row path, so one Object under two
+    Instances opens and selects independently. Rows carry counts and, once tags exist, tag chips.
+  actions:
+    select: a row selects on the canvas, opening its View by the drill path so Up and Back still work
+    open: Open, Enter or a double-click on a View row drills in
+    restack: dragging a row among its siblings is one `reorder` intent
+    filter: narrows the tree by name or type, and by tag (planned)
+```
+
+```mdl
+component ObjectsInspector
+  desc: >
+    The Objects panel: the library. One row per named Object, however many times it is placed, plus the
+    selected or isolated anonymous Object in italics, so it can be named there.
+  actions:
+    open: opens the Object in isolation
+    place: drops an Instance of it on the canvas
+    duplicate: copies the definition, named
+    rename: names it; an anonymous Object joins the library
+    delete: deletes the definition and its Instances, pruning orphans in the same step
+```
+
+```mdl
+component LayersInspector
+  desc: >
+    The layers panel (`Canvas.Layers`), as built: add, delete, merge down, show or hide, reorder and
+    rename a View's layers. It becomes the Tags panel (planned), managing document tags and their hide,
+    lock and opacity.
 ```
 
 ```mdl
@@ -370,7 +492,7 @@ op move
   input:
     ids: NodeId[]
     delta: Point
-  output: Scene
+  output: View
 ```
 
 ```mdl
@@ -381,7 +503,7 @@ op resize
   input:
     id: NodeId
     bounds: Bounds
-  output: Scene
+  output: View
 ```
 
 ```mdl
@@ -391,9 +513,9 @@ op link
     same node; free ends need nothing, which is why a link tool works on empty canvas.
   input:
     link: Link
-  output: Scene
+  output: View
   errors:
-    unknownNode: an end names a node not in the scene — the intent is dropped, not partially applied
+    unknownNode: an end names a node not in the View — the intent is dropped, not partially applied
     selfLink: both ends are the same node
 ```
 
@@ -402,7 +524,7 @@ op create
   desc: Add a node, built by its type's `NodeDef.create`. A new node arrives on the MAJOR grid.
   input:
     node: Node
-  output: Scene
+  output: View
 ```
 
 ```mdl
@@ -412,16 +534,35 @@ op delete
     its links too — the projection does this, never the view.
   input:
     ids: ElementId[]
-  output: Scene
+  output: View
 ```
 
 ```mdl
 op reorder
-  desc: Set one element's fractional `z`; nodes and links share the namespace and the key space.
+  desc: >
+    Move one element in its container's order by setting its fractional `z`; nodes and links share the
+    key space. Dragging a row in the Views tree emits it.
   input:
     id: ElementId
     z: string
-  output: Scene
+  output: View
+```
+
+```mdl
+op layer
+  desc: Add a layer, or replace the one with its id (a rename, a visibility toggle, a move in the order).
+  input:
+    layer: Layer
+  output: View
+  note: Replaced by tag operations when Tags land (planned).
+```
+
+```mdl
+op removeLayer
+  desc: Remove a layer and every element on it; a View's last layer stays.
+  input:
+    id: LayerId
+  output: View
 ```
 
 ```mdl
@@ -432,7 +573,7 @@ op update
   input:
     id: ElementId
     values: NodeValues | LinkValues
-  output: Scene
+  output: View
 ```
 
 ```mdl
@@ -440,20 +581,20 @@ op batch
   desc: Several intents as ONE model change, so a paste or a drill-in fix-up is one undo step.
   input:
     intents: Intent[]
-  output: Scene
+  output: View
 ```
 
 ```mdl
 op layout
   desc: >
-    Arrange the scene into ranked rows along its links, through `@dxos/diagram`'s ranking — the engine
+    Arrange the View into ranked rows along its links, through `@dxos/diagram`'s ranking — the engine
     the dynamic projection already lays its graph out with, rather than a second one. Unlike the old
     editor's `@antv` layout it keeps every node: type, size and content are untouched and only the
     centre moves. An intent rather than a view action, so a projection that owns its own positions may
     rewrite or refuse it, and a read-only view cannot invoke it.
   input:
-    ids?: ElementId[]                 # absent: the whole scene
-  output: Scene
+    ids?: ElementId[]                 # absent: the whole View
+  output: View
   note: >
     A row is as tall as its tallest node and a column as wide as its widest, so mixed sizes do not
     overlap; every centre lands on the major grid; a locked node stays where it is. The toolbar's
@@ -465,9 +606,10 @@ op layout
 
 ```mdl
 feat F-1: Depth and navigation
-  Scene nesting IS the hierarchy (decision 4); a portal node renders its child live, so moving between
-  levels is a camera move rather than a page change.
-  req F-1.1: Double-clicking a portal drills in; Escape drills out; the breadcrumbs drill to any level.
+  View nesting IS the hierarchy (decision 4); a `view` node renders its child live, so moving between
+  levels is a camera move rather than a page change. Below, a _portal_ is a `view` node seen as the
+  window it draws its child through.
+  req F-1.1: Double-clicking a View drills in; Escape drills out; the breadcrumbs drill to any level.
   req F-1.2: Drill-in stops where the child would pass 1:1, so its text lands at natural size rather
     than magnified to fill the view.
   req F-1.3: Zooming past a portal drills in on its own; zooming out below the arrival coverage drills
@@ -476,10 +618,12 @@ feat F-1: Depth and navigation
   req F-1.4: A portal's frame is the portal box times a power of the grid ratio, never once, placed on
     the major grid scaled by that factor: the child's grid lines land on the parent's own lines, not
     merely at their spacing, so the grids stay aligned through a drill-in.
-  req F-1.5: A scene entered through a portal keeps the frame it arrived with for the visit and exits
+  req F-1.5: A View entered through a portal keeps the frame it arrived with for the visit and exits
     through that same frame; the root's bounds stay derived.
   req F-1.6: At most `liveDepth` levels mount live; deeper portals draw as previews (decision 10).
-  req F-1.7: Alt+Left / Alt+Right walk the view's own camera history.
+  req F-1.7: Alt+Left / Alt+Right walk the canvas's own camera history.
+  req F-1.8: An Object is never drilled into: opening it from the Objects panel shows its definition in
+    isolation; Escape returns to the View and camera the user left.
 ```
 
 ```mdl
@@ -489,7 +633,7 @@ feat F-2: Grid and snapping
   req F-2.2: Gestures snap to the FINEST LEVEL THE GRID ACTUALLY DRAWS, read back through the same rule
     the component filters by, so the lines and the snap cannot part company. A unit fixed in scene units
     diverges as soon as the zoom moves: far enough in the drawn lines are finer than the snap, and in a
-    nested scene — entered at a fraction of the parent's zoom — they are coarser and the snap lands on
+    nested View — entered at a fraction of the parent's zoom — they are coarser and the snap lands on
     nothing visible.
   req F-2.3: A node drawn on the canvas, moved or resized lands on the major level, so its edges and ports
     stay on major lines; a palette drop, a dragged control point and a press that moves less than half a
@@ -520,9 +664,9 @@ feat F-3: Selection and editing
   req F-3.9: Double-click edits a node's text part in place; Enter commits, Escape rejects.
   req F-3.10: The properties panel edits the selected element's own schema through `update` intents,
     `style.fontSize` among them: set, it overrides the view's own size class for every text part.
-  req F-3.11: A scene shape's Scene picks any scene of the store for it to open, so several shapes may
-    share one scene; a scene that would open the current path again is not offered (`viewOptions`).
-  req F-3.12: Style classes are named looks kept beside the scenes (`ViewStore.styles`): an element
+  req F-3.11: A `view` node's View field picks any View of the store for it to open, so several nodes may
+    share one View; a View that would open the current path again is not offered (`viewOptions`).
+  req F-3.12: Style classes are named looks kept beside the Views (`ViewStore.styles`): an element
     naming one in `class` derives its style or line from it. Taking a class drops the element's own
     look; editing a classed element's look edits the class, so every element of it changes together.
     "New class from selection" makes a class of the selected element's look and moves the element onto it.
@@ -531,27 +675,31 @@ feat F-3: Selection and editing
     A selection of several kinds edits only the fields every kind declares (`commonSchema` intersects nested
     structs), with one style picker that offers the fill rows only when every element is a node; a class's style
     restyles nodes and links alike, a link taking its common base.
-  req F-3.15: A scene has ordered layers (`Scene.layers`, one implicit when it names none) and every node and link
+  req F-3.15: A View has ordered layers (`View.layers`, one implicit when it names none) and every node and link
     is on exactly one (`layer`; unset, the bottom one). Elements paint by layer, then by their own order; a hidden
     layer is neither drawn nor hit. The layers panel (`Canvas.Layers`) adds, deletes, merges down, shows or
     hides, reorders and renames layers in place, each as one undo step; new shapes go on the active layer, and the
-    properties panel picks an element's layer.
-  req F-3.13: Group (⌘G) moves the selected nodes, and the links between them, into an anonymous Object
-    (`View.anonymous`) and places one Instance of it over their bounds; a link crossing out of the group stays,
-    re-attached to a port of the Instance. Ungroup (⇧⌘G) puts an Instance's contents back where it drew them and,
-    for an anonymous Object, deletes the definition. Naming an anonymous Object or placing it again adds it to the
-    library. Deleting the last node that opens a View, or an anonymous Object's last Instance, deletes the record
-    with it. Each is one undo step (`controller.selection.group`/`ungroup`, `pruneOrphaned`).
+    properties panel picks an element's layer. Superseded by [F-9.6] and [F-9.7] when Tags land.
 ```
 
 ```mdl
 feat F-4: Undo and clipboard
-  req F-4.1: Undo is a snapshot log over the projection seam, so it works for any projection without
-    the view knowing what the model is.
-  req F-4.2: A restored snapshot reconciles the projection's own model (the compute projection takes
-    its nodes and edges along).
-  req F-4.3: Cut / copy / paste use a per-view clipboard: fresh ids, links rewired between the pasted
-    nodes only, applied as one `batch`.
+  req F-4.1: Every committed edit — a gesture at pointer-up, a panel edit, a key command, a controller
+    command — is one undo entry of field-level patches between the store's heads before and after it.
+    Undo writes a field back only while it still holds the value the edit wrote; a field changed since by
+    someone else, or an element deleted since, is skipped and the undo reports itself partial.
+  req F-4.2: Undo and redo patch a projection's own model (`Projection.model`) with the store, and call
+    `restored`, so the compute projection takes its nodes and edges along.
+  req F-4.3: Cut / copy / paste use a per-canvas clipboard: fresh ids, links rewired between the pasted
+    nodes only, applied as one `batch`. A cut keeps a copy of the records its nodes open, so the paste
+    after a cut restores them.
+  req F-4.4: One log per canvas document, not per View: undo returns to the View path, isolated Object
+    and selection the edit was made in, then reverses it.
+  req F-4.5: Consecutive commits with one merge key inside the merge window are one entry, so typing in
+    a number field or nudging with the arrow keys undoes in one step.
+  req F-4.6: In Composer each commit is recorded as `CanvasOperation.Patch` on the `HistoryTracker`,
+    scoped to the canvas object; agents and MCP edit through `CanvasOperation.Apply`, which shares the
+    same log and the same inverse.
 ```
 
 ```mdl
@@ -564,10 +712,10 @@ feat F-5: Read-only
 ```mdl
 feat F-6: Open registry
   req F-6.1: The engine operates on `NodeBase`; a host's type is not a special case.
-  req F-6.2: A host composes its registry from the built-ins and its own defs, and its scene schema with
+  req F-6.2: A host composes its registry from the built-ins and its own defs, and its View schema with
     `createViewSchema`.
   req F-6.3: An unknown type still renders rather than throwing, as the core base (`BaseNode`): a node as
-    a box showing its `label`, with ports and an editable label, and a link as a straight line. A scene
+    a box showing its `label`, with ports and an editable label, and a link as a straight line. A View
     written by a newer host, or one whose plugin is off, opens.
   req F-6.4: Ports come from the definition; a node may still carry its own.
 ```
@@ -597,6 +745,37 @@ feat F-8: Links between shapes
     on the same side double back through the middle rather than cutting across their own nodes.
 ```
 
+```mdl
+feat F-9: Views, Objects and Tags
+  The containers of the Ontology, and the two panels that show them: Views for the hierarchy, Objects
+  for the library.
+  req F-9.1: A stored `frame` node reads as `view`, on load, in every store; the next write stores it as
+    `view`.
+  req F-9.2: Group (⌘G) moves the selected nodes, and the links between them, into an anonymous Object
+    (`View.anonymous`) and places one Instance of it over their bounds; a link crossing out of the group
+    stays, re-attached to a port of the Instance. There is no separate Compose command.
+  req F-9.3: Ungroup (⇧⌘G) puts an Instance's contents back where it drew them, under fresh ids, and
+    brings the Object's animation tracks out with them; for an anonymous Object it deletes the
+    definition, and a named Object's definition stays.
+  req F-9.4: Naming an anonymous Object, or placing it a second time (from the library, a paste of its
+    Instance, a duplicate), adds it to the library.
+  req F-9.5: Deleting the last node that opens a View, or an anonymous Object's last Instance, deletes
+    the record in the same undo step. A record is kept while it is reachable from the root, a
+    store-declared root, or a named Object; records already orphaned are dropped on load. There is no
+    "Unplaced" bin.
+  req F-9.6: (planned) Tags replace layers: hidden or locked is the union over an element's tags, opacity
+    the product; layers and `node.layer` migrate to tags on load, and the drawn result is the same
+    before and after.
+  req F-9.7: (planned) Drawing order is each container's child order alone; layer `z` stops ordering
+    anything, and each container is migrated once by sorting on (layer `z`, node `z`).
+  req F-9.8: The Views panel shows the full hierarchy, selects on the canvas, opens a View by its drill
+    path, restacks by drag and filters by name or type; the canvas selection marks its rows and reveals
+    the first without taking focus.
+  req F-9.9: An Object cannot contain a View, so an Object stays a drawing rather than a navigable place:
+    Group refuses a selection holding a `view` node, and a `view` node created or pasted into an Object's
+    definition is refused.
+```
+
 ## Rules
 
 Conventions this engine's code must hold that a linter cannot express; each block is discovered by the
@@ -605,8 +784,8 @@ agentic-review harness.
 ```mdl
 rule intents-not-coordinates: The surface emits intents; only a projection writes coordinates
   Every model change leaves the view through `projection.apply(intent)`. A component under
-  `src/components` must not write `center`, `size`, `z`, `points` or an endpoint into a scene, a
-  store or a node object — not through `updateView`, not by constructing a `Scene` and putting it
+  `src/components` must not write `center`, `size`, `z`, `points` or an endpoint into a View, a
+  store or a node object — not through `updateView`, not by constructing a `View` and putting it
   back, not by mutating a node it read from the projection. Transient gesture state (the `drag`
   atom's `delta`, `bounds`, `points`, a preview node or link that is never applied) is exactly what
   that state is for and is not a violation. Flag a component that reaches `store`/`updateView`/
@@ -653,11 +832,11 @@ rule named-react-imports: Import React members by name, never through a `React.`
 ```
 
 ```mdl
-rule scene-bounds-are-derived: Never store a scene's bounds
-  A scene's extent is the union of its node frames, padded and grown to the major grid, computed where
+rule scene-bounds-are-derived: Never store a View's bounds
+  A View's extent is the union of its node frames, padded and grown to the major grid, computed where
   it is needed (`utils/hit.ts`, `sceneBounds`). Do not add a bounds, extent, width or height field to
-  `Scene`, cache one on a store, or persist one — a stored extent is a second source of truth that
-  goes stale on every move and gives an infinite canvas an edge (decision 6). Flag a `Scene` literal,
+  `View`, cache one on a store, or persist one — a stored extent is a second source of truth that
+  goes stale on every move and gives an infinite canvas an edge (decision 6). Flag a `View` literal,
   schema or ECHO record carrying such a field. A `Bounds` VALUE passed around (a portal frame, a
   marquee, a resize) is not a stored bound and is not a violation.
   scope: dir
@@ -671,7 +850,7 @@ rule scene-bounds-are-derived: Never store a scene's bounds
 
 ```mdl
 scenario T-1: Drill in and back out
-  given: the Nested story, a portal visible in the root scene
+  given: the Nested story, a portal visible in the root View
   when: double-clicking the portal, then pressing Escape
   then:
     - the camera animates into the portal and stops at or before 1:1 for the child's content
@@ -682,7 +861,7 @@ scenario T-1: Drill in and back out
 ```mdl
 scenario T-2: A link survives its node moving
   given: two nodes joined by a curve with no explicit ports
-  when: dragging one node across the scene
+  when: dragging one node across the View
   then: the link re-pairs to the closest appropriate ports on every frame, and still leaves each port
     along its side's normal
 ```
@@ -698,14 +877,14 @@ scenario T-3: A free-ended link
 scenario T-4: Read-only
   given: the Readonly story
   when: clicking a node, then attempting to drag it, resize it, or press Delete
-  then: the node is selected, no handle or port is drawn, and the scene is unchanged
+  then: the node is selected, no handle or port is drawn, and the View is unchanged
 ```
 
 ```mdl
 scenario T-5: Undo across a projection
   given: the Constrained story
   when: moving a node (which the projection rewrites into constraints), then pressing ⌘Z
-  then: both the positioned scene and the constraint list return to their previous state in one step
+  then: both the positioned View and the constraint list return to their previous state in one step
 ```
 
 ```mdl
@@ -782,6 +961,84 @@ test QA-2: Persistence round trip (M4)
     - name: Reload
       do: Reload the app and reopen the board.
       expect: the move, the new node and the new link are all still there
+```
+
+## Changelog
+
+```mdl
+decision D-1: The engine's containers are Views, Objects and Tags, as the Ontology defines them; scene, frame, composite and layer are no longer container terms, and this spec is the one current model.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [View, Tag, Layer, BuiltinNode, F-9]
+```
+
+```mdl
+decision D-2: Tags and container order are specified now and marked planned, beside the `Layer` type and [F-3.15] that describe what is built. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Tag, Layer, F-3.15, F-9.6, F-9.7]
+  why: The design is settled and the review can then report the gap as missing work, while the built behaviour stays specified until it changes.
+  rejected:
+    - Leaving tags and order out until built, which keeps the design in a second document.
+    - Describing only tags, which leaves layers unspecified while they are what the code does.
+```
+
+```mdl
+decision D-3: Undo is a log of field-level patches between store heads, one entry per committed edit and one log per canvas document, recorded on Composer's `HistoryTracker` when the host has one; projections expose their own model instead of snapshots. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Projection, CanvasHistory, F-4.1, F-4.2, F-4.4, F-4.5, F-4.6, T-5]
+  why: The snapshot log the spec described was removed when undo moved to patches; the spec follows the code, whose decisions are in the canvas-views design.
+```
+
+```mdl
+decision D-4: Group, Ungroup, library promotion and orphan pruning move from [F-3.13] to [F-9.2]–[F-9.5], and `frame` reading as `view` is [F-9.1]. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.13, F-9]
+  why: They are the container model's behaviour, not selection editing.
+```
+
+```mdl
+decision D-5: An Object cannot contain a View. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-9.9]
+  why: An Object is drawn at every placement and opened only in isolation; a View inside it would be a navigable place repeated per Instance, with no single drill path.
+  rejected:
+    - Allowing it, which the design left open and nothing built needs.
+```
+
+```mdl
+decision D-6: Approve [D-2], [D-3], [D-4] and [D-5].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-7: A stored `frame` node is read as `view`, and the next write stores it as `view`.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-8: Group refuses a selection holding a `view` node, and creating or pasting a `view` node into an Object's definition is refused, so no View ends up inside an Object.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-9.9]
+```
+
+```mdl
+decision D-9: F-3.15 points at the tags requirement [F-9.6] and the container-order requirement [F-9.7] as its successors.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.15]
 ```
 
 ---
