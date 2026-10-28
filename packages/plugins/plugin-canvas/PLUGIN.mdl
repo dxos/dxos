@@ -4,22 +4,45 @@ name: CanvasPlugin
 version: 0.1.0
 ---
 
+```mdl
+plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at multiple depths.
+  id: org.dxos.plugin.canvas
+  dependsOn: [org.dxos.plugin.illustrator]
+  modules:
+    - AppGraphBuilder: the lock and unlock actions on a canvas drawing
+    - CanvasSettings: whether the toolbar and palette overlays show
+    - DrawingVariant: the canvas drawing variant and its article, for the illustrator
+    - Migrations: the Scene type migrations
+    - OperationHandler: the canvas operations
+    - ReactSurface: the canvas properties panel of a drawing
+    - Schema: the canvas generator types
+    - SkillDefinition: the canvas generators skill
+    - SpaceTemplates: the architecture space template
+    - TldrawConverter: the illustrator converter from a tldraw drawing to a canvas
+    - Translations: the plugin's strings
+    - UndoMappings: undo for canvas edits
+```
+
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
 plugin as a drawing variant (`dxos.org/scene/1`). A drawing is stored in ECHO as one record per View,
 node and link; a `view` node opens a child View in place and can show its contents live.
 
-This plugin is the ECHO host between two specs it builds on:
+This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
+`Drawing` type, the variant contract and the converters this plugin registers with, and the canvas
+engine below.
 
-- `org.dxos.plugin.illustrator` (github:dxos/dxos/packages/plugins/plugin-illustrator/PLUGIN.mdl) — the
-  `Drawing` type, the variant contract and the converters this plugin registers with.
-- `org.dxos.ui.react-ui-canvas` (github:dxos/dxos/packages/ui/react-ui-canvas/SPEC.mdl) — the engine:
-  its Ontology, types, operations and features are the canvas's model, and this spec does not restate
-  them.
+## Dependencies
+
+```mdl
+uses org.dxos.ui.react-ui-canvas: The engine — its Ontology, types, operations and features are the canvas's model, and this spec does not restate them.
+```
 
 ## Extensions
 
 | Term       | URI                         |
 |------------|-----------------------------|
+| `plugin`   | `org.dxos.mdl.plugin@1.1`   |
+| `uses`     | `dxos.spec.core/uses`       |
 | `test`     | `org.dxos.mdl.test@1.0`     |
 | `decision` | `org.dxos.mdl.decision@1.0` |
 
@@ -199,4 +222,18 @@ decision D-2: plugin-canvas registers the hybrid conversion as an illustrator `C
 decision D-3: plugin-canvas builds on `org.dxos.plugin.illustrator` and `org.dxos.ui.react-ui-canvas`, and its spec references both rather than restating them.
   date: 2026-10-27
   by: user:richburdon
+```
+
+```mdl
+decision D-4: The spec declares its dependencies rather than listing them in prose: `org.dxos.plugin.illustrator` in the `plugin` block's `dependsOn`, exactly as dx.config.ts declares it, and `org.dxos.ui.react-ui-canvas` under `## Dependencies`. Fills in [D-3].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-5: The `plugin CanvasPlugin` block lists the twelve modules plugin.tsx adds, one line each, and the `uses` reason keeps the prose list's wording. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  why: The plugin dialect requires `modules:` on every `plugin` block; reusing the prose keeps what the spec says about the engine unchanged.
 ```
