@@ -1,6 +1,6 @@
 # plugin-animator — Tasks
 
-_Resume: Phase 3a built (effects, overlays, screen text); next is Phase 3b, the spacetime stage. Uncommitted: none. Last: canvas stage binds and draws `2d` effects._
+_Resume: Phase 3b built (spacetime stage, presentation look, labels, echo3d fixture); next is Phase 4, export. Uncommitted: none. Last: the echo3d Animation story in plugin-spacetime._
 
 ## Phase 0: Review and design
 
@@ -79,14 +79,40 @@ paths), design the plugin, and turn the approved design into an MDL spec.
 - [ ] Export handshake with effects: `onFrameDrawn` should wait for the effect frame of the same `t` (Phase 4).
 - [ ] Effects in the article UI: an "Add effect" action, effect rows on the timeline, paused-effect warnings.
 - [ ] Canvas links bind as straight centre-to-centre lines; bind the routed path where the router can run headless.
-- [ ] Label morph (echo3d) belongs to the stage's labels (F-8.2), not to an effect; do it with Phase 3b.
+- [x] Label morph (echo3d) belongs to the stage's labels (F-8.2), not to an effect; done in Phase 3b (D-30).
 - [ ] Storybook play test for the `Effects` story and a check that the effect worker loads from the bundle.
 
 ## Phase 3b: 3D
 
-- [ ] Spacetime stage (clock-driven Babylon render, annotations on `Model.Object`), implementing `bind`,
-      `onProjection` and an instanced-mesh layer for `3d` frames.
-- [ ] Merge as a 3D visual where the script beat alone is not enough.
+- [x] Spacetime stage in plugin-spacetime (`AnimatorStage` module on `AnimatorEvents.Start`, `SpacetimeStage`
+      container, `src/animator`): `AnimatableAnnotation` on `Model.Object` (with new `opacity` and `labelStyle`),
+      scene objects as targets, an orbit camera, a Babylon render per sample with no render loop (D-31), `bind` in world
+      coordinates, `onProjection` from projection math tested against Babylon's `NullEngine`.
+- [x] `3d` frames drawn as thin instances of a unit sphere and cube, with per-instance colour and opacity.
+- [x] Arrangers `ring`, `orbit`, `grid`, `containment` (echo3d's `pack`).
+- [x] Presentation look per scene (`Scene.style`, D-32): dithered PBR, rim shader with noise and a lattice on shells,
+      night-blue background with a lattice sphere; CAD stays the default. `Scene.links` for drawing and binding.
+- [x] Labels (F-8.1, F-8.2): DOM labels beside projected objects in `hero`, `title`, `inside`, `plain` or `hidden`,
+      fading with their object; word-sliding morph from `labelFrom`/`labelMorph` and `labelMorphBeats` (D-30).
+- [x] T-4: `makeEcho3dAnimation` (plugin-spacetime `src/testing/echo3d.ts`), twelve of echo3d's 28 slides over four
+      scenes: beginning, silo, silo-comms, spread, frontier, frontier-comms, absorb, merge-1/merge-2/final-frontier
+      (one shot), engulf, echo-spaces, object-thread, company-fills. Story `SpacetimeStage` `Echo3d`; `Default` and
+      `Presentation` play a demo of every layout, the morph and the effects. Stories not run in this phase.
+- [x] Merge as a 3D visual: the script's `merge` beat is enough for the labs; the apps' absorb uses `hide` + `set`
+      because a `merge` compounds its growth over several beats.
+
+### Phase 3b follow-ups
+
+- [ ] The other 16 echo3d slides (blank, scale, competitors, spread-comms, orbit, rivals, dont-panic, spread-again,
+      echo-hub, objects, object-detail, object-created, echo-spaces-again, echo-hub-again, saas-merge), and the
+      prototype's spin and turn (an orbit as keyed rotation), swallow shake, and per-scene link sets.
+- [ ] The curtain draws over captions, so engulf's caption cannot come up on the black as in echo3d; give screen text
+      a layer order.
+- [ ] `merge` grows the survivor by area per beat; a growth parameter would let staggered merges grow it gently.
+- [ ] Presentation style per object, if a slide ever mixes looks; the echo3d vendor's near-solid back wall
+      (`backOpacity`).
+- [ ] The editor (`SpacetimeCanvas`) ignores `opacity`, `labelStyle`, `rotation` and `links`.
+- [ ] Storybook play test for the `SpacetimeStage` stories (frame time, label positions against `onProjection`).
 
 ## Phase 4: Export and studio
 
