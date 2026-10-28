@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -30,6 +31,7 @@ const runExtractMessage = (
     .handler(input)
     .pipe(
       Effect.provideService(Database.Service, Database.makeService(layers.db)),
+      Effect.provide(Trace.writerLayerNoop),
       Effect.provideService(Capability.Service, layers.capabilityService),
       Effect.provide(AiService.notAvailable),
     );

@@ -281,7 +281,7 @@ export const ExtractSummaryFromMessage = Operation.make({
 
 export const ExtractMessage = Operation.make({
   meta: { key: DXN.make('org.dxos.operation.inbox.extractMessage'), name: 'Extract Message' },
-  services: [Capability.Service, AiService.AiService, Database.Service],
+  services: [Capability.Service, AiService.AiService, Database.Service, Trace.TraceService],
   input: Schema.Struct({
     // Live object or an immutable snapshot (feed messages resolve to snapshots); the handler
     // re-resolves the live proxy by id when available and reads only `source.id` otherwise.
@@ -360,6 +360,9 @@ export const createCorrespondentsProgressKey = (mailbox: Mailbox.Mailbox) =>
 
 /** Progress-registry key for a mailbox's pipeline-cascade monitor ({@link AnalyzeMailbox}). */
 export const createAnalyzeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#analyze');
+
+/** Progress-registry key for a single-message extraction in a mailbox ({@link ExtractMessage}). */
+export const createExtractProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#extract');
 
 /** Progress-registry key for a mailbox's summarization monitor ({@link SummarizeMailbox}). */
 export const createSummarizeProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#summarize');
