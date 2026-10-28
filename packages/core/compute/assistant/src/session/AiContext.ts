@@ -78,7 +78,19 @@ export class Bindings {
  */
 const bindingWrites = new Map<string, number>();
 
-const bindingWriteCount = (feed: Feed.Feed): number => bindingWrites.get(feed.id) ?? 0;
+/** Writes another process may have made to any feed's bindings; see {@link noteExternalBindingWrite}. */
+let externalBindingWrites = 0;
+
+const bindingWriteCount = (feed: Feed.Feed): number => (bindingWrites.get(feed.id) ?? 0) + externalBindingWrites;
+
+/**
+ * Tells this realm's binders that bindings may have been written outside it, so their next {@link Binder.sync}
+ * re-reads. For a host whose tools run in another process and whose live query does not carry their writes back
+ * (an EDGE agent: `enable-skills` binds in operation-service while the turn runs in compute-service).
+ */
+export const noteExternalBindingWrite = (): void => {
+  externalBindingWrites++;
+};
 
 const countBindingWrite = (feed: Feed.Feed): void => {
   bindingWrites.set(feed.id, (bindingWrites.get(feed.id) ?? 0) + 1);
