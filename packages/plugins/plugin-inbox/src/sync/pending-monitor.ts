@@ -17,14 +17,20 @@ import { createSyncLabel, createSyncProgressKey } from './mail-sync.ts';
 export const PENDING_SYNC_TIMEOUT_MS = 70_000;
 
 /**
+ * Error a pending sync meter shows when no run took it over in time.
+ * TODO(mykola): A successful sync can end here too, since EDGE progress is best effort; see the TODO in
+ *  plugin-client's `trace-progress.ts`.
+ */
+export const PENDING_SYNC_TIMEOUT_ERROR = 'Timed out: sync reported no progress';
+
+/**
  * Runs `sync` with the mailbox's sync meter showing from the moment sync is requested.
  *
  * The run registers the meter itself, but only when its first progress update reaches this client,
  * which for a run on EDGE is a round trip later. The run's own registration replaces this pending
  * entry under the same key; a superseded handle's `fail`/`remove` touch nothing, so the two never
- * fight. A meter the run never takes over is cleared {@link PENDING_SYNC_TIMEOUT_MS} after the request
- * ends: progress arrives over swarm broadcasts, which are best effort, so a run whose updates were lost
- * is not a failed run. A failed request, or a run that reports its failure, still shows an error.
+ * fight. A meter the run never takes over fails {@link PENDING_SYNC_TIMEOUT_MS} after the request ends,
+ * and stays until dismissed, so a sync that never started reads as an error rather than silently vanishing.
  */
 export const withPendingSyncMonitor = <A, E, R>(
   mailbox: Mailbox.Mailbox,
@@ -48,14 +54,23 @@ export const withPendingSyncMonitor = <A, E, R>(
       Effect.tapError((error) =>
         Effect.sync(() => handle.fail(error instanceof Error ? error.message : String(error))),
       ),
-      // An abandoned request never reaches the timeout below, and its meter would otherwise spin forever.
+      // An abandoned request reaches neither branch below, and its meter would otherwise spin forever.
       Effect.onInterrupt(() => Effect.sync(() => handle.remove())),
     );
 
     // Timed from the end of the request, not the click: a request still in flight (a routine form left
-    // open) is not a run that failed to report, and clearing it would re-enable Sync mid-request.
-    // A superseded handle's `remove` touches nothing, so a run that took over is left alone.
-    yield* Effect.sleep(timeoutMs).pipe(Effect.andThen(Effect.sync(() => handle.remove())), Effect.forkDetach);
+    // open) is not a run that failed to report, and failing it would re-enable Sync mid-request.
+    yield* Effect.sleep(timeoutMs).pipe(
+      Effect.andThen(
+        Effect.sync(() => {
+          // A superseded handle's `fail` touches nothing, so a run that took over is left alone.
+          if (registry.snapshot().tasks.some((task) => task.name === key && task.status === 'running')) {
+            handle.fail(PENDING_SYNC_TIMEOUT_ERROR);
+          }
+        }),
+      ),
+      Effect.forkDetach,
+    );
 
     return result;
   });
