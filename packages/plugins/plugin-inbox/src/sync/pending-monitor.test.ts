@@ -15,7 +15,7 @@ import * as Progress from '@dxos/app-toolkit/Progress';
 import { Mailbox } from '#types';
 
 import { createSyncProgressKey } from './mail-sync.ts';
-import { PENDING_SYNC_TIMEOUT_ERROR, PENDING_SYNC_TIMEOUT_MS, withPendingSyncMonitor } from './pending-monitor.ts';
+import { PENDING_SYNC_TIMEOUT_MS, withPendingSyncMonitor } from './pending-monitor.ts';
 
 class RequestRefusedError extends Data.TaggedError('RequestRefusedError')<{ message: string }> {}
 
@@ -44,18 +44,18 @@ describe('withPendingSyncMonitor', () => {
     }),
   );
 
+  // Progress arrives over best-effort swarm broadcasts: a successful request whose run never reported
+  // has lost its updates, not failed.
   it.effect(
-    'fails a meter the run never takes over with a timeout error that can be dismissed',
+    'clears a meter the run never takes over, without an error',
     Effect.fnUntraced(function* ({ expect }) {
-      const { progress, mailbox, key, task } = setup();
+      const { progress, mailbox, task } = setup();
       yield* withPendingSyncMonitor(mailbox, progress, Effect.void);
       expect(task()?.status).toBe('running');
 
-      yield* TestClock.adjust(PENDING_SYNC_TIMEOUT_MS);
-      expect(task()).toMatchObject({ status: 'error', error: PENDING_SYNC_TIMEOUT_ERROR });
-
-      // The meter's dismiss control routes through `cancel`.
-      progress.cancel(key);
+      yield* TestClock.adjust(PENDING_SYNC_TIMEOUT_MS - 1);
+      expect(task()?.status).toBe('running');
+      yield* TestClock.adjust(1);
       expect(task()).toBeUndefined();
     }),
   );
@@ -76,7 +76,7 @@ describe('withPendingSyncMonitor', () => {
       yield* Fiber.join(fiber);
       expect(task()?.status).toBe('running');
       yield* TestClock.adjust(PENDING_SYNC_TIMEOUT_MS);
-      expect(task()?.status).toBe('error');
+      expect(task()).toBeUndefined();
     }),
   );
 

@@ -16,13 +16,6 @@ export const STATUS_FAILED = 'Sync failed';
 /** Terminal status message — reducer calls `note()` then `remove()`. */
 export const STATUS_CANCELLED = 'Cancelled';
 
-/**
- * Reason shown when a run stops reporting. Deliberately not "failed": the run may well have finished
- * or still be going — what is known is that its progress stopped arriving, and saying more than that
- * would be inventing an outcome.
- */
-export const STATUS_STALLED = 'Stopped reporting';
-
 /** A terminal status message ends a run — the reducer removes or fails the keyed monitor. */
 const isTerminalMessage = (message: string | undefined): boolean =>
   message === STATUS_COMPLETE || message === STATUS_FAILED || message === STATUS_CANCELLED;
@@ -60,7 +53,7 @@ type MonitorEntry = {
   target: CancelTarget;
   /** Fires when this monitor has gone `stallTimeout` without an update; re-armed by every update. */
   stall?: ReturnType<typeof setTimeout>;
-  /** Set once the run failed or stalled, so the next update starts a clean run rather than reviving a dead one. */
+  /** Set once the run failed, so the next update starts a clean run rather than reviving a dead one. */
   ended?: boolean;
   /** Last phase index seen, so a change of phase can clear the count belonging to the old one. */
   phase?: number;
@@ -118,7 +111,7 @@ export type TraceSinkOptions = {
    */
   cancelScope?: 'pid' | 'run';
   /**
-   * Milliseconds a monitor may go without a status update before it is failed as stalled; see
+   * Milliseconds a monitor may go without a status update before it is removed; see
    * {@link DEFAULT_STALL_TIMEOUT_MS}. Non-positive or non-finite disables the bound, which leaves a
    * lost terminal pinning its meter open — only appropriate where the producer is in-process and its
    * terminal cannot be lost.
@@ -189,12 +182,10 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       clearTimeout(entry.stall);
     }
     entry.stall = setTimeout(() => {
-      // The entry stays in the map: the meter shows the failure with its dismiss control, and that
-      // control routes through `makeOnCancel` → `cancelMonitor`, both of which need the entry to
-      // still be here. `ended` is what stops it from being mistaken for a live run.
-      entry.stall = undefined;
-      entry.ended = true;
-      entry.handle.fail(STATUS_STALLED);
+      // Removed, not failed: broadcasts are best effort, so silence says the updates stopped arriving,
+      // not that the run failed.
+      entry.handle.remove();
+      dropMonitor(key);
     }, stallTimeout);
   };
 
@@ -354,7 +345,7 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
 
     if (data.message === STATUS_FAILED) {
       // Stays registered so the meter can show it, but the clock stops: a stall firing over a
-      // reported failure would replace the producer's reason with a guess about silence.
+      // reported failure would remove the producer's reason.
       disarmStall(key);
       handle.fail(STATUS_FAILED);
       const entry = monitors.get(key);
