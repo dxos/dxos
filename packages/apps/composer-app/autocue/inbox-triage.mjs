@@ -126,7 +126,7 @@ export const steps = [
       (await page.locator(`${SECTION}[data-section="untriaged"]`).count()) === 0,
     run: async ({ demo, page }) => {
       await caption(demo, 'Triage: label, prioritise and extract tasks with one click');
-      await demo.click({ selector: `${PLANK} button[aria-label="Extract"]`, label: 'Magic' });
+      await demo.click({ selector: `${PLANK} [data-testid="inbox.mailbox.more"]`, label: 'More' });
       await demo.click({ selector: '[role="menuitem"]:has-text("Triage inbox")', label: 'Triage inbox' });
       await page.locator(`${SECTION}[data-section="priority-urgent"]`).first().waitFor({ timeout: 60_000 });
       await page.waitForFunction(
