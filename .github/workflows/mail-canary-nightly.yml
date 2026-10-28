@@ -1,6 +1,6 @@
 name: Mail canary nightly
 
-# End-to-end canary for Gmail sync on the deployed preview EDGE (tools/mail-canary/README.md).
+# End-to-end canary for Gmail sync on the deployed preview EDGE (packages/plugins/plugin-google/src/canary/README.md).
 # It copies 100 Enron messages from the archived pool into test@braneframe.com, waits for the
 # space's own sync trigger to pick them up, and checks the space's Execution Trace and mailbox feeds
 # for the last day: every run ended and succeeded, the trigger kept firing, and every copy arrived
@@ -59,7 +59,7 @@ jobs:
           GMAIL_CLIENT_ID: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_ID }}
           GMAIL_CLIENT_SECRET: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_SECRET }}
           GMAIL_REFRESH_TOKEN: ${{ secrets.MAIL_CANARY_GMAIL_REFRESH_TOKEN }}
-        run: moon run mail-canary:nightly
+        run: moon run plugin-google:mail-canary
 
       # `always()`: the summary is most wanted when the step above failed; the test writes the report
       # before it asserts.

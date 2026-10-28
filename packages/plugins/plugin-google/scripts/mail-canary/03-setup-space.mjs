@@ -6,8 +6,8 @@
 // Step 03: creates the canary's preview identity and space with the dx CLI, and verifies the space
 // once Gmail is bound in Composer (README, step 03); the CLI cannot bind the mailbox and its sync yet.
 //
-//   node scripts/03-setup-space.mjs create <hub access code>   # profile, identity, space, recovery phrase
-//   MAIL_CANARY_RECOVERY_PHRASE=... node scripts/03-setup-space.mjs verify <space id>   # mailbox, trace feed, one sync trigger
+//   node scripts/mail-canary/03-setup-space.mjs create <hub access code>   # profile, identity, space, recovery phrase
+//   MAIL_CANARY_RECOVERY_PHRASE=... node scripts/mail-canary/03-setup-space.mjs verify <space id>   # mailbox, trace feed, one sync trigger
 //
 // verify reads the space as the nightly does: an in-process client recovers the identity and pulls the space.
 
@@ -19,13 +19,13 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { canaryAccount } from '../src/gmail/index.ts';
-import { CanarySpace, previewClientLayer } from '../src/space/index.ts';
+import { canaryAccount } from '../../src/canary/gmail/index.ts';
+import { CanarySpace, previewClientLayer } from '../../src/canary/space/index.ts';
 
 const PROFILE = 'mail-canary';
 const SPACE_NAME = 'Mail canary';
 const PREVIEW_HUB = 'https://preview.dxos.network/hub/';
-const DX = fileURLToPath(new URL('../../../packages/devtools/cli/bin/dx', import.meta.url));
+const DX = fileURLToPath(new URL('../../../../../packages/devtools/cli/bin/dx', import.meta.url));
 const env = { ...process.env, DX_PROFILE: PROFILE };
 const dx = (...args) => execFileSync(DX, args, { env, stdio: 'inherit' });
 const dxJson = (...args) => JSON.parse(execFileSync(DX, ['--json', ...args], { env, encoding: 'utf8' }));

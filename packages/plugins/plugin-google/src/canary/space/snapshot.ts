@@ -11,11 +11,9 @@ import { Database, type Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
+import { GMAIL_SOURCE } from '../../constants.ts';
 import { type SpaceSnapshot, type SyncedMessage, groupInvocations } from '../checks/index.ts';
 import { CanarySpaceError } from './errors.ts';
-
-/** Foreign-key source the Gmail mapper stamps on every synced message; plugin-google keeps its `GMAIL_SOURCE` internal. */
-export const GMAIL_SOURCE = 'com.google.mail';
 
 /**
  * Reads what the checks need from the canary space: the mailbox's synced messages, the mail sync's

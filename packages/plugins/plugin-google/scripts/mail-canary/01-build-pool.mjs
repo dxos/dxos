@@ -5,8 +5,8 @@
 
 // Step 01: turns Enron custodians' maildirs into the canary's pool mbox.
 //
-//   node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/enron-pool.mbox
-//   node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
+//   node scripts/mail-canary/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/enron-pool.mbox
+//   node scripts/mail-canary/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
 //
 // Samples `--limit` distinct messages evenly over the custodians' history and moves their dates into
 // `--span-days` ending `--end-days-ago` days back: inside the sync's 30-day window, so the canary
@@ -17,8 +17,8 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { readHeader, rewriteHeaders } from '../src/gmail/index.ts';
-import { joinMbox } from '../src/pool/index.ts';
+import { readHeader, rewriteHeaders } from '../../src/canary/gmail/index.ts';
+import { joinMbox } from '../../src/canary/pool/index.ts';
 
 const DAY = 86_400_000;
 // Enron dates outside the corpus's years are corrupt (1979, 2044, ...); clamp them rather than drop the mail.

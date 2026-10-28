@@ -6,7 +6,8 @@ import { describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
+
+import { GoogleOperation } from '#types';
 
 import {
   type Invocation,

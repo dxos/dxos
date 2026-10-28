@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { createServer } from 'node:http';
 
+import { LIVE_GMAIL_ACCOUNT } from '../../testing/live-credentials.ts';
 import { GmailError, request } from './request.ts';
 
 /** Insert, import, label and trash: what the canary does to the test account. */
@@ -22,7 +23,7 @@ export type GmailCredentials = {
 };
 
 /** The only mailbox the canary may write to; override with `GMAIL_ACCOUNT`. */
-export const canaryAccount = (env = process.env): string => env.GMAIL_ACCOUNT ?? 'test@braneframe.com';
+export const canaryAccount = (env = process.env): string => env.GMAIL_ACCOUNT ?? LIVE_GMAIL_ACCOUNT;
 
 /** Reads the grant from `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`. */
 export const credentialsFromEnv = (env = process.env): GmailCredentials | undefined =>

@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
+
+import { GoogleOperation } from '#types';
 
 /** How an invocation ended, as its `operation.end` event recorded it. */
 export type InvocationEnd = Trace.PayloadType<typeof Trace.OperationEnd> & { readonly timestamp: number };

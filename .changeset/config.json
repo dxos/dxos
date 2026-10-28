@@ -113,7 +113,6 @@
       "@dxos/lockfile-explorer",
       "@dxos/log",
       "@dxos/log-store-idb",
-      "@dxos/mail-canary",
       "@dxos/markdown",
       "@dxos/mcp-client",
       "@dxos/mcp-server",

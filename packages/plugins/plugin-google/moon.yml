@@ -27,3 +27,16 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+  # The nightly Gmail sync canary (src/canary/README.md): the `sync-e2e`-tagged suite `test` skips, run
+  # against preview with the canary's secrets. It seeds a real mailbox, so it is uncached and never in `Check`.
+  mail-canary:
+    extends: test
+    args:
+      - src/canary/nightly/canary.test.ts
+    env:
+      VITEST_TAGS_FILTER: sync-e2e
+      # Identity recovery logs its device credential at info, and the job log is public.
+      LOG_FILTER: warn
+    options:
+      cache: false
+      runInCI: false

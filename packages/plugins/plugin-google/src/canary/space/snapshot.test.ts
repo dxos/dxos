@@ -11,12 +11,14 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { Message } from '@dxos/types';
 
-import { GMAIL_SOURCE, readSnapshot } from './snapshot.ts';
+import { GoogleOperation } from '#types';
+
+import { GMAIL_SOURCE } from '../../constants.ts';
+import { readSnapshot } from './snapshot.ts';
 
 const KEY = GoogleOperation.GoogleMailSync.meta.key;
 

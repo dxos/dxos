@@ -5,9 +5,9 @@
 
 // Step 02: puts the pool from step 01 into the test account through the Gmail API.
 //
-//   node scripts/02-import-pool.mjs auth     # once: browser consent; writes the grant to .secrets/mail-canary-gmail.env
-//   node scripts/02-import-pool.mjs <mbox>   # import (resumable), then check the pool holds exactly the mbox
-//   node scripts/02-import-pool.mjs purge    # trash the pool, to clear the 10-message trial
+//   node scripts/mail-canary/02-import-pool.mjs auth     # once: browser consent; writes the grant to .secrets/mail-canary-gmail.env
+//   node scripts/mail-canary/02-import-pool.mjs <mbox>   # import (resumable), then check the pool holds exactly the mbox
+//   node scripts/mail-canary/02-import-pool.mjs purge    # trash the pool, to clear the 10-message trial
 //
 // The grant comes from GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN, else the .secrets
 // file, else (with a 1Password service account, as in the cloud sandbox) the references in gmail.env.tpl.
@@ -21,17 +21,17 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { GmailClient, canaryAccount, credentialsFromEnv, mintRefreshToken } from '../src/gmail/index.ts';
-import { Pool } from '../src/pool/index.ts';
+import { GmailClient, canaryAccount, credentialsFromEnv, mintRefreshToken } from '../../src/canary/gmail/index.ts';
+import { Pool } from '../../src/canary/pool/index.ts';
 
-const SECRETS = fileURLToPath(new URL('../../../.secrets/mail-canary-gmail.env', import.meta.url));
+const SECRETS = fileURLToPath(new URL('../../../../../.secrets/mail-canary-gmail.env', import.meta.url));
 const [command] = process.argv.slice(2);
 
 if (command !== 'auth' && !process.env.GMAIL_REFRESH_TOKEN) {
   if (existsSync(SECRETS)) {
     process.loadEnvFile(SECRETS);
   } else if (process.env.OP_SERVICE_ACCOUNT_TOKEN) {
-    const template = fileURLToPath(new URL('../gmail.env.tpl', import.meta.url));
+    const template = fileURLToPath(new URL('./gmail.env.tpl', import.meta.url));
     const run = spawnSync('op', ['run', `--env-file=${template}`, '--', process.execPath, ...process.argv.slice(1)], {
       stdio: 'inherit',
     });

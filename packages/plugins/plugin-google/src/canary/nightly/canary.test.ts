@@ -28,7 +28,7 @@ const SYNC_TIMEOUT_MINUTES = Number(process.env.DX_CANARY_SYNC_TIMEOUT_MIN ?? 45
 /**
  * The nightly canary against preview (see README): seed the test account, wait for the space's own
  * sync, and check every sync run of the last day. Tagged `sync-e2e`, which the default `test` task
- * excludes; `moon run mail-canary:nightly` selects it. Skips when the secrets are not set.
+ * excludes; `moon run plugin-google:mail-canary` selects it. Skips when the secrets are not set.
  */
 describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 25) * 60_000, retry: 0 }, () => {
   test.skipIf(!settings)('seeded mail syncs and every sync run of the last day ended well', async ({ expect }) => {
