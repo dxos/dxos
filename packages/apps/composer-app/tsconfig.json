@@ -277,6 +277,9 @@
       "path": "../../plugins/plugin-library"
     },
     {
+      "path": "../../plugins/plugin-lighthouse"
+    },
+    {
       "path": "../../plugins/plugin-linear"
     },
     {

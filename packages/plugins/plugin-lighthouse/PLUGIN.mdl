@@ -1,0 +1,385 @@
+---
+id: org.dxos.plugin.lighthouse
+name: LighthousePlugin
+version: 0.1.0
+---
+
+A Composer plugin that is lighthouse's web UI. Lighthouse (an agent that searches the web and keeps what it
+finds as an RDF graph) runs outside Composer, as its workspace daemon, and is reached through its API
+(`lighthouse-api`). The plugin adds a **Research** object to a space: a goal handed to a lighthouse search
+session, shown as the session's chat beside a ranked masonry of what it found. The person steers the agent,
+votes on results, adjusts the rating model and reads facets of a result on demand; what they keep is copied
+into the space, so it is shared with the space's members and outlives the lighthouse workspace.
+
+This document is drafted in the lighthouse repository and moves to `packages/plugins/plugin-lighthouse` in
+the DXOS repository, as its PLUGIN.mdl, when the plugin is built. Lighthouse's own code stays in its
+repository.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `service`   | `org.dxos.mdl.service@1.0`   |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
+
+## Where things live
+
+| What                                                   | Where                                   |
+| ------------------------------------------------------ | --------------------------------------- |
+| Sessions, trajectories, the graph, snapshots, issues   | Lighthouse (its workspace), via the API |
+| The Research object: goal, budget, link to the session | ECHO, in the space                      |
+| Picks and kept results, as immutable `Finding`s        | ECHO, the Research's feed               |
+| Votes and stars                                        | ECHO tag index, and sent to lighthouse  |
+| Rating adjustments                                     | Lighthouse (the session's overrides)    |
+| The connection (server URL and API token)              | ECHO, as a plugin-connector Integration |
+
+Everything else the article shows (every result, the live thread, extension sections, the rating model) is
+read live from the API and not copied.
+
+## Types
+
+```mdl
+type Research
+  desc: >
+    A goal handed to a lighthouse search session. Links to the session by run id on one lighthouse
+    connection; holds what the person kept as an append-only feed of Findings.
+  fields:
+    name?:      string
+    goal:       Prose
+    budget?:    Budget                  # minutes, usd, pages (lighthouse-api Budget)
+    connection: Ref<Integration>        # the lighthouse server it runs on
+    run?:       string                  # the lighthouse session; set once it starts
+    feed:       Ref<Feed>               # immutable Finding entries (SetParent)
+    tags:       Ref<TagIndex>           # starred and voted Findings (SetParent)
+    lastSeq?:   number                  # the trajectory seq the feed was last synced to
+    lastRunAt?: string                  # ISO 8601
+  annotations:
+    icon: ph--binoculars--regular
+    hue: amber
+    label: name
+```
+
+```mdl
+type Finding
+  desc: >
+    One result copied out of lighthouse into the space: the entity's identity and current facts at the time
+    it was kept, with where they came from. Immutable; keeping it again after the facts change appends a
+    newer entry with the same iri.
+  fields:
+    iri:        string                  # the lighthouse subject
+    title:      string
+    url?:       string
+    types:      string[]                # CURIEs, e.g. schema:Restaurant
+    images:     string[]
+    properties: Record<string, unknown> # CURIE → values, as lighthouse returns them
+    provenance: FindingSource[]
+    score?:     number                  # the rating score when kept
+    why?:       Prose                   # the agent's reason, for a pick
+    keptBy:     pick | person
+    keptAt:     string                  # ISO 8601
+  annotations:
+    icon: ph--push-pin--regular
+    hue: amber
+    label: title
+```
+
+```mdl
+type FindingSource
+  fields:
+    extractor: string                   # id@version
+    source?:   string                   # the page or API it read
+    at:        string
+```
+
+## Components
+
+```mdl
+component ResearchArticle
+  desc: >
+    Article surface for a Research. Two panes, as lighthouse's own web UI: left, the session's trajectory as
+    the assistant ChatThread (prompts, one tool panel per answer, result pills, the report as pick cards)
+    with a composer that sends follow-ups; right, the results as a masonry of FindingCards ranked by the
+    session's rating model, with the rating model panel behind the toolbar's model button. Before the
+    session starts it shows the goal and budget form.
+  props:
+    research: Research
+  state:
+    stream: connecting | live | lost
+    showModel: boolean
+  actions:
+    start()                             # op:StartResearch
+    send(text)                          # op:SendToResearch
+    stop()                              # op:StopResearch
+```
+
+```mdl
+component FindingCard
+  desc: >
+    A result in the masonry: photos and map, title, the key facts by kind, the score, thumbs up/down, a keep
+    toggle, and the result's extension sections with a "More about this" menu (quick read or research).
+    Renders a live lighthouse entity, or a kept Finding when the connection is offline.
+  props:
+    entity: Entity | Finding
+    research: Research
+  emits:
+    onVote(vote: up | down | clear)
+    onKeep(kept: boolean)
+    onExtend(extension: string, deep: boolean)
+```
+
+```mdl
+component RatingModelPanel
+  desc: >
+    The session's rating model term by term (what each reads, its formula with the session's numbers, its
+    share), with a nudge and an on/off switch per term and requirement; ported from lighthouse's web UI.
+  props:
+    research: Research
+```
+
+```mdl
+component LighthouseMeta
+  desc: >
+    A settings surface for one connection: its status and version, plugins and what they contribute, the
+    vocabulary, issues (with triage), and storage (bytes by area, prune, cache clear).
+  props:
+    connection: Integration
+```
+
+## Services
+
+```mdl
+service LighthouseClient
+  desc: >
+    The typed lighthouse-api client, bound to one Integration (server URL and token). Runs wherever the
+    plugin's operations run; on the desktop app it talks to the local daemon directly, in a browser over
+    HTTPS to the same localhost or a hosted server.
+  loading: lazy
+```
+
+```mdl
+service LighthouseSidecar
+  desc: >
+    Desktop only. Runs the lighthouse daemon as a Tauri sidecar with its workspace in the app's data
+    directory, the way plugin-claude runs dx-agent, and registers it as the default connection.
+  loading: lazy
+```
+
+## Operations
+
+```mdl
+op StartResearch
+  key: org.dxos.operation.lighthouse.start
+  desc: Creates the lighthouse session for a Research (createSession) and records its run.
+  input:
+    research: Ref<Research>
+  output: Ref<Research>
+  effects: [http, echo:write]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op SendToResearch
+  key: org.dxos.operation.lighthouse.send
+  desc: A follow-up into the session (sendMessage, from composer).
+  input:
+    research: Ref<Research>
+    text: string
+  effects: [http]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op StopResearch
+  key: org.dxos.operation.lighthouse.stop
+  input:
+    research: Ref<Research>
+  effects: [http]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op SyncFindings
+  key: org.dxos.operation.lighthouse.sync
+  desc: >
+    Appends to the Research's feed every pick in the session's report that is not in it yet, and records
+    lastSeq. Runs when the stream reports the session reported, and on open.
+  input:
+    research: Ref<Research>
+  output: number                        # Findings appended
+  effects: [http, echo:write]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op KeepFinding
+  key: org.dxos.operation.lighthouse.keep
+  desc: Copies one result into the feed (getEntity with provenance) and stars it.
+  input:
+    research: Ref<Research>
+    iri: string
+  output: Finding
+  effects: [http, echo:write]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op VoteFinding
+  key: org.dxos.operation.lighthouse.vote
+  desc: Records the vote in the tag index and sends it to lighthouse (sendFeedback), which rebuilds the model.
+  input:
+    research: Ref<Research>
+    iri: string
+    vote: up | down | clear
+  effects: [http, echo:write]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op ExtendFinding
+  key: org.dxos.operation.lighthouse.extend
+  desc: Reads one extension for one result (extend); deep starts a child session, shown as a link.
+  input:
+    research: Ref<Research>
+    iri: string
+    extension: string
+    deep?: boolean
+  effects: [http]
+  requires: [LighthouseClient]
+```
+
+## Features
+
+```mdl
+feat F-1: Connection
+
+  req F-1.1: The plugin registers a plugin-connector IntegrationProvider for lighthouse with a credential form (server URL, API token); the token is an AccessToken.
+  req F-1.2: On the desktop app the sidecar's daemon is the default connection, with no form.
+  req F-1.3: A connection that does not answer shows offline: the article shows kept Findings and the last synced state, read-only.
+```
+
+```mdl
+feat F-2: Research
+
+  req F-2.1: A Research is created from the space's create menu or by the assistant, with a goal and a budget preset (Quick, Standard, Deep).
+  req F-2.2: Starting it creates the lighthouse session and stores its run; the article streams it from then on.
+  req F-2.3: The thread is steering only: results appear on the right, and the report's picks appear as pick cards.
+  req F-2.4: A follow-up sent from Composer is marked from composer; follow-ups from the CLI or lighthouse's own UI appear live.
+```
+
+```mdl
+feat F-3: Findings in the space
+
+  req F-3.1: When the session reports, its picks are appended to the feed as Findings with keptBy pick.
+  req F-3.2: Keep on a card appends the result as a Finding with keptBy person and stars it; unkeep removes the star, not the entry.
+  req F-3.3: Findings are immutable; the feed is the Research's history of what was kept.
+  req F-3.4: Members of the space see the Research and its Findings without a lighthouse connection of their own.
+```
+
+```mdl
+feat F-4: Ranking and facets
+
+  req F-4.1: The masonry ranks by the session's rating model with the person's adjustments, as lighthouse's web UI does.
+  req F-4.2: Votes are kept in the tag index and sent to lighthouse.
+  req F-4.3: The rating model panel adjusts the session's overrides through the API.
+  req F-4.4: Extensions that apply to a result are offered on its card; a deep one links to its child session, which is a Research of its own only if opened.
+```
+
+```mdl
+feat F-5: The assistant
+
+  req F-5.1: A skill gives the assistant lighthouse's MCP tools (search, entity, sparql, extend) and an operation to start a Research for a goal.
+  req F-5.2: The assistant hands research goals to a Research instead of searching itself, and answers from its Findings.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Offline Research
+  given: a Research with kept Findings; its connection does not answer
+  when: a member opens it
+  then:
+    - the article shows the Findings as cards and a connection-offline notice
+    - the composer and votes are disabled
+```
+
+```mdl
+scenario T-2: Picks are kept once
+  given: a Research whose session reported 8 picks, 3 of them already in the feed
+  when: SyncFindings runs
+  then: 5 Findings are appended, with keptBy pick
+```
+
+## QA
+
+```mdl
+test QA-1: Research a goal from Composer
+  desc: The round trip through the API, against a local lighthouse daemon.
+  actors: both
+  covers: [F-1.1, F-2.1, F-2.2, F-3.1, F-4.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a lighthouse daemon is running locally, with its API token at hand
+  steps:
+    - name: Connect lighthouse
+      do: In Settings → Integrations, add Lighthouse with the local URL and the API token.
+      expect: the connection shows online with lighthouse's version
+    - name: Start a Research
+      do: Create a Research with the goal "Board game cafés in Bangkok with a big game library" and Quick budget, then start it.
+      expect: the thread shows the goal and the agent's first tool runs; result cards appear on the right
+    - name: Vote and keep
+      do: Thumbs-up one card, and press keep on another.
+      expect: the kept card's Finding is in the Research's feed; lighthouse's feedback for the session lists the vote
+    - name: Wait for the report
+      do: Wait until the session reports.
+      expect: the picks appear as pick cards and as Findings with keptBy pick
+```
+
+## Open questions
+
+- Web-only Composer users: a local daemon reached from the browser, a hosted lighthouse, or both.
+- Whether every result should be kept automatically (larger spaces, offline-complete) rather than picks and
+  the person's keeps.
+- plugin-commerce: its Provider templates (a request mapping and CSS/JSONPath result mapping written by an
+  LLM) could become a lighthouse extractor kind, with commerce searches run by lighthouse's runSearch; or
+  this plugin replaces it.
+
+## Changelog
+
+```mdl
+decision D-1: Composer is lighthouse's web UI: a Composer plugin reaches lighthouse through its API, while lighthouse's code stays in its own repository.
+  date: 2026-10-28
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-2: The plugin adds a Research object linked to one lighthouse session; its article is lighthouse's two-pane view (the assistant ChatThread steering on the left, the ranked masonry on the right) reading the session live from the API. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: Lighthouse's web UI is already built from the same DXOS components, so the view ports with its behavior intact.
+```
+
+```mdl
+decision D-3: The session's picks and the results a person keeps are copied into the space as immutable Findings in the Research's feed, with provenance; everything else is read live and not copied. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: Copies are what members without a connection see and what outlives the lighthouse workspace; copying every result (hundreds per session) would fill spaces with what nobody chose.
+  rejected: Copying every result; copying nothing (a Research unreadable without the person's own lighthouse).
+```
+
+```mdl
+decision D-4: The connection is a plugin-connector Integration with the API token as an AccessToken; on the desktop app a Tauri sidecar runs the lighthouse daemon and is the default connection. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: plugin-connector already stores credentials and renders the setup; plugin-claude's dx-agent is the precedent for a local server beside the desktop app.
+```

@@ -1,0 +1,26 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Database } from '@dxos/echo';
+
+import { LighthouseOperation } from '#types';
+
+import { loadClient, requireRun } from './util.ts';
+
+const handler: Operation.WithHandler<typeof LighthouseOperation.SendToResearch> =
+  LighthouseOperation.SendToResearch.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ research: researchRef, text, model }) {
+        const research = yield* Database.load(researchRef);
+        const run = yield* requireRun(research);
+        const client = yield* loadClient(research);
+        yield* client.sendMessage(run, text, model ? { model } : undefined);
+      }),
+    ),
+  );
+
+export default handler;

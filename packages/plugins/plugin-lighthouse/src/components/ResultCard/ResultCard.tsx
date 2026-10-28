@@ -1,0 +1,137 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import React, { type MouseEvent } from 'react';
+
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import { Tag } from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
+import * as Util from '@dxos/react-ui/Util';
+
+import { meta } from '#meta';
+
+import { type CardModel } from '../../model/results.ts';
+
+export type ResultCardProps = {
+  card: CardModel;
+  current?: boolean;
+  starred?: boolean;
+  /** The rating model's score, 0..1; absent before the agent writes a model. */
+  score?: number;
+  /** Requirements the result misses. */
+  missed?: readonly string[];
+  vote?: 'up' | 'down';
+  onToggleStar?: () => void;
+  onVote?: (vote: 'up' | 'down') => void;
+};
+
+/** A click on an action inside the tile must not also select the tile. */
+const stop = (handler?: () => void) => (event: MouseEvent) => {
+  event.stopPropagation();
+  handler?.();
+};
+
+/**
+ * Masonry tile for a lighthouse result, in plugin-commerce's ResultCard shape: the first photo, the star in the
+ * header's leading slot, title and price in its centre; then the key facts, the kind, and the score with thumbs.
+ * Composable so a masonry item (`Focus.Item asChild`) can make it the focusable, selectable unit.
+ */
+export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
+  (
+    { card, current, starred = false, score, missed, vote, onToggleStar, onVote, classNames, ...props },
+    forwardedRef,
+  ) => {
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const image = card.images[0];
+
+    return (
+      <Card.Root
+        ref={forwardedRef}
+        classNames={['dx-hover cursor-pointer', current && 'dx-current', classNames]}
+        data-testid='lighthouse.result'
+        {...props}
+      >
+        {image && <Card.Poster alt={card.title} src={image} fit='cover' loading='lazy' classNames='rounded-t-xs' />}
+        <Card.Header>
+          <Layout.Block>
+            <SystemButton.Star variant='ghost' iconOnly pressed={starred} onClick={stop(onToggleStar)} />
+          </Layout.Block>
+          <Layout.Flex column gap='xs' classNames='min-w-0 py-2'>
+            {card.eyebrow && (
+              <Typography.Text classNames='text-xs font-semibold uppercase tracking-wide text-accent-text'>
+                {card.eyebrow}
+              </Typography.Text>
+            )}
+            <Card.Title lines={2}>{card.title}</Card.Title>
+            {card.price && <span className='text-sm text-fg-muted tabular-nums'>{card.price}</span>}
+          </Layout.Flex>
+          <Layout.Block rail='end' />
+        </Card.Header>
+        {card.description && (
+          <Card.Row>
+            <Typography.Text lines={4} classNames='text-sm text-fg-muted whitespace-normal'>
+              {card.description}
+            </Typography.Text>
+          </Card.Row>
+        )}
+        {card.rows.map((row) => (
+          <Card.Row key={row.icon} icon={row.icon} title={row.title}>
+            <Typography.Text truncate classNames='text-sm'>
+              {row.text}
+            </Typography.Text>
+          </Card.Row>
+        ))}
+        <Card.Row
+          icon='ph--chart-bar--regular'
+          trailing={
+            onVote && (
+              <Layout.Flex gap='xs'>
+                <Button.Root
+                  variant={vote === 'up' ? 'primary' : 'ghost'}
+                  icon='ph--thumbs-up--regular'
+                  iconOnly
+                  label={t('vote-up.label')}
+                  aria-pressed={vote === 'up'}
+                  onClick={stop(() => onVote('up'))}
+                  data-testid='lighthouse.vote-up'
+                />
+                <Button.Root
+                  variant={vote === 'down' ? 'primary' : 'ghost'}
+                  icon='ph--thumbs-down--regular'
+                  iconOnly
+                  label={t('vote-down.label')}
+                  aria-pressed={vote === 'down'}
+                  onClick={stop(() => onVote('down'))}
+                  data-testid='lighthouse.vote-down'
+                />
+              </Layout.Flex>
+            )
+          }
+        >
+          <Layout.Flex gap='xs' align='center' classNames='min-w-0'>
+            {card.tags.map((tag) => (
+              <Tag key={tag.label} hue={tag.hue ?? 'neutral'}>
+                {tag.label}
+              </Tag>
+            ))}
+            {score !== undefined && (
+              <span
+                className='text-sm text-fg-muted tabular-nums'
+                title={missed?.length ? t('missed.label', { requirements: missed.join(', ') }) : undefined}
+              >
+                {Math.round(score * 100)}
+              </span>
+            )}
+          </Layout.Flex>
+        </Card.Row>
+      </Card.Root>
+    );
+  },
+);
+
+ResultCard.displayName = 'ResultCard';
