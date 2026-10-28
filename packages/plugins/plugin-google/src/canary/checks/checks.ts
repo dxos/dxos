@@ -209,13 +209,14 @@ export const runChecks = (
     .map(([gmailId, copies]) => ({ class: 'DATA', gmailId, message: `synced ${copies.length} times` }));
 
   // Every copy that arrived is compared, however new: the grace only gives a missing copy time to arrive.
-  const content: Failure[] = seeded.flatMap((expected) => {
-    const actual = synced.get(expected.gmailId)?.[0];
-    const mismatches = actual ? contentMismatches(expected, actual) : [];
-    return mismatches.length > 0
-      ? [{ class: 'DATA' as const, gmailId: expected.gmailId, message: `${mismatches.join(', ')} differ` }]
-      : [];
-  });
+  const content: Failure[] = seeded.flatMap((expected) =>
+    (synced.get(expected.gmailId) ?? []).flatMap((actual) => {
+      const mismatches = contentMismatches(expected, actual);
+      return mismatches.length > 0
+        ? [{ class: 'DATA' as const, gmailId: expected.gmailId, message: `${mismatches.join(', ')} differ` }]
+        : [];
+    }),
+  );
 
   const checks: CheckResult[] = [
     result('C1', 'Every invocation ends', closure),

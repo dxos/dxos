@@ -123,6 +123,17 @@ describe('runChecks', () => {
     expect(failedChecks(snapshot)).toEqual(['C6', 'C7']);
   });
 
+  test('a wrong second copy fails content as well as duplicates', ({ expect }) => {
+    const snapshot = {
+      ...healthySnapshot(),
+      messages: [
+        ...healthySnapshot().messages,
+        { gmailId: 'g1', subject: 'Re: forecast', sender: 'someone.else@enron.com' },
+      ],
+    };
+    expect(failedChecks(snapshot)).toEqual(['C6', 'C7']);
+  });
+
   test('a copy that arrived inside the grace period is still compared', ({ expect }) => {
     const snapshot = {
       ...healthySnapshot(),

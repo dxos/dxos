@@ -22,7 +22,8 @@ Design: the [Mail Sync Canary spec](https://claude.ai/artifact/GymNuUNJiiph2LuiD
 
 ## Steps
 
-Run the commands from `packages/plugins/plugin-google`.
+Run the commands from `packages/plugins/plugin-google`, after `moon run plugin-google:build`: the scripts
+run under plain `node`, so they load the compiled packages, which a fresh checkout does not have.
 
 | Step | Command                                         | Runs                 | Needs                       |
 | ---- | ----------------------------------------------- | -------------------- | --------------------------- |
