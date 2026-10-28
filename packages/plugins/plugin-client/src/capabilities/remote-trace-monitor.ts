@@ -9,6 +9,7 @@ import * as Stream from 'effect/Stream';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { RemoteTraceMonitor } from '@dxos/compute-runtime';
+import * as Trace from '@dxos/compute/Trace';
 import { toPublicKey } from '@dxos/protocols/buf';
 
 import { ClientCapabilities } from '#types';
@@ -50,8 +51,10 @@ export default Capability.makeModule(
                   // Carry the envelope tags with the payload — the wire payload drops ref meta
                   // (`trigger`), and decode restores it from the tags for cancel addressing.
                   // v4's `filterMap` signals the drop through a `Result`, not an `Option`.
+                  // The subscription also receives this peer's point-to-point messages (Messenger's
+                  // `ReliablePayload` / `Acknowledgement`), which are not trace broadcasts.
                   Stream.filterMap((message) =>
-                    message.payload?.value
+                    message.payload?.value && message.payload.typeUrl === Trace.TRACE_MESSAGE_TYPE_URL
                       ? Result.succeed({ payload: message.payload.value, tags: message.tags })
                       : Result.failVoid,
                   ),
