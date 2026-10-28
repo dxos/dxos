@@ -139,7 +139,7 @@ export const AnimationPlayer = ({
   const StageComponent = stage?.component;
   return (
     <div className={mx('flex flex-col h-full min-h-0', classNames)} data-testid='animator.player'>
-      <div className='relative dx-grow overflow-hidden' style={{ opacity: located?.opacity ?? 1 }}>
+      <div className='relative dx-grow overflow-hidden'>
         {!shot ? (
           <Message>{t('no-shots.message')}</Message>
         ) : !object ? (
@@ -157,6 +157,11 @@ export const AnimationPlayer = ({
           />
         )}
         <OverlayLayer frames={effects} projection={projection} />
+        {/* Transitions fade through black, as film does, rather than to the surface behind the player. */}
+        <div
+          className='absolute inset-0 bg-black pointer-events-none'
+          style={{ opacity: 1 - (located?.opacity ?? 1) }}
+        />
         <ScreenLayer frame={screenFrame} />
       </div>
       {spans.length > 1 && (
