@@ -188,6 +188,20 @@ describe('makeTraceSink', () => {
     expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
   });
 
+  test('a count that arrives after a higher one does not move the meter back', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 6, total: 10 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 3, total: 10 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))).toMatchObject({ current: 6, total: 10 });
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 7 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))?.current).toBe(7);
+  });
+
   test('a long-lived process that reports the same key again later is a new run', () => {
     vi.useFakeTimers();
     onTestFinished(() => {
