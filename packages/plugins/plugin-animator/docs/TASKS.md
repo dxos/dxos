@@ -113,6 +113,10 @@ paths), design the plugin, and turn the approved design into an MDL spec.
       (`backOpacity`).
 - [ ] The editor (`SpacetimeCanvas`) ignores `opacity`, `labelStyle`, `rotation` and `links`.
 - [ ] Storybook play test for the `SpacetimeStage` stories (frame time, label positions against `onProjection`).
+- [ ] Engulf (shot 9): the companies ring sits off the merged lab's centre near the top of the frame, and the burst
+      barely spreads; fix the fixture's layout.
+- [ ] End card (shot 12): echo3d fills the hub orange behind the DXOS headline; the fixture shows only the headline.
+- [ ] Jumping to a shot lands on the first frame of its fade-in (black); consider landing after the transition.
 
 ## Phase 4: Export and studio
 
