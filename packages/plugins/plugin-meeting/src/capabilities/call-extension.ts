@@ -3,21 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Feed, Obj, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type * as CallManager from '@dxos/plugin-calls/CallManager';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
+import * as TranscriptOperation from '@dxos/plugin-transcription/TranscriptOperation';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type Channel, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
@@ -50,7 +48,7 @@ export default Capability.makeModule(
       });
       await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     };
-    // Subscribed here rather than in `onJoin`, which plugin-calls never invokes; utterances only flow in a simulated call.
+    // Subscribed for the module's lifetime: utterances only flow in a simulated call, which never emits `roomJoined`.
     const callManager = yield* Capability.get(CallsCapabilities.Manager);
     const unsubscribe = callManager.simulatedUtterance.on(
       (utterance) => void writeUtterance(utterance).catch((err) => log.catch(err)),
@@ -58,21 +56,30 @@ export default Capability.makeModule(
     // The manager outlives this module, so a reactivation would otherwise write every line twice.
     yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
 
-    return Capability.contribute(CallsCapabilities.EventHandler, {
-      onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
-        const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
-        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
-        invariant(identity);
+    /** Links known entities in each native transcript segment, as the standalone transcription recorder does. */
+    const enrich: CallManager.TranscriptMessageEnricher = async (message) => {
+      const [settingsAtom] = capabilities.getAll(TranscriptionCapabilities.Settings);
+      const settings = settingsAtom && capabilities.get(Capabilities.AtomRegistry).get(settingsAtom);
+      const meeting = store.state.activeMeeting;
+      const spaceId = meeting && Obj.getDatabase(meeting)?.spaceId;
+      // Read per segment so a settings toggle mid-call applies.
+      if (!spaceId || !(settings?.entityExtraction ?? true)) {
+        return message;
+      }
+      const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
+      const { data, error } = await invokePromise(TranscriptOperation.EnrichMessage, { message }, { spaceId });
+      if (error) {
+        log.warn('entity extraction failed; using raw transcript', { error });
+        return message;
+      }
+      return data?.message ?? message;
+    };
 
-        // TODO(burdon): The TranscriptionManager singleton is part of the state and should just be updated here.
-        const transcriptionManager = await capabilities
-          .get(TranscriptionCapabilities.TranscriptionManagerProvider)({})
-          .open();
-        store.updateState((current) => ({ ...current, transcriptionManager }));
+    return Capability.contribute(CallsCapabilities.EventHandler, {
+      onJoin: async () => {
+        callManager.setTranscriptEnricher(enrich);
       },
       onLeave: async () => {
-        const { transcriptionManager } = store.state;
-        await transcriptionManager?.close();
         store.updateState(() => ({}));
       },
       onCallStateUpdated: async (callState: CallManager.CallState) => {
@@ -85,13 +92,6 @@ export default Capability.makeModule(
 
         const payload: MeetingPayload = activity.payload;
         await invokePromise(MeetingOperation.HandlePayload, payload);
-      },
-      onMediaStateUpdated: async ([mediaState, isSpeaking]: [CallManager.MediaState, boolean]) => {
-        const { transcriptionManager } = store.state;
-        // Not awaited (media updates must not block on transcription), but a rejection — e.g. no
-        // transcription endpoint configured — has to be logged rather than left unhandled.
-        void transcriptionManager?.setAudioTrack(mediaState.audioTrack).catch((err) => log.catch(err));
-        void transcriptionManager?.setRecording(isSpeaking);
       },
     });
   }),

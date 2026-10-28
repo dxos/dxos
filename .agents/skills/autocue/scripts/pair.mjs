@@ -18,7 +18,9 @@
  *
  * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, sleep })` gets each
  * peer by its lowercased name (`peers.alice.page`, `peers.alice.click(locator)`). Steps run in order; a
- * step's `name` is its caption unless it sets `caption: false` or captions itself.
+ * step's `name` is its caption unless it sets `caption: false` or captions itself. A flow may also export
+ * `preparePeer({ name, context })`, which runs on each peer's context before its page opens (e.g. to give each
+ * person their own camera with `fake-media.mjs`). `--chromium-args a,b` adds Chromium flags, as in `driver.mjs`.
  */
 
 import { chromium } from '@playwright/test';
@@ -60,6 +62,8 @@ const parseArgs = () => {
     // Milliseconds the cursor rests on a target before the click, so a viewer sees what is about to be chosen.
     'dwell': 400,
     'mp4': 'off',
+    // Extra Chromium flags, comma-separated (e.g. `--autoplay-policy=no-user-gesture-required` for fake media).
+    'chromium-args': '',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -96,8 +100,15 @@ const browser = await chromium.launch({
       : []),
     // `deviceScaleFactor` alone leaves the screencast at CSS size; forcing it browser-wide makes the frames 2x.
     ...(options.scale !== 1 ? [`--force-device-scale-factor=${options.scale}`] : []),
+    ...String(options['chromium-args'])
+      .split(',')
+      .map((arg) => arg.trim())
+      .filter(Boolean),
   ],
 });
+
+const flow = await import(pathToFileURL(path.resolve(options.flow)).href);
+const steps = flow.steps ?? [];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -164,6 +175,7 @@ const bootPage = async (page, label) => {
 const createPeer = async (name) => {
   const viewport = { width: options.width, height: options.height };
   const context = await browser.newContext({ viewport, deviceScaleFactor: options.scale, colorScheme: options.theme });
+  await flow.preparePeer?.({ name, context });
   const page = await context.newPage();
   page.setDefaultTimeout(options['action-timeout']);
   const overlay = createOverlay(page, { enabled: true, feed: false });
@@ -246,9 +258,6 @@ const createPeer = async (name) => {
 const names = options.peers.split(',').map((name) => name.trim());
 const peerList = await Promise.all(names.map(createPeer));
 const peers = Object.fromEntries(peerList.map((peer) => [peer.name.toLowerCase(), peer]));
-
-const flow = await import(pathToFileURL(path.resolve(options.flow)).href);
-const steps = flow.steps ?? [];
 
 /** Caption timeline, in ms from the shared cut; empty until the take starts. */
 const captions = [];

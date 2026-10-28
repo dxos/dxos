@@ -7,7 +7,6 @@
 import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 
 import { meta } from '#meta';
 
@@ -20,7 +19,6 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 
 export type MeetingState = {
   activeMeeting?: Meeting.Meeting;
-  transcriptionManager?: TranscriptionCapabilities.TranscriptionManager;
 };
 
 export type MeetingStateStore = {

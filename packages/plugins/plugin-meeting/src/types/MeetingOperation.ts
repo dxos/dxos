@@ -65,6 +65,20 @@ export const HandlePayload = Operation.make({
   output: Schema.Void,
 });
 
+export const SetTranscription = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.meeting.setTranscription'),
+    name: 'Set Meeting Transcription',
+    icon: 'ph--subtitles--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    meeting: Type.getSchema(Meeting.Meeting),
+    enabled: Schema.Boolean,
+  }),
+  output: Schema.Void,
+});
+
 export const Summarize = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.meeting.summarize'),
