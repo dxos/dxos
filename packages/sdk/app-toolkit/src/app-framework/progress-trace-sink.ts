@@ -287,13 +287,17 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
     }
 
     const offset = entry.offset ?? 0;
+    const current = progress.current === undefined ? undefined : offset + progress.current;
+    // Broadcasts arrive unordered, so a count below the one shown is a stale update, not the run going back;
+    // its total is as stale as its count, so neither is applied.
+    if (current !== undefined && entry.shown.current !== undefined && current < entry.shown.current) {
+      return;
+    }
     if (progress.total !== undefined) {
       entry.shown.total = offset + progress.total;
       entry.handle.total(entry.shown.total);
     }
-    // Broadcasts arrive unordered, so a count below the one shown is a stale update, not the run going back.
-    const current = progress.current === undefined ? undefined : offset + progress.current;
-    if (current !== undefined && (entry.shown.current === undefined || current >= entry.shown.current)) {
+    if (current !== undefined) {
       entry.shown.current = current;
       entry.handle.set(current);
     }

@@ -202,6 +202,17 @@ describe('makeTraceSink', () => {
     expect(registry.get(progress.monitorAtom(key))?.current).toBe(7);
   });
 
+  test('a stale count does not bring its stale total with it', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 8, total: 100 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 5, total: 5 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))).toMatchObject({ current: 8, total: 100 });
+  });
+
   test('a long-lived process that reports the same key again later is a new run', () => {
     vi.useFakeTimers();
     onTestFinished(() => {
