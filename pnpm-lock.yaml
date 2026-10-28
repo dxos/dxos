@@ -8237,6 +8237,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/assistant-toolkit':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant-toolkit
       '@dxos/brain':
         specifier: workspace:*
         version: link:../../core/compute/brain
@@ -22498,6 +22501,9 @@ importers:
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../../plugins/plugin-inbox
+      '@dxos/plugin-jmap':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-jmap
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown

@@ -464,7 +464,9 @@ test QA-2: Scene DSL round-trip — draw a face, then add a hat without redrawin
       do: Right-click "QA Face" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes if it was open
+```
 
+```mdl
 test QA-3: Showcase clip
   desc: |
     The 10s showcase clip: Draw a few shapes in tldraw. Recorded light at 60 fps with no ident, captions or

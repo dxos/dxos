@@ -4,53 +4,19 @@
 
 import { type Diagnostic } from '@codemirror/lint';
 
+import { frontmatter, reqIds } from '../spec-index/parse.ts';
+import { type SpecIndex } from '../spec-index/spec-index.ts';
+import {
+  type BlockHeader,
+  extensionTerms,
+  findInnerBlockHeaders,
+  parseBlockHeaders,
+  parseMdlBlocks,
+} from './blocks.ts';
 import { BLOCK_TYPES } from './constants.ts';
+import { findSpecKeys, findSpecRefs, specDependencies } from './refs.ts';
 
 const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
-
-/**
- * Regex matching the opening fence of a Spec mdl block.
- * All Spec blocks use ```mdl; the block type lives on the first body line.
- */
-export const FENCE_REGEX = /^```mdl\s*$/gm;
-
-type BlockHeader = { type: string; id: string; from: number; to: number; body: string };
-
-/**
- * Extracts block headers from the raw document text.
- * Returns { type, id, from, to, body } for each fenced block opening,
- * reading the block type from the first line of the block body.
- */
-const parseBlockHeaders = (text: string): BlockHeader[] => {
-  const results: BlockHeader[] = [];
-  const fenceRe = new RegExp(FENCE_REGEX.source, FENCE_REGEX.flags);
-  let match: RegExpExecArray | null;
-  while ((match = fenceRe.exec(text)) !== null) {
-    const fenceEnd = match.index + match[0].length;
-    const bodyStart = text.indexOf('\n', fenceEnd);
-    if (bodyStart === -1) {
-      continue;
-    }
-    const firstBodyLineStart = bodyStart + 1;
-    const firstBodyLineEnd = text.indexOf('\n', firstBodyLineStart);
-    const firstBodyLine = (
-      firstBodyLineEnd === -1 ? text.slice(firstBodyLineStart) : text.slice(firstBodyLineStart, firstBodyLineEnd)
-    ).trim();
-
-    // An unclosed block (mid-edit) ends at the next fence of either kind, or at the end of the text.
-    const endMatch = /^```/m.exec(text.slice(firstBodyLineStart));
-    const body = endMatch
-      ? text.slice(firstBodyLineStart, firstBodyLineStart + endMatch.index)
-      : text.slice(firstBodyLineStart);
-
-    // First body line: "<blockType> [name][: label]"
-    const lineMatch = firstBodyLine.match(/^(\w+)(?:\s+([^\s:][^\n:]*?))?(?::\s*[^\n]*)?\s*$/);
-    const blockType = lineMatch?.[1] ?? '';
-    const id = lineMatch?.[2]?.trim() ?? '';
-    results.push({ type: blockType, id, from: match.index, to: match.index + match[0].length, body });
-  }
-  return results;
-};
 
 const USER_REF = /^user:\S+$/;
 const AGENT_REF = /^agent:\S+$/;
@@ -85,27 +51,103 @@ const lintDecision = (body: string): string[] => {
   return errors;
 };
 
-/** One fenced `mdl` block: its type, identifier and title from the header line, and the body below it. */
-export type MdlBlock = {
-  type: string;
-  /** Empty for a block with no identifier. */
-  id: string;
-  /** The prose after the header's colon, if any. */
-  title?: string;
-  /** The block's lines after the header. */
-  body: string;
-  /** Offset of the opening fence in the text. */
-  from: number;
+export type LintOptions = {
+  /** Enables `mdl/ref` and `mdl/uses`, which need every other spec to resolve against. */
+  index?: SpecIndex;
+  /** The spec's own id; defaults to the frontmatter `id`. */
+  selfId?: string;
 };
 
-/** Every fenced `mdl` block of a spec, in document order. */
-export const parseMdlBlocks = (text: string): MdlBlock[] =>
-  parseBlockHeaders(text).map(({ type, id, from, body }) => {
-    const newline = body.indexOf('\n');
-    const header = newline === -1 ? body : body.slice(0, newline);
-    const title = header.match(/^\s*\w+\s+[^\s:][^\n:]*?:\s*(.+?)\s*$/)?.[1];
-    return { type, id, ...(title && { title }), body: newline === -1 ? '' : body.slice(newline + 1), from };
-  });
+const namespace = (id: string): string => id.split('.').slice(0, 2).join('.');
+
+/** Lint message for an id the index does not hold. */
+export const unknownSpecMessage = (id: string): string => `Unknown spec \`${id}\`.`;
+
+/** Lint message for a reference to an item the spec does not declare. */
+export const missingItemMessage = (id: string, item: string): string => `\`${id}\` has no item \`${item}\`.`;
+
+/** Lint message for an id more than one file claims. */
+export const duplicateSpecMessage = (id: string): string => `Spec id \`${id}\` is declared by more than one file.`;
+
+/**
+ * Whether a `<id>#<item>` candidate is a spec reference rather than prose (a file name, an external schema id):
+ * its id is indexed, or shares its first two dotted segments with an indexed id.
+ */
+export const specReferenceFilter = (index: SpecIndex): ((id: string) => boolean) => {
+  const namespaces = new Set([...Object.keys(index.specs), ...Object.keys(index.duplicates)].map(namespace));
+  return (id) => namespaces.has(namespace(id));
+};
+
+const lintReferences = (text: string, index: SpecIndex, selfId: string | undefined): Diagnostic[] => {
+  const diagnostics: Diagnostic[] = [];
+  const report = (source: string, from: number, to: number, message: string) =>
+    diagnostics.push({ from, to, severity: 'error', source, message });
+  const dependencies = specDependencies(text);
+  const dependsOn = new Set(dependencies.filter(({ via }) => via === 'dependsOn').map(({ id }) => id));
+  const declared = new Set<string>();
+
+  if (selfId && selfId in index.duplicates) {
+    const idLine = /^id:.*$/m.exec(text);
+    report(
+      'mdl/uses',
+      idLine?.index ?? 0,
+      (idLine?.index ?? 0) + (idLine?.[0].length ?? 0),
+      duplicateSpecMessage(selfId),
+    );
+  }
+
+  for (const { id, via, from, to } of dependencies) {
+    if (id === selfId) {
+      report('mdl/uses', from, to, 'A spec cannot use itself.');
+    } else if (id in index.duplicates) {
+      report('mdl/uses', from, to, duplicateSpecMessage(id));
+    } else if (!(id in index.specs)) {
+      report('mdl/uses', from, to, unknownSpecMessage(id));
+    } else if (via === 'uses' && dependsOn.has(id)) {
+      report('mdl/uses', from, to, `\`${id}\` is in dependsOn; do not repeat it under uses.`);
+    } else if (declared.has(id)) {
+      report('mdl/uses', from, to, `\`${id}\` is declared twice.`);
+    }
+    declared.add(id);
+  }
+
+  const isReference = specReferenceFilter(index);
+  const dependencyIds = new Set(dependencies.map(({ id }) => id));
+  // The spec's own items come from its text, since the index may predate the edit being linted.
+  let ownItems: Set<string> | undefined;
+  for (const { id, item, from, to } of findSpecRefs(text)) {
+    if (id === selfId) {
+      ownItems ??= new Set(
+        parseMdlBlocks(text).flatMap(({ id: own, body }) => [...(own ? [own] : []), ...reqIds(body)]),
+      );
+      if (!ownItems.has(item)) {
+        report('mdl/ref', from, to, missingItemMessage(id, item));
+      }
+      continue;
+    }
+    if (!isReference(id)) {
+      continue;
+    }
+    if (id in index.duplicates) {
+      report('mdl/ref', from, to, duplicateSpecMessage(id));
+    } else if (!(id in index.specs)) {
+      report('mdl/ref', from, to, unknownSpecMessage(id));
+    } else if (!dependencyIds.has(id)) {
+      report('mdl/ref', from, to, `\`${id}\` is not a dependency; add \`uses ${id}: …\` under ## Dependencies.`);
+    } else if (!index.specs[id].items.includes(item)) {
+      report('mdl/ref', from, to, missingItemMessage(id, item));
+    }
+  }
+
+  // The changelog is append-only, so a decision that predates this rule keeps the key it was written with.
+  const changelog = changelogRange(text);
+  for (const { from, to } of findSpecKeys(text)) {
+    if (!changelog || from < changelog.from || from >= changelog.to) {
+      report('mdl/ref', from, to, 'Refer to a spec by id (`<id>#<item>`), not by a github: key.');
+    }
+  }
+  return diagnostics;
+};
 
 /**
  * Lints the text of a Spec .mdl document.
@@ -113,10 +155,10 @@ export const parseMdlBlocks = (text: string): MdlBlock[] =>
  * Checks:
  *   - Unknown block types (first body line of ```mdl blocks) → error
  *   - `decision` attribution (`by:` / `for:` actor prefixes) → error
- *   - (future) Missing required fields → error
- *   - (future) Unresolved cross-references → error
+ *   - `mdl/block`: a second block header inside one fence, which every tool reads as body → error
+ *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given → error
  */
-export const lintMdl = (text: string): Diagnostic[] => {
+export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: LintOptions = {}): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
   for (const { type, from, to, body } of parseBlockHeaders(text)) {
     if (type && !KNOWN_BLOCK_TYPES.has(type as (typeof BLOCK_TYPES)[number])) {
@@ -132,6 +174,19 @@ export const lintMdl = (text: string): Diagnostic[] => {
         diagnostics.push({ from, to, severity: 'error', source: 'mdl/decision', message });
       }
     }
+  }
+  const types = new Set<string>([...BLOCK_TYPES, ...extensionTerms(text)]);
+  for (const { type, id, from, to } of findInnerBlockHeaders(text, types)) {
+    diagnostics.push({
+      from,
+      to,
+      severity: 'error',
+      source: 'mdl/block',
+      message: `A second block header (\`${[type, id].filter(Boolean).join(' ')}\`) inside one fence; give each block its own \`\`\`mdl fence.`,
+    });
+  }
+  if (index) {
+    diagnostics.push(...lintReferences(text, index, selfId));
   }
 
   return diagnostics;
@@ -162,6 +217,17 @@ export type ChangelogEntry = {
 };
 
 const CHANGELOG_HEADING = /^## Changelog[ \t]*$/m;
+
+/** The offsets of the `## Changelog` section, up to the next `## ` heading. */
+const changelogRange = (text: string): { from: number; to: number } | undefined => {
+  const heading = CHANGELOG_HEADING.exec(text);
+  if (!heading) {
+    return undefined;
+  }
+  const after = heading.index + heading[0].length;
+  const next = text.slice(after).search(/^## /m);
+  return { from: heading.index, to: next === -1 ? text.length : after + next };
+};
 const DECISION_ID = /^D-(\d+)$/;
 const DECISION_REF = /\[(D-\d+)\]/g;
 

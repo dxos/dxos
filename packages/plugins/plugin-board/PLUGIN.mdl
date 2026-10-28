@@ -314,7 +314,9 @@ test QA-1: Create a board, add and move an item, remove it
         `capture` it from, so there is no bound value for `space.removeObjects` to name; deletion
         stays human-only like the rest of this test. `space.removeObjects` deletes the Board object
         itself; "Meeting notes" is unaffected — the board only referenced it.
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Open a new card board. Recorded light at 60 fps with no ident, captions or

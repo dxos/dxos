@@ -25,21 +25,27 @@ feat F-1: Ask about a message
   req F-1.2: The label options are the space's own user tags plus "none of these"; canonical and provider tags are excluded.
   req F-1.3: With no user tags in the space the label question is omitted and the other two still run.
   req F-1.4: The state sent is the sender, subject and a snippet — never the full message body.
+```
 
+```mdl
 feat F-2: Apply only what it is confident about
 
   req F-2.1: A label is applied only when its confidence reaches the threshold (default 0.5).
   req F-2.2: `Needs reply` is applied at a probability of 0.6 or above.
   req F-2.3: Every message is placed in exactly one priority band — Urgent, High priority, Normal or Low priority — applied as the inbox's priority system tags; Urgent needs the top of the scale and a confident answer.
   req F-2.4: The message itself is not modified: triage writes tags, and the tasks and project of F-4.
+```
 
+```mdl
 feat F-3: Run it over the inbox
 
   req F-3.1: A toolbar action, "Triage inbox", runs triage over the whole mailbox.
   req F-3.2: A cascade pass (`label`, after `contacts`) runs it as part of Analyze.
   req F-3.3: A message already carrying a priority band is skipped, so a re-run is cheap.
   req F-3.4: A run is capped (default 50, max 200 messages) since each message costs a decision call, and one that needs a reply an extraction call too.
+```
 
+```mdl
 feat F-4: Extract what a message asks for as tasks
 
   req F-4.1: A message that needs a reply is read by an extraction model (Cloudflare's Clairic) for up to three requests and the due date of the first.
@@ -56,17 +62,23 @@ scenario T-1: An urgent request is tagged
   given: a mailbox with a message asking the user to act today
   when: TriageMailbox runs
   then: the message carries `Needs reply` and `Urgent`
+```
 
+```mdl
 scenario T-2: A receipt is labelled with the user's own tag
   given: a space with a user tag "Receipts" and a mailbox holding a payment receipt
   when: TriageMailbox runs
   then: the receipt carries "Receipts" and not `Needs reply`
+```
 
+```mdl
 scenario T-4: A request becomes a task in the inbox project
   given: a mailbox with a message asking the reader to approve an invoice today
   when: TriageMailbox runs
   then: the message is Urgent and a task "Approve the invoice today" is in the mailbox's project, extracted from the message
+```
 
+```mdl
 scenario T-3: Re-running changes nothing
   given: a mailbox whose messages were labelled by a previous run
   when: TriageMailbox runs again

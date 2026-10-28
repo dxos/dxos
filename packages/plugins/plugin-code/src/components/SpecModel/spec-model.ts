@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MdlBlock, parseMdlBlocks } from '@dxos/deus/extension';
+import { type MdlBlock, findSpecRefs, parseMdlBlocks, specReferenceFilter } from '@dxos/deus/extension';
+import { type SpecIndex } from '@dxos/deus/spec-index';
 
 import { type SourceKey, findSourceKeys, formatSourceKey, isSpecKey } from '#sync';
+
+import { resolveSpecRef } from '../SpecEditor/spec-ref.ts';
 
 /** A top-level spec block that other blocks can depend on. */
 export type DefinitionModel = {
@@ -280,14 +283,17 @@ export type Annotation = {
 
 /**
  * Every definition of a spec with an edge to each other definition its title or body names, plus a node for each
- * block of another spec it names by `github:` key and for each code symbol an annotation links to one of its items,
- * so a spec's graph shows what it rests on elsewhere and where it is implemented.
+ * block of another spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key) and for each
+ * code symbol an annotation links to one of its items, so a spec's graph shows what it rests on elsewhere and where
+ * it is implemented.
  */
 export const buildDefinitionGraph = (
   text: string,
   specs: SpecTexts = new Map(),
   annotations: readonly Annotation[] = [],
+  index?: SpecIndex,
 ): DefinitionGraphModel => {
+  const isReference = index ? specReferenceFilter(index) : () => false;
   const blocks = definitionBlocks(text);
   const ids = new Set(blocks.map(({ id }) => id));
   const externals = new Map<string, DefinitionModel>();
@@ -306,13 +312,21 @@ export const buildDefinitionGraph = (
   }
   const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => {
     const prose = `${title ?? ''}\n${body}`;
-    const linked = [...findSourceKeys(prose).map(({ key }) => key), ...(annotated.get(id) ?? [])].map(link);
+    const refs = findSpecRefs(prose).filter((ref) => isReference(ref.id));
+    const refKeys = refs.flatMap((ref) => {
+      const resolved = index && resolveSpecRef(index, ref.id, ref.item);
+      return resolved && !('error' in resolved) ? [resolved] : [];
+    });
+    const linked = [...findSourceKeys(prose).map(({ key }) => key), ...refKeys, ...(annotated.get(id) ?? [])].map(link);
+    // References and keys are removed first so their words are not read as names of this spec's blocks.
+    const local = refs
+      .reduceRight((stripped, { from, to }) => `${stripped.slice(0, from)} ${stripped.slice(to)}`, prose)
+      .replace(SOURCE_KEYS, ' ');
     return {
       id,
       kind: type,
       ...(title && { title }),
-      // Keys are removed first so their paths' words are not read as names of this spec's blocks.
-      dependsOn: [...new Set([...namedIds(prose.replace(SOURCE_KEYS, ' '), ids, id), ...linked])],
+      dependsOn: [...new Set([...namedIds(local, ids, id), ...linked])],
     };
   });
   const all = [...definitions, ...externals.values()];

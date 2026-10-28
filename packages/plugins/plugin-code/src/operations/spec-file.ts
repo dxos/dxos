@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { CodeOperationError } from '../errors.ts';
 
 /** The Spec a synced file is bound to, with its loaded content. */
 export const loadSpecText = Effect.fn(function* (object: Ref.Ref<Obj.Unknown>) {
   const spec = yield* Database.load(object);
-  if (!Obj.instanceOf(Spec.Spec, spec)) {
+  if (!Obj.instanceOf(SpecDocument.SpecDocument, spec)) {
     return yield* Effect.fail(new CodeOperationError({ message: `Not a Spec: ${object.uri}` }));
   }
   const text = yield* Database.load(spec.content);
