@@ -5,7 +5,14 @@
 // Normalisers from lighthouse's JSON to the client's types. The /v1 API and the legacy web server (`web/server`)
 // answer in different shapes; both are read here so the rest of the plugin sees one.
 
-import { type RatingModel, type RatingOverrides } from '../model/rating.ts';
+import {
+  type RatingModel,
+  type RatingOverrides,
+  type RatingTerm,
+  type Requirement,
+  type TermShape,
+  type TermValue,
+} from '../model/rating.ts';
 import {
   type Budget,
   type Engine,
@@ -183,35 +190,107 @@ export const toSession = (value: unknown): Session | undefined => {
   };
 };
 
-const isTermValue = (value: unknown): boolean => {
+const toTermValue = (value: unknown): TermValue | undefined => {
   const record = asRecord(value);
-  return !!record && ('prop' in record || 'sum' in record || 'has' in record || 'match' in record);
+  if (!record) {
+    return undefined;
+  }
+  const prop = asString(record.prop);
+  if (prop) {
+    return { prop };
+  }
+  if (Array.isArray(record.sum)) {
+    return { sum: asStrings(record.sum) };
+  }
+  const has = asString(record.has);
+  if (has) {
+    const equals = typeof record.equals === 'string' || typeof record.equals === 'number' ? record.equals : undefined;
+    return equals !== undefined ? { has, equals } : { has };
+  }
+  const match = asString(record.match);
+  const pattern = asString(record.pattern);
+  return match && pattern ? { match, pattern } : undefined;
 };
 
-const isTermShape = (value: unknown): boolean =>
-  value === 'higher' ||
-  value === 'lower' ||
-  value === 'flag' ||
-  (!!asRecord(value) && ['target', 'min', 'max'].some((key) => key in (asRecord(value) ?? {})));
-
-/** Whether a value is a rating model the agent wrote (mirrors lighthouse's `validateModel`). */
-export const isRatingModel = (value: unknown): value is RatingModel => {
+const toTermShape = (value: unknown): TermShape | undefined => {
+  if (value === 'higher' || value === 'lower' || value === 'flag') {
+    return value;
+  }
   const record = asRecord(value);
-  return (
-    !!record &&
-    Array.isArray(record.terms) &&
-    record.terms.every((term) => {
-      const fields = asRecord(term);
-      return (
-        !!fields &&
-        typeof fields.id === 'string' &&
-        typeof fields.label === 'string' &&
-        typeof fields.weight === 'number' &&
-        isTermValue(fields.value) &&
-        isTermShape(fields.shape)
-      );
-    })
-  );
+  const target = asNumber(record?.target);
+  if (target !== undefined) {
+    return { target, tolerance: asNumber(record?.tolerance) ?? 0 };
+  }
+  const min = asNumber(record?.min);
+  const max = asNumber(record?.max);
+  const soft = asNumber(record?.soft);
+  return min !== undefined || max !== undefined
+    ? {
+        ...(min !== undefined ? { min } : {}),
+        ...(max !== undefined ? { max } : {}),
+        ...(soft !== undefined ? { soft } : {}),
+      }
+    : undefined;
+};
+
+const toTerm = (value: unknown): RatingTerm | undefined => {
+  const record = asRecord(value);
+  const id = asString(record?.id);
+  const weight = asNumber(record?.weight);
+  const termValue = toTermValue(record?.value);
+  const shape = toTermShape(record?.shape);
+  if (!id || weight === undefined || !termValue || !shape) {
+    return undefined;
+  }
+  const missing = asNumber(record?.missing);
+  return {
+    id,
+    label: asString(record?.label) ?? id,
+    weight,
+    value: termValue,
+    shape,
+    ...(missing !== undefined ? { missing } : {}),
+  };
+};
+
+const OPS: readonly Requirement['op'][] = ['<', '<=', '>', '>=', '=', '!='];
+
+const toRequirement = (value: unknown): Requirement | undefined => {
+  const record = asRecord(value);
+  const label = asString(record?.label);
+  const requirementValue = toTermValue(record?.value);
+  const op = OPS.find((candidate) => candidate === record?.op);
+  const target = record?.target;
+  return label &&
+    requirementValue &&
+    op &&
+    (typeof target === 'string' || typeof target === 'number' || typeof target === 'boolean')
+    ? { label, value: requirementValue, op, target }
+    : undefined;
+};
+
+/**
+ * The rating model the agent wrote, rebuilt field by field: a malformed term or requirement is dropped rather than
+ * crashing the ranking, since the agent writes the model freehand. Undefined when no term survives.
+ */
+export const toRatingModel = (value: unknown): RatingModel | undefined => {
+  const record = asRecord(value);
+  const terms = asArray(record?.terms).flatMap((term) => toTerm(term) ?? []);
+  if (!record || terms.length === 0) {
+    return undefined;
+  }
+  const require = asArray(record.require).flatMap((requirement) => toRequirement(requirement) ?? []);
+  const penalty = asNumber(record.penalty);
+  const types = asStrings(record.types);
+  return {
+    version: asNumber(record.version) ?? 0,
+    rationale: asString(record.rationale) ?? '',
+    terms,
+    ...(require.length ? { require } : {}),
+    ...(penalty !== undefined ? { penalty } : {}),
+    ...(types.length ? { types } : {}),
+    ...(asString(record.updatedAt) ? { updatedAt: asString(record.updatedAt) } : {}),
+  };
 };
 
 const toOverrides = (value: unknown): RatingOverrides | undefined => {
@@ -243,8 +322,9 @@ export const toRating = (value: unknown): RatingState => {
     }
   }
   const overrides = toOverrides(record?.overrides);
+  const ratingModel = toRatingModel(model);
   return {
-    ...(isRatingModel(model) ? { model } : {}),
+    ...(ratingModel ? { model: ratingModel } : {}),
     ...(overrides ? { overrides } : {}),
     feedback,
   };

@@ -183,7 +183,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         const card = toCard(entity);
         return {
           id: finding.iri,
-          card: { ...card, eyebrow: finding.keptBy === 'pick' ? t('kept-pick.label') : t('kept-person.label') },
+          // A starred result reads as starred even when the report later names it as a pick too.
+          card: { ...card, eyebrow: t(starredIris.has(finding.iri) ? 'kept-person.label' : 'kept-pick.label') },
           entity,
           current: finding.iri === currentId,
           starred: starredIris.has(finding.iri),

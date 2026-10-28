@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { toRating, toSession, toUpdate } from './decode.ts';
+import { toRating, toRatingModel, toSession, toUpdate } from './decode.ts';
 import { type SseMessage, createSseParser } from './sse.ts';
 
 describe('createSseParser', () => {
@@ -69,6 +69,22 @@ describe('decode', () => {
     });
     expect(toUpdate('heartbeat', {})).toBeUndefined();
     expect(toRating({ model: { terms: [{ id: 1 }] }, feedback: { a: 'sideways' } })).toEqual({ feedback: {} });
+  });
+
+  test('a rating model keeps its valid terms and requirements and drops the rest', ({ expect }) => {
+    const model = toRatingModel({
+      version: 3,
+      terms: [
+        { id: 'ok', label: 'Ok', weight: 1, value: { prop: 'x' }, shape: { target: 4.9, tolerance: 0.1 } },
+        { id: 'bad', label: 'Bad', weight: 1, value: 'schema:name', shape: 'flag' },
+      ],
+      require: [
+        { label: 'Named', value: 'schema:name', op: '=', target: 1 },
+        { label: 'Cheap', value: { prop: 'price' }, op: '<', target: 100 },
+      ],
+    });
+    expect(model?.terms.map((term) => term.id)).toEqual(['ok']);
+    expect(model?.require?.map((requirement) => requirement.label)).toEqual(['Cheap']);
   });
 
   test('a reported session is not busy; a missing run is no session', ({ expect }) => {
