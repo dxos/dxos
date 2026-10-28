@@ -428,12 +428,6 @@ pub fn run() {
                     }
                 })?;
 
-                #[cfg(all(feature = "webdriver", target_os = "macos"))]
-                if let Some(space) = space {
-                    move_to_space(&main_window, space)?;
-                    main_window.show()?;
-                }
-
                 // Before anything runs in the page: the client opens its storage during boot.
                 #[cfg(target_os = "linux")]
                 main_window.with_webview(|webview| {
@@ -464,6 +458,13 @@ pub fn run() {
                     }
                 }
                 window_state::setup_window_state_tracking(&main_window);
+
+                // After the restore, which could otherwise carry the window onto another display's Space.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                if let Some(space) = space {
+                    move_to_space(&main_window, space)?;
+                    main_window.show()?;
+                }
 
                 // Saved on blur as well as close, so a crash or force quit still reopens a recent page.
                 {

@@ -28,7 +28,10 @@ const waitForCountersQuiet = async (page: Page, names: string[], timeoutMs: numb
   const read = () =>
     page.evaluate((names) => {
       const counters: unknown = Reflect.get(globalThis, '__dxosWorkCounters');
-      const totals: Record<string, number> = typeof counters === 'function' ? counters() : {};
+      if (typeof counters !== 'function') {
+        throw new Error('the tab publishes no work counters');
+      }
+      const totals: Record<string, number> = counters();
       return names.map((name) => totals[name] ?? 0).join(',');
     }, names);
   const deadline = Date.now() + timeoutMs;
@@ -66,7 +69,9 @@ const switchTo = async (page: Page, workspace: string, timeout: number) => {
 const objectRows = async (page: Page, timeout: number): Promise<string[]> => {
   const branch = page.locator(row(collections()));
   await branch.waitFor({ timeout });
-  const expanded = await branch.evaluate((element) => element.closest('[role="treeitem"]')?.getAttribute('aria-expanded'));
+  const expanded = await branch.evaluate((element) =>
+    element.closest('[role="treeitem"]')?.getAttribute('aria-expanded'),
+  );
   if (expanded === 'false') {
     await branch.locator('[data-part="branch-indicator"]').click();
   }
