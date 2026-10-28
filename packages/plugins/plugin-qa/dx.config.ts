@@ -31,9 +31,9 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     // The spec is package data rather than a module, so it is read relative to the package root.
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } })),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -41,14 +41,14 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: QaNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

@@ -39,10 +39,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: TransformerNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

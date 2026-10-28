@@ -31,11 +31,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['system'],
   },
   modules: [
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
-    AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'module-url' } })),
   ],
 });
 

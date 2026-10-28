@@ -43,35 +43,38 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
     ),
     // TODO(wittjosiah): Could some of these commands make use of operations?
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'dx-module' } })),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
     // The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
     // module cannot be evaluated without React.
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+      },
+    ),
     // Dependency-mode: the specs resolve services (client, database, ...) lazily at
     // slice-materialisation time, so activation needs nothing — and providing
     // Capabilities.LayerSpec soft-orders this module before the process-manager snapshot.
-    AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'module-url' } }), {
       name: 'LayerSpecs',
       provides: [Capabilities.TraceSink],
     }),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: RoutineNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
     }),
     Capability.lazyModule(
@@ -86,17 +89,17 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [],
         environments: ['browser', 'node', 'tauri'],
       },
-      () => import('./src/capabilities/registry-sync.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/registry-sync.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     // CreateRoutine (in OperationHandler) resolves RoutineCapabilities.Template, so the template
     // provider must be present wherever the handler is exported.
     Capability.lazyModule(
       'Templates',
       { provides: [RoutineCapabilities.Template], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/templates.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'TriggerRuntimeController',
       {
@@ -106,7 +109,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ClientEvents.SpacesAvailable,
         environments: ['browser', 'node', 'tauri'],
       },
-      () => import('./src/capabilities/trigger-runtime-controller.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/trigger-runtime-controller.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

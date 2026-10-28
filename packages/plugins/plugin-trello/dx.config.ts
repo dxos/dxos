@@ -46,15 +46,15 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'TrelloConnector',
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-      () => import('./src/capabilities/connector.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -62,10 +62,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: TrelloNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

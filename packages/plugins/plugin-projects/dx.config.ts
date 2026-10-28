@@ -43,21 +43,24 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
     // `LayoutOperation` actions, which mean nothing without an app shell.
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'tauri'],
       },
     ),
     // Browser-only: the entry supplies `CreateProjectPanel`, the React form that picks the project
     // template and collects its name.
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+      },
+    ),
     AppCapability.navigationResolver(
-      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -66,31 +69,31 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: ProjectsNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [ProjectCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'SubjectContext',
       { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
-      () => import('./src/capabilities/subject-context.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/subject-context.ts', { with: { type: 'module-url' } }),
     ),
     // Injects `Assign to agent`, an `Assign to <agent>` per agent, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
     Capability.lazyModule(
       'TaskAction',
       // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.
       { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
-      () => import('./src/capabilities/task-action.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/task-action.ts', { with: { type: 'module-url' } }),
     ),
     // Its own module, after the client: which EDGE the browser variant builds on and publishes to comes from the client's config.
     Capability.lazyModule(
@@ -101,7 +104,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ClientEvents.Initialized,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/composer-plugin-template.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/composer-plugin-template.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Templates',
@@ -109,14 +112,14 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [ProjectCapabilities.Template],
         activatesOn: ProjectsEvents.Start,
       },
-      () => import('./src/capabilities/templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/templates.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Tour',
       { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
-      () => import('./src/capabilities/tour.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/tour.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

@@ -88,11 +88,11 @@ contribute a declared `provides` is also a type error.
 `@dxos/app-toolkit` ships them for the common capabilities:
 
 ```ts
-AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
   roles: ['org.dxos.role.article'],
 });
 AppCapability.appGraphBuilder(
-  () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+  () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
   {
     requires: [SomeCapabilities.Thing],
   },
@@ -116,15 +116,15 @@ export const FooNamespace = Plugin.namespace('org.dxos.plugin.foo');
 const config: Plugin.PluginConfig = Plugin.config({
   plugin: { key: FooNamespace.key, name: 'Foo', author: 'DXOS', icon: { key: 'ph--cube--regular' }, tags: ['labs'] },
   modules: [
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'Coordinator',
       { requires: [ClientCapabilities.Client], provides: [FooCapabilities.Coordinator] },
-      () => import('./src/capabilities/coordinator.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/coordinator.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });
@@ -141,7 +141,7 @@ Hosts and tests call `make()`; a plugin with options is `Plugin.PluginConfig<Opt
 Rules the build enforces (`pluginConfigPlugin`, which evaluates `dx.config.ts` in Node and replaces it with a
 static `Plugin.Manifest`):
 
-- Every module body is `() => import('./src/capabilities/x.ts', { with: { type: 'dx-module' } })`. The attribute
+- Every module body is `() => import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`. The attribute
   marks the body as something to locate, never load; an unmarked dynamic import fails the build.
 - No inline modules (`Capability.inlineModule`) and no `props` mappers: bodies receive the plugin options as-is.
 - `dx.config.ts` statically imports only tags, events, makers and `src/namespace.ts` — never components or a

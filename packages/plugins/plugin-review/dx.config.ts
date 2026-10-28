@@ -64,15 +64,15 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
     Capability.lazyModule(
       'agent-identity',
       { requires: [], provides: [AgentIdentity.AgentIdentity] },
-      () => import('./src/capabilities/agent-identity.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/agent-identity.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [CommentCapabilities.Settings],
     }),
@@ -82,16 +82,16 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
       // this on the review UI's start is wrong. Ungated (hence idle) it is also pullable by the
       // consumers that need it earlier, which a start-gated provider is not.
       { provides: [CommentCapabilities.State] },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/history-graph.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/history-graph.ts', { with: { type: 'module-url' } }),
       {
         name: 'HistoryGraph',
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    AppCapability.surface(() => import('./src/capabilities/history-surface.tsx', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/history-surface.tsx', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
       name: 'HistorySurface',
     }),
@@ -105,7 +105,7 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
         provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
         activatesOn: MarkdownEvents.Start,
       },
-      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
     // Markdown owns the editor-binding socket; this plugin owns the version-aware behaviour, and gates
     // the history companion for markdown documents. Browser-only: the binding it contributes is
@@ -117,16 +117,16 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
         activatesOn: MarkdownEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/markdown-binding.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/markdown-binding.ts', { with: { type: 'module-url' } }),
     ),
     // Eager, like every migration provider: a migration missing when a space opens leaves its objects unreadable.
     Capability.lazyModule(
       'ReviewMigrations',
       { provides: [ClientCapabilities.Migration] },
-      () => import('./src/capabilities/migrations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -134,10 +134,10 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
     AppCapability.pluginAsset({
       pluginId: ReviewNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
     Capability.lazyModule(
@@ -147,11 +147,11 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
         activatesOn: ReviewEvents.Start,
         environments: ['browser', 'node', 'tauri'],
       },
-      () => import('./src/capabilities/review-state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/review-state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
@@ -159,10 +159,10 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
     Capability.lazyModule(
       'TourFragment',
       { provides: [AppCapabilities.TourFragment], environments: ['browser', 'tauri'] },
-      () => import('./src/capabilities/tour-fragment.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/tour-fragment.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } })),
-    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ReviewEvents.Start,
       environments: ['browser', 'node', 'tauri'],
     }),
@@ -171,7 +171,7 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
     Capability.lazyModule(
       'agent-runner-override',
       { requires: [], provides: [AppCapabilities.CommentAgentRunner] },
-      () => import('./src/capabilities/agent-runner-override.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/agent-runner-override.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

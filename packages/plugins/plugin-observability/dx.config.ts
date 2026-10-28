@@ -46,10 +46,10 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           // forked client initialization to have completed.
           activatesOn: ObservabilityCapabilities.ClientInitialized,
         },
-        () => import('./src/capabilities/client-ready.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/client-ready.ts', { with: { type: 'module-url' } }),
       ),
       // `#commands` resolves per condition: only a host with a CLI has anywhere to put them.
-      AppCapability.commands(() => import('#commands', { with: { type: 'dx-module' } })),
+      AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'InvocationListener',
         {
@@ -59,7 +59,7 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           // running before the first user action, not before the plugins that register events.
           activatesOn: ActivationEvents.Idle,
         },
-        () => import('./src/capabilities/invocation-listener.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/invocation-listener.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'namespace',
@@ -68,7 +68,7 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           requires: [],
           provides: [ObservabilityCapabilities.Namespace],
         },
-        () => import('./src/capabilities/namespace.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/namespace.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'observability',
@@ -77,9 +77,9 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           requires: [],
           provides: [ObservabilityCapabilities.Observability],
         },
-        () => import('./src/capabilities/observability.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/observability.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
         provides: [ObservabilityCapabilities.Settings],
         environments: ['browser', 'tauri'],
       }),
@@ -90,9 +90,9 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           requires: [Capabilities.AtomRegistry],
           provides: [ObservabilityCapabilities.State],
         },
-        () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.operationHandler(() => import('#operation-handler', { with: { type: 'dx-module' } })),
+      AppCapability.operationHandler(() => import('#operation-handler', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'PrivacyBanner',
         {
@@ -101,7 +101,7 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           provides: [],
           activatesOn: ObservabilityEvents.IdentityCreatedEvent,
         },
-        () => import('#privacy-banner', { with: { type: 'dx-module' } }),
+        () => import('#privacy-banner', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'PrivacyNotice',
@@ -118,17 +118,17 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
           // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
           activatesOn: ObservabilityEvents.IdentityCreatedEvent,
         },
-        () => import('./src/capabilities/privacy-notice.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/privacy-notice.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
         roles: ['org.dxos.role.article'],
       }),
-      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
       // Unconditional `provides`: the body contributes nothing when `downloadLogs` is absent.
       Capability.lazyModule(
         'log-downloader',
         { requires: [], provides: [ObservabilityCapabilities.LogDownloader] },
-        () => import('./src/capabilities/log-downloader.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/log-downloader.ts', { with: { type: 'module-url' } }),
       ),
     ],
   });

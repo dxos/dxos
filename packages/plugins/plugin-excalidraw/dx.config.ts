@@ -43,19 +43,19 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: IllustratorEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/drawing-variant.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/drawing-variant.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [ExcalidrawCapabilities.Settings],
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

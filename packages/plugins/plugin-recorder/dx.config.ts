@@ -32,10 +32,10 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -43,10 +43,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: RecorderNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.plugin.presenter.role.toolbar',
         'org.dxos.plugin.presenter.role.overlay',
@@ -62,14 +62,14 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: PresenterEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/recorder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/recorder.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [RecorderCapabilities.Settings],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
-    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } })),
   ],
 });
 

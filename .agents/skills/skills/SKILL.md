@@ -95,7 +95,7 @@ const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof A
 export default skillDefinition;
 ```
 
-2. **Plugin** — lists the module in `dx.config.ts`; the body is a `dx-module` dynamic import:
+2. **Plugin** — lists the module in `dx.config.ts`; the body is a `module-url` dynamic import:
 
 ```ts
 // dx.config.ts
@@ -103,7 +103,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   plugin: { key: MarkdownNamespace.key, name: 'Markdown' },
   modules: [
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     // ...other modules
   ],

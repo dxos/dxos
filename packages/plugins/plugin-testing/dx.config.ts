@@ -28,14 +28,14 @@ const config: Plugin.PluginConfig<StorybookPluginOptions> = Plugin.config<Storyb
   },
   modules: [
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'dx-module' } })),
+    AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'State',
       // Shell state read by `Layout` on its first render — same class as the deck's `DeckState`.
       { activatesOn: ActivationEvents.Startup, provides: [StorybookCapabilities.LayoutState, AppCapabilities.Layout] },
-      () => import('./src/capabilities/state.tsx', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.tsx', { with: { type: 'module-url' } }),
     ),
   ],
 });

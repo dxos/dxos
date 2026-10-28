@@ -54,19 +54,25 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.AnchorResolver],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/anchor-resolver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/anchor-resolver.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'module-url' } }), {
       requires: [AppCapabilities.AppGraph],
       activatesOn: MarkdownEvents.Start,
     }),
-    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } }), {
-      activatesOn: MarkdownEvents.Start,
-    }),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'node', 'tauri'],
-    }),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.commentConfig(
+      () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: MarkdownEvents.Start,
+      },
+    ),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [MarkdownCapabilities.Settings],
     }),
     // Browser-only: requires attention's view state, which only the app shell provides.
@@ -77,30 +83,30 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [MarkdownCapabilities.EditorState, MarkdownCapabilities.EditorViews],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Tour',
       // The tour auto-starts on an attended markdown document, which needs markdown started anyway.
       { provides: [AppCapabilities.Tour], activatesOn: MarkdownEvents.Start, environments: ['browser', 'tauri'] },
-      () => import('./src/capabilities/tour.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/tour.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } })),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } })),
   ],
 });
 

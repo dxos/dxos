@@ -34,12 +34,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'Connector',
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-      () => import('./src/capabilities/connector.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'GenerationService',
       { provides: [StudioCapabilities.GenerationService], activatesOn: StudioEvents.Start },
-      () => import('./src/capabilities/generation-service.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/generation-service.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

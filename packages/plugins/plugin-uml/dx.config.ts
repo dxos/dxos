@@ -37,16 +37,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: IllustratorEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/class-node-type.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/class-node-type.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       { environments: ['browser', 'node', 'tauri'] },
     ),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

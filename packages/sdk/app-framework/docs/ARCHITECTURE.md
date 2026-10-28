@@ -113,7 +113,7 @@ exactly once.
 
 A plugin is a single `dx.config.ts` default-exporting `Plugin.config({ plugin, modules })`. The config is
 data plus loaders: each module is an `AppCapability` maker or `Capability.lazyModule` whose body is a
-`import(…, { with: { type: 'dx-module' } })`. `Plugin.namespace(key)` (a leaf `src/namespace.ts`) supplies the
+`import(…, { with: { type: 'module-url' } })`. `Plugin.namespace(key)` (a leaf `src/namespace.ts`) supplies the
 key and the tag makers, so the config can name the tags its modules provide without importing the plugin's
 own `meta`.
 

@@ -35,7 +35,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'Connector',
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-      () => import('./src/capabilities/connector.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'BlobBackend',
@@ -46,7 +46,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         // ever fire an own-start event for it.
         activatesOn: FileEvents.Start,
       },
-      () => import('./src/capabilities/blob-backend.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/blob-backend.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

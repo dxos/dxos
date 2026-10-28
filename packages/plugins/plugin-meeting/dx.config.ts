@@ -41,7 +41,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
         requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
@@ -55,12 +55,12 @@ const config: Plugin.PluginConfig = Plugin.config({
         // Both features must be live: the handler extends calls but reads meeting state.
         activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
       },
-      () => import('./src/capabilities/call-extension.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/call-extension.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'MeetingSettings',
       { provides: [MeetingCapabilities.SettingsAtom], activatesOn: MeetingEvents.Start },
-      () => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'MeetingState',
@@ -69,10 +69,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [MeetingCapabilities.State],
         activatesOn: MeetingEvents.Start,
       },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -80,14 +80,14 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: MeetingNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

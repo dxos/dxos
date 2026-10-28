@@ -22,14 +22,14 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['system'],
   },
   modules: [
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.plugin.statusBar.role.footer',
         'org.dxos.plugin.statusBar.role.statusBar',
         'org.dxos.plugin.statusBar.role.versionInfo',
       ],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

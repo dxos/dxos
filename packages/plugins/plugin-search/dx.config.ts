@@ -44,10 +44,10 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -60,15 +60,15 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.PluginAsset],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.deckCompanion.search', 'org.dxos.role.dialog', 'org.dxos.role.searchInput'],
     }),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

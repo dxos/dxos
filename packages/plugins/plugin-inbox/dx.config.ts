@@ -38,27 +38,30 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'AutomationTemplates',
       { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-      () => import('./src/capabilities/automation-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/automation-templates.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'contact-extractor',
       { provides: [InboxCapabilities.ObjectExtractor] },
-      () => import('./src/capabilities/contact-extractor.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/contact-extractor.ts', { with: { type: 'module-url' } }),
     ),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'node', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
     Capability.lazyModule(
       'IdentitySpecs',
       { provides: [SpaceCapabilities.IdentitySpec] },
-      () => import('./src/capabilities/identity-specs.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/identity-specs.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [InboxCapabilities.Settings],
       activatesOn: ActivationEvents.Idle,
     }),
@@ -66,22 +69,22 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'MailboxProcessors',
       { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
-      () => import('./src/capabilities/mailbox-processors.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/mailbox-processors.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.navigationResolver(
-      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'tauri'],
         requires: [ClientCapabilities.Client],
       },
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.role.article',
         'org.dxos.role.cardContent',
@@ -91,9 +94,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         'org.dxos.role.section',
       ],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
@@ -101,9 +104,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'summarize-extractor',
       { provides: [InboxCapabilities.ObjectExtractor] },
-      () => import('./src/capabilities/summarize-extractor.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/summarize-extractor.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

@@ -32,7 +32,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'RoutingService',
       { provides: [TripCapabilities.RoutingService], activatesOn: TripEvents.Start },
-      () => import('./src/capabilities/routing-service.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/routing-service.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

@@ -25,10 +25,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['system'],
   },
   modules: [
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
     Capability.lazyModule(
@@ -37,15 +37,15 @@ const config: Plugin.PluginConfig = Plugin.config({
         requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry],
         provides: [AppCapabilities.UpdateManager],
       },
-      () => import('./src/capabilities/register-pwa.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/register-pwa.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     // Separate from `RegisterPwa` so that an app without the progress registry still registers the
     // service worker — only the meter is lost, not the update flow itself.
     Capability.lazyModule(
       'UpdateProgress',
       { provides: [] },
-      () => import('./src/capabilities/update-progress.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/update-progress.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

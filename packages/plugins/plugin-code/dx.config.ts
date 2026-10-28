@@ -62,20 +62,20 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'BuildRunState',
       { provides: [CodeCapabilities.BuildRun], activatesOn: CodeEvents.Start },
-      () => import('./src/capabilities/build-run-state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/build-run-state.ts', { with: { type: 'module-url' } }),
     ),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } })),
-    AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'dx-module' } })),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),
+    AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } })),
     AppCapability.navigationResolver(
-      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -83,19 +83,19 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: CodeNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.section'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [CodeCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     // Local files are reachable only from the desktop app or a dev server; settings supply the configured checkouts.
     Capability.lazyModule(
@@ -105,9 +105,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [CodeCapabilities.SpecSync],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/spec-sync.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/spec-sync.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

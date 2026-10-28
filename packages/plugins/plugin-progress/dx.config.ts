@@ -35,19 +35,19 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.ProgressRegistry],
         activatesOn: ActivationEvents.Startup,
       },
-      () => import('./src/capabilities/progress-registry.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/progress-registry.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'ReactSurface',
       { provides: [Capabilities.ReactSurface] },
-      () => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'TraceProgressSink',
       { provides: [Capabilities.TraceSink] },
-      () => import('./src/capabilities/trace-progress-sink.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/trace-progress-sink.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

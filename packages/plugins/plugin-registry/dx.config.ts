@@ -29,19 +29,19 @@ const config: Plugin.PluginConfig<RegistryPluginOptions> = Plugin.config<Registr
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.commands(() => import('#commands', { with: { type: 'dx-module' } })),
+    AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'DevPluginLoader',
       {
         requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, RegistryCapabilities.Settings],
         provides: [],
       },
-      () => import('./src/capabilities/dev-plugin-loader.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/dev-plugin-loader.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'PrivateRegistry',
@@ -52,18 +52,18 @@ const config: Plugin.PluginConfig<RegistryPluginOptions> = Plugin.config<Registr
         activatesOn: ClientEvents.Initialized,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/private-registry.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/private-registry.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
     }),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [RegistryCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

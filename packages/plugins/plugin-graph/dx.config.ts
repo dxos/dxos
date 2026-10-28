@@ -26,7 +26,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'Graph',
       { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.AppGraph] },
-      () => import('./src/graph.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/graph.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

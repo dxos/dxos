@@ -59,13 +59,16 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         // pre-init throw is not re-evaluated when initialization lands).
         activatesOn: ClientEvents.Initialized,
       },
-      () => import('./src/capabilities/app-graph-builder/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     // TODO(wittjosiah): Could some of these commands make use of operations?
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'dx-module' } })),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'node', 'tauri'],
-    }),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
     Capability.lazyModule(
       'Dashboard',
       {
@@ -74,9 +77,9 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         provides: [SpaceCapabilities.Dashboard],
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/dashboard.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/dashboard.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.defaultParent(() => import('./src/capabilities/default-parent.ts', { with: { type: 'dx-module' } })),
+    AppCapability.defaultParent(() => import('./src/capabilities/default-parent.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'IdentityCreated',
       {
@@ -88,35 +91,35 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         activatesOn: ClientEvents.IdentityCreated,
         environments: ['browser', 'node', 'tauri'],
       },
-      () => import('./src/capabilities/identity-created.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/identity-created.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.navigationHandler(
-      () => import('./src/capabilities/navigation-handler/navigation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/navigation-handler/navigation-handler.ts', { with: { type: 'module-url' } }),
       {
         requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
       },
     ),
     AppCapability.navigationResolver(
-      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'tauri'],
         requires: [ClientCapabilities.Client],
       },
     ),
     AppCapability.observabilityMappings(
-      () => import('./src/capabilities/observability-mappings.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/observability-mappings.ts', { with: { type: 'module-url' } }),
       {},
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: SpaceNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.plugin.space.role.homeContent',
         'org.dxos.role.article',
@@ -138,9 +141,9 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         // Runtime event: repairs run once spaces are observed, not at startup.
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/repair.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/repair.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'SettingsSync',
       {
@@ -150,10 +153,10 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         // again when `CreateIdentity` resets `IdentityCreated`.
         activatesOn: ActivationEvent.oneOf(ClientEvents.SpacesAvailable, ClientEvents.IdentityCreated),
       },
-      () => import('./src/capabilities/settings-sync/settings-sync.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/settings-sync/settings-sync.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     // Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
     // headless host registers.
@@ -176,9 +179,9 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         // Runtime event: spaces become ready when the client observes them, not at startup.
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/spaces-available.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/spaces-available.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [SpaceCapabilities.SettingsAtom],
     }),
     // Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
@@ -190,10 +193,10 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
         provides: [SpaceCapabilities.State, SpaceCapabilities.EphemeralState],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } })),
-    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],
       provides: [SpaceOperationConfig],
     }),

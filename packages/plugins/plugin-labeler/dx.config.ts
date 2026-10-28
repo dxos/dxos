@@ -33,15 +33,15 @@ const config: Plugin.PluginConfig = Plugin.config({
       'MailboxAction',
       // Rides the inbox feature it contributes to: the button is unreachable until a mailbox renders.
       { provides: [InboxCapabilities.MailboxAction], activatesOn: InboxEvents.Start },
-      () => import('./src/capabilities/mailbox-action.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/mailbox-action.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'MailboxProcessor',
       { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
-      () => import('./src/capabilities/mailbox-processor.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/mailbox-processor.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },

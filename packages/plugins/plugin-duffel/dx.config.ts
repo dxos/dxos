@@ -33,12 +33,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     dependsOn: ['org.dxos.plugin.trip'],
   },
   modules: [
-    AppCapability.settings(() => import('./src/capabilities/duffel.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/duffel.ts', { with: { type: 'module-url' } }), {
       requires: [Capabilities.AtomRegistry],
       provides: [DuffelCapabilities.Settings, TripCapabilities.BookingService],
       activatesOn: TripEvents.Start,
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

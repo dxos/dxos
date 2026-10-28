@@ -49,9 +49,12 @@ const config: Plugin.PluginConfig = Plugin.config({
   modules: [
     // Browser-only: the entry supplies `CreateGamePanel`, the React form that picks the variant and
     // collects its input.
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+      },
+    ),
     Capability.lazyModule(
       'plugin-asset',
       {
@@ -59,16 +62,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.PluginAsset],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

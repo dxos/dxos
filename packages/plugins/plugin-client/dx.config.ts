@@ -32,12 +32,12 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
       Capability.lazyModule(
         'AccountCache',
         { provides: [ClientCapabilities.AccountCache] },
-        () => import('./src/capabilities/account-cache.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/account-cache.ts', { with: { type: 'module-url' } }),
       ),
       // Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
       // and a pre-init throw is not re-evaluated when initialization lands).
       AppCapability.appGraphBuilder(
-        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
         {
           activatesOn: ClientEvents.Initialized,
         },
@@ -50,7 +50,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           provides: [Capabilities.BootGate],
           environments: ['browser', 'tauri'],
         },
-        () => import('./src/capabilities/boot-gate.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/boot-gate.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'Client',
@@ -68,7 +68,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           ],
           environments: ['browser', 'node', 'tauri'],
         },
-        () => import('./src/capabilities/client.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/client.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'ClientServices',
@@ -78,11 +78,11 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           // `client.config` and `client.edge` are initialized-only.
           activatesOn: ClientEvents.Initialized,
         },
-        () => import('./src/capabilities/client-services.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/client-services.ts', { with: { type: 'module-url' } }),
       ),
       // `#commands` resolves per condition: a node host has the OAuth callback server and filesystem the
       // browser command set omits (`account`, `profile`).
-      AppCapability.commands(() => import('#commands', { with: { type: 'dx-module' } })),
+      AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'HubHttpClient',
         {
@@ -91,7 +91,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           // Reads `client.config` (initialized-only) for the hub URL.
           activatesOn: ClientEvents.Initialized,
         },
-        () => import('./src/capabilities/hub-http-client.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/hub-http-client.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'IdentityLifecycle',
@@ -107,7 +107,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           // Subscribes to `client.halo` (initialized-only).
           activatesOn: ClientEvents.Initialized,
         },
-        () => import('./src/capabilities/identity-lifecycle.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/identity-lifecycle.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'IndexProgress',
@@ -116,9 +116,9 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           provides: [],
           activatesOn: ClientEvents.Initialized,
         },
-        () => import('./src/capabilities/index-progress.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/index-progress.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'module-url' } }), {
         name: 'LayerSpecs',
       }),
       Capability.lazyModule(
@@ -132,10 +132,10 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           activatesOn: ClientEvents.Initialized,
           environments: ['browser', 'node', 'tauri'],
         },
-        () => import('./src/capabilities/migrations.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.navigationHandler(
-        () => import('./src/capabilities/navigation-handler/navigation-handler.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/navigation-handler/navigation-handler.ts', { with: { type: 'module-url' } }),
         {
           requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
         },
@@ -143,13 +143,15 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
       Capability.lazyModule(
         'NavigationTargetLoader',
         { requires: [ClientCapabilities.Client], provides: [AppCapabilities.NavigationTargetLoader] },
-        () => import('./src/capabilities/navigation-target-loader.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/navigation-target-loader.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.operationHandler(
-        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'dx-module' } })),
-      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.reactContext(
+        () => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } }),
+      ),
+      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
         roles: [
           'org.dxos.role.article',
           'org.dxos.role.contactPicker',
@@ -164,7 +166,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
         // bakes a no-op remote source if it has not been contributed yet — demand activation always loses
         // that race, silencing remote traces for every Process.Manager consumer.
         { provides: [Capabilities.RemoteTraceMonitor], activatesOn: ActivationEvents.Startup },
-        () => import('./src/capabilities/remote-trace-monitor.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/remote-trace-monitor.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'SchemaDefs',
@@ -173,7 +175,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           provides: [ClientCapabilities.SchemaRegistered],
           environments: ['browser', 'node', 'tauri'],
         },
-        () => import('./src/capabilities/schema-defs.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/schema-defs.ts', { with: { type: 'module-url' } }),
       ),
       // Runtime event: spaces become ready when the client observes them, not at startup — see the
       // SpaceReplicationProgress module definition.
@@ -187,7 +189,7 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           // Runtime event: spaces become ready when the client observes them, not at startup.
           activatesOn: ClientEvents.SpacesAvailable,
         },
-        () => import('./src/capabilities/space-replication-progress.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/space-replication-progress.ts', { with: { type: 'module-url' } }),
       ),
       // Project remote (EDGE) trace progress into the registry (DX-1125) — see the TraceProgress
       // module definition for its activation gating.
@@ -201,9 +203,9 @@ const config: Plugin.PluginConfig<ClientOptions.ClientPluginOptions> = Plugin.co
           // registry are all available by the time spaces are observed.
           activatesOn: ClientEvents.SpacesAvailable,
         },
-        () => import('./src/capabilities/trace-progress.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/trace-progress.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     ],
   },
 );

@@ -36,7 +36,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'Connector',
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-      () => import('./src/capabilities/connector.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
     ),
     // Startup, not later: `AiService` snapshots its `AiModelResolver` contributions once during startup,
     // so a resolver contributed in a later round is invisible to it.
@@ -47,9 +47,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.AiModelResolver],
         activatesOn: ActivationEvents.Startup,
       },
-      () => import('./src/capabilities/model-resolver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/model-resolver.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [TypeSafeCapabilities.Settings],
     }),
   ],

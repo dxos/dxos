@@ -45,12 +45,12 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [Debug.DebugCapabilities.Settings],
       environments: ['browser', 'node', 'tauri'],
@@ -58,28 +58,28 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
     Capability.lazyModule(
       'GraphRetention',
       { provides: [AppCapabilities.AppGraphRetention] },
-      () => import('./src/capabilities/graph-retention.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/graph-retention.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'LogRecording',
       { provides: [], activatesOn: DebugEvents.Start },
-      () => import('./src/capabilities/log-recording.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/log-recording.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'MarkdownMenu',
       { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },
-      () => import('./src/capabilities/markdown-menu.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/markdown-menu.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: DebugNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.plugin.debug.surface.page',
         'org.dxos.plugin.debug.surface.stats',
@@ -93,7 +93,7 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
       requires: [Capabilities.AtomRegistry, Debug.DebugCapabilities.Settings, AppCapabilities.FileUploader],
     }),
     AppCapability.spaceTemplates(
-      () => import('./src/capabilities/space-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'StatsPanel',
@@ -102,9 +102,9 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
         provides: [AppCapabilities.StatsPanel],
         activatesOn: DebugEvents.Start,
       },
-      () => import('./src/capabilities/stats-panel.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/stats-panel.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

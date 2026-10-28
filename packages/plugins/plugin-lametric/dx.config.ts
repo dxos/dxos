@@ -25,7 +25,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['labs'],
   },
   modules: [
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [LaMetricCapabilities.SettingsAtom],
     }),
     // Headless: the display has to stay live with no surface rendered, so this is gated on spaces being
@@ -37,13 +37,13 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [LaMetricCapabilities.PushStatus],
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/dashboard-driver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/dashboard-driver.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     AppCapability.pluginAsset({
       pluginId: LaMetricNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
   ],

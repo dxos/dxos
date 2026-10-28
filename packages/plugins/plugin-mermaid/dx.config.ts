@@ -45,7 +45,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'MarkdownExtension',
       { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
-      () => import('./src/capabilities/markdown.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/markdown.ts', { with: { type: 'module-url' } }),
     ),
     // Gated on demand: nothing reads a spec at boot.
     Capability.lazyModule(
@@ -55,7 +55,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.PluginAsset],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

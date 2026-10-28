@@ -44,9 +44,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'ExitGuard',
       { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
-      () => import('./src/capabilities/exit-guard.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/exit-guard.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [NativeCapabilities.Settings],
     }),
@@ -61,23 +61,23 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.OllamaManager],
         activatesOn: ActivationEvents.Startup,
       },
-      () => import('./src/capabilities/ollama.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/ollama.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: NativeNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
     Capability.lazyModule(
       'SpotlightListener',
       { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
-      () => import('./src/capabilities/spotlight-listener.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/spotlight-listener.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'Updater',
       {
@@ -85,7 +85,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [NativeCapabilities.UpdateManager],
         activatesOn: NativeEvents.Start,
       },
-      () => import('./src/capabilities/updater.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/updater.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

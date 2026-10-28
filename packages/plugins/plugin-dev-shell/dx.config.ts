@@ -46,19 +46,19 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'AgentHost',
       { provides: [ClaudeCapabilities.AgentHelper], activatesOn: ActivationEvents.Startup, environments: ['browser'] },
-      () => import('./src/capabilities/agent-host.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/agent-host.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: DevShellNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -66,7 +66,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'ProjectTemplates',
       { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
-      () => import('./src/capabilities/project-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

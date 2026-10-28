@@ -49,19 +49,22 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['alpha'],
   },
   modules: [
-    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'module-url' } }), {
       requires: [AppCapabilities.AppGraph],
       activatesOn: SheetEvents.Start,
     }),
     // Ordering-only: registers the sort comparator once the app graph exists; the body reads
     // nothing else.
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } }), {
-      activatesOn: SheetEvents.Start,
-      environments: ['browser', 'node', 'tauri'],
-    }),
+    AppCapability.commentConfig(
+      () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: SheetEvents.Start,
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
     Capability.lazyModule(
       'ComputeGraphRegistry',
       {
@@ -74,11 +77,14 @@ const config: Plugin.PluginConfig = Plugin.config({
         // Needs a client, which headless hosts (EDGE) do not provide.
         environments: ['browser', 'node', 'tauri'],
       },
-      () => import('./src/capabilities/compute-graph-registry.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/compute-graph-registry.ts', { with: { type: 'module-url' } }),
     ),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'node', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
     Capability.lazyModule(
       'MarkdownExtension',
       {
@@ -89,16 +95,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         // Follows its required registry, which headless hosts (EDGE) do not provide.
         environments: ['browser', 'node', 'tauri'],
       },
-      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
     // Migration providers stay eager: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'SheetMigrations',
       { provides: [ClientCapabilities.Migration] },
-      () => import('./src/capabilities/migrations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -106,10 +112,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: SheetNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.role.article',
         'org.dxos.role.objectProperties',
@@ -117,23 +123,23 @@ const config: Plugin.PluginConfig = Plugin.config({
         'org.dxos.role.slide',
       ],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'SheetState',
       { provides: [SheetCapabilities.GridInstances], activatesOn: SheetEvents.Start },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
     ),
     AppCapability.spaceTemplates(
-      () => import('./src/capabilities/space-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
-    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } }), {
       activatesOn: SheetEvents.Start,
       environments: ['browser', 'node', 'tauri'],
     }),

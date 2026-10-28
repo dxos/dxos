@@ -51,9 +51,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['alpha'],
   },
   modules: [
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+      },
+    ),
     Capability.lazyModule(
       'EdgeBackend',
       {
@@ -62,7 +65,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: FileEvents.Start,
         environments: ['browser', 'node', 'tauri', 'workerd'],
       },
-      () => import('./src/capabilities/edge-backend.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/edge-backend.ts', { with: { type: 'module-url' } }),
     ),
     // Browser-only: it serves the UI's upload action, and a headless host (EDGE's operation-service)
     // has no operation invoker, so activating it there fails the plugin and with it every file backend.
@@ -74,7 +77,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: FileEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/file-uploader.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/file-uploader.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'InlineBackend',
@@ -83,7 +86,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: FileEvents.Start,
         environments: ['browser', 'node', 'tauri', 'workerd'],
       },
-      () => import('./src/capabilities/inline-backend.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/inline-backend.ts', { with: { type: 'module-url' } }),
     ),
     // Browser-only: the `image` editor extension mounts a React tree into the CodeMirror widget via
     // `react-dom/client`.
@@ -94,10 +97,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: MarkdownEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -105,10 +108,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: FileNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.role.article',
         'org.dxos.role.cardContent',
@@ -118,15 +121,15 @@ const config: Plugin.PluginConfig = Plugin.config({
         'org.dxos.role.slide',
       ],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [FileCapabilities.SettingsAtom],
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

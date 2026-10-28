@@ -49,7 +49,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [FileCapabilities.Backend],
         activatesOn: FileEvents.Start,
       },
-      () => import('./src/capabilities/blob-backend.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/blob-backend.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Dependencies',
@@ -60,15 +60,15 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
         activatesOn: FileEvents.Start,
       },
-      () => import('./src/capabilities/dependencies.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/dependencies.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: WnfsNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

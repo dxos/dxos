@@ -37,7 +37,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'Bridge',
       { provides: [MeetingRecorderCapabilities.Bridge], activatesOn: MeetingRecorderEvents.Start },
-      () => import('./src/capabilities/bridge.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/bridge.ts', { with: { type: 'module-url' } }),
     ),
     // Detection is a background listener with no surface to gate it; it starts once a space exists for
     // a detected meeting to be recorded into.
@@ -48,18 +48,18 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [],
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/detector.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/detector.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: MeetingRecorderNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.statusIndicator'],
     }),
     Capability.lazyModule(
@@ -69,17 +69,17 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [MeetingRecorderCapabilities.Recorder],
         activatesOn: MeetingRecorderEvents.Start,
       },
-      () => import('./src/capabilities/recorder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/recorder.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [MeetingRecorderCapabilities.Settings],
     }),
     Capability.lazyModule(
       'RecorderState',
       { provides: [MeetingRecorderCapabilities.State], activatesOn: MeetingRecorderEvents.Start },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

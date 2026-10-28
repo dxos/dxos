@@ -36,17 +36,17 @@ const config: Plugin.PluginConfig = Plugin.config({
         requires: [Capabilities.AtomRegistry],
         provides: [AttentionCapabilities.Attention, AttentionCapabilities.ViewState],
       },
-      () => import('./src/capabilities/attention.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/attention.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Keyboard',
       { requires: [AppCapabilities.AppGraph, AttentionCapabilities.Attention], provides: [] },
-      () => import('./src/capabilities/keyboard.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/keyboard.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'dx-module' } })),
+    AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } })),
   ],
 });
 

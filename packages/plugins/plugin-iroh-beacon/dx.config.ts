@@ -33,13 +33,13 @@ const config: Plugin.PluginConfig = Plugin.config({
         // startup point.
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/beacon-service.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/beacon-service.ts', { with: { type: 'module-url' } }),
     ),
     // Status indicator surface.
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.statusIndicator'],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

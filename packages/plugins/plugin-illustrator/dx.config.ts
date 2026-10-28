@@ -50,28 +50,34 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'dx-module' } })),
-    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } }), {
-      activatesOn: IllustratorEvents.Start,
-    }),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commentConfig(
+      () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: IllustratorEvents.Start,
+      },
+    ),
     // Browser-only: the entry supplies `CreateDrawingPanel`, the React form that picks the drawing
     // variant and collects its input.
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+      },
+    ),
     // Migration providers stay eager: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'IllustratorMigrations',
       { provides: [ClientCapabilities.Migration] },
-      () => import('./src/capabilities/migrations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
         environments: ['browser', 'node', 'tauri'],
@@ -80,20 +86,20 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: IllustratorNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
     }),
     Capability.lazyModule(
       'RefitState',
       { provides: [IllustratorCapabilities.Refit], activatesOn: ActivationEvents.Startup },
-      () => import('./src/capabilities/refit-state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/refit-state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
@@ -106,9 +112,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: IllustratorEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/svg-variant.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/svg-variant.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],
     }),
   ],

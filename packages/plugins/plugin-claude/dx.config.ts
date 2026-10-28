@@ -41,7 +41,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'AgentLauncher',
       { provides: [ClaudeCapabilities.AgentHelper], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },
-      () => import('./src/capabilities/agent-launcher.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/agent-launcher.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'ClaudeCodeAgent',
@@ -50,51 +50,51 @@ const config: Plugin.PluginConfig = Plugin.config({
         // Off the boot path: loading it pulls in the MCP SDK, and agents are only read once the assistant runs a turn.
         activatesOn: AppActivationEvents.AssistantStart,
       },
-      () => import('./src/capabilities/claude-code-agent.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/claude-code-agent.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'ClaudeCodeEdgeAgent',
       { provides: [AssistantCapabilities.Agent], activatesOn: AppActivationEvents.AssistantStart },
-      () => import('./src/capabilities/claude-code-edge-agent.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/claude-code-edge-agent.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'ClaudeCodeConnector',
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-      () => import('./src/capabilities/connector.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: ClaudeNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.plugin.projects.role.settings'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [ClaudeCapabilities.Settings],
     }),
-    AppCapability.layerSpec(() => import('./src/capabilities/shell-service.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.layerSpec(() => import('./src/capabilities/shell-service.ts', { with: { type: 'module-url' } }), {
       name: 'ShellService',
       environments: ['node'],
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'State',
       { provides: [ClaudeCapabilities.State], activatesOn: ActivationEvents.Startup },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

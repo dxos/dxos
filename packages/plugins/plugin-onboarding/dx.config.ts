@@ -25,7 +25,7 @@ const config: Plugin.PluginConfig<OnboardingOptions> = Plugin.config<OnboardingO
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'DefaultContent',
@@ -44,7 +44,7 @@ const config: Plugin.PluginConfig<OnboardingOptions> = Plugin.config<OnboardingO
         // `SchemaRegistered` pulls the idle-gated schema registration into it, for the seeded README.
         activatesOn: ClientEvents.IdentityCreated,
       },
-      () => import('./src/capabilities/default-content.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/default-content.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'MigrateDemoSpace',
@@ -53,12 +53,12 @@ const config: Plugin.PluginConfig<OnboardingOptions> = Plugin.config<OnboardingO
         provides: [],
         activatesOn: ClientEvents.SpacesAvailable,
       },
-      () => import('./src/capabilities/migrate-demo-space.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/migrate-demo-space.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'OAuthRecoveryRedirect',
       { provides: [] },
-      () => import('./src/capabilities/oauth-recovery-redirect.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/oauth-recovery-redirect.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Onboarding',
@@ -74,18 +74,18 @@ const config: Plugin.PluginConfig<OnboardingOptions> = Plugin.config<OnboardingO
         // client initialization to have completed.
         activatesOn: ClientEvents.Initialized,
       },
-      () => import('./src/capabilities/onboarding.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/onboarding.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
     }),
     AppCapability.spaceTemplates(
-      () => import('./src/capabilities/space-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

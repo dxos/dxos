@@ -32,12 +32,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     dependsOn: ['org.dxos.plugin.assistant', 'org.dxos.plugin.thread'],
   },
   modules: [
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.layerSpec(() => import('./src/capabilities/brain.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.layerSpec(() => import('./src/capabilities/brain.ts', { with: { type: 'module-url' } }), {
       name: 'Brain',
       environments: ['browser', 'node', 'tauri'],
     }),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [AgentCapabilities.Settings],
     }),
@@ -49,7 +49,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/agent-admission.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/agent-admission.ts', { with: { type: 'module-url' } }),
     ),
     // Makes the members who may write to the spaces of the agents this identity administers those agents' admins on EDGE,
     // which only the app shows; a headless host administers no agent. plugin-client provides the EDGE HTTP client only
@@ -61,10 +61,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/agent-admin-sync.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/agent-admin-sync.ts', { with: { type: 'module-url' } }),
     ),
     // EDGE's mailboxes over the client's EDGE HTTP client (`EdgeHttpClientService`), which plugin-client provides.
-    AppCapability.layerSpec(() => import('./src/capabilities/agent-mailbox.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.layerSpec(() => import('./src/capabilities/agent-mailbox.ts', { with: { type: 'module-url' } }), {
       name: 'AgentMailbox',
       environments: ['browser', 'node', 'tauri'],
     }),
@@ -76,24 +76,24 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ThreadEvents.Start,
         environments: ['browser', 'node', 'tauri'],
       },
-      () => import('./src/capabilities/email-channel-backend.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/email-channel-backend.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
     ),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

@@ -39,7 +39,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['labs'],
   },
   modules: [
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [CrxCapabilities.Settings],
     }),
@@ -50,10 +50,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [],
         activatesOn: CrxEvents.Start,
       },
-      () => import('./src/capabilities/install-page-actions.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/install-page-actions.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -61,18 +61,18 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'PageActionProvider',
       { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
-      () => import('./src/capabilities/page-action-provider.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/page-action-provider.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: CrxNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

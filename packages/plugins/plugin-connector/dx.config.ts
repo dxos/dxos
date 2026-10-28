@@ -58,7 +58,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         requires: [ConnectorSpec.Connector],
         environments: ['browser', 'node', 'tauri'],
@@ -67,11 +67,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'BuiltinConnectors',
       { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-      () => import('./src/capabilities/connectors.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/connectors.ts', { with: { type: 'module-url' } }),
     ),
     // `#commands` resolves to `commands.browser.ts` under the browser: `connector oauth` needs a Bun
     // callback server, so only headless runtimes get the real command graph.
-    AppCapability.commands(() => import('#commands', { with: { type: 'dx-module' } })),
+    AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
     // Coordination drives an interactive OAuth flow through the shell, as does `OAuthRedirect`, which
     // requires it.
     Capability.lazyModule(
@@ -87,11 +87,14 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [ConnectorCoordination.ConnectorCoordinator],
       },
       () =>
-        import('./src/capabilities/connector-coordinator/connector-coordinator.ts', { with: { type: 'dx-module' } }),
+        import('./src/capabilities/connector-coordinator/connector-coordinator.ts', { with: { type: 'module-url' } }),
     ),
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'node', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
     Capability.lazyModule(
       'OAuthRedirect',
       {
@@ -100,10 +103,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ConnectorEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/oauth-redirect.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/oauth-redirect.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -111,22 +114,22 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: ConnectorNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
     }),
     Capability.lazyModule(
       'RoutineTemplate',
       { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-      () => import('./src/capabilities/routine-template.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/routine-template.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

@@ -34,17 +34,20 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['labs'],
   },
   modules: [
-    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } }), {
-      activatesOn: BookmarksEvents.Start,
-    }),
+    AppCapability.commentConfig(
+      () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: BookmarksEvents.Start,
+      },
+    ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       { activatesOn: ActivationEvents.Idle },
     ),
     Capability.lazyModule(
       'PageActionProvider',
       { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
-      () => import('./src/capabilities/page-action.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/page-action.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'plugin-asset',
@@ -53,16 +56,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.PluginAsset],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

@@ -1245,7 +1245,7 @@ const loadAppFrameworkVitePlugin = async () => {
 const dxModuleAttributePlugin = (): Plugin => {
   let vitePlugin: ReturnType<typeof loadAppFrameworkVitePlugin> | undefined;
   return {
-    name: 'dx-module-attribute',
+    name: 'module-url-attribute',
     async transform(code, id) {
       if (!/\/dx\.config\.ts$/.test(id.split('?')[0])) {
         return null;

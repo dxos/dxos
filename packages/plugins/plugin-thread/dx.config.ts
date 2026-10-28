@@ -48,7 +48,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // so no spec-level require: a hard cross-plugin require would fail this plugin whenever
     // plugin-calls is disabled. Cross-feature requires are only valid with a plugin-level dependsOn.
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     // Default local-feed channel backend. Other plugins contribute additional
     // `ChannelBackend` providers (e.g. ATProto) earlier in plugin order.
@@ -59,15 +59,18 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ThreadEvents.Start,
         environments: ['browser', 'node', 'tauri', 'workerd'],
       },
-      () => import('./src/capabilities/channel-backend-feed.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/channel-backend-feed.ts', { with: { type: 'module-url' } }),
     ),
     // `CreateObjectEntry` carries a `customPanel` React component alongside the object factory, so it
     // cannot load without React — browser only.
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+      },
+    ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -75,14 +78,14 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: ThreadNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

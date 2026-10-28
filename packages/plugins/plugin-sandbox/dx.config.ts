@@ -33,21 +33,21 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'LocalLauncher',
       { provides: [SandboxCapabilities.LocalLauncher], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },
-      () => import('./src/capabilities/local-launcher.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/local-launcher.ts', { with: { type: 'module-url' } }),
     ),
     // Migration providers stay eager: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'SandboxMigrations',
       { provides: [ClientCapabilities.Migration] },
-      () => import('./src/capabilities/migrations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -55,7 +55,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: SandboxNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
     Capability.lazyModule(
@@ -65,22 +65,22 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [ProjectCapabilities.Template],
         activatesOn: ProjectsEvents.Start,
       },
-      () => import('./src/capabilities/project-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.section'],
     }),
-    AppCapability.layerSpec(() => import('./src/capabilities/sandbox-service.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.layerSpec(() => import('./src/capabilities/sandbox-service.ts', { with: { type: 'module-url' } }), {
       name: 'SandboxLayer',
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       provides: [SandboxCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

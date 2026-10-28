@@ -32,7 +32,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         requires: [MessengerCapabilities.NotificationsContainers],
       },
@@ -47,10 +47,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ClientEvents.SpacesAvailable,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/inbox-materializer.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/inbox-materializer.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -58,13 +58,13 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: MessengerNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.deckCompanion.messenger'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'Sender',
       {
@@ -73,9 +73,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ClientEvents.Initialized,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/sender.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/sender.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

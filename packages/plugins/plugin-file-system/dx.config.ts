@@ -36,7 +36,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         requires: [Capabilities.AtomRegistry, FileSystemCapabilities.State],
       },
@@ -50,10 +50,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [MarkdownCapabilities.ExtensionProvider],
         activatesOn: MarkdownEvents.Start,
       },
-      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -61,10 +61,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: FileSystemNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       requires: [FileSystemCapabilities.State],
       roles: ['org.dxos.role.article'],
     }),
@@ -75,9 +75,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [FileSystemCapabilities.State, FileSystemCapabilities.FileSystemManager],
         activatesOn: FileSystemEvents.Start,
       },
-      () => import('./src/capabilities/state/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state/state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

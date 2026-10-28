@@ -34,19 +34,19 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: PreviewEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/link-resolver.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/link-resolver.ts', { with: { type: 'module-url' } }),
     ),
     // Browser-only: the module mounts the popover itself, so its body is React all the way down.
     Capability.lazyModule(
       'PreviewPopover',
       { provides: [], activatesOn: PreviewEvents.Start, environments: ['browser', 'tauri'] },
-      () => import('./src/capabilities/preview-popover.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/preview-popover.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.cardContent', 'org.dxos.role.cardIcon', 'org.dxos.role.article'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

@@ -39,14 +39,14 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     // Listens on `document` for right-clicks on elements that name a graph node.
-    AppCapability.reactRoot(() => import('./src/capabilities/context-menu.tsx', { with: { type: 'dx-module' } })),
+    AppCapability.reactRoot(() => import('./src/capabilities/context-menu.tsx', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'expose',
       { requires: [AppCapabilities.AppGraph, AppCapabilities.Layout, Capabilities.OperationInvoker], provides: [] },
-      () => import('./src/capabilities/expose.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/expose.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'Keyboard',
@@ -56,18 +56,18 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/keyboard.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/keyboard.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: NavTreeNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.role.dialog',
         'org.dxos.role.documentTitle',
@@ -82,9 +82,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         requires: [Capabilities.AtomRegistry, AppCapabilities.Layout, AttentionCapabilities.ViewState],
         provides: [NavTreeCapabilities.State],
       },
-      () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

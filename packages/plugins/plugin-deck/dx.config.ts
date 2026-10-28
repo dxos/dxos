@@ -46,7 +46,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
     },
     modules: [
       AppCapability.appGraphBuilder(
-        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'CheckAppScheme',
@@ -54,9 +54,9 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           requires: [DeckCapabilities.Settings, Capabilities.OperationInvoker, AppCapabilities.NavigationHandler],
           provides: [],
         },
-        () => import('./src/capabilities/check-app-scheme.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/check-app-scheme.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
         provides: [DeckCapabilities.Settings],
       }),
       Capability.lazyModule(
@@ -76,7 +76,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
             DeckCapabilities.Projection,
           ],
         },
-        () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'GraphRetention',
@@ -84,7 +84,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           requires: [DeckCapabilities.State, AppCapabilities.Layout],
           provides: [AppCapabilities.AppGraphRetention],
         },
-        () => import('./src/capabilities/graph-retention.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/graph-retention.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'NotificationTracker',
@@ -99,22 +99,22 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           ],
           provides: [],
         },
-        () => import('./src/capabilities/notification-tracker.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/notification-tracker.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.operationHandler(
-        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.pluginAsset({
         pluginId: DeckNamespace.key,
         path: 'PLUGIN.mdl',
-        content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+        content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
         mimeType: 'application/x-mdl',
       }),
-      AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'dx-module' } })),
-      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'module-url' } })),
+      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
         roles: ['org.dxos.role.article'],
       }),
-      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'UrlHandler',
         {
@@ -135,7 +135,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
           ],
           provides: [],
         },
-        () => import('./src/capabilities/url-handler.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/url-handler.ts', { with: { type: 'module-url' } }),
       ),
     ],
   });

@@ -178,7 +178,7 @@ Phase 1, before the PR. The skeleton should include:
 6. `dx.config.ts` — `Plugin.config({ plugin, modules })` with key, name, author, description, icon, a **quality tier tag** (see below), surface and translations modules, and `export const { meta, make } = config; export default config;` (see **Plugin Definition**).
 7. `src/index.ts` — `export * as FooPlugin from '#meta'` plus types/operations. **Never exports `make` directly.**
 8. `src/types/` — one schema type with `make()` factory.
-9. `src/capabilities/react-surface.tsx` — one surface for the `article` role, wired by `AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), { roles })` in `dx.config.ts`.
+9. `src/capabilities/react-surface.tsx` — one surface for the `article` role, wired by `AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), { roles })` in `dx.config.ts`.
 10. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
 11. `src/components/` — empty barrel, ready for primitives.
 
@@ -507,7 +507,7 @@ anything without a maker. See `plugin-sample/dx.config.ts` (the commented exampl
 `plugin-debug/dx.config.ts` (a plugin with options). The build evaluates `dx.config.ts` into a static manifest
 (`pluginConfigPlugin`), so the file is data plus loaders:
 
-- **Every module body is `() => import('./src/capabilities/x.ts', { with: { type: 'dx-module' } })`.** The attribute
+- **Every module body is `() => import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`.** The attribute
   marks it as a body the build locates but never loads; an unmarked dynamic import, an inline module
   (`Capability.inlineModule`, `Plugin.addModule({ activate })`) and a `props` mapper all fail the build. Bodies
   receive the plugin options as-is — read what you need inside the body.

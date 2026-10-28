@@ -43,19 +43,19 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: SpotlightNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'dx-module' } })),
+    AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'SpotlightDismiss',
       { provides: [] },
-      () => import('./src/capabilities/spotlight-dismiss.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/spotlight-dismiss.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'State',
@@ -65,9 +65,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ActivationEvents.Startup,
         provides: [SpotlightCapabilities.State, AppCapabilities.Layout],
       },
-      () => import('./src/capabilities/state.tsx', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/state.tsx', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

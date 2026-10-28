@@ -38,10 +38,10 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: MapNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/surface.tsx', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/surface.tsx', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.section'],
     }),
   ],

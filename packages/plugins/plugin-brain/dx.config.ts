@@ -39,7 +39,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
     // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
     // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
-    AppCapability.layerSpec(() => import('./src/capabilities/fact-store.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.layerSpec(() => import('./src/capabilities/fact-store.ts', { with: { type: 'module-url' } }), {
       name: 'FactStore',
       provides: [BrainCapabilities.FactStoreRegistry],
     }),
@@ -52,10 +52,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [InboxCapabilities.MailboxProcessor],
         activatesOn: InboxEvents.Start,
       },
-      () => import('./src/capabilities/mailbox-processor.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/mailbox-processor.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -65,31 +65,31 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: BrainNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
     Capability.lazyModule(
       'ProjectTemplates',
       { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
-      () => import('./src/capabilities/project-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.plugin.brain.surface.facts'],
     }),
     Capability.lazyModule(
       'ReplyGenerator',
       { provides: [InboxCapabilities.ReplyGenerator], activatesOn: InboxEvents.Start },
-      () => import('./src/capabilities/reply-generator.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/reply-generator.ts', { with: { type: 'module-url' } }),
     ),
     // Owns the fact-analysis settings (model/provider/strict) and registers them in the settings UI.
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [BrainCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

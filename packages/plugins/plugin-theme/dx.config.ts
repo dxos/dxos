@@ -27,16 +27,16 @@ const config: Plugin.PluginConfig<ThemePluginOptions> = Plugin.config<ThemePlugi
     tags: ['system'],
   },
   modules: [
-    AppCapability.reactContext(() => import('./src/react-context.tsx', { with: { type: 'dx-module' } }), {
+    AppCapability.reactContext(() => import('./src/react-context.tsx', { with: { type: 'module-url' } }), {
       requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings],
     }),
-    AppCapability.settings(() => import('./src/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/settings.ts', { with: { type: 'module-url' } }), {
       provides: [ThemeCapabilities.Settings],
     }),
     Capability.lazyModule(
       'Translator',
       { requires: [Capabilities.AtomRegistry, AppCapabilities.Translations], provides: [AppCapabilities.Translator] },
-      () => import('./src/translator.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/translator.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

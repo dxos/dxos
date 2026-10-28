@@ -59,7 +59,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {
         requires: [CallsCapabilities.Manager],
         // The manager provider rides the client-initialized event, so the feature demand alone is
@@ -82,7 +82,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ClientEvents.Initialized,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/call-manager.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/call-manager.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'CallTransport',
@@ -92,10 +92,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ClientEvents.Initialized,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/call-transport.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/call-transport.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -103,16 +103,16 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: CallsNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.reactRoot(() => import('./src/capabilities/react-root.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.reactRoot(() => import('./src/capabilities/react-root.ts', { with: { type: 'module-url' } }), {
       activatesOn: ClientEvents.Initialized,
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.activeCall', 'org.dxos.role.devtoolsOverview'],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],
     }),
   ],

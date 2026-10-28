@@ -52,7 +52,7 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: IllustratorEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/drawing-variant.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/drawing-variant.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'plugin-asset',
@@ -61,16 +61,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [AppCapabilities.PluginAsset],
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [TldrawCapabilities.Settings],
     }),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });

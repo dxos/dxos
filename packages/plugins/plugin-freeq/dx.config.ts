@@ -47,16 +47,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [FreeqCapabilities.ConnectionManager, ThreadCapabilities.ChannelBackend],
         activatesOn: ThreadEvents.Start,
       },
-      () => import('./src/capabilities/channel-backend.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/channel-backend.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.pluginAsset({
       pluginId: FreeqNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

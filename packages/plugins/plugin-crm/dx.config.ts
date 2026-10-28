@@ -52,12 +52,12 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'AutomationTemplates',
       { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-      () => import('./src/capabilities/automation-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/automation-templates.ts', { with: { type: 'module-url' } }),
     ),
     // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
     Capability.lazyModule(
@@ -69,15 +69,15 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [InboxCapabilities.MailboxAction],
         activatesOn: InboxEvents.Start,
       },
-      () => import('./src/capabilities/mailbox-action.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/mailbox-action.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'MailboxProcessor',
       { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
-      () => import('./src/capabilities/mailbox-processor.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/mailbox-processor.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -85,15 +85,15 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: CrmNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
     Capability.lazyModule(
       'ProjectTemplates',
       { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
-      () => import('./src/capabilities/project-templates.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'SenderAction',
       // Rides the inbox feature it contributes to, like its MailboxAction sibling — the entry is
@@ -103,12 +103,12 @@ const config: Plugin.PluginConfig = Plugin.config({
         provides: [InboxCapabilities.SenderAction],
         activatesOn: InboxEvents.Start,
       },
-      () => import('./src/capabilities/sender-action.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/sender-action.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

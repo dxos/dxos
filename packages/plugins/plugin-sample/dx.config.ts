@@ -14,7 +14,7 @@ import * as SampleCapabilities from './src/types/SampleCapabilities.ts';
 // Plugin definition — the main entry point for the plugin.
 // `Plugin.config` takes the plugin's identity and its module list. Each module is authored via an
 // `AppCapability.*` maker or `Capability.lazyModule`, declares what it requires, provides and
-// activates on, and names its body with an `import(..., { with: { type: 'dx-module' } })`: the
+// activates on, and names its body with an `import(..., { with: { type: 'module-url' } })`: the
 // build turns this file into a static manifest and each body into its own chunk.
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -48,16 +48,19 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Registers graph builder extensions (actions, connectors, companions).
     // Activates when the app graph builder capability can be resolved.
     AppCapability.appGraphBuilder(
-      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
     // Registers type metadata for the framework's object system.
     // `createObject` is the factory called when users create this type via the UI.
-    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
-      environments: ['browser', 'node', 'tauri'],
-    }),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
     // Registers operation handlers.
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
       },
@@ -66,11 +69,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.pluginAsset({
       pluginId: SampleNamespace.key,
       path: 'PLUGIN.mdl',
-      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
     // Registers React surface contributions.
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.role.article',
         'org.dxos.role.deckCompanion.samplePanel',
@@ -80,15 +83,15 @@ const config: Plugin.PluginConfig = Plugin.config({
       ],
     }),
     // Registers the settings module.
-    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
       activatesOn: ActivationEvents.Idle,
       provides: [SampleCapabilities.Settings],
     }),
     // Registers ECHO schemas so the framework knows about this type.
     // Required for queries, serialization, and type resolution.
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     // Registers i18n translations.
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

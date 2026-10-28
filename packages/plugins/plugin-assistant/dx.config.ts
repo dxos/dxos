@@ -59,18 +59,18 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
     },
     modules: [
       AppCapability.appGraphBuilder(
-        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
         {
           environments: ['browser', 'node', 'tauri'],
         },
       ),
       AppCapability.skillDefinition(
-        () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
         {
           provides: [RoutineCapabilities.AgentDelegationStrategy],
         },
       ),
-      AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'dx-module' } })),
+      AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'McpServerRegistry',
         {
@@ -78,26 +78,26 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           provides: [],
           environments: ['browser', 'node', 'tauri'],
         },
-        () => import('./src/capabilities/mcp-server-registry.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/mcp-server-registry.ts', { with: { type: 'module-url' } }),
       ),
       SpaceCapability.createObject(
-        () => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
         {
           environments: ['browser', 'node', 'tauri'],
         },
       ),
       AppCapability.operationHandler(
-        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
         {
           activatesOn: ActivationEvents.Idle,
         },
       ),
-      AppCapability.schema(() => import('./src/capabilities/schema-defs.ts', { with: { type: 'dx-module' } })),
-      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.schema(() => import('./src/capabilities/schema-defs.ts', { with: { type: 'module-url' } })),
+      AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
         activatesOn: ActivationEvents.Idle,
         provides: [AssistantCapabilities.Settings],
       }),
-      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
         roles: [
           'org.dxos.plugin.assistant.role.chatSurface',
           'org.dxos.plugin.space.role.homeContent',
@@ -109,16 +109,16 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           'org.dxos.role.statusIndicator',
         ],
       }),
-      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+      AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
       Capability.lazyModule(
         'AutomationTemplates',
         { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-        () => import('./src/capabilities/automation-templates.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/automation-templates.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'MarkdownExtension',
         { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
-        () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
       ),
       // TODO(wittjosiah): Does not integrate with settings store.
       //   Should this be a different event?
@@ -133,7 +133,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           ],
           activatesOn: AssistantEvents.Start,
         },
-        () => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
       // Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
       // require once during startup, so a resolver contributed in a later round is invisible to it.
@@ -142,14 +142,14 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       Capability.lazyModule(
         'EdgeModelResolver',
         { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
-        () => import('./src/capabilities/edge-model-resolver.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/edge-model-resolver.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'LocalModelResolver',
         { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
-        () => import('./src/capabilities/local-model-resolver.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/local-model-resolver.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.layerSpec(() => import('./src/capabilities/ai-service.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.layerSpec(() => import('./src/capabilities/ai-service.ts', { with: { type: 'module-url' } }), {
         name: 'AiService',
         requires: [AppCapabilities.AiModelResolver],
       }),
@@ -158,10 +158,10 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
       // conversation-scoped services without an inline `Effect.provideService`
       // upstream. See `capabilities/ai-context.ts` for the rationale.
-      AppCapability.layerSpec(() => import('./src/capabilities/ai-context.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.layerSpec(() => import('./src/capabilities/ai-context.ts', { with: { type: 'module-url' } }), {
         name: 'AiContext',
       }),
-      AppCapability.layerSpec(() => import('./src/capabilities/agent-service.ts', { with: { type: 'dx-module' } }), {
+      AppCapability.layerSpec(() => import('./src/capabilities/agent-service.ts', { with: { type: 'module-url' } }), {
         name: 'AgentRuntime',
       }),
       // Present from startup so a comment posted before the assistant UI opens can still be answered. Headless hosts
@@ -174,7 +174,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           activatesOn: ActivationEvents.Startup,
           environments: ['browser', 'node', 'tauri'],
         },
-        () => import('./src/capabilities/comment-agent-runner.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/comment-agent-runner.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'Agents',
@@ -182,7 +182,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           provides: [AssistantCapabilities.Agent, AssistantCapabilities.CodeModeAvailable],
           activatesOn: ActivationEvents.Startup,
         },
-        () => import('./src/capabilities/agents.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/agents.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'Toolkit',
@@ -191,7 +191,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           activatesOn: AssistantEvents.Start,
           environments: ['browser', 'node', 'tauri', 'workerd'],
         },
-        () => import('./src/capabilities/toolkit.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/toolkit.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'AgentHydrator',
@@ -201,7 +201,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           activatesOn: AssistantEvents.Start,
           environments: ['browser', 'node', 'tauri'],
         },
-        () => import('./src/capabilities/agent-hydrator.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/agent-hydrator.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'CompanionChatProvisioner',
@@ -221,35 +221,35 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
           provides: [],
           activatesOn: AssistantEvents.Start,
         },
-        () => import('./src/capabilities/companion-chat-provisioner.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/companion-chat-provisioner.ts', { with: { type: 'module-url' } }),
       ),
       // Ungated: an agent blocked on a question is waiting whether or not any assistant UI is on screen.
       Capability.lazyModule(
         'QuestionResumer',
         // Headless hosts (EDGE) provide no operation invoker; it resumes questions only in the app.
         { requires: [Capabilities.OperationInvoker], provides: [], environments: ['browser', 'node', 'tauri'] },
-        () => import('./src/capabilities/question-resumer.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/question-resumer.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'SubjectContext',
         { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
-        () => import('./src/capabilities/subject-context.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/subject-context.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'AnthropicConnector',
         { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-        () => import('./src/capabilities/connector.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.pluginAsset({
         pluginId: AssistantNamespace.key,
         path: 'PLUGIN.mdl',
-        content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+        content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
         mimeType: 'application/x-mdl',
       }),
       Capability.lazyModule(
         'SlashCommands',
         { provides: [AssistantCapabilities.SlashCommands], activatesOn: ActivationEvents.Startup },
-        () => import('./src/capabilities/slash-commands.ts', { with: { type: 'dx-module' } }),
+        () => import('./src/capabilities/slash-commands.ts', { with: { type: 'module-url' } }),
       ),
     ],
   });

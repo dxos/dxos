@@ -20,10 +20,10 @@ const MODULE_REF = Symbol.for('@dxos/app-framework/vite-plugin/ModuleRef');
 
 /**
  * Import attribute marking a dynamic import in `dx.config.ts` as a module body, e.g.
- * `() => import('./src/capabilities/state.ts', { with: { type: 'dx-module' } })`: the build records
+ * `() => import('./src/capabilities/state.ts', { with: { type: 'module-url' } })`: the build records
  * its location and never loads it. Other runtimes ignore the attribute, and builds drop it.
  */
-export const MODULE_BODY_TYPE = 'dx-module';
+export const MODULE_BODY_TYPE = 'module-url';
 
 type ModuleBodyImport = { start: number; end: number; specifier: unknown; marked: boolean };
 

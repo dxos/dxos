@@ -34,9 +34,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     dependsOn: ['org.dxos.plugin.game'],
   },
   modules: [
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
-      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       { environments: ['browser', 'node', 'tauri'] },
     ),
     // Browser-only: the variant descriptor carries the `card`/`article` React components the game
@@ -48,10 +48,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: GameEvents.Start,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/game-variant.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/game-variant.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       { activatesOn: ActivationEvents.Idle },
     ),
     Capability.lazyModule(
@@ -61,12 +61,12 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ActivationEvents.PluginAssetsRequested,
         environments: ['browser', 'tauri'],
       },
-      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'translations',
       { provides: [AppCapabilities.Translations], environments: ['browser', 'node', 'tauri', 'workerd'] },
-      () => import('./src/capabilities/translations.ts', { with: { type: 'dx-module' } }),
+      () => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }),
     ),
   ],
 });
