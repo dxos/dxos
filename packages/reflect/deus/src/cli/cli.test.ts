@@ -21,8 +21,8 @@ import {
   QaLintError,
   ReviewCheckError,
   checkChangelog,
-  deriveStatus,
   configDependsOn,
+  deriveStatus,
   deus,
 } from './index.ts';
 
