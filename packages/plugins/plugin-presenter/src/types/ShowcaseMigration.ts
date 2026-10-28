@@ -20,17 +20,14 @@ export const makeShowcaseMigration = (): Migration.ObjectMigration => {
     from: LegacyShowcase.Showcase,
     to: Presentation,
     transform: async (from, { db }) => {
-      const slides: Slide[] = [];
+      // Every ref resolves before any slide is added, so a load that fails leaves nothing behind to duplicate on retry.
       const content = from.content.target ?? (await from.content.tryLoad());
-      if (content && !Obj.isDeleted(content)) {
-        slides.push(db.add(Obj.make(Slide, { content: Ref.make(content) })));
-      }
-      for (const ref of from.artifacts) {
-        const artifact = ref.target ?? (await ref.tryLoad());
-        if (artifact && !Obj.isDeleted(artifact) && !slides.some((slide) => slide.content.target?.id === artifact.id)) {
-          slides.push(db.add(Obj.make(Slide, { content: Ref.make(artifact) })));
-        }
-      }
+      const artifacts = await Promise.all(from.artifacts.map((ref) => ref.target ?? ref.tryLoad()));
+      const contents = [content, ...artifacts].filter(
+        (object, index, all): object is NonNullable<typeof object> =>
+          object !== undefined && !Obj.isDeleted(object) && all.findIndex((other) => other?.id === object.id) === index,
+      );
+      const slides = contents.map((object) => db.add(Obj.make(Slide, { content: Ref.make(object) })));
       pending.set(from.id, slides);
       return { name: from.name, slides: slides.map((slide) => Ref.make(slide)) };
     },
