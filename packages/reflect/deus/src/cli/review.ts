@@ -10,7 +10,7 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
-import { parseMdlBlocks } from '../extension/check.ts';
+import { parseMdlBlocks } from '../extension/blocks.ts';
 import { specDependencies } from '../extension/refs.ts';
 import { frontmatter, reqs } from '../spec-index/parse.ts';
 import { ReviewCheckError } from './errors.ts';
@@ -96,7 +96,7 @@ export const reviewVerdicts = (text: string): Map<string, { status?: string; not
 
 /**
  * The `dependsOn` array of the `plugin` object in a `dx.config.ts`, empty when the object has none; undefined when
- * there is no `plugin` object. Comments are stripped first so a commented-out entry does not count.
+ * there is no `plugin` object or `dependsOn` is not a literal array of strings. Comments are stripped first so a commented-out entry does not count.
  */
 export const configDependsOn = (configText: string): string[] | undefined => {
   const code = configText.replace(/(['"`])(?:\\.|(?!\1)[^\\])*\1|\/\/.*|\/\*[\s\S]*?\*\//g, (match) =>
@@ -115,8 +115,20 @@ export const configDependsOn = (configText: string): string[] | undefined => {
       break;
     }
   }
-  const list = code.slice(start.index, end).match(/\bdependsOn\s*:\s*\[([^\]]*)\]/)?.[1] ?? '';
-  return [...list.matchAll(/(['"`])(.*?)\1/g)].map((match) => match[2]);
+  const plugin = code.slice(start.index, end);
+  if (!/\bdependsOn\s*:/.test(plugin)) {
+    return [];
+  }
+  const literal = plugin.match(/\bdependsOn\s*:\s*\[([^\]]*)\]/)?.[1];
+  if (literal === undefined) {
+    return undefined;
+  }
+  const items = literal
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
+  const strings = items.map((item) => item.match(/^(['"`])([^'"`$\\]*)\1$/)?.[2]);
+  return strings.every((value) => value !== undefined) ? strings.filter((value) => value !== undefined) : undefined;
 };
 
 /** Whether the source declares the name: a top-level declaration, a member, or an export list entry. */

@@ -205,6 +205,9 @@ describe('review dependsOn', () => {
     expect(configDependsOn('plugin: {}')).toEqual([]);
     expect(configDependsOn("plugin: { key: 'x' }")).toEqual([]);
     expect(configDependsOn("export default { name: 'x' }")).toBeUndefined();
+    expect(configDependsOn('plugin: { dependsOn: DEPS }')).toBeUndefined();
+    expect(configDependsOn("plugin: { dependsOn: [...BASE, 'x'] }")).toBeUndefined();
+    expect(configDependsOn("plugin: { dependsOn: ['a', B] }")).toBeUndefined();
     expect(
       configDependsOn(
         "plugin: {\n  // dependsOn: ['old'],\n  dependsOn: [\n    'a',\n    // 'x',\n    'b', /* 'y' */\n  ],\n}",

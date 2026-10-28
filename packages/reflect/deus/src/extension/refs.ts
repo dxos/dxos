@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parseMdlBlocks } from './check.ts';
+import { parseMdlBlocks } from './blocks.ts';
 
 /** A `<spec id>#<item>` reference, with the offsets of the whole reference text. */
 export type SpecRef = { id: string; item: string; from: number; to: number };

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parseMdlBlocks } from '../extension/check.ts';
+import { parseMdlBlocks } from '../extension/blocks.ts';
 import { frontmatter, reqIds } from './parse.ts';
 
 /** One spec in the index: where it lives and every id a reference into it can name. */

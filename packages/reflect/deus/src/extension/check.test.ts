@@ -5,14 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { indexSpecs } from '../spec-index/index.ts';
-import {
-  MISSING_DECISION,
-  checkChangelogChange,
-  isTrivialEdit,
-  lintMdl,
-  parseChangelog,
-  parseMdlBlocks,
-} from './check.ts';
+import { parseMdlBlocks } from './blocks.ts';
+import { MISSING_DECISION, checkChangelogChange, isTrivialEdit, lintMdl, parseChangelog } from './check.ts';
 
 const block = (body: string) => ['```mdl', body, '```', ''].join('\n');
 

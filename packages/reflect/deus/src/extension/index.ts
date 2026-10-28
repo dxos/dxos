@@ -3,10 +3,10 @@
 //
 
 export { mdl, mdlBlockDescription } from './language.ts';
+export { type MdlBlock, parseMdlBlocks } from './blocks.ts';
 export {
   type ChangelogEntry,
   type LintOptions,
-  type MdlBlock,
   MISSING_DECISION,
   checkChangelogChange,
   duplicateSpecMessage,
@@ -14,7 +14,6 @@ export {
   lintMdl,
   missingItemMessage,
   parseChangelog,
-  parseMdlBlocks,
   specReferenceFilter,
   unknownSpecMessage,
 } from './check.ts';
