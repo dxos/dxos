@@ -38,8 +38,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { streamMboxMessages } from '../src/testing/mbox.ts';
-import { mapMboxMessage } from './mbox.ts';
+import { mapMboxMessage, streamMboxMessages } from './mbox.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_IN = resolve(__dirname, 'fixtures/sample.mbox');

@@ -18,8 +18,8 @@ import { Message } from '@dxos/types';
 
 import { GoogleOperation } from '#types';
 
-import { GMAIL_SOURCE } from '../../constants.ts';
-import { readSnapshot } from './snapshot.ts';
+import { GMAIL_SOURCE } from '../src/constants.ts';
+import { readSnapshot } from './space.ts';
 
 const KEY = GoogleOperation.GoogleMailSync.meta.key;
 

@@ -13,14 +13,11 @@ import {
   ErrorResponse,
   GoogleError,
   HistoryResponse,
-  Label,
   LabelsResponse,
   ListMessagesResponse,
   Message,
   MessagePartBody,
-  MessageRef,
   Profile,
-  RawMessage,
 } from './types.ts';
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
@@ -203,71 +200,4 @@ export const batchModifyMessages = Effect.fn('batchModifyMessages')(function* (
 export const trashMessage = Effect.fn('trashMessage')(function* (userId: string, messageId: string) {
   const url = createUrl([API_URL, 'users', userId, 'messages', messageId, 'trash']).toString();
   return yield* makeGoogleApiRequest(url, { method: 'POST' }).pipe(Effect.flatMap(decodeAndHandleErrors(Message)));
-});
-
-/**
- * Gets a message as its whole RFC 2822 text (base64url in `raw`), byte for byte as Gmail stores it.
- * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get
- */
-export const getRawMessage = Effect.fn('getRawMessage')(function* (userId: string, messageId: string) {
-  const url = createUrl([API_URL, 'users', userId, 'messages', messageId], { format: 'raw' }).toString();
-  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(RawMessage)));
-});
-
-/**
- * Puts a message straight into the mailbox, as if delivered now, without sending it or running filters
- * (requires `gmail.modify`). Its internal date is the time of the call.
- * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/insert
- */
-export const insertMessage = Effect.fn('insertMessage')(function* (
-  userId: string,
-  message: { raw: string; labelIds?: readonly string[] },
-) {
-  const url = createUrl([API_URL, 'users', userId, 'messages'], { internalDateSource: 'receivedTime' }).toString();
-  return yield* makeGoogleApiRequest(url, {
-    method: 'POST',
-    body: JSON.stringify({ raw: message.raw, labelIds: message.labelIds ?? [] }),
-  }).pipe(Effect.flatMap(decodeAndHandleErrors(MessageRef)));
-});
-
-/**
- * Imports a message as received mail: never marked spam, and dated by its own `Date` header rather than
- * the time of the call (requires `gmail.modify`).
- * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/import
- */
-export const importMessage = Effect.fn('importMessage')(function* (
-  userId: string,
-  message: { raw: string; labelIds?: readonly string[] },
-) {
-  const url = createUrl([API_URL, 'users', userId, 'messages', 'import'], {
-    internalDateSource: 'dateHeader',
-    neverMarkSpam: true,
-    processForCalendar: false,
-  }).toString();
-  return yield* makeGoogleApiRequest(url, {
-    method: 'POST',
-    body: JSON.stringify({ raw: message.raw, labelIds: message.labelIds ?? [] }),
-  }).pipe(Effect.flatMap(decodeAndHandleErrors(MessageRef)));
-});
-
-/**
- * Creates a user label (requires `gmail.modify` or `gmail.labels`).
- * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.labels/create
- */
-export const createLabel = Effect.fn('createLabel')(function* (userId: string, name: string) {
-  const url = createUrl([API_URL, 'users', userId, 'labels']).toString();
-  return yield* makeGoogleApiRequest(url, { method: 'POST', body: JSON.stringify({ name }) }).pipe(
-    Effect.flatMap(decodeAndHandleErrors(Label)),
-  );
-});
-
-/**
- * Deletes a user label; its messages keep their other labels (requires `gmail.modify` or `gmail.labels`).
- * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.labels/delete
- *
- * Returns `204 No Content`, so there is nothing to decode.
- */
-export const deleteLabel = Effect.fn('deleteLabel')(function* (userId: string, labelId: string) {
-  const url = createUrl([API_URL, 'users', userId, 'labels', labelId]).toString();
-  yield* makeGoogleApiRequest(url, { method: 'DELETE' });
 });

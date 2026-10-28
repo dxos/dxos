@@ -82,23 +82,6 @@ export interface GoogleMailApiService {
     messageIds: readonly string[],
     labels: { addLabelIds?: readonly string[]; removeLabelIds?: readonly string[] },
   ) => Effect.Effect<void, GoogleMailApiError>;
-  /** The message's whole RFC 2822 text, base64url-encoded. */
-  readonly getRawMessage: (
-    userId: string,
-    messageId: string,
-  ) => Effect.Effect<GoogleMail.RawMessage, GoogleMailApiError>;
-  /** Puts a message into the mailbox as if delivered now, without sending it. */
-  readonly insertMessage: (
-    userId: string,
-    message: { raw: string; labelIds?: readonly string[] },
-  ) => Effect.Effect<GoogleMail.MessageRef, GoogleMailApiError>;
-  /** Imports a message as received mail, dated by its own `Date` header. */
-  readonly importMessage: (
-    userId: string,
-    message: { raw: string; labelIds?: readonly string[] },
-  ) => Effect.Effect<GoogleMail.MessageRef, GoogleMailApiError>;
-  readonly createLabel: (userId: string, name: string) => Effect.Effect<GoogleMail.Label, GoogleMailApiError>;
-  readonly deleteLabel: (userId: string, labelId: string) => Effect.Effect<void, GoogleMailApiError>;
 }
 
 /**
@@ -171,11 +154,6 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
           Effect.provide(GoogleMail.modifyMessage(userId, messageId, labels), context),
         batchModifyMessages: (userId, messageIds, labels) =>
           Effect.provide(GoogleMail.batchModifyMessages(userId, messageIds, labels), context),
-        getRawMessage: (userId, messageId) => Effect.provide(GoogleMail.getRawMessage(userId, messageId), context),
-        insertMessage: (userId, message) => Effect.provide(GoogleMail.insertMessage(userId, message), context),
-        importMessage: (userId, message) => Effect.provide(GoogleMail.importMessage(userId, message), context),
-        createLabel: (userId, name) => Effect.provide(GoogleMail.createLabel(userId, name), context),
-        deleteLabel: (userId, labelId) => Effect.provide(GoogleMail.deleteLabel(userId, labelId), context),
       });
     }),
   );
@@ -340,11 +318,6 @@ export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiS
               labels,
             );
           }),
-        getRawMessage: () => Effect.die(new Error('mock GoogleMailApi: getRawMessage not supported')),
-        insertMessage: () => Effect.die(new Error('mock GoogleMailApi: insertMessage not supported')),
-        importMessage: () => Effect.die(new Error('mock GoogleMailApi: importMessage not supported')),
-        createLabel: () => Effect.die(new Error('mock GoogleMailApi: createLabel not supported')),
-        deleteLabel: () => Effect.die(new Error('mock GoogleMailApi: deleteLabel not supported')),
       }),
     );
   };

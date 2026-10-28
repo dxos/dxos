@@ -1,24 +1,18 @@
 name: Mail canary nightly
 
-# End-to-end canary for Gmail sync on the deployed preview EDGE (packages/plugins/plugin-google/src/canary/README.md).
-# It copies 100 Enron messages from the archived pool into test@braneframe.com, waits for the
-# space's own sync trigger to pick them up, and checks the space's Execution Trace and mailbox feeds
-# for the last day: every run ended and succeeded, the trigger kept firing, and every copy arrived
-# once with the right content. The one-time setup (pool import, identity, space) is manual.
-#
-# It signs in to the canary identity with its recovery phrase on every run; nothing is cached
-# between runs, so no device key ever sits in an Actions cache a fork could read.
+# End-to-end canary for Gmail sync on preview EDGE (packages/plugins/plugin-google/canary/README.md).
+# It signs in to the canary identity with its recovery phrase on every run, so no device key ever sits
+# in an Actions cache a fork could read.
 
 on:
   schedule:
-    # 03:17 UTC: after `EDGE nightly` (02:00), off the hour so it is not queued behind every other cron.
+    # 03:17 UTC: after `EDGE nightly` (02:00), off the hour so it is not queued behind other crons.
     - cron: '17 3 * * *'
-
   workflow_dispatch:
     inputs:
       count:
         type: string
-        description: 'Messages to copy from the pool into the inbox'
+        description: 'Pool messages to rotate into fresh copies'
         default: '100'
 
 permissions:
@@ -30,7 +24,7 @@ env:
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
-# Never two runs at once: both would seed the same mailbox and judge each other's copies.
+# Two runs at once would rotate the same mailbox and judge each other's copies.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -38,46 +32,38 @@ concurrency:
 jobs:
   canary:
     runs-on: ubuntu-24.04
-    # Seeding takes minutes, the sync up to 45 (DX_CANARY_SYNC_TIMEOUT_MIN), the checks a few more.
     timeout-minutes: 75
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           filter: blob:none
-
-      - name: Setup
-        uses: ./.github/actions/setup
+      - uses: ./.github/actions/setup
 
       - name: Run canary
         env:
           DX_CANARY_RECOVERY_PHRASE: ${{ secrets.MAIL_CANARY_RECOVERY_PHRASE }}
           DX_CANARY_SPACE_ID: ${{ vars.MAIL_CANARY_SPACE_ID }}
           DX_CANARY_SEED_COUNT: ${{ inputs.count || '100' }}
-          DX_CANARY_REPORT: ${{ runner.temp }}/mail-canary/report.json
+          DX_CANARY_REPORT_DIR: ${{ runner.temp }}/mail-canary
           GMAIL_CLIENT_ID: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_ID }}
           GMAIL_CLIENT_SECRET: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_SECRET }}
           GMAIL_REFRESH_TOKEN: ${{ secrets.MAIL_CANARY_GMAIL_REFRESH_TOKEN }}
         run: moon run plugin-google:mail-canary
 
-      # `always()`: the summary is most wanted when the step above failed; the test writes the report
-      # before it asserts.
       - name: Report
         if: always()
         run: cat "${{ runner.temp }}/mail-canary/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
 
-      - name: Upload report
+      - uses: actions/upload-artifact@v7
         if: always()
-        uses: actions/upload-artifact@v7
         with:
           name: mail-canary-report
           path: ${{ runner.temp }}/mail-canary
           retention-days: 14
           if-no-files-found: ignore
 
-      # One event per run, dated by the run, so a PostHog alert can page on a failed run and on a
-      # night with no event at all. `continue-on-error`: telemetry must never redden the canary.
+      # One event per run, so PostHog can alert on a failed night and on a night with no event at all.
       - name: Record the run
         if: always()
         continue-on-error: true
@@ -86,7 +72,6 @@ jobs:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           SUMMARY="${{ runner.temp }}/mail-canary/summary.json"
-          # A run that died before its report (build, login) is still a failed night, not a silent one.
           if [ ! -f "$SUMMARY" ]; then
             mkdir -p "$(dirname "$SUMMARY")"
             echo '{"ok":false,"failedChecks":"NO_REPORT"}' > "$SUMMARY"
