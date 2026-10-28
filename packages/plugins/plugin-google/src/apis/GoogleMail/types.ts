@@ -117,6 +117,24 @@ export const Message = Schema.Struct({
 
 export type Message = Schema.Schema.Type<typeof Message>;
 
+/** A message as `messages.get?format=raw` returns it: the whole RFC 2822 text, base64url-encoded. */
+export const RawMessage = Schema.Struct({
+  id: Schema.String,
+  threadId: Schema.String,
+  internalDate: Schema.String,
+  raw: Schema.String,
+});
+
+export type RawMessage = Schema.Schema.Type<typeof RawMessage>;
+
+/** What `messages.insert` and `messages.import` return for the message they created. */
+export const MessageRef = Schema.Struct({
+  id: Schema.String,
+  threadId: Schema.String,
+});
+
+export type MessageRef = Schema.Schema.Type<typeof MessageRef>;
+
 export const ListMessagesResponse = Schema.Struct({
   resultSizeEstimate: Schema.Number,
   messages: Schema.Array(Message.mapFields((fields) => Struct.pick(fields, ['id', 'threadId']))).pipe(Schema.optional),

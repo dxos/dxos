@@ -18,7 +18,7 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { readHeader, rewriteHeaders } from '../../src/canary/gmail/index.ts';
-import { joinMbox } from '../../src/canary/pool/index.ts';
+import { joinMbox } from '../../src/testing/mbox.ts';
 
 const DAY = 86_400_000;
 // Enron dates outside the corpus's years are corrupt (1979, 2044, ...); clamp them rather than drop the mail.

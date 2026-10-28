@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 
 import { type SeededMessage } from '../checks/index.ts';
-import { type GmailClient, GmailError, rewriteHeaders } from '../gmail/index.ts';
+import { CanaryError } from '../errors.ts';
+import { type CanaryMailbox, type CanaryMailboxError, rewriteHeaders } from '../gmail/index.ts';
 import { POOL_LABEL } from '../pool/index.ts';
 
 /** Header that maps a seeded copy back to the pool message it was copied from. */
@@ -30,7 +31,7 @@ export type RotateResult = {
  */
 /** The Gmail calls the rotation makes. */
 export type SeederGmail = Pick<
-  GmailClient,
+  CanaryMailbox,
   'ensureLabel' | 'listIds' | 'getMessage' | 'insert' | 'trash' | 'getMetadata'
 >;
 
@@ -46,11 +47,11 @@ export class Seeder {
    * so the sync sees both new mail and deletes. A copy is inserted before its original is trashed,
    * so a failed night never shrinks the pool.
    */
-  rotate({ count, now }: { count: number; now: Date }): Effect.Effect<RotateResult, GmailError> {
+  rotate({ count, now }: { count: number; now: Date }): Effect.Effect<RotateResult, CanaryMailboxError> {
     return Effect.gen({ self: this }, function* () {
       // `slice(-count)` takes the whole pool for 0 or NaN, so a typo in the dispatch input would rotate all of it.
       if (!Number.isInteger(count) || count < 1) {
-        return yield* new GmailError({ message: `seed count must be a positive integer, got ${count}` });
+        return yield* new CanaryError({ message: `seed count must be a positive integer, got ${count}` });
       }
       const poolLabel = yield* this.#gmail.ensureLabel(POOL_LABEL);
       // Gmail lists newest first, so the oldest pool messages are at the end.

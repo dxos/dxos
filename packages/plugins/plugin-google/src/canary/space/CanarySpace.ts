@@ -18,7 +18,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { Message } from '@dxos/types';
 
 import { type SpaceSnapshot } from '../checks/index.ts';
-import { CanarySpaceError } from './errors.ts';
+import { CanaryError } from '../errors.ts';
 import { readSnapshot } from './snapshot.ts';
 
 /** The types the snapshot queries; a fresh client knows none of them. */
@@ -53,23 +53,23 @@ export class CanarySpace {
   /** Recovers the canary identity and waits until its space has replicated. */
   static open = Effect.fn('mail-canary.CanarySpace.open')(function* ({ spaceId, recoveryPhrase }: CanarySpaceOptions) {
     if (!SpaceId.isValid(spaceId)) {
-      return yield* new CanarySpaceError({ message: `not a space id: ${spaceId}` });
+      return yield* new CanaryError({ message: `not a space id: ${spaceId}` });
     }
     const client = yield* ClientService;
     yield* Effect.promise(() => client.addTypes(TYPES));
     yield* Effect.tryPromise({
       try: () => client.halo.recoverIdentity({ recoveryCode: recoveryPhrase }),
       // The cause can carry the phrase, so it is not passed on.
-      catch: () => new CanarySpaceError({ message: 'cannot recover the canary identity' }),
+      catch: () => new CanaryError({ message: 'cannot recover the canary identity' }),
     });
     // The identity's spaces arrive over HALO after recovery, not with it.
     const space = yield* Effect.suspend(() => {
       const space = client.spaces.get(spaceId);
-      return space ? Effect.succeed(space) : new CanarySpaceError({ message: `space ${spaceId} never appeared` });
+      return space ? Effect.succeed(space) : new CanaryError({ message: `space ${spaceId} never appeared` });
     }).pipe(Effect.retry({ schedule: Schedule.spaced('1 second'), times: 120 }));
     yield* Effect.tryPromise({
       try: () => space.waitUntilReady(),
-      catch: (cause) => new CanarySpaceError({ message: `space ${spaceId} is not ready: ${String(cause)}` }),
+      catch: (cause) => new CanaryError({ message: `space ${spaceId} is not ready: ${String(cause)}` }),
     });
     // Replication with EDGE is a per-device preference, off on a newly admitted device.
     if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
@@ -82,11 +82,11 @@ export class CanarySpace {
    * Waits until the space's documents match EDGE, then reads the snapshot the checks run on. `syncToEdge`
    * covers documents only; `readSnapshot` pulls the feeds itself.
    */
-  snapshot(): Effect.Effect<SpaceSnapshot, CanarySpaceError> {
+  snapshot(): Effect.Effect<SpaceSnapshot, CanaryError> {
     return Effect.gen({ self: this }, function* () {
       yield* Effect.tryPromise({
         try: () => this.#space.internal.syncToEdge({ timeout: SYNC_TIMEOUT_MS, onProgress: () => {} }),
-        catch: (cause) => new CanarySpaceError({ message: `space did not sync with EDGE: ${String(cause)}` }),
+        catch: (cause) => new CanaryError({ message: `space did not sync with EDGE: ${String(cause)}` }),
       }).pipe(Effect.retry({ times: 2 }));
       return yield* readSnapshot().pipe(Effect.provide(Database.layer(this.#space.db)));
     });

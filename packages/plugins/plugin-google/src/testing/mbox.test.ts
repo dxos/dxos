@@ -27,11 +27,11 @@ describe('splitMbox', () => {
     const messages = splitMbox(MBOX);
     expect(messages).toHaveLength(2);
     expect(messages[0].startsWith('Message-ID: <1@thyme>\n')).toBe(true);
-    expect(messages[1]).toBe('Message-ID: <2@thyme>\nSubject: second\n\nbody two\n');
+    expect(messages[1]).toBe('Message-ID: <2@thyme>\nSubject: second\n\nbody two');
   });
 
   test('unescapes body lines that began with From', ({ expect }) => {
-    expect(splitMbox(MBOX)[0]).toContain('\nFrom the desk of Steven Kean\n');
+    expect(splitMbox(MBOX)[0].endsWith('\nFrom the desk of Steven Kean')).toBe(true);
   });
 
   test('reads CRLF files and empty input', ({ expect }) => {
@@ -40,7 +40,7 @@ describe('splitMbox', () => {
   });
 
   test('reads back what joinMbox writes', ({ expect }) => {
-    const messages = ['Subject: a\r\n\r\nFrom the desk\r\n', 'Subject: b\n\nbody\n'];
-    expect(splitMbox(joinMbox(messages))).toEqual(['Subject: a\n\nFrom the desk\n', 'Subject: b\n\nbody\n']);
+    const messages = ['Subject: a\r\n\r\nFrom the desk\r\n>From a quote', 'Subject: b\n\nbody'];
+    expect(splitMbox(joinMbox(messages))).toEqual(['Subject: a\n\nFrom the desk\n>From a quote', 'Subject: b\n\nbody']);
   });
 });

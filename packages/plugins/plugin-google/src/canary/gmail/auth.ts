@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { createServer } from 'node:http';
 
 import { LIVE_GMAIL_ACCOUNT } from '../../testing/live-credentials.ts';
-import { GmailError, request } from './request.ts';
+import { CanaryError } from '../errors.ts';
 
 /** Insert, import, label and trash: what the canary does to the test account. */
 export const GMAIL_MODIFY_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
@@ -37,6 +37,8 @@ const AUTH_PORT = 53682;
 /** The redirect `auth` uses; register it on the OAuth client. */
 export const AUTH_REDIRECT_URI = `http://127.0.0.1:${AUTH_PORT}/`;
 
+const TOKEN_URL = 'https://oauth2.googleapis.com/token';
+
 const TokenResponse = Schema.Struct({ access_token: Schema.String });
 const CodeExchange = Schema.Struct({
   refresh_token: Schema.optional(Schema.String),
@@ -44,18 +46,31 @@ const CodeExchange = Schema.Struct({
   refresh_token_expires_in: Schema.optional(Schema.Number),
 });
 
-/** Mints an access token from the refresh token. */
+/**
+ * Mints an access token from the refresh token. A dead grant fails with Google's `invalid_grant` in the
+ * message, which the nightly reports as AUTH.
+ */
 export const accessToken = ({ clientId, clientSecret, refreshToken }: GmailCredentials) =>
-  request(TokenResponse, 'https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token',
-    }),
-  }).pipe(Effect.map((body) => body.access_token));
+  Effect.tryPromise({
+    try: async () => {
+      const response = await fetch(TOKEN_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      });
+      const text = await response.text();
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${text.slice(0, 500)}`);
+      }
+      return Schema.decodeUnknownSync(TokenResponse)(JSON.parse(text)).access_token;
+    },
+    catch: (cause) => new CanaryError({ message: `cannot mint a Gmail access token: ${String(cause)}` }),
+  });
 
 /**
  * Mints a refresh token for the canary's own Gmail grant with a one-time browser consent.
@@ -72,7 +87,7 @@ export const mintRefreshToken = ({
   clientId: string;
   clientSecret: string;
   loginHint: string;
-}): Effect.Effect<string, GmailError> =>
+}): Effect.Effect<string, CanaryError> =>
   Effect.tryPromise({
     try: () =>
       new Promise<string>((resolve, reject) => {
@@ -86,7 +101,7 @@ export const mintRefreshToken = ({
           response.writeHead(200, { 'content-type': 'text/plain' }).end('Authorized. Return to the terminal.');
           server.close();
           try {
-            const exchange = await fetch('https://oauth2.googleapis.com/token', {
+            const exchange = await fetch(TOKEN_URL, {
               method: 'POST',
               headers: { 'content-type': 'application/x-www-form-urlencoded' },
               body: new URLSearchParams({
@@ -126,5 +141,5 @@ export const mintRefreshToken = ({
           console.error(`Open this URL signed in as ${loginHint}:\n\n${consent}\n`);
         });
       }),
-    catch: (cause) => new GmailError({ message: `consent failed: ${String(cause)}` }),
+    catch: (cause) => new CanaryError({ message: `consent failed: ${String(cause)}` }),
   });

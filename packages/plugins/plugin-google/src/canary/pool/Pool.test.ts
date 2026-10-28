@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { GmailError } from '../gmail/index.ts';
+import { GoogleApiError } from '../../errors.ts';
 import { Pool } from './Pool.ts';
 
 const mbox = (count: number) =>
@@ -44,7 +44,7 @@ const fakeGmail = ({ failAt }: { failAt?: number } = {}) => {
       importMessage: (message: string, labelIds: readonly string[]) => {
         const subject = message.match(/^Subject: (.*)$/m)?.[1] ?? '';
         if (failAt !== undefined && Number(subject) === failAt) {
-          return Effect.fail(new GmailError({ message: 'quota', status: 403 }));
+          return Effect.fail(new GoogleApiError(403, 'quota'));
         }
         imported.push(`${subject}:${labelIds.join(',')}`);
         return Effect.succeed(`id-${subject}`);

@@ -6,9 +6,10 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 import { type SpaceSnapshot, runChecks } from '../checks/index.ts';
-import { type GmailError } from '../gmail/index.ts';
+import { type CanaryError } from '../errors.ts';
+import { type CanaryMailboxError } from '../gmail/index.ts';
 import { type Seeder } from '../seed/index.ts';
-import { type CanarySpace, type CanarySpaceError } from '../space/index.ts';
+import { type CanarySpace } from '../space/index.ts';
 import { type NightlyReport } from './report.ts';
 
 export type NightlyOptions = {
@@ -40,7 +41,7 @@ export class Nightly {
     syncTimeout,
     pollInterval,
     window,
-  }: NightlyOptions): Effect.Effect<NightlyReport, GmailError | CanarySpaceError> {
+  }: NightlyOptions): Effect.Effect<NightlyReport, CanaryMailboxError | CanaryError> {
     return Effect.gen({ self: this }, function* () {
       const startedAt = new Date();
       const since = startedAt.getTime() - Duration.toMillis(window);

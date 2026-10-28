@@ -13,7 +13,7 @@ import { Message } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../../constants.ts';
 import { type SpaceSnapshot, type SyncedMessage, groupInvocations } from '../checks/index.ts';
-import { CanarySpaceError } from './errors.ts';
+import { CanaryError } from '../errors.ts';
 
 /**
  * Reads what the checks need from the canary space: the mailbox's synced messages, the mail sync's
@@ -24,14 +24,14 @@ export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
   function* () {
     const [mailbox] = yield* Database.query(Filter.type(Mailbox.Mailbox)).run;
     if (!mailbox) {
-      return yield* new CanarySpaceError({ message: 'the space has no mailbox' });
+      return yield* new CanaryError({ message: 'the space has no mailbox' });
     }
     const messages = yield* readMailbox(yield* Database.load(mailbox.feed));
 
     // Racing writers can create a second trace feed, so every one is read (as `react-ui-trace` does).
     const traceFeeds = yield* Database.query(FeedTraceSink.query).run;
     if (traceFeeds.length === 0) {
-      return yield* new CanarySpaceError({ message: 'the space has no Execution Trace feed' });
+      return yield* new CanaryError({ message: 'the space has no Execution Trace feed' });
     }
     const traceMessages = (yield* Effect.forEach(traceFeeds, readTraceFeed)).flat();
 
@@ -45,9 +45,7 @@ export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
       triggers,
     } satisfies SpaceSnapshot;
   },
-  Effect.mapError((error) =>
-    error instanceof CanarySpaceError ? error : new CanarySpaceError({ message: String(error) }),
-  ),
+  Effect.mapError((error) => (error instanceof CanaryError ? error : new CanaryError({ message: String(error) }))),
 );
 
 const pull = (feed: Feed.Feed) =>

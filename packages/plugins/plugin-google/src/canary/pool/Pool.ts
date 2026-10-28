@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-import { type GmailClient, GmailError } from '../gmail/index.ts';
-import { splitMbox } from './mbox.ts';
+import { splitMbox } from '../../testing/mbox.ts';
+import { CanaryError } from '../errors.ts';
+import { type CanaryMailbox, type CanaryMailboxError } from '../gmail/index.ts';
 
 /** The only label the canary puts on the test account's mail. */
 export const POOL_LABEL = 'enron-pool';
@@ -39,7 +40,7 @@ export type PoolStatus = {
   readonly ready: boolean;
 };
 
-type PoolGmail = Pick<GmailClient, 'count' | 'deleteLabels' | 'ensureLabel' | 'importMessage' | 'listIds' | 'trash'>;
+type PoolGmail = Pick<CanaryMailbox, 'count' | 'deleteLabels' | 'ensureLabel' | 'importMessage' | 'listIds' | 'trash'>;
 
 /** The Enron pool in the test account: inbox mail the canary space syncs. */
 export class Pool {
@@ -53,7 +54,11 @@ export class Pool {
    * Imports every message of the mbox from step 01 into the inbox under the pool label alone, with its
    * internal date taken from the shifted `Date` header.
    */
-  import({ mboxPath, concurrency = CONCURRENCY, onProgress }: ImportOptions): Effect.Effect<ImportResult, GmailError> {
+  import({
+    mboxPath,
+    concurrency = CONCURRENCY,
+    onProgress,
+  }: ImportOptions): Effect.Effect<ImportResult, CanaryMailboxError> {
     return Effect.gen({ self: this }, function* () {
       const messages = yield* readMbox(mboxPath);
       // Counts the messages already imported, so a rerun resumes rather than duplicating.
@@ -84,7 +89,7 @@ export class Pool {
   }
 
   /** Counts the pool and checks it is ready for step 03; with `mboxPath`, also that it holds exactly that mbox. */
-  status({ mboxPath }: { mboxPath?: string } = {}): Effect.Effect<PoolStatus, GmailError> {
+  status({ mboxPath }: { mboxPath?: string } = {}): Effect.Effect<PoolStatus, CanaryMailboxError> {
     return Effect.gen({ self: this }, function* () {
       const expected = mboxPath ? (yield* readMbox(mboxPath)).filter(isImportable).length : undefined;
       const size = yield* this.#gmail.count(`label:${POOL_LABEL}`);
@@ -101,7 +106,7 @@ export class Pool {
    * scope cannot delete outright. For clearing a trial import before the full one; it also deletes any
    * leftover per-folder `Enron/...` labels, which the pool no longer uses.
    */
-  purge(): Effect.Effect<number, GmailError> {
+  purge(): Effect.Effect<number, CanaryMailboxError> {
     return Effect.gen({ self: this }, function* () {
       const ids = yield* this.#gmail.listIds(`label:${POOL_LABEL}`);
       yield* Effect.forEach(ids, (id) => this.#gmail.trash(id), { concurrency: CONCURRENCY, discard: true });
@@ -111,10 +116,10 @@ export class Pool {
   }
 }
 
-const readMbox = (mboxPath: string): Effect.Effect<string[], GmailError> =>
+const readMbox = (mboxPath: string): Effect.Effect<string[], CanaryError> =>
   Effect.try({
     try: () => splitMbox(readFileSync(mboxPath, 'latin1')),
-    catch: (cause) => new GmailError({ message: `cannot read ${mboxPath}: ${String(cause)}` }),
+    catch: (cause) => new CanaryError({ message: `cannot read ${mboxPath}: ${String(cause)}` }),
   });
 
 const isImportable = (message: string): boolean => Buffer.byteLength(message, 'latin1') <= MAX_MESSAGE_BYTES;

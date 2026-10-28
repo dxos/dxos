@@ -21,7 +21,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { GmailClient, canaryAccount, credentialsFromEnv, mintRefreshToken } from '../../src/canary/gmail/index.ts';
+import { CanaryMailbox, canaryAccount, credentialsFromEnv, mintRefreshToken } from '../../src/canary/gmail/index.ts';
 import { Pool } from '../../src/canary/pool/index.ts';
 
 const SECRETS = fileURLToPath(new URL('../../../../../.secrets/mail-canary-gmail.env', import.meta.url));
@@ -47,7 +47,7 @@ const authorize = Effect.gen(function* () {
     );
   }
   const refreshToken = yield* mintRefreshToken({ clientId, clientSecret, loginHint: canaryAccount() });
-  yield* GmailClient.connect({ clientId, clientSecret, refreshToken }, canaryAccount());
+  yield* CanaryMailbox.connect({ clientId, clientSecret, refreshToken }, canaryAccount());
   mkdirSync(dirname(SECRETS), { recursive: true, mode: 0o700 });
   const grant = `GMAIL_CLIENT_ID=${clientId}\nGMAIL_CLIENT_SECRET=${clientSecret}\nGMAIL_REFRESH_TOKEN=${refreshToken}\n`;
   writeFileSync(SECRETS, grant, { mode: 0o600 });
@@ -63,7 +63,7 @@ const importOrPurge = Effect.gen(function* () {
       new Error('usage: 02-import-pool.mjs auth | <mbox> | purge, with the grant set (see README)'),
     );
   }
-  const pool = new Pool(yield* GmailClient.connect(credentials, canaryAccount()));
+  const pool = new Pool(yield* CanaryMailbox.connect(credentials, canaryAccount()));
   if (command === 'purge') {
     console.log(`trashed ${yield* pool.purge()} pool messages`);
     return;

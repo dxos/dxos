@@ -98,6 +98,10 @@ rotates the 100 oldest pool messages into fresh copies, and reads the space thro
 (`Mailbox`, `Message`, `Trace.Message`, `Trigger`). It re-reads until every copy is synced (up to 45
 minutes), runs the checks, and writes `report.json`, `summary.json` and `summary.md`.
 
+Recovery admits the run as a new device of the canary identity, and nothing removes old ones: no device
+key is kept between runs, since the only place to keep one, the Actions cache, is readable from forks. The
+identity gains one device a night.
+
 The checks count invocations of `GoogleMailSync`, paired by `pid`; an invocation that yields with
 `Operation.runAgain()` is continued by one with the same `runId`, and the report counts both.
 
@@ -128,12 +132,13 @@ Every run posts one `ci.mail-canary` PostHog event (`ciOk`, `ciFailedChecks`, `c
 
 ```text
 scripts/mail-canary/   steps 01–03 and the 1Password template for the grant
-src/canary/gmail/      GmailClient (test account only), the grant and consent, header helpers
+src/canary/gmail/      CanaryMailbox over plugin-google's GoogleMailApi, the grant and consent, header helpers
 src/canary/pool/       Pool: import the mbox, check it is exact, purge a trial
 src/canary/seed/       Seeder: rotate the oldest pool mail into fresh copies and trash the originals
 src/canary/space/      CanarySpace: recover the identity in-process and read a typed snapshot
 src/canary/checks/     checks C1–C7 over one snapshot
 src/canary/nightly/    Nightly: trash, seed, wait, check; the report and the live test
+src/testing/mbox.ts    the mbox reader and writer, shared with the Takeout import script
 ```
 
 The unit tests run with the package's own `moon run plugin-google:test` (part of Check). Nothing in `src/canary/` is exported or bundled: it is test tooling that lives beside the sync it checks.
