@@ -127,8 +127,9 @@ export class Binder extends Resource {
   /** {@link bindingWriteCount} at the last read of the bindings query. */
   #readWrites = 0;
 
-  /** `externalBindingWrites` and the number of binding items at the last read of the bindings query. */
+  /** `externalBindingWrites`, this realm's writes to the feed, and the binding items at the last read of the query. */
   #readExternal = 0;
+  #readLocal = 0;
   #readItems = 0;
 
   /**
@@ -254,6 +255,7 @@ export class Binder extends Resource {
     // Process initial state before returning.
     this.#readWrites = bindingWriteCount(this._feed);
     this.#readExternal = externalBindingWrites;
+    this.#readLocal = bindingWrites.get(this._feed.id) ?? 0;
     const initialResults = await bindingsQuery.run();
     this.#readItems = initialResults.length;
     await this._updateBindings(initialResults);
@@ -287,17 +289,24 @@ export class Binder extends Resource {
         log.warn('bindings sync failed; keeping the current bindings', { error });
         return;
       }
-      while (results.length <= this.#readItems && Date.now() < deadline) {
+      // Every write appends one item: the noted external write is in once the read holds one more item than this
+      // realm's own writes since the last read account for.
+      const local = bindingWrites.get(this._feed.id) ?? 0;
+      const expected = this.#readItems + (local - this.#readLocal) + 1;
+      while (results.length < expected && Date.now() < deadline) {
         await EffectEx.runPromise(Effect.sleep(EXTERNAL_WRITE_POLL_MS));
         const remaining = deadline - Date.now();
         if (remaining <= 0) {
           break;
         }
-        // A retry gets only the time left, so a slow index cannot hold the sync past the deadline; one that
-        // fails leaves the last read standing.
-        const retry = await this.#bindingsQuery.run({ timeout: remaining }).catch(() => undefined);
+        // A retry gets only the time left, so a slow index cannot hold the sync past the deadline; one that fails
+        // leaves the write unread, so the next sync retries it.
+        const retry = await this.#bindingsQuery.run({ timeout: remaining }).catch((error) => {
+          log.warn('bindings retry failed; keeping the write pending', { error });
+          return undefined;
+        });
         if (!retry) {
-          break;
+          return;
         }
         results = retry;
       }
@@ -306,6 +315,7 @@ export class Binder extends Resource {
       // Only after the update lands, so one that fails is retried by the next sync.
       this.#readWrites = writes;
       this.#readExternal = external;
+      this.#readLocal = local;
       this.#readItems = results.length;
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
