@@ -15,6 +15,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Routine from '@dxos/compute/Routine';
@@ -680,13 +681,6 @@ const fireSyncTrigger = ({
   });
 
 /**
- * Progress-registry key a bound target's sync reports under: the target's URI plus `#sync`. Absolute, because
- * the run that reports progress and the surface that shows it derive the key independently.
- */
-export const createSyncProgressKey = (target: Obj.Unknown): string =>
-  Obj.getURI(target, { prefer: 'absolute' }).toString() + '#sync';
-
-/**
  * Registers a running sync monitor for each live target of the connection the trigger's input names. Best
  * effort: with no progress registry (headless) or no resolvable connection, nothing shows early and the run's
  * own reports still do.
@@ -730,7 +724,7 @@ const registerSyncMonitors = (
         .map((task) => task.name),
     );
     return targets.flatMap((target) => {
-      const key = createSyncProgressKey(target);
+      const key = Progress.createSyncKey(target);
       if (running.has(key)) {
         return [];
       }

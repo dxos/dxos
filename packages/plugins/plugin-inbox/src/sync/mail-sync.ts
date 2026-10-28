@@ -19,7 +19,6 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
-import * as Binding from '@dxos/plugin-connector/Binding';
 import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -41,7 +40,7 @@ import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, t
  * Progress-registry key for a mailbox's mail-sync monitor. `MailboxArticle` subscribes to show the sync
  * meter, and the connector registers the same key when it fires the sync, before this run reports.
  */
-export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Binding.createSyncProgressKey(mailbox);
+export const createSyncProgressKey = (mailbox: Mailbox.Mailbox) => Progress.createSyncKey(mailbox);
 
 /** Sync meter label, shared by the run and the pending meter it replaces so the handover keeps the text. */
 export const createSyncLabel = (mailbox: Mailbox.Mailbox) => `Syncing ${mailbox.name ?? 'mailbox'}`;

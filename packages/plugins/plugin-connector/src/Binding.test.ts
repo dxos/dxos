@@ -307,7 +307,7 @@ describe('Binding.sync', () => {
   // target shows as syncing from the fire, until the run's own monitor takes over.
   test('shows each bound target syncing while the force-run is in flight', async ({ expect }) => {
     const { target } = await setup();
-    const key = Binding.createSyncProgressKey(target);
+    const key = Progress.createSyncKey(target);
     let during: string | undefined;
     duringRun = () => {
       during = progress.snapshot().tasks.find((task) => task.name === key)?.status;
@@ -322,7 +322,7 @@ describe('Binding.sync', () => {
 
   test('leaves the run’s own monitor in place when the force-run settles', async ({ expect }) => {
     const { target } = await setup();
-    const key = Binding.createSyncProgressKey(target);
+    const key = Progress.createSyncKey(target);
     duringRun = () => void progress.register(key, { label: 'Syncing Inbox' });
 
     await run(target);
@@ -332,7 +332,7 @@ describe('Binding.sync', () => {
 
   test('does not take over a monitor a run is already reporting into', async ({ expect }) => {
     const { target } = await setup();
-    const key = Binding.createSyncProgressKey(target);
+    const key = Progress.createSyncKey(target);
     const live = progress.register(key, { label: 'Syncing Inbox' });
 
     await run(target);
