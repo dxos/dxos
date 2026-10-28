@@ -1,5 +1,6 @@
 ---
 '@dxos/react-ui-canvas': patch
+'@dxos/plugin-code': minor
 ---
 
-A link end's marker can be set back to None in the properties inspector, Group refuses a selection holding a View node, and a View node cannot be created or pasted into an Object's definition. A legacy `frame` node is stored as `view` on its next write.
+Specs can declare the specs they build on (`uses` blocks, a plugin's `dependsOn`) and refer into them as `<spec id>#<item>`; the spec viewer links those references, marks broken ones and opens the target spec at the item. A plugin's Open Specification opens the spec as the main plank, and the Canvas plugin now publishes its spec. In the canvas, a link end's marker can be set back to None, and a View node cannot be grouped into or created inside an Object.
