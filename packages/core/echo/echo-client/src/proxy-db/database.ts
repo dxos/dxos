@@ -82,6 +82,7 @@ import {
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
+import { MigrationTransaction } from './migration-transaction.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -148,16 +149,10 @@ export interface EchoDatabase extends Database.Database {
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
 
   /**
-   * Migration-scoped accessor to the automerge repo.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
+   * Starts staging structural changes that commit atomically as a new space epoch.
+   * Committing needs a database constructed with `createEpoch`.
    */
-  readonly _repo: RepoProxy;
-
-  /**
-   * Returns the space root document handle for migration tools.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
-   */
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
+  beginMigration(): Migration.Transaction;
 
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
@@ -227,6 +222,9 @@ export type EchoDatabaseProps = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+
+  /** Starts a new space epoch whose root is the given document; enables {@link EchoDatabase.beginMigration}. */
+  createEpoch?: (rootUrl: string) => Promise<void>;
 };
 
 /**
@@ -380,6 +378,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
   readonly #runtime: EffectContext.Context<never>;
+  readonly #createEpoch?: (rootUrl: string) => Promise<void>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -399,6 +398,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._hypergraph = params.graph;
     this.#feedService = params.feedService;
     this.#runtime = params.runtime;
+    this.#createEpoch = params.createEpoch;
 
     this._entityManager = new EntityManager({
       graph: params.graph,
@@ -1209,6 +1209,21 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[] {
     return this._entityManager.getLoadedDocumentHandles();
+  }
+
+  beginMigration(): MigrationTransaction {
+    const createEpoch = this.#createEpoch;
+    invariant(createEpoch, 'Database cannot create epochs.');
+    const root = this._entityManager.getSpaceRootDocHandle().doc();
+    invariant(root, 'Space root document not available.');
+    return new MigrationTransaction({
+      repo: this._repo,
+      root,
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId: this.spaceId, spaceKey: this.spaceKey.toHex() },
+      flush: () => this.flush(),
+      createEpoch,
+    });
   }
 
   get _repo(): RepoProxy {

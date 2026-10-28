@@ -513,7 +513,7 @@ differs. When implementing on EDGE:
   cannot tell when the space is writable again. Both are reachable today via
   `compactDocumentsEpochMigration`; neither is on any path in this document,
   which is why they are recorded rather than fixed here.
-- **`MigrationBuilder._buildNewRoot` drops only links.** Deleted ids are removed
-  from `links` but the inline `objects` map is copied wholesale, so an object
-  inlined in the root survives the migration that deleted it. Affects
-  `REPLACE_AUTOMERGE_ROOT` migrations and `compactDocumentsEpochMigration`.
+- **Fixed: epoch migrations kept deleted inline objects.** The former
+  `MigrationBuilder` removed deleted ids from `links` only, so an object inlined
+  in the root survived the migration that deleted it. `Migration.Transaction`
+  (`db.beginMigration()`) removes it from the inline `objects` map as well.

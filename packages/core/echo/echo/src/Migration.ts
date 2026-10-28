@@ -14,6 +14,7 @@ import { DXN, type URI } from '@dxos/keys';
 import type * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
 import { ContentVersionAnnotation, type EntityMeta, MetaId, getSchemaURI } from './internal/index.ts';
+import type * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
 
 export const TypeId = '~@dxos/echo/Migration' as const;
@@ -421,3 +422,81 @@ export const applyContentSteps = (
   }
   return { version: current, content: result };
 };
+
+//
+// Transaction
+//
+
+/**
+ * Result of {@link Transaction.compact}.
+ */
+export type CompactResult = {
+  /** Objects whose documents will be rewritten without history. */
+  readonly compacted: readonly Obj.ID[];
+  /** Requested objects not stored in a document of their own. */
+  readonly skipped: readonly Obj.ID[];
+};
+
+/**
+ * Structural changes to a database, staged and then committed atomically as a new space epoch.
+ *
+ * Staged changes are not visible to queries; peers see them only once {@link Transaction.commit}
+ * has replaced the space root. Use it for changes that an ordinary write cannot express: changing
+ * an object's type in place, removing objects without a tombstone, or dropping document history.
+ * For schema changes that a write can express, prefer {@link define} with `db.runMigrations`.
+ *
+ * @example
+ * ```ts
+ * const migration = space.db.beginMigration();
+ * await migration.migrate(contact.id, (json) => Obj.make(ContactV2, { id: json.id, name: String(json.name) }));
+ * migration.add(Obj.make(Note, { title: 'Imported' }));
+ * migration.delete(legacy.id);
+ * await migration.commit();
+ * ```
+ */
+export interface Transaction {
+  /**
+   * The staged state of an object: what earlier calls in this transaction left, else what is stored.
+   * Returns `undefined` for an object that is not stored or that this transaction deletes.
+   */
+  get(id: Obj.ID): Promise<Obj.JSON | undefined>;
+
+  /**
+   * Stages a new object, with every object it references that is not stored yet.
+   * The object is not bound to the database: query it after {@link commit}.
+   */
+  add(object: Obj.Unknown): void;
+
+  /**
+   * Stages `object` in place of the stored object with the same id, replacing its type, data and meta.
+   * The object's document keeps its history, so concurrent edits from peers still merge.
+   *
+   * @throws When no object with that id is stored.
+   */
+  replace(object: Obj.Unknown): void;
+
+  /**
+   * Reads the staged state of an object and stages the object `transform` returns in its place.
+   * The returned object must keep the id. Does nothing for an object that is not stored.
+   *
+   * @returns Whether the object was found.
+   */
+  migrate(id: Obj.ID, transform: (current: Obj.JSON) => Obj.Unknown | Promise<Obj.Unknown>): Promise<boolean>;
+
+  /**
+   * Stages removing an object from the space. The object leaves no tombstone.
+   */
+  delete(id: Obj.ID): void;
+
+  /**
+   * Stages rewriting the documents of the given objects (default: every object stored in a document
+   * of its own) without their history.
+   */
+  compact(ids?: readonly Obj.ID[]): CompactResult;
+
+  /**
+   * Writes the staged changes and starts a new space epoch with them.
+   * The transaction cannot be used afterwards.
+   */
+  commit(): Promise<void>;
+}

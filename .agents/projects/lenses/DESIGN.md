@@ -519,8 +519,8 @@ Three properties worth naming:
 mutations performed in this callback are not guaranteed to be idempotent. If multiple peers run the
 migration separately, the effects may be applied multiple times."_
 
-**Space-level** — `Migrations` + `MigrationBuilder` in `@dxos/migrations`. A versioned list; the
-current version is a single `MigrationVersionAnnotation` on `space.properties`; `_commit()` builds a
+**Space-level** — `Migrations` in `@dxos/migrations`, staging through `Migration.Transaction` (`db.beginMigration()`). A versioned list; the
+current version is a single `MigrationVersionAnnotation` on `space.properties`; `commit()` builds a
 whole new root document and publishes it via `createEpoch({ migration: REPLACE_AUTOMERGE_ROOT })`.
 One peer rebuilds the world and everyone else adopts it, so anything another peer wrote that is not
 in the new root is gone. The version marker is a single scalar — two peers advancing it race, and it
@@ -660,9 +660,8 @@ address and a create/delete verb; nothing else changes.
   can order them deterministically, make them idempotent, and resume after a crash.
 - **Later** it hands the same set to a cross-object transaction. No call site moves.
 
-Note what exists: `MigrationBuilder.addObject` mints a **random** id, though the private
-`_createObject` it calls already accepts one. So the plumbing for derived ids is there and simply not
-reachable — a small change, but the semantics below depend on it entirely.
+Note what exists: `Migration.Transaction.add` stores the object under the id it was made with, so a
+derived id passed to `Obj.make(Type, { id, ... })` is kept — the semantics below depend on it entirely.
 
 #### Convergent creation — CORRECTED by the object-merging research (PR #12410)
 

@@ -17,40 +17,37 @@ import { Migrations } from './migrations.ts';
 Migrations.define('test', [
   {
     version: '1970-01-01',
-    next: async ({ builder }) => {
-      await builder.addObject(TestSchema.Expando, { namespace: 'test', count: 1 });
+    next: async ({ migration }) => {
+      migration.add(Obj.make(TestSchema.Expando, { namespace: 'test', count: 1 }));
     },
   },
   {
     version: '1970-01-02',
-    next: async ({ space, builder }) => {
+    next: async ({ space, migration }) => {
       // TODO(dmaretskyi): Is this intended to query only expando objects? Change to `Filter.type(TestSchema.Expando, { namespace: 'test' })`
       const objects = await space.db.query(Filter.props<any>({ namespace: 'test' })).run();
       for (const object of objects) {
-        await builder.migrateObject(object.id, ({ data }) => ({
-          type: TestSchema.Expando,
-          props: { namespace: data.namespace, count: 2 },
-        }));
+        await migration.migrate(object.id, (json) =>
+          Obj.make(TestSchema.Expando, { id: json.id, namespace: json.namespace, count: 2 }),
+        );
       }
     },
   },
   {
     version: '1970-01-03',
-    next: async ({ space, builder }) => {
+    next: async ({ space, migration }) => {
       // TODO(dmaretskyi): Is this intended to query only expando objects? Change to `Filter.type(TestSchema.Expando, { namespace: 'test' })`
       const objects = await space.db.query(Filter.props<any>({ namespace: 'test' })).run();
       for (const object of objects) {
-        await builder.migrateObject(object.id, ({ data }) => ({
-          type: TestSchema.Expando,
-          props: { namespace: data.namespace, count: data.count * 3 },
-        }));
+        await migration.migrate(object.id, (json) =>
+          Obj.make(TestSchema.Expando, { id: json.id, namespace: json.namespace, count: Number(json.count) * 3 }),
+        );
       }
     },
   },
 ]);
 
-// Flaky. We wanna depreacate and rewrite migration builder anyway.
-describe.skip('Migrations', () => {
+describe('Migrations', () => {
   let client: Client;
   let space: Space;
 
