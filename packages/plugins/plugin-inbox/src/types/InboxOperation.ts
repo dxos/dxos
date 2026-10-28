@@ -696,7 +696,7 @@ export const DEFAULT_TRIAGE_MAILBOX_BATCH_LIMIT = 50;
 export const TRIAGE_MAILBOX_CONCURRENCY = 10;
 
 /** Progress-registry key for a mailbox's triage monitor. */
-export const createTriageProgressKey = (mailbox: Mailbox.Mailbox) => `${Obj.getURI(mailbox).toString()}#triage`;
+export const createTriageProgressKey = (mailbox: Mailbox.Mailbox) => createProgressKey(mailbox, '#triage');
 
 export const TriageMailbox = Operation.make({
   meta: {
