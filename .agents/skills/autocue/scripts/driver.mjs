@@ -117,9 +117,8 @@ const parseArgs = () => {
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
-    // Every flag takes a value, so a trailing flag, or one followed by the next flag, would otherwise be misread;
-    // `--chromium-args` is exempt because its value is itself a list of `--` flags.
-    if (value === undefined || (value.startsWith('--') && key !== 'chromium-args')) {
+    // Every flag takes a value, so a trailing flag would otherwise read as unset and be silently ignored.
+    if (value === undefined) {
       console.error(`--${key} needs a value`);
       process.exit(1);
     }
