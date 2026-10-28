@@ -154,12 +154,59 @@ component ResultArticle
     Companion to a Research (variant `result`): the selected result's detail. Its title, star, price, tags,
     score and thumbs; its link and photos; the agent's reason when it is a pick; the rating terms; every fact;
     where the facts came from (the graph's provenance); the extension sections already read; and "More about
-    this", which reads another extension quickly or, for a deep one, starts a research session. A kept
-    Finding stands in when the session no longer has the result.
+    this", which reads another extension quickly or, for a deep one, starts a research session whose items (a
+    menu's dishes) are listed by section; then its Relations, the result's one-hop graph. A kept Finding stands in
+    when the session no longer has the result, and the graph when the node is no result of the session.
   props:
     research: Research
   actions:
     extend(extension, deep)                 # op:ExtendFinding
+```
+
+```mdl
+component SubjectGraph
+  desc: >
+    The Research article's Graph mode, which an entity session ("everything about X") opens on: the session's
+    subjects and what is around them as card nodes (photo, label, kind) laid out by a deterministic force-style
+    layout, roots emphasised, edges coloured by predicate family with the predicate shown (CURIE prefix dimmed) on
+    hover or selection, "+N more" on a capped node to fetch its neighbours, pan, zoom and fit. Selecting a node opens
+    it in the result companion, which reads a node that is no result from the graph.
+  props:
+    graph: SubjectGraph
+    selectedId?: string
+```
+
+```mdl
+component TracePanel
+  desc: >
+    The Research article's Trace mode: the session's trajectory as a tree (input, agent turn, tool call, command,
+    loads, extractions, model calls), each row with its time, a bar placing it on the session's timeline, its cost
+    and what it yielded (pages, facts, results). Rows are coloured by what ran them (the LLM, System One, or no
+    model) and interleaved in time; runs of System One calls are folded into one row.
+  props:
+    tree: ExplainNode
+```
+
+```mdl
+component ModelPanel
+  desc: >
+    The session's rating model, behind the article toolbar's Rating model toggle: the score formula, then each term
+    with its formula and the session's numbers (CURIE prefixes dimmed), its coverage and share, an on/off switch, a
+    nudge and a weight slider; requirements with switches; reset. Adjustments re-rank at once and are saved to the
+    session's overrides.
+  props:
+    model: RatingModel
+    overrides?: RatingOverrides
+```
+
+```mdl
+component LighthouseMeta
+  desc: >
+    A companion to a Lighthouse connection: lighthouse's plugins and what they contribute, its vocabulary
+    (predicates with their meanings, synonyms and extractors, filterable), its issues with triage (comment, change
+    status), and its storage (bytes by area, cache namespaces with clear, snapshot prune with a dry run first).
+  props:
+    connection: Connection
 ```
 
 ```mdl
@@ -319,8 +366,8 @@ feat F-4: Ranking and facets
   req F-4.4: Extensions that apply to a result are offered in its companion; a deep one starts a child session.
 ```
 
-Not built yet: the desktop sidecar that runs the daemon as the default connection (F-1.2), the rating model panel
-(F-4.3), a settings surface for lighthouse's plugins, issues and storage, and the assistant skill (F-5).
+Not built yet: the desktop sidecar that runs the daemon as the default connection (F-1.2) and the assistant skill
+(F-5).
 
 ## Acceptance
 
@@ -552,4 +599,39 @@ decision D-16: Record demos and screenshots in Composer with plugin-lighthouse r
   date: 2026-10-28
   by: user:dmaretskyi
   affects: [QA-2]
+```
+
+```mdl
+decision D-17: The Research article has Results, Graph and Trace view modes, an entity session opens on its subjects' graph, and the rating model panel, lighthouse's meta, Relations in the companion and deep extensions' research are ported from lighthouse's web UI.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [ResearchArticle, SubjectGraph, TracePanel, ModelPanel, LighthouseMeta, ResultArticle]
+```
+
+```mdl
+decision D-18: The graph is DXOS Cards placed by a small deterministic layout of the plugin's own (rings by hop distance, springs, repulsion, card collision) in a pan and zoom view, not react-ui-canvas or react-ui-graph. Fills in [D-17].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SubjectGraph]
+  why: react-ui-canvas is a scene editor with its own model; react-ui-graph draws d3-managed SVG nodes, where a card fits only as a foreignObject; a deterministic layout also keeps stories and recordings stable.
+  rejected: react-ui-canvas (an editor for a read-only view); react-ui-graph (SVG nodes, a d3 dependency).
+```
+
+```mdl
+decision D-19: Lighthouse's meta is a companion on a Lighthouse connection, the companion's extension nodes are read one by one from the graph, and a deep extension's items come from its child session (matched by the session's parent, or the run a deep read returns). Fills in [D-17].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [LighthouseMeta, ResultArticle]
+  why: A companion leaves the connection's own settings in place; /v1 results leave extension nodes and their items out.
+```
+
+```mdl
+decision D-20: A Research can be created on an existing lighthouse run (the create dialog's Existing session), so a session started from the CLI or lighthouse's web UI opens in Composer; once a Research has run, its goal reads as text with an Edit button. Fills in [D-16].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Research, ResearchArticle]
+  why: The demos show sessions that ran outside Composer (Fuego's menu in bkk-restaurant).
 ```
