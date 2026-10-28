@@ -126,6 +126,9 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
     forwardedRef,
   ) => {
     const { page } = useCarouselContext();
+    // Media mounts only on the slide in view and its neighbours: every mounted `<video controls>` reruns its controls
+    // on each layout of the page, and the slides keep their size empty.
+    const near = Math.abs(index - page) <= 1;
     return (
       <CarouselPrimitive.Item
         {...props}
@@ -134,7 +137,7 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
         ref={forwardedRef}
       >
         {children ??
-          (src && (
+          (src && near && (
             <MediaPlayer
               src={src}
               kind={kind}

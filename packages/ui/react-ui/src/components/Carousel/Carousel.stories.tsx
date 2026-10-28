@@ -96,6 +96,10 @@ export const Test: Story = {
     // The machine measures which slides are in view after mount, so every slide starts hidden.
     await waitFor(() => expect(within(slides[0]).getByRole('img', { name: 'Slide 1' })).toBeInTheDocument());
     await expect(slides[1]).toHaveAttribute('aria-hidden', 'true');
+    // Media mounts on the page in view and its neighbours only.
+    const media = (index: number) => slides[index].querySelector('[data-scope="media-player"]');
+    await expect(media(1)).not.toBeNull();
+    await expect(media(3)).toBeNull();
 
     await userEvent.click(next);
     await waitFor(() => expect(current()).toBe(1));
@@ -112,6 +116,8 @@ export const Test: Story = {
     await waitFor(() => expect(current()).toBe(4));
     await waitFor(() => expect(document.activeElement).toBe(indicators()[4]));
     await waitFor(() => expect(next).toBeDisabled());
+    await expect(media(3)).not.toBeNull();
+    await expect(media(0)).toBeNull();
 
     // Clicking a dot shows its page.
     await userEvent.click(indicators()[0]);
