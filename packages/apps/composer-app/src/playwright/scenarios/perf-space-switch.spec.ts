@@ -17,6 +17,12 @@ const SPACES = (process.env.DX_PERF_SWITCH_SPACES ?? '')
   .map((id) => id.trim())
   .filter(Boolean);
 
+/** Plugin ids to enable on top of the defaults (`DX_PERF_PLUGINS`, comma-separated), e.g. the reporter's own set. */
+const PLUGINS = (process.env.DX_PERF_PLUGINS ?? '')
+  .split(',')
+  .map((id) => id.trim())
+  .filter(Boolean);
+
 /** The tab's counters that move while it brings objects in. */
 const OBJECT_LOAD_COUNTERS = ['echo.objectDocumentsLoaded', 'echo.snapshotObjects', 'echo.queryRecomputes'];
 
@@ -80,7 +86,9 @@ defineScenario({
   flow: 'space-switch',
   reproduces:
     "Switching workspaces lags on the reporter's own profile, whose largest space holds 2,590 objects; dev fixtures do not show it (2026-10-27 debug session).",
-  scale: ARCHIVE ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,spaces=${SPACES.length}` : 'no-archive',
+  scale: ARCHIVE
+    ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,spaces=${SPACES.length},plugins=+${PLUGINS.length}`
+    : 'no-archive',
   timeoutMs: 30 * 60_000,
   privateData: true,
   persistentProfile: true,
@@ -94,6 +102,10 @@ defineScenario({
     // the index is built here, in every space the stages visit, rather than inside the measured stages.
     await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
     await waitForReady(page);
+    if (PLUGINS.length > 0) {
+      // The enabled set persists in the profile, so the measured boot starts with it.
+      await invokeInPage(page, 'org.dxos.operation.registry.enablePlugins', { ids: PLUGINS });
+    }
     await waitForSpacesReady(page, 120_000);
     // Boot navigates twice, and a switch landing between the two is overwritten, so an unanswered one is sent again.
     const switchSettled = async (workspace: string) => {

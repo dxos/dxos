@@ -9,7 +9,7 @@
  * page's longest frame and its query recomputes.
  *
  * Usage: node scripts/memory/system-webkit-switch.ts --host <wkapp> --archive <file> --dist <offline bundle>
- *        --spaces <id>,<id> [--boots 3] [--passes cold,warm,revisit,reindex] [--port 4499]
+ *        --spaces <id>,<id> [--boots 3] [--passes cold,warm,revisit,reindex] [--port 4499] [--plugins <id>,<id>]
  */
 
 import { execFileSync, spawn } from 'node:child_process';
@@ -38,6 +38,8 @@ const { values } = parseArgs({
     boots: { type: 'string', default: '3' },
     passes: { type: 'string', default: 'cold,warm,revisit,reindex' },
     port: { type: 'string', default: '4499' },
+    // Plugin ids to enable on top of the defaults, e.g. the reporter's own set.
+    plugins: { type: 'string' },
   },
 });
 if (!values.host || !values.archive || !values.dist || !values.spaces) {
@@ -131,8 +133,8 @@ const SWITCH = (workspace: string) => `
   const names = ['echo.objectDocumentsLoaded', 'echo.snapshotObjects', 'echo.queryRecomputes'];
   const read = () => { const c = globalThis.__dxosWorkCounters(); return names.map((n) => c[n] ?? 0); };
   const before = read();
-  let frames = 0, maxGap = 0, longFrames = 0, last = performance.now(), running = true;
-  const tick = (now) => { const gap = now - last; last = now; frames++; maxGap = Math.max(maxGap, gap); if (gap > 50) longFrames++; if (running) requestAnimationFrame(tick); };
+  let frames = 0, maxGap = 0, longFrames = 0, longFrameMs = 0, lastLongFrameEnd = 0, last = performance.now(), running = true;
+  const tick = (now) => { const gap = now - last; last = now; frames++; maxGap = Math.max(maxGap, gap); if (gap > 50) { longFrames++; longFrameMs += gap; lastLongFrameEnd = now - started; } if (running) requestAnimationFrame(tick); };
   requestAnimationFrame((now) => { last = now; requestAnimationFrame(tick); });
   globalThis.__switchTrace.length = 0;
   let firstMutation;
@@ -154,7 +156,7 @@ const SWITCH = (workspace: string) => `
   running = false;
   const after = read();
   for (const [name, at] of globalThis.__switchTrace) { steps[name] ??= Math.round(at - started); }
-  return { steps, urlMs: Math.round(urlMs), settledMs: Math.round(quietSince - started), maxFrameMs: Math.round(maxGap), longFrames, frames, recomputes: after[2] - before[2], docs: after[0] - before[0] };
+  return { steps, urlMs: Math.round(urlMs), settledMs: Math.round(quietSince - started), maxFrameMs: Math.round(maxGap), longFrames, longFrameMs: Math.round(longFrameMs), lastLongFrameEndMs: Math.round(lastLongFrameEnd), frames, recomputes: after[2] - before[2], docs: after[0] - before[0] };
 `;
 
 /**
@@ -258,6 +260,12 @@ const main = async () => {
 
     // A returning boot: index every visited space once, then park on Settings.
     await boot();
+    if (values.plugins) {
+      const reply = await host.evaluate(
+        `return await globalThis.composer.invoke('org.dxos.operation.registry.enablePlugins', { ids: ${JSON.stringify(values.plugins.split(','))} });`,
+      );
+      process.stdout.write(`plugins: ${JSON.stringify(reply)}\n`);
+    }
     for (const spaceId of spaces) {
       await switchSettled(spaceId);
       await waitForIndexIdle(host.evaluate);
