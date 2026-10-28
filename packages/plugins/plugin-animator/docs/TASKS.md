@@ -1,6 +1,6 @@
 # plugin-animator — Tasks
 
-_Resume: finish Phase 1 (script compiler), then Phase 2 (scaffold plugin-animator). Uncommitted: none. Last: Phase 1 neutral core extracted (`@dxos/animation`, `@dxos/react-ui-animation`)._
+_Resume: start Phase 2 (scaffold plugin-animator). Uncommitted: none. Last: Phase 1 neutral core extracted (`@dxos/animation`, `@dxos/react-ui-animation`)._
 
 ## Phase 0: Review and design
 
@@ -22,7 +22,7 @@ paths), design the plugin, and turn the approved design into an MDL spec.
 - [x] **Extract `@dxos/react-ui-animation`** (`TimelineBar`, `useClock`, `useExposedClock`).
 - [x] **Serializable `AnimatableAnnotation`** replacing the raw key; migrate react-ui-canvas.
 - [x] **Value kinds**: vec3, rotation (slerp), colour (OKLab); a track's optional `kind` names the interpolation.
-- [ ] **Script compiler**: beats → keys, deterministic; hand keys win (DESIGN.md §5.3, F-3). Effects and captions
+- [x] **Script compiler**: beats → keys, deterministic; hand keys win (DESIGN.md §5.3, F-3). Effects and captions
       compile to spans beside the timeline.
 - [x] **Canvas regression**: existing canvas node tests pass unchanged (the easing and timeline-bar tests moved with
       their code). Storybook play tests not run in this phase.
