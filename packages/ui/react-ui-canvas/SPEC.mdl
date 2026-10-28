@@ -679,7 +679,7 @@ feat F-3: Selection and editing
     is on exactly one (`layer`; unset, the bottom one). Elements paint by layer, then by their own order; a hidden
     layer is neither drawn nor hit. The layers panel (`Canvas.Layers`) adds, deletes, merges down, shows or
     hides, reorders and renames layers in place, each as one undo step; new shapes go on the active layer, and the
-    properties panel picks an element's layer. Superseded by [F-9.5] and [F-9.6] when Tags land.
+    properties panel picks an element's layer. Superseded by [F-9.6] and [F-9.7] when Tags land.
 ```
 
 ```mdl
@@ -1031,6 +1031,14 @@ decision D-8: Group refuses a selection holding a `view` node, and creating or p
   date: 2026-10-27
   by: user:richburdon
   affects: [F-9.9]
+```
+
+```mdl
+decision D-9: F-3.15 points at the tags requirement [F-9.6] and the container-order requirement [F-9.7] as its successors.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.15]
 ```
 
 ---
