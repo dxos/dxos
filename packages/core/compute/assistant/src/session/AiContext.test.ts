@@ -272,6 +272,44 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  test('sync re-reads a binding written outside this realm once the host notes it', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+
+      // Appended straight to the feed, as a tool running in another worker does: this realm counts no write.
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(a)], removed: [] },
+        }),
+      ]);
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      const run = vi.spyOn(Object.getPrototypeOf(probe), 'run');
+      yield* Effect.promise(() => agent.sync());
+      const unnotedReads = run.mock.calls.length;
+
+      AiContext.noteExternalBindingWrite();
+      yield* Effect.promise(() => agent.sync());
+      const notedReads = run.mock.calls.length - unnotedReads;
+      run.mockRestore();
+      const objects = agent.getObjects();
+      yield* Effect.promise(() => agent.close());
+
+      expect(unnotedReads).toBe(0);
+      expect(notedReads).toBe(1);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
   // `bindChatContext` re-binds on every companion open; a ref whose target does not resolve here (a
   // registry skill bound by URI) used to read as new each time and append a duplicate binding.
   test('re-binding an unchanged ref appends nothing', async ({ expect }) => {
