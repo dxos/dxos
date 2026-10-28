@@ -151,6 +151,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   // Results (the ranked masonry), Graph (the subjects' neighbourhood) or Trace (the trajectory as a tree).
   const [mode, setMode] = useState<'results' | 'graph' | 'trace'>('results');
   const [showModel, setShowModel] = useState(false);
+  // A double-click refocuses the graph on a node; Back to subjects returns to the session's roots.
+  const [focus, setFocus] = useState<string>();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string>();
   const spaceId = db?.spaceId;
@@ -354,10 +356,12 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     if (session && defaulted.current !== session.run) {
       defaulted.current = session.run;
       setMode(session.intent === 'entity' ? 'graph' : 'results');
+      setFocus(undefined);
     }
   }, [session]);
 
-  const subjectGraph = useSubjectGraph(mode === 'graph' ? client : undefined, roots);
+  const graphRoots = useMemo(() => (focus ? [focus] : roots), [focus, roots]);
+  const subjectGraph = useSubjectGraph(mode === 'graph' ? client : undefined, graphRoots);
   const trace = useExplain(mode === 'trace' ? client : undefined, snapshot.run, state.lastSeq);
 
   const handleOverrides = useCallback(
@@ -422,6 +426,13 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         );
       },
     );
+    if (mode === 'graph' && focus) {
+      builder.action(
+        'subjects',
+        { label: ['graph-subjects.label', { ns: meta.profile.key }], icon: 'ph--arrow-u-up-left--regular' },
+        () => setFocus(undefined),
+      );
+    }
     if (state.rating.model && mode === 'results') {
       builder.action(
         'model',
@@ -440,7 +451,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       );
     }
     return builder.build();
-  }, [view, mode, showModel, state.rating.model, busy, handleStop]);
+  }, [view, mode, focus, showModel, state.rating.model, busy, handleStop]);
 
   const hasConnection = !!snapshot.connection || connections.length > 0;
   const budget = snapshot.budget ?? 'quick';
@@ -529,6 +540,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                 graph={subjectGraph.graph}
                 selectedId={currentId}
                 onSelect={handleSelect}
+                onFocus={setFocus}
                 onMore={subjectGraph.expand}
                 classNames='h-full'
               />

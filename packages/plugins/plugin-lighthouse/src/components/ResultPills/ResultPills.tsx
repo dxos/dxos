@@ -134,14 +134,14 @@ const Picks = ({ picks, gaps }: { picks: Pick[]; gaps?: string }) => {
       <Layout.Flex asChild column gap='xs'>
         <ol>
           {picks.map((pick, index) => (
-            <Layout.Grid asChild key={index} cols={['min', 'fill', 'min']} gap='sm' align='start'>
+            <Layout.Grid asChild key={index} cols={['auto', 'fill', 'auto']} gap='sm' align='start'>
               <li>
                 <span className='text-fg-subtle tabular-nums'>{index + 1}</span>
                 <Layout.Flex column classNames='min-w-0'>
                   <Title title={pick.title} url={pick.url} />
                   {pick.why && <span className='text-fg-muted line-clamp-2'>{pick.why}</span>}
                 </Layout.Flex>
-                <span className='text-xs text-fg-subtle'>{hostOf(pick.url)}</span>
+                <span className='text-xs text-fg-subtle whitespace-nowrap'>{hostOf(pick.url)}</span>
               </li>
             </Layout.Grid>
           ))}
@@ -163,7 +163,7 @@ const PillList = ({ run }: { run: RunData }) => {
       <Layout.Flex asChild column classNames='max-h-56 overflow-y-auto'>
         <ul>
           {run.pills.map((pill) => (
-            <Layout.Grid asChild key={pill.id} cols={['min', 'fill', 'min']} gap='sm' align='center'>
+            <Layout.Grid asChild key={pill.id} cols={['auto', 'fill', 'auto']} gap='sm' align='center'>
               <li className='py-0.5'>
                 <span className='text-xs text-fg-subtle whitespace-nowrap'>{pill.kind}</span>
                 <Title title={pill.title} url={pill.url} />

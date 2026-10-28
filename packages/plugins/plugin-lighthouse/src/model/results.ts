@@ -23,6 +23,8 @@ export type CardModel = {
   eyebrow?: string;
   description?: string;
   images: string[];
+  /** The picture is a logo (an organisation's), shown whole on a light ground rather than cropped. */
+  logo?: boolean;
   rows: CardRow[];
   tags: CardTag[];
 };
@@ -150,7 +152,7 @@ export const priceOf = (entity: Entity): { price?: string; note?: string } => {
 };
 
 export const imagesOf = (entity: Entity): string[] =>
-  ['schema:image', 'lh:image', 'lh:images', 'schema:thumbnailUrl']
+  ['schema:image', 'lh:image', 'lh:images', 'schema:thumbnailUrl', 'schema:logo', 'lh:logo']
     .flatMap((key) => entity.props[key] ?? [])
     .filter((value): value is string => typeof value === 'string' && /^https?:/.test(value))
     .slice(0, 8);
@@ -262,6 +264,7 @@ export const toCard = (entity: Entity): CardModel => {
     priceNote: note,
     eyebrow: eyebrowOf(entity),
     images: imagesOf(entity),
+    ...(/Organization|VentureFund|Corporation/.test(entity.types.join(' ')) ? { logo: true } : {}),
     rows,
     tags: [{ label: kindOf(entity) }, ...legalTags(entity)],
   };

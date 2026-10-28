@@ -65,6 +65,8 @@ export type SubjectGraphProps = ThemedClassName<{
   /** The selected node; it is outlined and its edges carry their predicates. */
   selectedId?: string;
   onSelect?: (iri: string) => void;
+  /** A double-click: the host refocuses the graph on that node. */
+  onFocus?: (iri: string) => void;
   /** "+N more" on a capped node: the host fetches its neighbours and merges them in. */
   onMore?: (iri: string) => void;
 }>;
@@ -74,7 +76,7 @@ export type SubjectGraphProps = ThemedClassName<{
  * organisations, works, events), force-directed in rings by hops from the roots, each node a small card. Drag the
  * canvas to pan, scroll to zoom; hover or select a card and its edges carry their predicates.
  */
-export const SubjectGraph = ({ graph, selectedId, onSelect, onMore, classNames }: SubjectGraphProps) => {
+export const SubjectGraph = ({ graph, selectedId, onSelect, onFocus, onMore, classNames }: SubjectGraphProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
@@ -283,6 +285,11 @@ export const SubjectGraph = ({ graph, selectedId, onSelect, onMore, classNames }
               onClick={(event) => {
                 if (!event.defaultPrevented) {
                   onSelect?.(node.id);
+                }
+              }}
+              onDoubleClick={(event) => {
+                if (!event.defaultPrevented) {
+                  onFocus?.(node.id);
                 }
               }}
             >

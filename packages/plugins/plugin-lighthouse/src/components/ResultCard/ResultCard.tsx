@@ -56,7 +56,16 @@ export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
         data-testid='lighthouse.result'
         {...props}
       >
-        {image && <Card.Poster alt={card.title} src={image} fit='cover' loading='lazy' classNames='rounded-t-xs' />}
+        {image && (
+          <Card.Poster
+            alt={card.title}
+            src={image}
+            fit={card.logo ? 'contain' : 'cover'}
+            loading='lazy'
+            // A logo is often dark on transparent: a light ground keeps it visible in either theme.
+            classNames={['rounded-t-xs', card.logo && 'bg-white p-2']}
+          />
+        )}
         <Card.Header>
           <Layout.Block>
             <SystemButton.Star variant='ghost' iconOnly pressed={starred} onClick={stop(onToggleStar)} />

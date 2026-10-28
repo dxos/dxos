@@ -41,6 +41,9 @@ export type GraphNodeCardProps = {
  * One node as a small card, as lighthouse's graph shows it: a photo or a type icon, the title, its kind, and one or
  * two key facts (four on a root). Its size is fixed, so the layout can place it before it renders.
  */
+/** Types whose picture is a logo rather than a photo. */
+const isLogo = (types: readonly string[]) => /Organization|VentureFund|Corporation/.test(types.join(' '));
+
 export const GraphNodeCard = ({ node, root = false, selected = false, more, onMore }: GraphNodeCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const card = toCard(nodeEntity(node));
@@ -80,7 +83,13 @@ export const GraphNodeCard = ({ node, root = false, selected = false, more, onMo
             src={image}
             alt=''
             loading='lazy'
-            className={root ? 'size-12 shrink-0 rounded-sm object-cover' : 'size-8 shrink-0 rounded-sm object-cover'}
+            // An organisation's picture is its logo, often dark on transparent: shown whole, on a light ground in
+            // either theme, as lighthouse's web UI does.
+            className={[
+              root ? 'size-12' : 'size-8',
+              'shrink-0 rounded-sm',
+              isLogo(node.types) ? 'object-contain bg-white p-0.5' : 'object-cover',
+            ].join(' ')}
           />
         ) : (
           <Layout.Flex

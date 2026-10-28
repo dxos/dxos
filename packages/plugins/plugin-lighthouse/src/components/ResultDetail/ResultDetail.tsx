@@ -41,9 +41,15 @@ const ResearchItems = ({
 }) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const fields = extension.research?.fields ?? {};
+  // The extension names a section predicate the items may not use (lh:menuItemSection vs lh:menuSection): fall
+  // back to the items' own *Section property.
+  const sectionKey =
+    fields.section && research.items.some((item) => item.props[fields.section ?? ''])
+      ? fields.section
+      : research.items.flatMap((item) => Object.keys(item.props)).find((key) => /Section$/.test(key));
   const sections = new Map<string, Entity[]>();
   for (const item of research.items) {
-    const section = String(first(item, fields.section) ?? '');
+    const section = String(first(item, sectionKey) ?? '');
     sections.set(section, [...(sections.get(section) ?? []), item]);
   }
   return (
@@ -188,7 +194,8 @@ export const ResultDetail = ({
       {why && <Typography.Text classNames='text-sm whitespace-normal'>{why}</Typography.Text>}
 
       {card.images.length > 0 && (
-        <Carousel.Root count={card.images.length}>
+        // A logo is often dark on transparent: a light ground keeps it visible in either theme.
+        <Carousel.Root count={card.images.length} classNames={card.logo ? 'bg-white rounded-sm' : undefined}>
           <Carousel.PrevTrigger />
           <Carousel.ItemGroup>
             {card.images.map((image, index) => (
