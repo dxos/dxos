@@ -30,7 +30,7 @@ slower, so leave the beats in. A line marked _(verify)_ makes a product claim th
 
 ## 6. Your competitors (`#competitors`)
 
-- Scale, however, has a way of rearranging the furniture.
+- Scale, like most things, has its pros and cons.
 - Leaving was easier. In theory. So every vendor dug a moat.
 
 ## 7. Many silos (`#spread`)
@@ -175,7 +175,7 @@ About 127 words, 51 seconds spoken. The cut keeps the slides named in bold; each
 entered.
 
 - **2. In the Beginning:** In the beginning, there was SaaS, and it was rather marvellous.
-- **6. Your competitors:** But scale rearranged the furniture, and every vendor dug a moat.
+- **6. Your competitors:** But scale had its pros and cons, and every vendor dug a moat.
 - **7. Many silos:** Soon every company was juggling dozens of them.
 - **10. Everyone talks to the lab:** Then came AI, and we handed agents the keys to the house.
 - **11. The lab at the centre:** The frontier labs made many apps look rather superfluous.
