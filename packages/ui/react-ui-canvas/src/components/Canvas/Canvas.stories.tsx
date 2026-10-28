@@ -15,9 +15,9 @@ import { type InspectorMode, createLatticeProjection } from '../../engine/index.
 import { type BackgroundGrid, createMemoryStore } from '../../model/index.ts';
 import {
   createLatticeTree,
+  createLinkedPairTree,
   createModelViewTree,
   createNestedDeepTree,
-  createLinkedPairTree,
   createNestedSimpleTree,
   createNestedViewTree,
   createSquareTree,
