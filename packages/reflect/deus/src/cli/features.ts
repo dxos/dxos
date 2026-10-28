@@ -11,18 +11,11 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
-import { parseMdlBlocks } from '../extension/check.ts';
+import { parseMdlBlocks } from '../extension/blocks.ts';
+import { frontmatter } from '../spec-index/parse.ts';
 import { FeatureCheckError } from './errors.ts';
 import { git } from './git.ts';
-import {
-  type ReviewItem,
-  blockField,
-  frontmatter,
-  itemsUnder,
-  keyList,
-  reviewItems,
-  reviewVerdicts,
-} from './review.ts';
+import { type ReviewItem, blockField, itemsUnder, keyList, reviewItems, reviewVerdicts } from './review.ts';
 
 /** The authored statuses of `lang/features.mdl`, in the order a feature normally moves through them. */
 export const FEATURE_STATUSES = ['planned', 'in-progress', 'prototype', 'operational', 'failing'] as const;

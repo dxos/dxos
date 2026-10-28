@@ -29,14 +29,14 @@ extends?:  URI[]         # specs this document extends (transitive)
 All blocks use the `mdl` fence. The first line of the body declares the block
 type, optional identifier, and optional title:
 
-```
+````
 ```mdl
 <type> [<id>][: <title>]
   key: value
   key?: TypeExpr
   key: a | b | c
 ```
-```
+````
 
 - `<type>` must be declared in the Extensions section of this document or an ancestor.
 - `<id>` is an optional locally-scoped identifier (e.g. `F-1.1`, `Board`).
@@ -60,13 +60,13 @@ key:                      # multi-line value
 When an extension declares `inline-prose: true`, prose may appear between
 the header line and the first key-value pair:
 
-```
+````
 ```mdl
 feat F-1: Start Game
   A new Board is created with pieces in starting positions.  ← inline prose
   req F-1.1: White moves first.
 ```
-```
+````
 
 ### Cross-References
 
@@ -75,20 +75,20 @@ The linter verifies that all references resolve to a declared block.
 
 ### External References
 
-A block may name something outside its document by **source key**:
+A spec names a block of another spec as `<spec id>#<item>`, where the item is a block id or `req` id
+(`com.acme.canvas#F-3.1`), and declares that spec under `## Dependencies` (below). A
+block may name code, or anything else outside the specs, by **source key**:
 `github:<owner>/<repo>/<path>[#<fragment>]`, with the path relative to the repository root.
 
 | Key names           | Example                                                        | Fragment            |
 | ------------------- | -------------------------------------------------------------- | ------------------- |
-| A block of a spec   | `github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database`   | Block or req id     |
 | A code symbol       | `github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make`   | Symbol (`A.b` ok)   |
 | A whole file        | `github:dxos/dxos/packages/apps/composer-app/vite.config.ts`   | none                |
 
-A spec writes keys inline to name blocks of other specs. It does not name the code that implements
-it: those links are annotations kept outside the spec (a review's `evidence:`, see `review.mdl`),
-and the spec viewer renders them as decorations beside the items they annotate. Tools resolve keys
-against a local checkout of the repository. A key is a location, not a version: it names whatever
-the checkout holds.
+A spec does not name the code that implements it: those links are annotations kept outside the
+spec (a review's `evidence:`, see `review.mdl`), and the spec viewer renders them as decorations
+beside the items they annotate. Tools resolve keys against a local checkout of the repository. A
+key is a location, not a version: it names whatever the checkout holds.
 
 ---
 
@@ -111,6 +111,29 @@ An extension definition is either:
 
 A document may use both: external URIs for standard extensions,
 inline `ext` blocks for custom or experimental ones.
+
+---
+
+## Dependencies Section
+
+A spec lists the other specs it builds on under `## Dependencies`, after the opening prose and
+before `## Extensions`, one `uses` block per spec. A Composer plugin's runtime dependencies are the
+exception: they go in its `plugin` block's `dependsOn` (plugin dialect) and are never repeated under
+`uses`. The identifier is the depended-on spec's `id`;
+the inline prose is required and says what this spec takes from it.
+
+```mdl
+ext uses
+  uri: dxos.spec.core/uses
+  desc: Declares that this spec builds on another spec, identified by its frontmatter id.
+  inline-prose: true
+  fields:
+    id: URI                     # the depended-on spec's id (the block identifier)
+  syntax: |
+    uses org.dxos.ui.react-ui-canvas: The engine whose types and operations this canvas models.
+```
+
+A reference into another spec is `<spec id>#<item>`, where the item is any block id or `req` id.
 
 ---
 

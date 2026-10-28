@@ -731,7 +731,9 @@ test QA-1: Preview a document in the companion, then present it
       do: Right-click "QA Slides" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Present a document as slides and page through them. Recorded light at 60 fps with no ident, captions or
@@ -749,7 +751,9 @@ test QA-2: Showcase clip
     - name: Page through
       do: Press the right arrow three times.
       expect: each slide shows in turn
+```
 
+```mdl
 test QA-3: Build and present a Presentation
   desc: Create a Presentation, add a slide, link a markdown document, reorder in the navtree, present it fullscreen, step, exit and reload.
   actors: human
