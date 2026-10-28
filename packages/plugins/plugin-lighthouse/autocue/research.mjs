@@ -25,7 +25,7 @@ const GOAL = 'Board game cafés in Bangkok with a big game library';
 const SERVER = process.env.LIGHTHOUSE_URL ?? 'http://127.0.0.1:4319';
 
 /** A beat for the viewer after a visible change. */
-const BEAT = 1_500;
+const BEAT = 2_500;
 
 /** A Quick session runs up to 5 minutes; results land within the first one or two. */
 const RESULTS_TIMEOUT = 5 * 60_000;
@@ -164,7 +164,7 @@ export const steps = [
       await page.locator('[data-testid="assistant.thread"]').first().waitFor({ timeout: 30_000 });
       await page.getByText('Pages', { exact: false }).first().waitFor({ timeout: 30_000 });
       // The first run row: the agent says what it is doing and makes its first calls.
-      await demo.speed({ factor: 4 });
+      await demo.speed({ factor: 2 });
       await page.locator('[data-testid="lighthouse.run-row"]').first().waitFor({ timeout: 60_000 });
       await demo.speed({ factor: 1 });
       await demo.sleep({ ms: BEAT });
@@ -175,12 +175,12 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 4, 'Results land in the masonry as the agent extracts them');
       // The agent's searching is motion with little to read: the cut plays it fast, marked ⏩.
-      await demo.speed({ factor: 8 });
+      await demo.speed({ factor: 3 });
       await waitForResults(page, 6, RESULTS_TIMEOUT);
       // A few more seconds of results landing, then normal speed to read the cards.
       await page.waitForTimeout(8_000);
       await demo.speed({ factor: 1 });
-      await demo.sleep({ ms: 3_000 });
+      await demo.sleep({ ms: 5_000 });
     },
   },
   {
@@ -226,7 +226,7 @@ export const steps = [
         label: 'Findings',
       });
       await page.getByText('Kept · starred').first().waitFor({ timeout: 15_000 });
-      await demo.sleep({ ms: 4_000 });
+      await demo.sleep({ ms: 6_000 });
     },
   },
 ];
