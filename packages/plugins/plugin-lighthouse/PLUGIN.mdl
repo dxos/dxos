@@ -459,6 +459,29 @@ test QA-2: Search for apartments in Warsaw, live
       expect: the starred listing is shown as a card marked Kept · starred
 ```
 
+```mdl
+test QA-3: Everything about BlueYard
+  desc: An entity session started elsewhere, opened in Composer: its graph, a portfolio company's facts, the investments as cards, the trace.
+  actors: both
+  status: draft              # 2026-10-28; autocue/blueyard.mjs dry run passed against vc-blueyard-entity
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon holds the reported entity session vc-blueyard-entity (BlueYard, its team, funds and portfolio)
+  steps:
+    - name: Open the session
+      do: Create a Research named "BlueYard" with Existing session "vc-blueyard-entity".
+      expect: the Research opens on the Graph view, BlueYard's card at the centre with partners, funds and portfolio companies around it, people with photos and companies with logos
+    - name: Open a portfolio company
+      do: Click a portfolio company's card with a logo (Castelion, IonQ, Privy or Protocol Labs).
+      expect: the companion shows its facts, where they came from (extractor, page, date), and its relations
+    - name: The investments as cards
+      do: Pick Results in the toolbar and scroll past the funds.
+      expect: the portfolio companies as cards with their logos
+    - name: The trace
+      do: Pick Trace.
+      expect: the session's turns, calls and page loads as rows with time and cost
+```
+
 ## Open questions
 
 - Web-only Composer users: a local daemon reached from the browser, a hosted lighthouse, or both.
@@ -598,7 +621,7 @@ decision D-15: A vote's feedback prompt reads in the thread as one line naming t
 decision D-16: Record demos and screenshots in Composer with plugin-lighthouse rather than lighthouse's own web UI: an apartment search in Warsaw, everything about BlueYard with its investments, and cards with pictures.
   date: 2026-10-28
   by: user:dmaretskyi
-  affects: [QA-2]
+  affects: [QA-2, QA-3]
 ```
 
 ```mdl
