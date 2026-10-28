@@ -118,6 +118,11 @@
       "types": "./dist/types/src/AgentPlugin.d.ts",
       "import": "./dist/lib/AgentPlugin.mjs"
     },
+    "./AgentSkills": {
+      "source": "./src/AgentSkills.ts",
+      "types": "./dist/types/src/AgentSkills.d.ts",
+      "import": "./dist/lib/AgentSkills.mjs"
+    },
     "./AgentState": {
       "source": "./src/AgentState.ts",
       "types": "./dist/types/src/AgentState.d.ts",
@@ -338,6 +343,7 @@
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/brain": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",

@@ -78,6 +78,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
   readonly #blobManager = new BlobManager();
 
+  /** Malformed `echo:` URIs already warned about; a ref is read on every render, so one warning each. */
+  readonly #reportedMalformedUris = new Set<string>();
+
   constructor() {
     this._registry = makeRegistry();
     this._registry.add([Type.Type]);
@@ -233,9 +236,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (EID.isEID(uri)) {
-          const res = this._resolveSync(uri, context, onLoad);
+        // Parsed rather than prefix-checked: a malformed `echo:` URI in stored data resolves to nothing
+        // instead of throwing out of every caller that walks an object's refs.
+        const eid = EID.tryParse(uri);
+        if (eid) {
+          const res = this._resolveSync(eid, context, onLoad);
           return res ? materializeStoredSchema(res) : undefined;
+        }
+        if (EID.isEID(uri)) {
+          if (!this.#reportedMalformedUris.has(uri)) {
+            this.#reportedMalformedUris.add(uri);
+            log.warn('malformed echo reference', { uri, space: context.space });
+          }
+          return undefined;
         }
 
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
@@ -592,7 +605,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       loadedStack: new StackTrace().getStack(),
     }));
 
-    log('trap', { spaceId, objectId });
     if (onResolve) {
       entry(this._resolveEvents, spaceId)
         .orInsert(new Map())

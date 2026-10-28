@@ -12,7 +12,7 @@ import * as TimelineSpace from './TimelineSpace.ts';
 describe('Timeline project template', () => {
   test('builds the project, its feature map and its tasks', { timeout: 120_000 }, async ({ expect }) => {
     const { result, json } = await EffectEx.runPromise(buildArchive(TimelineSpace.make()));
-    const { project, features, tasks, fixture, spec } = result.timeline;
+    const { project, map, features, tasks, fixture, spec } = result.timeline;
 
     expect(project.name).toBe('Timeline');
     expect(features.map((feature) => feature.name)).toEqual([
@@ -22,7 +22,8 @@ describe('Timeline project template', () => {
       'Presenter space',
       'Timeline research skill',
     ]);
-    expect(features.every((feature) => feature.project?.uri.endsWith(project.id))).toBe(true);
+    expect(map.project?.uri.endsWith(project.id)).toBe(true);
+    expect(map.features.map((ref, index) => ref.uri.endsWith(features[index].id))).toEqual(features.map(() => true));
     expect(tasks.map((task) => task.title)).toEqual([
       'Create a test fixture',
       'Complete the spec',
@@ -38,8 +39,8 @@ describe('Timeline project template', () => {
     expect(fixtureTask.artifacts?.map((ref) => ref.uri.endsWith(fixture.id))).toEqual([true]);
     expect(project.artifacts.some((ref) => ref.uri.endsWith(fixture.id))).toBe(true);
 
-    // The spec is filed on the project, and every feature cites one of its blocks.
-    expect(project.artifacts.some((ref) => ref.uri.endsWith(spec.id))).toBe(true);
+    // The spec document lives in the map, and every feature cites one of its blocks.
+    expect(map.document?.uri.endsWith(spec.id)).toBe(true);
     expect(features.map((feature) => feature.specs)).toEqual(
       [1, 2, 3, 4, 5].map((index) => [`timeline/SPEC.mdl#F-${index}`]),
     );

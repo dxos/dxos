@@ -20,7 +20,7 @@ const SUBTITLE = 'from plugin-projects/spec/FEATURE-LINKS.mdl';
 const BEAT = 1_500;
 
 const story = (id) => `${STORYBOOK}/iframe.html?id=${id}&viewMode=story`;
-const CARDS = story('plugins-plugin-projects-containers-projectfeatures--cards');
+const CARDS = story('plugins-plugin-projects-containers-specfeatures--canvas');
 const CODE_LINKS = story('plugins-plugin-projects-containers-featurearticle--code-links');
 // The SetKey story's play function sets the key itself, so the take types into the story without one.
 const WITHOUT_KEY = story('plugins-plugin-projects-containers-featurearticle--without-key');
@@ -41,16 +41,19 @@ export const steps = [
     setup: true,
     run: async ({ page }) => {
       await open(page, CODE_LINKS, '[data-testid="feature-card.link"]');
-      await open(page, CARDS, '[data-testid="feature-card.test-count"]');
+      await open(page, CARDS, '[data-testid="feature-canvas-node"]');
     },
   },
   {
     name: 'See which features are tested',
     run: async ({ demo, page }) => {
       await demo.title({ value: 'Feature links', subtitle: 'dxn:<meta.key>#<mnemonic> and @feature tags' });
-      await caption(demo, 1, "Open the project's Features tab as cards");
-      await demo.hover({ selector: '[data-testid="feature-card.test-count"] >> nth=0', label: '2 tests' });
-      await page.getByText('2 tests').first().waitFor({ state: 'visible' });
+      await caption(demo, 1, "Open the spec's feature map as cards");
+      // The canvas card is a summary; the test count is on the feature's own card, opened in the next step.
+      await demo.hover({
+        selector: '[data-testid="feature-canvas-node"]:has-text("Provider sync")',
+        label: 'Provider sync',
+      });
       await demo.sleep({ ms: BEAT });
     },
   },

@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -32,7 +34,6 @@ export const Migrations = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
-  environments: ['browser', 'node', 'tauri'],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
@@ -43,18 +44,14 @@ export const RefitState = Capability.lazyModule(
   () => import('./refit-state.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['browser', 'node', 'tauri'],
-});
-// Browser-only: the variant supplies the React article/card components that render a drawing.
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const SvgVariant = Capability.lazyModule(
   'IllustratorSvgVariant',
   {
     provides: [IllustratorCapabilities.VariantProvider],
-    activatesOn: IllustratorEvents.Start,
-    environments: ['browser', 'tauri'],
+    activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
   },
-  () => import('./svg-variant.ts'),
+  () => import('#svg-variant'),
 );
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

@@ -513,25 +513,33 @@ type FundamentalsValuation
     marketCap?: number
     pe?: number            # price-to-earnings
     pb?: number            # price-to-book
+```
 
+```mdl
 type FundamentalsPerformance
   desc: Income-statement metrics from SEC EDGAR XBRL.
   fields:
     revenue?: number
     netIncome?: number
     eps?: number           # basic EPS
+```
 
+```mdl
 type FundamentalsRatios
   desc: Balance-sheet and profitability ratios.
   fields:
     roe?: number           # return on equity (decimal)
     debtToEquity?: number  # plain ratio, not a percent
+```
 
+```mdl
 type FundamentalsAdditional
   desc: Remaining us-gaap concepts from SEC EDGAR, keyed by XBRL concept name.
   fields:
     additionalFacts?: Record<string, number>
+```
 
+```mdl
 type FundamentalsSnapshot
   desc: |
     Transient output of op:GetInstrumentFundamentals. Parsed from SEC EDGAR

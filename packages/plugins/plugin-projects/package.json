@@ -154,6 +154,11 @@
       "types": "./dist/types/src/types/Showcase.d.ts",
       "import": "./dist/lib/Showcase.mjs"
     },
+    "./Spec": {
+      "source": "./src/types/Spec.ts",
+      "types": "./dist/types/src/types/Spec.d.ts",
+      "import": "./dist/lib/Spec.mjs"
+    },
     "./Templates": {
       "source": "./src/Templates.ts",
       "types": "./dist/types/src/Templates.d.ts",

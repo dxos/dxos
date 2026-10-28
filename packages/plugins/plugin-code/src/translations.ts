@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { meta } from '#meta';
 import { CodeProject, SourceFile } from '#types';
@@ -12,16 +12,16 @@ import { CodeProject, SourceFile } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Spec.Spec)]: {
-        'typename.label': 'Spec',
-        'typename.label_zero': 'Specs',
-        'typename.label_one': 'Spec',
-        'typename.label_other': 'Specs',
-        'object-name.placeholder': 'New spec',
-        'add-object.label': 'Add spec',
-        'rename-object.label': 'Rename spec',
-        'delete-object.label': 'Delete spec',
-        'object-deleted.label': 'Spec deleted',
+      [Type.getTypename(SpecDocument.SpecDocument)]: {
+        'typename.label': 'Spec Document',
+        'typename.label_zero': 'Spec Documents',
+        'typename.label_one': 'Spec Document',
+        'typename.label_other': 'Spec Documents',
+        'object-name.placeholder': 'New spec document',
+        'add-object.label': 'Add spec document',
+        'rename-object.label': 'Rename spec document',
+        'delete-object.label': 'Delete spec document',
+        'object-deleted.label': 'Spec document deleted',
       },
       [Type.getTypename(CodeProject.CodeProject)]: {
         'typename.label': 'Code Project',

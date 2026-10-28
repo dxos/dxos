@@ -52,11 +52,15 @@ feat F-1: Reading list CRUD in the content group
   req F-1.1: The Book type appears as a section in the navigation tree's content group.
   req F-1.2: A book can be created, renamed, opened as a full-page editable form, and deleted.
   req F-1.3: Collection tiles render a card body (cover, authors, status, rating).
+```
 
+```mdl
 feat F-2: BookHive-backed create autocomplete
   req F-2.1: The create form offers a type-ahead over the public buzz.bookhive.searchBooks endpoint.
   req F-2.2: Selecting a result autofills title, authors, coverUrl, genres, hiveId, hiveBookUri.
+```
 
+```mdl
 feat F-3: Publishable public face
   req F-3.1: The Book type carries an AtprotoRecordAnnotation (buzz.bookhive.book + generated codec).
   req F-3.2: Only fields marked publish via AtprotoVisibilityAnnotation are eligible to publish; mirror fields resolve from the upstream catalog; all others are private.
@@ -70,7 +74,9 @@ scenario T-1: Create a book via autocomplete
   given: a space with the library plugin enabled
   when: the user searches "dune" and selects a result
   then: a Book is created with title, authors, coverUrl, genres, and hiveId populated
+```
 
+```mdl
 scenario T-2: Private fields never publish
   given: a Book with notes, owned, and personalTags set
   when: the codec encodes the book to a buzz.bookhive.book record
