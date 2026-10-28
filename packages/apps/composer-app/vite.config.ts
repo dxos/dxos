@@ -429,7 +429,7 @@ export default defineConfig((env) => ({
     target: [...browserTargets],
     // The HTML preloads the boot graph; preloading each lazy chunk's dependencies at runtime is what
     // kept the main thread busy before ready. The polyfill stays: Firefox below 115 has no modulepreload.
-    modulePreload: { resolveDependencies: bootPreload() },
+    modulePreload: { resolveDependencies: bootPreload },
     rolldownOptions: {
       // Bundled dev otherwise forces Rolldown's lazy dev engine, which compiles a payload per
       // dynamic entry on request. Composer activates its plugin modules through ~270 concurrent
