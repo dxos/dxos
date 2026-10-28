@@ -19,7 +19,7 @@ The tone is upbeat, with a light touch of humour: the takeover story is told wit
 ## 3. Your data lives inside SaaS (`#silo`)
 
 - And it was good.
-- Really, really good.
+- Very good.
 
 ## 4. Data in both directions (`#silo-comms`)
 
@@ -50,7 +50,7 @@ The tone is upbeat, with a light touch of humour: the takeover story is told wit
 
 ## 10. Everyone talks to the lab (`#frontier-comms`)
 
-- Your people made friends with agents, and opened the gates to their data.
+- Your people started working with agents, and opened the gates to their data.
 - Every vendor rushed out its own AI, with plugins for the frontier platforms.
 
 ## 11. The lab at the centre (`#orbit`)
@@ -61,7 +61,7 @@ The tone is upbeat, with a light touch of humour: the takeover story is told wit
 ## 12. The apps are absorbed (`#absorb`)
 
 - One by one, the apps get absorbed.
-- Their data comes along for the ride.
+- And their data goes with them.
 
 ## 13. Three labs (`#rivals`)
 
@@ -69,7 +69,7 @@ The tone is upbeat, with a light touch of humour: the takeover story is told wit
 
 ## 14. The labs merge (`#merge-1`)
 
-- Cue the partnerships and acquisitions.
+- Partnerships and acquisitions follow.
 - Keep going, and you end up with one very big company.
 
 ## 15. The Final Frontier (`#final-frontier`)
@@ -128,7 +128,7 @@ The tone is upbeat, with a light touch of humour: the takeover story is told wit
 
 ## 27. The silos fold in (`#saas-merge`)
 
-- And your vendor list gets a little shorter every year.
+- And over time, you rely less on outside vendors.
 
 ## 28. DXOS (`#company-fills`)
 
@@ -147,7 +147,7 @@ Words and the seconds they need at 2.5 words a second, plus the half-second lead
 | --- | -------------------- | ----: | ----: | ---: | -------: |
 | 1   | `blank`              |     0 |     — |  1.5 |      1.5 |
 | 2   | `beginning`          |     6 |   2.9 |    4 |        4 |
-| 3   | `silo`               |     7 |   3.3 |  3.5 |      3.5 |
+| 3   | `silo`               |     6 |   2.9 |  3.5 |      3.5 |
 | 4   | **`silo-comms`**     |    16 |   6.9 |    5 |        7 |
 | 5   | **`scale`**          |    13 |   5.7 |  4.5 |        6 |
 | 6   | `competitors`        |    16 |   6.9 |  8.5 |      8.5 |
@@ -156,9 +156,9 @@ Words and the seconds they need at 2.5 words a second, plus the half-second lead
 | 9   | `frontier`           |     4 |   2.1 |  3.5 |      3.5 |
 | 10  | **`frontier-comms`** |    26 |  10.9 |    5 |       11 |
 | 11  | **`orbit`**          |    19 |   8.1 |    5 |      8.5 |
-| 12  | `absorb`             |    14 |   6.1 |  6.5 |      6.5 |
+| 12  | `absorb`             |    13 |   5.7 |  6.5 |      6.5 |
 | 13  | **`rivals`**         |    12 |   5.3 |  4.5 |      5.5 |
-| 14  | `merge-1`            |    16 |   6.9 |    7 |        7 |
+| 14  | `merge-1`            |    15 |   6.5 |    7 |        7 |
 | 15  | `final-frontier`     |     0 |     — |    6 |        6 |
 | 16  | `engulf`             |     8 |   3.7 |   12 |       12 |
 | 17  | `dont-panic`         |     9 |   4.1 |    5 |        5 |
@@ -171,7 +171,7 @@ Words and the seconds they need at 2.5 words a second, plus the half-second lead
 | 24  | `object-created`     |    15 |   6.5 |   14 |       14 |
 | 25  | `echo-spaces-again`  |    17 |   7.3 |   10 |       10 |
 | 26  | `echo-hub-again`     |     7 |   3.3 |    4 |        4 |
-| 27  | `saas-merge`         |    10 |   4.5 |    9 |        9 |
+| 27  | `saas-merge`         |     9 |   4.1 |    9 |        9 |
 | 28  | `company-fills`      |     9 |   4.1 |   10 |       10 |
 
 The current holds run 2:50.5; the proposed ones run 3:14.5. 11 slides run over
@@ -179,10 +179,10 @@ The current holds run 2:50.5; the proposed ones run 3:14.5. 11 slides run over
 
 ## 60-second cut
 
-About 136 words, 54 seconds spoken, which leaves room for the beats. The cut keeps the slides named in bold;
+About 134 words, 54 seconds spoken, which leaves room for the beats. The cut keeps the slides named in bold;
 each line starts as its slide is entered.
 
-- **2. In the Beginning:** In the beginning, there was SaaS, and it was really, really good.
+- **2. In the Beginning:** In the beginning, there was SaaS, and it was good.
 - **6. Your competitors:** But scale rewrote the economics, and every vendor dug a moat.
 - **7. Many silos:** Now the average company juggles dozens of apps.
 - **10. Everyone talks to the lab:** Then AI showed up, and your people opened the gates to their data.
