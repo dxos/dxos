@@ -31,7 +31,7 @@ slower, so leave the beats in. A line marked _(verify)_ makes a product claim th
 ## 6. Your competitors (`#competitors`)
 
 - Scale, like most things, has its pros and cons.
-- Leaving was easier. In theory. So every vendor dug a moat.
+- Leaving was easier. In theory. But, every vendor dug a deep moat.
 
 ## 7. Many silos (`#spread`)
 
