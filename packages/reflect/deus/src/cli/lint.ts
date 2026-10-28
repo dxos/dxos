@@ -27,13 +27,20 @@ export type LintOptions = {
 export const lintFiles = Effect.fnUntraced(function* ({ files, only }: LintOptions) {
   const fs = yield* FileSystem.FileSystem;
   const needsIndex = Option.isNone(only) || INDEXED_CHECKS.includes(only.value);
-  // Outside a checkout there is nothing to resolve references against, so those checks stay off.
-  const index = needsIndex
+  const root = needsIndex
     ? yield* git(process.cwd(), 'rev-parse', '--show-toplevel').pipe(
-        Effect.flatMap(buildSpecIndex),
-        Effect.catch(() => Effect.succeed(undefined)),
+        // Outside a checkout there is nothing to resolve references against; any other git failure must fail the run.
+        Effect.catch((error) =>
+          String(error.context?.stderr).includes('not a git repository')
+            ? Effect.succeed(undefined)
+            : Effect.fail(error),
+        ),
       )
     : undefined;
+  if (needsIndex && root === undefined) {
+    yield* Console.log('warning: not inside a git checkout; the mdl/ref and mdl/uses checks were skipped.');
+  }
+  const index = root === undefined ? undefined : yield* buildSpecIndex(root);
   let errors = 0;
   for (const file of files) {
     const text = yield* fs.readFileString(file);

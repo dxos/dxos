@@ -371,6 +371,56 @@ describe('mdl references and dependencies', () => {
     expect(lint(second)).toEqual([]);
   });
 
+  const dependsOn = (id: string) => block(`plugin P: x\n  dependsOn: [${id}]`);
+
+  test('dependsOn of an unknown spec', ({ expect }) => {
+    expect(lint(spec(dependsOn('org.test.nope')))).toEqual([
+      { source: 'mdl/uses', message: 'Unknown spec `org.test.nope`.' },
+    ]);
+  });
+
+  test('dependsOn of itself', ({ expect }) => {
+    expect(lint(spec(dependsOn('org.test.self')))).toEqual([
+      { source: 'mdl/uses', message: 'A spec cannot use itself.' },
+    ]);
+  });
+
+  test('dependsOn declared twice', ({ expect }) => {
+    expect(lint(spec(dependsOn('org.test.alpha, org.test.alpha')))).toEqual([
+      { source: 'mdl/uses', message: '`org.test.alpha` is declared twice.' },
+    ]);
+  });
+
+  test('dependsOn of an ambiguous spec', ({ expect }) => {
+    expect(lint(spec(dependsOn('org.test.twice')))).toEqual([
+      { source: 'mdl/ref', message: 'Spec id `org.test.twice` is declared by more than one file.' },
+    ]);
+  });
+
+  test('github key boundary', ({ expect }) => {
+    expect(lint(spec('See github:o/r/a/file.mdl.ts#X and github:o/r/a/file.mdlx.'))).toEqual([]);
+  });
+
+  test('a candidate outside the indexed namespaces is prose', ({ expect }) => {
+    expect(lint(spec('See gmail-sync.test.ts#Foo and app.bsky.feed.defs#post.'))).toEqual([]);
+  });
+
+  test('a typo in an indexed namespace is an unknown spec', ({ expect }) => {
+    expect(lint(spec('See org.test.typo#X.'))).toEqual([
+      { source: 'mdl/ref', message: 'Unknown spec `org.test.typo`.' },
+    ]);
+  });
+
+  test('a spec whose own id is declared by more than one file', ({ expect }) => {
+    const text = spec('Body.', 'id: org.test.twice');
+    const [diagnostic] = lintMdl(text, { index });
+    expect(diagnostic).toMatchObject({
+      source: 'mdl/uses',
+      message: 'Spec id `org.test.twice` is declared by more than one file.',
+    });
+    expect(text.slice(diagnostic.from, diagnostic.to)).toBe('id: org.test.twice');
+  });
+
   test('emits no ref or uses diagnostics without an index', ({ expect }) => {
     expect(lintMdl(spec(`${uses('org.test.nope')}\nSee org.test.nope#F-1 and github:a/b.mdl.`))).toEqual([]);
   });

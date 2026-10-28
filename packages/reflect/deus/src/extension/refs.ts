@@ -51,7 +51,7 @@ export const findSpecRefs = (text: string): SpecRef[] => {
   return refs;
 };
 
-const GITHUB_SPEC_KEY = /github:[^\s`'")\]>,]*?\.mdl(?:#[\w$.-]*)?/g;
+const GITHUB_SPEC_KEY = /github:[^\s`'")\]>,]*?\.mdl(?![\w/-]|\.\w)(?:#[\w$.-]*)?/g;
 
 /** Finds `github:` keys that point at a `.mdl` file, with the offsets of the whole key. */
 export const findSpecKeys = (text: string): { from: number; to: number }[] => {

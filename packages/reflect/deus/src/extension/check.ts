@@ -117,36 +117,42 @@ export type LintOptions = {
   selfId?: string;
 };
 
+const namespace = (id: string): string => id.split('.').slice(0, 2).join('.');
+
 const lintReferences = (text: string, index: SpecIndex, selfId: string | undefined): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
   const report = (source: string, from: number, to: number, message: string) =>
     diagnostics.push({ from, to, severity: 'error', source, message });
   const dependencies = specDependencies(text);
   const dependsOn = new Set(dependencies.filter(({ via }) => via === 'dependsOn').map(({ id }) => id));
-  const used = new Set<string>();
+  const declared = new Set<string>();
   const duplicate = (id: string): string => `Spec id \`${id}\` is declared by more than one file.`;
 
+  if (selfId && selfId in index.duplicates) {
+    const idLine = /^id:.*$/m.exec(text);
+    report('mdl/uses', idLine?.index ?? 0, (idLine?.index ?? 0) + (idLine?.[0].length ?? 0), duplicate(selfId));
+  }
+
   for (const { id, via, from, to } of dependencies) {
-    if (via !== 'uses') {
-      continue;
-    }
     if (id === selfId) {
       report('mdl/uses', from, to, 'A spec cannot use itself.');
     } else if (id in index.duplicates) {
       report('mdl/ref', from, to, duplicate(id));
     } else if (!(id in index.specs)) {
       report('mdl/uses', from, to, `Unknown spec \`${id}\`.`);
-    } else if (used.has(id)) {
-      report('mdl/uses', from, to, `\`${id}\` is declared twice.`);
-    } else if (dependsOn.has(id)) {
+    } else if (via === 'uses' && dependsOn.has(id)) {
       report('mdl/uses', from, to, `\`${id}\` is in dependsOn; do not repeat it under uses.`);
+    } else if (declared.has(id)) {
+      report('mdl/uses', from, to, `\`${id}\` is declared twice.`);
     }
-    used.add(id);
+    declared.add(id);
   }
 
+  // Candidates outside every indexed namespace are prose (a file name, an external schema id), not references.
+  const namespaces = new Set([...Object.keys(index.specs), ...Object.keys(index.duplicates)].map(namespace));
   const dependencyIds = new Set(dependencies.map(({ id }) => id));
   for (const { id, item, from, to } of findSpecRefs(text)) {
-    if (id === selfId) {
+    if (id === selfId || !namespaces.has(namespace(id))) {
       continue;
     }
     if (id in index.duplicates) {
