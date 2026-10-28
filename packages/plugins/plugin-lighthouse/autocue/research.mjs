@@ -163,6 +163,10 @@ export const steps = [
       await demo.click({ selector: '[data-testid="lighthouse.run"]', label: 'Run' });
       await page.locator('[data-testid="assistant.thread"]').first().waitFor({ timeout: 30_000 });
       await page.getByText('Pages', { exact: false }).first().waitFor({ timeout: 30_000 });
+      // The first run row: the agent says what it is doing and makes its first calls.
+      await demo.speed({ factor: 4 });
+      await page.locator('[data-testid="lighthouse.run-row"]').first().waitFor({ timeout: 60_000 });
+      await demo.speed({ factor: 1 });
       await demo.sleep({ ms: BEAT });
     },
   },
@@ -170,8 +174,13 @@ export const steps = [
     name: 'Watch results land',
     run: async ({ demo, page }) => {
       await caption(demo, 4, 'Results land in the masonry as the agent extracts them');
-      await waitForResults(page, 3, RESULTS_TIMEOUT);
-      await demo.sleep({ ms: 4_000 });
+      // The agent's searching is motion with little to read: the cut plays it fast, marked ⏩.
+      await demo.speed({ factor: 8 });
+      await waitForResults(page, 6, RESULTS_TIMEOUT);
+      // A few more seconds of results landing, then normal speed to read the cards.
+      await page.waitForTimeout(8_000);
+      await demo.speed({ factor: 1 });
+      await demo.sleep({ ms: 3_000 });
     },
   },
   {
