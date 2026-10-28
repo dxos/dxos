@@ -17,6 +17,7 @@ import {
   createLatticeTree,
   createModelViewTree,
   createNestedDeepTree,
+  createLinkedPairTree,
   createNestedSimpleTree,
   createNestedViewTree,
   createSquareTree,
@@ -50,6 +51,7 @@ const FIXTURES = {
   deep: () => createNestedDeepTree(),
   view: () => createNestedViewTree(),
   nested: () => createNestedSimpleTree(),
+  pair: () => createLinkedPairTree(),
 } satisfies Record<string, (depth: number) => ViewTree>;
 
 type Fixture = keyof typeof FIXTURES;
@@ -361,11 +363,12 @@ const topLevelNode = (root: HTMLElement, selector: string) =>
   );
 
 /**
- * Group and Ungroup over a nested scene: ⌘G makes an anonymous Object and one Instance in place of the selection,
- * ⇧⌘G puts its contents back and deletes the definition, and each is one undo step.
+ * Group and Ungroup: ⌘G makes an anonymous Object and one Instance in place of the selection, ⇧⌘G puts its contents
+ * back and deletes the definition, and each is one undo step. The fixture has no view node, since an Object cannot
+ * contain a View (SPEC.mdl F-9.9).
  */
 export const Group: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'nested', inspectors: 'docked' },
+  args: { depth: 0, liveDepth: 1, fixture: 'pair', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view');
