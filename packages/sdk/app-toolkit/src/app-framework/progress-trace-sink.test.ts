@@ -14,6 +14,7 @@ import {
   STATUS_CANCELLED,
   STATUS_COMPLETE,
   STATUS_FAILED,
+  STATUS_STALLED,
   makeTraceSink,
   resolveTriggerId,
 } from './progress-trace-sink.ts';
@@ -422,9 +423,7 @@ describe('stall bound', () => {
     });
   };
 
-  // Silence is not a failure: progress travels over best-effort broadcasts, so the run may well have
-  // finished with its terminal lost.
-  test('removes a monitor that stops reporting, without an error', () => {
+  test('fails a monitor that stops reporting, and says only that it stopped', () => {
     withFakeTimers();
     const registry = Registry.make();
     const progress = makeRegistry(registry);
@@ -438,7 +437,10 @@ describe('stall bound', () => {
     expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
 
     vi.advanceTimersByTime(1);
-    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('error');
+    // Not "failed": the run may have finished or still be going — what is known is that it went quiet.
+    expect(task?.error).toBe(STATUS_STALLED);
   });
 
   // The clock measures the gap between updates, not the run's length: a long sync that keeps
@@ -475,7 +477,7 @@ describe('stall bound', () => {
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 4 } }, { pid: 'run-2' }));
 
     vi.advanceTimersByTime(STALL);
-    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
   });
 
   test('a completed run is not failed afterwards', () => {
@@ -492,7 +494,7 @@ describe('stall bound', () => {
     expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
   });
 
-  // A reported failure names a cause; a stall firing over it would remove it.
+  // A reported failure names a cause; a stall firing over it would replace that with a guess.
   test('a reported failure keeps its own reason', () => {
     withFakeTimers();
     const registry = Registry.make();
@@ -518,7 +520,7 @@ describe('stall bound', () => {
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 40, total: 468 } }, { pid: 'run-1' }));
     vi.advanceTimersByTime(STALL);
-    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
 
     sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }, { pid: 'run-2' }));
     const task = registry.get(progress.monitorAtom(key));
@@ -526,6 +528,23 @@ describe('stall bound', () => {
     expect(task?.current).toBe(0);
     expect(task?.total).toBeUndefined();
     expect(task?.error).toBeUndefined();
+  });
+
+  // The dismiss control on a failed meter routes back through the sink, which has to still know the
+  // key — a stall that forgot the monitor would leave a meter nothing can clear.
+  test('a stalled monitor can still be dismissed', () => {
+    withFakeTimers();
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress, { cancelProcess: () => {} });
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 1 } }, { pid: 'run-1' }));
+    vi.advanceTimersByTime(STALL);
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
+
+    progress.cancel(key);
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
   });
 
   test('the bound can be disabled for a producer whose terminal cannot be lost', () => {

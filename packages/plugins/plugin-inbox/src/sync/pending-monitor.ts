@@ -24,7 +24,7 @@ export const PENDING_SYNC_TIMEOUT_MS = 70_000;
  * entry under the same key; a superseded handle's `fail`/`remove` touch nothing, so the two never
  * fight. A meter the run never takes over is cleared {@link PENDING_SYNC_TIMEOUT_MS} after the request
  * ends: progress arrives over swarm broadcasts, which are best effort, so a run whose updates were lost
- * is not a failed run. Only the request itself failing shows an error.
+ * is not a failed run. A failed request, or a run that reports its failure, still shows an error.
  */
 export const withPendingSyncMonitor = <A, E, R>(
   mailbox: Mailbox.Mailbox,
