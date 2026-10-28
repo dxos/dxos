@@ -39,7 +39,7 @@ const HOLDS = {
   'blank': 1.5,
   'beginning': 4,
   'silo': 3.5,
-  'silo-comms': 8.5,
+  'silo-comms': 7,
   'scale': 6,
   'competitors': 8.5,
   'spread': 4,

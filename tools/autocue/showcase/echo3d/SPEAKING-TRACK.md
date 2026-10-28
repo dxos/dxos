@@ -23,7 +23,7 @@ The tone is upbeat, with a light touch of humour: the takeover story is told wit
 
 ## 4. Data in both directions (`#silo-comms`)
 
-- Nothing to install, and no upgrades on a Saturday night.
+- Nothing to install, and nothing to maintain.
 - Updates just showed up, and the bill went down.
 
 ## 5. The vendor grows (`#scale`)
@@ -148,7 +148,7 @@ Words and the seconds they need at 2.5 words a second, plus the half-second lead
 | 1   | `blank`              |     0 |     — |  1.5 |      1.5 |
 | 2   | `beginning`          |     6 |   2.9 |    4 |        4 |
 | 3   | `silo`               |     7 |   3.3 |  3.5 |      3.5 |
-| 4   | **`silo-comms`**     |    19 |   8.1 |    5 |      8.5 |
+| 4   | **`silo-comms`**     |    16 |   6.9 |    5 |        7 |
 | 5   | **`scale`**          |    13 |   5.7 |  4.5 |        6 |
 | 6   | `competitors`        |    16 |   6.9 |  8.5 |      8.5 |
 | 7   | **`spread`**         |     8 |   3.7 |  3.5 |        4 |
@@ -174,7 +174,7 @@ Words and the seconds they need at 2.5 words a second, plus the half-second lead
 | 27  | `saas-merge`         |    10 |   4.5 |    9 |        9 |
 | 28  | `company-fills`      |     9 |   4.1 |   10 |       10 |
 
-The current holds run 2:50.5; the proposed ones run 3:16.0. 11 slides run over
+The current holds run 2:50.5; the proposed ones run 3:14.5. 11 slides run over
 (4, 5, 7, 8, 10, 11, 13, 19, 20, 22, 23).
 
 ## 60-second cut
