@@ -169,7 +169,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           workspace,
           active: deckUpdates.active,
           companionPlanks,
-          intent: { scrollIntoView: scrolled, focus: input.focus, transition: !workspaceToEnter },
+          intent: { scrollIntoView: scrolled, focus: input.focus },
         });
       }
 

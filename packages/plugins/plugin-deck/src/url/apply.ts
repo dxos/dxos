@@ -22,7 +22,6 @@ import {
   resolveCompanionAnchor,
   resolveCompanionPlank,
   updateActiveDeck,
-  withViewTransition,
 } from '../util/index.ts';
 import * as Navigation from './navigation.ts';
 import { computeActiveUpdates } from './set-active.ts';
@@ -36,8 +35,6 @@ export type NavigationIntent = {
   scrollIntoView?: string;
   /** Where that focus lands; unset means the plank itself. */
   focus?: boolean | 'content';
-  /** Run the write as the update step of a view transition, so the content region crossfades. */
-  transition?: boolean;
 };
 
 /**
@@ -77,7 +74,7 @@ export const applyActive = Effect.fnUntraced(function* (
   const changed =
     !sameList(open?.active, active) || !sameList(open?.inactive, inactive) || !sameMap(open?.segments, segments);
 
-  const write = Effect.sync(() => {
+  yield* Effect.sync(() => {
     // The projection re-applies the same URL, so writing unconditionally would re-render every plank of
     // an unchanged deck; a `scrollIntoView` forces the write, since it has to land in the commit that
     // mounts its plank.
@@ -95,10 +92,6 @@ export const applyActive = Effect.fnUntraced(function* (
       registry.update(stateAtom, (current) => updateActiveDeck(current, { companionPlanks, plankNames }));
     }
   });
-
-  // Only a write that changes what is open is worth animating, since rendering is frozen for the whole
-  // update step.
-  yield* intent?.transition && changed ? withViewTransition(write, ['dx-plank']) : write;
 
   return toAttend;
 });
