@@ -13,7 +13,7 @@ import { Text } from '@dxos/schema';
 import { PullRequest } from '@dxos/types';
 
 import * as Presentation from './Presentation.ts';
-import { showcaseMigration } from './ShowcaseMigration.ts';
+import { makeShowcaseMigration } from './ShowcaseMigration.ts';
 
 describe('showcase → presentation migration', () => {
   let builder: EchoTestBuilder;
@@ -58,8 +58,8 @@ describe('showcase → presentation migration', () => {
 
   // Each plugin contributes its own migration, so either may run first.
   for (const [order, migrations] of [
-    ['deck first', [showcaseMigration, Showcase.demonstratesMigration]],
-    ['relation first', [Showcase.demonstratesMigration, showcaseMigration]],
+    ['deck first', [makeShowcaseMigration(), Showcase.demonstratesMigration]],
+    ['relation first', [Showcase.demonstratesMigration, makeShowcaseMigration()]],
   ] as const) {
     test(`the showcase becomes a deck in place and its Demonstrates edges follow it (${order})`, async ({ expect }) => {
       const { db, feature, pullRequest, content, id } = await seed();
