@@ -114,6 +114,27 @@ inline `ext` blocks for custom or experimental ones.
 
 ---
 
+## Dependencies Section
+
+A spec lists the other specs it builds on under `## Dependencies`, after the opening prose and
+before `## Extensions`, one `uses` block per spec. The identifier is the depended-on spec's `id`;
+the inline prose is required and says what this spec takes from it.
+
+```mdl
+ext uses
+  uri: dxos.spec.core/uses
+  desc: Declares that this spec builds on another spec, identified by its frontmatter id.
+  inline-prose: true
+  fields:
+    id: URI                     # the depended-on spec's id (the block identifier)
+  syntax: |
+    uses org.dxos.ui.react-ui-canvas: The engine whose types and operations this canvas models.
+```
+
+A reference into another spec is `<spec id>#<item>`, where the item is any block id or `req` id.
+
+---
+
 ## The `ext` Primitive
 
 `ext` is the only block type the core language natively provides.
