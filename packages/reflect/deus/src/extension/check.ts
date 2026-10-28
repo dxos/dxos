@@ -6,7 +6,13 @@ import { type Diagnostic } from '@codemirror/lint';
 
 import { frontmatter, reqIds } from '../spec-index/parse.ts';
 import { type SpecIndex } from '../spec-index/spec-index.ts';
-import { type BlockHeader, parseBlockHeaders, parseMdlBlocks } from './blocks.ts';
+import {
+  type BlockHeader,
+  extensionTerms,
+  findInnerBlockHeaders,
+  parseBlockHeaders,
+  parseMdlBlocks,
+} from './blocks.ts';
 import { BLOCK_TYPES } from './constants.ts';
 import { findSpecKeys, findSpecRefs, specDependencies } from './refs.ts';
 
@@ -149,6 +155,7 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
  * Checks:
  *   - Unknown block types (first body line of ```mdl blocks) → error
  *   - `decision` attribution (`by:` / `for:` actor prefixes) → error
+ *   - `mdl/block`: a second block header inside one fence, which every tool reads as body → error
  *   - `mdl/ref` and `mdl/uses`: spec references and dependencies, when an index is given → error
  */
 export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: LintOptions = {}): Diagnostic[] => {
@@ -167,6 +174,16 @@ export const lintMdl = (text: string, { index, selfId = frontmatter(text).id }: 
         diagnostics.push({ from, to, severity: 'error', source: 'mdl/decision', message });
       }
     }
+  }
+  const types = new Set<string>([...BLOCK_TYPES, ...extensionTerms(text)]);
+  for (const { type, id, from, to } of findInnerBlockHeaders(text, types)) {
+    diagnostics.push({
+      from,
+      to,
+      severity: 'error',
+      source: 'mdl/block',
+      message: `A second block header (\`${[type, id].filter(Boolean).join(' ')}\`) inside one fence; give each block its own \`\`\`mdl fence.`,
+    });
   }
   if (index) {
     diagnostics.push(...lintReferences(text, index, selfId));

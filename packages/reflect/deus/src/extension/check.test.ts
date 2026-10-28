@@ -19,6 +19,41 @@ describe('mdl lint', () => {
     ]);
   });
 
+  describe('one block per fence', () => {
+    const lint = (text: string) =>
+      lintMdl(text)
+        .filter(({ source }) => source === 'mdl/block')
+        .map(({ from, message }) => ({ line: text.slice(0, from).split('\n').length, message }));
+
+    test('a second block header inside one fence', ({ expect }) => {
+      expect(lint(block('op create: Create.\n  input: A\n\nop convert: Convert.\n  input: B'))).toEqual([
+        {
+          line: 5,
+          message: 'A second block header (`op convert`) inside one fence; give each block its own ```mdl fence.',
+        },
+      ]);
+    });
+
+    test('a body line at column 0 that is not a block type', ({ expect }) => {
+      expect(lint(block('type T\n  desc: |\n    text\nsurface prompt -> RoutineArticle'))).toEqual([]);
+    });
+
+    test('a block type inside an indented body', ({ expect }) => {
+      expect(lint(block('feat F-1: Feature.\n  req:\n    test the thing works\n  type T'))).toEqual([]);
+    });
+
+    test('a term declared in the Extensions table', ({ expect }) => {
+      const extensions =
+        '## Extensions\n\n| Term | URI |\n|---|---|\n| `capability` | `org.dxos.mdl.capability@1.0` |\n\n';
+      expect(lint(extensions + block('capability A\n  desc: x\n\ncapability B\n  desc: y'))).toEqual([
+        {
+          line: 11,
+          message: 'A second block header (`capability B`) inside one fence; give each block its own ```mdl fence.',
+        },
+      ]);
+    });
+  });
+
   describe('decision', () => {
     test('user decision', ({ expect }) => {
       expect(messages(block('decision D-1: Use X.\n  date: 2026-10-20\n  by: user:a@b.org'))).toEqual([]);

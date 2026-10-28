@@ -116,3 +116,54 @@ export const parseMdlBlocks = (text: string): MdlBlock[] =>
     const title = header.match(/^\s*\w+\s+[^\s:][^\n:]*?:\s*(.+?)\s*$/)?.[1];
     return { type, id, ...(title && { title }), body: newline === -1 ? '' : body.slice(newline + 1), from };
   });
+
+/** A block header line: `<type> [<id>][: <title>]`. */
+export const BLOCK_HEADER_LINE = /^(\w+)(\s+[^\s:][^\n:]*?)?(:\s*.*)?\s*$/;
+
+/** The terms a document's `## Extensions` table declares: the backticked first cell of each row. */
+export const extensionTerms = (text: string): string[] => {
+  const terms: string[] = [];
+  let inExtensions = false;
+  scanFenceLines(text, ({ line, kind }) => {
+    if (kind !== 'prose') {
+      return;
+    }
+    if (/^## /.test(line)) {
+      inExtensions = /^## Extensions\s*$/.test(line);
+    } else if (inExtensions) {
+      const term = line.match(/^\|\s*`([\w-]+)`/)?.[1];
+      if (term) {
+        terms.push(term);
+      }
+    }
+  });
+  return terms;
+};
+
+/** A block header that follows another block inside the same fence. */
+export type InnerBlockHeader = { type: string; id: string; from: number; to: number };
+
+/**
+ * Finds the block headers an `mdl` fence hides after its first block: lines past the fence's first body line, at
+ * column 0 (a block body is always indented), whose first word is one of `types`.
+ */
+export const findInnerBlockHeaders = (text: string, types: ReadonlySet<string>): InnerBlockHeader[] => {
+  const headers: InnerBlockHeader[] = [];
+  let first = false;
+  scanFenceLines(text, ({ line, offset, kind, mdl }) => {
+    // A top-level `mdl` opener inside an unclosed block starts a new block, as in `parseBlockHeaders`.
+    if (kind === 'open' || (kind === 'body' && mdl && /^ {0,3}`{3,}mdl\s*$/.test(line))) {
+      first = true;
+    } else if (kind === 'body' && mdl) {
+      if (first) {
+        first = false;
+        return;
+      }
+      const match = line.match(BLOCK_HEADER_LINE);
+      if (match && types.has(match[1])) {
+        headers.push({ type: match[1], id: match[2]?.trim() ?? '', from: offset, to: offset + line.length });
+      }
+    }
+  });
+  return headers;
+};
