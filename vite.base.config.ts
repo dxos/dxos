@@ -523,8 +523,6 @@ export type NodeOptions = {
   jsx?: 'react' | 'solid';
   /** Globs to leave out, such as a nested workspace package that runs its own suite. */
   exclude?: string[];
-  /** Globs to run beside `src/` and `test/`, such as a package's own tooling directory. */
-  include?: string[];
 };
 
 export type BrowserOptions = {
@@ -827,7 +825,6 @@ const createNodeProject = ({
   plugins = [],
   jsx = 'react',
   exclude = [],
-  include = [],
 }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
@@ -849,7 +846,6 @@ const createNodeProject = ({
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
-        ...include,
         '!**/src/**/__snapshots__/**',
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',

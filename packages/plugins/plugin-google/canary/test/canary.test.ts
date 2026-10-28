@@ -12,9 +12,9 @@ import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { CanaryMailbox, credentialsFromEnv } from './mailbox.ts';
-import { Nightly, renderSummary, toEventProperties } from './nightly.ts';
-import { CanarySpace, previewClientLayer } from './space.ts';
+import { CanaryMailbox, credentialsFromEnv } from '../mailbox.ts';
+import { Nightly, renderSummary, toEventProperties } from '../nightly.ts';
+import { CanarySpace, previewClientLayer } from '../space.ts';
 
 const credentials = credentialsFromEnv();
 const { DX_CANARY_RECOVERY_PHRASE: phrase, DX_CANARY_SPACE_ID: spaceId } = process.env;

@@ -10,9 +10,9 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { GoogleMailApi } from '#services';
 
-import { GoogleApiError } from '../src/errors.ts';
-import { generateGmailDataset } from '../src/testing/index.ts';
-import { CanaryMailbox } from './mailbox.ts';
+import { GoogleApiError } from '../../src/errors.ts';
+import { generateGmailDataset } from '../../src/testing/index.ts';
+import { CanaryMailbox } from '../mailbox.ts';
 
 const dataset = generateGmailDataset({ count: 1_200, labels: ['enron-pool'], seed: 1 });
 const unused = () => Effect.die(new Error('not used'));

@@ -12,7 +12,7 @@
     "vite.config.ts"
   ],
   "include": [
-    "canary/*.ts",
+    "canary/**/*.ts",
     "dx.config.ts",
     "scripts/mbox.ts",
     "src/**/*.ts",

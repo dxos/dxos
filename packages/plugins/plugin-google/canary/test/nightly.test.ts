@@ -9,7 +9,7 @@ import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { Nightly, type NightlyMailbox, makeSeedCopy } from './nightly.ts';
+import { Nightly, type NightlyMailbox, makeSeedCopy } from '../nightly.ts';
 
 const NOW = new Date('2026-10-26T06:00:00Z');
 

@@ -9,7 +9,7 @@ import * as Trace from '@dxos/compute/Trace';
 
 import { GoogleOperation } from '#types';
 
-import { type Invocation, type SpaceSnapshot, classifyError, groupInvocations, runChecks } from './checks.ts';
+import { type Invocation, type SpaceSnapshot, classifyError, groupInvocations, runChecks } from '../checks.ts';
 
 const MINUTE = 60_000;
 const SINCE = Date.parse('2026-10-26T00:00:00Z');
