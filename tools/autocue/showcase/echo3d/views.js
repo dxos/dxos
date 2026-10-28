@@ -663,6 +663,8 @@ const saasViews = [
     hide: ABSORBED,
     shrink: ABSORBED,
     labels: { ...saasOrbit().labels, org: '' },
+    // Only the companies' links to the lab: your company's links to the apps go as the apps do.
+    edges: ['adopts'],
     move: Object.fromEntries(ABSORBED.map((app) => [`yours-${app}`, 'lab'])),
     tether: Object.fromEntries(ABSORBED.map((app) => [`yours-${app}`, 'yours-lab'])),
     absorbGrowth: 0.03,
