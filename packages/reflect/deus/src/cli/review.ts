@@ -102,8 +102,8 @@ export const configDependsOn = (configText: string): string[] | undefined => {
   const code = configText.replace(/(['"`])(?:\\.|(?!\1)[^\\])*\1|\/\/.*|\/\*[\s\S]*?\*\//g, (match) =>
     match.startsWith('/') ? ' ' : match,
   );
-  const start = code.match(/\bplugin\s*:\s*\{/);
-  if (!start) {
+  const start = /\bplugin\s*:\s*\{/.exec(code);
+  if (start?.index === undefined) {
     return undefined;
   }
   let depth = 0;
