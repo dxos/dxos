@@ -15,7 +15,7 @@ projects:
     tasks: packages/plugins/plugin-animator/docs/TASKS.md
     design: packages/plugins/plugin-animator/docs/DESIGN.md
     prs: []
-    resume: 'Design drafted; awaiting approval of DESIGN.md §13 open questions, then write PLUGIN.mdl.'
+    resume: 'Design approved and PLUGIN.mdl written; next: Phase 1, extract @dxos/animation from react-ui-canvas.'
   - name: hypercore-removal
     status: active
     user: dmaretskyi

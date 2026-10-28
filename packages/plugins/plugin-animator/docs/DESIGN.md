@@ -1,7 +1,7 @@
 # plugin-animator — Design
 
-Status: draft for review (2026-10-27). Nothing here is built. After this design is approved, the requirements move
-into `PLUGIN.mdl` and the build steps into `TASKS.md`.
+Status: approved (2026-10-27), with the open questions resolved in §13. Nothing here is built. The requirements are
+in `PLUGIN.mdl` and the build steps in `TASKS.md`.
 
 ## 1. Goal
 
@@ -57,6 +57,10 @@ design answers.
 | 7   | **3D stages use Babylon.js**, the engine plugin-spacetime and plugin-terra already ship. echo3d's effects are ported to it; echo3d stays a prototype.                                                                          | Two 3D engines in one bundle cost size and duplicate tooling. Babylon already has the CAD and planet work behind it.                                  |
 | 8   | **Export in the app first (WebCodecs), then on EDGE**, with the local CLI kept for CI and development.                                                                                                                         | WebCodecs encodes in the browser and the desktop webview with no native dependency. EDGE takes renders too long to run in a tab.                      |
 | 9   | **A rendered animation reaches plugin-studio as a `video/mp4` Variant from a `GenerationService` provider.**                                                                                                                   | Studio already models clips as Variants and long jobs as enqueue/await with a persisted `jobId`.                                                      |
+| 10  | **Every canvas animation is an `Animation`.** Canvas drops `View.timeline`; animating a canvas document creates a one-shot `Animation` over its scene.                                                                         | One place animations live. Canvas animation has not shipped, so there is no stored data to migrate.                                                   |
+| 11  | **Shots can be authored declaratively from the start** (§5.3): a list of scene states, each compiled to keys.                                                                                                                  | Agents describe "show these, merge those" far more compactly than keys; echo3d proved the form over 28 slides.                                        |
+| 12  | **Effects are pure functions of time, parameters and bindings**; they never read live ECHO data, and `3d` effects return instance lists only.                                                                                  | Keeps every render reproducible and every effect sandboxable. Live bindings and node-owning effects can be opt-ins later.                             |
+| 13  | **Audio stays in plugin-studio.** The animator renders picture only.                                                                                                                                                           | Studio already composes clips with tracks; a second mixer would duplicate it.                                                                         |
 
 ## 4. Architecture
 
@@ -104,8 +108,8 @@ Shot = {
 A track's `target` is a **stage-local id**: a canvas node id inside the scene, or `echo:<dxn>` for an ECHO object the
 stage holds by reference (a 3D object in a spacetime scene). The stage resolves it; the animator only stores it.
 
-Canvas keeps `View.timeline` for animations made inside a canvas document. A canvas shot can either point at that
-timeline or carry its own; open question 1 (§13) decides whether the two converge.
+Canvas has no timeline of its own: animating a canvas document creates (or opens) a one-shot `Animation` over its
+scene, and react-ui-canvas's animated projection reads the shot's `Sample` (decision 10).
 
 ### 5.2 Animatable properties
 
@@ -137,6 +141,34 @@ Value kinds and how they interpolate:
 | `discrete`      | Held until the next key                                           |
 
 Easing stays as built: named curves or a cubic bezier, taken from the key that ends each span.
+
+### 5.3 Declarative shots
+
+A shot can carry a **script** instead of, or as well as, hand-placed keys: an ordered list of states, the way
+echo3d's views describe each slide. The animator compiles the script into the shot's timeline; hand keys are kept
+and win where both set the same property at the same time.
+
+```ts
+Script = Beat[];
+
+Beat = {
+  at?: number;                   // seconds into the shot; default: after the previous beat
+  duration: number;              // how long the move into this state takes
+  ease?: Easing;
+  show?: string[];               // targets that appear (scale and opacity from 0)
+  hide?: string[];               // targets that disappear
+  set?: Record<string, Record<string, unknown>>;   // target → property → value
+  layout?: { kind: string; targets: string[]; params?: Record<string, unknown> };
+  merge?: { from: string[]; into: string };        // the merge effect, as a state change
+  camera?: Record<string, unknown>;
+  effects?: { add?: EffectInstance[]; remove?: string[] };
+  caption?: string;
+};
+```
+
+`layout` names an arranger the stage contributes (ring, grid, orbit), so the script states intent and the stage
+computes positions. Compilation is pure and deterministic: the same script and stage objects produce the same keys,
+so a script can be re-edited and recompiled at any time.
 
 ## 6. Effects
 
@@ -266,8 +298,8 @@ A skill (`animator`) documents the stage model, the effect contract and the buil
 
 | Phase | Delivers                                                                                                                                                               | Proves                                                                                         |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| 1     | `@dxos/animation` and `@dxos/react-ui-animation` extracted from react-ui-canvas; serializable `AnimatableAnnotation`; new value kinds                                  | Canvas animation and generators behave exactly as before (existing tests and stories pass)     |
-| 2     | plugin-animator: `Animation` object, article with shot list and timeline, `Stage` capability, canvas stage                                                             | A user animates two canvas scenes as one film and plays it                                     |
+| 1     | `@dxos/animation` and `@dxos/react-ui-animation` extracted from react-ui-canvas; serializable `AnimatableAnnotation`; new value kinds; script compiler (§5.3)          | Canvas generators behave as before; a script compiles to the same keys every time              |
+| 2     | plugin-animator: `Animation` object, article with shot list and timeline, `Stage` capability, canvas stage; canvas `View.timeline` removed in favour of `Animation`    | A user animates two canvas scenes as one film, by keys and by script, and plays it             |
 | 3     | Spacetime stage (clock-driven Babylon render, annotations on `Model.Object`); `3d` and `overlay` effect renderers; packet flow, burst, conversations and merge effects | echo3d's SaaS story rebuilt as an `Animation` over spacetime scenes                            |
 | 4     | In-app export (WebCodecs) and the studio provider; CLI form                                                                                                            | An animation renders to an MP4 Variant in a storyboard, matching live playback frame for frame |
 | 5     | EDGE render job                                                                                                                                                        | A ten-minute 4K render completes with the tab closed                                           |
@@ -281,18 +313,16 @@ A skill (`animator`) documents the stage model, the effect contract and the buil
 - **Export:** a CI job renders two seconds and checks the frame count and that consecutive frames differ by the
   expected camera step.
 
-## 13. Open questions
+## 13. Resolved questions
 
-1. **Canvas timelines:** should canvas documents keep their own `View.timeline`, or should every canvas animation
-   become an `Animation` with one shot, so there is a single place animations live?
-2. **3D engine:** is standardising on Babylon right, given echo3d is built on Three.js? The alternative is a Three.js
-   stage for presentation-style scenes beside spacetime's Babylon one.
-3. **echo3d's scene language:** echo3d describes scenes declaratively (show, hide, move, layouts by containment)
-   rather than by keyframes. Should the animator support that as a second way to author a shot, compiled to tracks?
-4. **Effect drawing:** do `3d` effects return instance lists only, or may an effect also own a small Babylon node
-   graph for things instances cannot do (trails, ribbons)?
-5. **EDGE:** does a render container with headless Chromium and ffmpeg fit the existing sandbox containers, or does it
-   need a dedicated media service?
-6. **Live data:** should effects read live ECHO data through bindings (counts, activity), or stay purely visual?
-7. **Audio:** does the animator place audio (narration takes from plugin-recorder, the chime) on its timeline, or does
-   that stay in studio when clips are assembled?
+Answered by the user on 2026-10-27.
+
+| #   | Question                                                            | Answer                                                                                             |
+| --- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 1   | Canvas keeps `View.timeline`, or every animation is an `Animation`? | Every canvas animation is an `Animation`, now; nothing has shipped, so no migration (decision 10). |
+| 2   | Babylon only, or a Three.js stage as well?                          | Babylon only (decision 7).                                                                         |
+| 3   | Declarative authoring of shots, compiled to keys?                   | Yes, from the start (decision 11, §5.3).                                                           |
+| 4   | `3d` effects: instance lists only, or own Babylon nodes?            | Instance lists first (decision 12).                                                                |
+| 5   | EDGE render: existing sandbox containers or a media service?        | Existing containers first (§8).                                                                    |
+| 6   | Effects read live ECHO data?                                        | No; visual first (decision 12).                                                                    |
+| 7   | Audio on the animator timeline?                                     | No; it stays in plugin-studio (decision 13).                                                       |

@@ -1,6 +1,6 @@
 # plugin-animator — Tasks
 
-_Resume: get the design approved (answer the open questions in DESIGN.md §13), then write `PLUGIN.mdl`. Uncommitted: none. Last: design draft and architecture diagram._
+_Resume: start Phase 1 (extract `@dxos/animation` from react-ui-canvas). Uncommitted: none. Last: open questions resolved; `PLUGIN.mdl` written._
 
 ## Phase 0: Review and design
 
@@ -11,8 +11,8 @@ paths), design the plugin, and turn the approved design into an MDL spec.
 
 - [x] **Review existing functionality** — findings in DESIGN.md §2.
 - [x] **Draft the design** — `docs/DESIGN.md` with the architecture diagram (`docs/diagrams/architecture.dx`).
-- [ ] **Design approved by the user** — open questions in DESIGN.md §13.
-- [ ] **Write `PLUGIN.mdl`** — requirements from the approved design (`mdl` skill), with a `## Changelog` entry.
+- [x] **Design approved by the user** — answers recorded in DESIGN.md §13.
+- [x] **Write `PLUGIN.mdl`** — features F-1…F-7, decisions D-1…D-19 (D-13…D-19 are agent entries awaiting approval).
 
 ## Phase 1: Neutral core
 
@@ -20,12 +20,13 @@ paths), design the plugin, and turn the approved design into an MDL spec.
 - [ ] **Extract `@dxos/react-ui-animation`** (timeline bar, clock hooks).
 - [ ] **Serializable `AnimatableAnnotation`** replacing the raw key; migrate react-ui-canvas.
 - [ ] **Value kinds**: vec3, rotation (slerp), colour (OKLab).
+- [ ] **Script compiler**: beats → keys, deterministic; hand keys win (DESIGN.md §5.3, F-3).
 - [ ] **Canvas regression**: existing canvas animation tests and stories pass unchanged.
 
 ## Phase 2: plugin-animator and the canvas stage
 
 - [ ] Scaffold the package (`"private": true`), `Animation` type, article, `Stage` capability.
-- [ ] Canvas stage in plugin-canvas.
+- [ ] Canvas stage in plugin-canvas; remove canvas `View.timeline` in favour of `Animation` (F-2.3).
 
 ## Phase 3: 3D
 
