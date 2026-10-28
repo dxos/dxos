@@ -134,6 +134,8 @@ export const steps = [
         SECTION,
         { timeout: 60_000 },
       );
+      // Bands land as each answer arrives; the project appears only once the run has filed its tasks.
+      await page.locator(TREE_ITEM('Projects')).first().waitFor({ timeout: 60_000 });
       await caption(demo, 'Messages regroup by priority');
       await page.waitForTimeout(BEAT * 3);
     },
@@ -207,7 +209,6 @@ export const steps = [
     narration: 'Allow it, and the reply goes out.',
     run: async ({ demo, page }) => {
       await demo.click({ selector: `${REQUEST} button:has-text("Allow") >> nth=0`, label: 'Allow' });
-      await page.locator(`${REQUEST}:has-text("Allow")`).first().waitFor({ timeout: 10_000 });
       await demo.speed({ factor: 2 });
       await page.waitForFunction(
         () =>
