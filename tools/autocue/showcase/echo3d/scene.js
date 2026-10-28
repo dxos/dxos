@@ -165,6 +165,8 @@ const compile = (view) => {
     spinReset: view.spinReset,
     caption: view.caption,
     captionImage: view.captionImage,
+    captionColor: view.captionColor,
+    captionLead: view.captionLead,
     sideTitle: view.sideTitle,
     chatter: view.chatter,
     sound: view.sound,

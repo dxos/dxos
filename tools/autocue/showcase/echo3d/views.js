@@ -12,7 +12,8 @@
 //            words fade out while the added ones fade in.
 //   labelGap id → extra distance (in the node's own units) between its label and its edge.
 //   swallow  kind or id → partner id: the node shakes and fades as the partner's growing edge reaches it.
-//   caption  large text faded in over the centre of the frame.
+//   caption  large text faded in over the centre of the frame; captionColor overrides its white, and captionLead
+//            brings it up that many seconds before the move ends.
 //   callouts [{ side, slot, wait, scale, anchor, inset, ...callout }]: side panels (`callout` alone is the right
 //            one); `slot` names a panel so a margin can hold several, `wait` delays its start in seconds, `pace` sets the
 //            seconds between its messages, `scale` shrinks it, `anchor` (top / centre / bottom) and `inset` (pixels in from the margin) place it.
@@ -532,10 +533,13 @@ const COMPANY_FILLS = {
   title: 'DXOS',
   // The closing title, once ECHO has filled the frame.
   // The DXOS logotype, then each line under it in turn.
-  captionImage: 'brand/dxos-horizontal-white.svg',
-  // ECHO's yellow turns orange as it fills the frame.
-  tint: { 'echo-hub': '#ff7a1a' },
-  caption: 'Your Team\nYour Apps\nYour Data',
+  // Near black, over the blue ECHO turns as it fills the frame.
+  captionImage: 'brand/dxos-horizontal-dark.svg',
+  captionColor: '#141414',
+  captionLead: 1,
+  // ECHO's yellow turns blue as it fills the frame.
+  tint: { 'echo-hub': '#f5c542' },
+  caption: 'Your team\nYour apps\nYour data',
   seconds: 4,
   tether: {},
   delay: {},

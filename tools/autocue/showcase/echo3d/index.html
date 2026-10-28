@@ -30,6 +30,11 @@
         font-weight: 300;
         src: local('Sharp Sans Display No1 Light'), local('SharpSansDisplayNo1-Light');
       }
+      @font-face {
+        font-family: 'Sharp Sans';
+        font-weight: 500;
+        src: local('Sharp Sans Display No1 Medium'), local('SharpSansDispNo1-Medium');
+      }
       /* Controls do not inherit the page font by default. */
       button {
         font-family: inherit;
@@ -292,8 +297,10 @@
         align-items: stretch;
       }
       /* The lettering of the DXOS logotype starts 38.6% of the way across the image (the D's left edge). */
+      /* The lines a step lighter than the logotype, so the logotype leads. */
       #caption .lockup:has(img) .lines {
         padding-left: 38.6%;
+        opacity: 0.75;
       }
       #caption img.headline {
         height: clamp(80px, 16vw, 200px);
@@ -305,9 +312,9 @@
         align-items: flex-start;
         gap: 0.2em;
         font-size: 0.45em;
-        /* Sharp Sans Light, the brand face, to match the thin strokes of the DXOS lettering above. */
+        /* Sharp Sans Medium, the brand face, heavy enough to hold its own under the DXOS lettering. */
         font-family: 'Sharp Sans', 'Space Grotesk', sans-serif;
-        font-weight: 300;
+        font-weight: 500;
         letter-spacing: 0.5px;
       }
       #caption .lines div {

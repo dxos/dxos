@@ -540,6 +540,7 @@ const goTo = (index, jump = false) => {
     // With a logotype, the lines sit in a block as wide as it, so they can line up with its lettering.
     const lockup = Object.assign(document.createElement('div'), { className: definition.captionImage ? 'lockup' : '' });
     lockup.append(headline, rest);
+    caption.style.color = definition.captionColor ?? '';
     caption.replaceChildren(lockup);
   };
   // A caption still on screen fades out with its old words before the new ones go in.
@@ -687,7 +688,11 @@ const animate = () => {
 
   const timing = scenes[current];
   const arriving = progress < 1;
-  progress = Math.min(1, progress + delta / (timing.seconds ?? config.transition.seconds));
+  const seconds = timing.seconds ?? config.transition.seconds;
+  const before = progress;
+  progress = Math.min(1, progress + delta / seconds);
+  // The caption comes up `captionLead` seconds before the move ends, or as it ends.
+  const captionAt = 1 - (timing.captionLead ?? 0) / seconds;
   centreMorphs();
   if (arriving && progress === 1) {
     for (const label of document.querySelectorAll('.label')) {
@@ -699,7 +704,7 @@ const animate = () => {
   if (arriving && progress === 1 && timing.sideTitle) {
     document.getElementById('side-title').style.opacity = '1';
   }
-  if (arriving && progress === 1 && timing.caption) {
+  if (timing.caption && before < captionAt && progress >= captionAt) {
     document.getElementById('caption').style.opacity = '1';
     document.getElementById('caption').classList.add('shown');
   }
