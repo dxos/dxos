@@ -116,7 +116,9 @@ op OpenSearch
   output: void
   effects: [layout:dialog]
   note: Registered as SearchOperation.OpenSearch; triggered from the command palette.
+```
 
+```mdl
 op SelectObject
   key: org.dxos.operation.search.selectObject
   desc: |

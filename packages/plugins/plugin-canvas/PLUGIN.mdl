@@ -82,7 +82,9 @@ test QA-1: Draw, connect, and nest a scene on a canvas
     - name: Zoom back out and show the frame's contents
       do: Click Up, select the Storage frame, and turn on "Show contents" in the Properties panel.
       expect: the frame draws its nested scene live inside it
+```
 
+```mdl
 test QA-2: Draw a nested architecture diagram of composer-app
   desc: |
     A complex diagram across three scenes — composer-app's top level, with the plugins and the client each
@@ -126,7 +128,9 @@ test QA-2: Draw a nested architecture diagram of composer-app
     - name: Go up and show both nested scenes live
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 20s showcase clip: Select a shape in the Composer architecture drawing, read its properties, and rename it. Recorded light at 60 fps with no ident, captions or
@@ -147,7 +151,9 @@ test QA-4: Showcase clip
     - name: Rename it
       do: Turn off read-only, double-click the box, and type React components.
       expect: the box shows its new label
+```
 
+```mdl
 test QA-5: Copy a tldraw drawing as a canvas
   desc: |
     The illustrator's "Copy as Canvas" action converts a tldraw drawing through the converter plugin-canvas registers:
