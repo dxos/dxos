@@ -35,9 +35,6 @@ const makeRecordingDatabaseLayer = () => {
       }
     },
     removeFeedItemsByIds: async () => {},
-    beginMigration: async () => {
-      throw new Error('Not supported.');
-    },
     queryFeed: () => ({ subscribe: () => () => {}, results: [], run: async () => [] }) as any,
     query: () => ({ subscribe: () => () => {}, results: [], run: async () => [] }) as any,
     syncFeed: async () => {},
