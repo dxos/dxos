@@ -23,6 +23,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.role.article',
+    'org.dxos.role.cardContent',
     'org.dxos.role.formInput',
     'org.dxos.role.objectProperties',
     'org.dxos.role.section',

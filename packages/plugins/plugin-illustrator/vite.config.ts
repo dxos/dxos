@@ -19,6 +19,8 @@ export default defineConfig({
     'model': 'src/model/index.ts',
     'operations': 'src/operations/index.ts',
     'skills': 'src/skills/index.ts',
+    'svg-variant': 'src/capabilities/svg-variant.ts',
+    'svg-variant/node': 'src/capabilities/svg-variant.node.ts',
     'DrawingSkill': 'src/skills/DrawingSkill.ts',
     'translations': 'src/translations.ts',
     'util': 'src/util/index.ts',

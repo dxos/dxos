@@ -445,6 +445,39 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(finalIds).toHaveLength(dataset.emails.length);
   });
 
+  test('a run out of time requests Operation.runAgain(), and repeated runs sync the whole mailbox', async ({
+    expect,
+  }) => {
+    const now = new Date();
+    const dataset = generateJmapDataset({ count: 5, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
+    const { db, mailbox, connection } = await seed();
+
+    // A zero budget is spent as soon as one message is taken, so every run stops after exactly one.
+    const runOnce = () =>
+      EffectEx.runPromise(
+        Effect.exit(runJmapSync({ connection: Ref.make(connection), timeBudgetMs: 0 })).pipe(
+          Effect.provide(jmapSyncTestServices(db, dataset)),
+        ),
+      );
+
+    const first = await runOnce();
+    expect(Exit.isFailure(first) && Process.RunAgainError.is(Cause.squash(first.cause))).toBe(true);
+    expect(await syncedIdsOf(db, mailbox)).toHaveLength(1);
+
+    let runs = 1;
+    let exit: Exit.Exit<unknown, unknown> = first;
+    while (Exit.isFailure(exit) && runs < 20) {
+      expect(Process.RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+      exit = await runOnce();
+      runs += 1;
+    }
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    const finalIds = await syncedIdsOf(db, mailbox);
+    expect(new Set(finalIds).size).toBe(finalIds.length);
+    expect(finalIds).toHaveLength(dataset.emails.length);
+  });
+
   test(
     'the newest message is not re-committed across backfill runs once it ages out of the dedup seed — ' +
       'regression: the forward high-boundary re-fetch duplicated it every run',
@@ -799,6 +832,46 @@ describe('runJmapSync against a mock JMAP API', () => {
       )!,
     ).toString();
     expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(starredUri);
+  });
+
+  test('the time budget never cuts a delta short, so a spent budget still applies every reconcile in one run', async ({
+    expect,
+  }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 3, seed: 94, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
+        Effect.provide(jmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+
+    // Every message was flagged on the server: three reconciles in one delta.
+    const run2 = {
+      ...base,
+      emails: base.emails.map((email) => ({ ...email, keywords: { $flagged: true } })),
+      state: 'state-1',
+      changeLog: [{ sinceState: 'state-0', newState: 'state-1', updated: base.emails.map((email) => email.id) }],
+    };
+    // A replayed delta has no position inside it, so cutting reconciles on time could starve its tail;
+    // even with the budget spent at once, all three apply and the token advances in a single run.
+    await EffectEx.runPromise(
+      runJmapSync({ connection: Ref.make(connection), now, timeBudgetMs: 0 }).pipe(
+        Effect.provide(jmapSyncTestServices(db, run2)),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('state-1');
+
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const starredUri = Obj.getURI(
+      tags.find((tag) =>
+        Obj.getMeta(tag).keys.some((key) => key.source === SystemTags.SYSTEM_TAG_SOURCE && key.id === 'starred'),
+      )!,
+    ).toString();
+    for (const message of await queryFeedMessages(db, mailbox)) {
+      expect(TagIndex.bind(tagIndex).tags(message.id)).toContain(starredUri);
+    }
   });
 
   test('a created delta larger than the per-run budget syncs across bounded runs (maxChanges)', async ({ expect }) => {

@@ -350,6 +350,41 @@ describe('EchoHost trace indexing', () => {
   });
 });
 
+describe('EchoHost feed indexing', () => {
+  // Regression: every pass a feed append started re-read the heads of every document and every
+  // cursor, though an append changes no document (UI lag trace, 2026-10-26).
+  test('a pass started by feed appends alone does not rescan documents', async () => {
+    const { host, runtime, spaceId, saveDocs } = await setup();
+    await saveDocs(200);
+    await host.updateIndexes();
+    const update = vi.spyOn(host.indexEngine, 'update');
+    const documentScans = () => update.mock.calls.filter(([, source]) => source.sourceName === 'automerge').length;
+    const feedScans = () => update.mock.calls.filter(([, source]) => source.sourceName !== 'automerge').length;
+
+    const feedId = EntityId.random();
+    for (let index = 0; index < 20; index++) {
+      const scansBefore = feedScans();
+      await RuntimeProvider.runPromise(runtime)(
+        host.feedStore.appendLocal([
+          {
+            spaceId,
+            feedId,
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+            data: EchoFeedCodec.encode({ id: EntityId.random() }),
+          },
+        ]),
+      );
+      await expect.poll(feedScans).toBeGreaterThan(scansBefore);
+    }
+    expect(documentScans()).toBe(0);
+
+    // A document saved after the appends is still indexed by the next background pass.
+    const scansBefore = documentScans();
+    await saveDocs();
+    await expect.poll(documentScans).toBeGreaterThan(scansBefore);
+  });
+});
+
 describe('EchoHost query service', () => {
   test('a one-shot query stream ends after its first result', async () => {
     const { host, spaceId, saveObject } = await setup();

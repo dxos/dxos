@@ -170,9 +170,11 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-typesafe": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",

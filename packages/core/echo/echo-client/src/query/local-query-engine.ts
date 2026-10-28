@@ -430,7 +430,7 @@ export class LocalQueryEngine implements QueryContext {
       }
       const members = views.flatMap((view) => view.evaluate(listed));
       const adjusted = adjustGroups(plan.manifest, remote, members, {
-        held: (id) => views.some((view) => view.holdsBody(id)),
+        held: (id) => views.some((view) => view.surfaces(id)),
         survivor: (id) => views.find((view) => view.holdsBody(id))?.survivorId(id) ?? id,
       });
       if (adjusted) {

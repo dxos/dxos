@@ -8,20 +8,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 import { Entity } from '@dxos/echo';
-import { type PublicKey } from '@dxos/keys';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
-import { SpaceOperationConfig } from '../operations/helpers.ts';
-
-type UndoMappingsOptions = {
-  createInvitationUrl: (invitationCode: string) => string;
-  createJoinUrl: (spaceKey: PublicKey) => string;
-};
-
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl, createJoinUrl }: UndoMappingsOptions) {
+  Effect.fnUntraced(function* () {
     return [
       Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
@@ -64,7 +56,6 @@ export default Capability.makeModule(
           ],
         }),
       ]),
-      Capability.contribute(SpaceOperationConfig, { createInvitationUrl, createJoinUrl }),
     ];
   }),
 );

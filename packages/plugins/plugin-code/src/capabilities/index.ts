@@ -7,6 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -29,6 +30,12 @@ export const BuildRunState = Capability.lazyModule(
   () => import('./build-run-state.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
+// Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.lazyModule(
+  'CodeMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
+);
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
 );
@@ -43,6 +50,12 @@ export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [CodeCapabilities.Settings],
 });
 export const Translations = AppCapability.translations(translations);
+// Registered at startup so a GitHub file sync on EDGE, where no UI event fires, finds the mapping.
+export const SpecFileMapping = Capability.lazyModule(
+  'SpecFileMapping',
+  { provides: [GitHubCapabilities.FileMapping], activatesOn: ActivationEvents.Startup },
+  () => import('./spec-file-mapping.ts'),
+);
 // Local files are reachable only from the desktop app or a dev server; settings supply the configured checkouts.
 export const SpecSync = Capability.lazyModule(
   'SpecSync',
