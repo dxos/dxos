@@ -267,3 +267,19 @@ decision D-1: Features live on specs, not projects: a spec owns its features and
   by: user:dmaretskyi
   affects: [QA-6]
 ```
+
+```mdl
+decision D-2: A showcase is a presenter slide deck, not a type of its own. Creating one makes a `Presentation` whose first slide is the write-up and whose further slides each show one artifact, such as an image or video file, a diagram or a pull request. The same `Demonstrates` relation links the deck to the features and tasks it shows.
+  date: 2026-10-28
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-3: `Demonstrates` 0.2.0 takes any object as its source, and plugin-presenter implements `CreateShowcase` and migrates each `Showcase` 0.1.0 into a `Presentation` in place, keeping its id and its `Demonstrates` edges. Fills in [D-2].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: plugin-presenter depends on this plugin through plugin-studio, so this plugin cannot import the `Presentation` type without a dependency cycle.
+  rejected:
+    - Moving `Presentation` into a package both plugins import, which moves the deck's whole type module for one relation.
+```

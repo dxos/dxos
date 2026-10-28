@@ -6,48 +6,28 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { Text } from '@dxos/schema';
+import { DXN, Migration, Obj, Relation, Type } from '@dxos/echo';
 
-/** What an agent makes to show that a feature or a task works: a write-up plus the artifacts that prove it. */
-export class Showcase extends Type.makeObject<Showcase>(DXN.make('org.dxos.type.showcase', '0.1.0'))(
-  Schema.Struct({
-    name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
+import * as LegacyShowcase from './LegacyShowcase.ts';
 
-    /** What was shown and how to reproduce it. */
-    content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
-
-    /**
-     * The evidence: screenshots and videos (`File`), the pull requests the work landed in, and anything else
-     * that shows the result. Refs rather than owned children, as for `Task.artifacts`: a PR belongs to its
-     * repository and a file may be filed elsewhere, so deleting the showcase must not cascade to them.
-     */
-    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
-      Annotation.FormInputAnnotation.set(false),
-      Schema.annotate({ title: 'Artifacts' }),
-    ),
-  }).pipe(
-    Annotation.LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--presentation-chart--regular', hue: 'amber' }),
-    Annotation.UserType.set(),
-  ),
-) {}
-
-type MakeProps = Pick<Obj.MakeProps<typeof Showcase>, 'name'> &
-  Partial<Pick<Obj.MakeProps<typeof Showcase>, 'artifacts'>> & {
-    /** Markdown body; wrapped in an owned `Text`. */
-    content?: string;
-  };
-
-export const make = ({ content = '', ...props }: MakeProps): Showcase =>
-  Obj.make(Showcase, { artifacts: [], ...props, content: Ref.make(Text.make({ content })) });
-
-export const instanceOf = (value: unknown): value is Showcase => Obj.instanceOf(Showcase, value);
-
-/** Source showcase demonstrates the target, which is a `Feature` or a `Task`. */
-export class Demonstrates extends Type.makeRelation<Demonstrates>(DXN.make('org.dxos.relation.demonstrates', '0.1.0'))({
-  source: Showcase,
+/**
+ * Source demonstrates the target, a `Feature` or a `Task`. The source is the showcase, a presenter deck
+ * (`org.dxos.type.presentation`), typed loosely because plugin-presenter depends on this plugin.
+ */
+export class Demonstrates extends Type.makeRelation<Demonstrates>(DXN.make('org.dxos.relation.demonstrates', '0.2.0'))({
+  source: Obj.Unknown,
   target: Obj.Unknown,
 })(Schema.Struct({ id: Obj.ID })) {}
 
 export const makeDemonstrates = (props: Relation.MakeProps<typeof Demonstrates>) => Relation.make(Demonstrates, props);
+
+/**
+ * `Demonstrates` 0.1.0 → 0.2.0, whose source may be any object since a showcase is a presenter deck. Each edge keeps
+ * its id and endpoints; plugin-presenter turns the `Showcase` at its source into a `Presentation` in place.
+ */
+export const demonstratesMigration = Migration.define({
+  from: LegacyShowcase.Demonstrates,
+  to: Demonstrates,
+  // The endpoints are named only for the result's type: the replace keeps the edge's stored source and target.
+  transform: async (from) => ({ [Relation.Source]: from[Relation.Source], [Relation.Target]: from[Relation.Target] }),
+});

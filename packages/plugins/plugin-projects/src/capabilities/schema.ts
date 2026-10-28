@@ -25,6 +25,5 @@ export default [
   Feature.Feature,
   Feature.DependsOn,
   Feature.Implements,
-  Showcase.Showcase,
   Showcase.Demonstrates,
 ];

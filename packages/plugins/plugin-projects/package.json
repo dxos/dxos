@@ -104,6 +104,11 @@
       "types": "./dist/types/src/types/LegacyFeature.d.ts",
       "import": "./dist/lib/LegacyFeature.mjs"
     },
+    "./LegacyShowcase": {
+      "source": "./src/types/LegacyShowcase.ts",
+      "types": "./dist/types/src/types/LegacyShowcase.d.ts",
+      "import": "./dist/lib/LegacyShowcase.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
