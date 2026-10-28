@@ -648,6 +648,26 @@ decision D-22: The implemented operation keys take the repository's `<root>.oper
   rejected: Keeping the dotted keys and disabling the rule for this package.
 ```
 
+```mdl
+decision D-23: A stage target carries its resting values, which a script compiles from, and a stage reports an edit made at the sample's time through an `onEdit` callback, which the animator writes as keys on the shot. Fills in [D-15].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [AnimatorCapabilities.Stage, F-2.5, F-3.1]
+  why: A script states targets' end states, so the compiler needs where each starts; keeping the write in the animator leaves the stage unable to write a timeline it does not own.
+  rejected: A separate `values(stage)` function on the stage, which would read the stage object twice.
+```
+
+```mdl
+decision D-24: The canvas stage receives each sample as held keys on its scene engine's animated projection, and a canvas View holds no timeline: the engine takes the timeline from its host, and composite objects carry no animation of their own. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.3, F-4.2]
+  why: Reusing the animated projection keeps hit testing, generators and the camera drawing the sampled scene without a second sampling path.
+  rejected: Keeping `View.timeline` beside `Animation` as a second place animation lives.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

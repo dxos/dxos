@@ -4,8 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { createTimeline, setKey } from '@dxos/animation';
-
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
 import { type InstanceNode, type Node, type View, isInstanceNode } from '../model/index.ts';
@@ -74,12 +72,6 @@ describe('composeSelection', () => {
     expect(instance.ports).toEqual([{ id: 'b', side: 'e', offset: 0.5 }]);
   });
 
-  test('keyed tracks of the grouped nodes move into the composite, in its coordinates', ({ expect }) => {
-    const timeline = setKey(createTimeline(), 'a', 'center', { t: 1, value: { x: 50, y: 25 } });
-    const composition = composeSelection({ ...scene, timeline }, ['a', 'b'], { compositeId: 'obj', instanceId: 'i' });
-    expect(composition?.composite.timeline?.tracks['a:center'].keys).toEqual([{ t: 1, value: { x: -100, y: 0 } }]);
-  });
-
   test('a locked node is not grouped', ({ expect }) => {
     const locked = { ...scene, nodes: { ...scene.nodes, a: { ...scene.nodes.a, locked: true } } };
     expect(composeSelection(locked, ['a', 'b'], { compositeId: 'obj', instanceId: 'i' })).toBeUndefined();
@@ -143,31 +135,6 @@ describe('compose and ungroup', () => {
           link.target.node === second.id,
       ),
     ).toBe(true);
-  });
-
-  test("ungrouping brings the Object's animation back out, on the new nodes and where the Instance drew them", ({
-    expect,
-  }) => {
-    // `a` slides from where it stands to 100 right of it; Group carries the track into the Object.
-    const centre = nodeCenter(scene.nodes.a);
-    const keyed = setKey(setKey(createTimeline(2), 'a', 'center', { t: 0, value: centre }), 'a', 'center', {
-      t: 1,
-      value: { x: centre.x + 100, y: centre.y },
-    });
-    const animated = { ...scene, timeline: keyed };
-    const composition = composeSelection(animated, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
-    if (!composition) {
-      throw new Error('no composition');
-    }
-    expect(Object.keys(composition.composite.timeline?.tracks ?? {})).toEqual(['a:center']);
-    const parent = reduceIntent(animated, { kind: 'batch', intents: composition.intents });
-    const restored = reduceIntent(parent, {
-      kind: 'batch',
-      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
-    });
-    const first = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x)[0];
-    const track = restored.timeline?.tracks[`${first.id}:center`];
-    expect(track?.keys.map((key) => key.value)).toEqual([centre, { x: centre.x + 100, y: centre.y }]);
   });
 
   test('make unique copies the definition under fresh ids and renames the overrides and ports', ({ expect }) => {

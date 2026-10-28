@@ -7,7 +7,7 @@
 // it: it holds the loaded modules, the scene, and one runner per generator node, and answers frame requests.
 //
 
-import { type RunnerOptions, hashSeed } from '@dxos/animation';
+import { type RunnerOptions, type Timeline, hashSeed } from '@dxos/animation';
 
 import { type NodeId, type View, isGeneratorNode } from '../model/index.ts';
 import { loadGenerator } from './compile.ts';
@@ -19,7 +19,7 @@ export type GeneratorFrameNode = { id: NodeId; key: string; schema?: Record<stri
 
 export type CoreRequest =
   | { type: 'load'; key: string; code: string }
-  | { type: 'scene'; scene: View }
+  | { type: 'scene'; scene: View; timeline?: Timeline }
   | { type: 'frame'; id: number; t: number; nodes: GeneratorFrameNode[] };
 
 export type CoreResponse = { type: 'frame'; id: number; t: number; frames: Record<NodeId, GeneratorFrame> };
@@ -29,6 +29,7 @@ export class GeneratorCore {
   readonly #runners = new Map<NodeId, { key: string; runner: GeneratorRunner }>();
   readonly #options: Omit<RunnerOptions, 'seed'>;
   #scene: View | undefined;
+  #timeline: Timeline | undefined;
 
   constructor(options: Omit<RunnerOptions, 'seed'> = {}) {
     this.#options = options;
@@ -47,6 +48,7 @@ export class GeneratorCore {
       case 'scene': {
         // An edit to the scene can move what a generator is bound to: every run starts over from its checkpoints' end.
         this.#scene = request.scene;
+        this.#timeline = request.timeline;
         for (const { runner } of this.#runners.values()) {
           runner.reset();
         }
@@ -70,6 +72,7 @@ export class GeneratorCore {
           }
           frames[node.id] = this.#runner(node, module, scene).frame(request.t, {
             scene,
+            timeline: this.#timeline,
             node: node.id,
             schema: node.schema,
           });

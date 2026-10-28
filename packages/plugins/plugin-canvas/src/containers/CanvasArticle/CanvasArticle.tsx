@@ -307,7 +307,6 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                     onGroupsChange={handleGroupsChange}
                     sceneFilter={isLocalScene}
                   />
-                  <Canvas.Timeline />
                   <Canvas.Views />
                   <Canvas.Layers />
                   <Canvas.Objects />

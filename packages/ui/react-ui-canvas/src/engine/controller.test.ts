@@ -5,7 +5,7 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { createTimeline, keyTimes } from '@dxos/animation';
+import { type Timeline, createTimeline, keyTimes } from '@dxos/animation';
 
 import { ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
@@ -61,6 +61,11 @@ const setup = ({
     view: {},
   });
   const projection = withHistory(createFreehandProjection({ registry, store, sceneId: tree.root }), history);
+  // The host's timeline: what a canvas animates is held outside its Views.
+  let timeline: Timeline | undefined;
+  const setTimeline = (next: Timeline) => {
+    timeline = next;
+  };
   let next = 0;
   const controller = createCanvasController({
     registry,
@@ -68,6 +73,8 @@ const setup = ({
     store,
     projection: () => projection,
     baseProjection: () => projection,
+    timeline: () => timeline,
+    onTimelineChange: () => setTimeline,
     nodeRegistry: () => defaultNodeRegistry,
     readonly: () => readonly,
     grid: () => ({ major: 64, snap: (value) => Math.round(value / 16) * 16 }),
@@ -91,6 +98,8 @@ const setup = ({
     views,
     linkId,
     projection,
+    timeline: () => timeline,
+    setTimeline,
     history,
     undoStep: history.undo,
     redoStep: history.redo,
@@ -547,8 +556,8 @@ describe('CanvasController', () => {
 
   describe('time', () => {
     test('seek pauses and keeps the playhead within the timeline; play at the end starts again', ({ expect }) => {
-      const { registry, atoms, controller, projection } = setup();
-      projection.apply({ kind: 'timeline', timeline: createTimeline(4) });
+      const { registry, atoms, controller, setTimeline } = setup();
+      setTimeline(createTimeline(4));
       registry.set(atoms.clock.playing, true);
       controller.time.seek(10);
       expect(registry.get(atoms.clock.playing)).toBe(false);
@@ -559,25 +568,25 @@ describe('CanvasController', () => {
     });
 
     test('addKey keys the selection at the playhead, and removeKey takes those keys away', ({ expect }) => {
-      const { registry, atoms, controller, projection } = setup();
-      projection.apply({ kind: 'timeline', timeline: createTimeline(4) });
+      const { controller, timeline, setTimeline } = setup();
+      setTimeline(createTimeline(4));
       controller.selection.select(['a']);
       controller.time.seek(1);
       controller.time.addKey();
-      const keyed = () => keyTimes(registry.get(projection.scene).timeline, ['a']);
+      const keyed = () => keyTimes(timeline(), ['a']);
       expect(keyed()).toEqual([1]);
       controller.time.removeKey();
       expect(keyed()).toEqual([]);
     });
 
     test('moveKey moves the selection keys at one time to another, with the playhead', ({ expect }) => {
-      const { registry, atoms, controller, projection } = setup();
-      projection.apply({ kind: 'timeline', timeline: createTimeline(4) });
+      const { registry, atoms, controller, timeline, setTimeline } = setup();
+      setTimeline(createTimeline(4));
       controller.selection.select(['a']);
       controller.time.seek(1);
       controller.time.addKey();
       controller.time.moveKey(1, 3);
-      expect(keyTimes(registry.get(projection.scene).timeline, ['a'])).toEqual([3]);
+      expect(keyTimes(timeline(), ['a'])).toEqual([3]);
       expect(registry.get(atoms.clock.time)).toBe(3);
     });
   });

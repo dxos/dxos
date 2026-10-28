@@ -6,6 +6,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
+  type Timeline,
   clampTime,
   createTimeline,
   getPath,
@@ -111,8 +112,12 @@ export type CanvasControllerOptions = {
   store: ViewStore;
   /** The open View's projection, read when a command runs: it changes as the View changes. */
   projection: () => Projection;
-  /** The projection under the animated one, which keys and timeline edits are written through. */
+  /** The projection under the animated one. */
   baseProjection: () => Projection;
+  /** The host's timeline, which animates the scenes; none, the time commands have nothing to key. */
+  timeline?: () => Timeline | undefined;
+  /** Takes the timeline with keys added, moved or removed; absent, the timeline cannot be edited here. */
+  onTimelineChange?: () => ((timeline: Timeline) => void) | undefined;
   /** What each node type animates, for keying the selection. */
   nodeRegistry: () => NodeRegistry;
   /** Read when a command runs: the host may toggle it. */
@@ -275,6 +280,8 @@ export const createCanvasController = ({
   store,
   projection,
   baseProjection,
+  timeline: hostTimeline = () => undefined,
+  onTimelineChange = () => undefined,
   nodeRegistry,
   readonly,
   grid,
@@ -478,7 +485,8 @@ export const createCanvasController = ({
     toggleDebug: toggle(atoms.debug),
   };
 
-  const timeline = () => registry.get(baseProjection().scene).timeline;
+  const timeline = hostTimeline;
+  const setTimeline = (next: Timeline) => onTimelineChange()?.(next);
   const seek = (t: number) => {
     registry.set(atoms.clock.playing, false);
     registry.set(atoms.clock.time, clampTime(timeline(), t));
@@ -526,7 +534,7 @@ export const createCanvasController = ({
           }
         }
       }
-      baseProjection().apply({ kind: 'timeline', timeline: next });
+      setTimeline(next);
     },
     moveKey: (from, to) => {
       const current = timeline();
@@ -536,7 +544,7 @@ export const createCanvasController = ({
       }
       const next = moveKeys(current, registry.get(atoms.selection), from, target, 0.5 / timelineFps(current));
       if (next !== current) {
-        baseProjection().apply({ kind: 'timeline', timeline: next });
+        setTimeline(next);
       }
       seek(target);
     },
@@ -557,7 +565,7 @@ export const createCanvasController = ({
         }
       }
       if (next !== current) {
-        baseProjection().apply({ kind: 'timeline', timeline: next });
+        setTimeline(next);
       }
     },
   };

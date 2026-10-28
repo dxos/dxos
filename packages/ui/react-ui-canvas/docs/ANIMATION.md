@@ -1,6 +1,7 @@
 # react-ui-canvas — Animation
 
 Status: phases 1 and 2 built (2026-10-15); §12 records what was built and where it differs from the design below.
+Superseded in part (2026-10-27) by plugin-animator: a View no longer holds a timeline (decisions 2 and 3, §12).
 Phases 3 and 4 are still design. Extends `DESIGN.md` (data model §4, layers §4b, prototypes §4c). Source
 material: the data-flow sample in `packages/plugins/plugin-canvas/src/samples/molecules/` and the frame renderer
 `scripts/render-story.mjs`, built for PR dxos/dxos#13992.
@@ -67,8 +68,8 @@ Each of these cost a render or a fix in the sample. The design removes the cause
 | #   | Decision                                                                                                       | Why                                                                                                                       |
 | --- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **A composite object is a scene.** Its definition is a scene in the store; its instances are `instance` nodes. | Scenes already nest, render as previews or live layers, and drill. A second container type would duplicate all of that.   |
-| 2   | **Animation data lives on the scene**, as `Scene.timeline`.                                                    | The scene is the unit the store saves, the projection emits and the undo log covers. One scene, one timeline.             |
-| 3   | **Sampling is a pure function**, `sampleView(scene, t) → Scene`.                                               | The surface, hit testing, the properties form and export all take a `Scene`. None of them learns about time.              |
+| 2   | ~~**Animation data lives on the scene**, as `Scene.timeline`.~~ Superseded: the host holds it (§12).           | The scene is the unit the store saves, the projection emits and the undo log covers. One scene, one timeline.             |
+| 3   | **Sampling is a pure function**, `sampleView(scene, timeline, t) → Scene`.                                     | The surface, hit testing, the properties form and export all take a `Scene`. None of them learns about time.              |
 | 4   | **One clock per view**, an atom holding the time; nothing else reads `performance.now()` or rAF timestamps.    | §2.1 items 1 to 3.                                                                                                        |
 | 5   | **Editing at a time is an intent rewrite.** An animated projection turns a `move` at time t into a keyframe.   | Decision 11 of `DESIGN.md` already routes every edit through `apply`. The surface does not change.                        |
 | 6   | **Generators are node types** with a `GeneratorDef` on top of `NodeDef`.                                       | They get the palette, the properties form, ports, layers and selection for free.                                          |
@@ -542,3 +543,13 @@ by `generator.test.ts` and plugin-canvas `operations.test.ts`, and the view stil
 plugin-canvas adds an `image` node type to the palette (key `I`): a picture linked by `src` (a web URL; anything else,
 such as a `javascript:` or `data:` URL in shared content, draws the placeholder), with a description and a fit
 (`contain`, `cover`, `fill`), all edited in the properties panel.
+
+### 12.1 The timeline moved to the host (2026-10-27)
+
+plugin-animator owns every animation (its F-2.3): a canvas is animated by an `Animation` shot over its scene, so a
+View stores no timeline and there is no `timeline` intent. `Canvas.Root` takes the timeline as a prop with an
+`onTimelineChange` callback; the animated projection, the time commands and the generator worker read the host's
+timeline, and keys an edit makes leave through the callback rather than the projection, so they are the host's to
+undo. `sampleView(scene, timeline, t)` takes the timeline as an argument. A composite object no longer carries an
+animation of its own: Group and Ungroup move no tracks, and a deleted node's tracks stay with the host, where they
+key nothing.

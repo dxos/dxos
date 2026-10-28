@@ -11,7 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AnimatableAnnotation, Timeline } from '@dxos/animation';
+import { AnimatableAnnotation } from '@dxos/animation';
 import { Scene as Dsl } from '@dxos/diagram';
 import { Annotation } from '@dxos/echo';
 import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
@@ -655,7 +655,6 @@ export const createViewSchema = <const Nodes extends readonly Schema.Codec<NodeB
     kind: Schema.optional(ViewKind),
     /** An Object the Group command made: kept out of the library until it is named or placed again. */
     anonymous: Schema.optional(Schema.Boolean),
-    timeline: Schema.optional(Timeline),
   });
 
 /** The View schema over the built-in node types. */
@@ -683,7 +682,6 @@ export type View = {
   readonly layers?: Readonly<Record<LayerId, Layer>>;
   readonly kind?: ViewKind;
   readonly anonymous?: boolean;
-  readonly timeline?: Timeline;
 };
 
 /** A View as stored before a rename, read in the current shape: its nodes' legacy type names and settings mapped. */
@@ -728,8 +726,6 @@ export type Intent =
   | { kind: 'layer'; layer: Layer }
   /** Removes a layer and every element on it; the last layer of a scene stays. */
   | { kind: 'removeLayer'; id: LayerId }
-  /** Replaces the scene's timeline, or removes it; how the animated projection writes keys (ANIMATION.md §5.4). */
-  | { kind: 'timeline'; timeline: Timeline | undefined }
   /** Several intents applied as one model change (one undo step), e.g. a paste. */
   | { kind: 'batch'; intents: Intent[] };
 

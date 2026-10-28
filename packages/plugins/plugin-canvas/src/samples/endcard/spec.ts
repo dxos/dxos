@@ -163,7 +163,7 @@ export const rootScene = (): View => {
   };
 };
 
-/** One key, as `canvas.setTimelineKey` takes it. */
+/** One key on the end card's timeline. */
 export type KeySpec = { target: string; property: string; t: number; value: unknown; easing?: Easing };
 
 /** The logo's frame at scale `scale` about the scale origin: its size and centre scale together. */

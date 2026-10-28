@@ -8,7 +8,7 @@
 // runs the same core in-process (a headless check; tests).
 //
 
-import { type ModuleCompiler } from '@dxos/animation';
+import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 
 import { type NodeId, type View, isGeneratorNode } from '../model/index.ts';
 import { type CoreRequest, type CoreResponse, GeneratorCore, type GeneratorFrameNode } from './core.ts';
@@ -37,6 +37,8 @@ export class GeneratorHost {
   readonly #compiled = new Map<string, Promise<string[] | undefined>>();
   #scene: View | undefined;
   #sentScene: View | undefined;
+  #timeline: Timeline | undefined;
+  #sentTimeline: Timeline | undefined;
   #sources: Readonly<Record<string, GeneratorSource>> = {};
   #wanted: number | undefined;
   #busy = false;
@@ -78,10 +80,11 @@ export class GeneratorHost {
     }
   }
 
-  /** The scene (as stored, unsampled) and the generators its nodes reference. */
-  update(scene: View, sources: Readonly<Record<string, GeneratorSource>>): void {
+  /** The scene (as stored, unsampled), the generators its nodes reference, and the timeline that animates it. */
+  update(scene: View, sources: Readonly<Record<string, GeneratorSource>>, timeline?: Timeline): void {
     this.#scene = scene;
     this.#sources = sources;
+    this.#timeline = timeline;
   }
 
   /** Asks for the frames at `t`; a request made while one is in flight replaces any still waiting. */
@@ -140,9 +143,11 @@ export class GeneratorHost {
       }
       nodes.push({ id: node.id, key, schema: source.params });
     }
-    if (this.#sentScene !== scene) {
+    const timeline = this.#timeline;
+    if (this.#sentScene !== scene || this.#sentTimeline !== timeline) {
       this.#sentScene = scene;
-      this.#backend.send({ type: 'scene', scene });
+      this.#sentTimeline = timeline;
+      this.#backend.send({ type: 'scene', scene, timeline });
     }
     const id = this.#next++;
     const response = await new Promise<CoreResponse>((resolve, reject) => {

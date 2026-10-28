@@ -7,7 +7,7 @@
 // from the scene sampled at each step. Pure of the DOM: the worker runs it, and so does a headless check.
 //
 
-import { EffectRunner, type EffectStatus, type EffectStep, type RunnerOptions } from '@dxos/animation';
+import { EffectRunner, type EffectStatus, type EffectStep, type RunnerOptions, type Timeline } from '@dxos/animation';
 
 import { type Bounds, type NodeId, type View, isGeneratorNode, sampleView } from '../model/index.ts';
 import { flattenPath, nodeBounds, viewLinkGeometry } from '../utils/index.ts';
@@ -23,6 +23,8 @@ import {
 /** What a frame is computed from: the scene as stored (it is sampled per step), and the generator's node in it. */
 export type RunnerInput = {
   scene: View;
+  /** The host's timeline, sampled per step so a bound node moving on it moves what the generator draws. */
+  timeline?: Timeline;
   node: NodeId;
   /** The parameter schema, whose `x-binding` properties name nodes or links to resolve. */
   schema?: Record<string, unknown>;
@@ -113,7 +115,7 @@ export class GeneratorRunner {
   }
 
   #context({ t, dt, random }: EffectStep, input: RunnerInput): GeneratorContext {
-    const scene = sampleView(input.scene, t);
+    const scene = sampleView(input.scene, input.timeline, t);
     const node = scene.nodes[input.node];
     const params = (node && isGeneratorNode(node) ? node.params : undefined) ?? {};
     return {

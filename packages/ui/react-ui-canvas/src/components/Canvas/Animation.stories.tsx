@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { type Timeline, createTimeline, setKey } from '@dxos/animation';
@@ -12,7 +12,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { ViewBuilder } from '../../builder/index.ts';
-import { type View, createMemoryStore } from '../../model/index.ts';
+import { createMemoryStore } from '../../model/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** A node drawn on the scene itself, not inside an instance (which draws its composite's nodes under their own ids). */
@@ -41,11 +41,8 @@ const createTree = (keyed: boolean) => {
       (next, t, index) => setKey(next, target, 'size', { t, value: index === 1 ? large : small }),
       timeline,
     );
-  const timeline = pulse('c', 2)(pulse('a', 0)(createTimeline(4)));
-  const scenes = tree.views.map((scene): View =>
-    scene.id === tree.root ? { ...scene, timeline: keyed ? timeline : createTimeline(4) } : scene,
-  );
-  return { scenes, root: tree.root };
+  const timeline = keyed ? pulse('c', 2)(pulse('a', 0)(createTimeline(4))) : createTimeline(4);
+  return { scenes: tree.views, root: tree.root, timeline };
 };
 
 type StoryArgs = {
@@ -54,13 +51,15 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ keyed = true }: StoryArgs) => {
-  const { store, root } = useMemo(() => {
+  const { store, root, initial } = useMemo(() => {
     const tree = createTree(keyed);
-    return { store: createMemoryStore(tree.scenes, {}, { root: tree.root }), root: tree.root };
+    return { store: createMemoryStore(tree.scenes, {}, { root: tree.root }), root: tree.root, initial: tree.timeline };
   }, [keyed]);
+  // The host holds the timeline, as plugin-animator does for a shot: a View stores none.
+  const [timeline, setTimeline] = useState<Timeline | undefined>(initial);
   // Docked: the objects inspector, which the story uses, never floats.
   return (
-    <Canvas.Root store={store} root={root} inspectors='docked'>
+    <Canvas.Root store={store} root={root} inspectors='docked' timeline={timeline} onTimelineChange={setTimeline}>
       <Canvas.Viewport />
       <Canvas.Navigation />
       <Canvas.Actions />

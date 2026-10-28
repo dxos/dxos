@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { type ModuleCompiler } from '@dxos/animation';
+import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 
 import { type GeneratorFrames, GeneratorHost, type GeneratorSource } from '../generator/index.ts';
 import { type View, isGeneratorNode } from '../model/index.ts';
@@ -12,6 +12,8 @@ import { type View, isGeneratorNode } from '../model/index.ts';
 export type UseGeneratorFramesOptions = {
   /** The scene as stored: the worker samples it per step. */
   scene: View;
+  /** The host's timeline, which the worker samples the scene through. */
+  timeline?: Timeline;
   /** The clock's time. */
   time: number;
   sources: Readonly<Record<string, GeneratorSource>>;
@@ -26,6 +28,7 @@ export type UseGeneratorFramesOptions = {
  */
 export const useGeneratorFrames = ({
   scene,
+  timeline,
   time,
   sources,
   compile,
@@ -48,9 +51,9 @@ export const useGeneratorFrames = ({
   }, [active, compile, createWorker]);
   useEffect(() => {
     if (host) {
-      host.update(scene, sources);
+      host.update(scene, sources, timeline);
       host.request(time);
     }
-  }, [host, scene, sources, time]);
+  }, [host, scene, sources, timeline, time]);
   return host ? frames : undefined;
 };

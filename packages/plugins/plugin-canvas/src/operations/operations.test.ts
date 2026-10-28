@@ -37,7 +37,7 @@ const SOURCE = `
 
 describe('canvas generator operations', () => {
   it.effect(
-    'create, place, key and check a generator',
+    'create, place and check a generator',
     Effect.fnUntraced(
       function* ({ expect }) {
         const canvas = yield* Database.add(createCanvas());
@@ -54,19 +54,8 @@ describe('canvas generator operations', () => {
           bounds: { x: -100, y: -100, width: 200, height: 200 },
           params: { count: 3 },
         });
-        const { keys } = yield* Operation.invoke(CanvasOperation.SetTimelineKey, {
-          drawing: Ref.make(drawing),
-          target: node,
-          property: 'params.count',
-          t: 2,
-          value: 6,
-          duration: 4,
-        });
-        expect(keys).toBe(1);
-
         const root = rootOf(canvas.content) ?? '';
         const scene = readViews(canvas.content)[root];
-        expect(scene.timeline?.duration).toBe(4);
         expect(Object.values(scene.nodes).filter(isGeneratorNode)).toHaveLength(1);
 
         const report = yield* Operation.invoke(CanvasOperation.InspectGenerator, {
@@ -76,8 +65,8 @@ describe('canvas generator operations', () => {
           times: [0, 1, 2],
         });
         expect(report.deterministic).toBe(true);
-        // The keyed count holds its only key's value at every time.
-        expect(report.frames).toEqual([0, 1, 2].map((t) => ({ t, shapes: 6 })));
+        // The placed count draws at every time.
+        expect(report.frames).toEqual([0, 1, 2].map((t) => ({ t, shapes: 3 })));
 
         const updated = yield* Operation.invoke(CanvasOperation.UpdateGenerator, {
           generator: created.generator,

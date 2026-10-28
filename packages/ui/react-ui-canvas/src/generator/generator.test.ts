@@ -85,9 +85,9 @@ describe('GeneratorRunner', () => {
 
   test('bindings are read from the scene sampled at each step', ({ expect }) => {
     const timeline = setKey(createTimeline(), 'box', 'center', { t: 0, value: { x: 100, y: 0 } });
-    const moving = { ...scene, timeline: setKey(timeline, 'box', 'center', { t: 1, value: { x: -100, y: 0 } }) };
+    const moving = setKey(timeline, 'box', 'center', { t: 1, value: { x: -100, y: 0 } });
     const still = new GeneratorRunner(drift, { seed: 3 }).frame(2, input).shapes;
-    const followed = new GeneratorRunner(drift, { seed: 3 }).frame(2, { ...input, scene: moving }).shapes;
+    const followed = new GeneratorRunner(drift, { seed: 3 }).frame(2, { ...input, timeline: moving }).shapes;
     expect(JSON.stringify(followed)).not.toBe(JSON.stringify(still));
   });
 

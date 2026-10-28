@@ -4,8 +4,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Timeline } from '@dxos/animation';
-
 import { Bounds, type Intent, Layer, Link, NodeBase, Point, nodeBase } from './types.ts';
 
 const isPoint = Schema.is(Point);
@@ -13,7 +11,6 @@ const isBounds = Schema.is(Bounds);
 const isLayer = Schema.is(Layer);
 const isLink = Schema.is(Link);
 const isNode = Schema.is(NodeBase);
-const isTimeline = Schema.is(Timeline);
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 const isString = (value: unknown): value is string => typeof value === 'string';
@@ -62,8 +59,6 @@ export const isIntent = (value: unknown): value is Intent => {
       return isLayer(value.layer);
     case 'removeLayer':
       return isString(value.id);
-    case 'timeline':
-      return value.timeline === undefined || isTimeline(value.timeline);
     case 'batch':
       return Array.isArray(value.intents) && value.intents.every(isIntent);
     default:

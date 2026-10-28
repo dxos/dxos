@@ -10,3 +10,4 @@ export * from './view-node.ts';
 export * from './image-node.ts';
 export * from './store.ts';
 export * from './migrations.ts';
+export * from './stage.ts';

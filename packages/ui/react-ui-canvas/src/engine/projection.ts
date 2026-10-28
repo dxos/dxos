@@ -11,8 +11,6 @@
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import { removeTargets } from '@dxos/animation';
-
 import {
   type Capabilities,
   type Intent,
@@ -112,17 +110,7 @@ export const reduceIntent = (scene: View, intent: Intent): View => {
           links[link.id] = link;
         }
       }
-      // A deleted node's tracks go with it.
-      const timeline = scene.timeline && removeTargets(scene.timeline, ids);
-      return { ...scene, nodes, links, ...(timeline ? { timeline } : {}) };
-    }
-
-    case 'timeline': {
-      if (intent.timeline === scene.timeline) {
-        return scene;
-      }
-      const { timeline: _, ...rest } = scene;
-      return intent.timeline ? { ...rest, timeline: intent.timeline } : rest;
+      return { ...scene, nodes, links };
     }
 
     case 'reorder': {

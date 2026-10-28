@@ -4,7 +4,7 @@
 
 import { type ReactNode } from 'react';
 
-import { type ModuleCompiler } from '@dxos/animation';
+import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
 
 import {
@@ -116,6 +116,13 @@ export type CanvasRootProps = Util.ThemedClassName<{
    * on `data-frame-time` (ANIMATION.md §7.2).
    */
   exportable?: boolean;
+  /**
+   * The timeline that animates the scenes, held by the host (an animator shot, plugin-animator F-2.3): a View stores
+   * none. Unset, nothing is animated.
+   */
+  timeline?: Timeline;
+  /** Takes the timeline with the keys an edit or a time command made; absent, the timeline is only played. */
+  onTimelineChange?: (timeline: Timeline) => void;
   /** The generators the scene's generator nodes reference, by reference (ANIMATION.md §6.6). */
   generators?: Readonly<Record<string, GeneratorSource>>;
   /** Compiles a generator's source (`createEsbuildCompiler`); without it generator nodes draw nothing. */

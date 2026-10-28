@@ -4,6 +4,8 @@
 
 import { useMemo, useRef } from 'react';
 
+import { type Timeline } from '@dxos/animation';
+
 import {
   type CameraMotion,
   type CanvasAtoms,
@@ -22,6 +24,8 @@ import { type useRegistry } from '../useRegistry.ts';
 export type CanvasControllerLive = {
   projection: Projection;
   baseProjection: Projection;
+  timeline?: Timeline;
+  onTimelineChange?: (timeline: Timeline) => void;
   nodeRegistry: NodeRegistry;
   readonly: boolean;
   grid: ControllerGrid;
@@ -54,6 +58,8 @@ export const useCanvasController = ({ registry, atoms, store, live }: UseCanvasC
         store,
         projection: () => liveRef.current.projection,
         baseProjection: () => liveRef.current.baseProjection,
+        timeline: () => liveRef.current.timeline,
+        onTimelineChange: () => liveRef.current.onTimelineChange,
         nodeRegistry: () => liveRef.current.nodeRegistry,
         readonly: () => liveRef.current.readonly,
         grid: () => liveRef.current.grid,

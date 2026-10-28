@@ -8,8 +8,6 @@
 // functions here that return the scenes and intents the view applies, so each is one undoable step.
 //
 
-import { type Timeline, type Track } from '@dxos/animation';
-
 import {
   type Bounds,
   type Endpoint,
@@ -207,29 +205,6 @@ export const instancePorts = (frame: Bounds, composite: View, fit?: InstanceFit)
     .map((node) => ({ id: node.id, ...sideToward(frame, toInstance(transform, node.center)) }));
 };
 
-/** The tracks of `ids` in `timeline`, with `center` keys moved by `shift` (into the composite's coordinates). */
-const movedTracks = (timeline: Timeline | undefined, ids: ReadonlySet<string>, shift: Point): Timeline | undefined => {
-  const tracks = Object.entries(timeline?.tracks ?? {}).filter(([, track]) => ids.has(track.target));
-  if (!timeline || tracks.length === 0) {
-    return undefined;
-  }
-  const moved = tracks.map(([id, track]): [string, Track] => [
-    id,
-    track.property === 'center'
-      ? {
-          ...track,
-          keys: track.keys.map((key) => {
-            const value: unknown = key.value;
-            return typeof value === 'object' && value !== null && 'x' in value && 'y' in value
-              ? { ...key, value: { x: Number(value.x) + shift.x, y: Number(value.y) + shift.y } }
-              : key;
-          }),
-        }
-      : track,
-  ]);
-  return { ...timeline, tracks: Object.fromEntries(moved) };
-};
-
 export type ComposeOptions = {
   /** The new composite scene's id. */
   compositeId: ViewId;
@@ -294,7 +269,6 @@ export const composeSelection = (
     }),
   );
   const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
-  const timeline = movedTracks(scene.timeline, inside, shift);
   const composite: View = {
     id: compositeId,
     name: name ?? 'Object',
@@ -303,7 +277,6 @@ export const composeSelection = (
     nodes: Object.fromEntries(childNodes.map((node) => [node.id, node])),
     links: Object.fromEntries(childLinks.map((link) => [link.id, link])),
     layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
-    ...(timeline ? { timeline } : {}),
   };
   const instance: InstanceNode = {
     type: 'instance',
@@ -389,39 +362,7 @@ export const ungroupInstance = (
       id: link.id,
       values: { source: onInstance(link.source), target: onInstance(link.target) },
     }));
-  // The Object's animation comes back out with its nodes: renamed to them, and placed and sized as the Instance drew it.
-  const mapValue = (property: string, value: unknown): unknown =>
-    property === 'center' && isPointValue(value)
-      ? map(value)
-      : property === 'size' && isSizeValue(value)
-        ? { width: value.width * transform.scale, height: value.height * transform.scale }
-        : value;
-  const tracks = Object.values(composite.timeline?.tracks ?? {}).map((track): [string, Track] => {
-    const target = ids.get(track.target) ?? track.target;
-    return [
-      `${target}:${track.property}`,
-      { ...track, target, keys: track.keys.map((key) => ({ ...key, value: mapValue(track.property, key.value) })) },
-    ];
-  });
-  const timed: Intent[] =
-    tracks.length === 0 || !composite.timeline
-      ? []
-      : [
-          {
-            kind: 'timeline',
-            timeline: {
-              ...(scene.timeline ?? { duration: composite.timeline.duration }),
-              tracks: {
-                // The Instance's own tracks go with it.
-                ...Object.fromEntries(
-                  Object.entries(scene.timeline?.tracks ?? {}).filter(([, track]) => track.target !== instance.id),
-                ),
-                ...Object.fromEntries(tracks),
-              },
-            },
-          },
-        ];
-  return [...created, ...linked, ...reattached, ...timed, { kind: 'delete', ids: [instance.id] }];
+  return [...created, ...linked, ...reattached, { kind: 'delete', ids: [instance.id] }];
 };
 
 const isPointValue = (value: unknown): value is Point =>
@@ -448,15 +389,6 @@ export const copyComposite = (
   const ids = new Map(Object.keys(composite.nodes).map((id) => [id, createId('node')]));
   const rename = (id: NodeId) => ids.get(id) ?? id;
   const renameEnd = (end: Endpoint): Endpoint => ('node' in end ? { ...end, node: rename(end.node) } : end);
-  const timeline = composite.timeline && {
-    ...composite.timeline,
-    tracks: Object.fromEntries(
-      Object.values(composite.timeline.tracks).map((track) => {
-        const target = rename(track.target);
-        return [`${target}:${track.property}`, { ...track, target }];
-      }),
-    ),
-  };
   return {
     rename,
     composite: {
@@ -472,7 +404,6 @@ export const copyComposite = (
           return [id, { ...link, id, source: renameEnd(link.source), target: renameEnd(link.target) }];
         }),
       ),
-      ...(timeline ? { timeline } : {}),
     },
   };
 };

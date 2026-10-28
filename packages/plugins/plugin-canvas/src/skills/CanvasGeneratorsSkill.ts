@@ -15,7 +15,6 @@ const operations = [
   CanvasOperation.UpdateGenerator,
   CanvasOperation.InspectGenerator,
   CanvasOperation.AddGenerator,
-  CanvasOperation.SetTimelineKey,
 ];
 
 export const key = Generator.SKILL_KEY;
@@ -42,8 +41,9 @@ export const INSTRUCTIONS = trim`
      the report: deterministic must be true; meanStepMs must stay under budgetMs (4 ms per step); look at the contact
      sheet (an SVG of the frames) to judge the motion. Revise and check again until it reads as asked.
   3. canvas.addGenerator to put it in a drawing's scene, binding node or link ids in its parameters.
-  4. canvas.setTimelineKey to key numeric parameters (property "params.<name>"), node properties (center, size,
-     style.opacity) or the camera (x, y: the scene point at the view centre; zoom) over time.
+  4. To animate, make an Animation over the drawing's canvas (animator.createAnimation) and key its shot with
+     animator.setKey: numeric parameters (path "<node>:params.<name>"), node properties (center, size,
+     style.opacity) or the camera ("camera:x", "camera:y": the scene point at the view centre; "camera:zoom").
 
   ## The module
 

@@ -55,7 +55,7 @@ export type CanvasServices = {
   /** The canvas's root View, which navigation starts from. */
   root: ViewId;
   projection: Projection;
-  /** The projection under the animated one: what keys and timeline edits are written through. */
+  /** The projection under the animated one: what plain edits are written through. */
   baseProjection: Projection;
   capabilities: Capabilities;
   /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
@@ -70,8 +70,10 @@ export type CanvasServices = {
   grid: number;
   /** Fit mode: the camera keeps the scene framed until the user pans or zooms. */
   fitting: Atom.Atom<boolean>;
-  /** The current scene's timeline, as stored. */
+  /** The host's timeline. */
   timeline: Atom.Atom<Timeline | undefined>;
+  /** Takes an edited timeline; absent while the host does not let it be edited. */
+  onTimelineChange?: (timeline: Timeline) => void;
   document: DocumentCommands;
   objectActions: ObjectActions;
 };
@@ -93,6 +95,7 @@ export const useCanvasDocument = (consumer: string) => {
     nodeRegistry,
     linkRegistry,
     timeline,
+    onTimelineChange,
     document,
     controller,
   } = useCanvasServices(consumer);
@@ -106,6 +109,7 @@ export const useCanvasDocument = (consumer: string) => {
     nodeRegistry,
     linkRegistry,
     timeline,
+    onTimelineChange,
     document,
     intents: controller.document,
   };

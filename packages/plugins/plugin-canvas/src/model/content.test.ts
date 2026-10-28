@@ -32,31 +32,18 @@ import {
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
 
 describe('content', () => {
-  test('a composite scene and a timeline survive a write and a read', ({ expect }) => {
+  test('a composite scene survives a write and a read; a scene stores no timeline', ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);
-    const timeline = {
-      duration: 3,
-      tracks: {
-        'a:style.opacity': {
-          target: 'a',
-          property: 'style.opacity',
-          keys: [
-            { t: 0, value: 0 },
-            { t: 1, value: 1 },
-          ],
-        },
-      },
-    };
     writeViews(content, {
-      root: { id: 'root', nodes: { a: { id: 'a', type: 'rect', ...box } }, links: {}, timeline },
+      root: { id: 'root', nodes: { a: { id: 'a', type: 'rect', ...box } }, links: {} },
       object: { id: 'object', kind: 'composite', name: 'Object', nodes: {}, links: {} },
     });
     const scenes = readViews(content);
-    expect(scenes.root.timeline).toEqual(timeline);
     expect(scenes.object.kind).toBe('composite');
-    // A plain scene stores no kind.
+    // A plain scene stores no kind, and no scene a timeline: animation is an animator Animation (F-2.3).
     expect(Reflect.get(content['scene:root'], 'sceneKind')).toBeUndefined();
+    expect(Reflect.get(content['scene:root'], 'timeline')).toBeUndefined();
   });
 
   test('a new canvas keys its root scene once: `scene:root`', ({ expect }) => {
@@ -74,6 +61,7 @@ describe('content', () => {
       'scene:root': {
         kind: 'scene',
         id: 'root',
+        // A timeline saved before canvas animation moved to the animator is not read.
         timeline: {
           duration: 1,
           tracks: { 'a:opacity': { target: 'a', property: 'opacity', keys: [{ t: 0, value: 0 }] } },
@@ -101,9 +89,7 @@ describe('content', () => {
       style: { opacity: 0.25 },
       link: { object, contents: true },
     });
-    expect(scenes.root.timeline?.tracks).toEqual({
-      'a:style.opacity': { target: 'a', property: 'style.opacity', keys: [{ t: 0, value: 0 }] },
-    });
+    expect(Reflect.get(scenes.root, 'timeline')).toBeUndefined();
 
     // The next write stores the current shape.
     expect(writeViews(content, scenes)).toBe(true);

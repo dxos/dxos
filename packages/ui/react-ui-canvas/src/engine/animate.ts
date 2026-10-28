@@ -4,8 +4,9 @@
 
 //
 // The animated projection (ANIMATION.md §5.3, §5.4): wraps any projection so its scene is sampled at the view's clock,
-// and turns an edit made away from the start into keys at the playhead. The surface is unchanged: it still sends
-// intents and draws a `Scene`.
+// and turns an edit made away from the start into keys at the playhead. The timeline is the host's (an animator shot,
+// plugin-animator F-2.3), never stored in the View, so keys leave through `onTimelineChange` rather than as intents.
+// The surface is unchanged: it still sends intents and draws a `Scene`.
 //
 
 import * as Atom from 'effect/reactivity/Atom';
@@ -30,6 +31,10 @@ import { type Projection } from './projection.ts';
 export type AnimateOptions = {
   registry: Registry.AtomRegistry;
   clock: Clock;
+  /** The timeline that animates the scenes. */
+  timeline: Atom.Atom<Timeline | undefined>;
+  /** Takes the timeline with the keys an edit made; absent, nothing is keyed and every edit writes the base. */
+  onTimelineChange?: (timeline: Timeline) => void;
   /** Whether an edit away from t = 0 keys the property (on by default, ANIMATION.md §5.4). */
   autoKey?: () => boolean;
   /** The animatable properties of a node's type; the shared ones (`center`, `size`, `style.opacity`) by default. */
@@ -44,30 +49,47 @@ const START_EPSILON = 1e-6;
  * scene without a timeline, edited at t = 0, behaves exactly as `base` does.
  */
 export const animate = (base: Projection, options: AnimateOptions): Projection => {
-  const { registry, clock } = options;
-  const scene = Atom.keepAlive(Atom.make((get) => sampleView(get(base.scene), get(clock.time))));
+  const { registry, clock, onTimelineChange } = options;
+  const scene = Atom.keepAlive(Atom.make((get) => sampleView(get(base.scene), get(options.timeline), get(clock.time))));
   return {
     ...base,
     scene,
-    apply: (intent) => base.apply(rewriteIntent(registry.get(base.scene), intent, registry.get(clock.time), options)),
+    apply: (intent) => {
+      // A host that takes no keys gets plain edits: nothing is keyed, so nothing is lost.
+      const timeline = onTimelineChange ? registry.get(options.timeline) : undefined;
+      const rewritten = rewriteIntent(registry.get(base.scene), timeline, intent, registry.get(clock.time), {
+        autoKey: onTimelineChange ? options.autoKey : () => false,
+        animatable: options.animatable,
+      });
+      if (rewritten.timeline !== timeline && rewritten.timeline) {
+        onTimelineChange?.(rewritten.timeline);
+      }
+      if (rewritten.intent) {
+        base.apply(rewritten.intent);
+      }
+    },
     constrain: base.constrain,
   };
 };
 
+/** What an intent becomes: the part written to the base (none when all of it was keyed), and the keyed timeline. */
+export type RewrittenIntent = { intent?: Intent; timeline?: Timeline };
+
 /**
- * Where `intent` lands on `scene` (the base, unsampled) at time `t`: unchanged at the start for properties with no
- * track, otherwise as keys at `t` (with auto-key) or as base values (without). Exported for tests.
+ * Where `intent` lands on `scene` (the base, unsampled) at time `t` of `timeline`: unchanged at the start for
+ * properties with no track, otherwise as keys at `t` (with auto-key) or as base values (without). Exported for tests.
  */
 export const rewriteIntent = (
   scene: View,
+  initial: Timeline | undefined,
   intent: Intent,
   t: number,
   { autoKey = () => true, animatable = () => BASE_ANIMATABLE }: Pick<AnimateOptions, 'autoKey' | 'animatable'> = {},
-): Intent => {
+): RewrittenIntent => {
   const atStart = Math.abs(t) < START_EPSILON;
   const keying = autoKey();
-  const shown = sampleView(scene, t);
-  let timeline: Timeline | undefined = scene.timeline;
+  const shown = sampleView(scene, initial, t);
+  let timeline: Timeline | undefined = initial;
   const rest: Intent[] = [];
 
   /** Whether `property` of `node` is keyed rather than written to the base. */
@@ -176,8 +198,10 @@ export const rewriteIntent = (
   };
 
   visit(intent);
-  const intents = timeline === scene.timeline ? rest : [{ kind: 'timeline' as const, timeline }, ...rest];
-  return intents.length === 1 ? intents[0] : { kind: 'batch', intents };
+  return {
+    ...(rest.length === 0 ? {} : { intent: rest.length === 1 ? rest[0] : { kind: 'batch', intents: rest } }),
+    timeline,
+  };
 };
 
 const update = (id: string, values: NodeValues): Intent => ({ kind: 'update', id, values });

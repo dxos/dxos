@@ -11,8 +11,9 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
+import { type Timeline } from '@dxos/animation';
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
 import { mx } from '@dxos/ui-theme';
 
@@ -95,6 +96,8 @@ export const CanvasRoot = ({
   onBackgroundGridChange,
   frame,
   exportable,
+  timeline,
+  onTimelineChange,
   generators = NO_GENERATORS,
   compileGenerator,
   createGeneratorWorker,
@@ -117,25 +120,32 @@ export const CanvasRoot = ({
   const history = historyProp === undefined || typeof historyProp === 'function' ? ownHistory : historyProp;
   const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp, history });
   history.view.projection = baseProjection;
+  // The host's timeline as an atom, so the animated projection follows it without being rebuilt.
+  const timelineAtom = useMemo(() => Atom.keepAlive(Atom.make<Timeline | undefined>(undefined)), []);
+  useLayoutEffect(() => registry.set(timelineAtom, timeline), [registry, timelineAtom, timeline]);
+  // Read when an edit is made, so a new callback does not rebuild the projection.
+  const onTimelineChangeRef = useRef(onTimelineChange);
+  onTimelineChangeRef.current = onTimelineChange;
+  const editable = onTimelineChange !== undefined;
   // Sampled at the view's clock; an edit away from the start becomes keys (ANIMATION.md §5.3, §5.4).
   const projection = useMemo(
     () =>
       animate(baseProjection, {
         registry,
         clock: atoms.clock,
+        timeline: timelineAtom,
+        onTimelineChange: editable ? (next) => onTimelineChangeRef.current?.(next) : undefined,
         autoKey: () => registry.get(atoms.autoKey),
         animatable: (node) => nodeAnimatable(nodeRegistry, node),
       }),
-    [baseProjection, registry, atoms, nodeRegistry],
+    [baseProjection, registry, atoms, nodeRegistry, timelineAtom, editable],
   );
   const scene = useAtomValue(projection.scene);
   const baseScene = useAtomValue(baseProjection.scene);
-  const timeline = baseScene.timeline;
-  // The timeline alone, so the parts that read it do not re-render on every other edit.
-  const timelineAtom = useMemo(() => Atom.make((get) => get(baseProjection.scene).timeline), [baseProjection]);
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
     scene: baseScene,
+    timeline,
     time,
     sources: generators,
     compile: compileGenerator,
@@ -218,6 +228,8 @@ export const CanvasRoot = ({
     live: {
       projection,
       baseProjection,
+      timeline,
+      onTimelineChange,
       nodeRegistry,
       readonly,
       grid: { major, snap },
@@ -504,6 +516,7 @@ export const CanvasRoot = ({
       grid={grid}
       fitting={fitting}
       timeline={timelineAtom}
+      onTimelineChange={onTimelineChange}
       document={documentCommands}
       objectActions={objectActions}
     >

@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import {
+  type Timeline,
   animatableProperties,
   createTimeline,
   keyTimes,
@@ -17,7 +18,7 @@ import {
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
 import { BASE_ANIMATABLE, applyCameraKey, cameraKey, sampleCamera, sampleView } from './timeline.ts';
-import { CAMERA_TARGET, InstanceNode, RectNode, type View } from './types.ts';
+import { CAMERA_TARGET, InstanceNode, RectNode } from './types.ts';
 
 const {
   views: [base],
@@ -27,23 +28,23 @@ const {
 ]).build();
 
 /** `a` moves from x 50 to 150 over two seconds, easing out, and fades in over the first second. */
-const animated = (): View => {
+const animated = (): Timeline => {
   let timeline = createTimeline(4);
   timeline = setKey(timeline, 'a', 'center', { t: 0, value: { x: 50, y: 25 } });
   timeline = setKey(timeline, 'a', 'center', { t: 2, value: { x: 150, y: 25 }, easing: 'ease-out' });
   timeline = setKey(timeline, 'a', 'style.opacity', { t: 0, value: 0 });
   timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 1 });
-  return { ...base, timeline };
+  return timeline;
 };
 
 describe('sampleView', () => {
   test('a scene without a timeline is returned as it is', ({ expect }) => {
-    expect(sampleView(base, 1)).toBe(base);
+    expect(sampleView(base, undefined, 1)).toBe(base);
   });
 
   test('tracked properties take their eased value; others keep the base value', ({ expect }) => {
-    const scene = animated();
-    const at = (t: number) => sampleView(scene, t).nodes.a;
+    const timeline = animated();
+    const at = (t: number) => sampleView(base, timeline, t).nodes.a;
     expect(at(0).center).toEqual({ x: 50, y: 25 });
     expect(at(2).center).toEqual({ x: 150, y: 25 });
     // Ease-out covers more than half the distance by half the time.
@@ -51,13 +52,15 @@ describe('sampleView', () => {
     expect(at(0.5).style?.opacity).toBeCloseTo(0.5);
     // Past the last key a track holds its end value.
     expect(at(3.5).center).toEqual({ x: 150, y: 25 });
-    expect(sampleView(scene, 1).nodes.b).toBe(scene.nodes.b);
+    expect(sampleView(base, timeline, 1).nodes.b).toBe(base.nodes.b);
     expect(at(1).id).toBe('a');
   });
 
   test('the same time samples once', ({ expect }) => {
-    const scene = animated();
-    expect(sampleView(scene, 1.25)).toBe(sampleView(scene, 1.25));
+    const timeline = animated();
+    expect(sampleView(base, timeline, 1.25)).toBe(sampleView(base, timeline, 1.25));
+    // Another timeline at the same time samples anew.
+    expect(sampleView(base, animated(), 1.25)).not.toBe(sampleView(base, timeline, 1.25));
   });
 
   test('a discrete value holds until the next key', ({ expect }) => {
@@ -96,13 +99,13 @@ describe('keys', () => {
   });
 
   test('key times of the selection are sorted without repeats', ({ expect }) => {
-    expect(keyTimes(animated().timeline, ['a'])).toEqual([0, 1, 2]);
-    expect(keyTimes(animated().timeline, ['b'])).toEqual([]);
+    expect(keyTimes(animated(), ['a'])).toEqual([0, 1, 2]);
+    expect(keyTimes(animated(), ['b'])).toEqual([]);
   });
 
-  test('deleting a node deletes its tracks', ({ expect }) => {
-    const next = reduceIntent(animated(), { kind: 'delete', ids: ['a'] });
-    expect(next.timeline?.tracks).toEqual({});
+  test('the tracks of a deleted node key nothing', ({ expect }) => {
+    const next = reduceIntent(base, { kind: 'delete', ids: ['a'] });
+    expect(sampleView(next, animated(), 1)).toBe(next);
   });
 });
 

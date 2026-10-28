@@ -9575,6 +9575,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/plugin-animator':
+        specifier: workspace:*
+        version: link:../plugin-animator
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention

@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AnimatorStage,
   AppGraphBuilder,
   CanvasSettings,
   DrawingVariant,
@@ -21,6 +22,7 @@ import {
 import { meta } from '#meta';
 
 export const CanvasPlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AnimatorStage),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CanvasSettings),
   Plugin.addModule(DrawingVariant),

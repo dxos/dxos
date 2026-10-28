@@ -46,20 +46,20 @@ const sampleNode = (node: Node, tracks: readonly Track[], t: number): Node =>
     return value === undefined ? current : setNodePath(current, track.property, value);
   }, node);
 
-/** Per scene, the last time sampled and its result: playback samples each time once, and hit tests re-read it. */
-const sampled = new WeakMap<View, { t: number; scene: View }>();
+/** Per scene, the last timeline and time sampled and the result: playback samples each time once, and hit tests re-read it. */
+const sampled = new WeakMap<View, { timeline: Timeline; t: number; scene: View }>();
 
 /**
- * The scene at time `t` (§5.3): every tracked property of every node set to its value then. Pure and memoised on the
- * scene and the time; a scene without a timeline is returned as it is.
+ * The scene at time `t` of `timeline` (§5.3): every tracked property of every node set to its value then. The timeline
+ * is the host's (an animator shot), never the scene's own. Pure and memoised on the scene, the timeline and the time;
+ * without a timeline, or with one that keys nothing here, the scene is returned as it is.
  */
-export const sampleView = (scene: View, t: number): View => {
-  const { timeline } = scene;
+export const sampleView = (scene: View, timeline: Timeline | undefined, t: number): View => {
   if (!timeline || Object.keys(timeline.tracks).length === 0) {
     return scene;
   }
   const cached = sampled.get(scene);
-  if (cached && cached.t === t) {
+  if (cached && cached.timeline === timeline && cached.t === t) {
     return cached.scene;
   }
   const byTarget = new Map<string, Track[]>();
@@ -72,8 +72,8 @@ export const sampleView = (scene: View, t: number): View => {
   for (const [target, tracks] of byTarget) {
     nodes[target] = sampleNode(scene.nodes[target], tracks, t);
   }
-  const result = { ...scene, nodes };
-  sampled.set(scene, { t, scene: result });
+  const result = byTarget.size > 0 ? { ...scene, nodes } : scene;
+  sampled.set(scene, { timeline, t, scene: result });
   return result;
 };
 

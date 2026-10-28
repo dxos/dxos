@@ -5,6 +5,8 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
+import * as AnimatorEvents from '@dxos/plugin-animator/AnimatorEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
@@ -31,6 +33,16 @@ export const TldrawConverter = Capability.lazyModule(
     environments: ['browser', 'tauri'],
   },
   () => import('./tldraw-converter.ts'),
+);
+// The canvas as an animator stage, contributed when the animator starts; browser-only, as it renders.
+export const AnimatorStage = Capability.lazyModule(
+  'animator-stage',
+  {
+    provides: [AnimatorCapabilities.Stage],
+    activatesOn: AnimatorEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./animator-stage.ts'),
 );
 // Migration providers stay eager: a migration missing when a space opens is a data hazard.
 export const Migrations = Capability.lazyModule(

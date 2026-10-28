@@ -16,7 +16,8 @@ describe('isIntent', () => {
       }),
     ).toBe(true);
     expect(isIntent({ kind: 'layout' })).toBe(true);
-    expect(isIntent({ kind: 'timeline', timeline: undefined })).toBe(true);
+    // The timeline is the host's, never an intent on the scene (plugin-animator F-2.3).
+    expect(isIntent({ kind: 'timeline', timeline: undefined })).toBe(false);
     expect(
       isIntent({
         kind: 'batch',

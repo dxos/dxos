@@ -3,13 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { waitFor, within } from 'storybook/test';
 
-import { EXPOSED_CLOCK_KEY } from '@dxos/animation';
-import * as Hooks from '@dxos/app-framework/Hooks';
-import { type Database, Obj, Ref } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
+import { EXPOSED_CLOCK_KEY, type Timeline, createTimeline, setKey } from '@dxos/animation';
+import { type Database, Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -20,7 +18,7 @@ import { createStoryDecorators } from '@dxos/storybook-testing';
 import { generatorCompiler, seedContent, updateCanvasRecord, writeViews } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
-import { CanvasOperation, Canvas as CanvasType, Generator } from '#types';
+import { Canvas as CanvasType, Generator } from '#types';
 
 import {
   createGeneratorWorker,
@@ -42,21 +40,13 @@ const seed = (db: Database.Database): Drawing.Drawing => {
   return db.add(Drawing.make({ name: END_CARD_NAME, canvas }));
 };
 
-type Invoke = ReturnType<typeof Hooks.useOperationInvoker>['invokePromise'];
-
-/** What an agent does through the canvas operations: keys every entrance on the timeline (`canvas.setTimelineKey`). */
-const author = async (invoke: Invoke, drawing: Drawing.Drawing, spaceId: SpaceId) => {
-  for (const key of endCardKeys()) {
-    const keyed = await invoke(
-      CanvasOperation.SetTimelineKey,
-      { drawing: Ref.make(drawing), ...key, duration: DURATION },
-      { spaceId },
-    );
-    if (keyed.error) {
-      throw keyed.error;
-    }
-  }
-};
+/** Every entrance keyed, as an animator shot over the drawing holds them: a canvas stores no timeline (F-2.3). */
+const endCardTimeline = (): Timeline =>
+  endCardKeys().reduce(
+    (timeline, { target, property, t, value, easing }) =>
+      setKey(timeline, target, property, { t, value, ...(easing !== undefined ? { easing } : {}) }),
+    createTimeline(DURATION),
+  );
 
 type FilmProps = { chrome: boolean };
 
@@ -77,29 +67,11 @@ const useEndCard = () => {
   return { db: drawing ? Obj.getDatabase(drawing) : undefined, drawing };
 };
 
-/** The end card authored, then shown as a film: the 1920x1080 frame fitted to the view, playing from the start. */
+/** The end card shown as a film: the 1920x1080 frame fitted to the view, playing its keys from the start. */
 const Film = ({ chrome }: FilmProps) => {
   const { db, drawing } = useEndCard();
   const canvas = drawing?.canvas.target;
-  const { invokePromise } = Hooks.useOperationInvoker();
-  const [authored, setAuthored] = useState(false);
-  const [failure, setFailure] = useState<string>();
-  // Authoring edits the canvas, which re-runs the queries above: it starts once.
-  const startedRef = useRef(false);
-  useEffect(() => {
-    if (!db || !drawing || !canvas || startedRef.current) {
-      return;
-    }
-    startedRef.current = true;
-    void author(invokePromise, drawing, db.spaceId)
-      .then(() => setAuthored(true))
-      .catch((error) => setFailure(error instanceof Error ? error.message : String(error)));
-  }, [db, drawing, canvas, invokePromise]);
-
-  if (failure) {
-    return <p data-testid='endcard-failure'>{failure}</p>;
-  }
-  if (!db || !canvas || !authored) {
+  if (!db || !canvas) {
     return <Loading />;
   }
   return <FilmView db={db} canvas={canvas} chrome={chrome} />;
@@ -113,6 +85,8 @@ const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
   const nodes = useCanvasNodes();
   const generators = useCanvasGenerators(db);
   const atoms = useMemo(() => (bound ? createCanvasAtoms(bound.root) : undefined), [bound]);
+  // The host holds the timeline; with the chrome, keys edited at a time land here.
+  const [timeline, setTimeline] = useState(endCardTimeline);
   // Plays once from the start; a frame renderer seeks instead, which pauses it.
   useEffect(() => {
     if (atoms) {
@@ -133,6 +107,8 @@ const FilmView = ({ db, canvas, chrome }: FilmViewProps) => {
       margin={0}
       readonly={!chrome}
       exportable
+      timeline={timeline}
+      onTimelineChange={chrome ? setTimeline : undefined}
       generators={generators}
       compileGenerator={generatorCompiler}
       createGeneratorWorker={createGeneratorWorker}
@@ -170,11 +146,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The DXOS end card (tools/autocue `EndCard`, 3 s) as a canvas document, authored through the canvas operations and
- * exported with `scripts/render-story.mjs`, which seeks the exposed clock.
+ * The DXOS end card (tools/autocue `EndCard`, 3 s) as a canvas document played through its keys, and exported with
+ * `scripts/render-story.mjs`, which seeks the exposed clock.
  *
  * Test:
- * 1. The operations author the card and the film view mounts, its clock exposed for export.
+ * 1. The film view mounts, its clock exposed for export.
  * 2. Seeking to 2 s draws the scene at 2 s.
  */
 export const Default: Story = {};
@@ -183,7 +159,7 @@ export const Default: Story = {};
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. Authored and mounted (the first compile loads esbuild's binary).
+    // 1. Mounted (the first compile loads esbuild's binary).
     await canvas.findByTestId('scene-view', undefined, { timeout: 60_000 });
     const seek = await waitFor(() => {
       const exposed: unknown = Reflect.get(globalThis, EXPOSED_CLOCK_KEY);

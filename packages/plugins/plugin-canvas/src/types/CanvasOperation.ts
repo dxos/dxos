@@ -6,7 +6,6 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Easing } from '@dxos/animation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
@@ -128,30 +127,6 @@ export const AddGenerator = Operation.make({
   services: [Database.Service],
 });
 
-export const SetTimelineKey = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.canvas.setTimelineKey'),
-    name: 'Set timeline key',
-    description:
-      'Sets a keyframe on a scene timeline: a node property (center, size, style.opacity, or params.<name> of a generator), or the camera (x, y: the scene point at the view centre; zoom). Creates the timeline, and extends its duration to the key, as needed.',
-    icon: 'ph--diamond--regular',
-  },
-  input: Schema.Struct({
-    drawing: Ref.Ref(Drawing.Drawing),
-    scene: Schema.optional(Schema.String.annotate({ description: 'Scene id; the root scene by default.' })),
-    target: Schema.String.annotate({ description: 'A node id, or "camera".' }),
-    property: Schema.String.annotate({ description: 'A dot path into the node, e.g. "center" or "params.rate".' }),
-    t: Schema.Number.annotate({ description: 'Seconds.' }),
-    value: Schema.Any,
-    easing: Schema.optional(Easing.annotate({ description: 'Shapes the span that ends at this key.' })),
-    duration: Schema.optional(Schema.Number.annotate({ description: 'Sets the timeline length, in seconds.' })),
-  }),
-  output: Schema.Struct({
-    keys: Schema.Number.annotate({ description: 'Keys now on the track.' }),
-  }),
-  services: [Database.Service],
-});
-
 /** Each bound drawing's Automerge heads, keyed by its URI (the drawing's own under `''`). */
 const Heads = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({
   description: "Each drawing's Automerge heads, keyed by its URI; the canvas's own drawing under the empty key.",
@@ -167,7 +142,7 @@ export const Apply = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.apply'),
     name: 'Apply canvas intents',
     description:
-      'Applies canvas intents (move, resize, link, create, delete, reorder, update, layout, layer, timeline, batch) to a View of a canvas, freehand; returns the heads before and after and the paths written, which undo patches back.',
+      'Applies canvas intents (move, resize, link, create, delete, reorder, update, layout, layer, removeLayer, batch) to a View of a canvas, freehand; returns the heads before and after and the paths written, which undo patches back.',
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({

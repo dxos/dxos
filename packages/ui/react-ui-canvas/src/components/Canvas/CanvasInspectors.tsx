@@ -363,8 +363,8 @@ export const CanvasObjects = () => {
     projection,
     readonly,
     capabilities,
-    baseProjection,
     timeline: timelineAtom,
+    onTimelineChange,
   } = useCanvasDocument('Canvas.Objects');
   const { objectActions } = useCanvasServices('Canvas.Objects');
   const navigation = useCanvasNavigation('Canvas.Objects');
@@ -408,11 +408,7 @@ export const CanvasObjects = () => {
         onDuplicate={objectActions.duplicate}
         onDelete={objectActions.remove}
         thumbnail={(id) => <ObjectThumbnail id={id} />}
-        onAnimate={
-          timeline || readonly || !capabilities.update
-            ? undefined
-            : () => baseProjection.apply({ kind: 'timeline', timeline: createTimeline() })
-        }
+        onAnimate={timeline || readonly || !onTimelineChange ? undefined : () => onTimelineChange(createTimeline())}
       />
     </InspectorSection>
   );
