@@ -92,14 +92,13 @@ export type PlankProps = Util.ThemedClassName<{
  * slots so this component stays free of capabilities/operations.
  */
 /**
- * False for the first commit of each subject, so the plank's shell paints before the article renders: the article's
- * render and layout cost more than the rest of the plank, and an open should show at once. A hidden page has no frames
- * to wait for.
+ * False for the first commit after a plank changes subject, so its shell paints before the new article renders: the
+ * article's render and layout cost more than the rest of the plank, and an open should show at once. A plank's first
+ * subject renders at once, since a newly mounted plank (a workspace switch) renders inside its view transition, while
+ * painting is held anyway; so does any subject while the page is hidden and has no frames to wait for.
  */
 const useArticleReady = (id: string): boolean => {
-  const [readyId, setReadyId] = useState<string | undefined>(() =>
-    typeof document === 'undefined' || document.visibilityState === 'hidden' ? id : undefined,
-  );
+  const [readyId, setReadyId] = useState(id);
   useEffect(() => {
     if (readyId === id) {
       return;
