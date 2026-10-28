@@ -7,18 +7,14 @@
  * urgent one to the agent, which drafts the reply and asks before it sends.
  *
  * @mdl packages/plugins/plugin-inbox/docs/TRIAGE.mdl test QA-2
- * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 5180`.
- *   Triage asks Jev through EDGE and Clairic through EDGE's `/ai/generate/workers-ai/clairic` route; until that
- *   route is deployed, pass `extractionEndpoint` (below) pointing at a loopback proxy to Workers AI.
- * @driver `--caption-background 0.45`; extraction proxy via `AUTOCUE_EXTRACTION_ENDPOINT`
+ * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 5180`
+ *   (EDGE preview, which serves the keyless decision and extraction models through the assistant).
+ * @driver `--theme dark --caption-background 0.45`
  */
-
-/** Clairic endpoint override for an EDGE without the route; empty uses EDGE. */
-const EXTRACTION_ENDPOINT = process.env.AUTOCUE_EXTRACTION_ENDPOINT ?? '';
 
 const SUBTITLE = 'plugin-inbox/docs/TRIAGE.mdl · QA-2';
 const TEMPLATE = 'org.dxos.plugin-debug.template.triage';
-const PLUGINS = ['org.dxos.plugin.debug', 'org.dxos.plugin.typesafe'];
+const PLUGINS = ['org.dxos.plugin.debug'];
 const AGENT_TIMEOUT = 300_000;
 const BEAT = 1_200;
 
@@ -62,35 +58,17 @@ const invokeWhenReady = async (page, key, input) => {
 
 export const steps = [
   {
-    name: 'Prep (off camera): enable triage and its models',
+    name: 'Prep (off camera): enable the triage sample',
     setup: true,
     done: ({ page }) =>
       page.evaluate((ids) => ids.every((id) => globalThis.composer?.manager.getEnabled().includes(id)), PLUGINS),
     run: async ({ page }) => {
-      if (EXTRACTION_ENDPOINT) {
-        await page.evaluate(
-          (endpoint) =>
-            localStorage.setItem('org.dxos.plugin.typesafe', JSON.stringify({ extractionEndpoint: endpoint })),
-          EXTRACTION_ENDPOINT,
-        );
-      }
-      const enable = async () => {
-        await invokeWhenReady(page, 'org.dxos.operation.registry.enablePlugins', { ids: PLUGINS });
-        await page.waitForFunction(
-          (ids) => ids.every((id) => globalThis.composer.manager.getEnabled().includes(id)),
-          PLUGINS,
-          { timeout: 30_000 },
-        );
-      };
-      await enable();
-      // Settings are read when a plugin activates, so the endpoint override needs a fresh boot. The
-      // enabled set is saved asynchronously; a reload straight away can lose it, so wait, then check.
-      if (EXTRACTION_ENDPOINT) {
-        await page.waitForTimeout(5_000);
-        await page.reload();
-        await page.locator('[data-testid="spacePlugin.addSpace"]').first().waitFor({ timeout: 120_000 });
-        await enable();
-      }
+      await invokeWhenReady(page, 'org.dxos.operation.registry.enablePlugins', { ids: PLUGINS });
+      await page.waitForFunction(
+        (ids) => ids.every((id) => globalThis.composer.manager.getEnabled().includes(id)),
+        PLUGINS,
+        { timeout: 30_000 },
+      );
     },
   },
   {
@@ -148,7 +126,7 @@ export const steps = [
       (await page.locator(`${SECTION}[data-section="untriaged"]`).count()) === 0,
     run: async ({ demo, page }) => {
       await caption(demo, 'Triage: label, prioritise and extract tasks with one click');
-      await demo.click({ selector: `${PLANK} button[aria-label="Extract"]`, label: 'Magic' });
+      await demo.click({ selector: `${PLANK} [data-testid="inbox.mailbox.more"]`, label: 'More' });
       await demo.click({ selector: '[role="menuitem"]:has-text("Triage inbox")', label: 'Triage inbox' });
       await page.locator(`${SECTION}[data-section="priority-urgent"]`).first().waitFor({ timeout: 60_000 });
       await page.waitForFunction(
@@ -156,6 +134,8 @@ export const steps = [
         SECTION,
         { timeout: 60_000 },
       );
+      // Bands land as each answer arrives; the project appears only once the run has filed its tasks.
+      await page.locator(TREE_ITEM('Projects')).first().waitFor({ timeout: 60_000 });
       await caption(demo, 'Messages regroup by priority');
       await page.waitForTimeout(BEAT * 3);
     },
@@ -206,7 +186,7 @@ export const steps = [
     narration:
       'Sending email needs permission, so the agent stops and asks in the chat, with the reply it drafted under the request.',
     run: async ({ demo, page }) => {
-      await demo.speed({ factor: 6 });
+      await demo.speed({ factor: 3 });
       await page.locator(REQUEST).first().waitFor({ state: 'visible', timeout: AGENT_TIMEOUT });
       await demo.speed({ factor: 1 });
       await caption(demo, 'Sending needs your permission');
@@ -229,8 +209,7 @@ export const steps = [
     narration: 'Allow it, and the reply goes out.',
     run: async ({ demo, page }) => {
       await demo.click({ selector: `${REQUEST} button:has-text("Allow") >> nth=0`, label: 'Allow' });
-      await page.locator(`${REQUEST}:has-text("Allow")`).first().waitFor({ timeout: 10_000 });
-      await demo.speed({ factor: 4 });
+      await demo.speed({ factor: 2 });
       await page.waitForFunction(
         () =>
           [...document.querySelectorAll('[data-testid="deck.companion"] *')].some((element) =>
