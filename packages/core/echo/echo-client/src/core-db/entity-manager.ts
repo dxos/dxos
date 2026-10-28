@@ -1092,7 +1092,8 @@ export class EntityManager implements IDatabaseBinding {
             if (updatedIds.includes(objectToLoad.id)) {
               clearTimeout(inactivityTimeoutTimer);
 
-              const core = this._objects.get(objectToLoad.id);
+              // Rehydrated if collected: the wait can outlast the core's pin, and every check below reads it.
+              const core = this.getObjectCoreById(objectToLoad.id, { load: false });
               if (!returnDeleted && core?.isDeleted()) {
                 diagnostics.push('object-deleted');
                 result[objectToLoad.resultIndex] = undefined;
@@ -1106,7 +1107,7 @@ export class EntityManager implements IDatabaseBinding {
                 diagnostics.push('deps-unsatisfied');
                 result[objectToLoad.resultIndex] = undefined;
               } else {
-                result[objectToLoad.resultIndex] = this.getObjectCoreById(objectToLoad.id)!;
+                result[objectToLoad.resultIndex] = core;
               }
 
               objectsToLoad.splice(i, 1);
