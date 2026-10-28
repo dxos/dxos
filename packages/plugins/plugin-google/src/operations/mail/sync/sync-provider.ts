@@ -116,10 +116,9 @@ export const googleMailSyncProvider = (options: {
                 } satisfies EmailStage.Change;
               });
 
-            const toItem = (message: GoogleMail.Message, fromDelta: boolean): MailSync.MailSyncItem => ({
+            const toItem = (message: GoogleMail.Message): MailSync.MailSyncItem => ({
               foreignId: message.id,
               key: Number.parseInt(message.internalDate),
-              fromDelta,
               process: toMapped(message).pipe(Effect.provide(context)),
             });
 
@@ -196,17 +195,15 @@ export const googleMailSyncProvider = (options: {
                     onEstimate,
                     onRetrieved,
                     forwardIds: ids,
-                  }).pipe(Stream.map((message) => toItem(message, ids !== undefined)));
-                // The delta's ids and the backward window are fetched apart so each item knows its origin:
-                // the same message can come from both, and only the delta's copy skips the date shortcut.
-                const additions = forwardIds
-                  ? Stream.concat(fetchItems({}, forwardIds), fetchItems({ backward: windows.backward }, undefined))
-                  : fetchItems(windows, undefined);
-                return {
-                  additions: additions.pipe(
+                  }).pipe(
+                    Stream.map(toItem),
                     Stream.provideService(GoogleMailApi, api),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
-                  ),
+                  );
+                // The delta's ids and the backward window are fetched apart, so the harness reads the delta first.
+                return {
+                  deltaAdditions: forwardIds ? fetchItems({}, forwardIds) : undefined,
+                  windowAdditions: fetchItems(forwardIds ? { backward: windows.backward } : windows, undefined),
                   // Empty on non-incremental runs; resolved to `Change`s by the shared `reconcileToChanges`.
                   reconciles: MailSync.reconcileToChanges(Stream.fromIterable(reconcileItems)),
                 };

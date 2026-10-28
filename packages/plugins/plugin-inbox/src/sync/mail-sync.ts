@@ -89,7 +89,8 @@ export type MailSyncItem = {
   /**
    * Listed by the provider's change feed (an incremental delta's created ids) rather than by a date
    * window, so its key is a provider date that says nothing about what was synced (an imported message
-   * keeps its original date). Set per item: the same id can also arrive from the backward window.
+   * keeps its original date). Set by the harness on {@link MailSyncStreams.deltaAdditions}: the same id
+   * can also arrive from the backward window.
    */
   readonly fromDelta?: boolean;
   readonly process: Effect.Effect<EmailStage.Change | undefined, MailSyncError, never>;
@@ -104,11 +105,18 @@ export type ReconcileItem = Omit<EmailStage.Retag, 'entityId'> | Omit<EmailStage
 /** The run's two raw source streams, produced by {@link MailSyncProviderService.prepare} once ready. */
 export type MailSyncStreams = {
   /**
-   * Raw new-message candidates (the provider's windows → `skipCommitted` → fetch). Not yet deduped,
-   * capped, or decoded — the harness applies `dedupStage` → `boundStage` → decode, so those generic
-   * stages stay visible in its pipeline rather than hidden in the provider.
+   * Raw new-message candidates the provider's change feed listed (an incremental delta's created ids →
+   * `skipCommitted` → fetch), or absent when this run lists additions by date window only. The harness
+   * reads all of them before {@link windowAdditions} and marks them {@link MailSyncItem.fromDelta}, since
+   * a window item taken is its proof that no delta item was cut.
    */
-  readonly additions: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
+  readonly deltaAdditions?: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
+  /**
+   * Raw new-message candidates the provider's date windows listed (→ `skipCommitted` → fetch). Like the
+   * delta's, not yet deduped, capped, or decoded — the harness applies `dedupStage` → `boundStage` →
+   * decode, so those generic stages stay visible in its pipeline rather than hidden in the provider.
+   */
+  readonly windowAdditions: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
   /**
    * Fully-resolved reconcile changes (retag/delete). Provider-coupled: the resolution is either the
    * shared {@link reconcileToChanges} (Gmail) or a provider-specific re-fetch+diff (JMAP), so unlike
@@ -129,8 +137,9 @@ export type MailSyncSource = {
   /**
    * The opaque delta-resume token at this run's chunk boundary (first-tick / staleness paths return the
    * freshly-captured provider token). The harness reads it at run end and writes it to the cursor once
-   * every delta item of the run has been taken or dropped, capped or not. Advancing to a *chunk* boundary
-   * (not the whole delta) bounds each run: a large delta drains across runs. Absent for providers with no delta path.
+   * every delta item of the run has been taken or dropped, capped or not (a run that scanned the forward
+   * window instead, only uncapped). Advancing to a *chunk* boundary (not the whole delta) bounds each run:
+   * a large delta drains across runs. Absent for providers with no delta path.
    */
   readonly nextToken?: () => string | undefined;
   /**
@@ -690,7 +699,7 @@ export const runMailSync = (
     const deltaHandledAtStart = deltaHandled.size;
     // Delta items lead the additions, so a window item taken means none of the delta was cut.
     let windowItemTaken = false;
-    const { additions, reconciles } = source.buildSource({
+    const { deltaAdditions, windowAdditions, reconciles } = source.buildSource({
       windows: backfillHeld ? { ...windows, backward: undefined } : windows,
       filter: targetOptions.filter,
       tagIndex,
@@ -700,6 +709,12 @@ export const runMailSync = (
         retrieved += 1;
       },
     });
+    const additions = deltaAdditions
+      ? Stream.concat(
+          deltaAdditions.pipe(Stream.map((item): MailSyncItem => ({ ...item, fromDelta: true }))),
+          windowAdditions,
+        )
+      : windowAdditions;
     const inserts = additions.pipe(
       Cursor.dedupStage<MailSyncItem>(
         'dedup',
@@ -871,6 +886,7 @@ export const runMailSync = (
       capped,
       outOfTime,
       hasMoreDelta,
+      backfillHeld,
       newMessages: stats.newMessages,
       action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
     });
@@ -887,7 +903,9 @@ export const runMailSync = (
       if (!capped && !backfillHeld) {
         Cursor.completeBackfill(binding, horizon.getTime());
       }
-      const deltaDrained = !capped || windowItemTaken;
+      // A window item proves the delta drained; a forward window it follows may still have been cut.
+      const forwardScanned = deltaAdditions === undefined && windows.forward !== undefined;
+      const deltaDrained = !capped || (windowItemTaken && !forwardScanned);
       const nextToken = deltaDrained ? source.nextToken?.() : undefined;
       if (nextToken !== undefined || tagPush.nextHeads !== undefined || deltaChanged) {
         Cursor.writeSyncState(binding, {

@@ -1088,6 +1088,49 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
   });
 
+  test('a capped forward scan after a stale historyId holds the token until the gap is synced', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 101, start: subDays(now, 10), end: subDays(now, 6) });
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(googleSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+
+    // The token went stale while more mail arrived than one run takes, so the fallback forward window is capped.
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind === 'external') {
+        binding.spec.token = '1';
+      }
+    });
+    const gap = generateGmailDataset({
+      count: 25,
+      seed: 102,
+      start: subDays(now, 5),
+      end: subDays(now, 1),
+      idPrefix: 'gap',
+    }).messages;
+    const dataset = { ...base, messages: [...base.messages, ...gap], historyId: '9999', historyLog: [] };
+
+    let runs = 0;
+    let exit: Exit.Exit<unknown, unknown>;
+    do {
+      exit = await EffectEx.runPromise(
+        Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: 10, now })).pipe(
+          Effect.provide(googleSyncTestServices(db, dataset)),
+        ),
+      );
+      runs += 1;
+    } while (Exit.isFailure(exit) && runs < 10);
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(tokenOf(binding)).toBe('9999');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(base.messages.length + gap.length);
+  });
+
   test('a crash mid-incremental leaves the token unadvanced and recovers with no duplicate', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateGmailDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });

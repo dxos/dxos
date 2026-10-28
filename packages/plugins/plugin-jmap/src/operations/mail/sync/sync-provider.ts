@@ -161,10 +161,9 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                 } satisfies EmailStage.Change;
               });
 
-            const toItem = (email: JmapMail.Email, fromDelta: boolean): MailSync.MailSyncItem => ({
+            const toItem = (email: JmapMail.Email): MailSync.MailSyncItem => ({
               foreignId: email.id,
               key: new Date(email.receivedAt).getTime(),
-              fromDelta,
               process: toMapped(email).pipe(Effect.provide(context)),
             });
 
@@ -236,17 +235,15 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                     onEstimate,
                     onRetrieved,
                     forwardIds: ids,
-                  }).pipe(Stream.map((email) => toItem(email, ids !== undefined)));
-                // The delta's ids and the backward window are fetched apart so each item knows its origin:
-                // the same email can come from both, and only the delta's copy skips the date shortcut.
-                const additions = forwardIds
-                  ? Stream.concat(fetchItems({}, forwardIds), fetchItems({ backward: windows.backward }, undefined))
-                  : fetchItems(windows, undefined);
-                return {
-                  additions: additions.pipe(
+                  }).pipe(
+                    Stream.map(toItem),
                     Stream.provideService(JmapMailApi, providerApi),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
-                  ),
+                  );
+                // The delta's ids and the backward window are fetched apart, so the harness reads the delta first.
+                return {
+                  deltaAdditions: forwardIds ? fetchItems({}, forwardIds) : undefined,
+                  windowAdditions: fetchItems(forwardIds ? { backward: windows.backward } : windows, undefined),
                   // Empty on non-incremental runs; `jmapReconcile` re-fetches + diffs each `updated` id
                   // and resolves it to a `Change` itself (it needs the entityId to read local tags).
                   reconciles: jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(

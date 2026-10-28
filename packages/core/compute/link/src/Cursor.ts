@@ -765,11 +765,12 @@ export const skipCommitted = <In>(
  * {@link Extent}). Reads {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with
  * {@link skipCommitted} to avoid fetching already-committed items.
  *
- * An item `isDelta` marks came from a provider change feed (arrival order), not a key window, so its key
- * is a provider date that says nothing about what was synced: it skips the range shortcut. A range run
- * splits ownership at `minKey` instead — the delta keeps keys at or above it, and leaves keys below it to
- * the backward window, which lists that range by key. A delta item never lowers `extent.minKey`, so it
- * cannot mark unscanned history as synced, and every one it drops is recorded in {@link State.deltaHandled}.
+ * An item `isDelta` marks came from a provider change feed (arrival order), not a key window, so its key is a
+ * provider date that says nothing about what was synced: it skips the range shortcut. A range run splits ownership
+ * at the backward window's low mark instead (`minKey`, or `maxKey` while `min` is unset; a never-synced cursor
+ * leaves everything to the backward window) — the delta keeps keys at or above it, and leaves keys below it to the
+ * backward window, which lists that range by key. A delta item never lowers `extent.minKey`, so it cannot mark
+ * unscanned history as synced, and every one it drops is recorded in {@link State.deltaHandled}.
  */
 export const dedupStage = <In>(
   id: string,
@@ -787,7 +788,10 @@ export const dedupStage = <In>(
           extent.maxKey = Math.max(extent.maxKey, key);
         }
         const handled = deltaHandled?.has(foreignId) || dedupSet.has(foreignId);
-        const belowMin = trackRange && minKey > 0 && key > 0 && key < minKey;
+        // The backward window's own low mark (see `resolveWindows`): a never-synced cursor walks the whole
+        // range, so the delta owns nothing yet, and an unset `min` falls back to `max`.
+        const lowKey = maxKey === 0 ? Number.POSITIVE_INFINITY : minKey > 0 ? minKey : maxKey;
+        const belowMin = trackRange && key > 0 && key < lowKey;
         if (handled || belowMin) {
           deltaHandled?.add(foreignId);
           return undefined;

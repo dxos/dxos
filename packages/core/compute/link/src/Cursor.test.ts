@@ -789,6 +789,56 @@ describe('dedupStage with delta items', () => {
     ]);
     expect(extent).toEqual({ maxKey: 40, minKey: 30 });
   });
+
+  const runDedup = async (cursorKeys: { max?: string; min?: string }, items: Item[]) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), ...cursorKeys }));
+    return Stream.fromIterable(items).pipe(
+      Cursor.dedupStage(
+        'dedup',
+        (item: Item) => item.id,
+        (item: Item) => item.key,
+        (item: Item) => item.fromDelta,
+      ),
+      Stream.runCollect,
+      Effect.map((kept) => [...kept]),
+      Effect.provide(
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: Cursor.parseKey(cursorKeys.max),
+            minKey: Cursor.parseKey(cursorKeys.min),
+            trackRange: true,
+            dedupSeedType: Expando.Expando,
+            stats: { newMessages: 0 },
+            deltaHandled: new Set(),
+          }),
+          Database.layer(db),
+        ),
+      ),
+      EffectEx.runAndForwardErrors,
+    );
+  };
+
+  test('a never-synced cursor leaves a delta id to the backward window, which lists it once', async ({ expect }) => {
+    const kept = await runDedup({}, [
+      { id: 'both-80', key: 80, fromDelta: true },
+      { id: 'both-80', key: 80, fromDelta: false },
+    ]);
+    expect(kept).toEqual([{ id: 'both-80', key: 80, fromDelta: false }]);
+  });
+
+  test('with min unset the split falls back to max, as the backward window does', async ({ expect }) => {
+    const kept = await runDedup({ max: '100' }, [
+      { id: 'imported-40', key: 40, fromDelta: true },
+      { id: 'arrival-120', key: 120, fromDelta: true },
+    ]);
+    expect(kept.map((item) => item.id)).toEqual(['arrival-120']);
+  });
 });
 
 describe('commit with objectless units', () => {
