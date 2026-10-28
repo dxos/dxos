@@ -116,6 +116,23 @@ const feedbackText = (value: string): string | undefined => {
 
 const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 
+/**
+ * Run rows travel inside the thread's markdown as a `<surface>` tag. Tool outputs are JSON full of escaped quotes;
+ * base64 holds nothing the markdown or the XML parser can act on. UTF-8 safe both ways.
+ */
+export const encodeRuns = (runs: readonly RunData[]): string => {
+  const bytes = new TextEncoder().encode(JSON.stringify(runs));
+  let binary = '';
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  }
+  return btoa(binary);
+};
+
+/** The JSON a {@link encodeRuns} payload holds (a list of run rows; one row from an older thread). */
+export const decodeRuns = (b64: string): unknown =>
+  JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (char) => char.charCodeAt(0))));
+
 /** Keeps a run row's tag small: very long tags stop the thread's markdown parser. */
 const RUN_BUDGET = 9_000;
 
@@ -245,18 +262,29 @@ export const toMessages = (
       return;
     }
     const rows = turn.rows;
-    const blocks = turn.blocks.flatMap((block): ContentBlock.Any[] => {
+    // Consecutive run rows travel as ONE surface tag holding the list: a surface tag directly after another run
+    // row's tag was sometimes not recognised by the thread's parser and showed as raw text.
+    const blocks: ContentBlock.Any[] = [];
+    let group: RunData[] | undefined;
+    const close = () => {
+      if (group) {
+        blocks.push({ _tag: 'surface', role: RUN_ROLE, data: { b64: encodeRuns(group) } });
+        group = undefined;
+      }
+    };
+    for (const block of turn.blocks) {
       if (block._tag !== 'surface' || block.role !== RUN_ROLE) {
-        return [block];
+        close();
+        blocks.push(block);
+        continue;
       }
       const row = rows[Number(block.data?.index)];
       // A row with neither calls nor results (all its calls were the report) says nothing.
-      if (!row || (row.calls.length === 0 && row.total === 0)) {
-        return [];
+      if (row && (row.calls.length > 0 || row.total > 0)) {
+        (group ??= []).push(fitRun(row));
       }
-      const data: RunData = fitRun(row);
-      return [{ _tag: 'surface', role: RUN_ROLE, data }];
-    });
+    }
+    close();
     messages.push(
       Message.make({
         id: EntityId.deterministic(run, 'decide', turn.seq),

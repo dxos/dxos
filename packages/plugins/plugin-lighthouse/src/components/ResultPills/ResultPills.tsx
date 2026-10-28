@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 import { asNumber, asRecord, asString } from '../../client/decode.ts';
 import { type Pick } from '../../client/types.ts';
-import { PICKS_ROLE, type Pill, RUN_ROLE, type RunCall, type RunData } from '../../model/trajectory.ts';
+import { PICKS_ROLE, type Pill, RUN_ROLE, type RunCall, type RunData, decodeRuns } from '../../model/trajectory.ts';
 
 const parse = (children: WidgetProps['children']): Record<string, unknown> | undefined => {
   try {
@@ -74,6 +74,23 @@ const toRun = (data: Record<string, unknown>): RunData => {
     total: asNumber(data.total) ?? pills.length,
     followed: asNumber(data.followed) ?? 0,
   };
+};
+
+/** The run rows a surface carries: base64 JSON of a list (or one row), or a plain row from an older thread. */
+const toRuns = (data: Record<string, unknown>): RunData[] => {
+  const b64 = asString(data.b64);
+  if (!b64) {
+    return [toRun(data)];
+  }
+  try {
+    const decoded = decodeRuns(b64);
+    return (Array.isArray(decoded) ? decoded : [decoded]).flatMap((row) => {
+      const record = asRecord(row);
+      return record ? [toRun(record)] : [];
+    });
+  } catch {
+    return [];
+  }
 };
 
 const toPicks = (value: unknown): Pick[] =>
@@ -276,8 +293,14 @@ export const ResultPills = ({ role, children }: WidgetProps) => {
     return picks.length ? <Picks picks={picks} gaps={asString(data.gaps)} /> : null;
   }
   if (role === RUN_ROLE) {
-    const run = toRun(data);
-    return run.calls.length || run.pills.length ? <RunRow run={run} /> : null;
+    const runs = toRuns(data).filter((run) => run.calls.length || run.pills.length);
+    return runs.length ? (
+      <Layout.Flex column data-testid='lighthouse.runs'>
+        {runs.map((run, index) => (
+          <RunRow key={index} run={run} />
+        ))}
+      </Layout.Flex>
+    ) : null;
   }
   return null;
 };

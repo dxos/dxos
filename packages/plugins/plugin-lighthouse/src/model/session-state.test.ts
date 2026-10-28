@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { snapshot } from '../testing/fixtures.ts';
 import { applyUpdate, applyVote, emptySessionState, nextVote } from './session-state.ts';
-import { PICKS_ROLE, RUN_ROLE, toMessages } from './trajectory.ts';
+import { PICKS_ROLE, RUN_ROLE, decodeRuns, encodeRuns, toMessages } from './trajectory.ts';
 
 describe('session state', () => {
   test('events are kept once each, in seq order, after the snapshot', ({ expect }) => {
@@ -41,25 +41,18 @@ describe('toMessages', () => {
     const messages = toMessages(session, events, results);
     expect(messages.map((message) => message.sender.role)).toEqual(['user', 'assistant']);
     const blocks = messages[1]?.blocks ?? [];
-    // One run row per narration, then the picks.
-    expect(blocks.map((block) => (block._tag === 'surface' ? block.role : block._tag))).toEqual([
-      RUN_ROLE,
-      RUN_ROLE,
-      PICKS_ROLE,
-    ]);
-    const [search, browse] = blocks.flatMap((block) =>
-      block._tag === 'surface' && block.role === RUN_ROLE ? [block.data] : [],
-    );
-    expect(search).toMatchObject({ narration: 'Searching Google Maps for board game cafés.', total: 2 });
-    expect(search?.calls).toEqual([
+    // Consecutive run rows travel as one surface (base64 JSON of the list), then the picks.
+    expect(blocks.map((block) => (block._tag === 'surface' ? block.role : block._tag))).toEqual([RUN_ROLE, PICKS_ROLE]);
+    const payload = blocks[0]?._tag === 'surface' ? blocks[0].data?.b64 : undefined;
+    const rows = typeof payload === 'string' ? decodeRuns(payload) : undefined;
+    expect(rows).toMatchObject([
       {
-        tool: 'search',
-        args: 'engine=google-maps params={"q":"board game cafe Bangkok"}',
-        ok: true,
-        output: '{"results":12}',
+        narration: 'Searching Google Maps for board game cafés.',
+        total: 2,
+        calls: [{ tool: 'search', args: 'engine=google-maps params={"q":"board game cafe Bangkok"}', ok: true }],
       },
+      { narration: 'Opening the cafés with the most games.', total: 3 },
     ]);
-    expect(browse).toMatchObject({ narration: 'Opening the cafés with the most games.', total: 3 });
     // Re-deriving gives the same ids, so the thread updates rows in place.
     expect(toMessages(session, events, results).map((message) => message.id)).toEqual(
       messages.map((message) => message.id),
@@ -93,5 +86,20 @@ describe('toMessages', () => {
     ]);
     const failed = { ...snapshot('reported').session, status: 'failed' as const, busy: false, reason: 'model_error' };
     expect(toMessages(failed, [], []).at(-1)?.blocks.at(-1)).toEqual({ _tag: 'suggestion', text: 'Retry' });
+  });
+});
+
+describe('run payload', () => {
+  test('base64 JSON round-trips non-ASCII text and long outputs', ({ expect }) => {
+    const rows = [
+      {
+        narration: 'ร้านบอร์ดเกม — "big" library',
+        calls: [{ tool: 'search', args: 'q="บอร์ดเกม"', ok: true, output: 'x'.repeat(70_000) }],
+        pills: [],
+        total: 0,
+        followed: 0,
+      },
+    ];
+    expect(decodeRuns(encodeRuns(rows))).toEqual(rows);
   });
 });
