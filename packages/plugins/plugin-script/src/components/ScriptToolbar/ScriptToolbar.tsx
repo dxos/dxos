@@ -1,7 +1,8 @@
-import * as Atom from 'effect/reactivity/Atom';
 //
 // Copyright 2024 DXOS.org
 //
+
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import type * as Script from '@dxos/compute/Script';

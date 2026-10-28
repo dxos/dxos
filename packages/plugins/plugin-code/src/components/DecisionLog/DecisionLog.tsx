@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
 //
 // Copyright 2026 DXOS.org
 //
+
+import React, { useMemo } from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';

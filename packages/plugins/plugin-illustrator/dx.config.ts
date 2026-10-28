@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -78,10 +80,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-        environments: ['browser', 'node', 'tauri'],
-      },
+      { activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: IllustratorNamespace.key,
@@ -100,19 +99,14 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      {
-        environments: ['browser', 'node', 'tauri'],
-      },
     ),
-    // Browser-only: the variant supplies the React article/card components that render a drawing.
     Capability.lazyModule(
       'IllustratorSvgVariant',
       {
         provides: [IllustratorCapabilities.VariantProvider],
-        activatesOn: IllustratorEvents.Start,
-        environments: ['browser', 'tauri'],
+        activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
       },
-      () => import('./src/capabilities/svg-variant.ts', { with: { type: 'module-url' } }),
+      () => import('#svg-variant', { with: { type: 'module-url' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],

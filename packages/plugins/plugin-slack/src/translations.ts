@@ -1,7 +1,8 @@
-import { SlackNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
+
+import { SlackNamespace } from './namespace.ts';
 
 export const translations = [
   {

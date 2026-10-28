@@ -220,6 +220,7 @@
     "@types/react": "catalog:",
     "@typescript/typescript6": "catalog:",
     "effect": "catalog:",
+    "playwright": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "storybook-solidjs-vite": "catalog:",

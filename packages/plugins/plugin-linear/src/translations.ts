@@ -1,7 +1,8 @@
-import { LinearNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
+
+import { LinearNamespace } from './namespace.ts';
 
 export const translations = [
   {

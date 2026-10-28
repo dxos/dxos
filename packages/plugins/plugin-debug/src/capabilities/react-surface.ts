@@ -1,7 +1,8 @@
-import * as Effect from 'effect/Effect';
 //
 // Copyright 2026 DXOS.org
 //
+
+import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';

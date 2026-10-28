@@ -1,7 +1,8 @@
-import * as Schema from 'effect/Schema';
 //
 // Copyright 2026 DXOS.org
 //
+
+import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type RefObject, useCallback, useMemo, useRef } from 'react';
 
 import * as Operation from '@dxos/compute/Operation';

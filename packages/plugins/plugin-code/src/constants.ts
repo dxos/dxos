@@ -1,7 +1,8 @@
-import { CodeNamespace } from './namespace.ts';
 //
 // Copyright 2025 DXOS.org
 //
+
+import { CodeNamespace } from './namespace.ts';
 
 export const CODE_PROJECTS_SECTION_TYPE = `${CodeNamespace.key}.code-projects-section`;
 export const CODE_PROJECT_SPEC_TYPE = `${CodeNamespace.key}.code-project-spec`;

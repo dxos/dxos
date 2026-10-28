@@ -19,6 +19,21 @@ import * as SpaceCapabilities from './src/types/SpaceCapabilities.ts';
 import * as SpaceCapability from './src/types/SpaceCapability.ts';
 import * as SpaceSchema from './src/types/SpaceSchema.ts';
 
+// Its own line in the module list, so composer-app's hot-reload demo (QA-16) can drop it with one edit.
+const AppGraphBuilder = Capability.lazyModule(
+  'AppGraphBuilder',
+  {
+    // Browser-only: the builder defaults its share-link origin to `window.location.origin`, read
+    // when the module activates.
+    environments: ['browser', 'tauri'],
+    provides: [AppCapabilities.AppGraphBuilder],
+    // Its connectors read `client.spaces` inside atom computations (initialized-only, and a
+    // pre-init throw is not re-evaluated when initialization lands).
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./src/capabilities/app-graph-builder/app-graph-builder.ts', { with: { type: 'module-url' } }),
+);
+
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.config<SpaceSchema.SpacePluginOptions>({
   plugin: {
@@ -48,19 +63,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     tags: ['system'],
   },
   modules: [
-    Capability.lazyModule(
-      'AppGraphBuilder',
-      {
-        // Browser-only: the builder defaults its share-link origin to `window.location.origin`, read
-        // when the module activates.
-        environments: ['browser', 'tauri'],
-        provides: [AppCapabilities.AppGraphBuilder],
-        // Its connectors read `client.spaces` inside atom computations (initialized-only, and a
-        // pre-init throw is not re-evaluated when initialization lands).
-        activatesOn: ClientEvents.Initialized,
-      },
-      () => import('./src/capabilities/app-graph-builder/app-graph-builder.ts', { with: { type: 'module-url' } }),
-    ),
+    AppGraphBuilder,
     // TODO(wittjosiah): Could some of these commands make use of operations?
     AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
     SpaceCapability.createObject(
@@ -198,8 +201,12 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } })),
     AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],
-      provides: [SpaceOperationConfig],
     }),
+    Capability.lazyModule(
+      'SpaceOperationConfig',
+      { provides: [SpaceOperationConfig] },
+      () => import('./src/capabilities/operation-config.ts', { with: { type: 'module-url' } }),
+    ),
   ],
 });
 

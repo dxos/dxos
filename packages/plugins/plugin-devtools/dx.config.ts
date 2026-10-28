@@ -47,7 +47,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } })),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.plugin.debug.surface.page', 'org.dxos.role.deckCompanion.devtoolsOverview'],
+      roles: [
+        'org.dxos.plugin.debug.surface.page',
+        'org.dxos.role.deckCompanion.devtoolsOverview',
+        'org.dxos.role.devtoolsOverview',
+      ],
     }),
     Capability.lazyModule(
       'setup-devtools',

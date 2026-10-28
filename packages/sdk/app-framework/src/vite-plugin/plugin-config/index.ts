@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { dirname, relative } from 'node:path';
+import { basename, dirname, relative } from 'node:path';
 import {
   type RunnableDevEnvironment,
   type Plugin as VitePlugin,
@@ -175,19 +175,43 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
       return environment;
     })());
 
+  // Files changed since the last evaluation; the evaluator watches none itself.
+  const changed = new Set<string>();
+  let queue: Promise<unknown> = Promise.resolve();
+  // One at a time: dropping the evaluated modules while another config is mid-import leaves it half-initialized.
+  const evaluate = (root: string, file: string): Promise<unknown> => {
+    const run = queue.then(async () => {
+      const environment = await getEvaluator(root);
+      if (changed.size > 0) {
+        for (const changedFile of changed) {
+          environment.moduleGraph
+            .getModulesByFile(changedFile)
+            ?.forEach((module) => environment.moduleGraph.invalidateModule(module));
+        }
+        changed.clear();
+        environment.runner.evaluatedModules.clear();
+      }
+      const { default: config } = await environment.runner.import(file);
+      return config;
+    });
+    queue = run.catch(() => undefined);
+    return run;
+  };
+
   return {
     name: 'dx-plugin-config',
     enforce: 'pre',
     apply,
+    watchChange(id) {
+      changed.add(id);
+    },
     async load(id) {
       const file = id.split('?')[0];
       if (!CONFIG_FILE.test(file)) {
         return null;
       }
 
-      const runner = (await getEvaluator(this.environment.config.root)).runner;
-      runner.evaluatedModules.clear();
-      const { default: config } = await runner.import(file);
+      const config = await evaluate(this.environment.config.root, file);
       // A `Config2.make` config carries metadata only; it is served as authored.
       if (!isPluginConfig(config)) {
         return null;
@@ -201,8 +225,11 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
           "import * as Plugin from '@dxos/app-framework/Plugin';",
           `const plugin = ${JSON.stringify(config.plugin)};`,
           'export const meta = Plugin.getMetaFromConfig({ plugin });',
-          `export const make = Plugin.lazy(meta, () => import(${JSON.stringify(`${file}?${MODULES_PARAM}`)}));`,
+          // Relative, so the dev server's hot-module transform takes the module list for the plugin's definition.
+          `export const make = Plugin.lazy(meta, () => import(${JSON.stringify(`./${basename(file)}?${MODULES_PARAM}`)}));`,
           'export default { plugin, meta, make };',
+          // An edit re-creates the plugin through its module list; its importers keep the `make` they hold.
+          ...(this.environment.mode === 'dev' ? ['if (import.meta.hot) { import.meta.hot.accept(); }'] : []),
         ].join('\n');
       }
 
@@ -236,7 +263,12 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
           return specifier;
         }
         if (this.environment.mode !== 'build') {
-          return `/@fs${moduleFile}`;
+          const url = `/@fs${moduleFile}`;
+          // A static import, so the dev server's hot-module transform finds the body and makes it hot-replaceable.
+          if (specifier.startsWith('.') || specifier.startsWith('#')) {
+            loaders.push(`${JSON.stringify(url)}: () => import(${JSON.stringify(specifier)})`);
+          }
+          return url;
         }
         // App builds drop entry exports; the body's `default` is the contract the manifest loads.
         chunkRefs.push(this.emitFile({ type: 'chunk', id: moduleFile, preserveSignature: 'exports-only' }));
@@ -272,7 +304,7 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
         }
         modules.push({
           id: name,
-          url: external ? toUrl(bodyFile, bodySpecifier) : toUrl(bodyFile),
+          url: external || !library ? toUrl(bodyFile, bodySpecifier) : toUrl(bodyFile),
           activatesOn: module.activatesOn,
           requires: toManifestTags(module.requires),
           provides: toManifestTags(module.provides),

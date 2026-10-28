@@ -1,7 +1,8 @@
-import { SupportNamespace } from './namespace.ts';
 //
 // Copyright 2023 DXOS.org
 //
+
+import { SupportNamespace } from './namespace.ts';
 
 export const WELCOME_TOUR_ID = `${SupportNamespace.key}.tour.welcome`;
 

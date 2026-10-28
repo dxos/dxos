@@ -15,8 +15,11 @@ export type Args = Omit<AppCapabilities.PluginAsset, 'content'>;
 
 /**
  * Adapts a text module (typically `PLUGIN.mdl?raw`) into a module body contributing it as an asset.
- * Default export: a manifest loads adapters by URL, like module bodies.
+ * Default export: a manifest loads adapters by URL, like module bodies. Keeps the body's other exports,
+ * where hot replacement finds its key.
  */
-export default ({ default: content }: { default: string }, asset: Args) => ({
-  default: () => Effect.succeed([Capability$.contribute(AppCapabilities.PluginAsset, { ...asset, content })]),
+export default <M extends { default: string }>(module: M, asset: Args) => ({
+  ...module,
+  default: () =>
+    Effect.succeed([Capability$.contribute(AppCapabilities.PluginAsset, { ...asset, content: module.default })]),
 });

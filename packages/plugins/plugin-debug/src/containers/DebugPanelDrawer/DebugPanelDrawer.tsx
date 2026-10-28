@@ -1,7 +1,8 @@
-import React, { useCallback } from 'react';
 //
 // Copyright 2026 DXOS.org
 //
+
+import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

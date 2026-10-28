@@ -9,16 +9,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 import { Entity } from '@dxos/echo';
 
-import { SpaceOperation, type SpaceSchema } from '#types';
+import { SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../namespace.ts';
-import { SpaceOperationConfig } from '../operations/helpers.ts';
-import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (options: SpaceSchema.SpacePluginOptions) {
-    const createInvitationUrl = makeCreateInvitationUrl(options);
-    const createJoinUrl = makeCreateJoinUrl(options);
+  Effect.fnUntraced(function* () {
     return [
       Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
@@ -61,7 +57,6 @@ export default Capability.makeModule(
           ],
         }),
       ]),
-      Capability.contribute(SpaceOperationConfig, { createInvitationUrl, createJoinUrl }),
     ];
   }),
 );

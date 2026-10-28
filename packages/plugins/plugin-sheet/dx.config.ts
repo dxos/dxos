@@ -131,9 +131,6 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      {
-        environments: ['browser', 'node', 'tauri'],
-      },
     ),
     AppCapability.spaceTemplates(
       () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),

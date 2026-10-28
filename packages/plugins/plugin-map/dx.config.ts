@@ -83,6 +83,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         'org.dxos.plugin.map.role.map',
+        'org.dxos.plugin.map.role.world',
         'org.dxos.role.article',
         'org.dxos.role.formInput',
         'org.dxos.role.objectProperties',

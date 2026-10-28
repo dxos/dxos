@@ -99,6 +99,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       }),
       AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
         roles: [
+          'org.dxos.plugin.assistant.role.chatDetails',
           'org.dxos.plugin.assistant.role.chatSurface',
           'org.dxos.plugin.space.role.homeContent',
           'org.dxos.plugin.space.role.homePinBottom',

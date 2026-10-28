@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import { type Server, createServer } from 'node:http';
@@ -13,6 +14,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { EdgeAiHttpClient, EdgeHttpClient, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
@@ -32,7 +34,9 @@ import * as Grounding from './Grounding.ts';
 // Live and billed, so opt-in:
 //   bun tools/code-index/bin/code-index.ts index     # once, and with no other code-index process running
 //   DX_RUN_MANUAL_TESTS=1 moon run plugin-code-graph:test -- src/command/Command.e2e.test.ts
-// Needs DX_ANTHROPIC_API_KEY, or DX_AI_PRESET=edge-remote to use EDGE preview; TYPESAFE_API_KEY adds the judge (without it a command stops after one good turn).
+// Needs DX_ANTHROPIC_API_KEY, or DX_AI_PRESET=edge-remote to use EDGE preview. Under edge-remote the judge is Clef, the
+// app's default decision model, through EDGE preview on a throwaway identity; otherwise TYPESAFE_API_KEY adds jev as
+// the judge (without either a command stops after one good turn).
 //
 
 const ROOT = fileURLToPath(new URL('../../../../..', import.meta.url));
@@ -43,27 +47,57 @@ const LATENCY_MS = 30_000;
 /** `direct` reads DX_ANTHROPIC_API_KEY; `edge-remote` goes through the EDGE preview AI service instead. */
 const PRESET = process.env.DX_AI_PRESET === 'edge-remote' ? 'edge-remote' : 'direct';
 
-/** Language models from the Anthropic API and decision models from System One, as one service. */
+const EDGE_URL = 'https://preview.dxos.network';
+
+/** One signed EDGE client for the suite, as the app keeps one per session; signing in again per command would be timed. */
+let edgeClient: Promise<EdgeHttpClient> | undefined;
+const getEdgeClient = () =>
+  (edgeClient ??= createEphemeralEdgeIdentity().then((identity) => {
+    const client = new EdgeHttpClient(EDGE_URL);
+    client.setIdentity(identity);
+    return client;
+  }));
+
+/** Clef on Workers AI through EDGE, as the app resolves `Model.defaultDecisionModel`; EDGE wants a signed identity. */
+const clefResolver = Layer.unwrap(
+  Effect.promise(getEdgeClient).pipe(
+    Effect.map((edge) =>
+      TypeSafeResolver.make({
+        workersAi: {
+          apiKey: Effect.succeed(undefined),
+          endpoint: () => 'http://workers-ai.edge.internal/v1/systemone',
+        },
+      }).pipe(
+        Layer.provide(
+          Layer.succeed(
+            HttpClient.HttpClient,
+            EdgeAiHttpClient.make(() => edge, { service: 'workers-ai/typesafe' }),
+          ),
+        ),
+      ),
+    ),
+  ),
+);
+
+/** jev on TypeSafe's own API, with a key from the environment. */
+const jevResolver = TypeSafeResolver.make({
+  typesafe: { apiKey: Effect.succeed(Redacted.make(process.env.TYPESAFE_API_KEY ?? '')) },
+}).pipe(Layer.provide(FetchHttpClient.layer));
+
+const JUDGE = PRESET === 'edge-remote' ? clefResolver : process.env.TYPESAFE_API_KEY ? jevResolver : undefined;
+
+/** Language models from the preset and the judge's decision model, as one service. */
 const aiService = Layer.effect(
   AiService.AiService,
   Effect.gen(function* () {
     const language = yield* AiService.tag.pipe(Effect.provide(AiServiceTestingPreset(PRESET)));
+    if (!JUDGE) {
+      return AiService.make({ languageModel: language.languageModel });
+    }
     const decision = yield* AiService.tag.pipe(
-      Effect.provide(
-        AiModelResolver.buildAiService.pipe(
-          Layer.provide(
-            TypeSafeResolver.make({
-              typesafe: { apiKey: Effect.succeed(Redacted.make(process.env.TYPESAFE_API_KEY ?? '')) },
-            }),
-          ),
-          Layer.provide(FetchHttpClient.layer),
-        ),
-      ),
+      Effect.provide(AiModelResolver.buildAiService.pipe(Layer.provide(JUDGE))),
     );
-    return AiService.make({
-      languageModel: language.languageModel,
-      ...(process.env.TYPESAFE_API_KEY && { decisionModel: decision.decisionModel }),
-    });
+    return AiService.make({ languageModel: language.languageModel, decisionModel: decision.decisionModel });
   }),
 );
 

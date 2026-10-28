@@ -1,7 +1,8 @@
-import { CloudflareNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
+
+import { CloudflareNamespace } from './namespace.ts';
 
 export const translations = [
   {

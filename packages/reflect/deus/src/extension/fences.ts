@@ -14,6 +14,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   type: 'var(--color-blue-400)',
   op: 'var(--color-orange-400)',
   feat: 'var(--color-emerald-400)',
+  feature: 'var(--color-sky-400)',
   scenario: 'var(--color-cyan-400)',
   test: 'var(--color-teal-400)',
   component: 'var(--color-pink-400)',
@@ -24,6 +25,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   decision: 'var(--color-amber-400)',
   verdict: 'var(--color-green-400)',
   plugin: 'var(--color-fuchsia-400)',
+  uses: 'var(--color-rose-400)',
   table: 'var(--color-red-400)',
 };
 

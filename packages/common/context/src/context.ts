@@ -28,6 +28,9 @@ const DEBUG_LOG_DISPOSE = false;
  */
 const MAX_SAFE_DISPOSE_CALLBACKS = 300;
 
+/** Stack frames reported with the warning above. */
+const CALL_SITE_FRAMES = 6;
+
 const DEFAULT_ERROR_HANDLER: ContextErrorHandler = (error, ctx) => {
   if (error instanceof ContextDisposedError) {
     return;
@@ -137,8 +140,13 @@ export class Context {
     if (this.#disposeCallbacks.length > this.maxSafeDisposeCallbacks && !this.#leakDetected) {
       this.#leakDetected = true;
       // A stack is never guaranteed — an engine may omit it entirely — and this is a diagnostic, so
-      // it must not be able to throw out of `onDispose` and break the caller's teardown.
-      const callSite = new StackTrace().getStackArray(1)[0]?.trim();
+      // it must not be able to throw out of `onDispose` and break the caller's teardown. Several frames,
+      // because the nearest is usually a helper such as `Event.on`, not the code that keeps subscribing.
+      const callSite = new StackTrace()
+        .getStackArray(1)
+        .slice(0, CALL_SITE_FRAMES)
+        .map((frame) => frame.trim())
+        .join('\n');
       log.warn('Context has a large number of dispose callbacks (this might be a memory leak).', {
         context: this.#name,
         callSite,

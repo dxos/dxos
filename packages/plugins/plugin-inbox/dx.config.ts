@@ -37,6 +37,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['alpha', 'connector'],
   },
   modules: [
+    Capability.lazyModule(
+      'MailboxActions',
+      // Rides the inbox feature it contributes to: the button is unreachable until a mailbox renders.
+      { provides: [InboxCapabilities.MailboxAction], activatesOn: InboxEvents.Start },
+      () => import('./src/capabilities/mailbox-actions.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),

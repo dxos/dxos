@@ -1,0 +1,366 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-qa/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: QaPlugin
+
+The data model and the nine operations are built and follow the spec's main rules. A run captures its
+cases at start, the rollup runs over that capture, a sealed run refuses pushes, and setCase matches by key.
+Almost nothing is tested: `TestRun.test.ts` unit-tests `rollup`, `unreported` and `tally`, and no
+operation, surface or end-to-end test exists. The agent-facing half is missing: there is no `QaSkill`, no
+mutation hints, no generation of a plan from a spec's `## QA` section, and no TestCase surface. The spec's
+typed errors (`UnknownCaseError`, `DuplicateCaseError`, `RunFinishedError`) are one generic `QaError`.
+Scenarios T-2 to T-8 sit in the same fenced block as T-1 and are not listed as items.
+
+Of 40 items: 3 done, 22 untested, 11 partial, 0 diverged, 4 missing. Three findings matter most:
+
+- **No MCP surface (F-5.1, F-5.3).** No `QaSkill` exists and no operation declares `Operation.mutation`,
+  so agents cannot reach the operations as the spec intends. `createPlan` also takes a live `Database`,
+  which does not cross MCP (F-5.2).
+- **No spec import and no case history view (F-1.1, F-4.2).** Plans start empty; nothing parses `## QA`
+  into cases. `getCaseHistory` exists, but no TestCaseArticle shows it.
+- **Operation behaviour is untested.** The rollup is covered, but the immutability, capture validation,
+  mid-run removal and artifact-by-reference guarantees (T-4 to T-8) have no tests.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict TestResultStatus: `ResultStatus` is passed, failed, skipped or blocked.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestCase.ts#ResultStatus]
+  tests: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.test.ts]
+```
+
+```mdl
+verdict TestStatus: `Status` adds `running` to the result statuses.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestCase.ts#Status]
+  note: |
+    No test reads a run status; the rollup tests return result statuses only.
+```
+
+```mdl
+verdict TestStep: `Step` has optional id, do and expect.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestCase.ts#Step]
+  note: |
+    Shape matches; no test builds a case with steps.
+```
+
+```mdl
+verdict TestCase: The TestCase object (org.dxos.type.qa.testCase 0.1.0) has key, title, description, steps and source, and no tags field.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestCase.ts#TestCase]
+  note: |
+    `source` is a plain string, not a DXN. No test creates a TestCase.
+```
+
+```mdl
+verdict TestPlan: The TestPlan object has name, description, ordered `cases`, a SetParent `feed` and `source`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestPlan.ts#TestPlan, github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestPlan.ts#make]
+  note: |
+    `source` is a string, not a DXN. The feed is an untyped `Ref<Feed>`, not `Feed<TestRun>`. No test creates a
+    plan.
+```
+
+```mdl
+verdict Actor: The runner uses `Actor` from `@dxos/types`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#TestRun]
+  note: |
+    `TestRun.runner` and `StartRun.runner` use `Actor.Actor`; no test sets a runner.
+```
+
+```mdl
+verdict TestTarget: `Target` has optional ref, branch, url and env.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#Target]
+  note: |
+    Shape matches; no test sets a target.
+```
+
+```mdl
+verdict TestArtifactRef: `ArtifactRef` holds kind, caption and a ref target.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#ArtifactRef]
+  note: |
+    Shape matches; no test attaches an artifact.
+```
+
+```mdl
+verdict CapturedCase: `CapturedCase` holds the key and a ref to the case.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#CapturedCase]
+  note: |
+    The rollup tests pass `{ key }` objects only, not a captured case ref.
+```
+
+```mdl
+verdict TestStepResult: `StepResult` has status, note and artifacts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#StepResult]
+  note: |
+    No test pushes step results.
+```
+
+```mdl
+verdict TestResult: `Result` has case, status, steps, note, durationMs and artifacts, plus a denormalised `caseKey`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#Result]
+  note: |
+    The extra `caseKey` field is what the rollup and push key on. The tests build results by hand and do not check
+    the schema.
+```
+
+```mdl
+verdict TestRun: The run has the specified fields, and its rollup runs over `cases` with an empty capture yielding skipped.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#TestRun, github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#rollup, github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#unreported]
+  tests: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.test.ts]
+```
+
+```mdl
+verdict F-1.1: Plans are created empty; nothing generates a plan from a spec's `## QA` section.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#CreatePlan, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/create-plan.ts]
+  note: |
+    `createPlan` takes an optional `source` string and creates an empty plan. No operation or code parses a
+    PLUGIN.mdl `## QA` section into cases (searched plugin-qa `src/`).
+```
+
+```mdl
+verdict F-1.2: Cases are added, updated, reordered and removed through operations.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/operations/set-case.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/remove-case.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/set-case-order.ts]
+  note: |
+    The handlers exist; no test invokes them.
+```
+
+```mdl
+verdict F-1.3: `setCase` matches by `key` and updates the existing TestCase in place.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/operations/set-case.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/util.ts#findCase]
+  note: |
+    No test re-runs setCase on an existing key (scenario T-6).
+```
+
+```mdl
+verdict F-2.1: `startRun` appends a running TestRun to the plan feed and returns its ref.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/operations/start-run.ts]
+  note: |
+    No operation test exists in the package.
+```
+
+```mdl
+verdict F-2.2: `pushResult` appends or replaces one result per case on a running run.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/operations/push-result.ts]
+  note: |
+    No test pushes results.
+```
+
+```mdl
+verdict F-2.3: The rollup over captured keys follows the stated precedence, and completeRun stamps `finishedAt`.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#rollup, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/complete-run.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.test.ts]
+  walkthrough:
+    - `rollup` returns skipped for an empty capture, then failed, blocked, skipped and passed. github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#rollup
+    - `completeRun` writes the rollup and `finishedAt` and returns the unreported keys. github:dxos/dxos/packages/plugins/plugin-qa/src/operations/complete-run.ts
+  note: |
+    The rollup is unit-tested; the completeRun handler itself is not.
+```
+
+```mdl
+verdict F-2.4: pushResult and completeRun refuse a run that is not running.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/operations/push-result.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/complete-run.ts]
+  note: |
+    Both check `run.status !== 'running'` and fail; no test covers T-5.
+```
+
+```mdl
+verdict F-3.1: Artifacts are refs to existing objects; nothing copies bytes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#ArtifactRef, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/push-result.ts]
+  note: |
+    `ArtifactRef.target` is `Ref<Obj.Unknown>` and pushResult stores the refs as given; no test covers T-7.
+```
+
+```mdl
+verdict F-3.2: Artifacts attach per step and per case.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#StepResult, github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#Result]
+  note: |
+    Both structs carry `artifacts`; no test sets them, and RunResults shows only a case-level artifact count.
+```
+
+```mdl
+verdict F-4.1: The plan feed lists runs newest-first with a passed/total tally and the target ref or runner name.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/containers/TestPlanArticle/TestPlanArticle.tsx#TestPlanArticle, github:dxos/dxos/packages/plugins/plugin-qa/src/components/RunRow/RunRow.tsx#RunRow]
+  note: |
+    The row shows passes over the captured total, not separate pass and fail counts. No story or test renders it.
+```
+
+```mdl
+verdict F-4.2: `getCaseHistory` exists, but there is no case surface to show it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/operations/get-case-history.ts]
+  note: |
+    No TestCaseArticle or other surface for TestCase is registered in `capabilities/react-surface.ts`; the history
+    is reachable only as an operation.
+```
+
+```mdl
+verdict F-5.1: No QaSkill exists.
+  status: missing
+  note: |
+    Searched `packages/` for `QaSkill` and `org.dxos.skill.qa`: no matches, and plugin-qa has no `skills/`
+    directory or SkillDefinition contribution.
+```
+
+```mdl
+verdict F-5.2: Most inputs are refs and plain values, but createPlan takes a live `Database` as `target`.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#CreatePlan, github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#StartRun]
+  note: |
+    `CreatePlan.input.target` is `Database.Database`, which does not cross MCP as text. The other operations take
+    refs and plain values.
+```
+
+```mdl
+verdict F-5.3: No operation declares a mutation hint.
+  status: missing
+  note: |
+    `Operation.mutation` exists in `@dxos/compute`, but no definition in `types/QaOperation.ts` uses it.
+```
+
+```mdl
+verdict createPlan: Creates a plan with its feed in a given database; it takes a Database and returns a Ref.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#CreatePlan, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/create-plan.ts]
+  note: |
+    It adds a required `target: Database`, takes `source` as a string rather than a Ref, and returns `{ plan: Ref
+    }`. It is still a factory that does not place the plan. No test.
+```
+
+```mdl
+verdict setCase: Upserts a case by key, appends it when new and sets tags in meta.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#SetCase, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/set-case.ts]
+  note: |
+    `steps` is optional rather than required, and the output `case` is a Ref. No test.
+```
+
+```mdl
+verdict removeCase: Removes the case ref from `cases`, keeps the object, and returns `removed`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#RemoveCase, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/remove-case.ts]
+  note: |
+    No test.
+```
+
+```mdl
+verdict setCaseOrder: Validates a full permutation and rewrites `cases`, but raises a generic QaError rather than typed errors.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#SetCaseOrder, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/set-case-order.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/errors.ts#QaError]
+  note: |
+    Duplicate, unknown and partial orderings all fail with `QaError`; `UnknownCaseError` and `DuplicateCaseError`
+    do not exist. No test.
+```
+
+```mdl
+verdict startRun: Captures keys and case refs, validates them and appends to the feed, with generic errors.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#StartRun, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/start-run.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/errors.ts#QaError]
+  note: |
+    The behaviour matches, but unknown and duplicate keys raise `QaError`, not the named errors. No test.
+```
+
+```mdl
+verdict pushResult: Validates against the capture and replaces a result by key, with generic errors and a different output.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#PushResult, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/push-result.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/errors.ts#QaError]
+  note: |
+    It fails with `QaError` for a finished run or an uncaptured key (no `RunFinishedError` or `UnknownCaseError`).
+    It returns `{ run, status }` rather than `{ result }`. No test.
+```
+
+```mdl
+verdict completeRun: Rolls up, stamps and seals, returning the unreported keys; an already sealed run fails with QaError.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#CompleteRun, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/complete-run.ts, github:dxos/dxos/packages/plugins/plugin-qa/src/errors.ts#QaError]
+  note: |
+    `RunFinishedError` is a generic `QaError`, and the output carries a Ref plus `status`. The rollup is tested,
+    the handler is not.
+```
+
+```mdl
+verdict queryRuns: Filters the feed newest-first by status and case, with no `full` option, and returns refs.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#QueryRuns, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/query-runs.ts]
+  note: |
+    There is no `full` input and no summarising: the output is `Ref<TestRun>[]`, not run objects. No test.
+```
+
+```mdl
+verdict getCaseHistory: Returns one case's status, target and time across runs, newest first.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/QaOperation.ts#GetCaseHistory, github:dxos/dxos/packages/plugins/plugin-qa/src/operations/get-case-history.ts]
+  note: |
+    No test.
+```
+
+```mdl
+verdict TestPlanArticle: The case list and the run feed render, with Run and Add case buttons; there is no per-case status or openRun/openCase.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/containers/TestPlanArticle/TestPlanArticle.tsx#TestPlanArticle]
+  note: |
+    Rows expand inline instead of opening a run. Cases show their step count, not their last outcome. There is no
+    menu. No story or test.
+```
+
+```mdl
+verdict TestRunArticle: The run surface shows status and a per-case table, without step rows or artifact opening.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/containers/TestRunArticle/TestRunArticle.tsx#TestRunArticle, github:dxos/dxos/packages/plugins/plugin-qa/src/components/RunResults/RunResults.tsx]
+  note: |
+    RunResults shows each case's status, note and an artifact count, but no per-step results and no
+    `openArtifact`. No story or test.
+```
+
+```mdl
+verdict TestCaseArticle: No case surface exists.
+  status: missing
+  note: |
+    No `TestCaseArticle` in `packages/`, and react-surface registers only the plan and run articles.
+```
+
+```mdl
+verdict T-1: The rollup unit test covers passed, blocked, passed resolving to blocked; no test goes through the operations.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.ts#rollup]
+  tests: [github:dxos/dxos/packages/plugins/plugin-qa/src/types/TestRun.test.ts]
+  note: |
+    The test calls `TestRun.rollup` directly; startRun, pushResult and completeRun are not exercised.
+```
+
+```mdl
+verdict QA-1: No automation runs the create, run, push, complete and late-push sequence.
+  status: missing
+  note: |
+    No e2e spec or operation test in the repository drives plugin-qa.
+```
+

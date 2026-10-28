@@ -1,7 +1,8 @@
-import * as Effect from 'effect/Effect';
 //
 // Copyright 2025 DXOS.org
 //
+
+import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
@@ -33,6 +34,7 @@ import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 import { SpaceNamespace } from '../../../namespace.ts';
 import { SpaceOperationError } from '../../../operations/errors.ts';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
+import { DATABASE_KEY } from '../../helpers.ts';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
   DATABASE_SECTION_TYPE,
@@ -161,7 +163,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       id: 'schemaChildren',
       // Shares `db` with `databaseObjects`: whether an object is a view is data, not shape.
       url: {
-        key: 'db',
+        key: DATABASE_KEY,
         kind: 'item',
         path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
         minDepth: 2,
@@ -211,7 +213,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
     AppGraphBuilder.createExtension({
       id: 'databaseObjects',
       url: {
-        key: 'db',
+        key: DATABASE_KEY,
         kind: 'item',
         path: [GraphPath.GroupSegments.system, GraphPath.Segments.database],
         minDepth: 2,

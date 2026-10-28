@@ -1,7 +1,8 @@
-import { describe, test } from 'vitest';
 //
 // Copyright 2025 DXOS.org
 //
+
+import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';

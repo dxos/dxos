@@ -36,7 +36,14 @@ import {
   warnAfterTimeout,
 } from '@dxos/debug';
 import { Filter, Obj } from '@dxos/echo';
-import { type DatabaseImpl, type EchoClient, type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
+import {
+  type DatabaseImpl,
+  type EchoClient,
+  type EchoDatabase,
+  type ExportWorkingSetOptions,
+  type SpaceSyncState,
+  type WorkingSetRow,
+} from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -76,9 +83,13 @@ import { InvitationsProxy } from '../invitations/index.ts';
 import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
+const SPACE_ROOT_MIGRATION_TIMEOUT = 60_000;
 
 const INITIALIZATION_RETRY_BASE_MS = 1_000;
 const INITIALIZATION_RETRY_MAX_MS = 30_000;
+
+/** Hands a space the working set a boot cache persisted for it, once. */
+export type TakeWorkingSet = (spaceId: string) => WorkingSetRow[] | undefined;
 
 /**
  * Returns the {@link Space} that owns the given object, or `undefined`.
@@ -180,6 +191,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     private _data: SpaceData,
     private readonly _echoClient: EchoClient,
     private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
+    private readonly _takeWorkingSet?: TakeWorkingSet,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -213,6 +225,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
       setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
+      migrateSpaceRoot: this._migrateSpaceRoot.bind(this),
       syncToEdge: this._syncToEdge.bind(this),
       export: this._export.bind(this),
     };
@@ -491,6 +504,10 @@ export class SpaceProxy implements Space, CustomInspectable {
       } else {
         log.warn('no automerge root found for space', { spaceId: this.id });
       }
+      const seed = this._takeWorkingSet?.(this.id);
+      if (seed) {
+        this._db.seedWorkingSet(seed);
+      }
       await this._db.open(ctx);
     } catch (err) {
       // Left set, a failed open would also block the reopen path, which requires a closed database.
@@ -525,6 +542,14 @@ export class SpaceProxy implements Space, CustomInspectable {
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
     );
+  }
+
+  /**
+   * The open database's working set as boot-cache rows; empty until the database is open.
+   * @internal
+   */
+  _exportWorkingSet(options: ExportWorkingSetOptions): WorkingSetRow[] {
+    return this._databaseOpen ? this._db.exportWorkingSet(options) : [];
   }
 
   /**
@@ -716,6 +741,19 @@ export class SpaceProxy implements Space, CustomInspectable {
       memberKey,
       newRole: SpaceMember_Role.REMOVED,
     });
+  }
+
+  private async _migrateSpaceRoot(): Promise<string> {
+    const { spaceRootUrl } = await runServiceCall(
+      this._runtime,
+      this._clientServices.rpc,
+      'SpacesService.migrateSpaceRoot',
+      { spaceKey: this.key },
+      { timeout: SPACE_ROOT_MIGRATION_TIMEOUT },
+    );
+    // Callers read the migration state off `data`, so resolve only once the update carrying it lands.
+    await this._anySpaceUpdate.waitForCondition(() => this._data.spaceRootUrl === spaceRootUrl);
+    return spaceRootUrl;
   }
 
   private async _createEpoch({

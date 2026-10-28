@@ -12,7 +12,6 @@ import * as Project from '@dxos/compute/Project';
 import type { Database, Obj } from '@dxos/echo';
 
 import { ProjectsNamespace } from '../namespace.ts';
-import type * as FeatureMapView from './FeatureMapView.ts';
 
 /**
  * Id of the built-in default template. Declared here (rather than on the template itself) so callers
@@ -46,8 +45,6 @@ export type Template = {
    * `Database.Service` may still be used for read-only lookups (e.g. loading a subject's feed ref).
    */
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Project.Project, Error, Database.Service>;
-  /** How the new project's Features tab first shows its features; the user's own choice wins after that. */
-  featureView?: FeatureMapView.Mode;
 };
 
 export const Template = Capability.make<Template>()(`${ProjectsNamespace.key}.capability.template`);

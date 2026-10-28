@@ -1,7 +1,8 @@
-import * as Effect from 'effect/Effect';
 //
 // Copyright 2025 DXOS.org
 //
+
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 

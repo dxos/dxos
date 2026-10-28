@@ -11,8 +11,10 @@ import * as Capability$ from '@dxos/app-framework/Capability';
 
 /**
  * Adapts a module whose default export is a command list into a module body contributing it.
- * Default export: a manifest loads adapters by URL, like module bodies.
+ * Default export: a manifest loads adapters by URL, like module bodies. Keeps the body's other exports,
+ * where hot replacement finds its key.
  */
-export default ({ default: commands }: { default: ReadonlyArray<Capabilities.AnyCommand> }) => ({
-  default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, commands)]),
+export default <M extends { default: ReadonlyArray<Capabilities.AnyCommand> }>(module: M) => ({
+  ...module,
+  default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, module.default)]),
 });

@@ -1,7 +1,8 @@
-import { EditorSelection, type Extension } from '@codemirror/state';
 //
 // Copyright 2025 DXOS.org
 //
+
+import { EditorSelection, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, {
   type PropsWithChildren,

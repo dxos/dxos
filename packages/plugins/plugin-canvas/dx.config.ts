@@ -28,6 +28,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-canvas',
     dependsOn: ['org.dxos.plugin.illustrator'],
     icon: { key: 'ph--graph--regular', hue: 'teal' },
+    spec: 'PLUGIN.mdl',
     screenshots: [
       { dark: 'https://assets.composer.space/demos/2026-10-09-plugin-canvas.mp4?v=5b3598bd' },
       { dark: 'https://assets.composer.space/demos/2026-10-10-plugin-canvas-uml.mp4?v=b7c7aa13' },
@@ -35,6 +36,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['beta'],
   },
   modules: [
+    AppCapability.pluginAsset({
+      pluginId: CanvasNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
     // Browser-only: the variant supplies the React article that renders a drawing.
     Capability.lazyModule(
       'drawing-variant',

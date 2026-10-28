@@ -1,0 +1,182 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-code-graph/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: CodeGraphPlugin
+
+The plugin is substantially built. The dev-server route (`CodeIndexMiddleware`) runs `code-index mcp` as a child,
+refuses non-loopback, foreign-host, non-JSON and cross-origin callers, and is tested against a fake MCP server. The
+client names the missing route on a 404. The graph model (dedupe, needed boxes, removal), the illustrator layout
+with per-package frames, the command filter and the 40-box budget all have unit tests. Weak spots are the UI and the
+operation handlers: no test drives an operation handler, the 300-box `LimitError`, dragging, double-click or the
+details panel's actions, and no automated test runs the assistant scenario.
+
+The spec's fences are malformed, so the review parser sees only the first declaration of each fenced block: `Node`,
+`Edge`, `NodeKind`, `Layout`, eight of the nine ops, four of the five components and scenario `T-2` are not listed
+as items, and `F-5` and scenarios `T-3`-`T-5` sit outside any fence. This review judges the 19 items the parser
+lists. For the unlisted F-5 work: `Command.run`, `Filter`, `Budget`, `Grounding` and the `CommandBar` with
+Whistle speech exist, and `Command.test.ts` covers the turn loop.
+
+Of 19 items: 7 done, 9 untested, 2 partial, 0 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict CodeGraph: The ECHO type has the spec's fields, and make starts empty with the illustrator layout.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/types/CodeGraph.ts#CodeGraph, github:dxos/dxos/packages/plugins/plugin-code-graph/src/types/CodeGraph.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/plugin.test.ts]
+```
+
+```mdl
+verdict query: The query operation forwards a SPARQL SELECT to the index and returns vars, rows and truncation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/types/CodeGraphOperation.ts#Query, github:dxos/dxos/packages/plugins/plugin-code-graph/src/operations/query.ts]
+  walkthrough:
+    - The operation declares the SPARQL input and row output. github:dxos/dxos/packages/plugins/plugin-code-graph/src/types/CodeGraphOperation.ts#Query
+    - The handler calls CodeIndexClient.query and returns the rows. github:dxos/dxos/packages/plugins/plugin-code-graph/src/operations/query.ts
+  note: No test invokes the handler; `CodeIndexClient.query` is only exercised by the gated live `Command.e2e.test.ts`.
+```
+
+```mdl
+verdict CodeGraphArticle: The article has the layout toolbar, group and reset actions, canvas or drawing, details panel, hover card and command bar.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/containers/CodeGraphArticle/CodeGraphArticle.tsx#CodeGraphArticle]
+  note: No story or test renders the article; only its child components have stories.
+```
+
+```mdl
+verdict F-1.1: The vite plugin mounts middleware that answers read-only tools through a code-index mcp child process.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/code-index-vite-plugin.ts#CodeIndexVitePlugin, github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/CodeIndexMiddleware.ts#make, github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/McpClient.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/CodeIndexMiddleware.test.ts, github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/McpClient.test.ts]
+  walkthrough:
+    - The vite plugin adds the middleware to the dev server. github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/code-index-vite-plugin.ts#CodeIndexVitePlugin
+    - The middleware accepts POSTs on the route, allows only known tools and calls them. github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/CodeIndexMiddleware.ts#make
+    - The MCP client spawns code-index mcp on stdio and calls tools. github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/McpClient.ts#make
+```
+
+```mdl
+verdict F-1.2: The route refuses non-loopback sockets, foreign Host headers, non-JSON bodies and cross-origin requests.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/CodeIndexMiddleware.ts#make, github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/CodeIndexMiddleware.ts#isAllowedHost]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/vite-plugin/CodeIndexMiddleware.test.ts]
+```
+
+```mdl
+verdict F-1.3: A 404 from the route fails with a CodeIndexError that names the route and vite dev.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/client/CodeIndexClient.ts#call]
+  note: No test calls the client against a server without the route.
+```
+
+```mdl
+verdict F-2.1: The Code Graph skill lists addObject and the eight graph operations.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/skills/CodeGraphSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-code-graph/src/capabilities/skill-definition.ts]
+  note: `runCommand` is correctly left out of the skill. No test checks the skill's tool list.
+```
+
+```mdl
+verdict F-2.2: The CodeGraph schema carries SkillsAnnotation with the skill key.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/types/CodeGraph.ts#CodeGraph]
+  note: No test checks that a chat about a graph picks up the skill.
+```
+
+```mdl
+verdict F-2.3: Model.missing adds only new boxes and arrows plus the boxes an arrow needs, and addPatch applies it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Model.ts#missing, github:dxos/dxos/packages/plugins/plugin-code-graph/src/operations/util.ts#addPatch]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Model.test.ts]
+```
+
+```mdl
+verdict F-2.4: addPatch refuses the whole addition with LimitError past 300 boxes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/operations/util.ts#addPatch, github:dxos/dxos/packages/plugins/plugin-code-graph/src/types/CodeGraph.ts#LimitError, github:dxos/dxos/packages/plugins/plugin-code-graph/src/types/CodeGraph.ts#MAX_NODES]
+  note: No test reaches the cap.
+```
+
+```mdl
+verdict F-3.1: The illustrator layout writes the graph as DSL, places boxes at solved centres and frames packages with one colour each when grouped.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Semantic.ts#toDsl, github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Semantic.ts#layout, github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Semantic.ts#groupColor, github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphCanvas/CodeGraphCanvas.tsx#framePositions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Semantic.test.ts, github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphCanvas/CodeGraphCanvas.stories.tsx]
+  walkthrough:
+    - The graph becomes semantic DSL, with a tinted group per package when grouped. github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Semantic.ts#toDsl
+    - The engine solves it and returns box centres and frames. github:dxos/dxos/packages/plugins/plugin-code-graph/src/graph/Semantic.ts#layout
+    - The canvas takes the centres as its overlay and draws frames on a backdrop layer. github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphCanvas/CodeGraphCanvas.tsx#CodeGraphCanvas
+```
+
+```mdl
+verdict F-3.2: Force uses the canvas's force arrangement and rank its crossings arrangement.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphCanvas/CodeGraphCanvas.tsx#CodeGraphCanvas, github:dxos/dxos/packages/plugins/plugin-code-graph/src/containers/CodeGraphArticle/CodeGraphArticle.tsx#CodeGraphArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphCanvas/CodeGraphCanvas.stories.tsx]
+```
+
+```mdl
+verdict F-3.3: A drag writes the position of only the moved boxes; the others stay under the layout.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/containers/CodeGraphArticle/CodeGraphArticle.tsx#CodeGraphArticle]
+  note: `handlePositionsChange` filters to boxes whose point changed before `Obj.update`; no test drags a box.
+```
+
+```mdl
+verdict F-3.4: The diagram layout renders SceneSvg read-only from the semantic layout's objects.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphDiagram/CodeGraphDiagram.tsx#CodeGraphDiagram]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphDiagram/CodeGraphDiagram.stories.tsx]
+```
+
+```mdl
+verdict F-4.1: Double-clicking a box selects it and the article opens NodeDetails with its facts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphCanvas/CodeGraphCanvas.tsx#CodeGraphCanvas, github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/NodeDetails/NodeDetails.tsx#NodeDetails]
+  walkthrough:
+    - The canvas calls onOpen on double-click. github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/CodeGraphCanvas/CodeGraphCanvas.tsx#CodeGraphCanvas
+    - The article sets the selection and shows NodeDetails with the describe facts. github:dxos/dxos/packages/plugins/plugin-code-graph/src/containers/CodeGraphArticle/CodeGraphArticle.tsx#CodeGraphArticle
+  note: The NodeDetails stories render a panel from fixed facts; nothing tests the double-click path.
+```
+
+```mdl
+verdict F-4.2: The panel's expand-out, expand-in and remove buttons call AddNeighbors and Remove.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/components/NodeDetails/NodeDetails.tsx#NodeDetails, github:dxos/dxos/packages/plugins/plugin-code-graph/src/operations/add-neighbors.ts, github:dxos/dxos/packages/plugins/plugin-code-graph/src/operations/remove.ts]
+  note: No test clicks the actions or runs the AddNeighbors or Remove handlers.
+```
+
+```mdl
+verdict T-1: No automated test asks the assistant to draw plugin-markdown's dependencies.
+  status: missing
+  note: The chat assistant was not exercised in QA-1 (no model key), and no test drives the skill. `Command.e2e.test.ts` covers the separate command loop, not the assistant.
+```
+
+```mdl
+verdict QA-1: Only the command step is automated; the Playwright script QA-1 cites is not in the repo.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/command/Command.e2e.test.ts]
+  note: |
+    `Command.e2e.test.ts` (gated on a model key, tagged manual) runs "clear the graph" through the command loop. No
+    committed test creates a graph, runs addFromQuery or addNeighbors, or switches the layout.
+```
+
+```mdl
+verdict QA-2: The live command test runs all three commands through the loop, but not through the command bar.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/command/Command.ts#run]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code-graph/src/command/Command.e2e.test.ts]
+  note: |
+    `Command.e2e.test.ts` runs the exports, identity-service and clear commands against the real index (gated on a
+    model key). The UI path is driven only by the autocue demo script `autocue/commands.mjs`, which is not a CI test.
+```

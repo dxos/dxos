@@ -1,7 +1,8 @@
-import { GoogleNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
+
+import { GoogleNamespace } from './namespace.ts';
 
 export const translations = [
   {

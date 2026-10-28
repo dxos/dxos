@@ -40,6 +40,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     dependsOn: ['org.dxos.plugin.assistant', 'org.dxos.plugin.tasks'],
   },
   modules: [
+    // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
+    Capability.lazyModule(
+      'ProjectsMigrations',
+      { provides: [ClientCapabilities.Migration] },
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
     // Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
     // `LayoutOperation` actions, which mean nothing without an app shell.
     AppCapability.appGraphBuilder(

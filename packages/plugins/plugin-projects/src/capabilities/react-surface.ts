@@ -14,19 +14,21 @@ import { type Task } from '@dxos/types';
 import {
   FeatureArticle,
   FeatureCardContent,
+  FeatureCompanion,
   MoveTaskDialog,
   ProjectArticle,
   ProjectArtifactsArticle,
   ProjectChatsArticle,
   ShowcaseArticle,
   ShowcaseCardContent,
+  SpecArticle,
 } from '#containers';
-import { Feature, Showcase } from '#types';
+import { Feature, Showcase, Spec } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
-import { MOVE_TASK_DIALOG } from '../constants.ts';
+import { FEATURE_COMPANION, MOVE_TASK_DIALOG } from '../constants.ts';
 
-/** React surfaces contributed by plugin-projects — articles and cards for projects, features and showcases. */
+/** React surfaces contributed by plugin-projects — articles and cards for projects, specs, features and showcases. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
@@ -37,10 +39,26 @@ export default Capability.makeModule(() =>
         props: ({ role, data }) => ({ role, ...data }),
       }),
       Surface.create({
+        id: 'spec.article',
+        filter: AppSurface.object(AppSurface.Article, Spec.Spec),
+        component: SpecArticle,
+        props: ({ role, data }) => ({ role, ...data }),
+      }),
+      Surface.create({
         id: 'feature.article',
         filter: AppSurface.object(AppSurface.Article, Feature.Feature),
         component: FeatureArticle,
         props: ({ role, data }) => ({ role, ...data }),
+      }),
+      // The spec's feature companion (see the `feature` node in the graph builder).
+      Surface.create({
+        id: 'feature.companion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, FEATURE_COMPANION),
+          AppSurface.companion(AppSurface.Article, Spec.Spec),
+        ),
+        component: FeatureCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, spec: companionTo, attendableId }),
       }),
       Surface.create({
         id: 'feature.card',

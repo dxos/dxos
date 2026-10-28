@@ -1,7 +1,8 @@
-import * as Effect from 'effect/Effect';
 //
 // Copyright 2025 DXOS.org
 //
+
+import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';

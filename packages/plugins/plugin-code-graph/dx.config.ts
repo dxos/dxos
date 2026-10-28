@@ -28,6 +28,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     icon: { key: 'ph--graph--regular', hue: 'teal' },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
+    // The command bar's judge is a decision model, and TypeSafe is the plugin that serves them.
+    dependsOn: ['org.dxos.plugin.typesafe'],
   },
   modules: [
     SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),

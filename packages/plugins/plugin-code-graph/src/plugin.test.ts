@@ -8,20 +8,21 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 import * as Harness from '@dxos/plugin-testing/Harness';
+import * as TypeSafePlugin from '@dxos/plugin-typesafe/TypeSafePlugin';
 
 import * as CodeGraphPlugin from '#meta';
 import { CodeGraph } from '#types';
 
 import { CodeGraphNamespace } from './namespace.ts';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), CodeGraphPlugin.make()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), TypeSafePlugin.make(), CodeGraphPlugin.make()] });
 
 const moduleId = (name: string) => `${CodeGraphNamespace.key}.module.${name}`;
 
 describe('CodeGraphPlugin', () => {
   test('schema and operation handlers activate', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), CodeGraphPlugin.make()],
+      plugins: [ClientPlugin.make({}), TypeSafePlugin.make(), CodeGraphPlugin.make()],
     });
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
@@ -30,7 +31,7 @@ describe('CodeGraphPlugin', () => {
 
   test('the create-object entry makes a code graph', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), CodeGraphPlugin.make()],
+      plugins: [ClientPlugin.make({}), TypeSafePlugin.make(), CodeGraphPlugin.make()],
     });
     await harness.fire(SpaceEvents.CreateObjectRequested);
     const entry = harness

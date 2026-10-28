@@ -35,12 +35,14 @@ export const undeclaredSurfaceRoles = (result: unknown, declared: readonly strin
  * Wraps a surface module body so it reports, when it loads, any role its surfaces bind but do not
  * declare: a request for only that role never loads the module, so the surface silently renders
  * nothing wherever no declared role was requested first.
- * Default export: a manifest loads adapters by URL, like module bodies.
+ * Default export: a manifest loads adapters by URL, like module bodies. Keeps the body's other exports,
+ * where hot replacement finds its key.
  */
-export default <P, A, E, R>(
-  module: { default: (props: P) => Effect.Effect<A, E, R> },
+export default <P, A, E, R, M extends { default: (props: P) => Effect.Effect<A, E, R> }>(
+  module: M & { default: (props: P) => Effect.Effect<A, E, R> },
   { roles }: { roles: readonly string[] },
 ) => ({
+  ...module,
   default: (props: P) =>
     module.default(props).pipe(
       Effect.tap((result) =>

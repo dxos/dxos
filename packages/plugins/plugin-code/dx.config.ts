@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
@@ -61,6 +62,18 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['labs'],
   },
   modules: [
+    // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
+    Capability.lazyModule(
+      'CodeMigrations',
+      { provides: [ClientCapabilities.Migration] },
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
+    // Registered at startup so a GitHub file sync on EDGE, where no UI event fires, finds the mapping.
+    Capability.lazyModule(
+      'SpecFileMapping',
+      { provides: [GitHubCapabilities.FileMapping], activatesOn: ActivationEvents.Startup },
+      () => import('./src/capabilities/spec-file-mapping.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),

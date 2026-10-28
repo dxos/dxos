@@ -13,11 +13,16 @@ import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
  * Adapts a module exporting `translations` into a module body contributing them.
- * Default export: a manifest loads adapters by URL, like module bodies.
+ * Default export: a manifest loads adapters by URL, like module bodies. Keeps the body's other exports,
+ * where hot replacement finds its key.
  */
-export default ({ translations }: { translations: Translations.Resource | Translations.Resource[] }) => ({
+export default <M extends { translations: Translations.Resource | Translations.Resource[] }>(module: M) => ({
+  ...module,
   default: () =>
     Effect.succeed([
-      Capability$.contribute(AppCapabilities.Translations, Array.isArray(translations) ? translations : [translations]),
+      Capability$.contribute(
+        AppCapabilities.Translations,
+        Array.isArray(module.translations) ? module.translations : [module.translations],
+      ),
     ]),
 });

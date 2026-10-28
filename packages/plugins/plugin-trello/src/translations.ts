@@ -1,7 +1,8 @@
-import { TrelloNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
+
+import { TrelloNamespace } from './namespace.ts';
 
 export const translations = [
   {

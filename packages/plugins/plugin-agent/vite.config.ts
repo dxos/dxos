@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     AgentKnowledge: 'src/AgentKnowledge.ts',
+    AgentSkills: 'src/AgentSkills.ts',
     AgentState: 'src/AgentState.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',

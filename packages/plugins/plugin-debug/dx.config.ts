@@ -8,6 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { trim } from '@dxos/util';
 
@@ -44,6 +46,11 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
     tags: ['labs'],
   },
   modules: [
+    Capability.lazyModule(
+      'SampleMailSend',
+      { provides: [InboxCapabilities.MailSendOperation], activatesOn: InboxEvents.Start },
+      () => import('./src/capabilities/sample-mail-send.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
       {

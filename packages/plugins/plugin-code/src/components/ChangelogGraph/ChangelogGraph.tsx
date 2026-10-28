@@ -1,7 +1,8 @@
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
 //
 // Copyright 2026 DXOS.org
 //
+
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
