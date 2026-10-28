@@ -11,6 +11,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { Message } from '@dxos/types';
@@ -54,9 +55,12 @@ describe('readSnapshot', () => {
     const trace = (pid: string, type: string, timestamp: number, data: object) =>
       Obj.make(Trace.Message, { meta: { pid }, isEphemeral: false, events: [{ type, timestamp, data }] });
 
+    const mailboxFeed = mailbox.feed?.target;
+    invariant(mailboxFeed, 'mailbox has no feed');
+
     const snapshot = await EffectEx.runAndForwardErrors(
       Effect.gen(function* () {
-        yield* Feed.append(mailbox.feed!.target!, [message('g1', 'Re: forecast'), message(undefined, 'draft')]);
+        yield* Feed.append(mailboxFeed, [message('g1', 'Re: forecast'), message(undefined, 'draft')]);
         yield* Feed.append(traceFeed, [
           trace('run-1', Trace.OperationStart.key, 10, { key: KEY }),
           trace('run-1', Trace.OperationEnd.key, 20, { key: KEY, outcome: 'success' }),

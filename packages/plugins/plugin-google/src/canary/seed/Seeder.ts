@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 
 import { type SeededMessage } from '../checks/index.ts';
-import { type GmailClient, type GmailError, rewriteHeaders } from '../gmail/index.ts';
+import { type GmailClient, GmailError, rewriteHeaders } from '../gmail/index.ts';
 import { POOL_LABEL } from '../pool/index.ts';
 
 /** Header that maps a seeded copy back to the pool message it was copied from. */
@@ -48,6 +48,10 @@ export class Seeder {
    */
   rotate({ count, now }: { count: number; now: Date }): Effect.Effect<RotateResult, GmailError> {
     return Effect.gen({ self: this }, function* () {
+      // `slice(-count)` takes the whole pool for 0 or NaN, so a typo in the dispatch input would rotate all of it.
+      if (!Number.isInteger(count) || count < 1) {
+        return yield* new GmailError({ message: `seed count must be a positive integer, got ${count}` });
+      }
       const poolLabel = yield* this.#gmail.ensureLabel(POOL_LABEL);
       // Gmail lists newest first, so the oldest pool messages are at the end.
       const poolIds = yield* this.#gmail.listIds(`label:${POOL_LABEL}`);

@@ -41,6 +41,14 @@ if (!args.maildir || !args.out) {
   console.error('usage: 01-build-pool.mjs --maildir <maildir> --out <mbox> [--limit 1000] [--custodian kean-s ...]');
   process.exit(1);
 }
+const limit = Number(args.limit);
+const spanDays = Number(args['span-days']);
+const endDaysAgo = Number(args['end-days-ago']);
+// A bad --limit would sample the whole corpus, and a bad day count writes `Date: Invalid Date` into every message.
+if (!Number.isInteger(limit) || limit < 1 || !(spanDays > 0) || !(endDaysAgo >= 0)) {
+  console.error('--limit must be a positive integer, --span-days a positive number, --end-days-ago a number >= 0');
+  process.exit(1);
+}
 
 /** Content key → the first file with that message and its date. */
 const distinct = new Map();
@@ -72,13 +80,13 @@ for (const custodian of args.custodian) {
 
 // An even sample over time, so the pool keeps the whole history rather than one folder or one month.
 const sorted = [...distinct.values()].sort((left, right) => left.date - right.date);
-const count = Math.min(Number(args.limit) || sorted.length, sorted.length);
+const count = Math.min(limit, sorted.length);
 const pool = Array.from({ length: count }, (_, index) => sorted[Math.floor((index * sorted.length) / count)]);
 
-const end = Date.now() - Number(args['end-days-ago']) * DAY;
+const end = Date.now() - endDaysAgo * DAY;
 const first = pool[0].date;
 const last = pool[pool.length - 1].date;
-const scale = (Number(args['span-days']) * DAY) / (last - first || 1);
+const scale = (spanDays * DAY) / (last - first || 1);
 const messages = pool.map(({ path, date }) =>
   rewriteHeaders(readFileSync(path, 'latin1'), {
     // Bcc would name recipients the original sender hid; it serves no test.

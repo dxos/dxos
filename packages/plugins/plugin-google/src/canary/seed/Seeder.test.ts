@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -104,5 +105,24 @@ describe('Seeder.rotate', () => {
       );
     }
     expect(calls.filter((call) => call.startsWith('trash'))).toHaveLength(2);
+  });
+
+  test('refuses a count that is not a positive integer before touching Gmail', async ({ expect }) => {
+    const calls: string[] = [];
+    const record = (call: string) => Effect.sync(() => void calls.push(call));
+    const gmail: SeederGmail = {
+      ensureLabel: (name) => record(`ensureLabel ${name}`).pipe(Effect.as(name)),
+      listIds: () => record('listIds').pipe(Effect.as(['oldest'])),
+      getMessage: () => record('getMessage').pipe(Effect.as(POOL_MESSAGE)),
+      insert: () => record('insert').pipe(Effect.as('copy')),
+      trash: () => record('trash'),
+      getMetadata: (id) => record('getMetadata').pipe(Effect.as({ id, internalDate: 0, headers: {} })),
+    };
+
+    for (const count of [0, Number.NaN, 1.5]) {
+      const exit = await EffectEx.runPromise(new Seeder(gmail).rotate({ count, now: NOW }).pipe(Effect.exit));
+      expect(Exit.isFailure(exit)).toBe(true);
+    }
+    expect(calls).toEqual([]);
   });
 });
