@@ -45,7 +45,7 @@ export const LogDownloader = Capability.makeSingleton<LogDownloader>()(`${meta.p
 // TODO(burdon): Figure out how to share defs.
 export const ClientCapability = Capability.makeSingleton<Client>()('org.dxos.plugin.client.capability.client');
 
-// Cloned from the client plugin for the same reason: fired once its forked initialize()
-// completes; modules reading initialized-only client APIs (`services`, `halo`, `spaces`)
-// at activation ride this instead of the startup pass.
-export const ClientInitialized = ActivationEvent.make('org.dxos.plugin.client.event.initialized');
+// Cloned from the client plugin for the same reason: fired once the client services answer, which a
+// boot-cached client reaches after its forked initialize() completes; modules calling the services at
+// activation ride this instead of the startup pass.
+export const ClientServicesReady = ActivationEvent.make('org.dxos.plugin.client.event.servicesReady');
