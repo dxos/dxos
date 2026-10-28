@@ -29,7 +29,8 @@ dialect. Use the app dialect (`app.mdl`) for the plugin's UI: graph nodes, surfa
   repeats the frontmatter `id`, so the block can be quoted on its own.
 - `dependsOn:` is optional and lists the plugin ids this plugin needs at runtime, exactly as
   `dx.config.ts` declares them. Each is also the `id` in that plugin's `PLUGIN.mdl` frontmatter.
-  Specs it only builds on or refers to go under `uses` instead.
+  It is written inline (`dependsOn: [a, b]`) or as a block list (`dependsOn:` then indented
+  `- id` lines, as `modules:`). Specs it only builds on or refers to go under `uses` instead.
 - `modules:` lists every module the plugin adds (`Plugin.addModule` in its `plugin.ts`). Each
   item is the module's export name, a colon, and one line on what it contributes.
 - A module named here is a spec item: a review can judge it (`verdict ReactSurface`), and a

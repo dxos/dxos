@@ -33,6 +33,22 @@ describe('findSpecRefs', () => {
   });
 });
 
+describe('fences', () => {
+  test('ignores refs inside a tilde fence', ({ expect }) => {
+    expect(findSpecRefs('~~~ts\norg.a.b#X\n~~~\n')).toEqual([]);
+  });
+
+  test('a longer outer fence is not closed by an inner fence line', ({ expect }) => {
+    const text = '````\n```mdl\n```\norg.a.b#X\n````\norg.a.b#Y\n';
+    expect(findSpecRefs(text).map(({ item }) => item)).toEqual(['Y']);
+  });
+
+  test('an inner info-string line does not close an open fence', ({ expect }) => {
+    const text = '```\n```ts\norg.a.b#X\n```\norg.a.b#Y\n';
+    expect(findSpecRefs(text).map(({ item }) => item)).toEqual(['Y']);
+  });
+});
+
 describe('specDependencies', () => {
   test('reads uses blocks and the plugin block dependsOn', ({ expect }) => {
     const text = [
@@ -49,6 +65,23 @@ describe('specDependencies', () => {
       { id: 'org.dxos.plugin.x', via: 'dependsOn' },
       { id: 'org.dxos.ui.react-ui-canvas', via: 'uses' },
     ]);
+    for (const { id, from, to } of deps) {
+      expect(text.slice(from, to)).toBe(id);
+    }
+  });
+
+  test('reads a block-list dependsOn with offsets', ({ expect }) => {
+    const text = mdl(
+      'plugin P: A plugin.',
+      '  id: org.dxos.plugin.p',
+      '  dependsOn:',
+      '    - org.dxos.plugin.a  # why',
+      '    - org.dxos.plugin.b',
+      '  modules:',
+      '    - M: m',
+    );
+    const deps = specDependencies(text);
+    expect(deps.map(({ id }) => id)).toEqual(['org.dxos.plugin.a', 'org.dxos.plugin.b']);
     for (const { id, from, to } of deps) {
       expect(text.slice(from, to)).toBe(id);
     }
