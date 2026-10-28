@@ -23,12 +23,11 @@ const makeProbePlugin = (activated: string[], release: Trigger) =>
       id: 'initialized',
       provides: [],
       activatesOn: ClientEvents.Initialized,
-      activate: () =>
-        Effect.gen(function* () {
-          yield* Effect.promise(() => release.wait());
-          activated.push('initialized');
-          return [];
-        }),
+      activate: Effect.fnUntraced(function* () {
+        yield* Effect.promise(() => release.wait());
+        activated.push('initialized');
+        return [];
+      }),
     }),
     Plugin.addModule({
       id: 'spaces-available',
