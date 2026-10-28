@@ -10,6 +10,7 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
+import { frontmatter, reqs } from '../spec-index/parse.ts';
 import { ReviewCheckError } from './errors.ts';
 import { git } from './git.ts';
 
@@ -60,21 +61,9 @@ export const reviewItems = (text: string): ReviewItem[] =>
     if (!header || !REVIEWED_KINDS.has(header[1])) {
       return [];
     }
-    const reqs = lines.flatMap((text, offset) => {
-      const req = text.match(/^\s+req\s+([A-Za-z][\w.-]*)\s*:\s*(.*)$/);
-      return req ? [{ id: req[1], kind: 'req', line: line + offset, title: req[2] }] : [];
-    });
-    return reqs.length > 0 ? reqs : [{ id: header[2], kind: header[1], line, title: header[3] ?? '' }];
+    const nested = reqs(body).map(({ id, title, offset }) => ({ id, kind: 'req', line: line + offset, title }));
+    return nested.length > 0 ? nested : [{ id: header[2], kind: header[1], line, title: header[3] ?? '' }];
   });
-
-/** The flat `key: value` pairs of a document's YAML frontmatter. */
-export const frontmatter = (text: string): Record<string, string> =>
-  Object.fromEntries(
-    (text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').split('\n').flatMap((line) => {
-      const match = line.match(/^([\w-]+):\s*(.*?)\s*(?:#.*)?$/);
-      return match ? [[match[1], match[2]]] : [];
-    }),
-  );
 
 /** A block field at two spaces of indent; a `|` value continues on lines indented four or more. */
 export const blockField = (body: string, name: string): string | undefined => {

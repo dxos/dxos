@@ -8,9 +8,27 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
 
-import { buildSpecIndex } from '../spec-index/index.ts';
-import { git } from './git.ts';
+import { indexSpecs } from '../spec-index/index.ts';
+import { git, lines } from './git.ts';
+
+const isSpec = (file: string): boolean => !file.endsWith('.review.mdl') && !file.includes('__fixtures__');
+
+/** Indexes every tracked `.mdl` spec under `root`, leaving out reviews and fixtures. */
+export const buildSpecIndex = Effect.fnUntraced(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tracked = lines(yield* git(root, '-c', 'core.quotePath=false', 'ls-files', '--', '*.mdl')).filter(isSpec);
+  const files = yield* Effect.forEach(tracked, (file) =>
+    fs.readFileString(path.join(root, file)).pipe(
+      Effect.map((text) => ({ path: file, text })),
+      // A tracked file deleted in the working tree is no longer a spec.
+      Effect.option,
+    ),
+  );
+  return indexSpecs(files.flatMap((file) => (file._tag === 'Some' ? [file.value] : [])));
+});
 
 export type IndexOptions = {
   /** File to write instead of printing. */

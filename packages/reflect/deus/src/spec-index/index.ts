@@ -3,3 +3,4 @@
 //
 
 export * from './spec-index.ts';
+export * from './parse.ts';
