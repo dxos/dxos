@@ -13,6 +13,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
+import * as Scheduler from 'effect/Scheduler';
 import * as Schema from 'effect/Schema';
 import * as Tracer from 'effect/Tracer';
 
@@ -28,6 +29,7 @@ import { markWork } from '@dxos/util';
 
 import { RemoteRuntimeUnreachableError } from './errors.ts';
 import * as OperationProcess from './OperationProcess.ts';
+import { promptScheduler } from './prompt-scheduler.ts';
 import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
 export type ProcessOperationInvoker = Operation.OperationService & OperationInvoker.OperationInvokerInternal;
@@ -261,7 +263,14 @@ export const make = ({
     ...args: any[]
   ): Promise<{ data?: O; error?: Error }> => {
     try {
-      const data = await EffectEx.runAndForwardErrors(invoke(op, ...args) as Effect.Effect<O, Error>);
+      // Called from outside Effect, typically a UI handler: the operation should reach its effect without waiting on
+      // the render that handler started.
+      const data = await EffectEx.runAndForwardErrors(
+        invoke(op, ...args).pipe(Effect.provideService(Scheduler.Scheduler, promptScheduler)) as Effect.Effect<
+          O,
+          Error
+        >,
+      );
       return { data };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error(String(error)) };
