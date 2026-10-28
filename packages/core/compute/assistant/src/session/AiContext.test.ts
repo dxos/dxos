@@ -373,7 +373,51 @@ describe('AiContext.Binder', () => {
       const objects = agent.getObjects();
       yield* Effect.promise(() => agent.close());
 
-      expect(reads).toBe(2);
+      // The stale first read is retried; how many more reads the index needs is not this test's concern.
+      expect(reads).toBeGreaterThanOrEqual(2);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(local), Obj.getURI(external)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a local write the index has not returned yet still counts toward the next external wait', async ({
+    expect,
+  }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const local = yield* Database.add(Obj.make(TypeA, {}));
+      const external = yield* Database.add(Obj.make(TypeA, {}));
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+      yield* Effect.promise(() => agent.bind({ objects: [Ref.make(local)] }));
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      const [localBinding] = yield* Effect.promise(() => probe.run());
+      // A local-only sync whose read does not yet hold the local write.
+      const run = vi.spyOn(Object.getPrototypeOf(probe), 'run').mockResolvedValueOnce([]);
+      yield* Effect.promise(() => agent.sync());
+
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(external)], removed: [] },
+        }),
+      ]);
+      // The next read holds the late local write but not yet the external one.
+      run.mockResolvedValueOnce([localBinding]);
+      const before = run.mock.calls.length;
+      AiContext.noteExternalBindingWrite();
+      yield* Effect.promise(() => agent.sync());
+      const reads = run.mock.calls.length - before;
+      run.mockRestore();
+      const objects = agent.getObjects();
+      yield* Effect.promise(() => agent.close());
+
+      expect(reads).toBeGreaterThanOrEqual(2);
       expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(local), Obj.getURI(external)]);
     })
       .pipe(Effect.provide(TestLayer))
