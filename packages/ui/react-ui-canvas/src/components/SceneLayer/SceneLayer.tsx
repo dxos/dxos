@@ -392,55 +392,71 @@ const paint = (shape: { hue?: string; color?: string }, kind: 'fill' | 'stroke')
         [kind]: shape.hue ? undefined : 'currentColor',
       };
 
+export type ShapeLayerProps = {
+  /** The time the shapes were drawn for, which a frame renderer waits on. */
+  t: number;
+  shapes: readonly Shape[];
+  style?: CSSProperties;
+  testId?: string;
+};
+
+/**
+ * Shapes in scene coordinates, as one SVG under the camera: a generator's or an animator effect's `2d` items. Instances
+ * are left to the caller, since drawing a composite needs the scene store.
+ */
+export const ShapeLayer = ({ t, shapes, style, testId = 'generator-layer' }: ShapeLayerProps) => (
+  <svg
+    className='absolute overflow-visible pointer-events-none'
+    style={style}
+    width={1}
+    height={1}
+    data-frame-time={frameTimeAttribute(t)}
+    data-testid={testId}
+  >
+    {shapes.map((shape, index) => {
+      switch (shape.kind) {
+        case 'circle':
+          return (
+            <circle
+              key={index}
+              cx={shape.center.x}
+              cy={shape.center.y}
+              r={shape.radius}
+              opacity={shape.opacity}
+              {...paint(shape, 'fill')}
+            />
+          );
+        case 'rect':
+          return (
+            <rect key={index} {...shape.bounds} rx={shape.radius} opacity={shape.opacity} {...paint(shape, 'fill')} />
+          );
+        case 'path':
+          return (
+            <path
+              key={index}
+              d={shape.d}
+              fill='none'
+              strokeWidth={shape.width ?? 2}
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              opacity={shape.opacity}
+              {...(shape.reveal !== undefined
+                ? { pathLength: 1, strokeDasharray: `${Math.max(0, shape.reveal)} 1` }
+                : {})}
+              {...paint({ hue: shape.hue, color: shape.color ?? shape.stroke }, 'stroke')}
+            />
+          );
+        case 'instance':
+          return null;
+      }
+    })}
+  </svg>
+);
+
 /** A generator layer: the shapes the layer's generators returned, in scene coordinates. */
 const GeneratedShapes = ({ store, registry, zoom, depth, t, shapes, style }: GeneratedShapesProps) => (
   <>
-    <svg
-      className='absolute overflow-visible pointer-events-none'
-      style={style}
-      width={1}
-      height={1}
-      data-frame-time={frameTimeAttribute(t)}
-      data-testid='generator-layer'
-    >
-      {shapes.map((shape, index) => {
-        switch (shape.kind) {
-          case 'circle':
-            return (
-              <circle
-                key={index}
-                cx={shape.center.x}
-                cy={shape.center.y}
-                r={shape.radius}
-                opacity={shape.opacity}
-                {...paint(shape, 'fill')}
-              />
-            );
-          case 'rect':
-            return (
-              <rect key={index} {...shape.bounds} rx={shape.radius} opacity={shape.opacity} {...paint(shape, 'fill')} />
-            );
-          case 'path':
-            return (
-              <path
-                key={index}
-                d={shape.d}
-                fill='none'
-                strokeWidth={shape.width ?? 2}
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                opacity={shape.opacity}
-                {...(shape.reveal !== undefined
-                  ? { pathLength: 1, strokeDasharray: `${Math.max(0, shape.reveal)} 1` }
-                  : {})}
-                {...paint({ hue: shape.hue, color: shape.color ?? shape.stroke }, 'stroke')}
-              />
-            );
-          case 'instance':
-            return null;
-        }
-      })}
-    </svg>
+    <ShapeLayer t={t} shapes={shapes} style={style} />
     {shapes.map((shape, index) =>
       shape.kind === 'instance' ? (
         <InstanceShape

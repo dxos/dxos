@@ -7,26 +7,15 @@
 // generator never touches the DOM; it returns `Shape` lists, plain data the generator layer draws.
 //
 
-import { type EffectStatus, type StatefulEffect, type StatelessEffect } from '@dxos/animation';
+import { type EffectStatus, type Shape2D, type StatefulEffect, type StatelessEffect } from '@dxos/animation';
 
 import { type Bounds, type Node, type Point, type View } from '../model/index.ts';
 
-/** What a generator draws, in scene coordinates. A hue is a theme hue; `color` a CSS colour, which wins over it. */
-export type Shape =
-  | { kind: 'circle'; center: Point; radius: number; hue?: string; color?: string; opacity?: number }
-  | { kind: 'rect'; bounds: Bounds; radius?: number; hue?: string; color?: string; opacity?: number }
-  | {
-      kind: 'path';
-      d: string;
-      stroke?: string;
-      hue?: string;
-      color?: string;
-      width?: number;
-      opacity?: number;
-      /** How much of the path is drawn, 0 to 1 from its start: a stroke being revealed. */
-      reveal?: number;
-    }
-  | { kind: 'instance'; composite: string; center: Point; scale?: number; opacity?: number };
+/**
+ * What a generator draws, in scene coordinates: the `2d` effect items of `@dxos/animation`, plus a composite placed as
+ * an instance.
+ */
+export type Shape = Shape2D | { kind: 'instance'; composite: string; center: Point; scale?: number; opacity?: number };
 
 /** A bound node, resolved from the scene sampled at the step's time. */
 export type BoundNode = {
