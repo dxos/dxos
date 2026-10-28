@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { loadEffectModule } from './compile.ts';
+import { isInstance3D, isOverlayItem, isShape2D } from './items.ts';
 import { hashSeed, seeded } from './random.ts';
 import { EffectRunner } from './runner.ts';
 import { type EffectModule, type EffectStep } from './types.ts';
@@ -96,5 +97,16 @@ describe('random', () => {
     expect([resumed(), resumed()]).toEqual(next);
     expect(hashSeed('node-1')).toBe(hashSeed('node-1'));
     expect(hashSeed('node-1')).not.toBe(hashSeed('node-2'));
+  });
+});
+
+describe('items', () => {
+  test('each renderer keeps only its own items', ({ expect }) => {
+    const circle = { kind: 'circle', center: { x: 0, y: 0 }, radius: 1 };
+    const sphere = { primitive: 'sphere', position: { x: 0, y: 1, z: 2 }, scale: 1, color: '#fff', opacity: 1 };
+    const thread = { kind: 'thread', id: 't', anchor: { target: 'a' }, messages: [], opacity: 1 };
+    expect([circle, sphere, thread].filter(isShape2D)).toEqual([circle]);
+    expect([circle, sphere, thread, { ...sphere, position: { x: 0 } }].filter(isInstance3D)).toEqual([sphere]);
+    expect([circle, sphere, thread, { kind: 'card' }].filter(isOverlayItem)).toEqual([thread]);
   });
 });

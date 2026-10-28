@@ -167,12 +167,10 @@ export const compileScript = <E extends ScriptEffect = ScriptEffect>(
   const open = new Map<string, EffectSpan<E>>();
   const captions: CaptionSpan[] = [];
   let caption: CaptionSpan | undefined;
-  let cursor = 0;
+  const times = beatTimes(script);
 
   script.forEach((beat, index) => {
-    const start = beat.at ?? cursor;
-    const end = start + beat.duration;
-    cursor = end;
+    const { start, end } = times[index];
 
     const known = (target: string) => {
       if (!state.has(target) || target === cameraTarget) {
@@ -286,6 +284,19 @@ export const compileScript = <E extends ScriptEffect = ScriptEffect>(
   });
 
   return { timeline, effects, captions };
+};
+
+/**
+ * When each beat runs, in seconds into the shot: from its `at`, or from where the previous beat ended. Anything timed
+ * by beats (keys, screen text) takes its times from here.
+ */
+export const beatTimes = (script: readonly Pick<Beat, 'at' | 'duration'>[]): { start: number; end: number }[] => {
+  let cursor = 0;
+  return script.map((beat) => {
+    const start = beat.at ?? cursor;
+    cursor = start + beat.duration;
+    return { start, end: cursor };
+  });
 };
 
 /** Every target a beat names. */

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Arranger, type Beat, ScriptError, compileScript } from './script.ts';
+import { type Arranger, type Beat, ScriptError, beatTimes, compileScript } from './script.ts';
 import { mergeTimelines, setKey, trackId, trackValue } from './timeline.ts';
 import { type Timeline } from './types.ts';
 
@@ -136,5 +136,16 @@ describe('compileScript', () => {
     const merged = mergeTimelines(hand, timeline);
     expect(value(merged, 'a', 'scale', 0)).toBe(1);
     expect(value(merged, 'a', 'scale', 1)).toBe(5);
+  });
+});
+
+describe('beatTimes', () => {
+  test('a beat starts at its `at`, else where the previous one ended', ({ expect }) => {
+    expect(beatTimes([{ duration: 1 }, { duration: 2 }, { at: 0.5, duration: 1 }, { duration: 1 }])).toEqual([
+      { start: 0, end: 1 },
+      { start: 1, end: 3 },
+      { start: 0.5, end: 1.5 },
+      { start: 1.5, end: 2.5 },
+    ]);
   });
 });
