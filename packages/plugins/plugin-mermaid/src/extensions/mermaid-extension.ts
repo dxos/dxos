@@ -34,6 +34,34 @@ const createConfig = (options: MermaidOptions, dark: boolean): MermaidConfig => 
   ...options,
 });
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const mermaidTheme = EditorView.theme({
+  '& .cm-mermaid': {
+    position: 'relative',
+    display: 'flex',
+    width: '100%',
+    margin: '4px 0',
+    // The top band holds the label, so it never lies over the diagram's own top-right corner.
+    padding: '28px 16px 16px',
+    justifyContent: 'center',
+    backgroundColor: 'var(--color-group-surface)',
+    borderRadius: '8px',
+  },
+  '& .cm-mermaid-label': {
+    position: 'absolute',
+    top: '6px',
+    right: '16px',
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+    fontFamily: 'unset',
+    color: 'var(--color-fg-subtle)',
+  },
+  '& .cm-mermaid-error': {
+    display: 'block',
+    color: 'var(--color-error)',
+  },
+});
+
 /**
  * Extension to create mermaid diagrams.
  *
@@ -102,32 +130,7 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
       },
       provide: (field) => EditorView.decorations.from(field),
     }),
-    EditorView.theme({
-      '& .cm-mermaid': {
-        position: 'relative',
-        display: 'flex',
-        width: '100%',
-        margin: '4px 0',
-        // The top band holds the label, so it never lies over the diagram's own top-right corner.
-        padding: '28px 16px 16px',
-        justifyContent: 'center',
-        backgroundColor: 'var(--color-group-surface)',
-        borderRadius: '8px',
-      },
-      '& .cm-mermaid-label': {
-        position: 'absolute',
-        top: '6px',
-        right: '16px',
-        fontSize: '0.75rem',
-        lineHeight: '1rem',
-        fontFamily: 'unset',
-        color: 'var(--color-fg-subtle)',
-      },
-      '& .cm-mermaid-error': {
-        display: 'block',
-        color: 'var(--color-error)',
-      },
-    }),
+    mermaidTheme,
   ];
 };
 
