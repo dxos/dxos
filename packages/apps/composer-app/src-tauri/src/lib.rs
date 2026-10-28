@@ -391,6 +391,15 @@ pub fn run() {
                     .map(|space| space.parse::<u64>().expect("TAURI_WEBDRIVER_SPACE is a space id"));
                 #[cfg(all(feature = "webdriver", target_os = "macos"))]
                 let window_builder = window_builder.visible(space.is_none());
+                // `TAURI_WEBDRIVER_INIT_SCRIPT` names a script that runs before the page's own, e.g. a probe that has
+                // to be installed before the bundle loads.
+                #[cfg(feature = "webdriver")]
+                let window_builder = match std::env::var("TAURI_WEBDRIVER_INIT_SCRIPT") {
+                    Ok(path) => window_builder.initialization_script(
+                        std::fs::read_to_string(&path).expect("TAURI_WEBDRIVER_INIT_SCRIPT is a readable file"),
+                    ),
+                    Err(_) => window_builder,
+                };
                 let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
