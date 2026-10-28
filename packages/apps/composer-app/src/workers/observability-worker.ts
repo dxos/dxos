@@ -101,15 +101,16 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
 
   return (event: MessageEvent<ObservabilityWorkerMessage>): void => {
     const data = event.data;
-    if (typeof data === 'string') {
-      store.append(data);
-      logs.deliver(data);
-      return;
-    }
     if (data == null) {
       return;
     }
     switch (data.type) {
+      case 'log-batch':
+        for (const line of data.lines) {
+          store.append(line);
+          logs.deliver(line);
+        }
+        break;
       case 'flush':
         void store.flush();
         logs.deliver({ type: 'otel-flush' });
