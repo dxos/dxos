@@ -141,7 +141,7 @@ const Picks = ({ picks, gaps }: { picks: Pick[]; gaps?: string }) => {
                   <Title title={pick.title} url={pick.url} />
                   {pick.why && <span className='text-fg-muted line-clamp-2'>{pick.why}</span>}
                 </Layout.Flex>
-                <span className='text-xs text-fg-subtle whitespace-nowrap'>{hostOf(pick.url)}</span>
+                <span className='text-xs text-fg-subtle whitespace-nowrap truncate max-w-32'>{hostOf(pick.url)}</span>
               </li>
             </Layout.Grid>
           ))}

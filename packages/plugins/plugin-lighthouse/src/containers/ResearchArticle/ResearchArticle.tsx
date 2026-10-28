@@ -39,6 +39,7 @@ import {
   type RatingOverrides,
   applyVote,
   formatBudget,
+  imagesOf,
   isResult,
   isThin,
   matchPicks,
@@ -203,10 +204,36 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       });
     }
     const picked = new Set(picks.flatMap(({ entity }) => (entity ? [entity.id] : [])));
-    const pickTiles = picks.map((matched): TileData => {
+    // A report can name one subject in several picks (a firm's identity, its team, its portfolio): one card each.
+    const seenPicks = new Set<string>();
+    const uniquePicks = picks.filter((matched) => {
+      const key = matched.entity?.id ?? pickKey(matched);
+      if (seenPicks.has(key)) {
+        return false;
+      }
+      seenPicks.add(key);
+      return true;
+    });
+    // An entity session opens on pictures: picks with a photo or logo first.
+    const orderedPicks =
+      session?.intent === 'entity'
+        ? [...uniquePicks].sort(
+            (a, b) =>
+              Number(!!b.entity && imagesOf(b.entity).length > 0) - Number(!!a.entity && imagesOf(a.entity).length > 0),
+          )
+        : uniquePicks;
+    const pickTiles = orderedPicks.map((matched): TileData => {
       const card = matched.entity
         ? toCard(matched.entity)
-        : { id: pickKey(matched), title: matched.pick.title, url: matched.pick.url, images: [], rows: [], tags: [] };
+        : {
+            id: pickKey(matched),
+            title: matched.pick.title,
+            url: matched.pick.url,
+            images: [],
+            icon: 'ph--push-pin--regular',
+            rows: [],
+            tags: [],
+          };
       const tileId = matched.entity?.id ?? pickKey(matched);
       return {
         id: tileId,
@@ -219,7 +246,13 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         why: matched.pick.why,
       };
     });
-    const rest = ranked
+    // An entity session's results are its subjects' graph: with no ranking to speak of, the ones with a picture
+    // (companies' logos, people's photos) come first so the view does not open on blank cards (funds, roles).
+    const withPictures =
+      session?.intent === 'entity'
+        ? [...ranked].sort((a, b) => Number(imagesOf(b).length > 0) - Number(imagesOf(a).length > 0))
+        : ranked;
+    const rest = withPictures
       .filter((entity) => !picked.has(entity.id))
       .slice(0, MAX_TILES)
       .map((entity): TileData => ({
@@ -231,8 +264,18 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         starred: starredIris.has(entity.id),
         vote: state.rating.feedback[entity.id],
       }));
+    if (session?.intent === 'entity') {
+      // "Everything about X" opens on pictures: whatever has a photo or logo (picks first), then the rest.
+      const pictured = (tile: TileData) => tile.card.images.length > 0;
+      return [
+        ...pickTiles.filter(pictured),
+        ...rest.filter(pictured),
+        ...pickTiles.filter((tile) => !pictured(tile)),
+        ...rest.filter((tile) => !pictured(tile)),
+      ];
+    }
     return [...pickTiles, ...rest];
-  }, [view, findings, picks, ranked, ratings, currentId, starredIris, state.rating.feedback, t]);
+  }, [view, findings, picks, ranked, ratings, currentId, starredIris, state.rating.feedback, session?.intent, t]);
 
   //
   // Actions
@@ -312,7 +355,15 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       const entity = matched.entity ?? { id: pickKey(matched), types: [], props: {} };
       const card = matched.entity
         ? toCard(matched.entity)
-        : { id: entity.id, title: matched.pick.title, url: matched.pick.url, images: [], rows: [], tags: [] };
+        : {
+            id: entity.id,
+            title: matched.pick.title,
+            url: matched.pick.url,
+            images: [],
+            icon: 'ph--push-pin--regular',
+            rows: [],
+            tags: [],
+          };
       return toFindingInput(entity, card, { score: ratings?.get(entity.id)?.score, why: matched.pick.why });
     });
     void invoke(LighthouseOperation.SyncFindings, { research: Ref.make(research), picks: inputs });

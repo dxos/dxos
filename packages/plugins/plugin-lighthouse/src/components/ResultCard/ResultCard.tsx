@@ -7,6 +7,7 @@ import React, { type MouseEvent } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { Tag } from '@dxos/react-ui/Tag';
@@ -56,6 +57,12 @@ export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
         data-testid='lighthouse.result'
         {...props}
       >
+        {!image && (
+          // A card with no picture (a fund, a role) shows its type, so it does not read as empty.
+          <Layout.Flex center classNames='h-16 rounded-t-xs bg-group-surface text-fg-subtle'>
+            <Icon.Icon icon={card.icon} size='xl' />
+          </Layout.Flex>
+        )}
         {image && (
           <Card.Poster
             alt={card.title}
@@ -63,7 +70,7 @@ export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
             fit={card.logo ? 'contain' : 'cover'}
             loading='lazy'
             // A logo is often dark on transparent: a light ground keeps it visible in either theme.
-            classNames={['rounded-t-xs', card.logo && 'bg-white p-2']}
+            classNames={['rounded-t-xs', card.logo && 'bg-white']}
           />
         )}
         <Card.Header>

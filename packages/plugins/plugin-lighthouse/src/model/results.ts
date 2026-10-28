@@ -23,6 +23,8 @@ export type CardModel = {
   eyebrow?: string;
   description?: string;
   images: string[];
+  /** A Phosphor icon for the result's type, shown in place of a picture when it has none. */
+  icon: string;
   /** The picture is a logo (an organisation's), shown whole on a light ground rather than cropped. */
   logo?: boolean;
   rows: CardRow[];
@@ -237,6 +239,23 @@ const legalTags = (entity: Entity): CardTag[] => {
   return tags;
 };
 
+const TYPE_ICONS: Array<[RegExp, string]> = [
+  [/VentureFund|Fund\b|InvestmentFund/, 'ph--vault--regular'],
+  [/Person/, 'ph--user--regular'],
+  [/Role/, 'ph--identification-badge--regular'],
+  [/Organization|Corporation|LocalBusiness/, 'ph--buildings--regular'],
+  [/Restaurant|Cafe|Food|Bar/, 'ph--fork-knife--regular'],
+  [/Product/, 'ph--package--regular'],
+  [/Residence|Apartment|House|Accommodation|Listing/, 'ph--house--regular'],
+  [/Article|CreativeWork|WebPage|Legislation/, 'ph--article--regular'],
+  [/Event/, 'ph--calendar--regular'],
+  [/Place/, 'ph--map-pin--regular'],
+];
+
+/** A Phosphor icon for an entity's types (a fund's vault, a person's silhouette). */
+export const iconOfTypes = (types: readonly string[]): string =>
+  TYPE_ICONS.find(([pattern]) => types.some((type) => pattern.test(type)))?.[1] ?? 'ph--circle--regular';
+
 /** A lighthouse entity as a card. */
 export const toCard = (entity: Entity): CardModel => {
   const url = urlOf(entity);
@@ -264,6 +283,7 @@ export const toCard = (entity: Entity): CardModel => {
     priceNote: note,
     eyebrow: eyebrowOf(entity),
     images: imagesOf(entity),
+    icon: iconOfTypes(entity.types),
     ...(/Organization|VentureFund|Corporation/.test(entity.types.join(' ')) ? { logo: true } : {}),
     rows,
     tags: [{ label: kindOf(entity) }, ...legalTags(entity)],

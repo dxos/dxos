@@ -83,12 +83,15 @@ export const GraphNodeCard = ({ node, root = false, selected = false, more, onMo
             src={image}
             alt=''
             loading='lazy'
+            // An SVG logo without its own width and height scales into this box rather than collapsing.
+            width={root ? 48 : 32}
+            height={root ? 48 : 32}
             // An organisation's picture is its logo, often dark on transparent: shown whole, on a light ground in
             // either theme, as lighthouse's web UI does.
             className={[
               root ? 'size-12' : 'size-8',
               'shrink-0 rounded-sm',
-              isLogo(node.types) ? 'object-contain bg-white p-0.5' : 'object-cover',
+              isLogo(node.types) ? 'object-contain object-center bg-white p-0.5' : 'object-cover',
             ].join(' ')}
           />
         ) : (
