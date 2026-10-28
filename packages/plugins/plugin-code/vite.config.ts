@@ -15,6 +15,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    sync: 'src/sync/index.ts',
     translations: 'src/translations.ts',
     CodeCapabilities: 'src/types/CodeCapabilities.ts',
     CodeEvents: 'src/types/CodeEvents.ts',

@@ -6,7 +6,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as EffectScope from 'effect/Scope';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
 import { Context, ContextDisposedError } from '@dxos/context';
@@ -287,6 +287,8 @@ describe('IndexQuerySource', () => {
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
   });
 
+  // Regression: every hit armed and cleared its own budget timer, which on a re-hydration pass over a
+  // large result set cost more than hydrating the already-loaded objects (UI lag trace, 2026-10-26).
   test('a row whose database closes under its load is dropped', async () => {
     const spaceId = SpaceId$.random();
     const [kept, closed] = [EntityId.random(), EntityId.random()];
@@ -424,6 +426,75 @@ describe('IndexQuerySource', () => {
       updateEvent.emit({ spaceId, objectIds: [stalled] });
       await rehydrated;
       expect(source.getResults().map((entry) => entry.id)).toEqual([stalled]);
+    });
+  });
+
+  describe('hydration budget', () => {
+    const makeSource = async (
+      results: QueryService.QueryResult[],
+      loadObject: (props: { objectId: string }) => Promise<Entity.Unknown | undefined>,
+      hydrationTimeout: number,
+    ) => {
+      const service = await makeQueryClient({
+        'QueryService.setConfig': () => Effect.void,
+        'QueryService.execQuery': (request) =>
+          EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+            queueMicrotask(() => void emit.single({ queryId: request.queryId, results }));
+          }),
+        'QueryService.reindex': () => Effect.void,
+      });
+      const source = new IndexQuerySource({
+        service,
+        runtime: EffectContext.empty(),
+        objectLoader: { loadObject, updateEvent: noopUpdateEvent },
+        graph: mockGraph,
+        queryTimeout: 5_000,
+        hydrationTimeout,
+      });
+      onTestFinished(() => source.close());
+      return source;
+    };
+
+    // Regression: every record armed and cleared its own timer, which cost ~1s of main thread per 30s
+    // in a Composer trace once reactive queries re-hydrated thousands of hits.
+    test('a large result arms one hydration timer per pass, not one per record', async () => {
+      const spaceId = SpaceId$.random();
+      const records = Array.from({ length: 2_000 }, () => ({ id: EntityId.random(), spaceId, rank: 0 }));
+      // A budget no other timer in the stack uses, so its timers can be told apart.
+      const hydrationTimeout = 7_777;
+      const source = await makeSource(
+        records,
+        async ({ objectId }) => ({ id: objectId }) as unknown as Entity.Unknown,
+        hydrationTimeout,
+      );
+
+      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+      onTestFinished(() => setTimeoutSpy.mockRestore());
+
+      const results = await source.run(Context.default(), makeQuery(spaceId));
+
+      expect(results).toHaveLength(records.length);
+      const hydrationTimers = setTimeoutSpy.mock.calls.filter(([, delay]) => delay === hydrationTimeout);
+      expect(hydrationTimers).toHaveLength(1);
+    });
+
+    test('a stall in an earlier chunk does not spend the budget of a later one', async () => {
+      const spaceId = SpaceId$.random();
+      // More than one hydration chunk (64 records), with the stalled record in the first.
+      const records = Array.from({ length: 200 }, () => ({ id: EntityId.random(), spaceId, rank: 0 }));
+      const [stalled] = records;
+      const source = await makeSource(
+        records,
+        ({ objectId }) =>
+          objectId === stalled.id
+            ? new Promise<Entity.Unknown | undefined>(() => {})
+            : Promise.resolve({ id: objectId } as unknown as Entity.Unknown),
+        100,
+      );
+
+      await expect(source.run(Context.default(), makeQuery(spaceId))).rejects.toThrow(
+        new RegExp(`index query result hydration \\(1 of 200 objects did not load: ${stalled.id}\\)`),
+      );
     });
   });
 

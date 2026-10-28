@@ -12,6 +12,10 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { meta } from '#meta';
 import { DiscordPlugin } from '#plugin';
 
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), DiscordPlugin()],
+});
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('DiscordPlugin', () => {

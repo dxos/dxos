@@ -1,0 +1,340 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-devtools/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: DevtoolsPlugin
+
+The devtools tree is solid. `createDevtoolsExtension` hangs the full Client/HALO/ECHO/MESH/Agent/EDGE tree, App
+Graph, SDK Explorer and CLI off `root/debug`, `react-surface.ts` registers one `@dxos/devtools` article per node,
+and `app-graph-builder.test.ts` checks the tree position and that pages have no URL. The Stats companion and
+Agent › HALO are built as described. Most of the rest of the spec describes `@dxos/plugin-debug`, so those items
+were judged against that package. There, several items are stale. `DebugStatus` shows error, swarm and saving
+indicators, not a generator running state, and `DebugContextType` does not exist. Log download uses a browser
+download, not the file uploader. `LoggingArticle` streams from the client's logging service and ignores
+`logStore`. `GithubPanel` lists merged PRs and no surface registers it. No scenario or QA test has automation;
+the only end-to-end coverage is the storage-version e2e test for F-8.
+
+Of 43 items: 7 done, 19 untested, 1 partial, 7 diverged, 9 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Settings: plugin-debug's Settings schema has exactly wireframe and traceAll.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/types/Settings.ts#Settings]
+  note: No test reads or writes these settings.
+```
+
+```mdl
+verdict DebugPluginOptions: The options carry logStore, plus an extra persistStats flag.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/types/Debug.ts#DebugPluginOptions]
+  note: '`persistStats` is not in the spec. No test constructs the plugin with a `logStore`.'
+```
+
+```mdl
+verdict DebugContextType: No debug context with a generator timer exists.
+  status: missing
+  note: Searched plugin-debug and plugin-devtools for `DebugContext`, `running` and `TimerCallback`; the only match is an unrelated `useDebug` in react-ui-feed.
+```
+
+```mdl
+verdict DebugSettings: The settings panel toggles wireframe and traceAll and downloads logs from logStore.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugSettings/DebugSettings.tsx#DebugSettings, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#DebugSettingsSurface]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugSettings/DebugSettings.stories.tsx]
+```
+
+```mdl
+verdict DebugStatus: The status indicator shows error, swarm and saving lights, not a generator running state.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugStatus/DebugStatus.tsx#DebugStatus]
+  note: '`DebugStatus` renders `ErrorIndicator`, `SwarmIndicator` and a stubbed `SavingIndicator`; it has no `running` state and is not tied to object generation.'
+```
+
+```mdl
+verdict DevtoolsOverviewContainer: The Stats companion polls stats once and fans them out to the DevtoolsOverview cards.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/containers/DevtoolsOverviewContainer/DevtoolsOverviewContainer.tsx#DevtoolsOverviewContainer, github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/react-surface.ts]
+  note: Cards run 0-13 (indexer and time-series added after sync) and plugin-debug's StatsPanel sits at 20. No test or story renders the container.
+```
+
+```mdl
+verdict DebugObjectPanel: The Debug companion shows an object tree and the selected object's JSON.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugObjectPanel/DebugObjectPanel.tsx#DebugObjectPanel]
+  note: '`companionTo` is the object itself, not a DXN string. No test renders it.'
+```
+
+```mdl
+verdict DebugSpaceObjectsPanel: The panel lists the space's objects in a searchable ObjectsTree with a JSON view of the selection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugSpaceObjectsPanel/DebugSpaceObjectsPanel.tsx#DebugSpaceObjectsPanel]
+  note: The list shows the tree, not a per-object field count. No test renders it.
+```
+
+```mdl
+verdict DebugGraph: DebugGraph renders AppGraph.toJSON from the given root as a Tree.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/containers/DebugGraph/DebugGraph.tsx#DebugGraph]
+  note: No test or story renders it.
+```
+
+```mdl
+verdict SpaceGenerator: The generator article creates typed objects and presets, applies templates and clears the space.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.tsx#SpaceGenerator]
+  tests: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/SpaceGenerator/SpaceGenerator.stories.tsx]
+```
+
+```mdl
+verdict Wireframe: Wireframe draws a labelled, sized outline with the object's JSON.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/Wireframe/Wireframe.tsx#Wireframe]
+  note: No test or story renders it.
+```
+
+```mdl
+verdict SchemaTable: SchemaTable is the generator's per-type row list with counts and a create button, not a schema registry table.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/components/SchemaTable/SchemaTable.tsx#SchemaTable]
+  note: It takes `types`, `objects` counts and `onClick`; it shows no fields or version and is used only inside `SpaceGenerator`.
+```
+
+```mdl
+verdict GithubPanel: GithubPanel lists merged pull requests and is not registered on any surface.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/containers/GithubPanel/GithubPanel.tsx#GithubPanel]
+  note: '`GithubComponent` fetches `/repos/:repo/pulls`, not issues or CI runs, and `react-surface.ts` never mounts the panel.'
+```
+
+```mdl
+verdict F-1.1: The DevTools branch hangs off root/debug at position 10, after the Debug node that holds Console and Logs.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.ts#createDevtoolsExtension]
+  tests: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.test.ts]
+```
+
+```mdl
+verdict F-1.2: The branch holds App Graph, SDK Explorer, CLI and the Client, HALO, ECHO, MESH, Agent and EDGE groups.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.ts#createDevtoolsExtension, github:dxos/dxos/packages/plugins/plugin-devtools/src/types/Devtools.ts#getNodePath]
+  tests: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.test.ts]
+```
+
+```mdl
+verdict F-1.3: The App Graph node carries the graph and root, and a surface renders DebugGraph for it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.ts#createDevtoolsExtension, github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/react-surface.ts]
+  walkthrough:
+    - The node's data is the app graph and the root id. github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.ts#createDevtoolsExtension
+    - The appGraph surface matches that data and renders DebugGraph. github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/react-surface.ts
+  note: The graph test checks that the node exists, not what it renders.
+```
+
+```mdl
+verdict F-1.4: The SDK Explorer page renders ToolsExplorer against the introspect endpoint.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/containers/ToolsExplorerContainer/ToolsExplorerContainer.tsx#ToolsExplorerContainer]
+  note: No test renders the page.
+```
+
+```mdl
+verdict F-1.5: Devtools pages have no URL representation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.ts#createDevtoolsExtension]
+  tests: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.test.ts]
+```
+
+```mdl
+verdict F-1.6: Space-scoped pages read the active space through ActiveSpacePanel; node data is only the page id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/DevtoolsSurfaces.tsx#ActiveSpacePanel, github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/DevtoolsSurfaces.tsx#SpaceInfoSurface]
+  note: No test renders a space-scoped page.
+```
+
+```mdl
+verdict F-1.7: AgentHaloArticle lists administered agents and reads their HALO from EDGE.
+  status: untested
+  evidence: [github:dxos/dxos/packages/devtools/devtools/src/containers/panels/agent/AgentHaloArticle/AgentHaloArticle.tsx#AgentHaloArticle, github:dxos/dxos/packages/core/mesh/edge-client/src/edge-http-client.ts, github:dxos/edge/packages/services/compute-service/src/api.ts]
+  walkthrough:
+    - The article filters spaces by AGENT_SPACE_TAG and ADMIN or EDITOR membership, and shows a refusal as error. github:dxos/dxos/packages/devtools/devtools/src/containers/panels/agent/AgentHaloArticle/AgentHaloArticle.tsx#AgentHaloArticle
+    - The HTTP client calls the agent HALO endpoint. github:dxos/dxos/packages/core/mesh/edge-client/src/edge-http-client.ts
+    - EDGE serves GET /brain/:agent/halo to the agent's admins. github:dxos/edge/packages/services/compute-service/src/api.ts
+  note: EDGE's `brain.node.test.ts` tests the endpoint, but nothing tests the article; `autocue/agent-halo.mjs` is a demo, not a test.
+```
+
+```mdl
+verdict F-2.1: Every ECHO object gets a Debug companion at the last position.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts]
+  note: The plugin-debug graph test covers only the debug category and Debug node, not the companion.
+```
+
+```mdl
+verdict F-2.2: The companion shows the object's JSON and tree, but not an explicit DXN.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugObjectPanel/DebugObjectPanel.tsx#DebugObjectPanel]
+  note: The JSON view carries the id and `@type`; no field shows the DXN. No test renders the panel.
+```
+
+```mdl
+verdict F-3.1: The Space Objects deck companion renders DebugSpaceObjectsPanel for the active space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#SpaceObjectsSurface]
+  walkthrough:
+    - The graph builder adds the spaceObjects deck companion on the root. github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts
+    - The surface resolves the active space and renders the panel. github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#SpaceObjectsSurface
+  note: No test opens the companion.
+```
+
+```mdl
+verdict F-3.2: The list is the reactive ObjectsTree over the space database.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugSpaceObjectsPanel/DebugSpaceObjectsPanel.tsx#DebugSpaceObjectsPanel]
+  note: Reactivity comes from `ObjectsTree` in `@dxos/devtools`; no test adds or removes objects under it.
+```
+
+```mdl
+verdict F-4.1: The Stats companion renders one card per DevtoolsOverview contribution.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-devtools/src/containers/DevtoolsOverviewContainer/DevtoolsOverviewContainer.tsx#DevtoolsOverviewContainer]
+  walkthrough:
+    - The graph builder adds the devtoolsOverview deck companion on the root. github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/app-graph-builder.ts
+    - The container renders the DevtoolsOverview surface inside StatsPanel. github:dxos/dxos/packages/plugins/plugin-devtools/src/containers/DevtoolsOverviewContainer/DevtoolsOverviewContainer.tsx#DevtoolsOverviewContainer
+  note: No test renders the stack.
+```
+
+```mdl
+verdict F-4.2: Each devtools page is a @dxos/devtools article registered on its Devtools id in react-surface.ts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/react-surface.ts]
+  note: '`InvocationTraceContainer` and `TestingArticle` reach the panel through wrapper surfaces in `DevtoolsSurfaces.tsx`. No test mounts the registered pages.'
+```
+
+```mdl
+verdict F-5.1: Generate objects is a Debug node page that renders SpaceGenerator for the active space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts#createDebugExtension, github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#SpaceGeneratorSurface]
+  walkthrough:
+    - The Debug node lists the generator page after Console and Logs. github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/app-graph-builder.ts#createDebugExtension
+    - The surface resolves the active space and renders SpaceGenerator. github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#SpaceGeneratorSurface
+  note: The graph test checks the node; nothing renders the page through the surface.
+```
+
+```mdl
+verdict F-5.2: Generated objects are added to the space's root collection, not the active collection.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/DebugSurfaces.tsx#SpaceGeneratorSurface]
+  note: '`handleCreateObjects` reads `RootCollectionAnnotation` from the space properties and invokes `SpaceOperation.AddObject` with that target. No test exercises it.'
+```
+
+```mdl
+verdict F-5.3: No toolbar indicator reflects generation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugStatus/DebugStatus.tsx#DebugStatus]
+  note: '`DebugStatus` shows errors, swarm state and a stubbed saving light. The generator shows its own in-page progress meter instead.'
+```
+
+```mdl
+verdict F-6.1: The wireframe surface sits first on every article and section of an object while the setting is on.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-debug/src/containers/Wireframe/Wireframe.tsx#Wireframe]
+  walkthrough:
+    - The surface filter matches article and section subjects when settings.wireframe is set. github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/react-surface.ts
+    - Wireframe draws the outline and role:name label. github:dxos/dxos/packages/plugins/plugin-debug/src/containers/Wireframe/Wireframe.tsx#Wireframe
+  note: It is a separate first-position surface beside the article, not a wrapper. No test toggles it.
+```
+
+```mdl
+verdict F-6.2: The wireframe filter returns false when the setting is off.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/capabilities/react-surface.ts]
+  note: No test checks the filter.
+```
+
+```mdl
+verdict F-7.1: LoggingArticle streams from the client's logging service and does not use logStore.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/devtools/devtools/src/containers/panels/client/LoggingArticle/LoggingArticle.tsx#LoggingArticle]
+  note: The devtools surface passes only `role`; `logStore` reaches only `DebugSettings` for download.
+```
+
+```mdl
+verdict F-7.2: Log download gzips logStore.exportBlob and saves it as a browser download, not through the file uploader.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/containers/DebugSettings/DebugSettings.tsx#DebugSettings]
+  note: '`handleDownloadLogs` uses `useFileDownload`. The file uploader is used only to upload the diagnostics JSON to IPFS.'
+```
+
+```mdl
+verdict F-8.1: DevtoolsPlugin's setup module registers composer.changeStorageVersionInMetadata.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/index.ts#SetupDevtools]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/basic.spec.ts]
+  note: It is DevtoolsPlugin, not DebugPlugin as the requirement says, that registers it.
+```
+
+```mdl
+verdict F-8.2: The function destroys the client, rewrites the storage version and reloads to /.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/index.ts#setupDevtools]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/basic.spec.ts]
+```
+
+```mdl
+verdict T-1: No automation opens the debug panel and checks the tree.
+  status: missing
+  note: The unit graph tests check the tree in isolation; no e2e drives the panel. The scenario's sidebar order (Console, Logs, DevTools, Debug) also differs from the code, where Console and Logs sit under Debug.
+```
+
+```mdl
+verdict T-2: No automation opens the Debug companion.
+  status: missing
+  note: Searched `packages/e2e/composer-e2e/src/playwright` for debug companion usage; none.
+```
+
+```mdl
+verdict T-3: No automation toggles the wireframe setting.
+  status: missing
+  note: No e2e or unit test references `wireframe`.
+```
+
+```mdl
+verdict T-4: No automation generates objects through the debug panel.
+  status: missing
+  note: No e2e drives SpaceGenerator; `DebugStatus` has no running state to check.
+```
+
+```mdl
+verdict T-5: No automation downloads logs from DebugSettings.
+  status: missing
+  note: No test triggers `handleDownloadLogs`.
+```
+
+```mdl
+verdict QA-1: No automation runs the devtools round trip.
+  status: missing
+  note: QA-1 is a manual test; no Playwright spec covers it.
+```
+
+```mdl
+verdict QA-2: No automation runs the space.addObject QA step.
+  status: missing
+  note: QA-2 is a manual or agent QA run; no test file runs it.
+```
+
+```mdl
+verdict QA-3: No automation inspects an agent's HALO in devtools.
+  status: missing
+  note: '`autocue/agent-halo.mjs` records a demo of this flow, which is not a test.'
+```

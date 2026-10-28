@@ -12,6 +12,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { DeckPlugin } from '#plugin';
 import { DeckCapabilities } from '#types';
 
+await Harness.preload({ plugins: [DeckPlugin()] });
+
 describe('LayoutOperation.UpdateDialog', () => {
   test('a close keeps what the dialog is showing until its exit has run', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });

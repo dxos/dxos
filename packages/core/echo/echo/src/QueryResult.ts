@@ -42,8 +42,22 @@ export type Entry<T> = {
      * Query resolution time in milliseconds.
      */
     time: number;
+
+    /** The state a remote source evaluated the entry at; absent for an in-process entry. */
+    version?: Version;
+
+    /**
+     * Whether local evidence confirmed a remote entry: its object is loaded here and still matches, or is held
+     * at the exact version the remote evaluated. False when the entry is shown on the remote's word alone.
+     */
+    verified?: boolean;
   };
 };
+
+/** The state a remote source evaluated an entry at: a document's heads, or a feed block's position. */
+export type Version =
+  | { kind: 'automerge'; documentId: string; heads: readonly string[] }
+  | { kind: 'feed'; insertionId: number };
 
 /**
  * Where query results come from.

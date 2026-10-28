@@ -17,7 +17,31 @@ export const KIND_STYLE: Record<string, { icon: string; hue: Tag.TagHue }> = {
   capability: { icon: 'ph--puzzle-piece--regular', hue: 'indigo' },
   module: { icon: 'ph--package--regular', hue: 'indigo' },
   db: { icon: 'ph--database--regular', hue: 'red' },
+  table: { icon: 'ph--table--regular', hue: 'red' },
+  // External nodes: a code symbol, or another spec whose text is not at hand.
+  code: { icon: 'ph--file-code--regular', hue: 'amber' },
+  spec: { icon: 'ph--file-text--regular', hue: 'violet' },
 };
 
 export const kindStyle = (kind: string): { icon: string; hue: Tag.TagHue } =>
   KIND_STYLE[kind] ?? { icon: 'ph--square--regular', hue: 'neutral' };
+
+/** The independently toggled groups of a definition graph: what the code is made of, what it must do, and how it is checked. */
+export type KindGroup = 'concepts' | 'requirements' | 'qa';
+
+export const KIND_GROUPS: readonly KindGroup[] = ['concepts', 'requirements', 'qa'];
+
+const GROUP_OF: Record<string, KindGroup> = {
+  feat: 'requirements',
+  req: 'requirements',
+  scenario: 'qa',
+  test: 'qa',
+  suite: 'qa',
+};
+
+/** A kind's group; anything not a requirement or a check is a concept, so a new block kind shows with the code. */
+export const groupOf = (kind: string): KindGroup => GROUP_OF[kind] ?? 'concepts';
+
+/** The kinds to leave out of a graph, given which groups are shown. */
+export const hiddenKinds = (kinds: Iterable<string>, shown: Record<KindGroup, boolean>): string[] =>
+  [...kinds].filter((kind) => !shown[groupOf(kind)]);

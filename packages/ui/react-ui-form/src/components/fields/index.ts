@@ -6,6 +6,7 @@ export * from './ArrayField.tsx';
 export * from './AsyncSelectField.tsx';
 export * from './AutofillField.tsx';
 export * from './BooleanField.tsx';
+export * from './ColorField.tsx';
 export * from './ComboboxField.tsx';
 export * from './createSelectField.tsx';
 export * from './DateField.tsx';

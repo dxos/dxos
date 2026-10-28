@@ -21,6 +21,8 @@ import { FileOperation } from '#types';
 
 import { DownloadNotAvailableError } from './resolve-download.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+
 const DIGEST = 'a'.repeat(64);
 
 describe('FileOperation.ResolveDownload', () => {

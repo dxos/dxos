@@ -9,6 +9,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { IrohBeaconPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [IrohBeaconPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('IrohBeaconPlugin', () => {

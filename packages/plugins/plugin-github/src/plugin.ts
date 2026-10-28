@@ -14,6 +14,7 @@ import {
   PluginAsset,
   ReactSurface,
   Schema,
+  SearchQueryAction,
   SkillDefinition,
   Translations,
 } from '#capabilities';
@@ -29,6 +30,7 @@ export const GitHubPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
+  Plugin.addModule(SearchQueryAction),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
   Plugin.make,

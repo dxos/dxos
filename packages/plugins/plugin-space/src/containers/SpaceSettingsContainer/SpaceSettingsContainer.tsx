@@ -168,6 +168,25 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
   const handleResetHome = useCallback(() => AppSpace.resetHomeVisibility(space), [space]);
 
+  const [spaceRootUrl, setSpaceRootUrl] = useState(space.internal.data.spaceRootUrl);
+  const [migrating, setMigrating] = useState(false);
+  // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
+  const handleMigrateSpaceRoot = useCallback(async () => {
+    setMigrating(true);
+    try {
+      setSpaceRootUrl(await space.internal.migrateSpaceRoot());
+    } catch (err) {
+      log.catch(err, { stage: 'migrate space root', spaceId: space.id });
+      void invokePromise(LayoutOperation.AddToast, {
+        id: `${space.id}-migrate-space-root-failed`,
+        title: t('migrate-space-root-failed.message'),
+        icon: 'ph--warning--regular',
+      });
+    } finally {
+      setMigrating(false);
+    }
+  }, [space, invokePromise, t]);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   // Wired to an onClick handler: must resolve (never reject) so it can't trigger an unhandled rejection.
   const handleDelete = useCallback(async () => {
@@ -230,6 +249,23 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             </Form.Field>
             <Form.Field standalone label={t('repair-space.title')} description={t('repair-space.description')}>
               <Button.Root onClick={handleRepair}>{t('repair-space.label')}</Button.Root>
+            </Form.Field>
+            <Form.Field
+              standalone
+              label={t('migrate-space-root.title')}
+              description={t('migrate-space-root.description')}
+            >
+              <Button.Root
+                disabled={migrating || spaceRootUrl !== undefined}
+                onClick={handleMigrateSpaceRoot}
+                data-testid='spaceSettings.migrateSpaceRoot'
+              >
+                {spaceRootUrl !== undefined
+                  ? t('migrate-space-root.migrated.label')
+                  : migrating
+                    ? t('migrate-space-root.pending.label')
+                    : t('migrate-space-root.label')}
+              </Button.Root>
             </Form.Field>
             <Form.Field standalone label={t('reset-home.title')} description={t('reset-home.description')}>
               <Button.Root onClick={handleResetHome}>{t('reset-home.label')}</Button.Root>

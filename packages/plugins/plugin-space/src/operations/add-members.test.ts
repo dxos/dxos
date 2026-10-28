@@ -17,6 +17,8 @@ import { InboxAccountRequiredError } from '@dxos/protocols';
 import { SpacePlugin } from '#plugin';
 import { SpaceOperation } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+
 describe('SpaceOperation.AddMembers', () => {
   test('admits a member it could not notify and reports why', async ({ expect }) => {
     const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });

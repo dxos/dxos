@@ -24,6 +24,7 @@ import { resolveKeyBinding } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
+import { TOOLBAR_OVERFLOW_ID } from '../builder.ts';
 import { useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
@@ -168,6 +169,23 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
   );
 };
 
+/** A toolbar's named group may be declared for others to extend and left empty; a menu then omits it. */
+const NamedGroupSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup<MenuItemChrome> }) => {
+  const items = useMenuItems(menu, group);
+  return items?.some(isMenuRow) ? <ActionSubMenu menu={menu} group={group} /> : null;
+};
+
+/**
+ * Whether an item renders as a menu row: a label belongs to a toolbar row (a menu has its own title), and a menu cannot
+ * host a control its contributor renders itself.
+ */
+const isMenuRow = (item: MenuItem): boolean =>
+  isMenuGroup(item) ||
+  (!isSeparator(item) &&
+    !item.properties?.hidden &&
+    item.properties?.variant !== 'text' &&
+    item.properties?.variant !== 'custom');
+
 type Segment = { kind: 'item'; item: MenuItem } | { kind: 'radio'; id: string; actions: MenuAction[] };
 
 /**
@@ -192,17 +210,38 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
     return <Menu.Separator />;
   }
   if (isMenuGroup(item)) {
+    // A toolbar's overflow items are already "more" in a menu, so they follow the other items rather than nest.
+    if (item.id === TOOLBAR_OVERFLOW_ID) {
+      return <OverflowSection menu={menu} group={item} />;
+    }
     // A graph group's properties are an open record, validated by the plugin that contributed them.
-    return <ActionSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />;
+    return item.properties.variant ? (
+      <ActionSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />
+    ) : (
+      <NamedGroupSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />
+    );
   }
   const action = item as MenuAction;
-  if (action.properties?.hidden) {
+  if (!isMenuRow(action)) {
     return null;
   }
   return isCheckable(action) ? (
     <ActionCheckboxItem menu={menu} action={action} group={group} />
   ) : (
     <ActionMenuItem menu={menu} action={action} group={group} />
+  );
+};
+
+const OverflowSection = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup }) => {
+  const items = useMenuItems(menu, group);
+  if (!items?.some(isMenuRow)) {
+    return null;
+  }
+  return (
+    <>
+      <Menu.Separator />
+      <ActionMenuItems menu={menu} group={group} />
+    </>
   );
 };
 
@@ -359,7 +398,8 @@ const ActionMenuRoot = ({
           {children}
         </Menu.Trigger>
       )}
-      <Menu.Content container={containerRef}>
+      {/* A menu opened at a point (a right-click) has no trigger for an arrow to point at. */}
+      <Menu.Content container={containerRef} arrow={virtualRef ? false : undefined}>
         <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
       </Menu.Content>
     </Menu.Root>

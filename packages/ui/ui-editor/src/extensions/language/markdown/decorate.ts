@@ -58,6 +58,11 @@ export interface DecorateOptions {
   skip?: (node: NodeData) => boolean;
   // TODO(burdon): Remove.
   renderLinkButton?: RenderCallback<{ url: string }>;
+  /**
+   * Decorates only these syntax nodes (e.g. `['FencedCode']`), leaving the rest of the document as source; the image
+   * and table widgets are included only when `Image` or `Table` is named. All nodes when unset.
+   */
+  nodes?: readonly string[];
 }
 
 /**
@@ -123,8 +128,10 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
         ],
       },
     ),
-    image({ skip: options.skip ? (node) => !!options.skip?.(node) : undefined }),
-    table(),
+    ...(!options.nodes || options.nodes.includes('Image')
+      ? [image({ skip: options.skip ? (node) => !!options.skip?.(node) : undefined })]
+      : []),
+    ...(!options.nodes || options.nodes.includes('Table') ? [table()] : []),
     adjustChanges(),
     formattingStyles,
   ];
@@ -331,6 +338,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   // let count = 0;
   const enterNode = (node: SyntaxNodeRef) => {
     // console.log(`[${count++}]`, { node: node.name, from: node.from, to: node.to });
+    if (options.nodes && !options.nodes.includes(node.name)) {
+      return;
+    }
     switch (node.name) {
       // ATXHeading > HeaderMark > Paragraph
       // NOTE: Numbering requires processing the entire document since otherwise only the visible range will be
@@ -657,6 +667,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   };
 
   const leaveNode = (node: SyntaxNodeRef) => {
+    if (options.nodes && !options.nodes.includes(node.name)) {
+      return;
+    }
     switch (node.name) {
       case 'BulletList':
       case 'OrderedList': {

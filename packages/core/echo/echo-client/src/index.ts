@@ -18,6 +18,7 @@ export {
   type BindOptions,
   type BranchStore,
   type DecodedAutomergePrimaryValue,
+  type ExportWorkingSetOptions,
   type GetObjectCoreByIdOptions,
   type InitRootProxyFn,
   type ItemsUpdatedEvent,
@@ -25,6 +26,7 @@ export {
   META_NAMESPACE,
   type ObjectCoreOptions,
   type SpaceDocumentHeads,
+  type WorkingSetRow,
   objectIsUpdated,
 } from './core-db/index.ts';
 // One definition, in `echo`, now that the write gate is shared; re-exported so the public name is

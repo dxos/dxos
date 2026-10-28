@@ -10,6 +10,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { CallsPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), CallsPlugin()] });
+
 describe('CallsPlugin', () => {
   // Calls own no persistent schema, so this is a load smoke test (activation rethrows on error).
   test('loads and is enabled', async ({ expect }) => {

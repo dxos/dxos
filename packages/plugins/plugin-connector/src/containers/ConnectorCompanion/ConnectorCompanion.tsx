@@ -50,7 +50,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
   // fuzzy if a token is ever shared across connections.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connection = useMemo(
-    () => connections.find((candidate) => candidate.accessToken.uri === externalSpec?.source.uri),
+    () => connections.find((candidate) => candidate.accessToken?.uri === externalSpec?.source.uri),
     [connections, externalSpec],
   );
 

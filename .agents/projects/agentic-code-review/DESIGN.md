@@ -28,7 +28,7 @@ them) define no rules and are passed over without error. This is why rules are
 **not** a new file extension: they ride the existing format.
 
 Rules can live anywhere — colocated in a package's `.mdl`, or in a shared
-document (`rules/non-negotiables.mdl`). `files` globs resolve **relative to the
+document (`.agents/rules/non-negotiables.mdl`). `files` globs resolve **relative to the
 `.mdl` file's directory** by default (`scope: dir`); a rule sets **`scope: repo`**
 to resolve from the repo root instead (the shared seed rules do this).
 

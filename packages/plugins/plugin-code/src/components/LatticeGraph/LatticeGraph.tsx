@@ -111,6 +111,10 @@ export const LatticeGraph = ({
   const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
 
   useEffect(() => {
+    // The atoms start with the first model, so setting it again on mount would only lay out and route twice.
+    if (atomRegistry.get(graph) === graphModel) {
+      return;
+    }
     atomRegistry.set(graph, graphModel);
     atomRegistry.set(overlay, { positions: {} });
   }, [atomRegistry, graph, overlay, graphModel]);

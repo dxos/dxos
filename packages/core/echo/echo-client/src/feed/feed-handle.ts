@@ -69,6 +69,12 @@ export class FeedHandle {
   public readonly updated = new Event();
 
   /**
+   * Fires inside every local write with the objects it appended, edited or deleted here, so a query re-evaluates
+   * only those rather than every object in {@link localWrites}.
+   */
+  public readonly localWrite = new Event<readonly Entity.Unknown[]>();
+
+  /**
    * Debounces `Obj.update` mutations on live feed objects into a single background append per
    * flush cycle (coalescing), mirroring `RepoProxy._sendUpdatesJob`'s use of the same primitive.
    */
@@ -94,6 +100,20 @@ export class FeedHandle {
   readonly #dirtyCores = new Set<FeedObjectCore>();
   /** In-flight append RPCs, awaited by {@link waitForPendingWrites}. */
   readonly #inFlight = new Set<Promise<void>>();
+
+  /**
+   * Cores of the objects appended or edited through this handle, by id in the order they were first written. Held
+   * weakly, so an acknowledged write no live query shows can be collected like any other feed object.
+   */
+  readonly #writtenHere = new Map<EntityId, WeakRef<FeedObjectCore>>();
+  /** Written cores the feed service has not acknowledged, held strongly because nothing else may carry the write. */
+  readonly #unacknowledged = new Set<FeedObjectCore>();
+
+  /**
+   * Settles when the last send does: each send starts after the one before it, because the store orders
+   * blocks as they arrive and two writes of one object racing would let the older one land last.
+   */
+  #sendTail: Promise<void> = Promise.resolve();
   /** Dedupes concurrent hydrations of the same id (reactive query + one-shot query racing). */
   readonly #hydrating = new Map<EntityId, Promise<Entity.Unknown | undefined>>();
 
@@ -202,9 +222,8 @@ export class FeedHandle {
       return { core, json, token };
     });
 
-    this.#addOptimistic(cores);
-
     if (this.#endpointClosed) {
+      this.#addOptimistic(cores);
       // Revert first: the capture above cleared each core's dirty flag and left a pending-append
       // token, so leaving without it would drop the write AND leave `reconcile` preferring the
       // never-sent local state over every inbound block for the life of the handle.
@@ -219,8 +238,10 @@ export class FeedHandle {
       throw this.#endpointClosed;
     }
 
-    const sendPromise = this.#sendAppendBatches(batch);
+    // Queued before subscribers hear of it: one that writes from the notification must send after this batch.
+    const sendPromise = this.#sendInOrder(batch);
     this.#inFlight.add(sendPromise);
+    this.#addOptimistic(cores);
     try {
       await sendPromise;
     } finally {
@@ -266,6 +287,7 @@ export class FeedHandle {
       const id = EntityId.make(item.id);
       const existingCore = this.#cores.get(id);
       const core = existingCore ?? this.#registerCore(item);
+      this.#markWritten(core);
       if (existingCore && existingCore.entity !== item) {
         existingCore.applyLocalUpdate(item);
       }
@@ -285,16 +307,51 @@ export class FeedHandle {
     if (added) {
       this.updated.emit();
     }
+    this.localWrite.emit(cores.map((core) => core.entity));
   }
 
   /** Enqueue a core for the next background append and wake the scheduler. */
   #onCoreDirty(core: FeedObjectCore): void {
+    this.#markWritten(core);
     this.#dirtyCores.add(core);
     this.#appendScheduler.trigger();
+    this.localWrite.emit([core.entity]);
+  }
+
+  /**
+   * The objects written through this handle, which the index may not have seen yet. A query shows them until its
+   * index answer does; keeping one past its acknowledgement keeps it from vanishing until the index catches up.
+   */
+  localWrites(): Entity.Unknown[] {
+    const objects: Entity.Unknown[] = [];
+    for (const [id, ref] of this.#writtenHere) {
+      const core = ref.deref();
+      if (!core) {
+        this.#writtenHere.delete(id);
+      } else if (!core.deleted) {
+        objects.push(core.entity);
+      }
+    }
+    return objects;
+  }
+
+  #markWritten(core: FeedObjectCore): void {
+    const id = EntityId.make(core.entity.id);
+    if (this.#writtenHere.get(id)?.deref() !== core) {
+      this.#writtenHere.set(id, new WeakRef(core));
+    }
+    this.#unacknowledged.add(core);
+  }
+
+  /** The object written through this handle under `id`, if there is one. */
+  getLocalWrite(id: EntityId): Entity.Unknown | undefined {
+    const core = this.#writtenHere.get(id)?.deref();
+    return core && !core.deleted ? core.entity : undefined;
   }
 
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
+    const deleted: Entity.Unknown[] = [];
     for (const id of ids) {
       if (!EntityId.isValid(id)) {
         continue;
@@ -302,12 +359,18 @@ export class FeedHandle {
       const core = this.#cores.get(id);
       if (core) {
         core.markDeleted();
+        deleted.push(core.entity);
         this.#cores.delete(id);
         this.#dirtyCores.delete(core);
+        this.#writtenHere.delete(id);
+        this.#unacknowledged.delete(core);
       }
       this.#objects.delete(id);
     }
     this.updated.emit();
+    if (deleted.length > 0) {
+      this.localWrite.emit(deleted);
+    }
 
     try {
       await runServiceCall(this._runtime, this._service, 'FeedService.deleteFromFeed', {
@@ -330,6 +393,16 @@ export class FeedHandle {
    * assigns a fresh sequence per object, so re-sending a chunk that already committed appends a
    * second block rather than reconciling with the first.
    */
+  /** Sends a batch once every earlier batch has settled; the returned promise carries this batch's own outcome. */
+  #sendInOrder(batch: AppendCapture[]): Promise<void> {
+    const send = this.#sendTail.then(() => this.#sendAppendBatches(batch));
+    this.#sendTail = send.then(
+      () => undefined,
+      () => undefined,
+    );
+    return send;
+  }
+
   async #sendAppendBatches(batch: AppendCapture[]): Promise<void> {
     for (let i = 0; i < batch.length; i += FEED_APPEND_BATCH_SIZE) {
       const chunk = batch.slice(i, i + FEED_APPEND_BATCH_SIZE);
@@ -346,7 +419,12 @@ export class FeedHandle {
           },
           { timeout: RPC_TIMEOUT },
         );
-        chunk.forEach(({ core, token }, index) => core.confirmAppend(token, blocks?.[index]));
+        chunk.forEach(({ core, token }, index) => {
+          core.confirmAppend(token, blocks?.[index]);
+          if (core.acknowledged) {
+            this.#unacknowledged.delete(core);
+          }
+        });
       } catch (err) {
         this.#onAppendFailed(err, batch.slice(i));
         // A closed endpoint never retries, so the write is lost and the caller must hear it.
@@ -436,7 +514,7 @@ export class FeedHandle {
     });
     this.#dirtyCores.clear();
 
-    const sendPromise = this.#sendAppendBatches(batch);
+    const sendPromise = this.#sendInOrder(batch);
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;
@@ -817,6 +895,8 @@ export class FeedHandle {
     }
     this.#cores.clear();
     this.#dirtyCores.clear();
+    this.#writtenHere.clear();
+    this.#unacknowledged.clear();
     await this._ctx.dispose();
     await this.#pushChain;
     if (unsent !== undefined) {

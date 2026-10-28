@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
 import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
-import { Obj, Ref, Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
+  type Mention,
   Message as MessageComponent,
   type MessageMetadata,
   Thread,
@@ -21,8 +20,10 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
+import { mention } from '@dxos/ui-editor';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
+import { useThreadMessages } from '#hooks';
 import { meta } from '#meta';
 
 // TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
@@ -38,12 +39,19 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
 
 export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   anchor: AnchoredTo.AnchoredTo;
+  /** Messages to show in place of the thread's feed, for a host with no database (a story). */
+  messages?: Message.Message[];
   /** Injected renderers (e.g. the Surface-backed object tile) supplied by the container. */
   components: ThreadComponents;
   /** The local author's metadata for the reply composer. */
   authorMetadata: MessageMetadata;
   /** The local identity DID (decides message editability). */
   identityDid?: string;
+  /**
+   * Actors the composer completes after `@` (space members and the comment agent), with the hue of each one's avatar
+   * that their mention pills take.
+   */
+  mentions?: Mention[];
   current?: boolean;
   /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
   getMetadata: (message: Message.Message) => MessageMetadata;
@@ -55,9 +63,9 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   onActivate?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
   onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<Message.Message>) => void;
+  onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, message: Message.Message) => void;
   onThreadDelete?: (anchor: AnchoredTo.AnchoredTo) => void;
-  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
+  onAcceptProposal?: (anchor: AnchoredTo.AnchoredTo, message: Message.Message) => void;
   /** Apply the change this (branch-review) thread is anchored to and resolve it; shown while diffing. */
   onAcceptChange?: (anchor: AnchoredTo.AnchoredTo) => void;
 };
@@ -69,9 +77,11 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
 export const CommentThread = ({
   activity,
   anchor,
+  messages,
   components,
   authorMetadata,
   identityDid,
+  mentions,
   current,
   getMetadata,
   onAttend,
@@ -89,16 +99,12 @@ export const CommentThread = ({
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [status] = useObject(thread, 'status');
-  const [messages] = useObject(thread, 'messages');
-
-  const loadedMessagesAtom = useMemo(
-    () =>
-      Atom.make((get) =>
-        (messages ?? []).map((ref) => get(ref.atom)).filter((message): message is Message.Message => !!message),
-      ),
-    [messages],
+  const feedMessages = useThreadMessages(thread);
+  const mentionExtension = useMemo(
+    () => (mentions?.length ? mention({ names: mentions.map(({ name }) => name) }) : undefined),
+    [mentions],
   );
-  const loadedMessages = useAtomValue(loadedMessagesAtom);
+  const loadedMessages = messages ?? feedMessages;
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
   const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
@@ -117,20 +123,24 @@ export const CommentThread = ({
   const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
   const handleMessageDelete = useCallback(
     (messageId: string) => {
-      // `Thread.Root` (react-ui-thread) hands back the bare entity id it renders each tile under;
-      // resolve it against the thread's own refs so the operation receives a typed ref, not an id.
-      const ref = messages?.find(Ref.hasEntityId(messageId));
-      if (ref) {
-        onMessageDelete?.(anchor, ref);
+      // `Thread.Root` (react-ui-thread) hands back the bare entity id it renders each tile under.
+      const message = loadedMessages.find(({ id }) => id === messageId);
+      if (message) {
+        onMessageDelete?.(anchor, message);
       }
     },
-    [onMessageDelete, anchor, messages],
+    [onMessageDelete, anchor, loadedMessages],
   );
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
   const handleAcceptChange = useCallback(() => onAcceptChange?.(anchor), [onAcceptChange, anchor]);
   const handleAcceptProposal = useCallback(
-    (messageId: string) => onAcceptProposal?.(anchor, messageId),
-    [onAcceptProposal, anchor],
+    (messageId: string) => {
+      const message = loadedMessages.find(({ id }) => id === messageId);
+      if (message) {
+        onAcceptProposal?.(anchor, message);
+      }
+    },
+    [onAcceptProposal, anchor, loadedMessages],
   );
 
   const handleComment = useCallback(
@@ -194,12 +204,19 @@ export const CommentThread = ({
         detached
         current={current}
         title={thread.name}
+        timestamp={loadedMessages[0]?.created}
         onSelect={handleActivate}
         controls={headerControls}
       />
     </Tooltip.Trigger>
   ) : (
-    <Thread.Header current={current} title={thread.name} onSelect={handleActivate} controls={headerControls} />
+    <Thread.Header
+      current={current}
+      title={thread.name}
+      timestamp={loadedMessages[0]?.created}
+      onSelect={handleActivate}
+      controls={headerControls}
+    />
   );
 
   return (
@@ -208,6 +225,7 @@ export const CommentThread = ({
       components={components}
       identityDid={identityDid}
       getMetadata={getMetadata}
+      mentions={mentions}
       onMessageDelete={onMessageDelete ? handleMessageDelete : undefined}
       onAcceptProposal={onAcceptProposal ? handleAcceptProposal : undefined}
     >
@@ -242,6 +260,7 @@ export const CommentThread = ({
           {...authorMetadata}
           placeholder={t('message.placeholder')}
           autoFocus={status === 'staged'}
+          extensions={mentionExtension}
           onSend={handleComment}
         />
 

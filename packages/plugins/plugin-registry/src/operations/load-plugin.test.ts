@@ -15,6 +15,8 @@ import { meta } from '#meta';
 import { RegistryOperation } from '#operations';
 import { RegistryPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [RegistryPlugin()] });
+
 const REMOTE_URL = 'https://example.com/hello/manifest.json';
 const remoteMeta = Plugin.makeMeta({ key: DXN.make('org.example.plugin.hello'), name: 'Hello' });
 const RemotePlugin = Plugin.make(Plugin.define(remoteMeta));

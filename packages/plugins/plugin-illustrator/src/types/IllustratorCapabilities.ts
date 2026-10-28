@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -112,3 +113,11 @@ export const editLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label =
   `edit-in-${variantSlug(variant)}.label`,
   { ns: meta.profile.key, defaultValue: `Edit in ${variant.label}` },
 ];
+
+/**
+ * Refit requests, a counter per canvas URI: the drawing operations an agent calls (`Draw`, `Edit`) bump it, and a
+ * variant's view reframes its scene when it changes, so an edit the viewer did not make is brought into view.
+ */
+export const Refit = Capability.makeSingleton<Atom.Writable<Record<string, number>>>()(
+  `${meta.profile.key}.capability.refit`,
+);

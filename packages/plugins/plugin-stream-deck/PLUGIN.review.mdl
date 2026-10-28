@@ -1,0 +1,299 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-stream-deck/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: StreamDeckPlugin
+
+The plugin meets almost all of its spec, and the pure parts are well tested. The model lives in
+`plugin-space`'s `Dashboard` module. `toShortcuts`, `findFavoriteTag`, `toMetrics` and
+`toSpaceStats` have tests for the favorite tag, label sort, keyed-tag rejection, task takeover,
+indeterminate progress and stats fallback. The renderer (`renderKey`, `renderDial`, `buildFrame`,
+`wrapText`, `escapeXml`) and `StreamDeckBridge` also have tests, which cover backoff, frame dedup and
+the incompatible stop. The device side (`packages/apps/composer-stream-deck`) tests its server and
+slot ordering.
+
+The gaps are in the glue. `bridge-driver.ts`, the module that owns the single bridge, maps presses to
+`LayoutOperation.Open` and brings the window forward, has no test. Neither do the three React
+components. So F-1.5, F-4.5, F-4.6 and the press half of T-5 are untested. F-3.4 is close but not
+literal: the panel and the driver each call `buildFrame` from their own queries (`useFavorites` and
+`SpaceCapabilities.Dashboard`), so they share code but not one frame object. Both QA tests are manual.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict DeviceProfile: The schema has model, keys, dials, keySize and dialSize.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/protocol/Protocol.ts#DeviceProfile]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.test.ts]
+```
+
+```mdl
+verdict Shortcut: Shortcut is declared in plugin-space's Dashboard module with target, label, icon and hue.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/types.ts#Shortcut]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.test.ts]
+```
+
+```mdl
+verdict MetricSpec: MetricSpec is a progress | stat union.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/types.ts#MetricSpec]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts]
+```
+
+```mdl
+verdict SpaceStats: SpaceStats has objects, feeds, types and plugins.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/types.ts#SpaceStats, github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/stats.ts#toSpaceStats]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/stats.test.ts]
+```
+
+```mdl
+verdict KeyImage: KeyImage carries an SVG string and an optional target.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/protocol/Protocol.ts#KeyImage]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/frame.test.ts]
+```
+
+```mdl
+verdict DialFeedback: DialFeedback has title, value and an optional bar.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/protocol/Protocol.ts#DialFeedback, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/dial.ts#renderDial]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/dial.test.ts]
+```
+
+```mdl
+verdict Frame: A Frame holds nullable keys and dials.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/protocol/Protocol.ts#Frame, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/frame.ts#buildFrame]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/frame.test.ts]
+```
+
+```mdl
+verdict BridgeStatus: The driver publishes BridgeStatus with state and device.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/types/StreamDeckCapabilities.ts#BridgeStatus, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/bridge-driver.ts]
+  note: '`StreamDeckBridge.test.ts` tests the bridge state, but nothing tests the driver that writes the capability atom.'
+```
+
+```mdl
+verdict VirtualStreamDeck: The replica renders the frame it is given.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/components/VirtualStreamDeck/VirtualStreamDeck.tsx#VirtualStreamDeck]
+  note: Stories only, no play function.
+```
+
+```mdl
+verdict StreamDeckStatus: The rail indicator renders only when the bridge state is connected.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/components/StreamDeckStatus/StreamDeckStatus.tsx#StreamDeckStatus, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/StreamDeckSurfaces.tsx#StreamDeckStatusSurface]
+  note: Stories only.
+```
+
+```mdl
+verdict StreamDeckDashboard: The deck companion builds and renders a frame without sending it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/containers/StreamDeckDashboard/StreamDeckDashboard.tsx#StreamDeckDashboard]
+  note: Stories only.
+```
+
+```mdl
+verdict F-1.1: Objects with the favorite tag become keys with icon and label.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.ts#toShortcuts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/containers/StreamDeckDashboard/useFavorites.ts#useFavorites]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.test.ts]
+```
+
+```mdl
+verdict F-1.2: findFavoriteTag matches the label among keyless tags only.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.ts#findFavoriteTag]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.test.ts]
+```
+
+```mdl
+verdict F-1.3: Slots come from a sort by label, then target.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.ts#toShortcuts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.test.ts]
+```
+
+```mdl
+verdict F-1.4: Objects with no navigation path are dropped.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.ts#toShortcuts]
+  note: The `catch` that drops them is not reached by any test.
+```
+
+```mdl
+verdict F-1.5: A keyDown opens the key's target and focuses the window.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/bridge-driver.ts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/bridge-driver.ts#focusWindow]
+  note: The bridge test checks that input is forwarded; nothing tests the driver's open and focus.
+```
+
+```mdl
+verdict F-2.1: Active tasks fill the segments with progress.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/dial.test.ts]
+```
+
+```mdl
+verdict F-2.2: A task with no total has no ratio and renders with no bar.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/dial.ts#renderDial]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/dial.test.ts]
+```
+
+```mdl
+verdict F-2.3: With nothing running, the segments show the four counts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics, github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/stats.ts#toSpaceStats]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/stats.test.ts]
+```
+
+```mdl
+verdict F-2.4: Finished and failed tasks are filtered out.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts]
+```
+
+```mdl
+verdict F-3.1: Keys are SVG strings at the device size with the sprite icon inlined.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/key.ts#renderKey, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/icons.ts#resolveIcon]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/key.test.ts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/frame.test.ts]
+```
+
+```mdl
+verdict F-3.2: Labels wrap to two lines with an ellipsis and are XML-escaped.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/text.ts#wrapText, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/text.ts#escapeXml]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/text.test.ts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/key.test.ts]
+```
+
+```mdl
+verdict F-3.3: Colours come from a literal palette.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/palette.ts#deviceColors, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/palette.ts#hueColor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/key.test.ts]
+```
+
+```mdl
+verdict F-3.4: The panel and the driver build frames with the same buildFrame, from separate queries.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/render/useFrame.ts#useFrame, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/bridge-driver.ts]
+  note: |
+    The panel uses `useFavorites` and its own progress and stats queries; the driver uses
+    `SpaceCapabilities.Dashboard`. The frames match only while both inputs agree. Untested.
+```
+
+```mdl
+verdict F-4.1: The bridge dials ws://127.0.0.1:21435; the device plugin listens.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts#StreamDeckBridge, github:dxos/dxos/packages/apps/composer-stream-deck/src/server/BridgeServer.ts#BridgeServer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.test.ts, github:dxos/dxos/packages/apps/composer-stream-deck/src/server/BridgeServer.test.ts]
+```
+
+```mdl
+verdict F-4.2: Failed connections retry with 1s to 30s backoff and log nothing above debug.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts#INITIAL_BACKOFF, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts#MAX_BACKOFF]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.test.ts]
+```
+
+```mdl
+verdict F-4.3: A protocol mismatch sets incompatible and stops retrying.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts#StreamDeckBridge]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.test.ts]
+```
+
+```mdl
+verdict F-4.4: An identical frame is not sent again.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts#StreamDeckBridge.publish]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.test.ts]
+```
+
+```mdl
+verdict F-4.5: Only the driver opens a bridge; surfaces read BridgeStatus.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/bridge-driver.ts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/StreamDeckSurfaces.tsx#StreamDeckStatusSurface]
+  note: No test of the driver module.
+```
+
+```mdl
+verdict F-4.6: The driver is a headless module that activates on SpacesAvailable.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/index.ts#BridgeDriver]
+  note: There is no `plugin.test.ts` to check activation.
+```
+
+```mdl
+verdict T-1: The label sort is tested; adding a favorite later is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.ts#toShortcuts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.test.ts]
+  note: The test adds both favorites before it queries, so the "added after" step is not run.
+```
+
+```mdl
+verdict T-2: A keyed tag labelled favorite is ignored.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.ts#findFavoriteTag]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/shortcuts.test.ts]
+```
+
+```mdl
+verdict T-3: An active task takes the first segment and clears the rest.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.ts#toMetrics]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/dashboard/metrics.test.ts]
+```
+
+```mdl
+verdict T-4: The disconnect callback is tested; the offline render is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/apps/composer-stream-deck/src/server/BridgeServer.ts#BridgeServer, github:dxos/dxos/packages/apps/composer-stream-deck/src/offline.ts#offlineKey]
+  tests: [github:dxos/dxos/packages/apps/composer-stream-deck/src/server/BridgeServer.test.ts]
+  note: '`BridgeServer.test.ts` checks that a disconnect is reported; no test checks that the keys and dials render `offlineKey`/`offlineDial`.'
+```
+
+```mdl
+verdict T-5: Slot order and input forwarding are tested; opening the object is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/apps/composer-stream-deck/src/server/slots.ts#slotOf, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts#StreamDeckBridge]
+  tests: [github:dxos/dxos/packages/apps/composer-stream-deck/src/server/slots.test.ts, github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.test.ts]
+  note: The driver's `LayoutOperation.Open` on keyDown has no test.
+```
+
+```mdl
+verdict T-6: The bridge reports incompatible and makes no further attempts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.ts#StreamDeckBridge]
+  tests: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/bridge/StreamDeckBridge.test.ts]
+```
+
+```mdl
+verdict QA-1: Manual/agent QA; no automation runs it.
+  status: missing
+  note: Status `unverified` in the spec.
+```
+
+```mdl
+verdict QA-2: Needs physical hardware; no automation runs it.
+  status: missing
+  note: Status `blocked` in the spec.
+```

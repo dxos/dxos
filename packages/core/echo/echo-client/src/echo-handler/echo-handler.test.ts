@@ -18,7 +18,7 @@ import {
   foreignKey,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
+import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -831,19 +831,57 @@ describe('Reactive Object with ECHO database', () => {
       });
     });
 
-    // Tags never had the asymmetry above: they hold refs, which the assignment path handles on an
-    // earlier branch than the proxy check. Asserted so a change to that ordering is caught.
-    test('a tag ref read off a detached object pushes', async () => {
+    // Tags are entities held by identity, so unlike the data above a tag moves between objects as is.
+    test('a tag read off a detached object pushes', async () => {
       const { db } = await builder.createDatabase({ types: [Tag.Tag] });
       const tag = db.add(Tag.make({ label: 'tag' }));
       const source = Obj.make(TestSchema.Expando, { string: 'detached' });
-      Obj.update(source, (source) => Obj.getMeta(source).tags.push(Ref.make(tag)));
+      Obj.update(source, (source) => Obj.getMeta(source).tags.push(tag));
       const target = db.add(Obj.make(TestSchema.Expando, { string: 'target' }));
 
       Obj.update(target, (target) => {
         Obj.getMeta(target).tags.push(Obj.getMeta(source).tags[0]);
       });
-      expect(Obj.getMeta(target).tags.map((ref) => ref.uri)).to.deep.eq([Ref.make(tag).uri]);
+      expect(Obj.getMeta(target).tags).to.deep.eq([tag]);
+      expect(Obj.getMeta(target).tags[0]).to.eq(tag);
+    });
+
+    test('tags read as entities, persist as references, and edit in place', async () => {
+      const { db } = await builder.createDatabase({ types: [Tag.Tag] });
+      const urgent = db.add(Tag.make({ label: 'urgent' }));
+      // Not yet in the database: tagging adds it, as relating to an unpersisted endpoint does.
+      const later = Tag.make({ label: 'later' });
+      const task = db.add(Obj.make(TestSchema.Expando, { title: 'A' }));
+
+      Obj.update(task, (task) => {
+        Obj.addTag(task, urgent);
+        Obj.getMeta(task).tags.push(later);
+        expect(Obj.getMeta(task).tags[0]).to.eq(urgent);
+      });
+      expect(Obj.getMeta(task).tags.map((tag) => tag.label)).to.deep.eq(['urgent', 'later']);
+      expect(db.getObjectById(later.id)).to.eq(later);
+      expect(getObjectCore(task).getTags()).to.deep.eq([
+        EncodedReference.fromURI(EID.make({ entityId: urgent.id })),
+        EncodedReference.fromURI(EID.make({ entityId: later.id })),
+      ]);
+      expect(Obj.toJSON(task)['@meta']?.tags).to.deep.eq(getObjectCore(task).getTags());
+      expect(getObjectCore(task).getStrongDependencies()).to.include.members([
+        EID.make({ spaceId: db.spaceId, entityId: urgent.id }),
+        EID.make({ spaceId: db.spaceId, entityId: later.id }),
+      ]);
+
+      Obj.update(task, (task) => {
+        Obj.getMeta(task).tags.splice(0, 1);
+        Obj.removeTag(task, later);
+        Obj.getMeta(task).tags = [later, urgent];
+      });
+      expect(Obj.getMeta(task).tags).to.deep.eq([later, urgent]);
+
+      // Deleting a tag does not cascade: the tagged object stays, still holding the deleted tag.
+      db.remove(urgent);
+      expect(Obj.isDeleted(task)).to.be.false;
+      expect(Obj.getMeta(task).tags[1]).to.eq(urgent);
+      expect(Obj.isDeleted(Obj.getMeta(task).tags[1])).to.be.true;
     });
 
     test('object with meta pushed to array', async () => {
@@ -941,17 +979,18 @@ describe('Reactive Object with ECHO database', () => {
     test('tags', async () => {
       const { db } = await builder.createDatabase();
 
-      const importantUri = 'echo:/TAGIMPORTANT';
+      const important = Tag.make({ label: 'important' });
       const org = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'DXOS',
-          [Obj.Meta]: { tags: [Ref.fromURI(URI.make(importantUri))] },
+          [Obj.Meta]: { tags: [important] },
         }),
       );
 
       log.info('', { acc: getObjectCore(org).getDocAccessor([]).handle.doc() });
 
-      expect(Obj.getMeta(org).tags.map((ref) => ref.uri)).toEqual([importantUri]);
+      expect(Obj.getMeta(org).tags).toEqual([important]);
+      expect(db.getObjectById(important.id)).toBe(important);
     });
   });
 

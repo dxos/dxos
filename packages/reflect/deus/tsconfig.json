@@ -2,9 +2,13 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
-    "scripts/**/*.ts",
+    "bin/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../common/errors"
+    }
+  ]
 }

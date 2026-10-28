@@ -61,7 +61,7 @@ export class GoogleCredentials extends Context.Service<
       GoogleCredentials,
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
-        return makeServiceForToken(yield* Database.load(connection.accessToken));
+        return makeServiceForToken(yield* Database.load(Connection.getAccessToken(connection)));
       }),
     );
 

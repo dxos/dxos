@@ -6,6 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   AppGraphBuilder,
+  ContextMenu,
   Expose,
   Keyboard,
   OperationHandler,
@@ -18,6 +19,7 @@ import { meta } from '#meta';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(ContextMenu),
   Plugin.addModule(Expose),
   Plugin.addModule(Keyboard),
   Plugin.addModule(OperationHandler),

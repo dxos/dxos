@@ -28,6 +28,8 @@ export const storyConfig = ({ persistent = true }: StoryConfigOptions = {}): Con
       services: {
         edge: { url: edge },
         ai: { server: `${edge}/ai` },
+        // TURN through EDGE, as the app has: peers on one machine behind its firewall cannot reach each other directly.
+        iceProviders: [{ urls: `${edge}/ice` }],
       },
     },
   });

@@ -239,7 +239,7 @@ export const TestQueueFull: Story = {
 
 /**
  * The row's own controls, with nothing contributed to it. The microphone is deliberately absent:
- * it is not the prompt's, it is filed on the chat's graph node by plugin-transcription.
+ * it is not the prompt's, it is filed on the prompt's graph node by plugin-transcription.
  */
 export const TestBareRow: Story = {
   args: {},

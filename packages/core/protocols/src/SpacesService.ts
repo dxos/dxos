@@ -216,6 +216,17 @@ export const ImportSpaceResponse = Schema.Struct({
 });
 export interface ImportSpaceResponse extends Schema.Schema.Type<typeof ImportSpaceResponse> {}
 
+export const MigrateSpaceRootRequest = Schema.Struct({
+  spaceKey: publicKey,
+});
+export interface MigrateSpaceRootRequest extends Schema.Schema.Type<typeof MigrateSpaceRootRequest> {}
+
+export const MigrateSpaceRootResponse = Schema.Struct({
+  /** The root EDGE holds in force, which every member adopts. */
+  spaceRootUrl: Schema.String,
+});
+export interface MigrateSpaceRootResponse extends Schema.Schema.Type<typeof MigrateSpaceRootResponse> {}
+
 /**
  * Effect RPC definitions for `dxos.client.services.SpacesService`.
  * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
@@ -283,6 +294,15 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('createEpoch', {
     payload: CreateEpochRequest,
     success: bufMessage(CreateEpochResponseSchema),
+    error: serviceError,
+  }),
+  /**
+   * Move a space's credentials off its hypercore control feed onto a space root document minted by
+   * EDGE, then adopt that root locally. Idempotent: a space already migrated returns its root.
+   */
+  Rpc.make('migrateSpaceRoot', {
+    payload: MigrateSpaceRootRequest,
+    success: MigrateSpaceRootResponse,
     error: serviceError,
   }),
   Rpc.make('exportSpace', {

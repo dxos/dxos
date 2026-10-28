@@ -16,7 +16,6 @@ import * as PlatformCommand from 'effect/process/ChildProcess';
 import * as ChildProcessSpawner from 'effect/process/ChildProcessSpawner';
 import * as Schema from 'effect/Schema';
 
-import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin';
 import { type Client, ClientService } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
@@ -104,7 +103,11 @@ export const publish = Command.make(
         const path = yield* Path.Path;
         const dir = path.resolve(options.dir);
 
-        // Load + validate the build/publish orchestration from dx.config.ts.
+        // Load + validate the build/publish orchestration from dx.config.ts. Imported here because the
+        // vite-plugin entry pulls in Babel, which every `dx` start would otherwise load.
+        const { findDxConfigFile, loadDxConfig } = yield* Effect.promise(
+          () => import('@dxos/app-framework/vite-plugin'),
+        );
         const configFile = findDxConfigFile(dir);
         if (!configFile) {
           return yield* Effect.fail(new PublishError({ message: 'No dx.config.ts found.', context: { dir } }));

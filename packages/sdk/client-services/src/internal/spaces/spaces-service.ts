@@ -76,8 +76,9 @@ import {
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpace } from './data-space.ts';
 
-/** Reads the space as the buf message the service returns. */
+type ArchiveFeed = NonNullable<ReturnType<typeof readSerializedSpaceArchive>['feeds']>[number];
 
+/** Reads the space as the buf message the service returns. */
 export class SpacesServiceImpl implements SpacesService.Handlers {
   'constructor'(
     private readonly _identityManager: IdentityContract.Manager,
@@ -136,6 +137,22 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         if (edgeReplication !== undefined) {
           await dataSpaceManager.setSpaceEdgeReplicationSetting(ctx, spaceKey, edgeReplication);
         }
+      },
+      catch: toServiceError,
+    });
+  }
+
+  ['SpacesService.migrateSpaceRoot']({
+    spaceKey,
+  }: SpacesService.MigrateSpaceRootRequest): Effect.Effect<SpacesService.MigrateSpaceRootResponse, BaseError> {
+    return Effect.tryPromise({
+      try: async () => {
+        const dataSpaceManager = await this._getDataSpaceManager();
+        if (!dataSpaceManager.spaces.has(spaceKey)) {
+          throw new SpaceNotFoundError(spaceKey);
+        }
+        const spaceRootUrl = await dataSpaceManager.migrateSpaceRootOnEdge(Context.default(), spaceKey);
+        return { spaceRootUrl };
       },
       catch: toServiceError,
     });
@@ -468,7 +485,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         if (format === SpacesService.SpaceArchiveFormat.enums.JSON) {
           const serialized = readSerializedSpaceArchive(request.archive);
           const space = await dataSpaceManager.createSpace(ctx, { tags: request.tags });
-          await this._hydrateSpaceFromSerialized(space, serialized);
+          await this._populateImportedSpace(ctx, space, () => this._hydrateSpaceFromSerialized(space, serialized));
           await this._updateMetrics();
           return { newSpaceId: space.id };
         }
@@ -480,6 +497,17 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
           tags: request.tags,
         });
+        // Feed messages live outside the documents, so the archive's feed blocks are written separately.
+        await this._populateImportedSpace(ctx, space, () =>
+          this._importFeeds(
+            space,
+            Object.values(extracted.feeds).map(({ metadata, blocks }) => ({
+              feedObjectId: metadata.id,
+              namespace: metadata.namespace,
+              messages: blocks.map((block) => JSON.parse(Buffer.from(block.data, 'base64').toString('utf8'))),
+            })),
+          ),
+        );
         await this._updateMetrics();
         return { newSpaceId: space.id };
       },
@@ -516,7 +544,30 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       }
     });
 
-    for (const feed of serialized.feeds ?? []) {
+    await this._importFeeds(space, serialized.feeds ?? [], { merge });
+  }
+
+  /**
+   * Fills a space created for an import; on failure the space is deleted again, so an import either lands whole or
+   * leaves nothing behind.
+   */
+  private async '_populateImportedSpace'(ctx: Context, space: DataSpace, populate: () => Promise<void>): Promise<void> {
+    try {
+      await populate();
+    } catch (err) {
+      const dataSpaceManager = await this._getDataSpaceManager();
+      await dataSpaceManager.markSpaceDeleted(ctx, space.key).catch((cleanupError) => log.catch(cleanupError));
+      throw err;
+    }
+  }
+
+  /** Appends each feed's messages; a merge skips messages the space's feed already holds. */
+  private async '_importFeeds'(
+    space: DataSpace,
+    feeds: readonly ArchiveFeed[],
+    { merge = false }: { merge?: boolean } = {},
+  ): Promise<void> {
+    for (const feed of feeds) {
       const namespace =
         feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
       const held = merge
@@ -531,27 +582,19 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         continue;
       }
 
-      try {
-        // Handlers are served, not called directly; bridge to a client in-process for this write.
-        const feedService = this._echoHost.feedService;
-        await EffectEx.runPromise(
-          Effect.gen(function* () {
-            const feedClient = yield* makeInProcessClient(FeedService.Rpcs, feedService);
-            yield* feedClient['FeedService.insertIntoFeed']({
-              spaceId: space.id,
-              feedId: feed.feedObjectId,
-              subspaceTag: namespace,
-              objects: messages.map((message) => JSON.stringify(message)),
-            });
-          }).pipe(Effect.scoped),
-        );
-      } catch (err) {
-        // A merge into an existing space must fail rather than report success with messages missing.
-        if (merge) {
-          throw err;
-        }
-        log.warn('failed to import feed data', { feedObjectId: feed.feedObjectId, error: err });
-      }
+      // Handlers are served, not called directly; bridge to a client in-process for this write.
+      const feedService = this._echoHost.feedService;
+      await EffectEx.runPromise(
+        Effect.gen(function* () {
+          const feedClient = yield* makeInProcessClient(FeedService.Rpcs, feedService);
+          yield* feedClient['FeedService.insertIntoFeed']({
+            spaceId: space.id,
+            feedId: feed.feedObjectId,
+            subspaceTag: namespace,
+            objects: messages.map((message) => JSON.stringify(message)),
+          });
+        }).pipe(Effect.scoped),
+      );
     }
   }
 
@@ -621,6 +664,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       membershipPolicy: space.membershipPolicy,
       metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting(),
+      spaceRootUrl: this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl,
     });
   }
 

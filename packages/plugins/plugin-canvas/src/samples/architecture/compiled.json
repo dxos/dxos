@@ -3814,5 +3814,685 @@
         ]
       }
     }
+  ],
+  "echo-model": [
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "space",
+        "origin": { "x": -160, "y": -96 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 704,
+            "h": 384,
+            "color": "light-violet",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Space", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "entities",
+        "origin": { "x": -160, "y": 480 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 1088,
+            "h": 384,
+            "color": "light-green",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Entities", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "types",
+        "origin": { "x": -160, "y": 1056 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 1088,
+            "h": 192,
+            "color": "light-green",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Types", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Space",
+        "origin": { "x": 256, "y": -64 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Database.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Space", "color": "violet" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Database",
+        "origin": { "x": 256, "y": 128 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Database.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Database" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Collection",
+        "origin": { "x": -128, "y": 128 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Collection.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Collection" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Object",
+        "origin": { "x": 256, "y": 704 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Obj.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Object", "color": "blue" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Relation",
+        "origin": { "x": 640, "y": 704 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Relation.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Relation" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Ref",
+        "origin": { "x": -128, "y": 704 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Ref.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Ref", "color": "light-blue" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Feed",
+        "origin": { "x": 640, "y": 512 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Feed.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Feed" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Schema",
+        "origin": { "x": 256, "y": 1088 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Type.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Schema", "color": "green" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Typename",
+        "origin": { "x": 640, "y": 1088 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Type.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Typename + version" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Dxn",
+        "origin": { "x": -128, "y": 1088 },
+        "scale": 1,
+        "ref": "packages/common/keys/src/EID.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "DXN / EID" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "edges",
+        "origin": { "x": -128, "y": -64 },
+        "scale": 1,
+        "elements": [
+          { "kind": "arrow", "id": "Space-Database-0", "start": { "x": 512, "y": 128 }, "end": { "x": 512, "y": 192 } },
+          {
+            "kind": "arrow",
+            "id": "Database-Collection-1",
+            "start": { "x": 384, "y": 256 },
+            "end": { "x": 256, "y": 256 }
+          },
+          {
+            "kind": "arrow",
+            "id": "Database-Object-2",
+            "start": { "x": 512, "y": 320 },
+            "end": { "x": 512, "y": 768 }
+          },
+          {
+            "kind": "line",
+            "id": "Database-Feed-3-path",
+            "points": [
+              { "x": 640, "y": 256 },
+              { "x": 896, "y": 256 }
+            ]
+          },
+          { "kind": "arrow", "id": "Database-Feed-3", "start": { "x": 896, "y": 256 }, "end": { "x": 896, "y": 576 } },
+          { "kind": "arrow", "id": "Object-Ref-4", "start": { "x": 384, "y": 832 }, "end": { "x": 256, "y": 832 } },
+          {
+            "kind": "arrow",
+            "id": "Relation-Object-5",
+            "start": { "x": 768, "y": 832 },
+            "end": { "x": 640, "y": 832 }
+          },
+          { "kind": "arrow", "id": "Ref-Dxn-6", "start": { "x": 128, "y": 896 }, "end": { "x": 128, "y": 1152 } },
+          { "kind": "arrow", "id": "Object-Schema-7", "start": { "x": 512, "y": 896 }, "end": { "x": 512, "y": 1152 } },
+          {
+            "kind": "arrow",
+            "id": "Schema-Typename-8",
+            "start": { "x": 640, "y": 1216 },
+            "end": { "x": 768, "y": 1216 }
+          },
+          { "kind": "text", "id": "Space-Database-0-label", "x": 520, "y": 147, "text": "holds", "weight": "s" },
+          { "kind": "text", "id": "Database-Object-2-label", "x": 520, "y": 563, "text": "adds", "weight": "s" },
+          { "kind": "text", "id": "Database-Feed-3-label", "x": 904, "y": 403, "text": "appends", "weight": "s" },
+          { "kind": "text", "id": "Object-Ref-4-label", "x": 273, "y": 802, "text": "points by", "weight": "s" },
+          {
+            "kind": "text",
+            "id": "Relation-Object-5-label",
+            "x": 655,
+            "y": 738,
+            "text": "source, target",
+            "weight": "s"
+          },
+          { "kind": "text", "id": "Ref-Dxn-6-label", "x": 136, "y": 1011, "text": "names", "weight": "s" },
+          { "kind": "text", "id": "Object-Schema-7-label", "x": 520, "y": 1011, "text": "instance of", "weight": "s" }
+        ]
+      }
+    }
+  ],
+  "echo-query": [
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "client",
+        "origin": { "x": -160, "y": 96 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 704,
+            "h": 192,
+            "color": "light-blue",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Client", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "host",
+        "origin": { "x": 224, "y": 480 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 1088,
+            "h": 192,
+            "color": "light-violet",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "echo-host", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "indexes",
+        "origin": { "x": 1376, "y": -96 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 320,
+            "h": 768,
+            "color": "light-green",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Indexes", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Query",
+        "origin": { "x": -128, "y": 128 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/Query.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Query + Filter", "color": "blue" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Atom",
+        "origin": { "x": 256, "y": 128 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo/src/internal/ref/atoms.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Reactive atom" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Service",
+        "origin": { "x": 256, "y": 512 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-host/src/db-host/query-service.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "QueryService", "color": "violet" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Planner",
+        "origin": { "x": 640, "y": 512 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-host/src/query/query-planner.ts",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "QueryPlanner" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Executor",
+        "origin": { "x": 1024, "y": 512 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-host/src/query/query-executor.ts",
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "QueryExecutor",
+            "color": "light-red"
+          }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Typename",
+        "origin": { "x": 1408, "y": 128 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-host/src/db-host/index-scheduler.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Type index", "color": "green" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Text",
+        "origin": { "x": 1408, "y": 512 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Full-text index" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Vector",
+        "origin": { "x": 1408, "y": -64 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Vector index" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "edges",
+        "origin": { "x": -128, "y": -64 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "line",
+            "id": "Query-Service-0-path",
+            "points": [
+              { "x": 128, "y": 320 },
+              { "x": 128, "y": 640 }
+            ]
+          },
+          { "kind": "arrow", "id": "Query-Service-0", "start": { "x": 128, "y": 640 }, "end": { "x": 384, "y": 640 } },
+          {
+            "kind": "arrow",
+            "id": "Service-Planner-1",
+            "start": { "x": 640, "y": 640 },
+            "end": { "x": 768, "y": 640 }
+          },
+          {
+            "kind": "arrow",
+            "id": "Planner-Executor-2",
+            "start": { "x": 1024, "y": 640 },
+            "end": { "x": 1152, "y": 640 }
+          },
+          {
+            "kind": "line",
+            "id": "Executor-Typename-3-path",
+            "points": [
+              { "x": 1304, "y": 576 },
+              { "x": 1304, "y": 256 }
+            ]
+          },
+          {
+            "kind": "arrow",
+            "id": "Executor-Typename-3",
+            "start": { "x": 1304, "y": 256 },
+            "end": { "x": 1536, "y": 256 }
+          },
+          {
+            "kind": "arrow",
+            "id": "Executor-Text-4",
+            "start": { "x": 1408, "y": 640 },
+            "end": { "x": 1536, "y": 640 }
+          },
+          {
+            "kind": "line",
+            "id": "Executor-Vector-5-path",
+            "points": [
+              { "x": 1256, "y": 576 },
+              { "x": 1256, "y": 64 }
+            ]
+          },
+          {
+            "kind": "arrow",
+            "id": "Executor-Vector-5",
+            "start": { "x": 1256, "y": 64 },
+            "end": { "x": 1536, "y": 64 }
+          },
+          { "kind": "arrow", "id": "Service-Atom-6", "start": { "x": 512, "y": 576 }, "end": { "x": 512, "y": 320 } },
+          { "kind": "text", "id": "Query-Service-0-label", "x": 136, "y": 467, "text": "run", "weight": "s" },
+          { "kind": "text", "id": "Service-Planner-1-label", "x": 690, "y": 610, "text": "plan", "weight": "s" },
+          { "kind": "text", "id": "Service-Atom-6-label", "x": 520, "y": 435, "text": "results", "weight": "s" }
+        ]
+      }
+    }
+  ],
+  "echo-sync": [
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "device",
+        "origin": { "x": -160, "y": -96 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 704,
+            "h": 384,
+            "color": "light-blue",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Device", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "peers",
+        "origin": { "x": 224, "y": 480 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 320,
+            "h": 384,
+            "color": "light-green",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "Peers", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "cloud",
+        "origin": { "x": 608, "y": 96 },
+        "scale": 1,
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "frame",
+            "x": 0,
+            "y": 0,
+            "w": 320,
+            "h": 768,
+            "color": "light-violet",
+            "fill": "tint",
+            "stroke": "dashed"
+          },
+          { "kind": "text", "id": "label", "x": 16, "y": 3, "text": "EDGE", "color": "grey", "weight": "s" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Proxy",
+        "origin": { "x": -128, "y": -64 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-client/src",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Object proxy", "color": "blue" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Core",
+        "origin": { "x": 256, "y": -64 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-client/src/core-db",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "ObjectCore" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Host",
+        "origin": { "x": 256, "y": 128 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-host/src/automerge/automerge-host.ts",
+        "elements": [
+          {
+            "kind": "rect",
+            "id": "box",
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 128,
+            "text": "AutomergeHost",
+            "color": "violet"
+          }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Sqlite",
+        "origin": { "x": -128, "y": 128 },
+        "scale": 1,
+        "ref": "packages/core/echo/echo-host/src/automerge/sqlite-storage-adapter.ts",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "SQLite", "color": "green" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Mesh",
+        "origin": { "x": 256, "y": 512 },
+        "scale": 1,
+        "ref": "packages/core/mesh",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "MESH swarm", "color": "orange" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Peer",
+        "origin": { "x": 256, "y": 704 },
+        "scale": 1,
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Other devices" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Router",
+        "origin": { "x": 640, "y": 128 },
+        "scale": 1,
+        "ref": "edge/packages/services/router",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Router" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "DbService",
+        "origin": { "x": 640, "y": 512 },
+        "scale": 1,
+        "ref": "edge/packages/services/db",
+        "elements": [{ "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "db-service" }]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "Subduction",
+        "origin": { "x": 640, "y": 704 },
+        "scale": 1,
+        "ref": "edge/packages/services/db",
+        "elements": [
+          { "kind": "rect", "id": "box", "x": 0, "y": 0, "w": 256, "h": 128, "text": "Subduction", "color": "violet" }
+        ]
+      }
+    },
+    {
+      "op": "upsert-object",
+      "object": {
+        "id": "edges",
+        "origin": { "x": -128, "y": -64 },
+        "scale": 1,
+        "elements": [
+          { "kind": "arrow", "id": "Proxy-Core-0", "start": { "x": 256, "y": 64 }, "end": { "x": 384, "y": 64 } },
+          { "kind": "arrow", "id": "Core-Host-1", "start": { "x": 512, "y": 128 }, "end": { "x": 512, "y": 192 } },
+          { "kind": "arrow", "id": "Host-Sqlite-2", "start": { "x": 384, "y": 256 }, "end": { "x": 256, "y": 256 } },
+          { "kind": "arrow", "id": "Host-Mesh-3", "start": { "x": 512, "y": 320 }, "end": { "x": 512, "y": 576 } },
+          { "kind": "arrow", "id": "Mesh-Peer-4", "start": { "x": 512, "y": 704 }, "end": { "x": 512, "y": 768 } },
+          { "kind": "arrow", "id": "Host-Router-5", "start": { "x": 640, "y": 256 }, "end": { "x": 768, "y": 256 } },
+          {
+            "kind": "arrow",
+            "id": "Router-DbService-6",
+            "start": { "x": 896, "y": 320 },
+            "end": { "x": 896, "y": 576 }
+          },
+          {
+            "kind": "arrow",
+            "id": "DbService-Subduction-7",
+            "start": { "x": 896, "y": 704 },
+            "end": { "x": 896, "y": 768 }
+          },
+          { "kind": "text", "id": "Proxy-Core-0-label", "x": 299, "y": 34, "text": "mutate", "weight": "s" },
+          { "kind": "text", "id": "Core-Host-1-label", "x": 520, "y": 147, "text": "change", "weight": "s" },
+          { "kind": "text", "id": "Host-Sqlite-2-label", "x": 296, "y": 226, "text": "persist", "weight": "s" },
+          { "kind": "text", "id": "Host-Mesh-3-label", "x": 520, "y": 435, "text": "replicate", "weight": "s" },
+          { "kind": "text", "id": "Mesh-Peer-4-label", "x": 520, "y": 723, "text": "sync", "weight": "s" },
+          { "kind": "text", "id": "Host-Router-5-label", "x": 657, "y": 226, "text": "WebSocket", "weight": "s" },
+          { "kind": "text", "id": "DbService-Subduction-7-label", "x": 904, "y": 723, "text": "compact", "weight": "s" }
+        ]
+      }
+    }
   ]
 }

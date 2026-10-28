@@ -166,13 +166,6 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
     return () => unregisterItem(data.id);
   }, [data.id, handleSelect, registerItem, unregisterItem]);
 
-  // Scroll into view when selected.
-  useEffect(() => {
-    if (isSelected && ref.current) {
-      ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }, [isSelected]);
-
   return (
     <Card.Root
       ref={ref}

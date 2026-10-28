@@ -10,6 +10,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { RoutinePlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), RoutinePlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('RoutinePlugin', () => {

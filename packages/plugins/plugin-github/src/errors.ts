@@ -40,10 +40,16 @@ export class GitHubPullRequestReferenceError extends BaseError.extend(
   'Not a pull request reference.',
 ) {}
 
-/** The local Project could not be re-resolved after its upsert. */
-export class GitHubProjectMissingError extends BaseError.extend(
-  'GitHubProjectMissingError',
-  'Local project missing after upsert.',
+/** A branch moved between reading its tip and updating it: the ref update was not a fast-forward. */
+/** A file marker names an object the space no longer holds. */
+export class GitHubFileObjectMissingError extends BaseError.extend(
+  'GitHubFileObjectMissingError',
+  'The object a synced file is bound to is gone.',
+) {}
+
+export class GitHubRefMovedError extends BaseError.extend(
+  'GitHubRefMovedError',
+  'The branch moved after it was read; pull again and retry.',
 ) {}
 
 /**

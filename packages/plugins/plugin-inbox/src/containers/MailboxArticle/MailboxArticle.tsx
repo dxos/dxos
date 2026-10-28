@@ -8,6 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
@@ -25,6 +26,7 @@ import {
   ActionToolbar,
   MenuBuilder,
   TOOLBAR_DISPOSITION,
+  TOOLBAR_OVERFLOW_ID,
   graphActions,
   isToolbarAction,
   useMenuBuilder,
@@ -38,6 +40,7 @@ import {
   InboxStack,
   type InboxStackActionHandler,
   type InboxStackItem,
+  type InboxStackSection,
   type MessageTagsFamily,
   isMessageGroup,
 } from '#components';
@@ -52,6 +55,7 @@ import { meta } from '#meta';
 import { createSyncProgressKey } from '#sync';
 import { InboxCapabilities, InboxOperation, Mailbox, SystemTags } from '#types';
 
+import { MAILBOX_MENU_DISPOSITION } from '../../constants.ts';
 import { getFeedObjectPath, getMailboxPath } from '../../paths.ts';
 import { buildSearchSelection, getSearchText, messageMatchesQuery } from '../../util/index.ts';
 import { InitializeMailbox } from './InitializeMailbox.tsx';
@@ -91,13 +95,15 @@ export const MailboxArticle = ({
   const showItem = ToolkitHooks.useShowItem();
   const runAction = GraphHooks.useActionRunner();
 
-  // Mail sync (`#sync`), the process pipeline (`#process`) and the analyze cascade (`#analyze`)
+  // Mail sync (`#sync`), the analyze cascade (`#analyze`), Triage inbox (`#triage`) and a message's extraction (`#extract`)
   // register monitors keyed by the mailbox URI; the statusbar shows whichever run is active, sync
   // first — it is the one that changes what the list contains rather than what is known about it.
   const syncProgress = ToolkitHooks.useProgressMonitor(createSyncProgressKey(mailbox));
   const scanProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createAnalyzeProgressKey(mailbox));
+  const triageProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createTriageProgressKey(mailbox));
+  const extractProgress = ToolkitHooks.useProgressMonitor(InboxOperation.createExtractProgressKey(mailbox));
   const isActive = (state: typeof syncProgress) => state?.status === 'running' || state?.status === 'error';
-  const progress = [syncProgress, scanProgress].find(isActive);
+  const progress = [syncProgress, scanProgress, triageProgress, extractProgress].find(isActive);
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -219,8 +225,18 @@ export const MailboxArticle = ({
     return applyPostFilters(result, mailbox, searchQuery);
   }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
+  // Triage's priority bands regroup the list once any message carries one; until then it stays in date order.
+  const priorityRanks = usePriorityRanks(db, tagIndex);
+  const { items: rankedItems, getSection } = useMemo(
+    () => groupByPriority(items, priorityRanks),
+    [items, priorityRanks],
+  );
+
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
-  const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
+  const messages = useMemo(
+    () => rankedItems.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])),
+    [rankedItems],
+  );
 
   // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
   // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
@@ -360,7 +376,9 @@ export const MailboxArticle = ({
         <Status.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
-            items={items}
+            items={rankedItems}
+            getSection={getSection}
+            animateReorder
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
@@ -387,6 +405,69 @@ export const MailboxArticle = ({
 };
 
 MailboxArticle.displayName = 'MailboxArticle';
+
+/** Each message's priority band, as its index in {@link SystemTags.PRIORITY_TAGS}. */
+const usePriorityRanks = (
+  db: Database.Database | undefined,
+  tagIndex: TagIndex.TagIndex | undefined,
+): ReadonlyMap<string, number> => {
+  // One hook pair per band, in band order; `PRIORITY_TAGS` is a fixed tuple, so the call order is stable.
+  const urgent = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityUrgent'));
+  const high = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityHigh'));
+  const normal = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityNormal'));
+  const low = useTaggedIds(tagIndex, useSystemTagUri(db, 'priorityLow'));
+  return useMemo(() => {
+    const ranks = new Map<string, number>();
+    [urgent, high, normal, low].forEach((ids, rank) => {
+      for (const id of ids) {
+        // A message somehow in two bands sits in the more pressing one.
+        if (!ranks.has(id)) {
+          ranks.set(id, rank);
+        }
+      }
+    });
+    return ranks;
+  }, [urgent, high, normal, low]);
+};
+
+/** The heading for messages no triage has reached yet. */
+const UNTRIAGED_SECTION = { id: 'untriaged', label: 'Not triaged', hue: 'neutral' } as const;
+
+/**
+ * Orders entries by priority band (a conversation by its most pressing message), keeping each band
+ * in query order, and names the band each entry sits under. With no message in any band the list is
+ * returned as-is, ungrouped.
+ */
+const groupByPriority = (
+  items: InboxStackItem[],
+  ranks: ReadonlyMap<string, number>,
+): { items: InboxStackItem[]; getSection?: (item: InboxStackItem) => InboxStackSection | undefined } => {
+  if (ranks.size === 0) {
+    return { items };
+  }
+  const untriaged = SystemTags.PRIORITY_TAGS.length;
+  const rankOf = (item: InboxStackItem): number =>
+    Math.min(
+      untriaged,
+      ...(isMessageGroup(item) ? item.messages : [item]).map((message) => ranks.get(message.id) ?? untriaged),
+    );
+  const ranked = items.map((item) => ({ item, rank: rankOf(item) }));
+  // `Array.prototype.sort` is stable, so each band keeps the query's date order.
+  ranked.sort((left, right) => left.rank - right.rank);
+  const counts = new Map<number, number>();
+  for (const { rank } of ranked) {
+    counts.set(rank, (counts.get(rank) ?? 0) + 1);
+  }
+  const sections = new Map<number, InboxStackSection>(
+    [...counts].map(([rank, count]) => {
+      const id = SystemTags.PRIORITY_TAGS[rank];
+      const band = id ? SystemTags.SystemTag[id] : UNTRIAGED_SECTION;
+      return [rank, { id: band.id, label: band.label, hue: band.hue, count }];
+    }),
+  );
+  const sectionOf = new Map(ranked.map(({ item, rank }) => [item, sections.get(rank)]));
+  return { items: ranked.map(({ item }) => item), getSection: (item) => sectionOf.get(item) };
+};
 
 /** One thread's worth of results from the conversation-aggregated message query (see the query above). */
 type ThreadGroup = {
@@ -534,7 +615,6 @@ const useMailboxActions = (
   const injectedActions = Hooks.useCapabilities(InboxCapabilities.MailboxAction);
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
   const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
-  const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
     (get) => {
@@ -559,33 +639,6 @@ const useMailboxActions = (
             checked: loadRemoteImages,
           },
           () => setSettings((settings) => ({ ...settings, loadRemoteImages: !loadRemoteImages })),
-        )
-        .subgraph((builder) => {
-          if (extractActions.length > 0) {
-            return builder.group(
-              'extract',
-              {
-                label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
-                icon: 'ph--magic-wand--regular',
-                iconOnly: true,
-                variant: 'dropdownMenu',
-              },
-              (group) => {
-                for (const item of extractActions) {
-                  group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
-                }
-              },
-            );
-          }
-        })
-        .action(
-          'composeEmail',
-          {
-            type: 'composeEmail',
-            icon: 'ph--pen--regular',
-            label: ['compose-email.label', { ns: meta.profile.key }],
-          },
-          handleCompose,
         );
 
       // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
@@ -603,9 +656,54 @@ const useMailboxActions = (
         );
       }
 
+      // Mailbox-wide jobs (sync, analyze, extract) share the trailing ⋮ menu so the toolbar row stays
+      // with the per-view controls; other contributed toolbar actions (Connect) keep their place in the row.
       return builder
         .separator('gap')
         .subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, surface: TOOLBAR_DISPOSITION }))
+        .action(
+          'composeEmail',
+          {
+            type: 'composeEmail',
+            icon: 'ph--pen--regular',
+            label: ['compose-email.label', { ns: meta.profile.key }],
+          },
+          handleCompose,
+        )
+        .menu(
+          TOOLBAR_OVERFLOW_ID,
+          (menu) => {
+            const jobs = graphActions(graph, get, nodeId, {
+              filter: (action) => AppGraphNode.hasDisposition(action, MAILBOX_MENU_DISPOSITION),
+              rootId: TOOLBAR_OVERFLOW_ID,
+            });
+            menu.subgraph(jobs);
+            // Contributed actions (triage, plugin-crm's image search) are mailbox-wide
+            // jobs like sync and analyze, not extractors, so they sit beside them.
+            for (const item of mailboxActions) {
+              menu.action(`mailbox-${item.id}`, { label: item.label, icon: item.icon }, item.onSelect);
+            }
+            if (mailboxExtractorActions.length > 0) {
+              if (jobs.nodes.length > 0 || mailboxActions.length > 0) {
+                menu.separator('line');
+              }
+              menu.group(
+                'extract',
+                {
+                  label: ['mailbox-toolbar-extract.menu', { ns: meta.profile.key }],
+                  icon: 'ph--magic-wand--regular',
+                  testId: 'inbox.mailbox.extract',
+                },
+                (group) => {
+                  for (const item of mailboxExtractorActions) {
+                    group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
+                  }
+                },
+              );
+            }
+          },
+          'inbox.mailbox.more',
+        )
         .build();
     },
     [

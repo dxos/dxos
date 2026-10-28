@@ -48,6 +48,11 @@ const CLIENT_INFO = { name: '@dxos/mcp-client', version: '0.8.3' };
 export interface Options {
   url: string;
   protocol: 'sse' | 'http';
+  /**
+   * Prefixes the server's tools, as `mcp__<name>__<tool>` (see {@link toolName}), so tools of servers
+   * offered together never share a name. Unprefixed when omitted.
+   */
+  name?: string;
   /** Sent as a Bearer token. Ignored when `authProvider` is set. */
   apiKey?: string;
   /** OAuth (MCP authorization); supplies the access token and refreshes it on a 401. */
@@ -80,8 +85,10 @@ export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolki
     // operation tools do (see `projectFunctionToTool`): `Tool.make` takes an Effect schema, and
     // handing it a fields record instead leaves the tool with no parameter AST, which then throws
     // inside `Response.StreamPart` on the first model turn that lists the tool.
+    const nameOf = (tool: string) =>
+      options.name === undefined ? sanitizeToolName(tool) : toolName(options.name, sanitizeToolName(tool));
     const effectTools = tools.map((mcpTool) =>
-      Tool.dynamic(sanitizeToolName(mcpTool.name), {
+      Tool.dynamic(nameOf(mcpTool.name), {
         description: mcpTool.description ?? `MCP tool: ${mcpTool.name}`,
         parameters: mcpTool.inputSchema,
         success: Schema.String,
@@ -96,9 +103,8 @@ export const make = (options: Options): Effect.Effect<OpaqueToolkit.OpaqueToolki
 
     const handlers = Object.fromEntries(
       tools.map((mcpTool) => {
-        const toolName = sanitizeToolName(mcpTool.name);
         return [
-          toolName,
+          nameOf(mcpTool.name),
           Effect.fn(function* (args: unknown) {
             const result = yield* Effect.promise(() =>
               client.callTool({
@@ -270,6 +276,38 @@ const createTransport = (
  * Sanitizes MCP tool names for use as Effect tool names (replaces / with _).
  */
 const sanitizeToolName = (name: string): string => name.replace(/\//g, '_');
+
+/** Providers reject a request carrying a tool name longer than this. */
+const MAX_TOOL_NAME = 64;
+
+/** Long enough to tell connections apart, short enough to leave room for the tool's own name. */
+const MAX_LABEL = 16;
+
+/** A server's name in a tool prefix: lower-case letters, digits and dashes, at most {@link MAX_LABEL} long. */
+export const label = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .slice(0, MAX_LABEL)
+    .replace(/^-+|-+$/g, '') || 'mcp';
+
+/**
+ * A server's tool as offered to a model, `mcp__<server>__<tool>` as other MCP hosts name it. A name over
+ * the providers' limit is cut short and ends in a hash of the whole, so it stays unique.
+ */
+export const toolName = (server: string, tool: string): string => {
+  const name = `mcp__${server}__${tool}`;
+  return name.length <= MAX_TOOL_NAME ? name : `${name.slice(0, MAX_TOOL_NAME - 7)}_${hash(name)}`;
+};
+
+/** Six base-36 characters of FNV-1a over `text`. */
+const hash = (text: string): string => {
+  let value = 0x811c9dc5;
+  for (let index = 0; index < text.length; index++) {
+    value = Math.imul(value ^ text.charCodeAt(index), 0x01000193);
+  }
+  return (value >>> 0).toString(36).padStart(6, '0').slice(-6);
+};
 
 /**
  * Formats MCP callTool result content for the assistant.

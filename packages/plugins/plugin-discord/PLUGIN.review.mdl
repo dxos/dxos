@@ -1,0 +1,332 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-discord/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: DiscordPlugin
+
+The three connector operations and the channel backend all exist. Discovery, materialization and the
+pull-only sync are wired into two `ConnectorSpec.Connector` entries (bot token and user OAuth), and the
+bot-token form validates against `GET /users/@me`. The channel backend is the best-covered part:
+`channel-backend.test.ts` checks chunked posts, DMs, mentions and the EDGE start/stop/status routes. The
+sync path has no test. `sync.test.ts` is a credential-gated live test of a testing helper, not of the
+operation, and `discord-source.test.ts` tests the crawler's own message mapper, not the copy in `sync.ts`.
+The spec has also drifted from the code. Channels are created eagerly by `MaterializeDiscordTarget` when a
+binding is made, not on first sync. Sync never renames a channel, has no legacy foreign-key fallback and
+uses no per-target transaction. `Binding.syncAll` runs two bindings at once, not three, and fails the
+whole operation once any binding fails, after every binding has had its turn. The plugin also ships much
+the spec does not cover: agent and admin operations, the back-index crawler and the bot setup UI.
+
+Of 42 items: 2 done, 23 untested, 1 partial, 2 diverged, 14 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict RemoteTarget: Discovery returns id, "#channel — Guild" name, topic and guild metadata per channel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/get-discord-channels.ts]
+  note: The shape is plugin-connector's `GetSyncTargetsOutput`; no test calls discovery.
+```
+
+```mdl
+verdict DiscordTargetOptions: The options schema has maxDays, but its UI text says the default is 7 while sync uses 30.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordTargetOptions.ts#DiscordTargetOptions]
+  note: '`DEFAULT_DAYS` in `constants.ts` is 30; the field description says "Defaults to 7". No test reads the option.'
+```
+
+```mdl
+verdict PullResult: PullResult carries added, and the operation sums it over bindings.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts#PullResult]
+  note: No test runs the sync operation.
+```
+
+```mdl
+verdict DiscordChannel: The config type has accessToken, applicationId, guildId and channels.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordChannel.ts#DiscordChannel, github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordChannel.ts#Properties]
+  tests: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/channel-backend.test.ts]
+  note: '`accessToken` is optional (absent for the EDGE-hosted Kai bot), where the spec makes it required.'
+```
+
+```mdl
+verdict DiscordREST: dfx DiscordREST with the memory rate limiter, routed through the EDGE CORS proxy or fetched directly.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/services/discord.ts#makeDiscordLayer, github:dxos/dxos/packages/plugins/plugin-discord/src/services/discord.ts#makeDiscordLayerFromToken, github:dxos/dxos/packages/plugins/plugin-discord/src/services/proxy-http-client.ts#makeEdgeProxyHttpClientLayer]
+  walkthrough:
+    - The connection's token is resolved through CredentialsService. github:dxos/dxos/packages/plugins/plugin-discord/src/services/discord.ts#makeDiscordLayer
+    - The token layer composes DiscordRESTMemoryLive with the chosen fetch. github:dxos/dxos/packages/plugins/plugin-discord/src/services/discord.ts#makeDiscordLayerFromToken
+    - The proxy fetch remaps the auth header and sets the bot User-Agent. github:dxos/dxos/packages/plugins/plugin-discord/src/services/proxy-http-client.ts#makeEdgeProxyHttpClientLayer
+  note: '`discord.test.ts` covers only `resolveDiscordToken`. A `DiscordEndpoint` reference also lets EDGE fetch directly, which the spec does not mention.'
+```
+
+```mdl
+verdict GetDiscordChannels: Discovery drains guild pages, keeps type 0 and 5 channels, and skips a guild that fails.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordOperation.ts#GetDiscordChannels, github:dxos/dxos/packages/plugins/plugin-discord/src/operations/get-discord-channels.ts]
+  walkthrough:
+    - The operation declares the connection input and the targets output. github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordOperation.ts#GetDiscordChannels
+    - The handler lists guilds and channels and labels each target. github:dxos/dxos/packages/plugins/plugin-discord/src/operations/get-discord-channels.ts
+  note: No test runs the handler.
+```
+
+```mdl
+verdict MaterializeDiscordTarget: The handler finds or creates a Channel keyed by the Discord channel id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordOperation.ts#MaterializeDiscordTarget, github:dxos/dxos/packages/plugins/plugin-discord/src/operations/materialize-target.ts]
+  walkthrough:
+    - The operation declares the connection and remote target input. github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordOperation.ts#MaterializeDiscordTarget
+    - The handler looks up the foreign key and adds a new Channel when none exists. github:dxos/dxos/packages/plugins/plugin-discord/src/operations/materialize-target.ts
+  note: No test runs the handler.
+```
+
+```mdl
+verdict SyncDiscordChannel: Pull-only sync works per binding, but it runs two at once and fails the operation when any binding fails.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordOperation.ts#SyncDiscordChannel, github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  walkthrough:
+    - The operation declares the connection and priority input and the pulled output. github:dxos/dxos/packages/plugins/plugin-discord/src/types/DiscordOperation.ts#SyncDiscordChannel
+    - syncAll fans out over the connection's cursors and surfaces the worst failure at the end. github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll
+    - The per-binding sync pages messages after the cursor, maps them, appends to the feed and toasts. github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts
+  note: |
+    `SYNC_CONCURRENCY` is 2, not 3. After all bindings run, `syncAll` re-fails the operation with the first binding
+    failure, so the operation fails on one bad target, which the spec says it should not. No test runs the operation.
+```
+
+```mdl
+verdict DiscordChannelBackend: The backend posts in chunks without mentions, names pending DMs and drives the EDGE bot routes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/channel-backend.ts#makeDiscordChannelBackend, github:dxos/dxos/packages/plugins/plugin-discord/src/services/bot-rest.ts#postText, github:dxos/dxos/packages/plugins/plugin-discord/src/containers/DiscordChannelProperties/DiscordChannelProperties.tsx#DiscordChannelProperties]
+  tests: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/channel-backend.test.ts]
+  walkthrough:
+    - The provider implements send, threads.send, openDirect and connection start, stop and status. github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/channel-backend.ts#makeDiscordChannelBackend
+    - postText splits text at 2000 characters and disables mentions. github:dxos/dxos/packages/plugins/plugin-discord/src/services/bot-rest.ts#postText
+    - The ObjectProperties surface renders the config form, bot status and Start or Stop. github:dxos/dxos/packages/plugins/plugin-discord/src/containers/DiscordChannelProperties/DiscordChannelProperties.tsx#DiscordChannelProperties
+  note: '`openDirect` returns a `dm:<user id>` pending thread and opens the DM on the first send, rather than opening it immediately.'
+```
+
+```mdl
+verdict F-1.1: The bot connector has a manual credential form with a password field for the token.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/connector.ts]
+  note: No test drives the form.
+```
+
+```mdl
+verdict F-1.2: onValidate and onSubmit check the token with GET /users/@me and map 401 to a clear message.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/connector.ts]
+  note: No test covers `validateToken`.
+```
+
+```mdl
+verdict F-1.3: onSubmit stores global_name or username on AccessToken.account.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/connector.ts]
+  note: No test checks the account field.
+```
+
+```mdl
+verdict F-1.4: The AccessToken is an ECHO object referenced by a Connection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/connector.ts, github:dxos/dxos/packages/plugins/plugin-discord/src/services/discord.ts#resolveDiscordToken]
+  note: It is referenced by a `Connection`, not an Integration. Nothing tests that the raw token is never shown again.
+```
+
+```mdl
+verdict F-2.1: The connector's getTargets is GetDiscordChannels, which returns one entry per text or announcement channel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/capabilities/connector.ts, github:dxos/dxos/packages/plugins/plugin-discord/src/operations/get-discord-channels.ts]
+  note: No test runs discovery.
+```
+
+```mdl
+verdict F-2.2: Targets are named "#channel — Guild".
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/get-discord-channels.ts]
+  note: No test checks the label.
+```
+
+```mdl
+verdict F-2.3: A guild whose channel list fails is logged and yields no entries.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/get-discord-channels.ts]
+  note: No test makes one guild fail.
+```
+
+```mdl
+verdict F-2.4: Discovery creates nothing; only a selected target is materialized.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/get-discord-channels.ts, github:dxos/dxos/packages/plugins/plugin-discord/src/operations/materialize-target.ts]
+  note: No test checks the space after discovery.
+```
+
+```mdl
+verdict F-3.1: Each bound target pulls messages after its cursor and appends them.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts]
+  note: '`sync.test.ts` runs the `fetchChannelMessages` testing helper against live Discord, not the operation.'
+```
+
+```mdl
+verdict F-3.2: First sync starts from now minus maxDays, default 30, capped at three years.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts#computeInitialCursor]
+  note: No test checks the computed snowflake.
+```
+
+```mdl
+verdict F-3.3: On success the cursor advances to the newest id seen.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts]
+  note: '`Cursor.advance(binding, newestId)` runs on success; no test checks it.'
+```
+
+```mdl
+verdict F-3.4: A failing target records lastError and the others still run.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  note: '`Cursor.recordError` stores the formatted failure, and `syncAll` lets every binding finish. No Discord test covers it.'
+```
+
+```mdl
+verdict F-3.5: The sync mapper keeps only type 0 and 19 messages.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts#mapDiscordMessage]
+  note: '`discord-source.test.ts` tests the separate mapper in `services/discord-message.ts`, not this one.'
+```
+
+```mdl
+verdict F-3.6: Replies carry the referenced message id in threadId.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts#mapDiscordMessage]
+  note: Falls back to `message_reference.message_id` when the parent is deleted. Only the crawler's mapper is tested.
+```
+
+```mdl
+verdict F-4.1: The Channel is created when the binding is made, not on first sync.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/materialize-target.ts, github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts]
+  note: '`MaterializeDiscordTarget` runs at binding creation; sync fails with `DiscordTargetInvalidError` if the target is not already a Channel.'
+```
+
+```mdl
+verdict F-4.2: Channels are keyed by the discord.com foreign key, and lookup by it makes materialization idempotent.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts#findChannelForDiscordChannel, github:dxos/dxos/packages/plugins/plugin-discord/src/operations/materialize-target.ts]
+  note: No test runs materialization twice.
+```
+
+```mdl
+verdict F-4.3: Sync never updates the Channel name.
+  status: missing
+  note: '`sync.ts` loads the Channel only to append to its feed; no code compares or writes `Channel.name`.'
+```
+
+```mdl
+verdict F-4.4: There is no fallback to the Channel's foreign key for legacy targets.
+  status: missing
+  note: Sync reads only `binding.spec.externalId` and fails with `DiscordChannelUnresolvedError` when it is missing.
+```
+
+```mdl
+verdict F-5.1: Mapped messages are appended with Feed.append.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts]
+  note: No test runs the operation's append.
+```
+
+```mdl
+verdict F-5.2: Peers see new messages through ordinary feed replication.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-discord/src/operations/sync.ts]
+  note: Relies on ECHO feed replication; no Discord test checks a second peer.
+```
+
+```mdl
+verdict F-5.3: Mutations are not transacted per target.
+  status: missing
+  note: The feed append and `Cursor.advance` are separate writes in `sync.ts`; `syncAll` only isolates bindings from each other.
+```
+
+```mdl
+verdict T-1: No automation submits a valid token through the form.
+  status: missing
+  note: No test exercises `credentialForm`.
+```
+
+```mdl
+verdict T-2: No automation submits an invalid token.
+  status: missing
+  note: No test exercises the 401 path of `validateToken`.
+```
+
+```mdl
+verdict T-3: No automation runs discovery across guilds.
+  status: missing
+  note: No test calls `GetDiscordChannels`; `src/testing/fake-rest.ts` exists but is used by the crawler tests.
+```
+
+```mdl
+verdict T-4: No automation makes one guild's channel list fail.
+  status: missing
+  note: No test calls `GetDiscordChannels`.
+```
+
+```mdl
+verdict T-5: No automation runs a first sync.
+  status: missing
+  note: '`sync.test.ts` is gated on live credentials and exercises a helper, not the operation.'
+```
+
+```mdl
+verdict T-6: No automation runs an incremental sync.
+  status: missing
+  note: No test sets a cursor and runs `SyncDiscordChannel`.
+```
+
+```mdl
+verdict T-7: A test filters system messages, but in the crawler's mapper, not in sync.
+  status: diverged
+  tests: [github:dxos/dxos/packages/plugins/plugin-discord/src/services/discord-source.test.ts]
+  note: '`skips system messages (non DEFAULT/REPLY)` runs `services/discord-message.ts#mapDiscordMessage`; the sync operation uses its own private copy in `sync.ts`.'
+```
+
+```mdl
+verdict T-8: No automation makes one target fail during sync.
+  status: missing
+  note: No Discord test; also, `syncAll` would fail the operation, not return without throwing as T-8 expects.
+```
+
+```mdl
+verdict T-9: No automation re-runs sync on an existing Channel.
+  status: missing
+  note: No test runs `SyncDiscordChannel` or `MaterializeDiscordTarget` twice.
+```
+
+```mdl
+verdict T-10: No automation checks the maxDays lookback.
+  status: missing
+  note: No test calls `computeInitialCursor` or checks the `after` parameter.
+```
+
+```mdl
+verdict QA-1: No automation runs the bot round trip.
+  status: missing
+  note: QA-1 is blocked on a real bot token; no test file runs it.
+```
+
+```mdl
+verdict QA-2: No automation re-runs sync against an existing Integration.
+  status: missing
+  note: QA-2 is blocked on a real bot token; no test file runs it.
+```

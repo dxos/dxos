@@ -98,6 +98,11 @@
       "types": "./dist/types/src/types/DebugSurface.d.ts",
       "import": "./dist/lib/DebugSurface.mjs"
     },
+    "./DemoSpace": {
+      "source": "./src/samples/demo/DemoSpace.ts",
+      "types": "./dist/types/src/samples/demo/DemoSpace.d.ts",
+      "import": "./dist/lib/DemoSpace.mjs"
+    },
     "./FieldstoneSpace": {
       "source": "./src/samples/fieldstone/FieldstoneSpace.ts",
       "types": "./dist/types/src/samples/fieldstone/FieldstoneSpace.d.ts",
@@ -112,6 +117,11 @@
       "source": "./src/samples/crm/PipelineSpace.ts",
       "types": "./dist/types/src/samples/crm/PipelineSpace.d.ts",
       "import": "./dist/lib/PipelineSpace.mjs"
+    },
+    "./PresenterSpace": {
+      "source": "./src/samples/presenter/PresenterSpace.ts",
+      "types": "./dist/types/src/samples/presenter/PresenterSpace.d.ts",
+      "import": "./dist/lib/PresenterSpace.mjs"
     },
     "./ReviewSpace": {
       "source": "./src/samples/review/ReviewSpace.ts",
@@ -132,6 +142,16 @@
       "source": "./src/samples/tidepool/TidepoolSpace.ts",
       "types": "./dist/types/src/samples/tidepool/TidepoolSpace.d.ts",
       "import": "./dist/lib/TidepoolSpace.mjs"
+    },
+    "./TimelineSpace": {
+      "source": "./src/samples/timeline/TimelineSpace.ts",
+      "types": "./dist/types/src/samples/timeline/TimelineSpace.d.ts",
+      "import": "./dist/lib/TimelineSpace.mjs"
+    },
+    "./TriageSpace": {
+      "source": "./src/samples/triage/TriageSpace.ts",
+      "types": "./dist/types/src/samples/triage/TriageSpace.d.ts",
+      "import": "./dist/lib/TriageSpace.mjs"
     },
     "./WeatherSpace": {
       "source": "./src/samples/weather/WeatherSpace.ts",
@@ -215,12 +235,15 @@
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
+    "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-spacetime": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-tldraw": "workspace:*",
+    "@dxos/plugin-voxel": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -259,6 +282,7 @@
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "chess.js": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

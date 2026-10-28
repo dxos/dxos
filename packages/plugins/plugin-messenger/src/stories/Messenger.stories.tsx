@@ -130,7 +130,7 @@ const SenderColumn = () => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <Layout.Flex column gap='md' classNames='p-3'>
+        <Layout.Flex column gap='md' classNames='p-trim-md'>
           <Select.Root
             items={options}
             value={recipientDid ? [recipientDid] : []}
@@ -330,7 +330,7 @@ const InviterColumn = () => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        <Layout.Flex column gap='md' classNames='p-3'>
+        <Layout.Flex column gap='md' classNames='p-trim-md'>
           <Button.Root
             variant='primary'
             icon='ph--user-plus--regular'

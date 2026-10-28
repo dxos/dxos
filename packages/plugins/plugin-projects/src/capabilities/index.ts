@@ -28,6 +28,12 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
   environments: ['browser', 'tauri'],
 });
+// Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.lazyModule(
+  'ProjectsMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
+);
 export const NavigationTargetResolver = AppCapability.navigationResolver(
   () => import('./navigation-target-resolver.ts'),
 );

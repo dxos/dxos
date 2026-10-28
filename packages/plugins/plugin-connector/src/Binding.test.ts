@@ -43,6 +43,9 @@ import { ConnectorSpec } from '#types';
 import * as Binding from './Binding.ts';
 import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync.ts';
 import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({})] });
+
 /**
  * The binding namespace: pairing an object with the feed a connection syncs into it, the account that
  * gates a resume, the schedule that drives it, and what a disconnect leaves behind.
@@ -120,7 +123,9 @@ describe('live bindings', () => {
     };
 
     const bind = (connection: Connection.Connection, target: Obj.Unknown) => {
-      const cursor = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
+      const cursor = db.add(
+        Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(target) }),
+      );
       invariant(Cursor.isExternal(cursor));
       return cursor;
     };
@@ -663,7 +668,7 @@ describe('binding lifecycle', () => {
     // Same cursor, same high-water mark: the next sync resumes instead of re-walking the horizon.
     expect(rebound.id).toBe(cursor.id);
     expect(rebound.max).toBe('1700000000000');
-    expect(rebound.spec.source.uri).toBe(connection.accessToken.uri);
+    expect(rebound.spec.source.uri).toBe(Connection.getAccessToken(connection).uri);
     expect((await cursors()).map((cursor) => cursor.id)).toEqual([cursor.id]);
     // No schedule is restored, and none is created: the sync Routine belonged to the connection the
     // disconnect deleted, and a Routine for the new one is only ever made through the create-routine
@@ -693,7 +698,7 @@ describe('binding lifecycle', () => {
     // A binding made before targets recorded their account: no evidence of a match, so no resume.
     const stale = addConnection('me@example.com');
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
-    const legacy = db.add(Cursor.makeExternal({ source: stale.accessToken, target: Ref.make(target) }));
+    const legacy = db.add(Cursor.makeExternal({ source: Connection.getAccessToken(stale), target: Ref.make(target) }));
     invariant(Cursor.isExternal(legacy));
     Cursor.advance(legacy, '1700000000000');
     await db.flush({ indexes: true });

@@ -71,6 +71,16 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 );
 
 /**
+ * Module maker contributing the MCP servers a plugin ships. Gated, like skill definitions, on the
+ * assistant plugin's start: the servers exist for its chats.
+ */
+export const mcpServer: Maker<typeof AppCapabilities.McpServer> = Capability$.moduleMaker(
+  'McpServer',
+  AppCapabilities.McpServer,
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri', 'workerd'] },
+);
+
+/**
  * Module maker contributing operation handlers. Handler sets register eagerly by default: a
  * keyed set is a definition→loader map with a thin closure (definitions carry no
  * implementations), so the operation registry is complete at boot while each handler's BODY
@@ -195,7 +205,9 @@ const withDeclaredRolesCheck =
     roles: readonly string[],
   ): Capability$.LoadModule<Props, Requires, Provides> =>
   () =>
+    // Spread so hot replacement still finds the body's key on the wrapped module.
     loader().then((module) => ({
+      ...module,
       default: (props: Props) =>
         module.default(props).pipe(
           Effect.tap((result) =>
@@ -300,8 +312,9 @@ export const schema = (
   if (typeof types === 'function') {
     const loader = types;
     return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(options?.name ?? 'schema', spec, () =>
-      loader().then(({ default: values }) => ({
-        default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
+      loader().then((module) => ({
+        ...module,
+        default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, module.default)]),
       })),
     );
   }
@@ -398,8 +411,9 @@ export const spaceTemplates = (
       environments: options?.environments ?? ['browser', 'tauri'],
     },
     () =>
-      loader().then(({ default: templates }) => ({
-        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SpaceTemplate, templates)]),
+      loader().then((module) => ({
+        ...module,
+        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SpaceTemplate, module.default)]),
       })),
   );
 
@@ -415,8 +429,9 @@ export const commands = (
   if (typeof values === 'function') {
     const loader = values;
     return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(options?.name ?? 'cli-commands', spec, () =>
-      loader().then(({ default: commands }) => ({
-        default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, commands)]),
+      loader().then((module) => ({
+        ...module,
+        default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, module.default)]),
       })),
     );
   }

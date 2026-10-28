@@ -1,0 +1,25 @@
+diagram flow=right
+group api "api.github.com" {
+  node Head "branch head sha"
+  node Compare "compare old...new"
+  node Commit "commit on branch"
+}
+group github "plugin-github" {
+  node Filter "match mappings" ref="packages/plugins/plugin-github/src/types/GitHubCapabilities.ts"
+  node Marker "FileMarker" ref="packages/core/compute/link/src/Cursor.ts"
+  node Diff "diff since heads"
+}
+group code "plugin-code" {
+  node Import "ImportSpec op" ref="packages/plugins/plugin-code/src/operations/index.ts"
+  node Export "ExportSpec op" ref="packages/plugins/plugin-code/src/operations/index.ts"
+  node Spec "Spec (Text)" ref="packages/plugins/plugin-code/src/types/Spec.ts"
+}
+edge Head -> Compare "≠ marker commit"
+edge Compare -> Filter "changed paths"
+edge Filter -> Import "invoke"
+edge Import -> Spec "changeAt(heads)"
+edge Import -> Marker "blob, commit, heads"
+edge Marker -> Diff "base heads"
+edge Spec -> Diff
+edge Diff -> Export "local edits"
+edge Export -> Commit "write tip + read head"

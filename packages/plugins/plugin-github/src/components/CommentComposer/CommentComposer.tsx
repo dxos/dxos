@@ -75,7 +75,7 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
 
 /** The composer as a band under the toolbar, for a comment on the pull request as a whole. */
 export const CommentBand = (props: CommentComposerProps) => (
-  <Layout.Flex column gap='sm' classNames='p-3 border-b border-separator'>
+  <Layout.Flex column gap='sm' classNames='p-trim-md border-b border-separator'>
     <CommentComposer {...props} />
   </Layout.Flex>
 );

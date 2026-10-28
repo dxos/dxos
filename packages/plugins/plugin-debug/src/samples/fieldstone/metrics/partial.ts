@@ -15,7 +15,7 @@ export type Provides = {
 };
 
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('fieldstoneMetrics', {
-  schemas: [Sheet.Sheet],
+  schemas: [Sheet.Sheet, Sheet.Chart],
   run: () =>
     Effect.gen(function* () {
       const sheets = yield* makeSheets();

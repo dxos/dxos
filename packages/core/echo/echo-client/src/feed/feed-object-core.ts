@@ -96,6 +96,12 @@ export class FeedObjectCore {
 
   #nextToken = 0;
 
+  /** The token of the write {@link #applied} names, so a write confirmed out of order cannot step it back. */
+  #appliedToken = 0;
+
+  /** A position the entity's state is ordered after, kept when {@link #applied} names a block not yet positioned. */
+  #positionFloor: number | undefined;
+
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
     const ref = EchoFeedCodec.blockOfKeys([
@@ -114,6 +120,11 @@ export class FeedObjectCore {
 
   get deleted(): boolean {
     return this.#deleted;
+  }
+
+  /** Whether the store holds the entity's current state: nothing left to capture, and no capture awaiting the store. */
+  get acknowledged(): boolean {
+    return !this.#dirty && (this.#pending === undefined || this.#pending.confirmed);
   }
 
   /**
@@ -137,6 +148,13 @@ export class FeedObjectCore {
    */
   confirmAppend(token: number, blockId: string | undefined): void {
     if (this.#pending?.token !== token) {
+      // A write a newer capture superseded still landed: its block is ours and older than the pending state, so
+      // an echo of it must be recognised as such rather than read as a newer block from elsewhere.
+      if (blockId !== undefined && this.#pending !== undefined && token > this.#appliedToken) {
+        this.#positionFloor = this.#applied?.position ?? this.#positionFloor;
+        this.#applied = EchoFeedCodec.blockOfKeys([{ source: FeedProtocol.KEY_FEED_BLOCK, id: blockId }]);
+        this.#appliedToken = token;
+      }
       return;
     }
     if (blockId === undefined) {
@@ -145,6 +163,7 @@ export class FeedObjectCore {
     }
     this.#pending = undefined;
     this.#applied = EchoFeedCodec.blockOfKeys([{ source: FeedProtocol.KEY_FEED_BLOCK, id: blockId }]);
+    this.#appliedToken = token;
   }
 
   /**
@@ -186,6 +205,7 @@ export class FeedObjectCore {
         this.#applyingRemote = false;
       }
       this.#applied = ref;
+      this.#positionFloor = undefined;
       this.#pending = undefined;
     }
   }
@@ -215,8 +235,8 @@ export class FeedObjectCore {
     if (this.#pending !== undefined) {
       // Our write orders after every block we hold, so only one an authority placed after the
       // current state can be newer; unordered reads are stale.
-      const newerPosition =
-        ref.position !== undefined && (this.#applied?.position === undefined || ref.position > this.#applied.position);
+      const bound = this.#applied?.position ?? this.#positionFloor;
+      const newerPosition = ref.position !== undefined && (bound === undefined || ref.position > bound);
       return newerPosition ? 'apply' : 'ignore';
     }
     return order === 'newer' ? 'apply' : 'ignore';

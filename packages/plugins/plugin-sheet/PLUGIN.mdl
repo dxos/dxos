@@ -175,7 +175,9 @@ op create
   output: { id: string }         # DXN of the created sheet
   effects: [echo:write]
   requires: [Database.Service]
+```
 
+```mdl
 op getRange
   key: org.dxos.operation.sheet.getRange
   desc: Reads cell values from a sheet as a 2D array. Omit `range` for the entire occupied area.
@@ -185,7 +187,9 @@ op getRange
   output: { values: any[][], range: string }
   effects: [echo:read]
   requires: [Database.Service]
+```
 
+```mdl
 op setRange
   key: org.dxos.operation.sheet.setRange
   desc: Sets multiple cell values in a sheet at once, keyed by A1 address.
@@ -450,7 +454,9 @@ test QA-3: Chart a sales report in the Charts companion
     - name: Switch back to the bags sold chart
       do: Click "Bags sold by blend".
       expect: the bar chart returns and A1:D7 is selected in the sheet
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 10s showcase clip: Fill a sheet with values and formulas. Recorded light at 60 fps with no ident, captions or

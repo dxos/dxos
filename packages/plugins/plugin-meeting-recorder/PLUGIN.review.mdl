@@ -1,0 +1,222 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-meeting-recorder/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MeetingRecorderPlugin
+
+The plugin is fully built: the four operations, the recorder state machine, the settings, the status-bar
+item, the native mic detector (Rust `meeting-capture` crate in composer-app) and the two-channel
+`MeetingSession` that segments each source with a `SpeakingMonitor` and falls back to the microphone
+when system audio is refused. The code matches the spec closely; the gap is tests. Only the pure
+pieces are tested: the ignore-list and naming policy (`policy.test.ts`), the elapsed-time format, and
+the Rust detector's self-exclusion and diffing. No test drives the operations or the state machine, so
+nearly every behavioural verdict is `untested` and the scenarios are at best partly covered.
+
+Minor divergences: `RecorderState` is a tagged union with an extra `stopRequested` flag on
+`starting`, and the built-in ignore list lives in `DEFAULT_IGNORED_APPS` with `ignoredApps` only
+adding to it rather than defaulting to it.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict MicApp: MicApp has id and name, as a TS type and a schema.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderCapabilities.ts#MicApp, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#MicApp]
+  tests: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.test.ts]
+```
+
+```mdl
+verdict RecorderState: The five phases exist as a tagged union, with an extra stopRequested flag.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderCapabilities.ts#RecorderState]
+  note: |
+    `starting` also carries `stopRequested` (the app released the mic before capture was up), not in
+    the spec. No test drives the transitions.
+```
+
+```mdl
+verdict Settings: All six settings exist with the specified defaults.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/Settings.ts#defaultSettings]
+  note: |
+    `ignoredApps` adds to the built-in `DEFAULT_IGNORED_APPS` rather than defaulting to that list.
+    No test reads the settings.
+```
+
+```mdl
+verdict RecorderStatus: The status item shows idle, detected and recording, and invokes the four ops.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/components/RecorderStatus.tsx#RecorderStatus]
+  note: `RecorderStatus.test.ts` covers only `formatElapsed`; nothing renders the component or its actions.
+```
+
+```mdl
+verdict Start: Start creates and opens a Meeting, starts the recorder, and is idempotent while recording.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#Start, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/start.ts]
+  walkthrough:
+    - The op declares optional name, app and db and returns the meeting. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#Start
+    - The handler claims starting, resolves the space, creates and opens the meeting, then starts the recorder. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/start.ts
+  note: It also removes the meeting if capture fails and honours a stop requested during start. No test.
+```
+
+```mdl
+verdict Stop: Stop flushes the recorder, returns to idle, and fires Summarize when autoSummarize is on.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#Stop, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/stop.ts]
+  walkthrough:
+    - The op declares an empty input. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#Stop
+    - The handler stops the recorder, sets idle and invokes MeetingOperation.Summarize without awaiting it. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/stop.ts
+  note: No test.
+```
+
+```mdl
+verdict HandleDetection: HandleDetection applies settings and the ignore list, then prompts, starts or stops.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#HandleDetection, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/handle-detection.ts]
+  walkthrough:
+    - The op declares the micStarted/micStopped event with its apps. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#HandleDetection
+    - The handler selects the meeting app and prompts, auto-starts, clears or stops. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/handle-detection.ts
+  note: The app selection is tested via `selectMeetingApp`; the handler itself is not.
+```
+
+```mdl
+verdict ClearDetection: ClearDetection returns detected to idle.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#ClearDetection, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/clear-detection.ts]
+  walkthrough:
+    - The op declares an empty input. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/types/MeetingRecorderOperation.ts#ClearDetection
+    - The handler resets the state only when it is detected. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/clear-detection.ts
+  note: No test.
+```
+
+```mdl
+verdict F-1.1: The native detector reports mic changes and drops Composer and its WebKit helper.
+  status: done
+  evidence: [github:dxos/dxos/packages/apps/composer-app/src-tauri/plugins/meeting-capture/src/detector.rs#without_self, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/bridge/tauri-bridge.ts]
+  tests: [github:dxos/dxos/packages/apps/composer-app/src-tauri/plugins/meeting-capture/src/detector.rs]
+```
+
+```mdl
+verdict F-1.2: A non-ignored app taking the mic while idle sets detected and shows a Take notes toast.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/handle-detection.ts]
+  note: No test invokes HandleDetection.
+```
+
+```mdl
+verdict F-1.3: Ignored apps never prompt.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.ts#DEFAULT_IGNORED_APPS, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.ts#selectMeetingApp]
+  tests: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.test.ts]
+```
+
+```mdl
+verdict F-1.4: autoStart invokes Start without a prompt.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/handle-detection.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-1.5: Release before an answer returns detected to idle.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/handle-detection.ts]
+  note: The toast action also no-ops once the state has moved on. No test.
+```
+
+```mdl
+verdict F-2.1: Start creates a Meeting via MeetingOperation.Create in the active space and opens it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/start.ts]
+  note: Falls back to the default space. No test.
+```
+
+```mdl
+verdict F-2.2: The microphone channel is transcribed with the provider's default sender.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/session.ts#MeetingSession]
+  note: The mic channel passes no enricher, relying on the transcription manager's default (local identity) sender. No test.
+```
+
+```mdl
+verdict F-2.3: System audio is transcribed with sender "<App> participants".
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/session.ts#MeetingSession, github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/capabilities/recorder.ts]
+  walkthrough:
+    - The recorder capability builds the "<App> participants" label. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/capabilities/recorder.ts
+    - The session's system-audio channel stamps that sender on each message. github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/session.ts#MeetingSession
+  note: No test.
+```
+
+```mdl
+verdict F-2.4: Each channel is gated by its own SpeakingMonitor.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/session.ts#MeetingSession]
+  note: No test.
+```
+
+```mdl
+verdict F-2.5: A system-audio failure is logged and the microphone keeps recording.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/session.ts#MeetingSession]
+  note: No test.
+```
+
+```mdl
+verdict F-3.1: Stop flushes each transcription manager before closing it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/session.ts#MeetingSession]
+  note: No test.
+```
+
+```mdl
+verdict F-3.2: With autoStop, the app releasing the mic invokes Stop (or defers it while starting).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/handle-detection.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-3.3: With autoSummarize, Stop invokes MeetingOperation.Summarize.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/operations/stop.ts]
+  note: Fire-and-forget; no test.
+```
+
+```mdl
+verdict T-1: Only the meeting-naming and app-selection pieces are tested.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.test.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.ts#defaultMeetingName]
+  note: Nothing runs HandleDetection then Take notes or checks the phase sequence or the open meeting.
+```
+
+```mdl
+verdict T-2: The ignore list is tested through selectMeetingApp, not the operation.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.test.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-meeting-recorder/src/recorder/policy.ts#selectMeetingApp]
+  note: No test invokes HandleDetection with superwhisper and checks the state stays idle with no toast.
+```
+
+```mdl
+verdict T-3: Nothing tests the meeting-ends flow.
+  status: missing
+  note: No test drives a recording, a micStopped event, the flush or the summary.
+```
+
+```mdl
+verdict QA-1: The QA round-trip has no automated test.
+  status: missing
+  note: Status is unverified; no e2e drives fake audio through detection, recording and summary.
+```

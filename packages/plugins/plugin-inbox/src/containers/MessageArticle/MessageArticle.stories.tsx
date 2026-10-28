@@ -29,6 +29,8 @@ const ATTENDABLE_ID = 'story';
 type StoryArgs = {
   /** Number of messages seeded into the single fake thread. */
   length?: number;
+  /** Open the thread from its oldest message instead of its most recent. */
+  openOldest?: boolean;
 };
 
 /**
@@ -37,7 +39,7 @@ type StoryArgs = {
  * root (see `MessageArticle`'s `openDraft`) is picked up reactively. The article beside the JSON of
  * the selected message lives in `@dxos/stories-inbox`'s `MessageArticle` story.
  */
-const DefaultStory = () => {
+const DefaultStory = ({ openOldest }: StoryArgs) => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const feed = useResolveRef(mailbox?.feed);
@@ -49,7 +51,7 @@ const DefaultStory = () => {
           .orderBy(Order.property('created', 'asc'))
       : Query.select(Filter.nothing()),
   );
-  const subject = messages[messages.length - 1];
+  const subject = openOldest ? messages[0] : messages[messages.length - 1];
 
   if (!space?.db || !mailbox || !subject) {
     return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, messages: messages.length }} />;
@@ -129,5 +131,30 @@ export const Spec: Story = {
     // Pressing it again appends a second draft — multiple drafts per thread are allowed.
     await userEvent.click(canvas.getByRole('button', { name: 'Reply All' }));
     await waitFor(() => expect(canvas.getAllByTestId('edit-email-form')).toHaveLength(2), { timeout: 5_000 });
+  },
+};
+
+export const OpenOlderMessage: Story = {
+  args: {
+    length: 3,
+    openOldest: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Every Reply All button that ever renders. Before the thread query resolves the article holds only the
+    // opened (oldest) message; if it were expanded then, it would fold once the thread lands and its button
+    // would be left disconnected.
+    const seen = new Set<HTMLElement>();
+    const record = () => canvas.queryAllByRole('button', { name: 'Reply All' }).forEach((button) => seen.add(button));
+    const observer = new MutationObserver(record);
+    observer.observe(canvasElement, { childList: true, subtree: true });
+
+    // Only the latest message is expanded: one Reply All, and the other two show as collapsed summaries.
+    await waitFor(() => expect(canvas.getAllByTestId('message.expand')).toHaveLength(2), { timeout: 12_000 });
+    record();
+    observer.disconnect();
+    await expect(canvas.getAllByRole('button', { name: 'Reply All' })).toHaveLength(1);
+    await expect([...seen].filter((button) => !button.isConnected)).toHaveLength(0);
   },
 };

@@ -6,11 +6,15 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   AppGraphBuilder,
+  CreateObject,
   MarkdownExtension,
+  Migrations,
   OperationHandler,
   PluginAsset,
-  PresenterSettings,
   ReactSurface,
+  Schema,
+  Settings,
+  SkillDefinition,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -20,11 +24,15 @@ import { meta } from '#meta';
 
 export const PresenterPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CreateObject),
   Plugin.addModule(MarkdownExtension),
+  Plugin.addModule(Migrations),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
-  Plugin.addModule(PresenterSettings),
   Plugin.addModule(ReactSurface),
+  Plugin.addModule(Schema),
+  Plugin.addModule(Settings),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
   Plugin.make,
 );

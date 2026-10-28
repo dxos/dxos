@@ -49,7 +49,7 @@ type Settings
     chatView?: ChatView
     modelProvider?: ModelProvider
     modelDefaults?: ModelDefaults
-    codeMode?: boolean
+    disableCodeMode?: boolean
     reportStruggles?: boolean
     tracePanelDebug?: boolean
 ```
@@ -281,10 +281,10 @@ feat F-5: Tool Execution
   req F-5.3:
     when: AI invokes a tool during a conversation
     then: operation is dispatched via the compute runtime and result returned to the model
-  req F-5.4: Code mode is opt-in via `Settings.codeMode`, off by default; the host supplies the engine
+  req F-5.4: Code mode is on by default and opt-out via `Settings.disableCodeMode`; the host supplies the engine
              through the `codeModeTurnProducer` plugin option, and without it the setting has no effect.
   req F-5.5:
-    when: Settings.codeMode is enabled, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
+    when: Settings.disableCodeMode is false or absent, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
     then: agent processes spawned afterwards run turns through the code-mode producer (one `eval` tool)
           instead of AiSession
 ```
@@ -292,7 +292,7 @@ feat F-5: Tool Execution
 ```mdl
 feat F-6: ECHO Integration
 
-  req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
+  req F-6.1: Chat, Skill, Feed, Message, Memory, Plan, Routine, Agent, and Sequence schemas are registered with ECHO. A chat's subject is recorded by Chat.CompanionChatAnnotation on that subject, not by a type.
   req F-6.2:
     when: a new space is created
     then: op:OnCreateSpace provisions default assistant objects
@@ -460,15 +460,14 @@ test QA-2: Companion chat is provisioned and bound
 ```mdl
 test QA-3: The prompt carries context, commands and the agent's settings
   desc: |
-    The chat prompt: the task and context drawers above it, the "+" menu (objects and MCP servers),
+    The chat prompt: the task and context drawers above it, the "+" menu (objects and connectors),
     `@` mentions, `/` commands and skills, and the agent picker (agent, where it runs, model).
   actors: human
   status: unverified
   given:
     - an identity exists
     - space: a space is open
-    - documents "Prompt redesign spec", "Q4 roadmap" and "Meeting notes", a person "Rich Burdon",
-      and MCP servers "Linear" and "GitHub", both switched off
+    - documents "Prompt redesign spec", "Q4 roadmap" and "Meeting notes", and a person "Rich Burdon"
     - chat: a chat "Prompt redesign" with two tasks, open in a plank
   steps:
     - name: Open the task and context drawers
@@ -476,9 +475,9 @@ test QA-3: The prompt carries context, commands and the agent's settings
       expect: the two tasks open in a drawer above the prompt; the context button swaps it for a drawer
         with Context and a collapsed Skills section, and only one drawer is open at a time
     - name: Switch on an MCP server from the + menu
-      do: Click "+", open "MCP servers", check "Linear", then uncheck it.
-      expect: Linear shows a check and the menu stays open for the next switch; MCP servers are not
-        listed in the context drawer, since the switch is the space's rather than the chat's
+      do: Click "+", open "Connectors", check "Browser", then uncheck it.
+      expect: Browser, a built-in server that starts off, shows a check and the menu stays open for
+        the next switch; unchecking it turns it off in this chat again
     - name: Load a skill with a slash command
       do: Type "/web", pick "/web-search", then press Enter.
       expect: the thread shows "Loaded the Web Search skill." and Web Search appears under Skills
@@ -506,6 +505,45 @@ test QA-3: The prompt carries context, commands and the agent's settings
       do: Click the x beside Rich Burdon in the context drawer.
       expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
 ```
+
+```mdl
+test QA-4: A chat's MCP servers come from connections and built-in servers
+  desc: |
+    MCP tools reach a chat from two places: the built-in servers plugins ship (Browser), which start
+    off and are turned on as a skill needs them, and the space's connections, such as a Custom MCP
+    Server, which are on until a chat turns them off. The "+" menu's Connectors submenu switches both
+    for one chat, and "Manage connections…" opens the space's Connections beside the chat.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - chat: a chat "MCP servers", open in a plank
+    - an MCP server that takes no credential answers at http://localhost:8931/open/mcp (the
+      repo's `@dxos/mcp-client` test server)
+  steps:
+    - name: The built-in servers start off
+      do: Click "+" and open "Connectors".
+      expect: Browser is listed and unchecked; no connection was created to list it
+    - name: The agent turns a built-in on when its skill needs it
+      do: Send "Open https://www.iana.org/help/example-domains in the browser and tell me the page heading."
+      expect: in one response the agent enables the Browser skill, turns the Browser server on with
+        set-mcp-connection and calls browser_navigate; the reply names "Example Domains", and Browser
+        is now checked under Connectors
+    - name: Manage connections opens beside the chat
+      do: Click "+" > "Connectors" > "Manage connections…".
+      expect: the space's Connections settings open next to the chat, which stays open
+    - name: Add a Custom MCP Server with no credential
+      do: Click Connect, pick "Custom MCP Server", enter http://localhost:8931/open/mcp, and save.
+      expect: the connection is created at once, with no sign-in, and is listed in Connections
+    - name: The chat uses the connection's tools
+      do: In the chat, send "What is the weather in Paris? Use the get_weather tool."
+      expect: the agent calls get_weather and reports the test server's forecast
+    - name: Turn the connection off for this chat
+      do: Click "+" > "Connectors" and uncheck "localhost:8931".
+      expect: it shows unchecked here, while it stays listed in the space's Connections
+```
+
 
 ## Changelog
 
@@ -572,6 +610,93 @@ decision D-7: The attaching list appears only once an upload has taken 400 ms, i
 decision D-8: Approve [D-7].
   date: 2026-10-21
   by: user:wittjosiah
+```
+
+```mdl
+decision D-9: A chat's MCP servers come from connections. A connector that declares an MCP server makes each connection made with it an MCP server, acting as whoever the connection signs in as; a Custom MCP Server connector adds any other server by URL. The `McpServer` object type and `Skill.mcpServers` are removed, without migrating existing `McpServer` objects.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-10: The MCP servers Composer ships, Browser and DXOS Introspect, are built in: they come from plugin code and config, with no object in the space. They are off in a chat by default, and the skill that uses one knows about it, so the agent turns it on when needed.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3, QA-4]
+```
+
+```mdl
+decision D-11: The "+" menu's submenu is "Connectors" and lists only the connections that have an MCP server, since those are the only ones relevant to a chat. "Manage connections…" opens the space's Connections settings as a pivot of the chat (under breadcrumbs, or in a plank beside it when the deck is not flat), and has no dialog of its own.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3, QA-4]
+```
+
+```mdl
+decision D-12: A built-in server lives in the registry as a keyed connection, contributed through `AppCapabilities.McpServer`, and a chat binds it by `dxn:<key>`. Fills in [D-10].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Each process makes its own copy from code, so the key is the one id they share, and the registry is where the agent runtime, the Skill Manager and the menu already look for skills.
+  rejected:
+    - Connectors that take no credential: each space would need a connection made, and Settings would list something nobody configures.
+```
+
+```mdl
+decision D-13: The Skill Manager adds a server as a Custom MCP Server connection (`add-mcp-connection`), and a session re-reads its MCP servers at every step, so a server added or turned on during a response is used in the same response. Fills in [D-9].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The weather and stockfish samples registered their deployed server on a skill; with that field gone, the agent needs its own way to add one and use it without a restart.
+```
+
+```mdl
+decision D-14: Creating a connection from a deck that already holds several planks opens it beside them instead of replacing the deck. Fills in [D-11].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Adding a server from the Connections pivot otherwise closed the chat that opened it.
+```
+
+```mdl
+decision D-15: Every MCP tool is offered to the agent as `mcp__<connection>__<tool>`, as other MCP hosts name them, so two connections never share a tool name and each acts as its own account.
+  date: 2026-10-22
+  by: user:wittjosiah
+  affects: [QA-3, QA-4]
+```
+
+```mdl
+decision D-16: A connection's name in a tool prefix is its own name, or its endpoint's host, as lower-case letters, digits and dashes of at most 16 characters, unique across all the space's connections whether a chat has them on or not; a prefixed name over 64 characters is cut short and ends in a hash. A connection whose key is gone or cannot be read is left out for that read; a failed read of the connection list connects no servers for that step. Fills in [D-15].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3, QA-4]
+  why: A name that depended on which other servers were connected moved between accounts mid-conversation, and providers reject a request with a tool name over 64 characters.
+  rejected:
+    - Prefix only tools whose names clash: a tool's name then changed whenever another server came or went.
+    - Keep the last set of servers read when a read fails: the agent process ends with each turn, so the set never outlived one.
+```
+
+```mdl
+decision D-17: Every chat prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it: a chat, the assistant companion, or a space's home. The prompt node is keyed by its host, not its chat, so a draft chat that is stored or replaced keeps the same buttons and the same dictation session. Contributors file app-graph actions on it with the `prompt` disposition. Fills in [D-2].
+  date: 2026-10-23
+  by: user:wittjosiah
+  affects: [QA-3]
+  why: Most prompts have a draft chat with no graph node, so actions filed on the chat's node, the microphone among them, never reached them. Graph actions keep one way for a plugin to add a button to another plugin's surface. The command palette does not list a prompt node's actions yet: it walks only the attended node and its ancestors.
+  rejected:
+    - A surface role for prompt buttons: a contribution would be a component, not an action other parts of the app can list.
+    - An `ObjectAction` capability: it has no custom render, which the microphone needs, and keeps actions out of the app graph. `ObjectAction` is deprecated in favour of graph actions.
+```
+
+```mdl
+decision D-18: Code mode is the default turn engine; the setting becomes `disableCodeMode`, an opt-out.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-5.4, F-5.5]
 ```
 
 ---

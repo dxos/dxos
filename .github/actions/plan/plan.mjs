@@ -10,7 +10,8 @@
 // when anything it depends on changed. A change to CI, toolchain or root config is an input of no task
 // yet changes how every test runs, so it starts every cell too, as does any failure: skipping a suite
 // that should have run is the one outcome this must never produce. A draft PR starts only the node
-// cells.
+// cells. The merge queue starts no e2e cells, since e2e cannot block a merge, and a push to main starts
+// only the e2e cells.
 
 import { execFileSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
@@ -36,15 +37,18 @@ const BROWSER_SHARDS = 8;
 
 const main = () => {
   const draft = process.env.DRAFT === 'true';
+  const tests = process.env.MAIN_PUSH !== 'true';
+  const e2e = process.env.MERGE_QUEUE !== 'true';
   const browsers = draft ? [] : ['chromium', 'firefox', 'webkit'];
   const affected = readAffected();
-  const browserTargets = draft ? [] : (affected ?? queryTasks([])).filter(([, task]) => BROWSER_TASKS.has(task));
+  const browserTargets =
+    draft || !tests ? [] : (affected ?? queryTasks([])).filter(([, task]) => BROWSER_TASKS.has(task));
   const plan = {
     browsers,
-    node: affected?.some(([, task]) => NODE_TASKS.has(task)) ?? true,
+    node: tests && (affected?.some(([, task]) => NODE_TASKS.has(task)) ?? true),
     browser: browserTargets.length > 0,
-    composer: affected?.some(([project, task]) => project === 'composer-e2e' && task === 'e2e') ?? true,
-    rest: affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true,
+    composer: e2e && (affected?.some(([project, task]) => project === 'composer-e2e' && task === 'e2e') ?? true),
+    rest: e2e && (affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true),
   };
   const outputs = {
     node: String(plan.node),

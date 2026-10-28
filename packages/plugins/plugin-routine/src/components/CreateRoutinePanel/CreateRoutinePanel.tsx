@@ -139,7 +139,7 @@ export const CreateRoutinePanel = ({
   const handleCancel = useCallback(() => setDraft(undefined), []);
 
   if (draft && db) {
-    return <RoutineForm db={db} routine={draft.routine} onSave={handleSave} onCancel={handleCancel} />;
+    return <RoutineForm db={db} routine={draft.routine} scroll={false} onSave={handleSave} onCancel={handleCancel} />;
   }
 
   if (pendingTemplate?.inputSchema) {

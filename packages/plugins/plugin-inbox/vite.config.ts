@@ -33,6 +33,7 @@ export default defineConfig({
     'Calendar': 'src/types/Calendar.ts',
     'ExtractedFrom': 'src/types/ExtractedFrom.ts',
     'InboxCapabilities': 'src/types/InboxCapabilities.ts',
+    'InboxPermission': 'src/types/InboxPermission.ts',
     'InboxEvents': 'src/types/InboxEvents.ts',
     'InboxOperation': 'src/types/InboxOperation.ts',
     'Mailbox': 'src/types/Mailbox.ts',

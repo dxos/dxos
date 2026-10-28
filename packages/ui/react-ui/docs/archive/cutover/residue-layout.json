@@ -210,7 +210,7 @@
           "line": 51,
           "column": 5,
           "reason": "Flex not converted: classNames (layout classes need a person)",
-          "snippet": "<Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>"
+          "snippet": "<Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>"
         },
         {
           "transform": "layout",
@@ -242,7 +242,7 @@
           "line": 74,
           "column": 5,
           "reason": "Flex not converted: classNames (layout classes need a person)",
-          "snippet": "<Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>"
+          "snippet": "<Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>"
         },
         {
           "transform": "layout",
@@ -482,7 +482,7 @@
           "line": 229,
           "column": 13,
           "reason": "Grid not converted: rows (a person decides the layout)",
-          "snippet": "<Grid rows={[1, 2]} classNames='divide-y divide-subdued-separator'>"
+          "snippet": "<Grid rows={[1, 2]} classNames='divide-y divide-separator-subtle'>"
         },
         {
           "transform": "layout",
@@ -570,7 +570,7 @@
           "line": 38,
           "column": 9,
           "reason": "Grid not converted: rows (a person decides the layout)",
-          "snippet": "<Grid rows={2} classNames='divide-y divide-subdued-separator'>"
+          "snippet": "<Grid rows={2} classNames='divide-y divide-separator-subtle'>"
         },
         {
           "transform": "layout",

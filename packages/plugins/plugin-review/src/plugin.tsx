@@ -6,16 +6,18 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import {
   AgentIdentityModule,
-  AgentRunner,
   AppGraphBuilder,
+  CommentsSettings,
   CommentState,
   HistoryGraph,
   HistorySurface,
   Markdown,
   MarkdownBinding,
+  Migrations,
   OperationHandler,
   PluginAsset,
   ReactSurface,
@@ -27,26 +29,27 @@ import {
   UndoMappings,
 } from '#capabilities';
 import { meta } from '#meta';
-import { AgentIdentity, CommentCapabilities } from '#types';
+import { AgentIdentity } from '#types';
 
 /**
- * Test/storybook hosts swap in a stub `AgentRunner`/`AgentIdentity` via these options rather
- * than shadowing by plugin order: `AgentRunner`/`AgentIdentity` are singleton capabilities, so
- * two dependency-mode providers of either would trip the duplicate-provider check.
+ * Test/storybook hosts swap in a stub agent runner and identity via these options; `AgentIdentity` is a singleton
+ * capability, so a second provider would trip the duplicate-provider check.
  */
 export type ReviewPluginOptions = {
-  agentRunner?: CommentCapabilities.AgentRunner;
+  agentRunner?: AppCapabilities.CommentAgentRunner;
   agentIdentity?: AgentIdentity.AgentIdentity;
 };
 
 export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
   Plugin.addModule(AgentIdentityModule),
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CommentsSettings),
   Plugin.addModule(CommentState),
   Plugin.addModule(HistoryGraph),
   Plugin.addModule(HistorySurface),
   Plugin.addModule(Markdown),
   Plugin.addModule(MarkdownBinding),
+  Plugin.addModule(Migrations),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),
@@ -56,29 +59,15 @@ export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
   Plugin.addModule(TourFragment),
   Plugin.addModule(Translations),
   Plugin.addModule(UndoMappings),
-  // Default comment-thread agent runner (one-shot LLM call per scheduled turn). `AgentRunner`
-  // is a singleton capability, so a test/storybook host that wants a stub runner passes
-  // `agentRunner` in `ReviewPluginOptions` instead of contributing a second provider.
+  // Test/storybook hosts pass a stub runner; in the app the assistant contributes the real one.
   Plugin.addModule((options: ReviewPluginOptions) => {
-    const agentRunnerOverride = options.agentRunner;
-    if (agentRunnerOverride) {
-      return {
-        id: 'agent-runner-override',
-        provides: [CommentCapabilities.AgentRunner],
-        activate: () => Effect.succeed([Capability.contribute(CommentCapabilities.AgentRunner, agentRunnerOverride)]),
-      };
-    }
-    // `AgentRunner` is browser-only (the generated node/workerd `#capabilities` barrels stub it to
-    // `undefined`) — headless environments never contributed a default comment-thread agent runner
-    // before this module list was unified into one canonical entry, so this stays a no-op there.
-    return AgentRunner
-      ? {
-          id: Capability.getModuleTag(AgentRunner),
-          requires: AgentRunner.requires,
-          provides: AgentRunner.provides,
-          activate: AgentRunner,
-        }
-      : { id: 'agent-runner-unavailable', provides: [], activate: () => Effect.succeed([]) };
+    const agentRunner = options.agentRunner;
+    return {
+      id: 'agent-runner-override',
+      provides: agentRunner ? [AppCapabilities.CommentAgentRunner] : [],
+      activate: () =>
+        Effect.succeed(agentRunner ? [Capability.contribute(AppCapabilities.CommentAgentRunner, agentRunner)] : []),
+    };
   }),
   Plugin.make,
 );

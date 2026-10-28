@@ -1,0 +1,232 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-trip/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TripPlugin
+
+The shared types match the spec: `Provider` and `Account` in `@dxos/types`, `ExtractedFrom` and the
+`Mailbox.extractors` config in plugin-inbox, and a generic extractor contract (`ObjectExtractor`) in
+`@dxos/extractor` with an `ExtractMessage` dispatcher. The map integration is built as a plugin-map
+`MarkerProvider`. The trip model itself has moved away from the spec, and the email extractor is
+an LLM template, not per-provider parsers.
+
+Of 25 items: 5 done, 3 untested, 2 partial, 11 diverged, 4 missing. Findings:
+
+- **Segments are separate ECHO objects, not inline union members.** `Segment` is
+  `org.dxos.type.trip.segment` with `booking`, `notes` and a `details` union tagged by `_tag`
+  (`accommodation`, not `lodging`); `Trip.segments` holds refs. There is no `status` field, so
+  tentative/proposed/confirmed/cancelled do not exist.
+- **The extractor is `TripMessageExtractor`, an LLM template.** No `parseUnitedFlight` or
+  `parseBookingComHotel` pure parsers, no `providers.ts` table and no Account dedup; Trip resolution
+  groups by PNR and a date gap rather than "most recently updated".
+- **`TripCalendarSource` and the `CalendarEventSource` contract are not built**, as the spec's
+  Phase 2 notes anticipate.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Provider: A plain struct with optional name, domain and Organization ref in @dxos/types.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Provider.ts#Provider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/extractor/trip-extractor.test.ts]
+```
+
+```mdl
+verdict Account: An ECHO object org.dxos.type.account with the specified fields.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Account.ts#Account]
+  note: The label is displayName only, not displayName then provider.name. No test creates one.
+```
+
+```mdl
+verdict Place: An inline struct with name, code, city, country and geo.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Place.ts#Place]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+```
+
+```mdl
+verdict SegmentCore: There is no shared core with id and status; fields are split between Segment and per-variant details.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#Segment, github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#TransportFields]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: |
+    booking and notes sit on the Segment object; origin, destination, departAt and arriveAt sit in
+    TransportFields; the ECHO id replaces `id`; no `status` field exists anywhere.
+```
+
+```mdl
+verdict FlightSegment: FlightDetails has terminals and gates plus shared provider, number, serviceClass and seat.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#FlightDetails]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: Tagged `_tag 'flight'`, not `kind`; airline, flightNumber and cabin are renamed provider, number and serviceClass.
+```
+
+```mdl
+verdict TrainSegment: TrainDetails has platform and coach plus the shared transport fields.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#TrainDetails]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: operator, trainNumber and class become provider, number and serviceClass; platform is added.
+```
+
+```mdl
+verdict BoatSegment: BoatDetails has vessel plus the shared transport fields.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#BoatDetails]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: There is no cabin field; operator is provider.
+```
+
+```mdl
+verdict RoadSegment: RoadDetails has an optional subKind and computed routes.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#RoadDetails]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: subKind is optional (spec says required), vehicleClass is missing, and routes are added for PlanRoute.
+```
+
+```mdl
+verdict LodgingSegment: Implemented as AccommodationDetails with a single location.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#AccommodationDetails]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: Tagged 'accommodation', not 'lodging'; no operator; one `location` replaces origin and destination.
+```
+
+```mdl
+verdict ActivitySegment: ActivityDetails has title, venue and start/end times.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#ActivityDetails]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: title is optional, there is no operator, and the variant carries its own departAt and arriveAt.
+```
+
+```mdl
+verdict Segment: A Segment ECHO type whose details field is the union of six variants.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#Segment, github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.ts#Details]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Segment.test.ts]
+  note: The spec has an inline union discriminated by `kind`; the code has a separate ECHO object keyed by `details._tag`.
+```
+
+```mdl
+verdict Trip: Trip has name, summary, start, end and a list of Segment refs.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Trip.ts#Trip, github:dxos/dxos/packages/plugins/plugin-trip/src/types/Trip.ts#addSegment]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Trip.test.ts]
+  note: Segments are refs to child objects, not inline values; startDate and endDate are named start and end.
+```
+
+```mdl
+verdict Booking: An ECHO object with provider, confirmation code, account, passengers, price and source.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Booking.ts#Booking]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/extractor/trip-extractor.test.ts]
+  note: Passengers have no person ref, attachments is missing, and the label is confirmationCode only.
+```
+
+```mdl
+verdict MessageExtractor: The generic contract is ObjectExtractor in @dxos/extractor, registered as an inbox capability.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/extractor/src/ObjectExtractor.ts#ObjectExtractor, github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxCapabilities.ts#ObjectExtractor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.test.ts]
+  note: Generalised beyond messages (`sourceTypes`, `source`); extract takes `{ db, source }` and adds title and an optional operation.
+```
+
+```mdl
+verdict MatchResult: Declared with matched, confidence and reason; ExtractInput and ExtractResult beside it.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/extractor/src/ObjectExtractor.ts#MatchResult, github:dxos/dxos/packages/core/compute/extractor/src/ObjectExtractor.ts#ExtractInput, github:dxos/dxos/packages/core/compute/extractor/src/ObjectExtractor.ts#ExtractResult]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.test.ts]
+  note: ExtractCtx is ExtractInput with db and source (no space); ExtractResult adds updated and tags.
+```
+
+```mdl
+verdict ExtractedFrom: A relation with extractorId, extractedAt and confidence from any object to its source.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/ExtractedFrom.ts#ExtractedFrom]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts]
+  note: The target is typed Obj.Unknown, not Message, since sources are generalised.
+```
+
+```mdl
+verdict MailboxExtractorConfig: Mailbox has an optional extractors struct with enabled ids and a threshold.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/Mailbox.ts#Mailbox, github:dxos/dxos/packages/plugins/plugin-inbox/src/util/on-arrival.ts#runOnArrivalExtractors]
+  note: The on-arrival runner reads it; no test was found that sets it.
+```
+
+```mdl
+verdict CalendarEventSource: Not built.
+  status: missing
+  note: No CalendarEventSource symbol in any package; the spec marks it a follow-up phase.
+```
+
+```mdl
+verdict CalendarEventLike: Not built.
+  status: missing
+  note: No CalendarEventLike symbol in any package.
+```
+
+```mdl
+verdict ExtractMessage: The inbox dispatcher picks an extractor by id or highest confidence and persists results with provenance.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxOperation.ts#ExtractMessage, github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.test.ts]
+  walkthrough:
+    - The operation takes a source and optional extractorId and returns counts. github:dxos/dxos/packages/plugins/plugin-inbox/src/types/InboxOperation.ts#ExtractMessage
+    - The handler matches registered extractors, runs the best one and writes objects and ExtractedFrom relations. github:dxos/dxos/packages/plugins/plugin-inbox/src/operations/extractor/extract-message.ts
+  note: No `target` Trip input; the output is created/updated counts, not the objects and relations.
+```
+
+```mdl
+verdict TravelMessageExtractor: TripMessageExtractor is an LLM template extractor, not a set of pure per-provider parsers.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/extractor/trip-extractor.ts#TripMessageExtractor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/extractor/trip-extractor.test.ts, github:dxos/dxos/packages/plugins/plugin-trip/src/operations/extractor/trip-feed.test.ts]
+  note: |
+    It matches by sender domain or subject, then an LLM fills a template; flights and trains are
+    handled, not Booking.com hotels. Trips group by PNR and a date gap, not most recently updated;
+    there is no target input, no providers.ts table and no Account dedup.
+```
+
+```mdl
+verdict parseUnitedFlight: Extractor tests run a United fixture through the LLM template with a mocked model.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/extractor/trip-extractor.ts#TripMessageExtractor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/extractor/trip-extractor.test.ts]
+  note: No parseUnitedFlight or parseBookingComHotel parser exists; the tests exercise the template extractor instead, and no hotel fixture is tested.
+```
+
+```mdl
+verdict TripCalendarSource: Not built.
+  status: missing
+  note: No projection of segments to calendar events exists; the only mention is in dx.config.ts prose.
+```
+
+```mdl
+verdict TripMapMarkers: A plugin-map MarkerProvider plots one marker per segment with arcs and IATA geocoding.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/capabilities/marker-provider.tsx#tripMarkerProvider, github:dxos/dxos/packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx#TripArticle]
+  walkthrough:
+    - The provider builds markers keyed by segment id, arcs and a single-mode selection. github:dxos/dxos/packages/plugins/plugin-trip/src/capabilities/marker-provider.tsx#tripMarkerProvider
+    - The article shows its map toggle only when a provider matches the trip. github:dxos/dxos/packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx#TripArticle
+  note: marker-provider.test.ts tests only the coordinate helper toLatLng; no test of markers, arcs or selection.
+```
+
+```mdl
+verdict QA-1: Not automated.
+  status: missing
+  note: Manual and unverified; no automated test drives the add-segment flow in the app.
+```

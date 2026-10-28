@@ -43,7 +43,7 @@ import {
   runInCommit,
 } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, runServiceEffect, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
@@ -64,6 +64,7 @@ import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts'
 import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore, type SnapshotState } from './object-core.ts';
 import { shareStructure } from './share-structure.ts';
+import { getSnapshotState } from './snapshot-state.ts';
 import {
   type AddCoreOptions,
   type AtomicReplaceObjectProps,
@@ -76,6 +77,7 @@ import {
   type SpaceDocumentHeads,
 } from './types.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
+import { type ExportWorkingSetOptions, type WorkingSetRow } from './working-set-row.ts';
 
 const TRACE_LOADING = false;
 
@@ -606,6 +608,109 @@ export class EntityManager implements IDatabaseBinding {
     } catch (err) {
       log.warn('index row not placed, the object loads from its document', { id, err });
       return undefined;
+    }
+  }
+
+  /**
+   * The working set as rows the host can be bypassed with at the next open: the space root first, then
+   * each object's document by most recent use, leaving out what does not fit `maxBytes` and any
+   * document with a change the host has not taken.
+   */
+  exportWorkingSet({ maxBytes }: ExportWorkingSetOptions): WorkingSetRow[] {
+    const root = this._spaceRootDocHandle;
+    const rootState = root?._heldState();
+    if (!root?.documentId || !rootState || rootState.bytes.length > maxBytes) {
+      return [];
+    }
+    const rows: WorkingSetRow[] = [
+      { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes },
+    ];
+    let total = rootState.bytes.length;
+    const exported = new Set<string>([root.documentId]);
+    const cores = this.allObjectCores()
+      .filter((core) => this.getCurrentBranch(core.id) === 'main')
+      .sort((a, b) => b.activeAt - a.activeAt);
+    for (const core of cores) {
+      const handle = core.handle;
+      const documentId = handle?.documentId;
+      if (!handle || !documentId || exported.has(documentId)) {
+        continue;
+      }
+      const row = this.#workingSetRow(core, handle, documentId);
+      if (!row || total + row.bytes.length > maxBytes) {
+        continue;
+      }
+      exported.add(documentId);
+      total += row.bytes.length;
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  #workingSetRow(
+    core: ObjectCore,
+    handle: DocHandleProxy<DatabaseDirectory>,
+    documentId: string,
+  ): WorkingSetRow | undefined {
+    const state = handle._heldState();
+    if (!state) {
+      return undefined;
+    }
+    const row: WorkingSetRow = { documentId, heads: [...state.heads], bytes: state.bytes };
+    const structure = core.snapshot ? core.snapshot.root.objects[core.id] : this.#soleObjectStructure(core.id, handle);
+    if (structure) {
+      row.objectId = core.id;
+      row.objectJson = JSON.stringify(objectStructureToJson(core.id as EntityId, structure));
+      row.createdAt = structure.system?.createdAt;
+      row.updatedAt = core.getUpdatedAt();
+    }
+    return row;
+  }
+
+  /** The object's structure when it is the only thing its loaded document holds — the shape a JSON row can stand for. */
+  #soleObjectStructure(id: string, handle: DocHandleProxy<DatabaseDirectory>): EntityStructure | undefined {
+    if (handle === this._spaceRootDocHandle || this._documentObjects.get(handle)?.size !== 1) {
+      return undefined;
+    }
+    const doc = handle.doc();
+    const structure = doc.objects?.[id];
+    return structure &&
+      Object.keys(doc.objects ?? {}).length === 1 &&
+      Object.keys(doc.links ?? {}).length === 0 &&
+      structure.system?.mergedInto === undefined
+      ? structure
+      : undefined;
+  }
+
+  /**
+   * Holds each row's stored changes as a passive handle, so the space root and every object document
+   * load from them, without waiting for the host. Called between {@link open} and {@link openWithSpaceState}.
+   */
+  seedDocuments(rows: readonly WorkingSetRow[]): void {
+    for (const { documentId, bytes, heads } of rows) {
+      this._repoProxy.find<DatabaseDirectory>(documentId as DocumentId, { passive: { bytes, heads } });
+    }
+  }
+
+  /** Shows each object row from its JSON, as an index row is, once the space root routes objects to documents. */
+  placeSeededObjects(rows: readonly WorkingSetRow[]): void {
+    for (const { objectId, objectJson, documentId, heads, bytes, createdAt, updatedAt } of rows) {
+      if (objectId === undefined || objectJson === undefined) {
+        continue;
+      }
+      this.placeIndexRow(EntityId.make(objectId), documentId, () =>
+        getSnapshotState({
+          id: objectId,
+          spaceId: this._spaceId,
+          documentId,
+          rank: 0,
+          documentJson: objectJson,
+          heads,
+          bytes,
+          createdAt,
+          updatedAt,
+        }),
+      );
     }
   }
 
@@ -2086,7 +2191,7 @@ export class EntityManager implements IDatabaseBinding {
   private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
     const docHandle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
     await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
-      await cancelWithContext(ctx, docHandle.whenReady());
+      await cancelWithContext(ctx, docHandle.whenUsable());
     });
 
     return docHandle;
@@ -2154,7 +2259,8 @@ export class EntityManager implements IDatabaseBinding {
       }
       this._currentlyLoadingObjects.add({ url: handle.url, objectId });
 
-      if (opts.diskOnly) {
+      // A document loaded from stored changes this client held is on hand, wherever the host is.
+      if (opts.diskOnly && !handle.isLoaded()) {
         const onDisk = await handle.whenSettledOnDisk();
         if (this.#isStale(generation)) {
           this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
@@ -2183,7 +2289,7 @@ export class EntityManager implements IDatabaseBinding {
         }
       }
 
-      await handle.whenReady();
+      await handle.whenUsable();
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
       if (this.#isStale(generation)) {
         log('lifetime ended while a document was loading, abandoning load', { objectId });

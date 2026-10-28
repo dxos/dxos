@@ -8,7 +8,7 @@ import * as Media from '@dxos/react-ui/Media';
 
 import { type VariantContent } from '#surfaces';
 
-import { useVariantSource } from '../../hooks/index.ts';
+import { useVariantSource } from '../../hooks/useVariantSource.ts';
 
 export type ImageVariantProps = {
   variant: VariantContent;

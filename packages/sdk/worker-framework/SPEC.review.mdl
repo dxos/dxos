@@ -1,0 +1,342 @@
+---
+spec: github:dxos/dxos/packages/sdk/worker-framework/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: WorkerFramework
+
+The framework is built and heavily tested. Leader election, port exchange, displacement with
+escalation, reconnection and the coordinator strategies all live in `Client.ts`, `Worker.ts` and
+`Coordinator/`, and `Client.test.ts`, `Client.hostile.test.ts` and the seeded `Client.model.test.ts`
+exercise nearly every requirement by name. The gaps are in the module surface, not the behaviour.
+
+Of 41 items: 35 done, 1 untested, 3 partial, 2 diverged, 0 missing. Findings:
+
+- **Subpath names differ.** package.json exports `./Client`, `./Worker` and `./Coordinator`
+  (PascalCase); the spec says `client`, `worker`, `coordinator`.
+- **Worker.RuntimeHandle has a different shape.** `createSession` returns a scoped Effect with no
+  `onClose`, and there is no `stop()`.
+- **Coordinator.SharedWorkerOptions is not exported**, and WorkerProtocol is not re-exported from the
+  entrypoints that use it. F-5.1 is not tested against `Rpc.makeClient` itself.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict RpcTiming: Every listed member exists in src/RpcTiming.ts and the middleware is tested end to end.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#SENT_AT_HEADER, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#Metadata, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#Middleware, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#applyMiddleware, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#serverLayer, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#clientLayer, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#recordSample, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#getStatsSnapshot, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#resetStats, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#isEnabled, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#resolveOptions]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.test.ts]
+  note: |
+    The tags are `Context.Service` / `RpcMiddleware.Service` classes (Effect v4) rather than `Context.Tag`. The module also exports client-side samples and a readout (`recordClientSample`, `getReadout`) that the spec does not list.
+```
+
+```mdl
+verdict Client: Connection, Options, Handle, LeaderTimeouts and ConnectionDiagnostics match, but the entrypoint is ./Client.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection, github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Options, github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Handle, github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#LeaderTimeouts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#ConnectionDiagnostics]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts]
+  note: |
+    The API matches the spec. package.json exports the subpath as `@dxos/worker-framework/Client` (PascalCase), and every consumer imports it that way; the spec names `@dxos/worker-framework/client`.
+```
+
+```mdl
+verdict Worker: run, Options and DEFAULT_DISPLACE_GRACE_TIMEOUT match; RuntimeHandle has a different shape.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run, github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#Options, github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#DEFAULT_DISPLACE_GRACE_TIMEOUT, github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#RuntimeHandle]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+  note: |
+    `RuntimeHandle.createSession({ clientId, isOwner })` returns an Effect that acquires into a session Scope; there is no `onClose` argument and no `stop()`, since teardown is scope finalizers. The subpath is `./Worker`, not `./worker`. Options also has `shutdownTimeout`, and the module exports `displace`.
+```
+
+```mdl
+verdict Coordinator: SharedWorker, SingleClient, Memory, createOnConnect and run exist; SharedWorkerOptions is not exported.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/shared-worker-coordinator.ts#SharedWorker, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/single-client-coordinator.ts#SingleClient, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/memory-coordinator.ts#Memory, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.ts#createOnConnect, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/single-client-coordinator.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/stories/counter.browser.test.ts]
+  note: |
+    `SharedWorkerOptions` is declared in shared-worker-coordinator.ts but `Coordinator/index.ts` does not re-export it. The subpath is `./Coordinator`, not `./coordinator`. `Memory` has no test of its own.
+```
+
+```mdl
+verdict WorkerProtocol: Every listed type and the error codec exist; they are a separate subpath rather than re-exported from each entrypoint.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#WorkerCoordinator, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#CoordinatorMessage, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#DedicatedWorkerMessage, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#SerializedError, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#encodeError, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#decodeError, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#WorkerEndpoint, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#WorkerOrPort, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#TerminableWorker, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#isTerminable]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.test.ts]
+  note: |
+    Client, Worker and Coordinator import WorkerProtocol but do not re-export it; callers reach it through the root namespace or `@dxos/worker-framework/WorkerProtocol`. `DedicatedWorkerMessage` also has a `status` member the spec omits.
+```
+
+```mdl
+verdict F-1.1: The tab that acquires the leader lock hosts the worker; the others follow.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.model.test.ts]
+```
+
+```mdl
+verdict F-1.2: A leader broadcasts leader-heartbeat every heartbeatInterval (default 1s).
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-1.3: A follower steals a stale held lock, subject to a steal cooldown.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts]
+```
+
+```mdl
+verdict F-1.4: A failed leader session re-elects after capped, jittered exponential backoff.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-1.5: init-failed before the first connection rejects open() with the decoded error.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#decodeError]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-1.6: A tab never steals on its own port timeout or a dead coordinator link, but counts the attempt.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-1.7: A session that finishes opening after the lock is lost or the connection closed is closed and its worker terminated.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-1.8: maxLeaderFailures failures before first connect, or a dead coordinator link, reject open() at once and release resources.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-2.1: request-port leads to start-session and a directed provide-port to the requester only.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection, github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.ts#createOnConnect]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+  walkthrough:
+    - The follower sends request-port and waits for a provide-port addressed to its clientId. github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection
+    - The worker answers start-session with app and system ports. github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run
+    - The coordinator routes provide-port only to the requesting tab, transferring the ports. github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.ts#createOnConnect
+```
+
+```mdl
+verdict F-2.2: A portless follower re-sends request-port on new-leader or leader-heartbeat.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-2.3: Repeated start-session for one clientId serves a single session.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.model.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+  note: |
+    A same-or-older `attempt` is ignored; a newer attempt supersedes and closes the old session, so there is still one per client.
+```
+
+```mdl
+verdict F-2.4: A provide-port for an attempt other than the current one is ignored.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts]
+```
+
+```mdl
+verdict F-2.5: session-failed is relayed and fails the attempt at once, then retries with backoff.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run, github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts]
+```
+
+```mdl
+verdict F-3.1: The worker holds storageLockKey for its life and broadcasts a stop signal on start.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run, github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#displace]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.2: The worker holds a per-instance liveness lock before ready and releases it on shutdown.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.model.test.ts]
+```
+
+```mdl
+verdict F-3.3: init builds the runtime, marks the owner and replies ready with livenessLockKey, workerId and displaceChannel.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.4: A failed createRuntime replies init-failed with the encoded error and shuts down.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#encodeError]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.5: A worker still queued after the grace period escalates once with a terminate action.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run, github:dxos/dxos/packages/sdk/worker-framework/src/internal/displace-channel.ts#DisplaceChannel]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.6: A tab judges only its own worker, by liveness lock and ping probe, before terminating it.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.7: The worker answers ping with pong carrying the same nonce.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.8: A forced kill logs WorkerTerminationError at error level and closes the session with it.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/errors.ts#WorkerTerminationError, github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.9: A non-terminable handle logs WorkerNotTerminableError and leaves the session open.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/errors.ts#WorkerNotTerminableError, github:dxos/dxos/packages/sdk/worker-framework/src/WorkerProtocol.ts#isTerminable]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.10: A stolen storage or liveness lock, or an aborted signal, shuts the worker down.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-3.11: start-session during shutdown is ignored.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+  note: |
+    The guard is in the start-session case; the shutdown tests in Client.test.ts drive it indirectly, not by name.
+```
+
+```mdl
+verdict F-4.1: On worker or leader termination the follower closes the stale handle and reconnects through onConnect.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/stories/counter.browser.test.ts]
+```
+
+```mdl
+verdict F-4.2: A reconnection runs onReconnect callbacks and fires reconnected; a throwing callback is logged.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-4.3: The stale handle closes before the next attempt; a late handle is closed, not installed.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts]
+```
+
+```mdl
+verdict F-4.4: A handle that fails to open retries with jittered backoff and fires onPersistentFailure once per streak.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.hostile.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+```
+
+```mdl
+verdict F-5.1: Rpc.makeClient builds the worker protocol client at Number.MAX_SAFE_INTEGER concurrency.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/client-protocol/src/Rpc.ts#makeClient, github:dxos/dxos/packages/sdk/client-protocol/src/Rpc.ts#makeClientOverProtocol]
+  note: |
+    client-protocol `Rpc.test.ts` exercises a stream not blocking other calls, but with its own client layer rather than `Rpc.makeClient`. `makeClientOverProtocol` takes its concurrency from the caller-supplied protocol layer.
+```
+
+```mdl
+verdict F-5.2: timing wires RpcTiming.clientLayer and serverLayer into the client and serve helpers.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/client-protocol/src/Rpc.ts#makeClientOverProtocol, github:dxos/dxos/packages/sdk/client-protocol/src/Rpc.ts#serve, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#serverLayer, github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.ts#clientLayer]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/RpcTiming.test.ts]
+  note: |
+    The test runs against the internal copy in `src/internal/rpc.ts`, not client-protocol `Rpc`.
+```
+
+```mdl
+verdict F-6.1: Coordinator.SharedWorker broadcasts leadership traffic and routes provide-port to the requester.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/shared-worker-coordinator.ts#SharedWorker, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.ts#createOnConnect]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/coordinator-worker.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/stories/counter.browser.test.ts]
+```
+
+```mdl
+verdict F-6.2: SingleClient and Memory satisfy WorkerCoordinator without a SharedWorker.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/single-client-coordinator.ts#SingleClient, github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/memory-coordinator.ts#Memory]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Coordinator/single-client-coordinator.test.ts]
+  note: |
+    SingleClient is tested; Memory has no test of its own.
+```
+
+```mdl
+verdict T-1: Two tabs connect through one leader and agree on leaderId.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.model.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/stories/counter.browser.test.ts]
+```
+
+```mdl
+verdict T-2: Followers reconnect to a new leader and worker after the leader tab closes.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/stories/counter.browser.test.ts]
+```
+
+```mdl
+verdict T-4: The seeded model walk asserts every convergence invariant.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.ts#Connection, github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.model.test.ts]
+```
+
+```mdl
+verdict T-3: The model walk checks one session per tab under dropped and repeated requests, but no test counts ignored start-session messages.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/worker-framework/src/Worker.ts#run]
+  tests: [github:dxos/dxos/packages/sdk/worker-framework/src/Client.model.test.ts, github:dxos/dxos/packages/sdk/worker-framework/src/Client.test.ts]
+  note: |
+    `Client.model.test.ts` asserts the worker serves exactly the open tabs, and the heartbeat recovery test re-sends request-port. No test asserts that the extra start-session messages were ignored.
+```

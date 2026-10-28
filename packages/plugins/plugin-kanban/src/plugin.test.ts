@@ -9,6 +9,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { KanbanPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [KanbanPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('KanbanPlugin', () => {

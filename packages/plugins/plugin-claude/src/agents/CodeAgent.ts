@@ -30,6 +30,7 @@ import * as Settings from '../types/Settings.ts';
 import * as State from '../types/State.ts';
 import * as AcpAgent from './AcpAgent.ts';
 import * as ComposerMcp from './ComposerMcp.ts';
+import * as McpProxy from './McpProxy.ts';
 import * as Protocol from './Protocol.ts';
 import * as Workspace from './Workspace.ts';
 
@@ -52,6 +53,10 @@ export type Definition = {
   icon: string;
   /** Agent-specific options every session opens with (ACP `_meta`), given the Composer tools it is offered. */
   sessionMeta?: (composer: ComposerTools) => Record<string, unknown>;
+  /** What a chat can choose for the agent; the model and effort reach `sessionMeta`, the mode the session. */
+  choices?: AssistantCapabilities.AgentChoices;
+  /** The permission mode a chat that chose none runs in. */
+  mode?: (chat: Chat.Chat) => string | undefined;
 };
 
 /** The MCP server a session gets Composer's tools from. */
@@ -59,6 +64,8 @@ export type ComposerTools = {
   server: string;
   /** Tools that only read, which an agent may be let call without asking. */
   readOnlyTools: readonly string[];
+  /** The chat whose session is opening, for the choices it made (`chat.session`). */
+  chat: Chat.Chat;
 };
 
 /** A coding agent, as a plugin contributes it. */
@@ -114,11 +121,16 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       string,
       { server: string; handle: ClaudeCapabilities.McpHandle; dispose: () => Promise<void> }
     >();
+    const proxies = new McpProxy.Proxies({
+      relay: () => helper()?.mcp,
+      serverId: randomToken,
+      reserved: [ComposerMcp.SERVER_NAME],
+    });
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
         await Promise.all([...served.values()].map(({ dispose }) => dispose()));
         served.clear();
-      }),
+      }).pipe(Effect.andThen(proxies.close())),
     );
     const composerTools = (
       chat: Chat.Chat,
@@ -167,13 +179,18 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
         };
       });
 
+    const sessionMeta = definition.sessionMeta;
     const options: AcpAgent.AgentOptions = {
       id: definition.id,
       sessions,
-      sessionMeta: definition.sessionMeta?.({
-        server: ComposerMcp.SERVER_NAME,
-        readOnlyTools: ComposerMcp.READ_ONLY_TOOLS,
-      }),
+      sessionMeta:
+        sessionMeta &&
+        ((chat) =>
+          sessionMeta({
+            server: ComposerMcp.SERVER_NAME,
+            readOnlyTools: ComposerMcp.READ_ONLY_TOOLS,
+            chat,
+          })),
       connect: (cwd, toolsToken) => {
         const current = helper();
         return current
@@ -217,7 +234,8 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
           Workspace.recordBranch(chat, worktree.branch);
           return worktree.path;
         }),
-      mode: () => settings()?.agentPermissionMode ?? Settings.DEFAULT_AGENT_PERMISSION_MODE,
+      mode: (chat) =>
+        definition.mode?.(chat) ?? settings()?.agentPermissionMode ?? Settings.DEFAULT_AGENT_PERMISSION_MODE,
       tools: (chat) =>
         composerTools(chat).pipe(
           // Composer's tools add to a turn; a turn without them still runs.
@@ -228,6 +246,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
             }),
           ),
         ),
+      connections: (chat, servers, token) => proxies.offer(chat.id, servers, token),
       device: () => toPublicKey(manager.getAll(ClientCapabilities.Client).at(0)?.halo.device?.deviceKey)?.toHex(),
     };
 
@@ -235,6 +254,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       id: definition.id,
       label: definition.label,
       icon: definition.icon,
+      ...(definition.choices && { choices: definition.choices }),
       availability,
       makeTurnProducer: AcpAgent.makeTurnProducer(options),
       respond: ({ chat, message, requestId, optionId }) =>

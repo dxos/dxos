@@ -44,6 +44,6 @@ export const Presenter = {
 
   deck: (page: Page) => page.getByTestId('presenter.deck'),
 
-  /** The slide Reveal is showing; `present` is Reveal's own marker for it. */
-  currentSlide: (page: Page) => Presenter.deck(page).locator('.slides section.present'),
+  /** The slide on show: the deck's viewport renders only the current one. */
+  currentSlide: (page: Page) => Presenter.deck(page).locator('[data-slide]').first(),
 };

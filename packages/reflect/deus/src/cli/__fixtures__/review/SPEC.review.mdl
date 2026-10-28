@@ -1,0 +1,26 @@
+---
+spec: github:dxos/dxos/packages/reflect/deus/src/cli/__fixtures__/review/SPEC.mdl
+commit: 0000000000000000000000000000000000000000
+date: 2026-10-23
+by: agent:claude-code
+---
+
+```mdl
+verdict F-1.1: Listed
+  status: done
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/review.ts#reviewItems]
+  tests: [github:dxos/dxos/packages/reflect/deus/src/cli/cli.test.ts]
+```
+
+```mdl
+verdict F-1.2: Checked
+  status: partial
+  evidence: [github:dxos/dxos/packages/reflect/deus/src/cli/review.ts#noSuchSymbol]
+```
+
+```mdl
+verdict Greet: Greets
+  status: shiny
+  note: Not a status.
+  evidence: [github:dxos/dxos/../outside.ts]
+```

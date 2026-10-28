@@ -13,3 +13,6 @@ export const LINEAR_APP_PROVIDER_ID = 'linear-app';
 
 /** Linear's GraphQL endpoint. */
 export const LINEAR_API_URL = 'https://api.linear.app/graphql';
+
+/** Linear's MCP server. It takes Linear OAuth tokens as a bearer token, so both Linear connectors expose it. */
+export const LINEAR_MCP_ENDPOINT = { url: 'https://mcp.linear.app/mcp', protocol: 'http' } as const;

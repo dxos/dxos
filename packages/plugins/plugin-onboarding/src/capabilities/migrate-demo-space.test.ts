@@ -15,6 +15,8 @@ import { OnboardingPlugin } from '#plugin';
 
 import { BRAMBLE_TEMPLATE_ID } from '../constants.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), OnboardingPlugin({ generateDemoSpace: false })] });
+
 const LEGACY_TAG = 'org.dxos.space.exemplar';
 
 describe('demo space migration', () => {

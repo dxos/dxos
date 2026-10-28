@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-studio",
   "version": "0.16.0",
-  "private": true,
   "description": "Image-creation plugin for Composer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -126,6 +125,11 @@
       "types": "./dist/types/src/types/StudioEvents.d.ts",
       "import": "./dist/lib/StudioEvents.mjs"
     },
+    "./StudioHooks": {
+      "source": "./src/hooks/StudioHooks.ts",
+      "types": "./dist/types/src/hooks/StudioHooks.d.ts",
+      "import": "./dist/lib/StudioHooks.mjs"
+    },
     "./StudioOperation": {
       "source": "./src/types/StudioOperation.ts",
       "types": "./dist/types/src/types/StudioOperation.d.ts",
@@ -160,8 +164,8 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "MediaArtifact": [
-        "dist/types/src/types/MediaArtifact.d.ts"
+      "Frame": [
+        "dist/types/src/types/Frame.d.ts"
       ],
       "Generation": [
         "dist/types/src/types/Generation.d.ts"
@@ -171,6 +175,12 @@
       ],
       "Lightbox": [
         "dist/types/src/types/Lightbox.d.ts"
+      ],
+      "MediaArtifact": [
+        "dist/types/src/types/MediaArtifact.d.ts"
+      ],
+      "Storyboard": [
+        "dist/types/src/types/Storyboard.d.ts"
       ],
       "StudioCapabilities": [
         "dist/types/src/types/StudioCapabilities.d.ts"
@@ -183,12 +193,6 @@
       ],
       "Variant": [
         "dist/types/src/types/Variant.d.ts"
-      ],
-      "Frame": [
-        "dist/types/src/types/Frame.d.ts"
-      ],
-      "Storyboard": [
-        "dist/types/src/types/Storyboard.d.ts"
       ]
     }
   },

@@ -67,8 +67,16 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
           },
           handleSync,
         )
+        .subgraph(
+          !!account?.username &&
+            ((builder) =>
+              builder.text('account', {
+                label: account.league ? `${account.username} · ${account.league}` : account.username,
+                classNames: 'text-fg-subtle text-sm',
+              })),
+        )
         .build(),
-    [handleSync],
+    [handleSync, account?.username, account?.league],
   );
 
   const empty = sortedGames.length === 0;
@@ -76,15 +84,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId}>
-          {account?.username && (
-            <span className='text-fg-subtle text-sm px-2'>
-              {account.username}
-              {account.league ? ` · ${account.league}` : ''}
-            </span>
-          )}
-          <div className='grow' />
-        </ActionToolbar>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body>
         {empty ? (

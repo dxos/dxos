@@ -17,6 +17,10 @@ import type * as Atom from 'effect/reactivity/Atom';
  * ```ts
  * export const TaskAction = Capability.make<ObjectAction<Task.Task>>()(`${meta.profile.key}.capability.taskAction`);
  * ```
+ *
+ * @deprecated Contribute an app-graph action on the subject's node instead, so every contributed action
+ *   lives in the one graph the app's menus read. The host reads it with `graphActions(…, { filter })`; a
+ *   subject that is not an object gets a typed hidden node, as a prompt does (`AppNode.makePrompt`).
  */
 export type ObjectAction<T> = {
   /** Stable id; the menu item's key, and what the host dispatches on. */

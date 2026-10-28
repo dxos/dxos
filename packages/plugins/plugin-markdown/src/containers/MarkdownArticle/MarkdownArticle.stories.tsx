@@ -104,7 +104,7 @@ const meta = {
   title: 'plugins/plugin-markdown/containers/MarkdownArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(
       ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false, contentState } }) => ({
         plugins: [

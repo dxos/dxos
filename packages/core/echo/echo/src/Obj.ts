@@ -760,7 +760,7 @@ export type Meta = internal.Meta;
  * // Mutable access inside change callback
  * Obj.update(person, (obj) => {
  *   const meta = Obj.getMeta(obj);     // EntityMeta (mutable)
- *   meta.tags.push(Ref.make(tag));     // tags are refs to Tag objects
+ *   meta.tags.push(tag);               // tags are Tag objects
  * });
  * ```
  *
@@ -802,9 +802,9 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  *
- * @performance O(t) in the tag count; dedupes by ref URI before appending.
+ * @performance O(t) in the tag count; dedupes by tag id before appending.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the object.
@@ -815,7 +815,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  *
  * @performance O(t) in the tag count.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the object is deleted.

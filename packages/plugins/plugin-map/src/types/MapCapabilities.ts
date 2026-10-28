@@ -51,6 +51,8 @@ export type MarkerSet = {
   markers: GeoMarker[];
   /** Optional great-circle arcs between points (globe only). */
   lines?: GeoLine[];
+  /** Stops the globe's tour flies through in order, looping back to the first; unset, it visits every marker. */
+  tour?: LatLngLiteral[];
   /** Attention selection wiring. Defaults to the article's `attendableId` in single mode. */
   selection?: { contextId?: string; mode?: 'single' | 'multi' };
 };

@@ -15,6 +15,8 @@ import { SampleItem, SampleOperation } from '#types';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), SamplePlugin()] });
+
 describe('SamplePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({

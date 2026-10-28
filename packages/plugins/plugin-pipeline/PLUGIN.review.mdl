@@ -1,0 +1,267 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-pipeline/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: PipelinePlugin
+
+The board itself works. The `Pipeline` type (in `@dxos/types`), the article, the composable
+`PipelineComponent` with column drag-and-drop, and the `PipelineProperties` column editor (add, rename,
+delete, reorder, query) exist and do roughly what the spec says. Almost none of it is tested: the only test,
+`plugin.test.ts`, checks that the schema module activates, and the three stories render without play
+functions.
+
+Much of the spec is missing or diverged. The plugin contributes no app-graph builder, so there are no
+"Invocations" or "Automation" companions (F-1.4, F-6). Items cannot be dragged between columns, and
+`Column.order` is never read (F-4.2). Every column is listed newest-first, including space queries
+(F-3.3). The research template is not in this plugin: it is a plugin-debug space-generator preset that throws
+on a missing mailbox instead of returning null (F-5). Creation is a `CreateObjectEntry`, not an operation,
+and does not pass `hidden: true`.
+
+Of 34 items: 0 done, 14 untested, 3 partial, 6 diverged, 11 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Pipeline: The ECHO type matches: optional name, description and image, and a form-hidden columns array.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Pipeline.ts#Pipeline, github:dxos/dxos/packages/sdk/types/src/types/Pipeline.ts#make]
+  note: Typename `org.dxos.type.pipeline` at 0.1.0; `make` defaults `columns` to `[]`. No test covers the type's fields.
+```
+
+```mdl
+verdict Column: The fields exist, but order is never used to sort items.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Pipeline.ts#Column, github:dxos/dxos/packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts#usePipelineBoardModel]
+  note: |
+    `name`, `view: Ref<View>` and `order` are declared. The board model lists the view query's results
+    reversed and never reads `order`, so the "ordered items first" invariant is not met.
+```
+
+```mdl
+verdict ViewModel: A View object stores the query AST and projection; the JSON schema is an input, not a stored field.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/schema/src/types/ViewModel.ts#make]
+  tests: [github:dxos/dxos/packages/sdk/schema/src/types/View.test.ts]
+  note: `ViewModel.make` builds a `View.View` with `query.ast` and `projection`; `jsonSchema` only seeds the projection.
+```
+
+```mdl
+verdict PipelineArticle: Renders the toolbar and columns over a board model; "+" opens the settings companion.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineArticle/PipelineArticle.tsx#PipelineArticle, github:dxos/dxos/packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts#usePipelineBoardModel]
+  note: The story has no play function.
+```
+
+```mdl
+verdict PipelineComponent: Root, Content, Columns and Toolbar exist as described.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/components/PipelineComponent/PipelineComponent.tsx#PipelineComponent]
+  note: Columns uses `useEventHandlerAdapter` for column drag-and-drop. The stories have no play functions.
+```
+
+```mdl
+verdict PipelineProperties: The column editor has add, delete, rename, move and query actions; the new column does not auto-expand.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#PipelineProperties]
+  note: |
+    The prop is `subject`, not `pipeline`, and the heading is the `columns.label` string. `handleAdd` sets
+    `expandedId` to `newView.id` but rows compare against `column.view.uri`, so the new column's editor stays
+    closed. No test; the story has no play function.
+```
+
+```mdl
+verdict createPipeline: Creation is a CreateObjectEntry that calls SpaceOperation.AddObject without hidden.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/capabilities/create-object.ts, github:dxos/dxos/packages/sdk/types/src/types/Pipeline.ts#make]
+  note: There is no `createPipeline` operation; the entry builds `Pipeline.make(props)` and invokes `AddObject` with `object` and `target` only.
+```
+
+```mdl
+verdict createResearchProject: Exists only as a plugin-debug space-generator preset, which throws rather than returning null.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/components/SpaceGenerator/presets.ts#generator]
+  note: |
+    The `ORG_RESEARCH_PROJECT` preset builds an "Investor Research" pipeline with Mailbox, Contacts,
+    Organizations and Notes columns, plus triggers. It asserts a mailbox with `invariant`. Nothing in
+    plugin-pipeline defines it.
+```
+
+```mdl
+verdict F-1.1: New pipelines start with an empty columns array.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Pipeline.ts#make]
+  note: No test creates a pipeline and checks `columns`.
+```
+
+```mdl
+verdict F-1.2: The pipeline is added through SpaceOperation.AddObject, but not with hidden=true.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/capabilities/create-object.ts]
+  note: `AddObject` input has no `hidden` flag.
+```
+
+```mdl
+verdict F-1.3: An article surface is registered for Pipeline objects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/capabilities/react-surface.ts]
+  note: `AppSurface.object(AppSurface.Article, Pipeline.Pipeline)` renders `PipelineArticle`. No test.
+```
+
+```mdl
+verdict F-1.4: No graph companions are added.
+  status: missing
+  note: plugin-pipeline has no app-graph builder; searched `src/` for `Invocations`, `Automation` and `companion`.
+```
+
+```mdl
+verdict F-2.1: The toolbar "+" opens the settings companion.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineArticle/PipelineArticle.tsx#PipelineArticle]
+  note: Invokes `LayoutOperation.UpdateCompanion` with `Attention.linkedSegment('settings')`. No test.
+```
+
+```mdl
+verdict F-2.2: Adding a column appends one with a new View querying Filter.nothing().
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#PipelineProperties]
+  note: `handleAdd` adds the view to the db and pushes `{ name: '', view, order: [] }`. No test.
+```
+
+```mdl
+verdict F-2.3: Renaming updates column.name immediately.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#PipelineProperties]
+  note: Done through `useObject`'s updater on the `name` change. No test.
+```
+
+```mdl
+verdict F-2.4: Deleting removes the column and its View object.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#PipelineProperties]
+  note: `handleDelete` splices the column and calls `db.remove` on the loaded view. No test.
+```
+
+```mdl
+verdict F-2.5: Dragging a column in the list reorders with arrayMove.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#PipelineProperties]
+  note: `OrderedList` `onMove` calls `arrayMove` on `columns`. No test.
+```
+
+```mdl
+verdict F-3.1: Changing the query updates query.ast and rebuilds the projection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#PipelineProperties]
+  note: `handleQueryChanged` writes the AST, resolves the type and copies a fresh projection. No test.
+```
+
+```mdl
+verdict F-3.2: A feed target scopes the query to the feed; items are newest-first.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#PipelineProperties, github:dxos/dxos/packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts#usePipelineBoardModel]
+  note: Uses `.from([Scope.feed(...)])` rather than `Query.from({ feeds })`; the board model reverses results. No test.
+```
+
+```mdl
+verdict F-3.3: Space queries are also reversed, so they are not in insertion order.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts#usePipelineBoardModel]
+  note: The items atom always returns `[...raw].reverse()`; a comment says the space-vs-feed branch was removed as dead.
+```
+
+```mdl
+verdict F-4.1: Dragging a column tile reorders pipeline.columns through Obj.update.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/components/PipelineComponent/PipelineComponent.tsx#PipelineComponent]
+  note: The Columns event handler's `onChange` mutates `pipeline.columns` inside `Obj.update`. No test.
+```
+
+```mdl
+verdict F-4.2: Items cannot be dragged between columns, and column.order is never written.
+  status: missing
+  note: `PipelineColumn.tsx` carries a TODO to support item drag reordering; nothing writes `order`.
+```
+
+```mdl
+verdict F-4.3: Only Column objects are accepted as column drop targets.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-pipeline/src/components/PipelineComponent/PipelineComponent.tsx#PipelineComponent, github:dxos/dxos/packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts#usePipelineBoardModel]
+  note: `canDrop` checks `model.isColumn`, which is `Schema.is(Pipeline.Column)`. No test.
+```
+
+```mdl
+verdict F-5.1: The research pipeline is a debug space-generator preset, not a user template.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/components/SpaceGenerator/presets.ts#generator]
+  note: There is no "org-research" template in plugin-pipeline; plugin-debug's `ORG_RESEARCH_PROJECT` preset builds the four columns.
+```
+
+```mdl
+verdict F-5.2: A missing mailbox throws an invariant error instead of failing gracefully.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-debug/src/components/SpaceGenerator/presets.ts#generator]
+  note: `invariant(mailbox, 'Mailbox not found')` in the preset.
+```
+
+```mdl
+verdict F-6.1: No Invocations companion exists.
+  status: missing
+  note: plugin-pipeline does not reference `InvocationTraceContainer` or contribute a companion node.
+```
+
+```mdl
+verdict F-6.2: No Automation companion exists.
+  status: missing
+  note: As for F-6.1.
+```
+
+```mdl
+verdict T-1: No test creates a pipeline.
+  status: missing
+  note: `plugin.test.ts` only checks module activation.
+```
+
+```mdl
+verdict T-2: No test adds a column.
+  status: missing
+  note: The PipelineProperties story has no play function.
+```
+
+```mdl
+verdict T-3: No test renames a column.
+  status: missing
+  note: No test or play function.
+```
+
+```mdl
+verdict T-4: No test deletes a column.
+  status: missing
+  note: No test or play function.
+```
+
+```mdl
+verdict T-5: No test runs the research template.
+  status: missing
+  note: The template exists only as a plugin-debug preset; no test runs it.
+```
+
+```mdl
+verdict T-6: No test covers the missing-mailbox case, and the code throws rather than returning null.
+  status: missing
+  note: See F-5.2.
+```
+
+```mdl
+verdict QA-1: The QA test is human-only; no automation runs it.
+  status: missing
+  note: Status `unverified`; every step is marked human-only.
+```

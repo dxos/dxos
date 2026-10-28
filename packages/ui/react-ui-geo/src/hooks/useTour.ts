@@ -70,7 +70,7 @@ export const useTour = (
             context.save();
             try {
               context.beginPath();
-              context.strokeStyle = options.styles?.arc?.strokeStyle ?? 'yellow';
+              context.strokeStyle = options.styles?.arc?.strokeStyle ?? 'rgb(220, 38, 38)';
               context.lineWidth = (options.styles?.arc?.lineWidth ?? 1.5) * (controller.zoom ?? 1);
               context.setLineDash(options.styles?.arc?.lineDash ?? []);
               path({ type: 'LineString', coordinates: [ip(t1), ip(t2)] });

@@ -47,7 +47,7 @@ const main = () => {
   const { base, reason, force } = resolve({ args, event, branch, defaultBranch });
   if (base === FULL_RUN) {
     note(`Full run — ${reason}. Leaving MOON_AFFECTED unset.`);
-    if (force) {
+    if (force && process.env.CI_AFFECTED_FORCE !== 'false') {
       // Catches an input that some task's key misses, which a cached run would keep passing.
       note('Forced — bypassing the cache.');
       emit(args, { MOON_FORCE: 'true' });

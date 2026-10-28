@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Progress from '@dxos/app-toolkit/Progress';
 
 const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
 import * as Operation from '@dxos/compute/Operation';
@@ -87,6 +88,8 @@ type BoardSnapshot = {
  * (`closed = true`) and refresh the snapshot's `closed` field — so we don't try
  * to push the tombstone back next pass.
  *
+ * `onCardReconciled` runs once per remote card, after that card is handled.
+ *
  * For the board itself: three-way merge of `kanban.name` and the
  * remote-derived arrangement against the board snapshot. This pull pass writes
  * outputs in-place; any "local-wins" fields would be pushed by `pushBoardCards`
@@ -98,8 +101,9 @@ export const reconcileBoardCards: (
   remoteBoard: TrelloBoard,
   remoteCards: ReadonlyArray<TrelloCard>,
   lists: ReadonlyArray<TrelloList>,
+  onCardReconciled?: () => void,
 ) => Effect.Effect<ReconcileResult, never, Database.Service> = Effect.fn('reconcileBoardCards')(
-  function* (binding, kanban, remoteBoard, remoteCards, lists) {
+  function* (binding, kanban, remoteBoard, remoteCards, lists, onCardReconciled) {
     if (!Kanban.isKanbanItems(kanban)) {
       // The integration mechanism only ever creates items-variant Kanbans for Trello.
       return { added: 0, updated: 0, removed: 0 };
@@ -144,6 +148,7 @@ export const reconcileBoardCards: (
           yield* Database.remove(existing);
           removed++;
         }
+        onCardReconciled?.();
         // Skip first-sight create when remote already says closed.
         continue;
       }
@@ -154,6 +159,7 @@ export const reconcileBoardCards: (
         // without an `unknown` cast.
         if (!Obj.instanceOf(Expando.Expando, existing)) {
           log.warn('trello pull: foreign-keyed local object is not an Expando; skipping', { cardId: card.id });
+          onCardReconciled?.();
           continue;
         }
         const snapshot = Cursor.readSnapshot<CardSnapshot>(binding, card.id);
@@ -193,6 +199,7 @@ export const reconcileBoardCards: (
         Cursor.writeSnapshot(binding, card.id, remoteFields);
         added++;
       }
+      onCardReconciled?.();
     }
 
     // Cards present locally that aren't in the remote response — treat the
@@ -528,47 +535,62 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
         return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
       }
 
-      // Resolve the remote board id: prefer the binding's `externalId`, fall
-      // back to the Kanban's foreign-key meta (set by `materializeTarget`).
-      const boardId = bound.spec.externalId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
-      if (boardId === undefined) {
-        return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
-      }
+      const kanbanName = Obj.getLabel(kanban);
+      return yield* Progress.withReporter(
+        {
+          key: Progress.createSyncKey(kanban),
+          label: kanbanName ? `Syncing ${kanbanName}` : 'Syncing board',
+        },
+        (reporter) =>
+          Effect.gen(function* () {
+            // Resolve the remote board id: prefer the binding's `externalId`, fall
+            // back to the Kanban's foreign-key meta (set by `materializeTarget`).
+            const boardId =
+              bound.spec.externalId ?? Obj.getMeta(kanban).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
+            if (boardId === undefined) {
+              return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
+            }
 
-      // Look up the remote `TrelloBoard` (for board-level fields like `name`).
-      const allBoards = yield* TrelloApi.fetchBoards();
-      const remoteBoard = allBoards.find((board) => board.id === boardId);
-      if (!remoteBoard) {
-        return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
-      }
+            // Look up the remote `TrelloBoard` (for board-level fields like `name`).
+            const allBoards = yield* TrelloApi.fetchBoards();
+            const remoteBoard = allBoards.find((board) => board.id === boardId);
+            if (!remoteBoard) {
+              return { pulled: { added: 0, updated: 0, removed: 0 }, pushed: { created: 0, updated: 0 } };
+            }
 
-      // The trello-api functions return `Effect<T, HttpClientError | ParseError, HttpClient>`
-      // with retry+timeout baked in. The HttpClient layer is provided at the
-      // operation boundary below. Trello's cards endpoint doesn't support a
-      // delta cursor, so we full-fetch every sync and never advance the
-      // cursor's `value` (only its run status, below).
-      const lists = yield* TrelloApi.fetchLists(boardId);
-      const cards = yield* TrelloApi.fetchCards(boardId);
-      const reconcileResult = yield* reconcileBoardCards(bound, kanban, remoteBoard, cards, lists);
+            // The trello-api functions return `Effect<T, HttpClientError | ParseError, HttpClient>`
+            // with retry+timeout baked in. The HttpClient layer is provided at the
+            // operation boundary below. Trello's cards endpoint doesn't support a
+            // delta cursor, so we full-fetch every sync and never advance the
+            // cursor's `value` (only its run status, below).
+            const lists = yield* TrelloApi.fetchLists(boardId);
+            const cards = yield* TrelloApi.fetchCards(boardId);
+            // The meter counts the pull only; the push pass has no total known up front.
+            reporter.total(cards.length);
+            const reconcileResult = yield* reconcileBoardCards(bound, kanban, remoteBoard, cards, lists, () =>
+              reporter.advance(),
+            );
 
-      const pushResult = yield* pushBoardCards(bound, kanban, lists, {
-        create: ({ listId, name, desc }) =>
-          TrelloApi.createCard({ idList: listId, name, desc }).pipe(Effect.map((card) => ({ id: card.id }))),
-        update: (foreignId, payload) =>
-          TrelloApi.updateCard(foreignId, {
-            name: payload.name,
-            desc: payload.desc,
-            idList: payload.listId,
-          }).pipe(Effect.map(() => undefined)),
-      });
+            const pushResult = yield* pushBoardCards(bound, kanban, lists, {
+              create: ({ listId, name, desc }) =>
+                TrelloApi.createCard({ idList: listId, name, desc }).pipe(Effect.map((card) => ({ id: card.id }))),
+              update: (foreignId, payload) =>
+                TrelloApi.updateCard(foreignId, {
+                  name: payload.name,
+                  desc: payload.desc,
+                  idList: payload.listId,
+                }).pipe(Effect.map(() => undefined)),
+            });
 
-      // Stamp success on the binding.
-      Cursor.advance(bound);
+            // Stamp success on the binding.
+            Cursor.advance(bound);
 
-      return {
-        pulled: reconcileResult,
-        pushed: pushResult,
-      };
+            return {
+              pulled: reconcileResult,
+              pushed: pushResult,
+            };
+          }),
+      );
     }).pipe(
       // A failure mid-sync writes `lastError` on the binding then re-raises,
       // so the toast path still surfaces the crash.

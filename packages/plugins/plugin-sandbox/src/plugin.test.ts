@@ -18,6 +18,10 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { SandboxPlugin } from '#plugin';
 import { Sandbox, SandboxOperation } from '#types';
 
+await Harness.preload({
+  plugins: [ClientPlugin.make({ config: configPreset({ sandbox: 'local' }) }), SandboxPlugin()],
+});
+
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (routes served at its root).
  * Entity IDs must be unique per run (do not call `EntityId.dangerouslyDisableRandomness`) so sandbox-service

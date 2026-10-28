@@ -114,7 +114,6 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
           <SearchList.Input
-            classNames='px-0'
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('add-to-collection-dialog.placeholder')}

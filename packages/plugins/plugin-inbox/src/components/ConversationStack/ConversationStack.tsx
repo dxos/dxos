@@ -5,7 +5,15 @@
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import React, {
+  type PropsWithChildren,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -24,7 +32,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 import { TagIndex } from '@dxos/schema';
-import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
+import { type Actor, ContentBlock, DraftMessage, type Message as MessageType, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
@@ -133,6 +141,11 @@ type ConversationStackContextValue = {
   summaries?: ReadonlyMap<string, string>;
   /** Summary of the conversation as a whole, rendered as the first tile in the stack. */
   conversationSummary?: Mailbox.ConversationSummary;
+  /**
+   * Renders a task extracted from a message, below its body (container-resolved, so the row can carry
+   * the actions other plugins contribute); unset renders a plain link row.
+   */
+  renderTask?: (task: Task.Task) => ReactNode;
   onExpandedChange?: (id: string, expanded: boolean) => void;
   /** Folds every message (thread toolbar only). */
   onCollapseAll?: () => void;
@@ -167,6 +180,7 @@ export type ConversationStackRootProps = PropsWithChildren<
     | 'getSenderActions'
     | 'summaries'
     | 'conversationSummary'
+    | 'renderTask'
     | 'onExpandedChange'
     | 'onCollapseAll'
     | 'onExpandAll'
@@ -201,6 +215,7 @@ const ConversationStackRoot = ({
   getSenderActions,
   summaries,
   conversationSummary,
+  renderTask,
   onExpandedChange,
   onCollapseAll,
   onExpandAll,
@@ -235,6 +250,7 @@ const ConversationStackRoot = ({
     getSenderActions={getSenderActions}
     summaries={summaries}
     conversationSummary={conversationSummary}
+    renderTask={renderTask}
     runtime={runtime}
     sendOperations={sendOperations}
   >
@@ -364,10 +380,7 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
     <Mosaic.Tile {...tileProps} data={data} asChild>
       <Card.Root grid border={false} classNames='dx-attention-surface overflow-hidden rounded-md'>
         {DraftMessage.instanceOf(message) ? (
-          // The composer isn't rail-aligned; it spans the whole tile.
-          <div className='col-span-full'>
-            <DraftTile id={id} message={message} />
-          </div>
+          <DraftTile id={id} message={message} />
         ) : (
           <MessageTile id={id} message={message} />
         )}
@@ -606,6 +619,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
             <Layout.Flex column gap='xs' classNames='min-w-0 pb-1'>
               <MessageBody message={message} mailbox={mailbox} options={options} />
             </Layout.Flex>
+            <MessageTasks message={message} mailbox={mailbox} />
           </Card.Section>
         </Collapsible.Content>
       </Card.Section>
@@ -698,8 +712,10 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
   const tagObjects = useQuery(db, Filter.type(Tag.Tag));
   const messageTags = useMessageTags(mailbox, message, tagObjects);
 
-  // Extracted objects — trips, people, etc.
-  const objects = useMessageExtractedObjects(db, mailbox, message);
+  // Extracted objects — trips, people, etc. Tasks are listed under the body instead (`MessageTasks`).
+  const objects = useMessageExtractedObjects(db, mailbox, message).filter(
+    (object) => !Obj.instanceOf(Task.Task, object),
+  );
 
   const recipients = useMemo(
     () => parseAddressList(message.properties?.to).map(({ email }) => email),
@@ -746,6 +762,45 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
 };
 
 MessageDetails.displayName = MESSAGE_DETAILS_NAME;
+
+//
+// Message Tasks
+//
+
+const MESSAGE_TASKS_NAME = 'ConversationStack.MessageTasks';
+
+type MessageTasksProps = Pick<MessageDetailsProps, 'message' | 'mailbox'>;
+
+/** The tasks extracted from a message, listed under its body: what the email asks of the reader. */
+const MessageTasks = ({ message, mailbox }: MessageTasksProps) => {
+  const db = Obj.getDatabase(message);
+  const { renderTask } = useConversationStackContext(MESSAGE_TASKS_NAME);
+  // As `MessageDetails`: an extraction that only mutates `mailbox.extracted` must still re-render.
+  const [, bump] = useReducer((tick: number) => tick + 1, 0);
+  useEffect(() => (mailbox ? Obj.subscribe(mailbox, bump) : undefined), [mailbox]);
+  const tasks = useMessageExtractedObjects(db, mailbox, message).filter((object): object is Task.Task =>
+    Obj.instanceOf(Task.Task, object),
+  );
+  if (tasks.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card.Section data-testid='message.tasks'>
+      {tasks.map((task) =>
+        renderTask ? (
+          <div key={task.id} className='col-span-full min-w-0' data-testid='message.task'>
+            {renderTask(task)}
+          </div>
+        ) : (
+          <Row.Ref key={task.id} object={task} />
+        ),
+      )}
+    </Card.Section>
+  );
+};
+
+MessageTasks.displayName = MESSAGE_TASKS_NAME;
 
 //
 // Message Body
@@ -910,14 +965,18 @@ const DraftTile = ({ id, message }: DraftTileProps) => {
     return <MessageTile id={id} message={live} />;
   }
 
+  // The composer isn't rail-aligned, so it spans the whole tile; a sent draft above is a read message,
+  // whose rows subgrid onto the tile's rails and so must not sit inside this wrapper.
   return (
-    <EditMessage
-      message={live}
-      extensions={extensions}
-      onSend={onSend}
-      title={t('draft-message.title')}
-      onDelete={mailbox && onDelete ? handleDelete : undefined}
-    />
+    <div className='col-span-full'>
+      <EditMessage
+        message={live}
+        extensions={extensions}
+        onSend={onSend}
+        title={t('draft-message.title')}
+        onDelete={mailbox && onDelete ? handleDelete : undefined}
+      />
+    </div>
   );
 };
 

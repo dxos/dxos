@@ -63,6 +63,9 @@ struct InitiateOAuthRequest {
     // `app` for a grant that acts as DXOS's registered app; omitted for a user grant.
     #[serde(skip_serializing_if = "Option::is_none")]
     kind: Option<String>,
+    // The MCP server a `provider: "mcp"` grant is for.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    resource: Option<String>,
 }
 
 /// Response from Edge for OAuth initiation.
@@ -174,6 +177,7 @@ pub async fn initiate_oauth_flow(
     register_recovery: Option<bool>,
     login_hint: Option<String>,
     kind: Option<String>,
+    resource: Option<String>,
 ) -> Result<String, String> {
     let client = reqwest::Client::new();
 
@@ -209,6 +213,7 @@ pub async fn initiate_oauth_flow(
         register_recovery,
         login_hint,
         kind,
+        resource,
     };
 
     let response = client

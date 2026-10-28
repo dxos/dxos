@@ -146,14 +146,15 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
       return createListCollection<ComboboxOption>({ items: create ? [...matches, create] : matches });
     }, [items, filter, query, create]);
 
-    // zag moves the highlight off an option the filter removed only in a passive effect, which an Enter typed in the same
-    // frame beats (selecting nothing); so a filtered-out highlight is replaced here, as the collection itself narrows.
+    // zag autohighlights a match, and moves the highlight off an option the filter removed, only in a passive effect,
+    // which an Enter typed in the same frame beats (selecting nothing); so the highlight is derived here, as the
+    // collection itself narrows. While loading, the items are the previous query's, so none is highlighted.
     const [highlight, setHighlight] = useState<string | null>(null);
     const highlightedValue =
       highlightedValueProp !== undefined
         ? highlightedValueProp
-        : highlight !== null && !collection.has(highlight)
-          ? inputBehavior === 'autohighlight' && query
+        : highlight === null || !collection.has(highlight)
+          ? inputBehavior === 'autohighlight' && query && !loading
             ? collection.firstValue
             : null
           : highlight;

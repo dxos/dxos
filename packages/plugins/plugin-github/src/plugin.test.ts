@@ -14,6 +14,8 @@ import { meta } from '#meta';
 import { GitHubPlugin } from '#plugin';
 import { GitHubSkill } from '#skills';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('GitHubPlugin', () => {

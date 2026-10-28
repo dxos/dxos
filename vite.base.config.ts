@@ -18,7 +18,7 @@ import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
 import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
-import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
+import type { BrowserCommand, Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
@@ -589,6 +589,14 @@ const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
     }
   : {};
 
+const throttleCpu: BrowserCommand<[]> = async ({ context, page }) => {
+  const rate = Number(process.env.DX_STORYBOOK_CPU_THROTTLE ?? 1);
+  if (rate > 1 && context.browser()?.browserType().name() === 'chromium') {
+    const session = await context.newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate });
+  }
+};
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
@@ -606,6 +614,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         // `DX_STORYBOOK_BROWSER` runs the stories elsewhere, for a story that pins browser-specific behaviour.
         instances: [{ browser: process.env.DX_STORYBOOK_BROWSER || 'chromium' }],
+        commands: { throttleCpu },
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },

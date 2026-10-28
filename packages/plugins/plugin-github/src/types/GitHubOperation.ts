@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -43,15 +44,15 @@ export const GetGitHubRepositories = Operation.make({
 });
 
 /**
- * Find-or-create the empty local root Project for a selected GitHub repo so a
- * cursor can reference it as its `spec.target`. Keyed by the repo's
- * GitHub foreign id (`remoteTarget.id`), so it is idempotent across re-selection.
+ * Find or create the `Repo` a cursor binds as its `spec.target`, and the `TaskSet` that mirrors the
+ * repository's issues. Both carry the repo's GitHub foreign id (`remoteTarget.id`), so it is
+ * idempotent across re-selection.
  */
 export const MaterializeGitHubTarget = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.materializeTarget'),
     name: 'Materialize GitHub Target',
-    description: 'Create the empty local root Project bound to a selected GitHub repository.',
+    description: 'Find or create the Repo bound to a selected GitHub repository, and the TaskSet mirroring its issues.',
     icon: 'ph--github-logo--regular',
   },
   input: ConnectorSpec.MaterializeTargetInput,
@@ -72,33 +73,66 @@ export const SyncOptions = Schema.Struct({
 
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
+/** What one run of {@link SyncGitHubRepositories} did, across the connection's bindings. */
+export const SyncResult = Schema.Struct({
+  bindings: Schema.Number,
+  /** Bindings whose delta answered 304. */
+  notModified: Schema.Number,
+  /** GitHub requests made, across bindings. */
+  requests: Schema.Number,
+  pulled: Schema.Struct({ issues: Schema.Number, pullRequests: Schema.Number }),
+  pushed: Schema.Struct({ issues: Schema.Number, repos: Schema.Number }),
+  /** File bindings (spec/FILE-SYNC.mdl): files pulled into objects, objects pushed as files, files skipped. */
+  files: Schema.Struct({ pulled: Schema.Number, pushed: Schema.Number, skipped: Schema.Number }).pipe(Schema.optional),
+});
+
+export interface SyncResult extends Schema.Schema.Type<typeof SyncResult> {}
+
 /**
- * Reconcile GitHub data for every repo bound to a connection (one cursor per repo).
- *
- * Pull-then-push per bound repo: auto-upsert its owning org + members,
- * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting
- * `maxDaysBack` if set), then push diverged Project/Task fields back to GitHub.
- * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto each binding.
+ * Poll every repository bound to a connection (one cursor per repo), as spec/SYNC.mdl describes:
+ * one conditional delta of issues and pull requests updated since the binding's watermark, one
+ * GraphQL batch for the pull requests among them (and open ones whose checks are pending), the
+ * three-way merge and push for issues, and the cursor advance. A quiet repository costs one request.
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.syncRepositories'),
     name: 'Sync GitHub Repositories',
-    description: 'Reconcile every bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
+    description: 'Poll every bound GitHub repository for changed issues and pull requests.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: ConnectorSpec.SyncInput,
-  output: Schema.Struct({
-    pulled: Schema.Struct({
-      organizations: Schema.Number,
-      people: Schema.Number,
-      projects: Schema.Number,
-      tasks: Schema.Number,
-      comments: Schema.Number,
-    }),
-  }),
-  services: [Credential.CredentialsService],
+  output: SyncResult,
+  // Capabilities carry the contributed file mappings a file binding runs.
+  services: [Trace.TraceService, Credential.CredentialsService, Capability.Service],
 }).pipe(Operation.visible);
+
+/**
+ * Turn on two-way file sync (spec/FILE-SYNC.mdl) for a repository the connection already syncs: adds
+ * a file binding next to its item binding. Files a contributed mapping claims (Deus specs, say) become
+ * objects, and Composer edits to them are committed to a write branch with one pull request.
+ */
+export const EnableGitHubFileSync = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.enableFileSync'),
+    name: 'Enable GitHub File Sync',
+    description: 'Sync files of a bound GitHub repository (such as .mdl specs) with objects in the space, both ways.',
+    icon: 'ph--files--regular',
+  },
+  input: Schema.Struct({
+    repository: Ref.Ref(Repo.Repo),
+    /** Branch read from; the repository's default branch when absent. */
+    branch: Schema.String.pipe(Schema.optional),
+    /** Branch written to; `composer/<spaceId>` when absent. */
+    writeBranch: Schema.String.pipe(Schema.optional),
+    /** FileMapping ids to run; every contributed mapping when absent. */
+    mappings: Schema.Array(Schema.String).pipe(Schema.optional),
+    /** Globs that narrow every mapping, e.g. `packages/plugins/**`. */
+    paths: Schema.Array(Schema.String).pipe(Schema.optional),
+  }),
+  output: Schema.Struct({ binding: Schema.String, created: Schema.Boolean }),
+  services: [Database.Service],
+});
 
 /**
  * Import a pull request named by a github.com URL or `owner/repo#123` into the space, so it can be

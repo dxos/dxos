@@ -81,6 +81,8 @@ export default meta;
 export const Default: StoryObj<typeof meta> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('2 open tasks', { exact: false }, { timeout: 10_000 })).toBeInTheDocument();
+    // The card summarizes what lies beneath the feature: its subfeatures and requirements.
+    await expect(await canvas.findByText('2 subfeatures', undefined, { timeout: 10_000 })).toBeInTheDocument();
+    await expect(canvas.getByText('3 requirements')).toBeInTheDocument();
   },
 };

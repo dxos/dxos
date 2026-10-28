@@ -90,12 +90,15 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   const publisher = publishers[0];
   const db = Obj.getDatabase(subject);
   const connections = useQuery(db, Filter.type(Connection.Connection));
-  const accessTokenRefs = useMemo(() => connections.map((connection) => connection.accessToken), [connections]);
+  const accessTokenRefs = useMemo(
+    () => connections.flatMap((connection) => (connection.accessToken ? [connection.accessToken] : [])),
+    [connections],
+  );
   const loadedAccessTokens = useObjects(accessTokenRefs);
   const connection = useMemo(
     () =>
       publisher
-        ? connections.find((candidate) => candidate.accessToken.target?.source === publisher.source)
+        ? connections.find((candidate) => candidate.accessToken?.target?.source === publisher.source)
         : undefined,
     [connections, loadedAccessTokens, publisher],
   );

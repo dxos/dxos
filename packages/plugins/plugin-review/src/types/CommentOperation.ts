@@ -117,7 +117,6 @@ export const AddMessage = Operation.make({
 
 export const DeleteMessageOutput = Schema.Struct({
   message: Type.getSchema(Message.Message).annotate({ description: 'The deleted comment message.' }),
-  messageIndex: Schema.Number.annotate({ description: 'The index the message was at.' }),
 }).mapFields(Struct.map(Schema.optional));
 
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
@@ -132,7 +131,7 @@ export const DeleteMessage = Operation.make({
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo),
     subject: Obj.Unknown,
-    message: Ref.Ref(Message.Message),
+    message: Type.getSchema(Message.Message).annotate({ description: 'The comment message to delete.' }),
   }),
   output: DeleteMessageOutput,
 });
@@ -167,7 +166,6 @@ export const RestoreMessage = Operation.make({
   input: Schema.Struct({
     anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotate({ description: 'The anchor of the comment thread.' }),
     message: Type.getSchema(Message.Message).annotate({ description: 'The message to restore.' }),
-    messageIndex: Schema.Number.annotate({ description: 'The index to restore the message at.' }),
   }),
   output: Schema.Void,
 });
@@ -182,6 +180,7 @@ export const RespondToThread = Operation.make({
   input: Schema.Struct({
     thread: Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to respond to.' }),
     subject: Ref.Ref(Obj.Unknown).annotate({ description: 'The object the comment thread is anchored to.' }),
+    messageId: Obj.ID.annotate({ description: 'The comment message the agent responds to.' }),
   }),
   output: Schema.Void,
 });

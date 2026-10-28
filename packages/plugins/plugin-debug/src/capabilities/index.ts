@@ -7,6 +7,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { meta } from '#meta';
@@ -55,6 +57,11 @@ export const MarkdownMenu = Capability.lazyModule(
   'MarkdownMenu',
   { provides: [MarkdownCapabilities.MenuExtension], activatesOn: DebugEvents.Start },
   () => import('./markdown-menu.ts'),
+);
+export const SampleMailSend = Capability.lazyModule(
+  'SampleMailSend',
+  { provides: [InboxCapabilities.MailSendOperation], activatesOn: InboxEvents.Start },
+  () => import('./sample-mail-send.ts'),
 );
 export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const LogRecording = Capability.lazyModule(

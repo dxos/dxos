@@ -24,12 +24,13 @@ import {
   Ref,
   Relation,
   Scope,
+  Tag,
   Type,
   View,
 } from '@dxos/echo';
 import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
-import { BACKED_OBJECT_LIMIT, type DatabaseDirectory } from '@dxos/echo-protocol';
+import { BACKED_OBJECT_LIMIT, type DatabaseDirectory, EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
@@ -45,14 +46,13 @@ const getFeedUriOrThrow = (feed: Feed.Feed): EID.EID => {
   return uri;
 };
 
-// Tag ids are the URIs of Tag objects; meta stores them as refs.
-const tags = ['echo:///TAGRED', 'echo:///TAGGREEN', 'echo:///TAGBLUE'];
-const tagRefs = tags.map((uri) => Ref.fromURI(URI.make(uri)));
+// Tags are Tag objects; each test database gets its own, since tagging adds them to it.
+const createTestTags = () => ['red', 'green', 'blue'].map((label) => Tag.make({ label }));
 
 Obj.make(TestSchema.Expando, { foo: 100 });
 
 type ObjectProps = {
-  [Obj.Meta]?: { tags?: Ref.Ref<unknown>[]; key?: string; version?: string };
+  [Obj.Meta]?: { tags?: Tag.Tag[]; key?: string; version?: string };
   value?: number;
 };
 
@@ -63,7 +63,7 @@ const createTestObject = (props: ObjectProps = {}) => {
   });
 };
 
-const createTestObjects = () => {
+const createTestObjects = (tags: Tag.Tag[]) => {
   return new Array<Entity.Any>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
@@ -77,7 +77,7 @@ const createTestObjects = () => {
       range(2).map((i) =>
         createTestObject({
           value: 200,
-          [Obj.Meta]: { tags: tagRefs.slice(i) },
+          [Obj.Meta]: { tags: tags.slice(i) },
         }),
       ),
     )
@@ -85,7 +85,7 @@ const createTestObjects = () => {
       range(4).map((i) =>
         createTestObject({
           value: 300,
-          [Obj.Meta]: { tags: tagRefs.slice(i + 1) },
+          [Obj.Meta]: { tags: tags.slice(i + 1) },
         }),
       ),
     );
@@ -104,10 +104,15 @@ describe('Query', () => {
 
   describe('Query with different filters', () => {
     let db: EchoDatabase;
+    let tags: Tag.Tag[];
+
+    // The 10 test objects plus the 3 tags they carry, which tagging adds to the database.
+    const objectCount = 13;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase({ types: [Feed.Feed, Collection.Collection, View.View] }));
-      createTestObjects().forEach((object) => db.add(object));
+      ({ db } = await builder.createDatabase({ types: [Feed.Feed, Collection.Collection, View.View, Tag.Tag] }));
+      tags = createTestTags();
+      createTestObjects(tags).forEach((object) => db.add(object));
       await db.flush();
     });
 
@@ -118,7 +123,7 @@ describe('Query', () => {
 
     test('query everything', async () => {
       const objects = await db.query(Query.select(Filter.everything())).run();
-      expect(objects).to.have.length(10);
+      expect(objects).to.have.length(objectCount);
     });
 
     test('order by natural', async () => {
@@ -162,7 +167,7 @@ describe('Query', () => {
 
     test('limit larger than result set returns all results', async () => {
       const objects = await db.query(Query.select(Filter.everything()).limit(100)).run();
-      expect(objects).to.have.length(10);
+      expect(objects).to.have.length(objectCount);
     });
 
     test('filter by type', async () => {
@@ -184,7 +189,7 @@ describe('Query', () => {
 
     test('filter by tag', async () => {
       {
-        const objects = await db.query(Query.select(Filter.tag(tags[1]))).run();
+        const objects = await db.query(Query.select(Filter.tag(Obj.getURI(tags[1])))).run();
         expect(objects).to.have.length(3);
       }
 
@@ -349,17 +354,17 @@ describe('Query', () => {
 
       {
         const objects = await db.query(Query.select(Filter.everything())).run();
-        expect(objects).to.have.length(7);
+        expect(objects).to.have.length(objectCount - 3);
       }
 
       {
         const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'exclude' })).run();
-        expect(objects).to.have.length(7);
+        expect(objects).to.have.length(objectCount - 3);
       }
 
       {
         const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
-        expect(objects).to.have.length(10);
+        expect(objects).to.have.length(objectCount);
       }
 
       {
@@ -2333,45 +2338,64 @@ describe('Query', () => {
     });
 
     test('tags', async () => {
-      const { db } = await builder.createDatabase();
+      const { db } = await builder.createDatabase({ types: [Tag.Tag] });
 
-      const important = 'echo:///TAGIMPORTANT';
-      const investor = 'echo:///TAGINVESTOR';
-      const importantRef = Ref.fromURI(URI.make(important));
-      const investorRef = Ref.fromURI(URI.make(investor));
+      const important = Tag.make({ label: 'important' });
+      const investor = Tag.make({ label: 'investor' });
 
       db.add(Obj.make(TestSchema.Expando, { name: 'a' }));
       const b = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'b',
-          [Obj.Meta]: { tags: [importantRef] },
+          [Obj.Meta]: { tags: [important] },
         }),
       );
       const c = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'c',
-          [Obj.Meta]: { tags: [importantRef, investorRef] },
+          [Obj.Meta]: { tags: [important, investor] },
         }),
       );
 
-      const objects = await db.query(Query.select(Filter.tag(important))).run();
+      const objects = await db.query(Query.select(Filter.tag(Obj.getURI(important)))).run();
       expect(objects).toEqual([b, c]);
+      expect(Obj.getMeta(c).tags).toEqual([important, investor]);
+    });
+
+    test('an object whose tag is missing is not surfaced', async ({ expect }) => {
+      const spaceKey = PublicKey.random();
+      await using peer = await builder.createPeer({ types: [Tag.Tag] });
+      let plainId: string;
+      {
+        await using db = await peer.createDatabase(spaceKey);
+        const tagged = db.add(Obj.make(TestSchema.Expando, { name: 'tagged' }));
+        plainId = db.add(Obj.make(TestSchema.Expando, { name: 'plain' })).id;
+        // A tag is a strong dependency: an object naming a tag this space does not hold stays hidden.
+        const missingTag = EncodedReference.fromURI(EID.make({ entityId: EntityId.random() }));
+        getObjectCore(tagged).setDecoded(['meta', 'tags'], [missingTag]);
+        await db.flush({ indexes: true });
+      }
+
+      await peer.reload();
+      {
+        await using db = await peer.openLastDatabase();
+        const objects = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+        expect(objects.map((object) => object.id)).toEqual([plainId]);
+      }
     });
 
     test('bare string tags are upgraded to refs on read', async ({ expect }) => {
-      const { db } = await builder.createDatabase();
+      const { db } = await builder.createDatabase({ types: [Tag.Tag] });
+      const tag = db.add(Tag.make({ label: 'legacy' }));
       const obj = db.add(Obj.make(TestSchema.Expando, { name: 'legacy' }));
       await db.flush();
 
       // Simulate data written before the tags-as-refs migration: a bare tag id string in `meta.tags`.
-      const tagEid = EID.make({ entityId: EntityId.make('01J00000000000000000000000') });
+      const tagEid = EID.make({ entityId: tag.id });
       getObjectCore(obj).setDecoded(['meta', 'tags'], [tagEid]);
 
-      // Read back: the string is materialized as a `Ref` carrying the tag EID.
-      const tags = Obj.getMeta(obj).tags;
-      expect(tags).toHaveLength(1);
-      expect(Ref.isRef(tags[0])).toBe(true);
-      expect(tags[0].uri).toBe(tagEid);
+      // Read back: the string resolves to the tag it names.
+      expect(Obj.getMeta(obj).tags).toEqual([tag]);
 
       // And it remains queryable by the tag URI.
       const objects = await db.query(Query.select(Filter.tag(tagEid))).run();

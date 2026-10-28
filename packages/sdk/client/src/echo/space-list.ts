@@ -35,7 +35,8 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common.ts';
 import { InvitationsProxy } from '../invitations/index.ts';
-import { SpaceProxy } from './space-proxy.ts';
+import { type WorkingSetSource } from '../services/boot-cache/index.ts';
+import { SpaceProxy, type TakeWorkingSet } from './space-proxy.ts';
 
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
@@ -50,6 +51,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
     private readonly _runtime: EffectContext.Context<never> = EffectContext.empty(),
+    private readonly _takeWorkingSet?: TakeWorkingSet,
   ) {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
@@ -166,7 +168,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           | SpaceProxy
           | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient, this._runtime);
+          spaceProxy = new SpaceProxy(
+            this._serviceProvider,
+            space,
+            this._echoClient,
+            this._runtime,
+            this._takeWorkingSet,
+          );
 
           if (this._shouldOpenSpace(space)) {
             this._openSpaceAsync(spaceProxy);
@@ -262,6 +270,16 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   private get _spaces() {
     return this.get();
+  }
+
+  /**
+   * The spaces as boot-cache sources, in list order.
+   * @internal
+   */
+  _workingSetSources(): WorkingSetSource[] {
+    return this.get()
+      .filter((space): space is SpaceProxy => space instanceof SpaceProxy)
+      .map((space) => ({ id: space.id, exportWorkingSet: (options) => space._exportWorkingSet(options) }));
   }
 
   async create(meta?: SpaceProperties, options?: CreateSpaceOptions): Promise<Space> {

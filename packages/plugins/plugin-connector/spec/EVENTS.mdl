@@ -1,0 +1,614 @@
+---
+id: org.dxos.plugin.connector.events
+name: Connector event dispatch
+version: 0.1.0
+---
+
+Provider webhooks delivered to the spaces allowed to receive them: one Provider interface in place
+of per-provider switches, an `event` trigger kind, routing on EDGE, and grants derived from OAuth
+state. GitHub is the first provider.
+
+This is part 3 of the GitHub sync design (see
+[plugin-github/spec/SYNC.mdl](../../plugin-github/spec/SYNC.mdl)). It runs `op:SyncGitHubRepositories`;
+with events flowing, that operation's poll becomes a slow backstop for missed deliveries. Nothing here is
+GitHub-specific except `github.ts`.
+
+It spans two repositories: `@dxos/compute` (the trigger kind) and plugin-connector live in
+`dxos/dxos`; kms-service (which owns the Provider extension point and the webhook ingress) and
+compute-service (which routes) live in `dxos/edge`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
+
+## Diagram
+
+A plugin-illustrator render, grouped by package and service. The `diagram` block is the source;
+regenerate the image with `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/p3-dispatch.dx`.
+
+![Inside kms-service, provider modules implement the Provider interface that its webhook ingress and grant issuer use; a signed webhook enters kms-service's ingress, which hands the resource to compute-service's EventRouter; the router pokes the space's TriggersDispatcher, which runs plugin-github's sync; when the TriggersDispatcher loads the space's event trigger, it gets a grant from kms-service and registers the route with the router.](diagrams/p3-dispatch.dx.svg)
+
+```diagram
+diagram flow=right
+group kms "kms-service" {
+  node Iface "Provider"
+  node GitHubP "github.ts"
+  node LinearP "linear.ts"
+  node Ingress "webhook ingress"
+  node Grants "token + grant"
+}
+group compute "compute-service" {
+  node Router "EventRouter"
+  node Dispatch "TriggersDispatcher"
+}
+group github "plugin-github" {
+  node Sync "sync operation"
+}
+node Trigger "event trigger"
+node App "GitHub App"
+edge GitHubP implements Iface
+edge LinearP implements Iface
+edge Ingress depends-on Iface "verify, route"
+edge Grants depends-on Iface "checkAccess"
+edge App -> Ingress "signed webhook"
+edge Ingress -> Router "github.com/o/r"
+edge Router -> Dispatch "poke"
+edge Dispatch -> Sync "run"
+edge Dispatch -> Trigger "load" stroke=dashed
+edge Dispatch -> Grants "issue grant" stroke=dashed
+edge Dispatch -> Router "register" stroke=dashed
+```
+
+## Extension point
+
+### `Provider` (kms-service)
+
+An extension point of kms-service, not a separate package or worker. One module per external
+service, registered in kms-service, so adding a provider is one module and its secrets, with no
+`switch` to extend. Everything provider-specific (OAuth, tokens, access checks, webhook signatures)
+stays in kms-service; compute-service only routes resource URIs and never sees a provider module.
+
+```ts
+// edge: packages/services/kms-service/src/providers/Provider.ts
+import type * as Effect from 'effect/Effect';
+
+import { type OAuthProvider } from '@dxos/protocols';
+
+/** A resource an external service exposes, as host/path: `github.com/dxos/dxos`, `github.com/dxos`, `github.com`. */
+export type ResourceUri = string & { readonly _ResourceUri: unique symbol };
+
+/** One external service: how to authorize against it, check access on it, and receive its webhooks. */
+export interface Provider {
+  readonly id: OAuthProvider;
+  /** Token-endpoint details for the provider's OAuth flow. */
+  readonly oauth: AuthProviderData;
+  /** kms keeps the refresh token and hands the client a placeholder; required for `checkAccess`. */
+  readonly managed: boolean;
+  /** The account a token belongs to, recorded on the AccessToken. */
+  account?(token: ProviderToken): Effect.Effect<ProviderAccount, ProviderError>;
+  /** Whether the token's account may read `resource` now. */
+  checkAccess?(token: ProviderToken, resource: ResourceUri): Effect.Effect<AccessVerdict, ProviderError>;
+  /** Absent → the provider sends no webhooks and its bindings only poll. */
+  readonly webhook?: ProviderWebhook;
+}
+
+export interface ProviderWebhook {
+  /** Secret binding holding the provider's shared webhook secret, e.g. `GITHUB_WEBHOOK_SECRET`. */
+  readonly secret: string;
+  /** Checks the request's signature (GitHub: `X-Hub-Signature-256`, HMAC-SHA256 of the raw body). */
+  verify(request: Request, body: string, secret: string): Effect.Effect<boolean>;
+  /** The provider's delivery id, for dedupe (GitHub: `X-GitHub-Delivery`). */
+  deliveryId(request: Request): string;
+  /** Parses a verified delivery. */
+  parse(request: Request, body: string): Effect.Effect<ProviderEvent, ProviderError>;
+  /** Resources the event concerns, most specific first: `github.com/dxos/dxos`, then `github.com/dxos`. */
+  route(event: ProviderEvent): readonly ResourceUri[];
+  /** Routes the event revokes (app uninstalled, authorization revoked); empty for ordinary events. */
+  revokes(event: ProviderEvent): readonly Revocation[];
+}
+
+export type ProviderToken = { readonly accessToken: string; readonly account?: string };
+export type ProviderAccount = { readonly id: string; readonly login: string };
+export type AccessVerdict = {
+  readonly allowed: boolean;
+  readonly reason?: string;
+  /** Installations the resource is reached through; one for a repository, every covered one for an owner or `github.com`. */
+  readonly installations?: readonly string[];
+};
+
+export type ProviderEvent = {
+  readonly provider: OAuthProvider;
+  /** `pull_request`, `issues`, `push`, `check_suite`, … */
+  readonly name: string;
+  readonly action?: string;
+  /** Provider-scoped installation id; GitHub sends `installation.id`. */
+  readonly installation?: string;
+  readonly payload: unknown;
+};
+
+export type Revocation =
+  | { readonly kind: 'account'; readonly account: string }
+  | { readonly kind: 'installation'; readonly installation: string }
+  | { readonly kind: 'resource'; readonly resource: ResourceUri };
+
+/** Every provider, keyed by id; kms-service looks a provider up here. */
+export const Providers: Readonly<Partial<Record<OAuthProvider, Provider>>>;
+```
+
+```mdl
+service Provider
+  desc: kms-service's extension point for one external service. Implemented once per provider (github.ts, linear.ts, …); used by kms-service's OAuth flow, grant issuer and webhook ingress.
+  ops:
+    account(token: ProviderToken) → ProviderAccount
+    checkAccess(token: ProviderToken, resource: ResourceUri) → AccessVerdict
+    webhook.verify(request: Request, body: string, secret: string) → boolean
+    webhook.deliveryId(request: Request) → string
+    webhook.parse(request: Request, body: string) → ProviderEvent
+    webhook.route(event: ProviderEvent) → ResourceUri[]
+    webhook.revokes(event: ProviderEvent) → Revocation[]
+  errors:
+    ProviderError: the provider rejected the token or failed
+```
+
+GitHub's module, in outline:
+
+```ts
+// edge: packages/services/kms-service/src/providers/github.ts
+export const GitHubProvider: Provider = {
+  id: OAuthProvider.GITHUB,
+  oauth: { /* today's getGitHubAuthProviderSpec() */ },
+  managed: true,
+  account: (token) => getJson('/user', token).pipe(Effect.map(({ id, login }) => ({ id: String(id), login }))),
+  // github.com/<owner>/<repo> → GET /repos/<owner>/<repo>; github.com/<owner> and github.com → GET /user/installations.
+  checkAccess: (token, resource) => ...,
+  webhook: {
+    secret: 'GITHUB_WEBHOOK_SECRET',
+    verify: (request, body, secret) => hmacSha256Equals(secret, body, request.headers.get('x-hub-signature-256')),
+    deliveryId: (request) => request.headers.get('x-github-delivery') ?? '',
+    parse: (request, body) => ...,
+    // repository.full_name → github.com/<full_name>, then github.com/<owner>.
+    route: (event) => ...,
+    // github_app_authorization.revoked → account; installation.deleted → installation;
+    // installation_repositories.removed → each removed repository.
+    revokes: (event) => ...,
+  },
+};
+```
+
+### Connector declaration (`plugin-connector`)
+
+A connector says which resource a binding listens to, so plugin-connector can create the event
+trigger beside the timer trigger part 1 already creates.
+
+```ts
+// Added to ConnectorSpec.ConnectorSync (packages/plugins/plugin-connector/src/types/ConnectorSpec.ts).
+/** Push events that re-run the sync for one binding; absent → the connector only polls. */
+events?: {
+  /** The resource a binding's events arrive for, e.g. `github.com/dxos/dxos` from the bound Repo. */
+  resource: (binding: Cursor.ExternalCursor, target: Obj.Unknown) => string;
+  /** Provider event names that wake the binding. */
+  names: readonly string[];
+};
+```
+
+## Types
+
+### Trigger kind (`@dxos/compute`)
+
+```ts
+// packages/core/compute/compute/src/types/Trigger.ts — added to the Spec union.
+/**
+ * External event. Fires when a provider reports a change to `source` or anything below it.
+ */
+export const EventSpec = Schema.Struct({
+  kind: Schema.Literal('event').annotate(kindLiteralAnnotations),
+  /** Resource URI pattern: `github.com/dxos/dxos` (one repo), `github.com/dxos` (an org), `github.com` (everything the account sees). */
+  source: Schema.String.annotate({ title: 'Source', examples: ['github.com/dxos/dxos'] }),
+  /** Provider event names; omit for every event on the source. `issues.closed` narrows to one action. */
+  events: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Events' })),
+  /** The credential whose account access is checked against. */
+  credential: Ref.Ref(AccessToken.AccessToken).annotate({ title: 'Credential' }),
+  /** UCAN issued by EDGE after checking access; valid until `exp`. Written by EDGE, never by a user. */
+  grant: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))),
+});
+export type EventSpec = Schema.Schema.Type<typeof EventSpec>;
+
+export const specEvent = (opts: {
+  source: string;
+  credential: Ref.Ref<AccessToken.AccessToken>;
+  events?: readonly string[];
+}): EventSpec => ({ kind: 'event', ...opts });
+```
+
+```mdl
+type EventSpec
+  desc: Trigger spec kind `event` in @dxos/compute.
+  fields:
+    kind: event
+    source: string                   # resource URI pattern
+    events?: string[]                # provider event names, optionally `name.action`
+    credential: Ref<AccessToken>
+    grant?: string                   # UCAN, written by EDGE
+```
+
+### Grant
+
+The grant caches one access check. It is a UCAN so the router can verify it without calling kms or
+the provider on every delivery.
+
+```ts
+// UCAN 0.10 payload of an event grant.
+type EventGrant = {
+  /** EDGE's signing DID. */
+  iss: string;
+  /** The space's DID. */
+  aud: string;
+  att: [{ with: `dxos:event:${ResourceUri}`; can: 'event/subscribe' }];
+  /** Issued-at + 24 hours. */
+  exp: number;
+  /** Binds the grant to the trigger and the token it was checked with. */
+  fct: [{ spaceId: string; triggerId: string; accessTokenId: string; account: string; installations?: readonly string[] }];
+  prf: [];
+};
+```
+
+```mdl
+type EventGrant
+  desc: UCAN issued by kms-service after Provider.checkAccess succeeds with the space's token.
+  fields:
+    iss: string                      # EDGE's DID
+    aud: string                      # the space's DID
+    with: string                     # dxos:event:<ResourceUri>
+    can: event/subscribe
+    exp: number                      # 24 hours after issue
+    spaceId: string
+    triggerId: string
+    accessTokenId: string
+    account: string                  # provider account the check ran as
+    installations?: string[]         # from AccessVerdict; present for every GitHub grant
+```
+
+### Routing (compute-service)
+
+```ts
+// edge: compute-service — one row per registered event trigger; D1 table `event_routes`.
+type Route = {
+  resource: ResourceUri;           // primary key part: the trigger's source
+  spaceId: SpaceId;                // primary key part
+  triggerId: ObjectId;             // primary key part
+  provider: OAuthProvider;
+  accessTokenId: string;           // for token deletion; copied from the grant
+  account: string;                 // for account revocations
+  installations?: readonly string[]; // for installation revocations; copied from the grant, so set on every GitHub route
+  events?: readonly string[];
+  grantExp: number;
+};
+
+/** What the TriggersDispatcher hands the trigger's runnable as `event.data`. Never the payload. */
+type EventPoke = {
+  provider: OAuthProvider;
+  resource: ResourceUri;
+  event: string;                   // `pull_request`
+  action?: string;                 // `synchronize`
+  deliveryId: string;
+  receivedAt: string;
+  /** Narrows the sync; the sync still reads everything with its own token. */
+  hint?: { kind: 'pullRequest' | 'issue' | 'push' | 'checks'; number?: number; ref?: string };
+};
+```
+
+```mdl
+service EventRouter
+  desc: Global index of event triggers in compute-service, keyed by resource.
+  ops:
+    register(trigger: EventSpec, spaceId: SpaceId, triggerId: ObjectId) → Route   # account, accessTokenId and installations come from trigger.grant
+    unregister(spaceId: SpaceId, triggerId: ObjectId) → void
+    match(resources: ResourceUri[], event: ProviderEvent) → Route[]
+    revoke(revocation: Revocation) → number
+    dispatch(resources: ResourceUri[], event: ProviderEvent, deliveryId: string) → number   # called by kms-service's ingress; returns spaces poked
+  errors:
+    GrantInvalid: the grant's signature, audience, resource or expiry does not check out
+```
+
+```mdl
+service EventGrants
+  desc: Grant issuing in kms-service, which holds managed tokens.
+  ops:
+    issue(spaceId: SpaceId, triggerId: ObjectId, accessTokenId: string, source: ResourceUri) → string
+  errors:
+    NotManaged: the credential's provider keeps its token on the client, so kms cannot check access
+    AccessDenied: Provider.checkAccess refused the resource
+```
+
+## Features
+
+```mdl
+feat F-1: Provider registry
+
+  req F-1.1: Every provider is one module implementing Provider, registered in kms-service; kms-service looks providers up in Providers and contains no per-provider branch, and compute-service contains no provider code at all.
+
+  req F-1.2: kms-service's OAuth flow reads `Providers[id].oauth`.
+
+  req F-1.3: GitHub is a managed provider: kms keeps its refresh token, and the client's AccessToken holds the placeholder, as Google's does today.
+```
+
+```mdl
+feat F-2: Event trigger and grant
+
+  req F-2.1:
+    when: a connector with `events` binds a target
+    then: plugin-connector creates an event trigger with source = events.resource(binding, target), credential = the connection's AccessToken, and remote = true, running the connector's sync operation scoped to that binding
+
+  req F-2.2:
+    when: compute-service loads an event trigger without a valid grant
+    then: it calls EventGrants.issue; on success it writes the grant to the trigger and registers the route
+
+  req F-2.4: Access is never inferred from the trigger alone; it comes from Provider.checkAccess with the space's own managed token.
+```
+
+```mdl
+feat F-3: Ingress
+
+  req F-3.1: One endpoint per provider, `POST /events/<provider id>`, served by kms-service, which holds the webhook secrets; after verify, dedupe, parse and route it calls EventRouter.dispatch over its service binding to compute-service.
+
+  req F-3.2:
+    when: a delivery arrives
+    then: it is verified with Provider.webhook.verify before parsing; an unverified delivery answers 401 and is not logged beyond its delivery id
+
+  req F-3.3: A delivery id seen in the last 24 hours is answered 200 and dropped.
+
+  req F-3.4: The ingress answers within 1 second and fans out from a queue, because GitHub times out slow receivers.
+```
+
+```mdl
+feat F-4: Routing and delivery
+
+  req F-4.1: A route matches when its resource is one of Provider.webhook.route(event), or an ancestor of one at a `/` boundary (`github.com` matches `github.com/o/r`; `github.com/o` does not match `github.com/ob/r`), and its events, if set, include the event name or name.action.
+
+  req F-4.2: A match is delivered to the space's TriggersDispatcher as an EventPoke; the provider's payload never enters a space.
+
+  req F-4.3: Deliveries to one trigger are coalesced for 5 seconds, so a burst of events runs the sync once.
+
+  req F-4.4: The router checks grantExp on delivery and drops routes past it.
+```
+
+```mdl
+feat F-5: Revocation
+
+  req F-5.1:
+    when: Provider.webhook.revokes returns revocations
+    then: EventRouter.revoke removes every matching route and clears its trigger's grant, so the next load issues a fresh grant (F-2.2) for whatever the token still reaches, and the timer falls back to its default schedule until then (F-6.1)
+
+  req F-5.2:
+    when: kms deletes a managed token
+    then: every route whose accessTokenId is that token's is removed; routes another token of the same account backs stay
+
+  req F-5.3:
+    when: an event trigger is deleted or disabled
+    then: its route is removed on the dispatcher's next load
+```
+
+```mdl
+feat F-6: Backstop
+
+  req F-6.1: While a binding's event trigger holds a valid grant, plugin-connector sets the binding's timer trigger to an hourly schedule, and restores the 3-minute default when the grant lapses. The schedule lives only on the trigger.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Push to a bound repository
+  given: a space bound to dxos/dxos with a valid event grant
+  when: GitHub delivers pull_request.synchronize for dxos/dxos#12
+  then:
+    - the delivery verifies and routes to github.com/dxos/dxos
+    - the space receives one EventPoke with hint { kind: pullRequest, number: 12 }
+    - part 1's sync runs and updates PullRequest #12
+```
+
+```mdl
+scenario T-2: Unauthorized space
+  given: a space whose account cannot read acme/secret
+  when: it creates an event trigger with source github.com/acme/secret
+  then:
+    - EventGrants.issue fails with AccessDenied
+    - no route exists for that trigger and the trigger's lastError names the refusal
+```
+
+```mdl
+scenario T-3: Forged delivery
+  given: a request to /events/github whose signature does not match the body
+  when: it arrives
+  then:
+    - the ingress answers 401
+    - no route is matched and no space is poked
+```
+
+```mdl
+scenario T-4: App uninstalled
+  given: routes registered for installation 42
+  when: GitHub delivers installation.deleted for installation 42
+  then:
+    - every route whose installations include 42 is removed and its trigger's grant is cleared
+    - the affected bindings fall back to the timer's default schedule
+    - a trigger whose source still reaches installation 43 gets a fresh grant and route on its next load
+```
+
+## Open questions
+
+1. One GitHub App per environment, or one App whose endpoint forwards by environment.
+2. Whether `github.com/<owner>` and `github.com` patterns should be allowed: they route by installation, so a space can learn that a repository it cannot read changed, though never what changed.
+3. Which existing DXOS key signs grants as EDGE, and the space's DID format; `@dxos/permission` mentions UCAN and should be checked first.
+
+## Changelog
+
+```mdl
+decision D-1: Part 3 of the GitHub sync design is webhook dispatch: an event trigger type, routing, and permissions.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-2: The new trigger type is `event`. Its source is a URI or pattern for a resource, such as `github.com` or `github.com/dxos/dxos`. EDGE gives the space a credential, a UCAN, that shows the space can actually access those events.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [EventSpec, EventGrant, F-2]
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-3: Access may need no separate credential and may be inferred from OAuth state instead.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-2.4]
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-4: A wide Provider (service) interface replaces the switch over providers.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [Provider, F-1]
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-5: Access is checked from OAuth state, which requires GitHub to become a managed provider; the UCAN of [D-2] caches that check for 24 hours, so the router verifies it without calling kms or GitHub per delivery. Fills in [D-2] and [D-3].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3, F-2, EventGrant]
+  why: Only a token held on EDGE can prove access to EDGE without sending it; a grant with expiry gives revocation a bound and keeps per-event cost at a signature check.
+  rejected:
+    - Check access with the provider on every delivery: one provider request per event per space.
+    - UCAN without managed tokens: nothing on EDGE could check the claim before signing it.
+```
+
+```mdl
+decision D-6: The Provider interface carries OAuth data, account, checkAccess and an optional webhook part (verify, deliveryId, parse, route, revokes), in a new edge package shared by kms-service and compute-service. Fills in [D-4].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Provider, F-1, F-3]
+  rejected:
+    - A separate github-service worker: the only GitHub-specific code is the module itself.
+```
+
+```mdl
+decision D-7: A delivery is a poke: the payload never enters a space, and the space's sync reads what changed with its own token. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [EventPoke, F-4.2]
+  why: A routing mistake then cannot leak content, at the cost of one read per event.
+```
+
+```mdl
+decision D-8: Routes live in a global D1 table in compute-service, ingress is `POST /events/<provider>`, and deliveries to one trigger coalesce for 5 seconds. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [EventRouter, F-3, F-4]
+  why: Each space's TriggersDispatcher sees only its own space, so the reverse index from resource to spaces must be global.
+```
+
+```mdl
+decision D-9: The Provider interface is not a new edge service or package; it is an extensibility point in kms-service.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [Provider, F-1]
+  supersedes: D-6
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-10: kms-service also serves the webhook ingress and calls compute-service's EventRouter.dispatch with the routed resources; compute-service has no provider code. Fills in [D-9].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1, EventRouter, F-1.1]
+  why: Verifying a webhook needs the provider module and its secret, both of which now live only in kms-service; routing by resource URI stays generic.
+  rejected:
+    - Ingress in compute-service calling kms-service per delivery to verify: one extra service-binding hop per event and webhook secrets readable outside kms.
+```
+
+```mdl
+decision D-11: The spec omits renewing a grant before it expires (formerly F-2.3).
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-2, EventSpec]
+  source: https://claude.ai/code/artifact/3c2feabe-985f-479a-aeea-1d598f6bf1e0
+```
+
+```mdl
+decision D-12: The connector declares no backstop interval; while events flow, plugin-connector edits the timer trigger's own schedule, so the interval lives only on the trigger. Follows from plugin-github SYNC.mdl D-7.
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1]
+  why: A backstop interval on the connector would mirror the trigger's schedule, which SYNC.mdl D-7 rules out.
+```
+
+```mdl
+decision D-13: Provider.checkAccess reports the installation a resource is reached through; the grant and the route carry it, so every GitHub route can be removed by installation.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [AccessVerdict, EventGrant, Route, F-5.1, T-4]
+  why: EventRouter.register had no source for the installation id, so installation.deleted could not find the routes T-4 expects it to remove.
+```
+
+```mdl
+decision D-14: A route stores the accessTokenId of its grant, and deleting a managed token removes only the routes that token backs. Narrows F-5.2, which removed by account.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Route, F-5.2]
+  why: Two spaces can hold distinct tokens for one provider account; removing by account cut off the space whose token is still valid.
+```
+
+```mdl
+decision D-15: A route's resource matches a delivered resource it equals or is an ancestor of, at a `/` boundary.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1]
+  why: EventSpec allows `github.com` and owner sources, but Provider.webhook.route lists only the repository and owner, so exact matching never delivered to a `github.com` trigger.
+```
+
+```mdl
+decision D-16: An event trigger runs the connector's sync for its own binding only, so one event polls one repository; a binding-scoped input on the sync operation carries it (plugin-github SYNC.mdl D-16).
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, EventPoke]
+  why: The sync operation polled every binding of a connection, so several event triggers on one connection turned one burst into several full polls.
+```
+
+```mdl
+decision D-17: A grant and its route carry every installation the source reaches, not one: a repository has one, an owner or `github.com` source can have several, and an installation revocation removes each route that lists it. Narrows [D-13].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [AccessVerdict, EventGrant, Route, F-5.1]
+  why: One account can see the GitHub App installed on several owners, so a single installation id could not find every route a broad grant covers.
+```
+
+```mdl
+decision D-18: An installation revocation clears the grant of every trigger whose route it removed, rather than editing the route; the trigger's next load re-checks access and registers whatever remains.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, T-4]
+  why: A broad route can list several installations; dropping it while the grant stayed valid cut off the installations still reachable and kept the timer on its slow schedule. Re-issuing on load reuses F-2.2 instead of a second path that edits routes in place.
+```

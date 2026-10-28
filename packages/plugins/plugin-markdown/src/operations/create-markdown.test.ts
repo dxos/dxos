@@ -11,6 +11,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { MarkdownPlugin } from '#plugin';
 import { Markdown, MarkdownOperation } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), MarkdownPlugin()] });
+
 describe('CreateMarkdown', () => {
   test('returns an unpersisted document with the given name and content', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({

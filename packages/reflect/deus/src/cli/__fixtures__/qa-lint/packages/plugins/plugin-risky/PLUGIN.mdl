@@ -1,0 +1,29 @@
+---
+id: org.dxos.plugin.risky
+name: Risky
+version: 0.1.0
+---
+
+A fixture spec with one unbound reference and one unsafe teardown, for `deus qa lint`.
+
+## QA
+
+```mdl
+test QA-1: Uses names it never binds
+  given:
+    - space: an empty space
+  steps:
+    - do: open $given.space
+    - do: rename $given.document to $title
+      capture: title
+    - do: delete $orphan
+```
+
+```mdl
+test QA-2: Removes whatever comes first
+  steps:
+    - do: create a document
+  after:
+    - do: remove the document
+      invoke: removeObjects(db.query(Filter.type(Document)).objects[0])
+```

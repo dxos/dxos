@@ -40,7 +40,7 @@ export const SupportHomeCompanion = () => {
       </Panel.Header>
       <Panel.Body>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-3'>
+          <ScrollArea.Viewport classNames='p-trim-md'>
             <WelcomePanel />
           </ScrollArea.Viewport>
         </ScrollArea.Root>

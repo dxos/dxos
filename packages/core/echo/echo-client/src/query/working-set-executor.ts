@@ -23,7 +23,7 @@ import {
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
-import type { ObjectCore } from '../core-db/index.ts';
+import type { DeletionMemo, ObjectCore } from '../core-db/index.ts';
 import { aggregateNeedsIndex } from './util.ts';
 
 export type WorkingSetItem = {
@@ -40,8 +40,8 @@ export type WorkingSetItem = {
 };
 
 const WorkingSetItem = Object.freeze({
-  isDeleted(item: WorkingSetItem): boolean {
-    return item.core.isDeleted();
+  isDeleted(item: WorkingSetItem, memo?: DeletionMemo): boolean {
+    return item.core.isDeleted(undefined, memo);
   },
 
   getProperty(item: WorkingSetItem, property: EntityPropPath): unknown {
@@ -93,7 +93,7 @@ const WorkingSetItem = Object.freeze({
 export type WorkingSetDataProvider = {
   spaceId: SpaceId;
   allCores(): ObjectCore[];
-  getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
+  getCoreById(id: EntityId): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
   areStrongDepsResolved(core: ObjectCore): boolean;
 };
@@ -105,6 +105,9 @@ export type WorkingSetDataProvider = {
  * Returns null when the plan requires index capabilities (TextSelector, TimestampSelector).
  */
 export class WorkingSetQueryExecutor {
+  /** Set for the duration of one {@link tryExecute}, which is synchronous, so no core changes under it. */
+  #deletionMemo: DeletionMemo | undefined = undefined;
+
   constructor(private readonly _provider: WorkingSetDataProvider) {}
 
   /**
@@ -112,11 +115,18 @@ export class WorkingSetQueryExecutor {
    * Returns null if the plan requires SQL index access.
    */
   tryExecute(plan: QueryPlan.Plan): WorkingSetItem[] | null {
-    return this._execPlan(plan, []);
+    // Items under one parent share its deletion walk; without the memo a scan costs items × depth.
+    const outer = this.#deletionMemo;
+    this.#deletionMemo = new Map();
+    try {
+      return this._execPlan(plan, []);
+    } finally {
+      this.#deletionMemo = outer;
+    }
   }
 
   private _execPlan(plan: QueryPlan.Plan, ws: WorkingSetItem[]): WorkingSetItem[] | null {
-    for (const step of plan.steps) {
+    for (const step of deletedChecksLast(plan.steps)) {
       const result = this._execStep(step, ws);
       if (result === null) {
         return null;
@@ -204,7 +214,7 @@ export class WorkingSetQueryExecutor {
         }
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
-            const core = this._provider.getCoreById(id, true);
+            const core = this._provider.getCoreById(id);
             // Resolved, not satisfied: an id selector names one object the caller already holds an
             // id for, so a dependency that is settled unreachable must still surface it. Requiring
             // satisfaction here left an object that `getObjectById` returns unloadable by its own
@@ -286,14 +296,37 @@ export class WorkingSetQueryExecutor {
 
     const maxDepth = filter.transitive ? MAX_DEPTH_FOR_CHILD_OF_TRACING : 1;
 
-    return ws.filter((item) => this._isChildOfAny(item, parentObjectIds, maxDepth));
+    // Siblings share their ancestors' verdicts; without the memo a transitive scan costs items × depth.
+    const memo: ChildOfMemo = new Map();
+    return ws.filter((item) => this._isChildOfAny(item, parentObjectIds, maxDepth, memo));
   }
 
-  private _isChildOfAny(item: WorkingSetItem, parentObjectIds: Set<EntityId>, remainingDepth: number): boolean {
+  private _isChildOfAny(
+    item: WorkingSetItem,
+    parentObjectIds: Set<EntityId>,
+    remainingDepth: number,
+    memo: ChildOfMemo,
+  ): boolean {
     if (remainingDepth <= 0) {
       return false;
     }
+    const cached = memo.get(item.objectId)?.[remainingDepth];
+    if (cached !== undefined) {
+      return cached;
+    }
+    const verdict = this.#computeIsChildOfAny(item, parentObjectIds, remainingDepth, memo);
+    const byDepth = memo.get(item.objectId) ?? [];
+    byDepth[remainingDepth] = verdict;
+    memo.set(item.objectId, byDepth);
+    return verdict;
+  }
 
+  #computeIsChildOfAny(
+    item: WorkingSetItem,
+    parentObjectIds: Set<EntityId>,
+    remainingDepth: number,
+    memo: ChildOfMemo,
+  ): boolean {
     const parentEid = WorkingSetItem.getParentEid(item);
     if (!parentEid) {
       return false;
@@ -314,12 +347,12 @@ export class WorkingSetQueryExecutor {
     if (!parentItem) {
       return false;
     }
-    return this._isChildOfAny(parentItem, parentObjectIds, remainingDepth - 1);
+    return this._isChildOfAny(parentItem, parentObjectIds, remainingDepth - 1, memo);
   }
 
   private _execFilterDeletedStep(step: QueryPlan.FilterDeletedStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
     const expected = step.mode === 'only-deleted';
-    return ws.filter((item) => WorkingSetItem.isDeleted(item) === expected);
+    return ws.filter((item) => WorkingSetItem.isDeleted(item, this.#deletionMemo) === expected);
   }
 
   private _execTraverseStep(step: QueryPlan.TraverseStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -616,6 +649,34 @@ export class WorkingSetQueryExecutor {
 
 /** Matches the host executor and `DeletionResolver`, so a child resolves the same on both sides. */
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
+
+/**
+ * Moves each deletion filter past the property filters right after it. Both keep or drop an item on its
+ * own, so the order is free; the planner puts the deletion check first, which ran it (a dependency walk)
+ * on every loaded object a wildcard select returned rather than on the few the filters keep.
+ */
+const deletedChecksLast = (steps: readonly QueryPlan.Step[]): readonly QueryPlan.Step[] => {
+  if (!steps.some((step, index) => step._tag === 'FilterDeletedStep' && steps[index + 1]?._tag === 'FilterStep')) {
+    return steps;
+  }
+  const reordered: QueryPlan.Step[] = [];
+  let pending: QueryPlan.Step[] = [];
+  for (const step of steps) {
+    if (step._tag === 'FilterDeletedStep') {
+      pending.push(step);
+    } else if (step._tag === 'FilterStep' && pending.length > 0) {
+      reordered.push(step);
+    } else {
+      reordered.push(...pending, step);
+      pending = [];
+    }
+  }
+  reordered.push(...pending);
+  return reordered;
+};
+
+/** `childOf` verdicts by object id, indexed by the depth budget they were judged with. */
+type ChildOfMemo = Map<EntityId, boolean[]>;
 
 /** True once the working set has been partitioned by an AggregateStep (every item carries a group key). */
 const _isGroupedWorkingSet = (ws: WorkingSetItem[]): boolean => ws.length > 0 && ws[0].groupKey !== undefined;

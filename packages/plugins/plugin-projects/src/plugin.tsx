@@ -8,6 +8,7 @@ import {
   AppGraphBuilder,
   ComposerPluginTemplate,
   CreateObject,
+  Migrations,
   NavigationTargetResolver,
   OperationHandler,
   PluginAsset,
@@ -26,6 +27,7 @@ import { meta } from '#meta';
 export const ProjectsPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(Migrations),
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),

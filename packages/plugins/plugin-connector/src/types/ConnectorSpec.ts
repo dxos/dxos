@@ -215,8 +215,11 @@ export const KeyPairForm = (fields: { keyId: CredentialFieldText; keySecret: Cre
   });
 
 export type CredentialFormResult =
-  | { kind: 'complete'; accessToken: AccessToken.AccessToken; connection: Connection.Connection }
-  | { kind: 'oauth'; loginHint?: string };
+  /** `accessToken` is absent for a service that needs no auth. */
+  | { kind: 'complete'; accessToken?: AccessToken.AccessToken; connection: Connection.Connection }
+  | { kind: 'oauth'; loginHint?: string }
+  /** An MCP server that signs in with MCP authorization; EDGE discovers its authorization server from the URL. */
+  | { kind: 'mcp-oauth'; endpoint: Connection.McpEndpoint };
 
 /**
  * Per-connector form rendered by the generic connector-form dialog. One
@@ -300,6 +303,11 @@ export type ConnectorEntry = {
     accessToken: AccessToken.AccessToken;
     connection: Connection.Connection;
   }) => ReadonlyArray<{ label: string; value: string }>;
+  /**
+   * The MCP server a connection made with this connector exposes to agents, authenticated with the
+   * connection's own credential. Declare it only where the vendor's server accepts that credential.
+   */
+  mcp?: (connection: Connection.Connection) => Connection.McpEndpoint | undefined;
 };
 
 /**
@@ -341,3 +349,16 @@ export const idsForTarget = (
     .filter((connector) => connector.sync?.targetTypename === typename)
     .map((connector) => connector.id);
 };
+
+/**
+ * The MCP server a connection exposes, from the connector that operates it. `undefined` when the
+ * connector declares none or is not registered here.
+ */
+export const mcpEndpoint = (
+  connectors: readonly ConnectorEntry[],
+  connection: Connection.Connection,
+): Connection.McpEndpoint | undefined =>
+  // A built-in MCP server belongs to no connector and stores its own endpoint.
+  connection.connectorId === undefined
+    ? connection.mcp
+    : connectors.find((connector) => connector.id === connection.connectorId)?.mcp?.(connection);

@@ -79,12 +79,6 @@ export const steps = [
         });
         await add({ '@type': 'org.dxos.type.person', 'fullName': 'Rich Burdon' });
         await add({ '@type': 'org.dxos.type.organization', 'name': 'DXOS' });
-        for (const [name, url] of [
-          ['Linear', 'https://mcp.linear.app/mcp'],
-          ['GitHub', 'https://api.githubcopilot.com/mcp/'],
-        ]) {
-          await add({ '@type': 'org.dxos.type.assistant.mcpServer', name, url, 'protocol': 'http', 'enabled': false });
-        }
 
         const { object: chat } = await invoke('org.dxos.operation.assistant.createChat', { name: 'Prompt redesign' });
         await add(chat);
@@ -140,15 +134,15 @@ export const steps = [
   {
     name: 'Switch on an MCP server from the + menu',
     run: async ({ demo, page }) => {
-      await caption(demo, '"+" holds things by kind; MCP servers are switched on here');
+      await caption(demo, '"+" holds things by kind; Connectors switch MCP servers on for this chat');
       await demo.click({ selector: ADD_MENU, label: 'Add' });
-      await demo.hover({ selector: '[data-testid="assistant.add-menu.mcp-servers"]', label: 'MCP servers' });
-      const linear = '[data-testid="assistant.add-menu.mcp-server"]:has-text("Linear")';
-      await demo.click({ selector: linear, label: 'Linear' });
-      await page.locator(`${linear}[data-state="checked"]`).waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.hover({ selector: '[data-testid="assistant.add-menu.connectors"]', label: 'Connectors' });
+      const browser = '[data-testid="assistant.add-menu.connection"]:has-text("Browser")';
+      await demo.click({ selector: browser, label: 'Browser' });
+      await page.locator(`${browser}[data-state="checked"]`).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.sleep({ ms: 1_800 });
-      await demo.click({ selector: linear, label: 'Linear' });
-      await page.locator(`${linear}[data-state="unchecked"]`).waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.click({ selector: browser, label: 'Browser' });
+      await page.locator(`${browser}[data-state="unchecked"]`).waitFor({ state: 'visible', timeout: 5_000 });
       await demo.sleep({ ms: 1_000 });
       await demo.press({ key: 'Escape' });
       await demo.press({ key: 'Escape', hud: false });
@@ -216,7 +210,7 @@ export const steps = [
       await clearPrompt(page);
       await demo.type({ selector: PROMPT, value: 'For ', delay: 70 });
       await demo.click({ selector: ADD_MENU, label: 'Add' });
-      await demo.click({ selector: '[data-testid="assistant.add-menu.object"]', label: 'Add an object…' });
+      await demo.click({ selector: '[data-testid="assistant.add-menu.object"]', label: 'Add object…' });
       await demo.type({ selector: '[data-testid="search.dialog"] input', value: 'Rich' });
       await demo.click({
         selector: '[data-testid="search.dialog"] [role="option"]:has-text("Rich Burdon")',

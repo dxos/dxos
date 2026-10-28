@@ -2,29 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
 import React from 'react';
-import { expect, fn, userEvent, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AiContext } from '@dxos/assistant';
 import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
@@ -39,11 +48,13 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
+import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { File, Message, Organization, Outline, Person, Task } from '@dxos/types';
 
 import { ChatDetailsSection } from '#components';
+import { usePromptActions } from '#hooks';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { ChatSurface } from '#types';
@@ -138,6 +149,8 @@ type StoryArgs = {
   /** Contributes the deck's platform capability, which the prompt reads to drop desktop-only affordances. */
   platform?: DeckCapabilities.Platform;
   workspace?: boolean;
+  /** Names the story's prompt host as the article's `nodeId`, or only as its `attendableId`. */
+  promptHost?: 'nodeId' | 'attendableId';
 } & Pick<ChatArticleProps, 'debug' | 'onSubmit'>;
 
 const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
@@ -156,7 +169,7 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
     ['Linear', 'https://mcp.linear.app/mcp'],
     ['GitHub', 'https://api.githubcopilot.com/mcp/'],
   ]) {
-    db.add(Obj.make(McpServer.McpServer, { name, url, protocol: 'http', enabled: false }));
+    db.add(Connection.make({ name, connectorId: 'mcp', mcp: { url, protocol: 'http' } }));
   }
   return [spec];
 };
@@ -171,14 +184,79 @@ const changesSection = Surface.create({
   ),
 });
 
-const DefaultStory = ({ debug, onSubmit }: StoryArgs) => {
+const PROMPT_HOST_ID = GraphNode.qualifyId(GraphNode.RootId, 'story-host');
+const PROMPT_ACTION_TEST_ID = 'story.prompt-action';
+
+/** A prompt host whose prompt node carries one contributed action, the way plugin-transcription files the mic. */
+const PromptHostStoryPlugin = Plugin.define({
+  profile: { key: 'org.dxos.test.promptHost', name: 'Prompt host story' },
+}).pipe(
+  Plugin.addModule(
+    Capability.inlineModule(
+      'prompt-host-story-graph',
+      { provides: [AppCapabilities.AppGraphBuilder] },
+      Effect.fnUntraced(function* () {
+        const extensions = yield* AppGraphBuilder.createExtension({
+          id: 'storyPromptHost',
+          match: GraphNodeMatcher.whenRoot,
+          connector: () =>
+            Effect.succeed([
+              {
+                id: GraphNode.segmentId(PROMPT_HOST_ID),
+                type: 'story.prompt-host',
+                data: null,
+                properties: { disposition: 'hidden' },
+                nodes: [
+                  {
+                    ...AppNode.makePrompt(),
+                    actions: [
+                      AppGraphNode.makeAction({
+                        id: 'story-action',
+                        data: () => Effect.void,
+                        properties: { label: 'Story action', disposition: 'prompt', testId: PROMPT_ACTION_TEST_ID },
+                      }),
+                    ],
+                  },
+                ],
+              },
+            ]),
+        });
+        return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
+      }),
+    ),
+  ),
+  Plugin.make,
+);
+
+const NO_ACTIONS = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
+
+/** Shows once the host's prompt node has its action, so a story can tell "not read" from "not yet". */
+const PromptSettled = () => {
+  const { actions } = usePromptActions(PROMPT_HOST_ID);
+  const { nodes } = useAtomValue(actions ?? NO_ACTIONS);
+  return nodes.length > 0 ? <span data-testid='story.prompt-settled' /> : null;
+};
+
+const DefaultStory = ({ debug, onSubmit, promptHost }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(Chat.Chat));
   if (!chat) {
     return <Loading />;
   }
 
-  return <ChatArticle role='article' subject={chat} attendableId='story' debug={debug} onSubmit={onSubmit} />;
+  return (
+    <>
+      {promptHost === 'attendableId' && <PromptSettled />}
+      <ChatArticle
+        role='article'
+        subject={chat}
+        attendableId={promptHost === 'attendableId' ? PROMPT_HOST_ID : 'story'}
+        nodeId={promptHost === 'nodeId' ? PROMPT_HOST_ID : undefined}
+        debug={debug}
+        onSubmit={onSubmit}
+      />
+    </>
+  );
 };
 
 const meta = {
@@ -194,10 +272,10 @@ const meta = {
             types: [
               Blob.Blob,
               Chat.Chat,
+              Connection.Connection,
               Feed.Feed,
               File.File,
               Markdown.Document,
-              McpServer.McpServer,
               Message.Message,
               Organization.Organization,
               Outline.Outline,
@@ -262,6 +340,7 @@ const meta = {
           TasksPlugin.make(),
           ...(workspace ? [FilePlugin.make()] : []),
           ...(workspace ? [SearchPlugin.make()] : []),
+          PromptHostStoryPlugin(),
           StorybookPlugin.make({}),
         ],
         // Contributed directly rather than by loading the deck plugin: the prompt reads only this
@@ -731,5 +810,24 @@ export const ViewCommandLeavesChatUnsent: Story = {
     });
     await expect(args.onSubmit).toHaveBeenCalledTimes(1);
     await expect(args.onSubmit).toHaveBeenCalledWith('/planning');
+  },
+};
+
+/** The prompt row shows the actions filed on the prompt node of the host passed as `nodeId`. */
+export const TestPromptReadsNodeId: Story = {
+  args: { promptHost: 'nodeId' },
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByTestId(PROMPT_ACTION_TEST_ID, {}, { timeout: 30_000 });
+  },
+};
+
+/** The prompt ignores a prompt host named only by `attendableId`, which for a companion is its host plank's. */
+export const TestPromptIgnoresAttendableId: Story = {
+  args: { promptHost: 'attendableId' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('story.prompt-settled', {}, { timeout: 30_000 });
+    await canvas.findByTestId('assistant.send');
+    await expect(canvas.queryByTestId(PROMPT_ACTION_TEST_ID)).toBeNull();
   },
 };

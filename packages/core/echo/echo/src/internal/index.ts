@@ -15,6 +15,5 @@ export * from './Ref/index.ts';
 export * from './Type/index.ts';
 
 // Re-exported here (not from the low-level `common/types` barrel) so consumers keep importing meta
-// from `@dxos/echo/internal`, while that barrel stays free of the Ref/Annotation eval cycle. Placed
-// after `./Ref` so the ref schema `meta` depends on is initialized first.
+// from `@dxos/echo/internal`, while that barrel stays free of the Annotation eval cycle.
 export * from './common/types/meta.ts';

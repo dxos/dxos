@@ -21,7 +21,7 @@ type ArchivedTask = {
 };
 
 describe('Weather MCP template', () => {
-  test('builds the project, its skill and four steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
+  test('builds the project and four steps, and nothing else', { timeout: 120_000 }, async ({ expect }) => {
     const { json, objectCount } = await EffectEx.runPromise(buildArchive(WeatherSpace.make()));
     const counts = histogram(json);
     const countOf = (typename: string) =>
@@ -32,7 +32,7 @@ describe('Weather MCP template', () => {
     expect(objectCount).toBeGreaterThan(0);
     expect(countOf('type.project')).toBe(1);
     expect(countOf('type.instructions')).toBe(1);
-    expect(countOf('type.skill')).toBe(1);
+    expect(countOf('type.skill')).toBe(0);
     expect(countOf('type.taskSet')).toBe(1);
     expect(countOf('type.task:')).toBe(4);
     expect(countOf('type.document')).toBe(0);
@@ -70,17 +70,6 @@ describe('Weather MCP template', () => {
         undefined,
         ...tasks.slice(0, -1).map((task) => [`echo:///${task.id}`]),
       ]);
-    },
-  );
-
-  test(
-    'the seeded skill starts with no MCP server for the run to fill in',
-    { timeout: 120_000 },
-    async ({ expect }) => {
-      const [skill] = await archived<{ mcpServers?: unknown[]; agentCanEnable?: boolean }>('type.skill');
-
-      expect(skill?.mcpServers).toEqual([]);
-      expect(skill?.agentCanEnable).toBe(true);
     },
   );
 });

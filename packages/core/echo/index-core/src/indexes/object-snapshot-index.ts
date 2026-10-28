@@ -13,6 +13,7 @@ import { ATTR_TYPE } from '@dxos/echo/internal';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { chunkArray, chunkRows } from '../utils.ts';
+import { type EntityMeta } from './entity-meta-index.ts';
 import type { Index, IndexerObject } from './interface.ts';
 
 /**
@@ -97,6 +98,67 @@ export class ObjectSnapshotIndex implements Index {
   }
 
   /**
+   * Each document object's JSON text with the version it was read at, and its backing heads when a client can
+   * back it. Objects stored without a version (feed blocks, and rows indexed before versions) are omitted.
+   */
+  querySnapshots(recordIds: readonly number[]): Effect.Effect<readonly ObjectSnapshot[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+      const results: ObjectSnapshot[] = [];
+      for (const chunk of chunkArray(recordIds)) {
+        const rows = yield* sql<{ recordId: number; snapshot: string; heads: string | null; version: string }>`
+          SELECT recordId, snapshot, heads, COALESCE(version, heads) AS version FROM objectSnapshot
+          WHERE recordId IN ${sql.in(chunk)} AND COALESCE(version, heads) IS NOT NULL`;
+        for (const row of rows) {
+          results.push({
+            recordId: row.recordId,
+            json: row.snapshot,
+            version: JSON.parse(row.version),
+            heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
+          });
+        }
+      }
+      return results;
+    });
+  }
+
+  /**
+   * How many snapshots belong to records stamped past `version` in `objectMeta`. A record's snapshot row is
+   * written in the transaction that stamps its counter, so a counter without one names a deleted record.
+   */
+  countStampedSince(version: number): Effect.Effect<number, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const [row] = yield* this.#sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM objectMeta AS m
+        JOIN objectSnapshot AS s ON s.recordId = m.recordId
+        WHERE m.version > ${version}
+      `;
+      return row?.count ?? 0;
+    });
+  }
+
+  /** Up to `limit` snapshots of records stamped past `version`, parsed, with their meta, in stamp order. */
+  readStampedSince(
+    version: number,
+    limit: number,
+  ): Effect.Effect<readonly { meta: EntityMeta; snapshot: Obj.JSON }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const rows = yield* this.#sql<EntityMeta & { snapshot: string }>`
+        SELECT m.*, s.snapshot
+        FROM objectMeta AS m
+        JOIN objectSnapshot AS s ON s.recordId = m.recordId
+        WHERE m.version > ${version}
+        ORDER BY m.version
+        LIMIT ${limit}
+      `;
+      // The row is handed on as the meta, snapshot column and all: copying it without that column costs more
+      // than the parse on wide meta rows.
+      return rows.map((row) => ({ meta: row, snapshot: JSON.parse(row.snapshot) }));
+    });
+  }
+
+  /**
    * How many indexed objects have no snapshot yet. Non-zero only while the store is filling after
    * its introduction; a reader that cannot tolerate a partial store waits for this to reach zero.
    * `spaceIds` narrows the count to those spaces, and `feeds: false` to document objects.
@@ -174,10 +236,12 @@ export class ObjectSnapshotIndex implements Index {
           isPartialBlock({ object }) && existing !== undefined
             ? { ...(JSON.parse(existing) as Record<string, unknown>), ...object.data }
             : object.data;
+        const version = object.version ?? object.heads;
         return {
           recordId,
           snapshot: JSON.stringify(merged),
           heads: object.heads ? JSON.stringify(object.heads) : null,
+          version: version ? JSON.stringify(version) : null,
           bytes: object.heads && object.bytes ? object.bytes : null,
         };
       });
@@ -185,12 +249,15 @@ export class ObjectSnapshotIndex implements Index {
       for (const chunk of chunkRows(rows)) {
         yield* sql`
             INSERT INTO objectSnapshot ${sql.insert(chunk)}
-            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, bytes = excluded.bytes
+            ON CONFLICT (recordId) DO UPDATE SET snapshot = excluded.snapshot, heads = excluded.heads, version = excluded.version, bytes = excluded.bytes
           `;
       }
     }),
   );
 }
+
+/** A document object's JSON with the heads it was read at, and those heads again when a client can back it. */
+export type ObjectSnapshot = { recordId: number; json: string; version: string[]; heads?: string[] };
 
 /** An object's JSON with the heads it was read at, and its document's bytes when the host stored them. */
 export type ObjectBacking = { recordId: number; json: string; heads: string[]; bytes?: Uint8Array };

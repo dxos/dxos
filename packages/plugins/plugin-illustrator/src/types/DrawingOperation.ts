@@ -119,6 +119,9 @@ export const Draw = Operation.make({
         '`group <id> ["label"] [right-of|below… <group>] { node… edge… }`, `edge <a>[:side|side] -> <b>[:side] ["label"] [via x,_ | _,y] [bus]`',
         '(`~` before a relation makes it soft; `<->` two arrows; `a -> b, c bus` one trunk), `diagram [flow=down|right]`; the engine places and routes the rest.',
         'In place of `->` an edge may name its relationship, left end being the child/whole/owner/one side: `extends`, `implements`, `composes`, `owns`, `one-to-many`, `many-to-many`, `depends-on`.',
+        '`diagram kind=sequence` draws participants (nodes, `role=actor` for a person) as columns and messages (edges) as rows in source order:',
+        '`calls` opens an activation that `returns` closes, `sends` is asynchronous; `note <a>[, <b>] "…"`, `fragment alt|opt|loop|par|break|critical ["guard"] { … } [else ["guard"] { … }]`.',
+        '`diagram kind=dataflow` gives each node `role=process|store|external` (default process) and labels each edge with the data that flows.',
         'Scene statements are `object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { <element>* }`,',
         '`elements <objectId> { … }`, `move <id> @ <x>,<y>`, `remove object <id>`, `remove elements <id> <ids…>`.',
         'An element is `<kind> <id> <geometry> ["label"] <name=value>*` where kind is rect/ellipse/diamond/triangle',
@@ -150,12 +153,16 @@ export const Draw = Operation.make({
   services: [Capability.Service, Database.Service],
 });
 
+/**
+ * @deprecated Mermaid input is deprecated; write the semantic diagram DSL and call {@link Draw}, which covers
+ * structure, sequence and data-flow diagrams.
+ */
 export const Generate = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.illustrator.generate'),
     name: 'Generate Drawing',
     description:
-      'Replaces a drawing with a diagram compiled from a mermaid description (flowchart or classDiagram). The dialect owns layout, so no coordinates are supplied.',
+      'DEPRECATED: use Draw with the semantic diagram DSL instead. Replaces a drawing with a diagram compiled from a mermaid description (flowchart or classDiagram). The dialect owns layout, so no coordinates are supplied.',
     icon: 'ph--graph--regular',
   },
   input: Schema.Struct({
@@ -183,7 +190,7 @@ export const Score = Operation.make({
     description:
       'Grades the drawing as laid out, on one 0–1 scale (1 is good): each layout constraint (pass 1 / fail 0) and cost ' +
       'term (crossings, overlapping arrows, overlapping labels, bends, length, gaps, compactness), their overall score, ' +
-      'and the diagnostics behind them. Call after Generate to decide what to change before regenerating.',
+      'and the diagnostics behind them. Call after Draw to decide what to change before drawing again.',
     icon: 'ph--gauge--regular',
   },
   input: Schema.Struct({

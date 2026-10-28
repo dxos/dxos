@@ -1,0 +1,270 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-tasks/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TasksPlugin (Outline and Journal)
+
+The spec covers only the outline and journal half of plugin-tasks; the package has since grown a
+task, task-set, milestone and remote-session model the spec does not mention. Of what it does
+cover, the outline editor is solid (CRDT text, the shared `outliner` extension with Tab indent,
+hashtags, a Delete row menu), and quick journal entry is well tested by `quick-entry.test.ts` and
+`Journal.test.ts`. The journal view diverges: entries render oldest first with today at the
+bottom, and selecting a calendar date does nothing to the list. There is no `createOutline`
+operation; outlines are made through the generic create-object entry.
+
+Of 36 items (34 verdicts: the spec reuses the ids `Journal` and `Outline` for a type and a component, so one verdict covers each pair): 11 done, 12 untested, 3 partial, 1 diverged, 7 missing. Findings:
+
+- **F-2.3 diverged.** `Journal` sorts entry keys ascending and autofocuses the last (today), so the
+  list is oldest-to-newest, not newest-to-oldest.
+- **F-3.2 missing.** `JournalArticle` passes no select handler to `Calendar`; only the reverse
+  direction (entry date button → calendar scroll) is wired.
+- **createOutline missing.** No such operation exists; the Outline create-object entry in
+  `create-object.ts` covers the navtree path, and T-1 is not automated.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Outline: The Outline type (in @dxos/types) has name and an owned content Ref<Text>; the Outline component wraps CodeMirror with the outliner.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Outline.ts#Outline, github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Outline/Outline.tsx#Outline]
+  tests: [github:dxos/dxos/packages/sdk/types/src/types/Outline.test.ts, github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/get-outline.test.ts, github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Outline/Outline.stories.tsx]
+  note: The spec uses the id Outline for both the type and the component, so one verdict covers both.
+```
+
+```mdl
+verdict Journal: The Journal type has id, name and date-keyed entry refs; the Journal component lists entries and offers Start today.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#Journal, github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Journal/Journal.tsx#Journal]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.test.ts, github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.test.ts]
+  note: The spec uses the id Journal for both the type and the component, so one verdict covers both. The type is tested; the component does not auto-create today's entry (the user clicks Start today) and no test drives it.
+```
+
+```mdl
+verdict JournalEntry: JournalEntry has id, a yyyy-MM-dd date and a content Ref<Text>.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#JournalEntry, github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#makeEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.test.ts]
+```
+
+```mdl
+verdict OutlineArticle: The article renders the outliner over the outline's text, with convert-to-task added.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/OutlineArticle/OutlineArticle.tsx#OutlineArticle, github:dxos/dxos/packages/plugins/plugin-tasks/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/OutlineArticle/OutlineArticle.stories.tsx]
+```
+
+```mdl
+verdict OutlineCard: The card renders a read-only outliner inside Card.Body.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/OutlineCard/OutlineCard.tsx#OutlineCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/OutlineCard/OutlineCard.stories.tsx]
+```
+
+```mdl
+verdict JournalArticle: The article has a calendar toggle and an optional calendar beside or above the journal.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/JournalArticle/JournalArticle.tsx#JournalArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/JournalArticle/JournalArticle.stories.tsx]
+  note: scrollToDate on the journal list is not implemented; only the calendar scrolls. The story renders it without assertions.
+```
+
+```mdl
+verdict QuickEntryDialog: The dialog saves via QuickJournalEntry, resets on Save & Add Another, and closes on Save or Cancel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/QuickEntryDialog/QuickEntryDialog.tsx#QuickEntryDialog, github:dxos/dxos/packages/plugins/plugin-tasks/src/capabilities/react-surface.ts]
+  note: No story or test renders the dialog.
+```
+
+```mdl
+verdict createOutline: No createOutline operation exists; outlines are created by the generic create-object entry.
+  status: missing
+  note: Searched plugin-tasks src for createOutline/CreateOutline; `create-object.ts` contributes an Outline CreateObjectEntry instead.
+```
+
+```mdl
+verdict quickJournalEntry: The operation appends a checkbox bullet to today's entry in the default space, creating journal and entry as needed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/types/OutlineOperation.ts#QuickJournalEntry, github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.ts, github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#getOrCreateEntry, github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#addBullet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.test.ts, github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.test.ts]
+  walkthrough:
+    - The operation declares text input and the appendJournalEntry key. github:dxos/dxos/packages/plugins/plugin-tasks/src/types/OutlineOperation.ts#QuickJournalEntry
+    - The handler finds the default space and its first Journal or adds one. github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.ts
+    - getOrCreateEntry returns today's entry, adding it when absent. github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#getOrCreateEntry
+    - addBullet appends a sanitised "- [ ] " line to the entry text. github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#addBullet
+```
+
+```mdl
+verdict F-1.1: Outline content is a Ref to a CRDT Text object.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Outline.ts#Outline]
+  note: Concurrent-edit merging is inherited from ECHO text; no test edits one outline from two peers.
+```
+
+```mdl
+verdict F-1.2: The shared outliner extension binds Tab and Shift-Tab to indent and outdent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Outline/Outline.tsx#OutlineRoot, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.ts#outliner]
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+```
+
+```mdl
+verdict F-1.3: The hashtag extension decorates tags in the outline.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/decoration/hashtag.ts#hashtag]
+  note: Highlighting is done; nothing treats hashtags as ECHO tags. No test.
+```
+
+```mdl
+verdict F-1.4: The editor menu offers Delete row, which calls deleteItem.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Outline/Outline.tsx#OutlineContent, github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/commands.ts#deleteItem]
+  note: No test opens the menu.
+```
+
+```mdl
+verdict F-2.1: Entries are keyed by ISO date, each with its own Text.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#Journal, github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#makeEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.test.ts]
+```
+
+```mdl
+verdict F-2.2: A Start today button appears without today's entry and adds one, which autofocuses as the last entry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Journal/Journal.tsx#Journal]
+  note: No test clicks Start today.
+```
+
+```mdl
+verdict F-2.3: Entries render oldest to newest, not newest to oldest.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Journal/Journal.tsx#Journal]
+  note: `entryRefs` sorts keys ascending and today is autofocused at the bottom. `getEntries` sorts descending but the component does not use it.
+```
+
+```mdl
+verdict F-2.4: Clicking an entry's date button scrolls the calendar; focusing the editor does not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Journal/Journal.tsx#Journal, github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/JournalArticle/JournalArticle.tsx#JournalArticle]
+  note: onSelect fires from the date button's click handler only. No test.
+```
+
+```mdl
+verdict F-3.1: The toolbar toggle shows the calendar grid beside the entries.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/JournalArticle/JournalArticle.tsx#JournalArticle]
+  note: No test toggles it.
+```
+
+```mdl
+verdict F-3.2: Selecting a calendar date does not scroll the journal list.
+  status: missing
+  note: JournalArticle passes no select handler to Calendar.Root or Calendar.Grid, and Journal exposes no scroll API.
+```
+
+```mdl
+verdict F-3.3: Below the md breakpoint the calendar stacks above the entries.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/JournalArticle/JournalArticle.tsx#JournalArticle]
+  note: Uses a media query rather than plank width. No test.
+```
+
+```mdl
+verdict F-4.1: Non-empty text appends a "- [ ] <text>" bullet to today's entry in the default space.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.ts, github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#addBullet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.test.ts]
+```
+
+```mdl
+verdict F-4.2: Save & Add Another (button or Cmd+Shift+Enter) saves and bumps the form key, keeping the dialog open.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/QuickEntryDialog/QuickEntryDialog.tsx#QuickEntryDialog]
+  note: No test.
+```
+
+```mdl
+verdict F-4.3: Save invokes the operation and closes the dialog.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/containers/QuickEntryDialog/QuickEntryDialog.tsx#QuickEntryDialog]
+  note: No test.
+```
+
+```mdl
+verdict F-5.1: Outline and Journal are ECHO objects and replicate with the space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Outline.ts#Outline, github:dxos/dxos/packages/plugins/plugin-tasks/src/types/Journal.ts#Journal]
+  note: No multi-peer test for these types.
+```
+
+```mdl
+verdict F-5.2: Peer edits to an outline are not tested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/components/Outline/Outline.tsx#OutlineRoot]
+  note: Relies on ECHO text sync through the editor's data extensions; no collaboration test.
+```
+
+```mdl
+verdict F-5.3: The schema module registers Outline, Journal and JournalEntry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tasks/src/capabilities/schema.ts]
+  note: plugin.test.ts checks Task and TaskSet registration only.
+```
+
+```mdl
+verdict T-1: No test runs createOutline (it does not exist) and checks the article.
+  status: missing
+  note: OutlineArticle stories render a prepared outline, not one created by an operation.
+```
+
+```mdl
+verdict T-2: The outliner unit tests indent and outdent at the command level, not by Tab in OutlineArticle.
+  status: partial
+  tests: [github:dxos/dxos/packages/ui/ui-editor/src/extensions/structure/outliner/outliner.test.ts]
+  note: The keystroke binding in the article is not exercised.
+```
+
+```mdl
+verdict T-3: No test renders JournalArticle and clicks Start today.
+  status: missing
+  note: JournalArticle and Journal stories have no play function for it.
+```
+
+```mdl
+verdict T-4: quick-entry.test.ts appends to today's entry in an existing journal.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.test.ts]
+```
+
+```mdl
+verdict T-5: quick-entry.test.ts creates the journal on first use and appends the bullet.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-tasks/src/operations/quick-entry.test.ts]
+```
+
+```mdl
+verdict T-6: No test toggles the calendar.
+  status: missing
+  note: JournalArticle story has no play function.
+```
+
+```mdl
+verdict QA-1: No automation runs the create-and-edit outline QA flow.
+  status: missing
+  note: autocue/showcase.mjs drives QA-3 only.
+```
+
+```mdl
+verdict QA-2: No automation runs the quick-add journal QA flow end to end.
+  status: missing
+  note: The operation is unit-tested (quick-entry.test.ts) but no browser flow opens the dialog.
+```

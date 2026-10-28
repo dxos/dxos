@@ -3,11 +3,12 @@
 //
 
 import { Chess as ChessJS } from 'chess.js';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import * as Game from '@dxos/plugin-game/Game';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import { type Player } from '@dxos/react-ui-gameboard';
 import * as Button from '@dxos/react-ui/Button';
@@ -22,7 +23,7 @@ import { Chess } from '#types';
 
 export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 
-export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
+export const ChessArticle = ({ role, game, variant }: ChessArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);
@@ -35,6 +36,20 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
   const state = Obj.instanceOf(Chess.State, variant) ? variant : undefined;
   const [pgn] = useObject(state, 'pgn');
   const [fen] = useObject(state, 'fen');
+
+  // The game's description is its current position, so tables and cards show where each game stands; a snapshot
+  // (from a read-only host) cannot be written, so only a live game is kept in step.
+  useEffect(() => {
+    if (!Obj.isObject(game) || !Obj.instanceOf(Game.Game, game)) {
+      return;
+    }
+    const position = Chess.fen({ pgn, fen });
+    if (game.description !== position) {
+      Obj.update(game, (game) => {
+        game.description = position;
+      });
+    }
+  }, [game, pgn, fen]);
 
   const isGameOver = (() => {
     if (!pgn && !fen) {

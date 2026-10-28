@@ -19,7 +19,7 @@ export type ChatCompanionProps = Omit<AppSurface.ArticleProps<Chat.Chat, {}, Obj
 };
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
-  ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {
+  ({ role = 'article', subject: chat, companionTo, attendableId, nodeId }, forwardedRef) => {
     const { invokePromise } = Hooks.useOperationInvoker();
     const db = Obj.getDatabase(companionTo);
 
@@ -46,6 +46,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         role={role}
         subject={chat}
         attendableId={attendableId}
+        nodeId={nodeId}
         companionTo={companionTo}
         onSubmit={handleSubmit}
         ref={forwardedRef}

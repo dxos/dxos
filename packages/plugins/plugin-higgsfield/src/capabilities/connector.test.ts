@@ -18,10 +18,10 @@ describe('higgsfield connector', () => {
       entry.credentialForm.onSubmit({ values: { keyId: ' kid ', keySecret: ' sec ' }, connector }),
     );
     expect(result.kind).toBe('complete');
-    expect(result.accessToken.source).toBe(HIGGSFIELD_SOURCE);
-    expect(result.accessToken.token).toBe('kid:sec');
+    expect(result.accessToken?.source).toBe(HIGGSFIELD_SOURCE);
+    expect(result.accessToken?.token).toBe('kid:sec');
     expect(result.connection.connectorId).toBe(HIGGSFIELD_CONNECTOR_ID);
-    expect(result.connection.accessToken.target?.token).toBe('kid:sec');
+    expect(result.connection.accessToken?.target?.token).toBe('kid:sec');
   });
 
   test('rejects a missing id or secret as a typed failure, never a defect', ({ expect }) => {

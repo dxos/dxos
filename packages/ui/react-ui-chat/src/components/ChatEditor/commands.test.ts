@@ -7,10 +7,11 @@ import {
   acceptCompletion,
   completionStatus,
   currentCompletions,
+  selectedCompletionIndex,
   setSelectedCompletion,
 } from '@codemirror/autocomplete';
 import { EditorState } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, runScopeHandlers } from '@codemirror/view';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { commands, matchCommands, openCommandCompletion } from './commands.ts';
@@ -65,6 +66,23 @@ describe('commands completion', () => {
   };
 
   const labels = (view: EditorView) => currentCompletions(view.state).map(({ label }) => label);
+
+  const press = (view: EditorView, key: string, times = 1) => {
+    for (let count = 0; count < times; count++) {
+      runScopeHandlers(view, new KeyboardEvent('keydown', { key }), 'editor');
+    }
+  };
+
+  test('arrow keys stop at the ends of the list rather than cycling', async () => {
+    const view = await open('');
+    // CodeMirror's own cycling keymap ignores keys within `interactionDelay` (75ms) of opening, which would hide it.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(selectedCompletionIndex(view.state)).toBe(0);
+    press(view, 'ArrowUp');
+    expect(selectedCompletionIndex(view.state)).toBe(0);
+    press(view, 'ArrowDown', all.length + 2);
+    expect(selectedCompletionIndex(view.state)).toBe(all.length - 1);
+  });
 
   test.each(['', 'hello'])('typing narrows the list opened over %j', async (doc) => {
     const view = await open(doc);

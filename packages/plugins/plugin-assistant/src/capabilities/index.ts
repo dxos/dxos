@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -35,13 +36,28 @@ export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-servic
 });
 export const Agents = Capability.lazyModule(
   'Agents',
-  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  {
+    provides: [AssistantCapabilities.Agent, AssistantCapabilities.CodeModeAvailable],
+    activatesOn: ActivationEvents.Startup,
+  },
   () => import('./agents.ts'),
 );
 export const SlashCommands = Capability.lazyModule(
   'SlashCommands',
   { provides: [AssistantCapabilities.SlashCommands], activatesOn: ActivationEvents.Startup },
   () => import('./slash-commands.ts'),
+);
+// Present from startup so a comment posted before the assistant UI opens can still be answered. Headless hosts
+// (EDGE) provide no operation invoker and host no comment UI.
+export const CommentAgentRunner = Capability.lazyModule(
+  'CommentAgentRunner',
+  {
+    requires: [Capabilities.OperationInvoker],
+    provides: [AppCapabilities.CommentAgentRunner],
+    activatesOn: ActivationEvents.Startup,
+    environments: ['browser', 'node', 'tauri'],
+  },
+  () => import('./comment-agent-runner.ts'),
 );
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context.ts'), {
   name: 'AiContext',
@@ -62,6 +78,16 @@ export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates.ts'),
+);
+export const McpServer = AppCapability.mcpServer(() => import('./mcp-server.ts'));
+export const McpServerRegistry = Capability.lazyModule(
+  'McpServerRegistry',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.AtomRegistry, AppCapabilities.McpServer],
+    provides: [],
+    environments: ['browser', 'node', 'tauri'],
+  },
+  () => import('./mcp-server-registry.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema-defs.ts'));
 export const SubjectContext = Capability.lazyModule(
@@ -126,6 +152,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
+    'org.dxos.plugin.assistant.role.chatDetails',
     'org.dxos.plugin.assistant.role.chatSurface',
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.plugin.space.role.homePinBottom',

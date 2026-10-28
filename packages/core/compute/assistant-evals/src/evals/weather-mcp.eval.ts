@@ -9,13 +9,11 @@ import { evalite } from 'evalite';
 import { Model } from '@dxos/ai';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { Config } from '@dxos/client';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
-import * as Skill from '@dxos/compute/Skill';
 import { EDGE_URLS } from '@dxos/config';
-import { Blob, Collection, Database, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { Blob, Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
+import { AccessToken, Connection } from '@dxos/link';
 import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
@@ -26,7 +24,6 @@ import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import * as SandboxOperation from '@dxos/plugin-sandbox/SandboxOperation';
 import * as SandboxPlugin from '@dxos/plugin-sandbox/SandboxPlugin';
 import * as SandboxSkill from '@dxos/plugin-sandbox/SandboxSkill';
-import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { File } from '@dxos/types';
 
@@ -38,7 +35,6 @@ import {
   CLAIM_URL,
   OPENING_PROMPT,
   PROJECT_NAME,
-  SKILL_KEY,
   TASK_TITLES,
   WORKER_URL,
   evaluateHandOff,
@@ -48,8 +44,8 @@ import {
 //
 // The weather-MCP template, run end to end by the one session that writes the code: it builds a
 // one-tool MCP server over the Open-Meteo forecast in a sandbox, deploys it with
-// `wrangler deploy --temporary`, adds it to its own configuration by setting the URL on the
-// template's Weather MCP skill, and then calls the tool itself.
+// `wrangler deploy --temporary`, adds it to the space as an MCP connection, and then calls the tool
+// itself.
 //
 // The goal graded is that last hand-off: the session picks up a server it configured mid-run, with
 // no restart, and the call shows in its own transcript. Nothing outside the session talks to the
@@ -75,12 +71,11 @@ const handOff = Scorer.shared(
   Scorer.invocations.pipe(Effect.map((invocations) => evaluateHandOff(invocations, { server: WORKER_URL }))),
 );
 
-/** The servers the skill ends up listing — the configuration a chat actually reads. */
+/** The MCP servers the space ends up holding as connections — the configuration a chat actually reads. */
 const configured = Scorer.shared(
-  Effect.gen(function* () {
-    const skill = yield* findObject(Skill.Skill, (candidate) => Obj.getMeta(candidate).key === SKILL_KEY);
-    return skill?.mcpServers ?? [];
-  }),
+  Database.query(Filter.type(Connection.Connection)).run.pipe(
+    Effect.map((connections) => connections.flatMap(({ mcp }) => (mcp ? [mcp] : []))),
+  ),
 );
 
 /** Everything the session filed on the project, as text. */
@@ -128,8 +123,8 @@ const SCORERS = [
     score: handOff.pipe(Effect.map(({ called }) => called)),
   }),
   Scorer.make({
-    name: 'server-configured-on-skill',
-    description: 'The Weather MCP skill lists the deployed workers.dev server over Streamable HTTP.',
+    name: 'server-added-as-connection',
+    description: 'The space holds the deployed workers.dev server as an MCP connection over Streamable HTTP.',
     score: configured.pipe(
       Effect.map((servers) => servers.some(({ url, protocol }) => protocol === 'http' && WORKER_URL.test(url))),
     ),
@@ -175,9 +170,6 @@ const task = createEvalRunner({
     Ref.make(MarkdownSkill.make()),
     Ref.make(ProjectSkill.make()),
     Ref.make(SandboxSkill.make()),
-    // The step that configures the server writes the skill through the Database skill's update
-    // tool; bound up front so the session does not have to find and enable it first.
-    Ref.make(DatabaseSkill.make()),
   ],
   plugins: [ProjectsPlugin.make(), TasksPlugin.make(), MarkdownPlugin.make(), SandboxPlugin.make()],
   types: [
@@ -186,8 +178,8 @@ const task = createEvalRunner({
     Sandbox.Sandbox,
     // A sandbox names its credentials by this type; a space query that meets it unregistered fails.
     AccessToken.AccessToken,
-    // A session may look for registered servers before configuring the skill; the type must resolve.
-    McpServer.McpServer,
+    // The step that configures the server adds a connection.
+    Connection.Connection,
     File.File,
     Blob.Blob,
   ],

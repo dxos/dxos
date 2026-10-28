@@ -386,7 +386,7 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    ...(container
+    ...(container && ContainerModel.isRemovable(container, object)
       ? [
           AppGraphNode.makeAction({
             id: 'removeFromContainer',

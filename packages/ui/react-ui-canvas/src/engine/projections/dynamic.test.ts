@@ -37,6 +37,29 @@ describe('dynamic projection', () => {
     expect(Object.keys(scene.links).length).toBe(3);
   });
 
+  test('a host declares layers, so a backdrop node paints under the links', ({ expect }) => {
+    const scene = layoutGraph(
+      graph,
+      { positions: {} },
+      {
+        nodes: defaultNodeRegistry,
+        layers: [
+          { id: 'backdrop', name: 'Backdrop', z: 'a0' },
+          { id: 'graph', name: 'Graph', z: 'a1' },
+        ],
+        link: { layer: 'graph' },
+        createNode: (node, props) => ({
+          type: 'rect',
+          ...props,
+          layer: node.id === 'root' ? 'backdrop' : 'graph',
+        }),
+      },
+    );
+    expect(Object.keys(scene.layers ?? {}).sort()).toEqual(['backdrop', 'graph']);
+    expect(Object.values(scene.links).every(({ layer }) => layer === 'graph')).toBe(true);
+    expect(scene.nodes.root?.layer).toBe('backdrop');
+  });
+
   test('a host supplies the node type, link style and capabilities', ({ expect }) => {
     const scene = layoutGraph(
       graph,

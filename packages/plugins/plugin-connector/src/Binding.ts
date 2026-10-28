@@ -91,7 +91,7 @@ export const isForConnection = (
     return false;
   }
   const source = refEntityId(cursor.spec.source);
-  return source !== undefined && source === refEntityId(connection.accessToken);
+  return source !== undefined && connection.accessToken !== undefined && source === refEntityId(connection.accessToken);
 };
 
 /** True when `cursor`'s `spec.target` is the given object. */
@@ -100,7 +100,7 @@ export const targets = (cursor: Cursor.Cursor, target: Obj.Unknown): boolean =>
 
 /** True when `accessToken` is the credential `connection` authenticates with. */
 export const isTokenFor = (accessToken: AccessToken.AccessToken, connection: Connection.Connection): boolean =>
-  refEntityId(connection.accessToken) === accessToken.id;
+  connection.accessToken !== undefined && refEntityId(connection.accessToken) === accessToken.id;
 
 //
 // Lookup.
@@ -1016,12 +1016,12 @@ export const bind = ({
 }): Effect.Effect<Cursor.ExternalCursor, TargetAccountMismatchError, Database.Service> =>
   Effect.gen(function* () {
     const object = yield* Database.load(target).pipe(Effect.orDie);
-    const accessToken = yield* Database.load(connection.accessToken).pipe(Effect.orDie);
+    const accessToken = yield* Database.load(Connection.getAccessToken(connection)).pipe(Effect.orDie);
     // Settled first: a target that syncs another account is refused before anything is written.
     const adopted = yield* prepare({
       target: object,
       accessToken,
-      source: connection.accessToken,
+      source: Connection.getAccessToken(connection),
     });
     const name = accessToken.account;
     if (name) {
@@ -1030,7 +1030,7 @@ export const bind = ({
     if (adopted) {
       return adopted;
     }
-    const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target }));
+    const cursor = yield* Database.add(Cursor.makeExternal({ source: Connection.getAccessToken(connection), target }));
     invariant(Cursor.isExternal(cursor));
     return cursor;
   });

@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
-import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -15,6 +15,7 @@ import { type InspectorMode, createLatticeProjection } from '../../engine/index.
 import { type BackgroundGrid, createMemoryStore } from '../../model/index.ts';
 import {
   createLatticeTree,
+  createLinkedPairTree,
   createModelViewTree,
   createNestedDeepTree,
   createNestedSimpleTree,
@@ -50,6 +51,7 @@ const FIXTURES = {
   deep: () => createNestedDeepTree(),
   view: () => createNestedViewTree(),
   nested: () => createNestedSimpleTree(),
+  pair: () => createLinkedPairTree(),
 } satisfies Record<string, (depth: number) => ViewTree>;
 
 type Fixture = keyof typeof FIXTURES;
@@ -281,6 +283,15 @@ export const View: Story = {
     await userEvent.click(await canvas.findByTestId('portal-open'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
+    // 3. The background's menu offers Back there, which returns to the root.
+    const viewport = await canvas.findByTestId('scene-view');
+    const { left, top } = viewport.getBoundingClientRect();
+    await fireEvent.contextMenu(viewport, { clientX: left + 8, clientY: top + 8 });
+    const back = await screen.findByTestId('menu-back');
+    const items = [...(back.closest('[role="menu"]')?.querySelectorAll('[role="menuitem"]') ?? [])];
+    // Keyboard, since zag ignores the synthetic pointer events a test can send.
+    await userEvent.keyboard('{ArrowDown}'.repeat(items.indexOf(back) + 1) + '{Enter}');
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled(), { timeout: 5_000 });
   },
 };
 
@@ -352,11 +363,12 @@ const topLevelNode = (root: HTMLElement, selector: string) =>
   );
 
 /**
- * Group and Ungroup over a nested scene: ⌘G makes an anonymous Object and one Instance in place of the selection,
- * ⇧⌘G puts its contents back and deletes the definition, and each is one undo step.
+ * Group and Ungroup: ⌘G makes an anonymous Object and one Instance in place of the selection, ⇧⌘G puts its contents
+ * back and deletes the definition, and each is one undo step. The fixture has no view node, since an Object cannot
+ * contain a View (SPEC.mdl F-9.9).
  */
 export const Group: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'nested', inspectors: 'docked' },
+  args: { depth: 0, liveDepth: 1, fixture: 'pair', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view');

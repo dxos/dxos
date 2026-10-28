@@ -234,11 +234,11 @@ const BLOCK_SIZE = { width: 144, height: 48 };
 
 const createLayout = (lookup: NodeLookup): DynamicOptions => ({
   nodes,
-  size: { width: 288, height: 256 },
-  pitch: { width: 320, height: 320 },
+  // The same 288×256 cards on a 320×320 pitch, as a lattice so smart links route through the gutters around the cards.
+  lattice: { width: 288, height: 256, gutterX: 32, gutterY: 64 },
   createNode: (node, props) =>
     lookup(node.id)?.kind === 'block' ? createBlockNode({ ...props, size: BLOCK_SIZE }) : createDecisionNode(props),
-  link: { type: 'line' },
+  link: { type: 'smart' },
 });
 
 const toGraph = (model: ChangelogGraphModel, label: (kind: ChangelogEdgeKind) => string): GraphModel => ({
@@ -305,9 +305,10 @@ export const ChangelogGraph = ({ content, affects = false, selected }: Changelog
   }, [atomRegistry, graph, graphModel]);
 
   const createProjection = useCallback(
-    ({ registry }: FreehandProjectionOptions) =>
+    ({ registry, constrained }: FreehandProjectionOptions) =>
       createDynamicProjection({
         registry,
+        constrained,
         graph,
         overlay,
         options: createLayout(lookup),

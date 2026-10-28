@@ -21,10 +21,13 @@ import { type Planet } from './generate-planet.ts';
 import { type Vec3 } from './noise.ts';
 import { palette } from './palette.ts';
 
-/** The scene's backdrop per theme: near-black space in dark mode, a mid-gray in light mode so the scene sits in the light UI. */
+/**
+ * The scene's backdrop per theme, matching the map globe's: light mode is its grey-blue (`oklch(0.966 0.012 240)`, the
+ * r0 surface's lightness), and dark mode clears to transparent so the canvas's `bg-base-surface` shows, as the globe's does.
+ */
 const BACKGROUND_COLORS = {
-  dark: new Color4(0.043, 0.051, 0.071, 1),
-  light: new Color4(0.5, 0.5, 0.5, 1),
+  dark: new Color4(0, 0, 0, 0),
+  light: new Color4(0.929, 0.961, 0.985, 1),
 } as const;
 
 const clampChannel = (value: number): number => Math.min(1, Math.max(0, value));

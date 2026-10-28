@@ -38,8 +38,8 @@ tasks:
     # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,
     # taking the web server down with it.
     deps:
-      - '#vendor:build'
-      - '#storybook:#prebuild'
+      - target: storybook-react:e2e-deps
+        cacheStrategy: hash
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

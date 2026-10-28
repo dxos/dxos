@@ -105,6 +105,8 @@ export interface Manager {
   createSpace(ctx: Context, options?: CreateSpaceOptions): Promise<DataSpace>;
   acceptSpace(ctx: Context, options: AcceptSpaceOptions): Promise<DataSpace>;
   migrateSpaceToRootDocument(ctx: Context, spaceKey: PublicKey): Promise<SpaceRootRefs>;
+  migrateSpaceRootOnEdge(ctx: Context, spaceKey: PublicKey): Promise<AutomergeUrl>;
+  getSpaceRootUrl(spaceKey: PublicKey): AutomergeUrl | undefined;
   markSpaceDeleted(ctx: Context, spaceKey: PublicKey): Promise<void>;
   deleteAllSpaces(ctx: Context): Promise<void>;
   handleRemoteSpaceDeleted(ctx: Context, spaceKey: PublicKey): Promise<void>;

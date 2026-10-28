@@ -13,7 +13,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
-import { useVariantSource } from '../../hooks/index.ts';
+import { useVariantSource } from '../../hooks/useVariantSource.ts';
 import { GalleryImage } from '../GalleryImage/index.ts';
 
 /** The subset of a {@link Variant} a gallery tile needs (a live object or a snapshot). */

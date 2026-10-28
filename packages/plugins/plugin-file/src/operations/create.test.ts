@@ -21,6 +21,8 @@ import { FileCapabilities, FileOperation } from '#types';
 
 import { FileTooLargeError } from './create.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+
 describe('FileOperation.Create', () => {
   test('uploads a small PNG to the selected inline backend', async ({ expect }) => {
     const { harness, defaultSpace } = await setup();

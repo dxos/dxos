@@ -1,0 +1,253 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-projects/spec/FEATURE-LINKS.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Feature links
+
+Most of the spec is built and tested. The DXN mnemonic suffix in `@dxos/keys` is covered by `DXN.test.ts`.
+`Feature.getLink`, the `key` on Create and Update, and the scanner are covered by `FeatureLink.test.ts`.
+`FeatureLink.resolve` (exact, renamed, stale, ambiguous, missing) and `importFeatureLinks` are covered by
+`feature.test.ts`. The feature article's DXN, copy button, code links and set-key field are covered by the
+FeatureArticle stories. The scanner is `FeatureLink.scan`, not `scanFeatureLinks`, with the same behaviour.
+
+Of 28 items: 22 done, 2 untested, 3 partial, 0 diverged, 1 missing. Three findings matter most:
+
+- **No analytics event carries a feature DXN (F-4.4).** No event in `packages/` has a `feature` property.
+  No source file carries a `@feature` tag yet either, so the scanner has nothing real to read.
+- **Resolution is per import, not per reader (F-3.5).** Links resolve only in the space the import runs in.
+  Nothing resolves a DXN across the spaces a reader is a member of.
+- **The card test count and the scan script are untested (F-6.3, F-5.4).** The count appears only in the
+  hand-run autocue flow, and no test runs `scan-feature-links.ts`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict F-1.1: `tryMake` accepts an optional six-character Crockford mnemonic after the name or version, in either case.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/keys/src/DXN.ts#tryMake]
+  tests: [github:dxos/dxos/packages/common/keys/src/DXN.test.ts]
+```
+
+```mdl
+verdict F-1.2: `getName` and `getVersion` ignore the suffix; `getMnemonic` returns it uppercased.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/keys/src/DXN.ts#getName, github:dxos/dxos/packages/common/keys/src/DXN.ts#getVersion, github:dxos/dxos/packages/common/keys/src/DXN.ts#getMnemonic]
+  tests: [github:dxos/dxos/packages/common/keys/src/DXN.test.ts]
+```
+
+```mdl
+verdict F-1.3: `withMnemonic` sets or replaces and `withoutMnemonic` removes the suffix.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/keys/src/DXN.ts#withMnemonic, github:dxos/dxos/packages/common/keys/src/DXN.ts#withoutMnemonic]
+  tests: [github:dxos/dxos/packages/common/keys/src/DXN.test.ts]
+```
+
+```mdl
+verdict F-1.4: `make` throws on a `#` in the name or version, and `NameSchema` rejects one.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/keys/src/DXN.ts#make, github:dxos/dxos/packages/common/keys/src/DXN.ts#NameSchema]
+  tests: [github:dxos/dxos/packages/common/keys/src/DXN.test.ts]
+```
+
+```mdl
+verdict F-2.1: Create and Update take an optional `key` validated by `DXN.NameSchema`; `null` removes it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureOperation.ts#Update, github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/update.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts]
+```
+
+```mdl
+verdict F-2.2: `Feature.getLink` returns `dxn:<key>#<mnemonic>`, or undefined without a key.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/Feature.ts#getLink]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts]
+```
+
+```mdl
+verdict F-2.3: Nothing enforces a unique key; resolution picks by mnemonic among features sharing one.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#resolve]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-3.1: The resolver queries features by `Filter.key` on the name, and the mnemonic match among them wins.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/import-links.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#resolve]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts]
+  walkthrough:
+    - The import handler queries features by key and, separately, by mnemonic. github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/import-links.ts
+    - `resolve` returns the key match whose mnemonic is equal as `exact`. github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#resolve
+```
+
+```mdl
+verdict F-3.2: With no key match, a single mnemonic match resolves as `renamed`.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#resolve]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts]
+```
+
+```mdl
+verdict F-3.3: Key matches without the mnemonic are `stale` for one and `ambiguous` for several.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#resolve]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-3.4: The five statuses exist, and the feature is named for every status except missing and ambiguous.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#Status, github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#Resolution]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-3.5: Resolution runs only against the one space the import runs in; there is no per-space resolution for a reader.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/import-links.ts]
+  note: |
+    `importFeatureLinks` resolves in its own `Database.Service`. No reader-side resolver tries each space the
+    reader is a member of; `resolveFeatureLink` from the diagram does not exist as such. The resolution logic is
+    `FeatureLink.resolve` and the query is inside the import handler.
+```
+
+```mdl
+verdict F-4.1: The scanner reads `@feature <dxn>` block tags, several per JSDoc block.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#scan]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+  note: |
+    Done in the scanner; no file in the repository carries a `@feature` tag yet.
+```
+
+```mdl
+verdict F-4.2: A tag documents the next line of code: a describe is a suite, a test or it is a test, anything else is code.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#scan]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-4.3: The scanner reports a tag whose DXN has no mnemonic as an error.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#scan]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-4.4: No analytics event carries a `feature` DXN property.
+  status: missing
+  note: |
+    Searched `packages/` for events with a `feature: 'dxn:...'` or `Feature.getLink` property: none. The spec
+    lists event counts as out of scope, but this req says events carry the DXN now.
+```
+
+```mdl
+verdict F-5.1: The scanner returns each tag's DXN, path, 1-based line, symbol and kind; it is `FeatureLink.scan`, not `scanFeatureLinks`.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#scan, github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#Link]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+  note: |
+    The function is `FeatureLink.scan(path, text)` and returns `{ links, errors }`; the behaviour matches the req.
+```
+
+```mdl
+verdict F-5.2: The kind is suite for describe or suite, test for test or it, code otherwise.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#scan]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-5.3: Invalid values are returned as errors with path, line and message.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#scan, github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#ScanError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-5.4: The script scans git-tracked TypeScript files and prints `{ links }` JSON ready for ImportLinks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/scripts/scan-feature-links.ts]
+  note: |
+    The script runs `git ls-files`, scans `.ts`/`.tsx` files, prints the links and exits 1 on errors; no test runs
+    it.
+```
+
+```mdl
+verdict F-6.1: `Feature.code` holds a list of path, line, symbol and kind links.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/Feature.ts#Feature, github:dxos/dxos/packages/plugins/plugin-projects/src/types/Feature.ts#CodeLink]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts]
+```
+
+```mdl
+verdict F-6.2: ImportLinks resolves each DXN, replaces each resolved feature's `code` and returns the unresolved ones.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureOperation.ts#ImportLinks, github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/import-links.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts]
+  walkthrough:
+    - The operation declares the links input and the space it resolves against. github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureOperation.ts#ImportLinks
+    - The handler resolves each link, groups links per feature and replaces `code`. github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/import-links.ts
+  note: |
+    It also returns `outdated` links (renamed or stale) with the feature's current DXN.
+```
+
+```mdl
+verdict F-6.3: The card shows the number of suite and test links, or nothing when there are none.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.tsx#FeatureCardTestCount]
+  note: |
+    No story or test asserts `feature-card.test-count`.
+```
+
+```mdl
+verdict F-6.4: The article shows the DXN with a copy button and lists code links to GitHub at their line.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.tsx#FeatureCardLink, github:dxos/dxos/packages/plugins/plugin-projects/src/components/FeatureCard/FeatureCard.tsx#FeatureCardCode, github:dxos/dxos/packages/plugins/plugin-projects/src/types/Feature.ts#getCodeUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/containers/FeatureArticle/FeatureArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts]
+```
+
+```mdl
+verdict F-6.5: Without a key there is no DXN, and the article offers a set-key field.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/containers/FeatureArticle/FeatureArticle.tsx#FeatureArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/containers/FeatureArticle/FeatureArticle.stories.tsx]
+```
+
+```mdl
+verdict T-1: Import and article pieces are tested separately; no test runs a scanned describe through to the card and article.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/import-links.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.ts#scan]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/types/FeatureLink.test.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/containers/FeatureArticle/FeatureArticle.stories.tsx]
+  note: |
+    FeatureLink.test scans a describe tag; feature.test imports a suite link; the CodeLinks story shows the
+    article. The card test count and a single scan-to-import run are not tested.
+```
+
+```mdl
+verdict T-2: The import test resolves a link with an old key as `renamed` and stores it on the feature.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/import-links.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/operations/feature/feature.test.ts]
+```
+
+```mdl
+verdict QA-1: The CodeLinks and SetKey stories cover the article steps; the card test count is not asserted.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-projects/src/containers/FeatureArticle/FeatureArticle.tsx#FeatureArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-projects/src/containers/FeatureArticle/FeatureArticle.stories.tsx]
+  note: |
+    The autocue flow `autocue/feature-links.mjs` is a recording run by hand. Step 1 (the card shows "2 tests") has
+    no play-function assertion.
+```
+

@@ -9,6 +9,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { FileSystemPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [FileSystemPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('FileSystemPlugin', () => {

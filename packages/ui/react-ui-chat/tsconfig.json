@@ -36,6 +36,9 @@
       "path": "../react-ui-experimental"
     },
     {
+      "path": "../react-ui-list"
+    },
+    {
       "path": "../ui-editor"
     },
     {

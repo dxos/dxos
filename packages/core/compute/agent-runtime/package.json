@@ -18,6 +18,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./mcp-server-types": {
+      "source": "./src/mcp-server-types.ts",
+      "types": "./dist/types/src/mcp-server-types.d.ts",
+      "import": "./dist/lib/mcp-server-types.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -27,6 +32,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "mcp-server-types": [
+        "dist/types/src/mcp-server-types.d.ts"
+      ],
       "testing": [
         "dist/types/src/testing/index.d.ts"
       ]

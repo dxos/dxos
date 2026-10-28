@@ -24,6 +24,7 @@ import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
+import * as CodeGraphPlugin from '@dxos/plugin-code-graph/CodeGraphPlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
@@ -53,7 +54,6 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as IrohBeaconPlugin from '@dxos/plugin-iroh-beacon/IrohBeaconPlugin';
 import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
-import * as LabelerPlugin from '@dxos/plugin-labeler/LabelerPlugin';
 import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
@@ -71,6 +71,7 @@ import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as QaPlugin from '@dxos/plugin-qa/QaPlugin';
+import * as RecorderPlugin from '@dxos/plugin-recorder/RecorderPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
@@ -82,6 +83,7 @@ import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
 import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
 import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+import * as StePlugin from '@dxos/plugin-ste/StePlugin';
 import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
 import * as StudioPlugin from '@dxos/plugin-studio/StudioPlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
@@ -133,6 +135,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
+    PresenterPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
@@ -151,6 +154,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
+      CodeGraphPlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       DebugPlugin.meta.profile.key,
@@ -164,7 +168,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       IdeogramPlugin.meta.profile.key,
       AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
-      LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
       TypeSafePlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
@@ -180,6 +183,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
+      StePlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
@@ -270,6 +274,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ClaudePlugin.make(),
     CloudflarePlugin.make(),
     CodePlugin.make(),
+    // Reads code-index through a `vite dev` route (see its vite plugin below in vite.config.ts); inert in a build.
+    CodeGraphPlugin.make(),
     CommercePlugin.make(),
     ConductorPlugin.make(),
     CrmPlugin.make(),
@@ -287,7 +293,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
-    LabelerPlugin.make(),
     LibraryPlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
@@ -304,6 +309,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     PipelinePlugin.make(),
     PresenterPlugin.make(),
     QaPlugin.make(),
+    // Records a presentation's voice-over; it asks for the microphone only when Record is pressed.
+    RecorderPlugin.make(),
     ProjectsPlugin.make(),
     ReviewPlugin.make(),
     isLocal && SamplePlugin.make(),
@@ -312,6 +319,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     StackPlugin.make(),
+    StePlugin.make(),
     TablePlugin.make(),
     TypeSafePlugin.make(),
     TasksPlugin.make(),

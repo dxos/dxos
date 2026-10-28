@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
         position: Position.first,
         component: AgentPrivateChat,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, agent: subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, agent: subject, attendableId, nodeId }),
       }),
       // What the agent knows: facts read from its conversations, the goals it watches and its graph.
       Surface.create({

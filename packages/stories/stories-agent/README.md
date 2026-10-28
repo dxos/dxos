@@ -92,7 +92,7 @@ In the **Setup** story:
 5. Mention `@Kai` in that channel. Kai replies in a thread once its turn ends, and the conversation appears under
    **Activity → Conversations**.
 
-In the **PipelineDiscord → Setup** story (`?path=/story/stories-stories-agent-pipelinediscord--setup`), a Discord
+In the **DiscordPipeline → Setup** story (`?path=/story/stories-stories-agent-discordpipeline--setup`), a Discord
 back-index runs as a remote timer trigger on EDGE: plugin-discord's `CrawlDiscordChannels` reads the channels' history
 with the Discord token stored in the space, keeps its progress in a `CrawlState` object and appends the facts it
 extracts to a fact feed; the agent's brain indexes the fact feed once it is registered. It needs an EDGE that serves
@@ -111,7 +111,7 @@ plugin-discord: the edge branch `dm/elegant-euler-at56gd`, either checked out in
 5. **Pause** and **Resume** switch the trigger off and on; a row's reset button re-reads that channel or thread from
    the start, and **Reset all** re-reads every target, without a model call for a message read before.
 
-The **PipelineDiscord → Scripted** story runs the same panel with EDGE faked (`startFakeBackIndexRunner` steps the
+The **DiscordPipeline → Scripted** story runs the same panel with EDGE faked (`startFakeBackIndexRunner` steps the
 crawl state while the trigger is on, `installFakeBrain` answers the fact feed routes), with no Discord or EDGE at all.
 
 ### 5. Check the bot

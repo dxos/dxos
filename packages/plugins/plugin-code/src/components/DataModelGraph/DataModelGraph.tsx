@@ -9,6 +9,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
@@ -42,7 +43,15 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
     >
       <Card.Header>
         <Layout.Block rail='start'>
-          <Icon.Icon icon={type.stored ? 'ph--database--regular' : 'ph--cube--regular'} />
+          <Icon.Icon
+            icon={
+              type.stored === 'table'
+                ? 'ph--table--regular'
+                : type.stored
+                  ? 'ph--database--regular'
+                  : 'ph--cube--regular'
+            }
+          />
         </Layout.Block>
         <Card.Title truncate classNames='font-mono'>
           {type.id}
@@ -57,6 +66,11 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
               <Tag.Tag>{t('data-model.embedded.label')}</Tag.Tag>
             )}
             {type.typename && <Tag.Tag classNames='font-mono'>{type.typename}</Tag.Tag>}
+            {type.store && (
+              <Tag.Tag classNames='font-mono max-w-full truncate' title={type.store}>
+                {type.store}
+              </Tag.Tag>
+            )}
           </Layout.Flex>
         </Card.Row>
         {type.variants.length > 0 && (
@@ -161,9 +175,9 @@ export const DataModelGraph = ({ content }: DataModelGraphProps) => {
 
   if (model.types.length === 0) {
     return (
-      <Layout.Flex center grow classNames='text-description' data-testid='data-model.empty'>
+      <Status.Empty classNames='dx-fill' data-testid='data-model.empty'>
         {t('data-model.empty.message')}
-      </Layout.Flex>
+      </Status.Empty>
     );
   }
 

@@ -18,6 +18,7 @@ import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 import { reactCompilerOptions } from '../../../react-compiler.config.ts';
 import { withRetry } from './indexers.ts';
 import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
+import { specFilesPlugin } from './spec-files.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -521,6 +522,9 @@ export const createConfig = ({
 
           // `?module-url` imports: stories that hand module URLs to a worker to `import()`.
           ModuleUrlPlugin(),
+
+          // `?spec` imports: spec text a published page can replace without a rebuild.
+          specFilesPlugin({ rootDir }),
 
           importSource({
             // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,

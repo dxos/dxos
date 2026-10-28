@@ -338,7 +338,7 @@ const holdFallbacks = (definitions: Definition[], pending: boolean): Definition[
 /**
  * Filters the pre-indexed candidates for a role through their data guards.
  */
-const matchCandidates = (
+export const matchCandidates = (
   definitions: ReadonlyArray<Definition> | undefined,
   role: string,
   data: Props['data'],

@@ -144,7 +144,7 @@ const HostModule = () => {
         <dd>{SEED_SENDERS.map((sender) => sender.email).join(', ')}</dd>
       </dl>
 
-      <div className='flex flex-col gap-2 rounded border border-separator p-3'>
+      <div className='flex flex-col gap-2 rounded border border-separator p-trim-md'>
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Recovery code (CLI login)</span>
           <button
@@ -171,7 +171,7 @@ const HostModule = () => {
         )}
       </div>
 
-      <div className='flex flex-col gap-2 rounded border border-separator p-3'>
+      <div className='flex flex-col gap-2 rounded border border-separator p-trim-md'>
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Device invitation (browser / Composer only)</span>
           <button className='rounded bg-neutral-surface px-3 py-1' onClick={onShare} data-testid='share-button'>

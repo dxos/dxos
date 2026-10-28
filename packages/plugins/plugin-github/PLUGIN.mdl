@@ -127,8 +127,8 @@ type GitHubComment
 ```
 
 ```mdl
-type ProjectSnapshot
-  desc: Fields recorded on Integration.snapshots after each pull; used to detect local divergence on push.
+type RepoSnapshot
+  desc: Fields recorded on the binding's snapshots after each repository read; used to detect local divergence on push. The full shape, with read times, is in [SYNC.mdl](spec/SYNC.mdl).
   fields:
     name: string          # recorded but push is intentionally disabled
     description: string
@@ -147,12 +147,11 @@ type TaskSnapshot
 type SyncResult
   desc: Counters returned by SyncGitHubRepositories.
   fields:
-    pulled:
-      organizations: number
-      people: number
-      projects: number
-      tasks: number
-      comments: number
+    bindings: number
+    notModified: number     # bindings whose delta answered 304
+    requests: number        # GitHub requests made, across bindings
+    pulled: { issues: number, pullRequests: number }
+    pushed: { issues: number, repos: number }
 ```
 
 ## Operations
@@ -179,8 +178,9 @@ op GetGitHubRepositories
 op MaterializeGitHubTarget
   key: org.dxos.operation.github.materializeTarget
   desc: |
-    Find-or-create the empty local root Project bound to a selected GitHub repo, keyed by the
-    repo's foreign id, so a Cursor can reference it as its `spec.target`.
+    Find-or-create the Repo bound to a selected GitHub repo, and the TaskSet that mirrors its
+    issues, both keyed by the repo's foreign id, so a Cursor can reference the Repo as its
+    `spec.target`.
   input:
     connection: Ref<Connection>
     remoteTarget?: RemoteTarget
@@ -194,13 +194,12 @@ Effectful sync operations — pull from GitHub, push diverged fields back.
 op SyncGitHubRepositories
   key: org.dxos.operation.github.syncRepositories
   desc: |
-    Reconcile selected GitHub repositories plus their owning organizations,
-    members, issues, PRs, and (future) comments with ECHO.
-    Pull direction: upserts Organization, Person, Project, Task via foreign-key.
-    Push direction: snapshot-diffs Project.description and Task title /
+    Poll every bound GitHub repository as [SYNC.mdl](spec/SYNC.mdl) describes.
+    Pull direction: upserts Organization, Person, Repo, Task (issues) and PullRequest via
+    foreign key. Push direction: snapshot-diffs Repo.description and Task title /
     description / status and PATCHes diverged fields back to GitHub.
-    PR status is pull-only (push is intentionally disabled).
-    Updates Integration.targets[i].lastSyncAt / lastError per target.
+    Pull requests are pull-only.
+    Records lastTick / lastError on each binding's Cursor.
   input:
     connection: Ref<Connection>   # renamed from `integration`; every binding of the connection is synced
     priority?: string             # cursor id to sync first
@@ -330,44 +329,44 @@ feat F-3: Pull — Organizations and People
 ```
 
 ```mdl
-feat F-4: Pull — Repositories as Projects
+feat F-4: Pull — Repositories as Repos
 
   req F-4.1:
     when: a selected repo does not yet have a local mirror
-    then: Project created in ECHO with foreign key [source: "github.com", id: String(repo.id)]
+    then: a Repo is created in ECHO with foreign key [source: "github.com", id: String(repo.id)], with a TaskSet carrying the same key for its issues
 
   req F-4.2:
     when: a selected repo already has a local mirror
-    then: Project fields updated via three-way merge against the stored snapshot
+    then: Repo name and description are updated via three-way merge against the stored snapshot, at most once an hour ([SYNC.mdl](spec/SYNC.mdl) F-2.6)
 
   req F-4.3:
-    when: Integration.targets[i].object is missing or points at a different Project
-    then: target.object is rewired to the upserted Project
+    when: a binding targets the issue TaskSet (bound before bindings targeted a Repo)
+    then: the binding is rewired to the repo's Repo
 ```
 
 ```mdl
-feat F-5: Pull — Issues and PRs as Tasks
+feat F-5: Pull — Issues as Tasks, pull requests as PullRequests
 
   req F-5.1:
-    when: issue/PR does not yet have a local mirror
-    then: Task created with fields title, description, status (open→todo, closed→done), assignee, project ref
+    when: an issue does not yet have a local mirror
+    then: Task created with fields title, description, status (open→todo, closed→done), assignee and milestone, listed by the repo's issue TaskSet
 
   req F-5.2:
-    when: issue/PR already has a local mirror
+    when: an issue already has a local mirror
     then: Task fields updated via three-way merge against stored snapshot
 
-  req F-5.3: PRs are treated identically to issues on pull; pull_request field marks them as PRs.
+  req F-5.3: A pull request is a PullRequest with `repository` set, pull-only; the polling delta and its GraphQL batch are specified in [SYNC.mdl](spec/SYNC.mdl).
 
   req F-5.4:
     when: maxDaysBack is set on a target
-    then: only issues/PRs updated within that window are fetched from GitHub
+    then: the first poll reads only issues and pull requests updated within that window; later polls read from the binding's watermark
 ```
 
 ```mdl
 feat F-6: Push — Local Edits Back to GitHub
 
   req F-6.1:
-    when: Project.description diverges from the last pulled snapshot
+    when: Repo.description diverges from the last pulled snapshot
     then: PATCH /repos/{owner}/{repo} sends the new description
 
   req F-6.2:
@@ -382,7 +381,7 @@ feat F-6: Push — Local Edits Back to GitHub
     when: PR status diverges locally
     then: divergence is logged; push is skipped (PRs are pull-only for status)
 
-  req F-6.5: Project.name (repo rename) divergence is logged but never pushed.
+  req F-6.5: Repo.name (repo rename) divergence is logged but never pushed.
 ```
 
 ```mdl
@@ -459,6 +458,12 @@ feat F-9: Pull Request Review
   req F-9.11:
     when: the reader checks a file off, in the tree or with the toolbar's Reviewed action
     then: the file counts as reviewed in that browser until a push changes it, and the toolbar action moves on to the next file
+
+  req F-9.12:
+    when: the user types a pull request URL or `owner/repo#123` into the search dialog (Cmd+K)
+    then: an "Import owner/repo#123 from GitHub" row appears above the results without a request to
+      GitHub, and choosing it files the pull request in the active space through ImportPullRequest and
+      opens it in the deck
 ```
 
 ## Acceptance
@@ -478,18 +483,18 @@ scenario T-2: Repository discovery is read-only
   when: GetGitHubRepositories is invoked
   then:
     - list of SyncTargetDescriptor returned sorted by full_name
-    - no Organization, Person, Project, or Task objects are created in ECHO
+    - no Organization, Person, Repo, Task or PullRequest objects are created in ECHO
 ```
 
 ```mdl
-scenario T-3: First sync — create Project and Tasks
+scenario T-3: First sync — create Repo, Tasks and PullRequests
   given: integration with one selected repo (no prior local mirror)
   when: SyncGitHubRepositories runs
   then:
-    - Project created with foreign key for the repo
-    - one Task created per issue/PR
+    - the Repo carries the repo's foreign key, and a TaskSet with the same key holds the issues
+    - one Task created per issue, one PullRequest per pull request
     - open issues map to status todo; closed issues map to status done
-    - ProjectSnapshot and TaskSnapshot written for each object
+    - RepoSnapshot and TaskSnapshot written for each object
 ```
 
 ```mdl
@@ -564,7 +569,7 @@ invocable operation, an agent binding (`invoke`). Report failures by test and st
 
 ```mdl
 test QA-1: Connect, select a repository, and sync
-  desc: The core round-trip — authorize a GitHub connection, discover repos, materialize and sync one as a Project with its issues as Tasks.
+  desc: The core round-trip — authorize a GitHub connection, discover repos, materialize and sync one as a Repo with its issues as Tasks.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-4.1, F-5.1, T-2, T-3]
   status: unverified
@@ -572,8 +577,8 @@ test QA-1: Connect, select a repository, and sync
     - an identity exists
     - space: a space is open
     - a GitHub account reachable for OAuth, owning at least one repo with at least one open issue
-    - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
-      ABORT rather than reusing a Project this test did not create
+    - no Repo with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
+      ABORT rather than reusing a Repo this test did not create
   steps:
     - name: Connect a GitHub account
       id: connect
@@ -588,25 +593,32 @@ test QA-1: Connect, select a repository, and sync
       do: Open the target picker for the new connection.
       invoke: [op:GetGitHubRepositories] { connection: $connection.connection }
       capture: targets
-      expect: the picker lists repos visible to the token, sorted by full_name, and no Organization/Person/Project/Task objects are created yet
+      expect: the picker lists repos visible to the token, sorted by full_name, and no Organization/Person/Repo/Task objects are created yet
       assert: return $result.targets.length > 0 && !$result.targets.some((t) => /^\d+$/.test(t.id) === false)
     - name: Select the repository as a sync target
       do: Pick the target repo from the list and confirm.
       invoke: [op:MaterializeGitHubTarget] { connection: $connection.connection, remoteTarget: $targets.targets[0] }
       capture: materialized
-      expect: an empty local root Project now exists, bound to the selected repo
+      expect: a Repo and an empty issue TaskSet now exist, bound to the selected repo
       assert: return !!$materialized.target
     - name: Sync the connection
       do: Click "Sync now" on the connection (or wait for the scheduled sync).
       invoke: [op:SyncGitHubRepositories] { connection: $connection.connection }
       capture: synced
-      expect: the Project's fields are populated from the repo, and one Task exists per open/closed issue and PR in that repo
-      assert: return $synced.pulled.projects >= 1 && $synced.pulled.tasks >= 1
+      expect: the Repo's fields are populated from the repo, one Task exists per issue and one PullRequest per pull request in that repo
+      assert: return $synced.bindings >= 1 && $synced.pulled.issues + $synced.pulled.pullRequests >= 1
   after:
-    - name: Remove the synced Project and its Tasks
-      do: Right-click the Project in the navtree and choose Delete, then repeat for each Task it produced (or delete the containing collection).
-      invoke: org.dxos.operation.space.removeObjects { objects: [$materialized.target] }
-      expect: the Project and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
+    - name: Remove the synced Repo and its issue set
+      do: Right-click the Repo and the repo's issue TaskSet in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects {
+          refs: [$materialized.target,
+            ...(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.taskSet'))).run()).objects
+              .filter((set) => set.name === `${$materialized.target.target?.owner}/${$materialized.target.target?.name}`)
+              .map((set) => window.__echo.Ref.make(set))]
+        }
+      note: Removing the TaskSet cascades to the Tasks it holds; synced PullRequests stay until removed by hand.
+      expect: the Repo and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
     - name: Disconnect the GitHub account
       do: In Settings -> Connectors -> GitHub, remove the connection.
       expect: the Connection object and its stored access token are removed
@@ -623,11 +635,11 @@ test QA-2: Local edit pushes back to GitHub
     - space: a space is open
     - a GitHub account reachable for OAuth, with write access to a repo owning at least one open
       (non-PR) issue
-    - no Project with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
-      ABORT rather than reusing a Project this test did not create
+    - no Repo with foreign key [source: "github.com", id: <that repo's numeric id>] exists —
+      ABORT rather than reusing a Repo this test did not create
     - connection: a fresh GitHub Connection, authorized against that account (same human-only
       OAuth step as QA-1's "Connect a GitHub account")
-    - materialized: the target repo materialized and synced as a Project via
+    - materialized: the target repo materialized and synced as a Repo via
       op:MaterializeGitHubTarget then op:SyncGitHubRepositories (same steps as QA-1), leaving at
       least one open (non-PR) Task
   steps:
@@ -648,20 +660,19 @@ test QA-2: Local edit pushes back to GitHub
       do: Edit the issue's title back to its original value directly on github.com, then re-sync.
       invoke: [op:SyncGitHubRepositories] { connection: $given.connection }
       expect: the local Task.title reflects the reverted value
-    - name: Remove the synced Project and its Tasks
-      do: Right-click the Project in the navtree and choose Delete, then repeat for each Task it
-        produced (or delete the containing collection).
+    - name: Remove the synced Repo and its issue set
+      do: Right-click the Repo and the repo's issue TaskSet in the navtree and choose Delete.
       invoke: |
         org.dxos.operation.space.removeObjects {
           refs: [$given.materialized.target,
-            ...(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run()).objects
-              .filter((task) => task.project?.target?.id === $given.materialized.target.target?.id)
-              .map((task) => window.__echo.Ref.make(task))]
+            ...(await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.taskSet'))).run()).objects
+              .filter((set) => set.name === `${$given.materialized.target.target?.owner}/${$given.materialized.target.target?.name}`)
+              .map((set) => window.__echo.Ref.make(set))]
         }
       note: |
-        `materialized.target` is a Ref, so it travels in `refs`, not `objects`; the synced Tasks
-        are resolved separately because removing the Project does not cascade to them.
-      expect: the Project and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
+        `materialized.target` is a Ref, so it travels in `refs`, not `objects`; removing the issue
+        TaskSet cascades to the Tasks it holds.
+      expect: the Repo and its Tasks leave the navtree; the underlying GitHub repo and issues are untouched
     - name: Disconnect the GitHub account
       do: In Settings -> Connectors -> GitHub, remove the connection.
       expect: the Connection object and its stored access token are removed
@@ -727,6 +738,48 @@ test QA-3: Open a pull request from the browser extension
       expect: the pull request no longer appears in the space
 ```
 
+```mdl
+test QA-4: Import a pull request from the search dialog
+  desc: |
+    Cmd+K offers to import a pull request the moment its URL is pasted, then imports and opens it.
+    Uses a public pull request so no GitHub connection is needed — the import falls back to an
+    anonymous read.
+  actors: user
+  covers: [F-9.12, F-9.1]
+  status: unverified
+  automated:
+    - plugin-github:search-query-action.test.ts#matchPullRequestQuery › labels a pull request URL with its coordinates
+    - plugin-search:SearchDialog.stories.tsx#QueryAction
+  given:
+    - an identity exists
+    - space: a space is open
+    - the GitHub plugin is enabled (Plugins › Labs; it is off by default)
+    - no PullRequest with owner "dxos", repo "dxos", number 1 exists — ABORT rather than
+      deleting one this test did not create
+  steps:
+    - name: Open the search dialog
+      do: Press Cmd+K (Ctrl+K elsewhere).
+      expect: the search dialog opens with its input focused
+    - name: Paste the pull request URL
+      do: Paste https://github.com/dxos/dxos/pull/1 into the search input.
+      expect: an "Import dxos/dxos#1 from GitHub" row appears above the results
+      note: |
+        The row is built from the URL alone; no GitHub request is made until it is chosen.
+    - name: Import and open it
+      do: Choose "Import dxos/dxos#1 from GitHub".
+      invoke: |
+        org.dxos.operation.github.importPullRequest { reference: "https://github.com/dxos/dxos/pull/1" }
+      capture: imported
+      expect: the dialog closes and the pull request "chore: release 1.0.0" opens in the deck
+      assert: return !!$imported.pullRequest
+  after:
+    - name: Delete the imported pull request
+      do: Right-click the pull request in the navtree and choose Delete.
+      invoke: |
+        org.dxos.operation.space.removeObjects { refs: [$imported.pullRequest], target: $given.space.db }
+      expect: the pull request no longer appears in the space
+```
+
 ## Changelog
 
 ```mdl
@@ -772,6 +825,36 @@ decision D-4: Discovery and sync list `/installation/repositories` for an instal
 ```
 
 ---
+
+```mdl
+decision D-5: F-4 and F-5 now describe the polling sync of [SYNC.mdl](spec/SYNC.mdl): a binding targets a Repo, issues stay Tasks in the TaskSet keyed like the Repo, and pull requests are PullRequests.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4, F-5]
+  why: SYNC.mdl states that it replaces F-4 and F-5 once implemented; this change implements it.
+```
+
+```mdl
+decision D-6: The body names Repo where it named Project, SyncResult takes the shape of [SYNC.mdl](spec/SYNC.mdl), and QA-1 asserts on `bindings` and `pulled.issues + pulled.pullRequests`. Fills in [D-5].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SyncResult, RepoSnapshot, MaterializeGitHubTarget, SyncGitHubRepositories, F-6.1, F-6.5, T-2, T-3, QA-1, QA-2]
+  why: QA-1 read `pulled.projects` and `pulled.tasks`, which the new result no longer has, so its assertion could never pass.
+```
+
+```mdl
+decision D-7: Cmd+K offers "Import owner/repo#N from GitHub" for a pasted pull request URL, built from the text alone, and imports and opens it only when chosen.
+  date: 2026-10-08
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.12]
+  why: The row is offered on every keystroke, so asking GitHub before the user chooses it would make the dialog wait on the network.
+  rejected:
+    - Reusing the preview LinkResolver: it builds an object for a popover and never stores it, while Cmd+K has to store and navigate.
+  source: https://github.com/dxos/dxos/pull/13811
+```
 
 ## Appendix: Extension Definitions
 

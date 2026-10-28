@@ -4,9 +4,10 @@ name: Check
 # storybook and e2e suites (`plan` holds them back on a draft) and `cli`. Converting a PR to a draft, by
 # hand or by `draft-on-open.yml`, starts a draft run, and the concurrency group cancels the run in flight.
 #
-# Where suites run: a ready PR and the merge queue run every job; e2e reports without gating. Pushes to
-# main run nothing: main moves to the exact commit the queue tested, so the queue's results are the ones
-# GitHub shows on it. No `labeled` trigger: its run would post
+# Where suites run: a ready PR runs every job. The merge queue runs only what can block a merge: `check`
+# and the jobs behind the required `test` gate. A push to main runs only e2e, which reports without gating:
+# main moves to the exact commit the queue tested, so the queue's results are the ones GitHub shows on it,
+# and e2e there covers whatever landed since the last run. No `labeled` trigger: its run would post
 # skipped check runs over the PR's real results, and branch protection reads skipped as passing.
 on:
   pull_request:
@@ -15,6 +16,7 @@ on:
 
   push:
     branches:
+      - main
       - ci/*
 
   schedule:
@@ -44,6 +46,10 @@ permissions:
   packages: read
 
 env:
+  # PR and merge-queue jobs mount the nightly workspace snapshot instead of checking out and installing
+  # (`.github/actions/workspace-snapshot`); nightly, manual and main runs keep the clean path as the canary.
+  # Setting the repository variable WORKSPACE_SNAPSHOT to `off` turns it off without a change here.
+  WORKSPACE_SNAPSHOT: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && vars.WORKSPACE_SNAPSHOT != 'off' && 'true' || 'false' }}
   # Bound once here rather than at every setup call site: a composite action cannot read the
   # `secrets` context, but it does inherit the process environment.
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
@@ -62,30 +68,54 @@ env:
 #
 # A merge group never cancels: its ref is unique, so only a duplicate run for the same commit shares
 # the group, and cancelling one posts `cancelled` on required checks, which dequeues the PR.
+#
+# Neither does a push to main. GitHub keeps one pending run per group and replaces it with each newer push,
+# so the run in flight finishes and the next one tests the newest commit, covering the ones it skipped.
+# Cancelling instead would never finish a run while merges land faster than e2e takes.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
     }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
-  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+  cancel-in-progress: >-
+    ${{ github.event_name != 'merge_group' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
     # `inputs.only` is empty outside a dispatch, so every job-group condition passes there.
-    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     permissions:
+      actions: write
       contents: read
       packages: read
     runs-on: ubuntu-24.04
     # The scheduled run bypasses the cache: the compile gate takes about 24 minutes, then module structure
     # rebuilds every package again (another 12), before knip and the docs bundle.
-    timeout-minutes: 75
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
         with:
           detached: true
+
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
 
       # Full depth keeps the commit graph the affected resolver and moon's own merge-base resolve against,
       # while `filter: blob:none` stops the transfer of every historical file version — the previous
@@ -95,6 +125,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -102,6 +134,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Resolve affected scope
         id: affected
@@ -132,7 +166,15 @@ jobs:
         if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
         env:
           MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
-        run: node packages/reflect/deus/scripts/check-changelog.ts
+        run: pnpm deus changelog check
+
+      # Passes with a notice until the repository has a TYPESAFE_API_KEY secret.
+      - name: Check spec decisions
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        env:
+          MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: node .agents/skills/mdl/scripts/check-decisions.ts
 
       - name: Check version files in sync
         if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
@@ -207,6 +249,16 @@ jobs:
           env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
           moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
 
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
   # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
   # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
   # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
@@ -215,10 +267,12 @@ jobs:
   # regression.
   # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
-  # instead. A PR or merge group confined to `docs/` skips it: the docs site is a separate Astro project
+  # instead. A PR confined to `docs/` skips it: the docs site is a separate Astro project
   # that nothing in Composer imports.
   boot-budget:
-    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' && github.event_name != 'merge_group' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     permissions:
       contents: read
       packages: read
@@ -232,9 +286,25 @@ jobs:
       status: ${{ steps.compare.outputs.status || 'skipped' }}
       body: ${{ steps.compare.outputs.body }}
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -243,9 +313,9 @@ jobs:
       # A diff that will not resolve counts as touching code, so the budget runs.
       - name: Scope
         id: scope
-        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        if: github.event_name == 'pull_request'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           if changed=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$changed" | grep -qv '^docs/'; then
             echo 'docs-only=true' >> "$GITHUB_OUTPUT"
@@ -257,6 +327,8 @@ jobs:
       - name: Setup
         if: steps.scope.outputs.docs-only != 'true'
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Check boot budget
         id: budget
@@ -391,6 +463,8 @@ jobs:
       - id: plan
         env:
           DRAFT: ${{ github.event.pull_request.draft == true }}
+          MERGE_QUEUE: ${{ github.event_name == 'merge_group' }}
+          MAIN_PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: node .github/actions/plan/plan.mjs
 
   # Vitest, split by runtime. `node` (`:test`, `:test-workerd`) runs four targets at a time, split by moon's
@@ -408,15 +482,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cell: ['1/2', '2/2']
-    # `statuses: write` lets the second cell post the advisory suites' results.
+        # A core change runs every node suite (~3 h of test time), which two cells cannot finish inside the cap below.
+        cell: ['1/4', '2/4', '3/4', '4/4']
     permissions:
+      actions: write
       contents: read
       packages: read
-      statuses: write
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell took 58 minutes.
-    timeout-minutes: 75
+    # A forced nightly once rebuilt every dependency per shard here; a cell took 58 minutes.
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -430,6 +506,84 @@ jobs:
       VITEST_XML_REPORT: 'true'
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       # One target per core.
+      MOON_CONCURRENCY: 4
+      DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+        with:
+          force: 'false'
+
+      # plugin-sandbox's local-backend tests skip without these.
+      - name: Install sandbox tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat ripgrep
+
+      - name: Test
+        uses: ./.github/actions/vitest
+        with:
+          suite: node
+          targets: ':test :test-workerd'
+          shard: ${{ strategy.job-index }}
+          of: ${{ strategy.job-total }}
+
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
+  # Every `:test-native`: suites that compile native code or load it, kept out of the `:test` sweep. The Rust
+  # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
+  # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
+  # The advisory suites (memory retention, model-fixture replay), apart from the test cells because their minutes ran a
+  # cell into its cap and cancelled tests that had passed; `test` does not wait on them.
+  advisory:
+    name: advisory
+    needs: plan
+    if: >-
+      ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
+      needs.plan.outputs.node == 'true' && github.event_name != 'merge_group' }}
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: '24.11.1'
       MOON_CONCURRENCY: 4
     steps:
       - name: Checkout
@@ -445,37 +599,45 @@ jobs:
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
-
-      # plugin-sandbox's local-backend tests skip without these.
-      - name: Install sandbox tools
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat ripgrep
-
-      - name: Test
-        uses: ./.github/actions/vitest
         with:
-          suite: node
-          targets: ':test :test-workerd'
-          shard: ${{ strategy.job-index }}
-          of: ${{ strategy.job-total }}
+          force: 'false'
 
-      # The second cell also runs the advisory suites, memory retention and the model-fixture replay, which once
-      # had a runner each for under 30 s of work. Each reports as its own commit status; neither fails
-      # this cell. Not in the merge queue, where nobody reads those statuses and the PR already ran them.
       - name: Advisory suites
-        if: ${{ !cancelled() && strategy.job-index == 1 && github.event_name != 'merge_group' }}
         uses: ./.github/actions/advisory
 
-  # Every `:test-native`: suites that compile native code or load it, kept out of the `:test` sweep. The Rust
-  # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
-  # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
   native:
-    if: ${{ inputs.only != 'check' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'check' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    # `actions: write` for the merge queue's cancel-on-failure step.
+    permissions:
+      contents: read
+      packages: read
+      actions: write
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           filter: blob:none
@@ -484,6 +646,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
           rust: 'true'
 
       - name: Resolve affected scope
@@ -492,6 +655,16 @@ jobs:
       - name: Test
         run: >-
           moon exec --on-failure continue :test-native
+
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
 
   test-browser:
     name: test browser
@@ -503,15 +676,21 @@ jobs:
       fail-fast: false
       matrix:
         cell: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
+    # `actions: write` for the merge queue's cancel-on-failure step.
+    permissions:
+      contents: read
+      packages: read
+      actions: write
     runs-on: ubuntu-24.04
-    # Covers a cold build: the forced nightly, and fork or Dependabot PRs with no remote cache.
-    timeout-minutes: 90
+    # Covers a cold build: fork or Dependabot PRs with no remote cache.
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 90 || 40 }}
     env:
       # The test phase; the build step overrides it.
       MOON_CONCURRENCY: 1
       CELL_SHARD: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].shard }}
       CELL_TARGETS: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].targets }}
-      # The nightly's tests must execute, but its force flag stays on the build step.
       DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -522,9 +701,25 @@ jobs:
       VITEST_XML_REPORT: 'true'
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           filter: blob:none
@@ -532,20 +727,23 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       # Everything this cell's targets depend on, at full concurrency and before any Chromium. No affected
-      # scope: the list is the scope. The nightly forces this step only, so its tests run once.
+      # scope: the list is the scope.
       - name: Build
         env:
           MOON_CONCURRENCY: 4
-          MOON_FORCE: ${{ github.event_name == 'schedule' }}
         run: |
           builds=$(node .github/actions/plan/closure.mjs $CELL_TARGETS < /dev/null)
           [ -z "$builds" ] || moon exec --on-failure continue $builds
 
       - name: Install Playwright
         if: ${{ !cancelled() }}
-        run: pnpm exec playwright install --with-deps chromium
+        uses: ./.github/actions/playwright
+        with:
+          browser: chromium
 
       # After a failed build too, so every target that does not depend on it still runs and reports.
       - name: Test
@@ -556,12 +754,22 @@ jobs:
           targets: ${{ env.CELL_TARGETS }}
           shard: ${{ env.CELL_SHARD }}
 
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
   # One check per suite for branch protection to require, whatever the shard count: it fails if any cell
   # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
   # draft's browser cells.
   test:
     needs: [plan, test-node, test-browser, native]
-    if: always()
+    if: ${{ always() && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
@@ -600,6 +808,9 @@ jobs:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].browser }}
@@ -613,24 +824,45 @@ jobs:
         with:
           detached: true
 
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -642,10 +874,6 @@ jobs:
         if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
-        env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
-          # and reports green without executing a test.
-          DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -697,6 +925,9 @@ jobs:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].browser }}
@@ -711,24 +942,45 @@ jobs:
         with:
           detached: true
 
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -750,10 +1002,6 @@ jobs:
         if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
-        env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
-          # and reports green without executing a test.
-          DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -781,7 +1029,7 @@ jobs:
   # gating.
   e2e:
     needs: [plan, e2e-composer, e2e-rest]
-    if: always()
+    if: ${{ always() && github.event_name != 'merge_group' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
@@ -805,13 +1053,30 @@ jobs:
   cli:
     if: >-
       ${{ (inputs.only == '' || inputs.only == 'all') && (
-      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+      github.event_name != 'pull_request' || !github.event.pull_request.draft) &&
+      github.event_name != 'merge_group' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -819,6 +1084,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
       # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.

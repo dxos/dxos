@@ -109,7 +109,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
       </Panel.Header>
       <Panel.Body>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='flex flex-col items-center p-3 gap-3'>
+          <ScrollArea.Viewport classNames='flex flex-col items-center p-trim-md gap-3'>
             {screenshots.length > 0 && (
               <Carousel.Root count={screenshots.length}>
                 <Carousel.PrevTrigger />

@@ -38,7 +38,7 @@ directly. Regenerating makes real Anthropic calls and **requires the
 Populate it from 1Password:
 
 ```bash
-pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY from the 1Password CI vault
+pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY (op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY)
 ```
 
 or export it directly: `export DX_ANTHROPIC_API_KEY=sk-ant-...`.

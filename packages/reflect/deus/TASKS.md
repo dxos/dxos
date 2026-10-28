@@ -67,7 +67,7 @@ Done:
       green).
 - [x] `.agents/skills/composer-qa` replaces `qa` + `running-qa-flows`; `composer-debug` trimmed to
       the read-only transport reference; `/qa` command removed; `/dxos:qa` gains `suites`,
-      `run --suite|--tag`, `snapshot`; `scripts/list-tests.mjs` (was `list-flows.mjs`) parses
+      `run --suite|--tag`, `snapshot`; `scripts/list-tests.mjs` (was `list-flows.mjs`, now `deus qa list`) parses
       suites and resolves tags.
 - [x] `composer-app/spec/APP.mdl`: QA-1..4 from `testing/scripts/basics.md` (deleted), suites
       `smoke`, `basics`, `assistant`, `editor`; `testing/README.md`, `reports/TEMPLATE.md` rewritten;
@@ -130,8 +130,8 @@ Later (tracked, not started):
 - [ ] `--tag nightly` for QA-2, QA-3 and the two markdown tests.
 - [ ] **Register the Routines** (`create_trigger`): nightly QA on `qa` (`source_revision`/
       `outcome_branch: qa`), on-merge smoke, daily spec-sync. Create the `qa` branch from main first.
-- [ ] **Move every `PLUGIN.mdl` to `plugin-xxx/spec/PLUGIN.mdl`**, updating `list-tests.mjs`,
-      `tools/qa-lint/*`, the `composer-plugins` skill, the template and every path in docs.
+- [ ] **Move every `PLUGIN.mdl` to `plugin-xxx/spec/PLUGIN.mdl`**, updating `deus qa list`,
+      `deus qa lint`, the `composer-plugins` skill, the template and every path in docs.
 - [ ] **Spec-sync sweep** over all plugins in batches of 8 (`sweep 8`), then incremental. Inputs
       from the PR #12986 review (CodeRabbit, 2026-09-08), all pre-existing content the rename only
       exposed: assistant QA-1 `op:CreateChat` lacks its `db` input and asserts `typeof $result ===

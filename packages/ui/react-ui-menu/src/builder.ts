@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ReactNode } from 'react';
+
 import { invariant } from '@dxos/invariant';
 import type { DropdownMenuItemGroupProperties, MenuActionProperties, MenuItemGroupProperties } from '@dxos/ui-types';
 
@@ -43,6 +45,12 @@ export interface ActionGroupBuilder {
 
   /** Add a switch action rendered as a labeled Field.Switch. */
   switch(id: string, props: Omit<MenuActionProperties, 'variant'> & { checked: boolean }, invoke: () => void): this;
+
+  /** Add a control the caller renders itself (a picker, a field); it stays in the toolbar and never collapses. */
+  custom(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>, render: () => ReactNode): this;
+
+  /** Add a plain label (e.g. a panel's name) that takes the toolbar's free space. */
+  text(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>): this;
 
   /** Add a nested action group. */
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this;
@@ -101,6 +109,14 @@ class MenuBuilderImpl implements MenuBuilder {
     return this.action(id, { ...props, variant: 'switch' }, invoke);
   }
 
+  custom(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>, render: () => ReactNode): this {
+    return this.action(id, { ...props, variant: 'custom', render }, () => {});
+  }
+
+  text(id: string, props: Omit<MenuActionProperties, 'variant' | 'render'>): this {
+    return this.action(id, { ...props, variant: 'text' }, () => {});
+  }
+
   group(id: string, props: MenuItemGroupProperties, cb: ActionGroupBuilderFn): this {
     this._data.nodes.push(createMenuItemGroup(id, props));
     this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
@@ -138,6 +154,22 @@ class MenuBuilderImpl implements MenuBuilder {
   }
 }
 
+/** Id of the overflow menu (⋮) every toolbar ends with; contributors add to it with {@link MenuBuilder.extend}. */
+export const TOOLBAR_OVERFLOW_ID = 'toolbar-overflow';
+
+/** The overflow group a toolbar uses when its owner declares none, so contributors can still add to it. */
+export const defaultOverflowGroup = createMenuItemGroup(TOOLBAR_OVERFLOW_ID, overflowMenuProperties);
+
 export const MenuBuilder = Object.freeze({
   make: (): MenuBuilder => new MenuBuilderImpl({ nodes: [], edges: [] }, 'root'),
+
+  /**
+   * Builds items into a named group another component declared, so a plugin extends a toolbar or menu it does not own.
+   * The result is merged into the owner's graph (e.g. with `subgraph`); its edges hang off `groupId`.
+   */
+  extend: (groupId: string, cb: ActionGroupBuilderFn): ActionGraphProps => {
+    const data: ActionGraphProps = { nodes: [], edges: [] };
+    cb(new MenuBuilderImpl(data, groupId));
+    return data;
+  },
 });

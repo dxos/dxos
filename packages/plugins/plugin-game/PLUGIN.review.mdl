@@ -1,0 +1,203 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-game/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: GamePlugin
+
+The host scaffolding exists: the `Game` type with a `Ref` to variant state, the `VariantProvider` multi
+capability, the two-stage `CreateGamePanel`, the article and card surfaces that dispatch on the variant
+typename, and a `CreateObjectEntry.createObject` that builds the variant state, adds it, wraps it in a Game and
+rolls the state back if the second write fails. None of it is tested: plugin-game has no test files, its one story
+has no `play`, and plugin-chess's `plugin.test.ts` never creates a game.
+
+Two behaviours diverge from the spec. The variant state is not hidden: `createObject` adds it with the same
+`target` as the Game and passes no hidden flag (`SpaceOperation.AddObject` has none). And picking a variant
+with no `inputSchema` only selects the row; creation happens when the user presses Save. An unknown variant
+fails an `invariant` (a defect), not a typed `UnknownVariant` error.
+
+Of 25 items: 0 done, 14 untested, 2 partial, 1 diverged, 8 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Player: Player has role, optional identity and optional name.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/types/Game.ts#Player]
+  note: No test constructs or decodes a Player.
+```
+
+```mdl
+verdict Game: Game (org.dxos.type.game@0.1.0) has name, players and a variant Ref, plus a description field.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/types/Game.ts#Game, github:dxos/dxos/packages/plugins/plugin-game/src/types/Game.ts#make]
+  note: The schema adds an optional `description` the spec does not list. No test.
+```
+
+```mdl
+verdict GameVariant: GameVariant matches the spec except that variantSchema is variantType, an ECHO type entity.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/types/GameCapabilities.ts#GameVariant, github:dxos/dxos/packages/plugins/plugin-game/src/types/GameCapabilities.ts#VariantProvider]
+  note: `createVariant` takes the form input and returns an Effect over `Database.Service`. No test.
+```
+
+```mdl
+verdict CreateGamePanel: A sorted, searchable variant picker, then a form from inputSchema for variants that have one.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/components/CreateGamePanel.tsx#CreateGamePanel]
+  note: `CreateGamePanel.stories.tsx` renders it but has no `play` function, so nothing asserts its behaviour.
+```
+
+```mdl
+verdict GameArticle: GameArticle resolves the variant Ref live, matches by typename and delegates to variant.article.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/containers/GameArticle/GameArticle.tsx#GameArticle]
+  note: No test or story renders it.
+```
+
+```mdl
+verdict GameCard: GameCard resolves the variant the same way and delegates to variant.card.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/containers/GameCard/GameCard.tsx#GameCard]
+  note: It renders nothing (not a fallback) when no variant card matches. No test.
+```
+
+```mdl
+verdict createGame: Creation and rollback exist in createObject, but the state is not hidden and an unknown id is an invariant defect.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/capabilities/create-object.ts]
+  note: |
+    It is a `CreateObjectEntry.createObject` function, not an operation. It calls `variant.createVariant`, adds the
+    state with `SpaceOperation.AddObject` to the same `target` as the Game with no hidden flag, then adds the Game
+    and on failure invokes `RemoveObjects` for the state. An unregistered `variantId` fails
+    `invariant(variant, ...)` rather than returning `UnknownVariant`. No test.
+```
+
+```mdl
+verdict F-1.1: Variant plugins contribute through GameCapabilities.VariantProvider.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/types/GameCapabilities.ts#VariantProvider]
+  note: plugin-chess contributes a variant; no test asserts the contribution.
+```
+
+```mdl
+verdict F-1.2: All variants are read with useCapabilities or Capability.getAll; the picker sorts them by label.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/components/CreateGamePanel.tsx#CreateGamePanel, github:dxos/dxos/packages/plugins/plugin-game/src/capabilities/create-object.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-2.1: The Game CreateObjectEntry registers CreateGamePanel as its custom panel.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-game/src/components/CreateGamePanel.tsx#CreateGamePanel]
+  note: No test opens the create flow.
+```
+
+```mdl
+verdict F-2.2: Picking a variant only selects it; createObject runs when the user presses Save.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/components/CreateGamePanel.tsx#CreateGamePanel]
+  note: |
+    `VariantPicker` preselects the first result and a row's `onSelect` only sets the selection; the Form's
+    `onSave` calls `handleSelect`, which invokes `onCreateObject({ variantId })` with no input when the variant
+    has no `inputSchema`. No test.
+```
+
+```mdl
+verdict F-2.3: A variant with inputSchema shows a Continue button, then a form whose submit calls onCreateObject with the input.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/components/CreateGamePanel.tsx#CreateGamePanel]
+  note: No test.
+```
+
+```mdl
+verdict F-2.4: The Game is added to the target, but the variant state is added beside it and is not hidden.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/capabilities/create-object.ts]
+  note: Both objects go through `AddObject` with the same `target`; nothing marks the state hidden. No test.
+```
+
+```mdl
+verdict F-3.1: The article surface for Game delegates to the matching variant.article.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-game/src/containers/GameArticle/GameArticle.tsx#GameArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-3.2: The card surface for Game delegates to the matching variant.card.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-game/src/containers/GameCard/GameCard.tsx#GameCard]
+  note: No test.
+```
+
+```mdl
+verdict F-3.3: GameArticle renders 'Unsupported game variant' when no variant (or no article) matches.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/containers/GameArticle/GameArticle.tsx#GameArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-3.4: Both GameArticle and GameCard return null until the variant Ref resolves.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-game/src/containers/GameArticle/GameArticle.tsx#GameArticle, github:dxos/dxos/packages/plugins/plugin-game/src/containers/GameCard/GameCard.tsx#GameCard]
+  note: No test.
+```
+
+```mdl
+verdict T-1: No test runs the picker with two variants.
+  status: missing
+  note: plugin-game has no test files and `CreateGamePanel.stories.tsx` has no `play`.
+```
+
+```mdl
+verdict T-2: No test runs creation without a form.
+  status: missing
+  note: No test; the code also needs a Save press rather than a row click (see F-2.2).
+```
+
+```mdl
+verdict T-3: No test runs creation with a form.
+  status: missing
+  note: No test in plugin-game or plugin-chess submits the variant input form.
+```
+
+```mdl
+verdict T-4: No test runs createObject.
+  status: missing
+  note: Searched plugin-game and plugin-chess tests; none creates a Game.
+```
+
+```mdl
+verdict T-5: No test forces the second write to fail.
+  status: missing
+  note: The rollback (`Effect.tapError` invoking `RemoveObjects`) is not exercised.
+```
+
+```mdl
+verdict T-6: No test passes an unregistered variantId.
+  status: missing
+  note: No test; the code throws through `invariant` instead of returning `UnknownVariant`.
+```
+
+```mdl
+verdict T-7: No test renders GameArticle with an unregistered variant.
+  status: missing
+  note: No test or story renders `GameArticle`.
+```
+
+```mdl
+verdict QA-1: No automation runs the create-and-render round-trip.
+  status: missing
+  note: No Playwright spec or plugin test creates a Game through the picker.
+```

@@ -19,6 +19,7 @@ import {
   QuickEntryDialog,
   RemoteSessionCard,
   TaskArticle,
+  TaskRow,
   TaskSetArticle,
 } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
@@ -34,6 +35,12 @@ const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSe
 
 const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { showDescription?: boolean }>> =
   Role.make('org.dxos.role.section');
+
+/**
+ * An object shown beside the one it relates to — a task under the email it was extracted from. Typed
+ * here for a task; hosts make the same NSID (role identity is structural).
+ */
+const TaskRelated: Role.Role<{ subject: Task.Task }> = Role.make('org.dxos.role.related');
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -100,6 +107,12 @@ export default Capability.makeModule(() =>
           attendableId,
           showDescription,
         }),
+      }),
+      Surface.create({
+        id: 'related.task',
+        filter: AppSurface.object(TaskRelated, Task.Task),
+        component: TaskRow,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'card.outline',

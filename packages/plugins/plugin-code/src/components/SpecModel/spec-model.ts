@@ -2,7 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MdlBlock, parseMdlBlocks } from '@dxos/deus/extension';
+import { type MdlBlock, findSpecRefs, parseMdlBlocks, specReferenceFilter } from '@dxos/deus/extension';
+import { type SpecIndex } from '@dxos/deus/spec-index';
+
+import { type SourceKey, findSourceKeys, formatSourceKey, isSpecKey } from '#sync';
+
+import { resolveSpecRef } from '../SpecEditor/spec-ref.ts';
 
 /** A top-level spec block that other blocks can depend on. */
 export type DefinitionModel = {
@@ -11,7 +16,22 @@ export type DefinitionModel = {
   title?: string;
   /** Ids of the other definitions this one names, in order of first mention. */
   dependsOn: string[];
+  /** Set on a node that lives outside this spec: a block of another spec, or a code symbol. */
+  external?: ExternalModel;
 };
+
+/** Where an external node comes from; its id is the `github:` key itself. */
+export type ExternalModel = {
+  target: 'spec' | 'code';
+  key: SourceKey;
+  /** The block or symbol named; absent for a key that names a whole file. */
+  fragment?: string;
+  /** Whether the other spec's text was available to describe the block. */
+  resolved: boolean;
+};
+
+/** The texts of other specs, keyed by their `github:` key without a fragment. */
+export type SpecTexts = ReadonlyMap<string, string>;
 
 /** The definitions of a spec and which name which, pointing from the dependent to what it names. */
 export type DefinitionGraphModel = {
@@ -27,12 +47,14 @@ export type FieldModel = {
   comment?: string;
 };
 
-/** Why a type is taken to be persisted. */
-export type StoredReason = 'typename' | 'ref' | 'described';
+/** Why a type is taken to be persisted; `table` is a SQL table (`lang/sql.mdl`), stored by definition. */
+export type StoredReason = 'typename' | 'ref' | 'described' | 'table';
 
 export type DataTypeModel = {
   id: string;
   typename?: string;
+  /** A SQL table's database and migration-history table, from its `store:` field. */
+  store?: string;
   desc?: string;
   fields: (FieldModel & {
     /** Spec types the field's type names. */
@@ -220,21 +242,101 @@ const namedIds = (text: string, ids: ReadonlySet<string>, self?: string): string
   ),
 ];
 
-/** Every definition of a spec with an edge to each other definition its title or body names. */
-export const buildDefinitionGraph = (text: string): DefinitionGraphModel => {
-  const blocks = definitionBlocks(text);
-  const ids = new Set(blocks.map(({ id }) => id));
-  const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => ({
-    id,
-    kind: type,
-    ...(title && { title }),
-    dependsOn: namedIds(`${title ?? ''}\n${body}`, ids, id),
-  }));
+/**
+ * The node a `github:` key names. A spec key with a fragment becomes that block of the other spec, described from
+ * its text when `specs` has it; any other key (code, or a whole file) becomes one node for the key.
+ */
+const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel => {
+  const id = formatSourceKey(key);
+  if (!isSpecKey(key)) {
+    return {
+      id,
+      kind: 'code',
+      title: key.fragment ?? key.path.split('/').pop(),
+      dependsOn: [],
+      external: { target: 'code', key, ...(key.fragment && { fragment: key.fragment }), resolved: true },
+    };
+  }
+  const text = specs.get(formatSourceKey(key, false));
+  const blocks = text ? definitionBlocks(text) : [];
+  const owner = key.fragment ? resolveToken(key.fragment, new Set(blocks.map((block) => block.id))) : undefined;
+  const block = blocks.find((candidate) => candidate.id === owner);
   return {
-    definitions,
-    edges: definitions.flatMap(({ id, dependsOn }) => dependsOn.map((to) => ({ id: `${id}->${to}`, from: id, to }))),
+    id,
+    kind: block?.type ?? 'spec',
+    title: block?.title ?? key.fragment ?? key.path,
+    dependsOn: [],
+    external: { target: 'spec', key, ...(key.fragment && { fragment: key.fragment }), resolved: block !== undefined },
   };
 };
+
+/** Keys attached to a spec item from outside its text, e.g. a review's evidence; `id` may name a nested req (`F-1.2`). */
+export type Annotation = {
+  id: string;
+  /** The code that implements the item. */
+  keys: readonly SourceKey[];
+  /** Whether a review found tests for the item; absent when it does not say. */
+  testing?: 'tested' | 'untested';
+  /** The tests that exercise the item. */
+  tests?: readonly SourceKey[];
+};
+
+/**
+ * Every definition of a spec with an edge to each other definition its title or body names, plus a node for each
+ * block of another spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key) and for each
+ * code symbol an annotation links to one of its items, so a spec's graph shows what it rests on elsewhere and where
+ * it is implemented.
+ */
+export const buildDefinitionGraph = (
+  text: string,
+  specs: SpecTexts = new Map(),
+  annotations: readonly Annotation[] = [],
+  index?: SpecIndex,
+): DefinitionGraphModel => {
+  const isReference = index ? specReferenceFilter(index) : () => false;
+  const blocks = definitionBlocks(text);
+  const ids = new Set(blocks.map(({ id }) => id));
+  const externals = new Map<string, DefinitionModel>();
+  const link = (key: SourceKey): string => {
+    const external = externals.get(formatSourceKey(key)) ?? externalDefinition(key, specs);
+    externals.set(external.id, external);
+    return external.id;
+  };
+  // A requirement's annotation hangs off its feature, the box the graph draws.
+  const annotated = new Map<string, SourceKey[]>();
+  for (const { id, keys } of annotations) {
+    const owner = resolveToken(id, ids);
+    if (owner) {
+      annotated.set(owner, [...(annotated.get(owner) ?? []), ...keys]);
+    }
+  }
+  const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => {
+    const prose = `${title ?? ''}\n${body}`;
+    const refs = findSpecRefs(prose).filter((ref) => isReference(ref.id));
+    const refKeys = refs.flatMap((ref) => {
+      const resolved = index && resolveSpecRef(index, ref.id, ref.item);
+      return resolved && !('error' in resolved) ? [resolved] : [];
+    });
+    const linked = [...findSourceKeys(prose).map(({ key }) => key), ...refKeys, ...(annotated.get(id) ?? [])].map(link);
+    // References and keys are removed first so their words are not read as names of this spec's blocks.
+    const local = refs
+      .reduceRight((stripped, { from, to }) => `${stripped.slice(0, from)} ${stripped.slice(to)}`, prose)
+      .replace(SOURCE_KEYS, ' ');
+    return {
+      id,
+      kind: type,
+      ...(title && { title }),
+      dependsOn: [...new Set([...namedIds(local, ids, id), ...linked])],
+    };
+  });
+  const all = [...definitions, ...externals.values()];
+  return {
+    definitions: all,
+    edges: all.flatMap(({ id, dependsOn }) => dependsOn.map((to) => ({ id: `${id}->${to}`, from: id, to }))),
+  };
+};
+
+const SOURCE_KEYS = /github:\S+/g;
 
 /** A definition graph narrowed to the kinds still shown, with lookups for drawing it. */
 export type DefinitionSelection = DefinitionGraphModel & {
@@ -271,14 +373,41 @@ export const selectDefinitions = (
 
 const REFERENCE_TYPE = /\bRef<\s*([\w.]+)\s*>/;
 
+/** A column's foreign key, `REFERENCES <table>(<column>)`. */
+const SQL_REFERENCE = /\bREFERENCES\s+([\w.]+)\s*\(/i;
+
 /**
- * The persisted part of a spec's `type` blocks. A type is a stored root when it declares an ECHO `typename`,
- * holds a `Ref<…>`, or its description says it is persisted; the types the roots embed are stored inside them.
+ * The persisted part of a spec's `type` and `table` blocks. A type is a stored root when it declares an ECHO
+ * `typename`, holds a `Ref<…>`, or its description says it is persisted; the types the roots embed are stored inside
+ * them. A table is always a stored root, its columns are its fields, and a `REFERENCES` column references a table.
  */
 export const buildDataModel = (text: string): DataModel => {
-  const blocks = parseMdlBlocks(text).filter(({ type, id }) => type === 'type' && id);
+  const parsed = parseMdlBlocks(text);
+  const blocks = parsed.filter(({ type, id }) => type === 'type' && id);
+  const tables = parsed.filter(({ type, id }) => type === 'table' && id);
   const ids = new Set(blocks.map(({ id }) => id));
-  const all = blocks.map((block): DataTypeModel => {
+  const tableIds = new Set(tables.map(({ id }) => id));
+  const tableModels = tables.map((block): DataTypeModel => {
+    const fields = parseFields(block.body);
+    const store = fields.get('store')?.inline;
+    return {
+      id: block.id,
+      ...(store && { store }),
+      ...(block.title && { desc: block.title }),
+      fields: (fields.get('columns')?.lines ?? [])
+        .map(parseField)
+        .filter((field): field is FieldModel => field !== undefined)
+        .map((field) => {
+          const target = field.type.match(SQL_REFERENCE)?.[1];
+          return { ...field, refs: target && tableIds.has(target) ? [target] : [], reference: target !== undefined };
+        }),
+      literals: [],
+      variants: [],
+      bases: [],
+      stored: 'table',
+    };
+  });
+  const typeModels = blocks.map((block): DataTypeModel => {
     const fields = parseFields(block.body);
     const desc = proseOf(fields.get('desc'));
     const typename = fields.get('typename')?.inline;
@@ -319,6 +448,7 @@ export const buildDataModel = (text: string): DataModel => {
     };
   });
 
+  const all = [...typeModels, ...tableModels];
   const byId = new Map(all.map((type) => [type.id, type]));
   const kept = new Set<string>();
   const visit = (id: string) => {

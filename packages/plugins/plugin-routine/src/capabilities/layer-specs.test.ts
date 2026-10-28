@@ -22,6 +22,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { RoutinePlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), RoutinePlugin()] });
+
 /** A port fetch refuses outright, so the client's own EDGE probes fail locally and the tests need no network. */
 const EDGE_URL = 'http://127.0.0.1:1';
 

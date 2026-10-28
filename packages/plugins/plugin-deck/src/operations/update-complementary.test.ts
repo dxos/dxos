@@ -12,6 +12,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { DeckPlugin } from '#plugin';
 import { DeckCapabilities } from '#types';
 
+await Harness.preload({ plugins: [DeckPlugin()] });
+
 describe('LayoutOperation.UpdateComplementary', () => {
   test('selecting a panel expands the sidebar, and collapsing keeps the panel', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });

@@ -152,7 +152,6 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "date-fns": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

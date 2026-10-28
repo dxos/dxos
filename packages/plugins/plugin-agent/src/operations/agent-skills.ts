@@ -77,7 +77,6 @@ export const fork = Effect.fnUntraced(function* (source: Skill.Skill, agent: Age
     description: source.description,
     tools: [...source.tools],
     agentCanEnable: source.agentCanEnable,
-    mcpServers: source.mcpServers ? [...source.mcpServers] : undefined,
     hooks: source.hooks ? [...source.hooks] : undefined,
     instructions: Template.make({ source: text.content, inputs: [...(source.instructions.inputs ?? [])] }),
   });

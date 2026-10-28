@@ -6,6 +6,7 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Attention } from '@dxos/react-ui-attention';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -89,7 +90,13 @@ export const Companion = ({
   );
 
   return (
-    <Pane.Root {...landmark} classNames={classNames} data-testid='deck.companion'>
+    <Pane.Root
+      {...landmark}
+      classNames={classNames}
+      // Right-clicking the companion lists the selected companion's node actions.
+      {...(selected ? AppNode.contextMenuProps(selected) : {})}
+      data-testid='deck.companion'
+    >
       {!headless && (
         <Pane.Toolbar>
           <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />

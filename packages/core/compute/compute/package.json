@@ -58,11 +58,6 @@
       "types": "./dist/types/src/LayerSpec.d.ts",
       "import": "./dist/lib/LayerSpec.mjs"
     },
-    "./McpServer": {
-      "source": "./src/McpServer.ts",
-      "types": "./dist/types/src/McpServer.d.ts",
-      "import": "./dist/lib/McpServer.mjs"
-    },
     "./Operation": {
       "source": "./src/Operation.ts",
       "types": "./dist/types/src/Operation.d.ts",
@@ -167,7 +162,6 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",

@@ -13,6 +13,8 @@ import { Task, TaskMigration, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TasksPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), TasksPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('TasksPlugin', () => {

@@ -25,10 +25,22 @@ inputs:
       Set "true" to install the Rust toolchain and restore the cargo registry. Only Check's `native` job compiles
       Rust; every other job skips the ~12 s install.
     default: 'false'
+  prebuilt:
+    description: >
+      Set "true" when the workspace, ~/.proto and ~/.moon come from a mounted workspace image: the toolchain
+      installs and the pnpm store restore are skipped, and the install links only the lockfile delta.
+    default: 'false'
 
 runs:
   using: 'composite'
   steps:
+    - name: Use the image's toolchain
+      if: ${{ inputs.prebuilt == 'true' }}
+      run: |
+        echo "$HOME/.proto/shims" >> "$GITHUB_PATH"
+        echo "$HOME/.proto/bin" >> "$GITHUB_PATH"
+      shell: bash
+
     # A bare runner has neither node nor pnpm on PATH, and once moon's toolchain cache is restored
     # `moon setup` skips installing them, so `pnpm store path` would come back empty. The
     # `ghcr.io/dxos/gh-actions` container already ships both. Versions come from `.prototools`.
@@ -168,6 +180,7 @@ runs:
 
     # TODO(wittjosiah): Install moon in docker image?
     - uses: moonrepo/setup-toolchain@v0
+      if: ${{ inputs.prebuilt != 'true' }}
       with:
         # IMPORTANT: Keep in-sync with .prototools
         moon-version: '2.5.2'
@@ -256,8 +269,12 @@ runs:
       run: echo "version=$(node --version)" >> $GITHUB_OUTPUT
       shell: bash
 
-    - name: Cache pnpm store
-      uses: actions/cache@v4
+    # Restore and save as separate steps: `actions/cache` adds a post-job step that spends 14–35 s on every
+    # job even on a hit, when it saves nothing, and the `test` gate waits for it.
+    - name: Restore pnpm store
+      id: pnpm-cache
+      if: ${{ inputs.prebuilt != 'true' }}
+      uses: actions/cache/restore@v4
       with:
         path: ${{ steps.pnpm-store.outputs.pnpm-store }}
         key: ${{ inputs.cache-scope }}-${{ runner.os }}-node-${{ steps.node-version.outputs.version }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -273,3 +290,11 @@ runs:
         fi
         pnpm install --prefer-offline
       shell: bash
+
+    # Only on a miss, as `actions/cache` did: the store is complete once the install has run.
+    - name: Save pnpm store
+      if: ${{ inputs.prebuilt != 'true' && steps.pnpm-cache.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ steps.pnpm-store.outputs.pnpm-store }}
+        key: ${{ steps.pnpm-cache.outputs.cache-primary-key }}

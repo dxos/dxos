@@ -1,0 +1,182 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-mermaid/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MermaidPlugin
+
+The plugin is one CodeMirror extension (`mermaid-extension.ts`) contributed through
+`MarkdownCapabilities.ExtensionProvider`. It replaces each `mermaid` fence the cursor is outside of
+with a block widget, shows the source while the cursor is inside (except in read-only), renders an
+inline `cm-mermaid-error` on failure, follows the editor's dark-theme facet and paints the widget on
+`--color-group-surface`. The behaviour largely matches; testing is thin. The only unit test checks
+module activation, and four storybook stories (smoke-run by `ts-test-storybook`) render a flowchart, a
+sequence diagram and an error case without asserting anything.
+
+Divergences: the four types (`DiagramKind`, `DiagramTheme`, `RenderResult`, `RenderError`) are not
+declared — the code uses mermaid's own `MermaidConfig`; `renderDiagram` is a private widget method
+that turns every failure into a string rather than distinct parse and render errors; the source lines
+are replaced by a block decoration, not hidden with a `cm-mermaid-hidden` class; and the module
+activates on `MarkdownEvents.Start`, not `SetupExtensions`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict DiagramKind: No DiagramKind type exists.
+  status: missing
+  note: The extension takes the first token of the source as a label and never enumerates kinds; searched `src/`.
+```
+
+```mdl
+verdict DiagramTheme: No DiagramTheme type exists; themes pass through MermaidConfig.
+  status: missing
+  note: The code picks `dark` or `neutral` and accepts mermaid's `theme` option; the five literals appear only as a story control.
+```
+
+```mdl
+verdict RenderResult: No RenderResult type exists.
+  status: missing
+  note: The widget stores mermaid's `result.svg` in `_svg`; there is no declared type with svg and id.
+```
+
+```mdl
+verdict RenderError: No RenderError type exists.
+  status: missing
+  note: Errors are stored as `String(err)` in `_error`, without the source.
+```
+
+```mdl
+verdict MermaidWidget: The widget renders the SVG with a type label, or the error text.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#MermaidWidget]
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid.stories.tsx]
+  note: It takes a full `MermaidConfig` instead of a `darkMode` boolean.
+```
+
+```mdl
+verdict renderDiagram: Rendering is a private widget method, not an operation, with no typed errors.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#MermaidWidget]
+  note: |
+    `MermaidWidget.render` calls `Mermaid.parse` then `Mermaid.render` and catches everything into one
+    string; there is no `ParseError`/`RenderError` split and no invocable op.
+```
+
+```mdl
+verdict F-1.1: A mermaid fence is replaced by a block widget with the rendered SVG.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#mermaid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid.stories.tsx]
+```
+
+```mdl
+verdict F-1.2: With the cursor inside the fence, no widget is built and the source shows.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#mermaid]
+  note: No test moves the cursor.
+```
+
+```mdl
+verdict F-1.3: Moving the cursor out rebuilds the widget.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#mermaid]
+  note: The state field rebuilds on selection changes; no test.
+```
+
+```mdl
+verdict F-1.4: In read-only state the widget ignores the cursor.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#mermaid]
+  note: No read-only test or story.
+```
+
+```mdl
+verdict F-2.1: A parse failure shows inline error text.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#MermaidWidget]
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid.stories.tsx]
+```
+
+```mdl
+verdict F-2.2: Corrected source builds a new widget that renders the diagram.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#MermaidWidget]
+  note: Widget equality is on source and config, so an edit re-renders; no test.
+```
+
+```mdl
+verdict F-3.1: The dark-theme facet selects a config with darkMode and the dark theme.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#mermaid]
+  note: No test switches colour mode.
+```
+
+```mdl
+verdict F-3.2: The widget background is var(--color-group-surface).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid-extension.ts#mermaid]
+  note: Set in the extension's `EditorView.theme`; no test.
+```
+
+```mdl
+verdict F-4.1: The plugin contributes the extension via MarkdownCapabilities.ExtensionProvider.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/markdown.ts, github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/index.ts#MarkdownExtension]
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/plugin.browser.test.ts]
+```
+
+```mdl
+verdict F-4.2: The module activates on MarkdownEvents.Start, not SetupExtensions.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/index.ts#MarkdownExtension]
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/plugin.browser.test.ts]
+  note: The browser test fires `MarkdownEvents.Start` and checks `MarkdownExtension` activates.
+```
+
+```mdl
+verdict T-1: A story renders a valid flowchart, but nothing asserts on it.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid.stories.tsx]
+  note: The Default story is smoke-run; no check that lines are hidden, the SVG exists or no error shows.
+```
+
+```mdl
+verdict T-2: Nothing tests the cursor in/out toggle.
+  status: missing
+  note: No test moves the cursor; the code also has no `cm-mermaid-hidden` class to check (it uses a block replace).
+```
+
+```mdl
+verdict T-3: The Error story renders invalid syntax, but nothing asserts on it.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/extensions/mermaid.stories.tsx]
+  note: No check for the `cm-mermaid-error` element or the absence of an SVG.
+```
+
+```mdl
+verdict T-4: Nothing tests read-only mode.
+  status: missing
+  note: No story or test sets the editor read-only.
+```
+
+```mdl
+verdict T-5: The activation test fires MarkdownEvents.Start rather than SetupExtensions.
+  status: diverged
+  tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/plugin.browser.test.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/index.ts#MarkdownExtension]
+  note: The module is `MarkdownExtension`, and the event is `Start`; the scenario names `SetupExtensions` and a `markdown` module.
+```
+
+```mdl
+verdict QA-1: The QA flow has no automated test.
+  status: missing
+  note: Status is unverified; agent/human QA only.
+```

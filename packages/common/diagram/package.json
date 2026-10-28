@@ -52,6 +52,7 @@
     "elkjs": "catalog:"
   },
   "devDependencies": {
+    "@codemirror/lang-markdown": "catalog:",
     "@lezer/generator": "catalog:",
     "@uiw/codemirror-theme-vscode": "catalog:",
     "effect": "catalog:",

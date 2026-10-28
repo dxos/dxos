@@ -15,6 +15,8 @@ import { DeckCapabilities } from '#types';
 import { applyActive } from './apply.ts';
 import * as Navigation from './navigation.ts';
 
+await Harness.preload({ plugins: [DeckPlugin()] });
+
 describe('applyActive', () => {
   afterEach(() => vi.unstubAllGlobals());
 

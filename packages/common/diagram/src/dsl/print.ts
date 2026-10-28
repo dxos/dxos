@@ -96,7 +96,7 @@ export const formatElement = (element: Scene.Element): string => {
         'line',
         formatId(element.id),
         ...element.points.map(formatPoint),
-        ...formatAttrs('line', { closed: element.closed, ...style(element) }),
+        ...formatAttrs('line', { closed: element.closed, guide: element.guide, ...style(element) }),
       ].join(' ');
 
     case 'curve':

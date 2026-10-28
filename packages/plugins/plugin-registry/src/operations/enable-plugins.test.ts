@@ -12,6 +12,8 @@ import { meta } from '#meta';
 import { RegistryOperation } from '#operations';
 import { RegistryPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [RegistryPlugin(), GraphPlugin.make()] });
+
 const graphKey = GraphPlugin.make().meta.profile.key;
 
 describe('RegistryOperation.QueryDisabledPlugins', () => {

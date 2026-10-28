@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-spacetime",
   "version": "0.16.0",
-  "private": true,
   "description": "3D modeling plugin with Babylon.js and Manifold",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -105,6 +104,11 @@
       "source": "./src/SpacetimePlugin.ts",
       "types": "./dist/types/src/SpacetimePlugin.d.ts",
       "import": "./dist/lib/SpacetimePlugin.mjs"
+    },
+    "./SpacetimePresets": {
+      "source": "./src/SpacetimePresets.ts",
+      "types": "./dist/types/src/SpacetimePresets.d.ts",
+      "import": "./dist/lib/SpacetimePresets.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -124,6 +128,9 @@
       ],
       "SpacetimeEvents": [
         "dist/types/src/types/SpacetimeEvents.d.ts"
+      ],
+      "SpacetimePresets": [
+        "dist/types/src/SpacetimePresets.d.ts"
       ]
     }
   },
@@ -176,5 +183,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

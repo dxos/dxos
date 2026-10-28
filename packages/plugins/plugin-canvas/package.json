@@ -73,6 +73,7 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./Architecture": {
       "source": "./src/samples/architecture/index.ts",
       "types": "./dist/types/src/samples/architecture/index.d.ts",
@@ -125,7 +126,8 @@
   "files": [
     "dist",
     "dx.config.ts",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -141,6 +143,7 @@
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-presenter": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",

@@ -45,6 +45,7 @@ export const MobileDrawer = () => {
 
     return {
       attendableId: companionId,
+      nodeId: companionId,
       subject: node.data,
       companionTo: parentNode?.data,
       properties: node.properties,

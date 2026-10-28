@@ -1,0 +1,25 @@
+diagram flow=down
+group link "@dxos/link" {
+  node Connection "Connection" ref="packages/core/compute/link/src/Connection.ts"
+  node AccessToken "AccessToken" ref="packages/core/compute/link/src/AccessToken.ts"
+  node Cursor "Cursor" ref="packages/core/compute/link/src/Cursor.ts"
+}
+group types "@dxos/types" below link {
+  node Repo "Repo" ref="packages/sdk/types/src/types/Repo.ts"
+  node PullRequest "PullRequest" ref="packages/sdk/types/src/types/PullRequest.ts"
+  node TaskSet "TaskSet (issues)" ref="packages/sdk/types/src/types/TaskSet.ts"
+  node Task "Task (issue)" ref="packages/sdk/types/src/types/Task.ts"
+  node Milestone "Milestone" ref="packages/sdk/types/src/types/Milestone.ts"
+}
+group github "plugin-github" left-of types {
+  node Walkthrough "Walkthrough" ref="packages/plugins/plugin-github/src/types/Walkthrough.ts"
+}
+edge Connection -> AccessToken
+edge Cursor -> AccessToken "source"
+edge Cursor -> Repo "target"
+edge PullRequest -> Repo "repository"
+edge TaskSet -> Repo "same foreign key" stroke=dashed
+edge TaskSet composes Task "tasks[]"
+edge TaskSet composes Milestone
+edge PullRequest -> Task "closes" stroke=dashed
+edge Walkthrough -> PullRequest "subject"

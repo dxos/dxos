@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { DiscordAgentOperation, DiscordChannel } from '#types';
 
-export const operations = [
+export const operations: readonly Operation.Definition.Any[] = [
   DiscordAgentOperation.Reply,
   DiscordAgentOperation.DirectMessage,
   DiscordAgentOperation.React,
@@ -43,6 +43,8 @@ export const make = (): Skill.Skill =>
           acknowledge it when a reply would add nothing.
         - ${tool(DiscordAgentOperation.DirectMessage)}: message a person directly; \`to\` is their user id (the number
           after \`from\`), their @username, or their name.
+        - To send a picture, video or document, pass \`files\`: references to File objects (\`echo://…\` URIs you were
+          given), up to 10 MB each, with a short \`text\` saying what it is.
 
         Pick what the request needs, and it may be somewhere other than where it came from: "tell Rich the agent is
         ready" is a direct message to Rich, perhaps with a 👍 on the request. Do one thing per intent, never post the

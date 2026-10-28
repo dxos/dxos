@@ -25,6 +25,7 @@ import {
   providerForModel,
   resolveProvider,
 } from '../chat-model/index.ts';
+import { modelIcon } from '../util/model-icon.ts';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
@@ -113,6 +114,7 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
         id: preset.id,
         label: preset.label ?? preset.model,
         local: 'local' in preset && preset.local === true,
+        icon: modelIcon(preset.model),
       })),
     [presets, unavailable],
   );

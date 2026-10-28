@@ -78,6 +78,9 @@ const seedViewState = (state: DebugPanelViewState | undefined) => () => {
   }
 };
 
+// The button renders once the plugin manager has booted, which takes seconds on a cold story.
+const LOAD_TIMEOUT = { timeout: 10_000 };
+
 /** Docked by default: the button toggles the deck's drawer through the layout operation. */
 export const Default: Story = {
   args: { controller: createFakeController() },
@@ -89,7 +92,7 @@ export const Default: Story = {
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = await canvas.findByRole('button', { name: 'Show debug panel' });
+    const button = await canvas.findByRole('button', { name: 'Show debug panel' }, LOAD_TIMEOUT);
     await expect(getDrawerState()).toBe('closed');
     await userEvent.click(button);
     await waitFor(() => expect(getDrawerState()).toBe('open'));
@@ -105,7 +108,7 @@ export const Floating: Story = {
   loaders: [seedViewState({ mode: 'floating', open: [] })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: 'Show debug panel' }));
+    await userEvent.click(await canvas.findByRole('button', { name: 'Show debug panel' }, LOAD_TIMEOUT));
     // Portaled to the body, so the window is looked up on the document.
     const body = within(document.body);
     const dialog = await body.findByRole('dialog', { name: 'Debug' }, { timeout: 10_000 });

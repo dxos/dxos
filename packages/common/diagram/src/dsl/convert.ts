@@ -9,7 +9,8 @@
 //
 // The output is the POST-layout form, and there is no other option: the DSL has no unpositioned
 // node to emit. That is the point of converting — you run mermaid once to get a layout, then keep
-// the result as something you can hand-tune, diff and review. See `docs/DSL.md`.
+// the result as something you can hand-tune, diff and review. See `docs/DSL.md`. Mermaid input is
+// deprecated everywhere else, so this is also how an existing mermaid source moves to the DSL.
 //
 
 import * as Data from 'effect/Data';

@@ -1,0 +1,98 @@
+{
+  "name": "@dxos/plugin-ste",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Simplified Technical English (ASD-STE100): an assistant skill and a check tool",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "imports": {
+    "#capabilities": {
+      "source": {
+        "node": "./src/capabilities/gen/node.ts",
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
+      },
+      "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities.node.mjs",
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
+    },
+    "#meta": {
+      "source": "./src/meta.ts",
+      "types": "./dist/types/src/meta.d.ts",
+      "default": "./dist/lib/meta.mjs"
+    },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
+    "#plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/plugin.mjs"
+    },
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
+    }
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    },
+    "./SteCheck": {
+      "source": "./src/check/SteCheck.ts",
+      "types": "./dist/types/src/check/SteCheck.d.ts",
+      "import": "./dist/lib/SteCheck.mjs"
+    },
+    "./SteOperation": {
+      "source": "./src/operations/SteOperation.ts",
+      "types": "./dist/types/src/operations/SteOperation.d.ts",
+      "import": "./dist/lib/SteOperation.mjs"
+    },
+    "./StePlugin": {
+      "source": "./src/StePlugin.ts",
+      "types": "./dist/types/src/StePlugin.d.ts",
+      "import": "./dist/lib/StePlugin.mjs"
+    },
+    "./SteSkill": {
+      "source": "./src/skills/SteSkill.ts",
+      "types": "./dist/types/src/skills/SteSkill.d.ts",
+      "import": "./dist/lib/SteSkill.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "dx.config.ts",
+    "src",
+    "PLUGIN.mdl"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/plugin-testing": "workspace:*",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -123,6 +123,11 @@
       "types": "./dist/types/src/types/InboxCapabilities.d.ts",
       "import": "./dist/lib/InboxCapabilities.mjs"
     },
+    "./InboxPermission": {
+      "source": "./src/types/InboxPermission.ts",
+      "types": "./dist/types/src/types/InboxPermission.d.ts",
+      "import": "./dist/lib/InboxPermission.mjs"
+    },
     "./InboxEvents": {
       "source": "./src/types/InboxEvents.ts",
       "types": "./dist/types/src/types/InboxEvents.d.ts",
@@ -316,6 +321,7 @@
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/permission": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

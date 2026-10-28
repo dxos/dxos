@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Heads } from '@automerge/automerge';
+import type { Heads, ImmutableString } from '@automerge/automerge';
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as Brand from 'effect/Brand';
 
@@ -45,7 +45,9 @@ export type DecodedAutomergePrimaryValue =
   | Uint8Array
   | readonly DecodedAutomergePrimaryValue[]
   | { readonly [key: string]: DecodedAutomergePrimaryValue }
-  | EncodedReference;
+  | EncodedReference
+  // Stored as-is by `ObjectCore.encode`: a schema field annotated with `RawStringAnnotation`.
+  | ImmutableString;
 
 //
 // Shared entity-manager / database types — placed here so they can be

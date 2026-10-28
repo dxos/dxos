@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { CardAnnotation } from '@dxos/schema';
 
@@ -57,6 +58,9 @@ export const isCanvas = (object: unknown): object is Canvas => Obj.instanceOf(Ca
  * `schema`, so all renderers (tldraw, excalidraw, ...) share one typename, graph node, create
  * flow, and surface scaffolding.
  */
+/** The drawing skill, declared on the type so binding a drawing to a chat gives the agent its tools. */
+export const SKILL_KEY = 'org.dxos.skill.drawing';
+
 export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.drawing', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -66,6 +70,7 @@ export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.dr
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
     CardAnnotation.set(true),
     Annotation.UserType.set({ tags: [Collection.ItemTag] }),
   ),

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
@@ -15,6 +15,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { translations } from '@dxos/react-ui/translations';
 import * as Typography from '@dxos/react-ui/Typography';
 
+import { type ReorderListController, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import { Listbox } from './Listbox.tsx';
 import { listboxSelection } from './selection.ts';
 
@@ -174,4 +175,124 @@ export const Test: Story = {
     await userEvent.type(canvas.getByRole('textbox', { name: 'Filter' }), 'x');
     await waitFor(() => expect(canvas.getByText('No matches')).toBeVisible());
   },
+};
+
+const SWATCHES = [
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'pink',
+  'rose',
+  'slate',
+];
+
+const SwatchTile = ({ value, controller }: { value: string; controller: ReorderListController<string> }) => {
+  const { rowRef, handleRef } = useReorderItem(controller, value);
+  // The whole tile is the drag handle.
+  const ref = useCallback(
+    (node: HTMLDivElement | null) => {
+      rowRef(node);
+      handleRef(node);
+    },
+    [rowRef, handleRef],
+  );
+  return (
+    <Listbox.Item ref={ref} id={value} data-testid={`tile-${value}`}>
+      <div className='aspect-video rounded-sm' style={{ background: `var(--color-${value}-500)` }} />
+      <Listbox.ItemText />
+    </Listbox.Item>
+  );
+};
+
+/**
+ * A grid of cards: `tiles` columns in a `Viewport` that scrolls vertically, a neutral outline on hover and the focus
+ * outline on the selected tile, and tiles dragged to reorder them (`useReorderList` with `axis='horizontal'`).
+ */
+const TilesStory = ({ tileWidth }: { tileWidth?: number }) => {
+  const [order, setOrder] = useState(SWATCHES);
+  const [large, setLarge] = useState(false);
+  const [selected, setSelected] = useState<string | undefined>('green');
+  const { controller } = useReorderList<string>({
+    items: order,
+    getId: (value) => value,
+    axis: 'horizontal',
+    dragPreview: 'clone',
+    onMove: (from, to) =>
+      setOrder((current) => {
+        const next = [...current];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        return next;
+      }),
+  });
+  const items = order.map((value) => ({ value, label: value[0].toUpperCase() + value.slice(1) }));
+  return (
+    // With `tileWidth` the grid fills the viewport (escaping the meta's fixed-width frame), so resizing the window reflows it.
+    <div
+      className={tileWidth ? 'fixed inset-0 flex flex-col dx-base-surface' : 'flex flex-col h-80 [grid-column:full]'}
+    >
+      {tileWidth && (
+        <label className='flex items-center gap-2 p-2'>
+          <input type='checkbox' checked={large} onChange={(event) => setLarge(event.target.checked)} />
+          Large tiles
+        </label>
+      )}
+      <Listbox.Root
+        items={items}
+        {...(tileWidth
+          ? { tileWidth: { min: tileWidth * (large ? 2 : 1), max: tileWidth * (large ? 3 : 1.5) } }
+          : { tiles: 4 })}
+        value={selected}
+        onValueChange={setSelected}
+        classNames='dx-grow'
+      >
+        <Listbox.Viewport>
+          <Listbox.Content aria-label='Swatches'>
+            {order.map((value) => (
+              <SwatchTile key={value} value={value} controller={controller} />
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
+      </Listbox.Root>
+    </div>
+  );
+};
+
+/** Tiles wrap into rows that scroll, the selected tile is outlined, and arrow keys move across and down the grid. */
+export const Tiles: Story = {
+  render: () => <TilesStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const listbox = canvas.getByRole('listbox', { name: 'Swatches' });
+    await expect(canvas.getByRole('option', { name: 'Green' })).toHaveAttribute('aria-selected', 'true');
+    await waitFor(() => expect(listbox.scrollHeight).toBeGreaterThan(listbox.clientHeight));
+    const red = canvas.getByTestId('tile-red');
+    await expect(red).toHaveAttribute('draggable', 'true');
+    // A tile is its own drag handle, so the list must not cancel the press that would start its native drag.
+    await expect(red).toHaveAttribute('data-drag-row');
+    const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    red.dispatchEvent(press);
+    await expect(press.defaultPrevented).toBe(false);
+
+    listbox.focus();
+    await userEvent.keyboard('{Home}{ArrowRight}{ArrowDown}{Enter}');
+    await waitFor(() => expect(canvas.getByRole('option', { name: 'Green' })).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.keyboard('{ArrowDown}{Enter}');
+    await waitFor(() => expect(canvas.getByRole('option', { name: 'Blue' })).toHaveAttribute('aria-selected', 'true'));
+  },
+};
+
+/** Tiles at least `tileWidth` wide, as many columns as fit: resize the window and they reflow without stretching. */
+export const ResponsiveTiles: Story = {
+  render: () => <TilesStory tileWidth={120} />,
 };

@@ -38,6 +38,7 @@ const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
     return (
       node && {
         attendableId: id,
+        nodeId: id,
         subject: node.data,
         properties: node.properties,
         popoverAnchorId,

@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { type AccessToken, Cursor } from '@dxos/link';
@@ -282,56 +283,70 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
                     return { added: 0 } satisfies PullResult;
                   }
                   const targetChannel = localRoot;
-
-                  // Channels synced before the Slack backend existed are moved onto it here, keeping their feed.
-                  const config = yield* upgradeChannel(targetChannel, {
-                    accessToken: accessTokenRef,
-                    conversationId: externalId,
-                  });
-                  if (!config) {
-                    return yield* Effect.fail(new SlackChannelTargetError({ context: { channel: targetChannel.id } }));
-                  }
-                  const feed = yield* Database.load(config.feed);
-
-                  // One round-trip to fetch the conversation metadata so we can
-                  // mirror a friendly name onto the local Channel.
-                  const allConversations = yield* SlackApi.fetchConversations();
-                  const conversation = allConversations.find((conv) => conv.id === externalId);
-
-                  const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.max });
-                  if (messages.length === 0) {
-                    return { added: 0 } satisfies PullResult;
-                  }
-
-                  const userById = yield* resolveUsers(messages);
-                  const botById = yield* resolveBots(messages);
-
-                  // Slack returns history newest-first; reverse so feed append order
-                  // matches chronological order.
-                  const sorted = [...messages].sort((messageA, messageB) => Number(messageA.ts) - Number(messageB.ts));
-                  const mapped = sorted
-                    .map((message) => mapSlackMessage(message, userById, botById))
-                    .filter((message): message is Message.Message => message !== undefined);
-
-                  // Messages the backend already posted and mirrored are skipped by their `ts`.
-                  const appended = yield* appendToMirror(feed, mapped);
-
-                  // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
-                  // succeeds so the next sync is incremental.
-                  newestTs = sorted[sorted.length - 1].ts;
-
-                  // Mirror the conversation's display name onto the local Channel if
-                  // we just learned a better one (first sync, or renamed remotely).
-                  if (conversation) {
-                    const desiredName = friendlyChannelName(conversation);
-                    if (targetChannel.name !== desiredName) {
-                      Obj.update(targetChannel, (targetChannel) => {
-                        targetChannel.name = desiredName;
+                  return yield* Progress.withReporter(
+                    {
+                      key: Progress.createSyncKey(targetChannel),
+                      label: `Syncing ${Obj.getLabel(targetChannel) ?? 'channel'}`,
+                    },
+                    Effect.fnUntraced(function* (reporter) {
+                      // Channels synced before the Slack backend existed are moved onto it here, keeping their feed.
+                      const config = yield* upgradeChannel(targetChannel, {
+                        accessToken: accessTokenRef,
+                        conversationId: externalId,
                       });
-                    }
-                  }
+                      if (!config) {
+                        return yield* Effect.fail(
+                          new SlackChannelTargetError({ context: { channel: targetChannel.id } }),
+                        );
+                      }
+                      const feed = yield* Database.load(config.feed);
 
-                  return { added: appended.length } satisfies PullResult;
+                      // One round-trip to fetch the conversation metadata so we can
+                      // mirror a friendly name onto the local Channel.
+                      const allConversations = yield* SlackApi.fetchConversations();
+                      const conversation = allConversations.find((conv) => conv.id === externalId);
+
+                      const messages = yield* SlackApi.fetchHistory(externalId, { oldest: binding.max });
+                      reporter.total(messages.length);
+                      if (messages.length === 0) {
+                        return { added: 0 } satisfies PullResult;
+                      }
+
+                      const userById = yield* resolveUsers(messages);
+                      const botById = yield* resolveBots(messages);
+
+                      // Slack returns history newest-first; reverse so feed append order
+                      // matches chronological order.
+                      const sorted = [...messages].sort(
+                        (messageA, messageB) => Number(messageA.ts) - Number(messageB.ts),
+                      );
+                      const mapped = sorted
+                        .map((message) => mapSlackMessage(message, userById, botById))
+                        .filter((message): message is Message.Message => message !== undefined);
+
+                      // Messages the backend already posted and mirrored are skipped by their `ts`.
+                      const appended = yield* appendToMirror(feed, mapped);
+                      // Join / leave events are dropped by mapping but still count as processed.
+                      reporter.advance(messages.length);
+
+                      // Capture the newest `ts` seen; the cursor advances (value + status) after the sync
+                      // succeeds so the next sync is incremental.
+                      newestTs = sorted[sorted.length - 1].ts;
+
+                      // Mirror the conversation's display name onto the local Channel if
+                      // we just learned a better one (first sync, or renamed remotely).
+                      if (conversation) {
+                        const desiredName = friendlyChannelName(conversation);
+                        if (targetChannel.name !== desiredName) {
+                          Obj.update(targetChannel, (targetChannel) => {
+                            targetChannel.name = desiredName;
+                          });
+                        }
+                      }
+
+                      return { added: appended.length } satisfies PullResult;
+                    }),
+                  );
                 }),
               );
 

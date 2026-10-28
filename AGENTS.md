@@ -231,6 +231,10 @@ is invisible there until something publishes it.
   day (06:00 UTC); to bump edge to a commit that landed since, dispatch it first.
 - The `file:` overrides live in edge's root `package.json` and must not be committed there; edge's
   `CLAUDE.md` covers the undo.
+- **Skills edge shares live here.** edge installs them with `npx skills` (recorded in its
+  `skills-lock.json`), so change a skill here, never in edge's copy; a skill folder holds no
+  repo-specific content (rules go in each repo's `.agents/rules/`). `scripts/skills-sync.ts` reports
+  which copies are behind or edited in place, and `agents/routines/skills-sync.md` acts on it.
 
 ## Long-running tasks
 
@@ -368,6 +372,11 @@ Do not paste real credential values into any shell command, and do not paste the
 
 ## Where things live
 
+- **Diagrams, anywhere** — Artifact pages, PR bodies, docs: plugin-illustrator `.dx` renders →
+  `drawing-diagrams` skill. This overrides the harness's `artifact-diagramming` skill: never
+  hand-author `<svg>` or Mermaid.
+- **Sharing a spec with the team** — Composer's spec viewer (inline diagrams, decision graph) as a
+  commentable Claude Artifact → `sharing-specs` skill (`.agents/skills/sharing-specs/SKILL.md`).
 - **Cloud sandbox / Claude Code on the web** — hooks that don't run, missing tooling, and the
   HTTPS egress proxy → `cloud-sandbox` skill (`.agents/skills/cloud-sandbox/SKILL.md`).
 - **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
@@ -398,10 +407,15 @@ Do not paste real credential values into any shell command, and do not paste the
   `scripts/publish-package.mjs` → `npm-publishing` skill (`.agents/skills/npm-publishing/SKILL.md`).
 - **Credentials (API keys, tokens, passwords)** — the `op` CLI in remote sessions only, `.secrets/` otherwise →
   `1password` skill (`.agents/skills/1password/SKILL.md`).
+- **Private test fixtures** (real recordings, inboxes) — encrypted in R2, shared with agents via the agents key in
+  1Password `eng-dev` → `private-fixtures` skill (`.agents/skills/private-fixtures/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **The feature map** (`FEATURES.mdl`) — the top of feature map > spec > review > tasks > code > result;
+  carry a feature change down every layer, one commit each → `feature-waterfall` skill
+  (`.agents/skills/feature-waterfall/SKILL.md`); `pnpm deus features check` shows where each feature stands.
 - **`.mdl` specs** (`PLUGIN.mdl`, `SPEC.mdl`) — the Deus language, and the `## Changelog`
   decision that every spec change must add, attributed to a `user:` or an `agent:` → `mdl` skill
   (`.agents/skills/mdl/SKILL.md`).

@@ -72,7 +72,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='dx-expand grid grid-cols-2 gap-3 p-3'>
+    <div className='dx-expand grid grid-cols-2 gap-3 p-trim-md'>
       <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-separator-subtle'>
         <Editor source={source} autoFocus />
       </div>

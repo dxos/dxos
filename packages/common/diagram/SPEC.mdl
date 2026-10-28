@@ -1,0 +1,501 @@
+---
+id: org.dxos.diagram
+name: DiagramStack
+version: 0.1.0
+---
+
+The illustrator/canvas stack: how a diagram goes from text to a drawing on a canvas, and which
+package owns each step. `@dxos/diagram` is the headless core: the scene model, the `.dx` DSL, its
+layout engines and the layout checks. `plugin-illustrator` binds that core to the `Drawing` ECHO type
+and to the agent operations. The renderer variants (`plugin-canvas`, `plugin-tldraw`,
+`plugin-excalidraw`, and the plugin's own SVG variant) store a scene in their own record format.
+The consumers draw through the operations or call the core directly.
+
+This document covers the stack as a whole and the diagram kinds of the DSL. Each package keeps its own
+spec for what is inside it: [plugin-illustrator](../../plugins/plugin-illustrator/PLUGIN.mdl) for the
+operations and the variant seam, [react-ui-canvas](../../ui/react-ui-canvas/SPEC.mdl) for the scene
+engine behind `plugin-canvas`, and [DIAGRAM.mdl](rules/DIAGRAM.mdl) for the appeal rules that score
+a layout.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
+
+## Stack
+
+Each arrow points at a package the source package depends on (its `package.json` `dependencies`).
+Plugin names drop their `plugin-` prefix. The `diagram` blocks in this document are the sources;
+regenerate a render with `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/<name>.dx`.
+
+![@dxos/diagram is the base. plugin-illustrator and react-ui-canvas depend on it; the variants canvas, tldraw and excalidraw depend on plugin-illustrator, and canvas also on react-ui-canvas; the consumers uml and drawing-app depend on canvas, dx drawing on plugin-illustrator, @dxos/drawing and plugin-code on @dxos/diagram.](spec/diagrams/stack.dx.svg)
+
+```diagram
+diagram
+node Diagram "@dxos/diagram" ref="packages/common/diagram"
+node Illustrator "illustrator" ref="packages/plugins/plugin-illustrator"
+group variants "Renderer variants" {
+  node ReactCanvas "react-ui-canvas" ref="packages/ui/react-ui-canvas"
+  node Canvas "canvas" ref="packages/plugins/plugin-canvas"
+  node Tldraw "tldraw" ref="packages/plugins/plugin-tldraw"
+  node Excalidraw "excalidraw" ref="packages/plugins/plugin-excalidraw"
+}
+group consumers "Consumers" {
+  node Uml "uml" ref="packages/plugins/plugin-uml"
+  node App "drawing-app" ref="packages/apps/drawing-app"
+  node Cli "dx drawing" ref="packages/devtools/cli"
+  node DrawingCli "@dxos/drawing" ref="packages/devtools/drawing"
+  node Code "code" ref="packages/plugins/plugin-code"
+}
+edge Illustrator -> Diagram
+edge ReactCanvas -> Diagram
+edge Canvas -> Illustrator
+edge Canvas -> ReactCanvas
+edge Tldraw -> Illustrator
+edge Excalidraw -> Illustrator
+edge Uml -> Canvas
+edge App -> Canvas
+edge Cli -> Illustrator
+edge DrawingCli -> Diagram
+edge Code -> Diagram
+```
+
+## Pipeline
+
+A diagram is text until a variant stores it. `Dsl.read` parses the text and collects the semantic
+statements into a `Semantic.Diagram`. The engine for its kind lays it out as `Scene.Command[]`, and
+the variant's builder writes those as records into the drawing's canvas. `Diagnostics` reads the
+scene back and reports what is wrong with the layout, which is what lets an agent fix its own drawing.
+The figure is itself a data-flow diagram ([F-3]).
+
+![The author's .dx source flows to Dsl.read, a Semantic.Diagram to the engine for its kind, Scene.Command[] to the variant builder, records into the Drawing.Canvas store, the scene to Diagnostics, and the report back to the author.](spec/diagrams/pipeline.dx.svg)
+
+```diagram
+diagram kind=dataflow
+node Author "Author or agent" role=external
+node Read "Dsl.read" ref="packages/common/diagram/src/dsl/parse.ts"
+node Layout "Engine by kind" ref="packages/common/diagram/src/dsl/compile.ts"
+node Apply "Variant builder" ref="packages/common/diagram/src/content.ts"
+node Store "Drawing.Canvas" role=store ref="packages/plugins/plugin-illustrator/src/types/Drawing.ts"
+node Check "Diagnostics" ref="packages/common/diagram/src/diagnostics.ts"
+edge Author -> Read ".dx source"
+edge Read -> Layout "Semantic.Diagram"
+edge Layout -> Apply "Scene.Command[]"
+edge Apply -> Store "records"
+edge Store -> Check "scene"
+edge Check -> Author "report"
+```
+
+## Types
+
+The headless model, in `src/scene.ts` and `src/semantic.ts`. None of it depends on ECHO or React.
+
+```mdl
+type Scene
+  desc: >
+    A drawing as renderer-neutral data: named world objects, each a list of elements in
+    object-local units. Every variant reads and writes this, and nothing else crosses the seam
+    between the core and a renderer.
+  fields:
+    objects: WorldObject[]
+```
+
+```mdl
+type WorldObject
+  desc: >
+    One thing the drawing depicts ("server", a participant, a group frame), placed by `origin` and
+    `scale`. Its id is how an edit, a selection or a layout check names it.
+  fields:
+    id: string
+    origin?: Point
+    scale?: number
+    index?: string                # fractional z-order
+    ref?: string                  # a DXN that opens on activation, or a URI or path for tooling
+    elements: Element[]
+```
+
+```mdl
+type Element
+  desc: >
+    A graphical primitive inside an object: rect, ellipse, diamond, triangle, circle, line, curve,
+    arc, text, arrow, portal. Arrows carry a `relation` from which renderers derive their markers.
+    A `line` with `guide: true` is a guide (a lifeline, a divider, an outline), not a connector.
+  literals: Box | Circle | Polyline | Curve | Arc | Text | Arrow | Portal
+```
+
+```mdl
+type Command
+  desc: >
+    An edit to a scene: upsert-object, upsert-elements, remove-elements, remove-object,
+    move-object. Every engine emits these, and every variant's builder applies them.
+  literals: UpsertObject | UpsertElements | RemoveElements | RemoveObject | MoveObject
+```
+
+```mdl
+type Diagram
+  desc: >
+    The semantic statements of a document, before any coordinate exists (`Semantic.Diagram`). The
+    `kind` picks the engine; `timeline` keeps messages, notes and fragments in source order for a
+    sequence diagram.
+  fields:
+    kind: DiagramKind
+    flow: 'down' | 'up' | 'right' | 'left'
+    nodes: Node[]
+    groups: Group[]
+    edges: Edge[]
+    timeline: Step[]
+```
+
+```mdl
+type DiagramKind
+  desc: What a diagram depicts, which decides its layout ([F-1]).
+  literals: structure | sequence | dataflow
+```
+
+```mdl
+type Step
+  desc: One entry of a sequence timeline, in source order; a fragment holds sections of steps.
+  literals: message | note | fragment
+```
+
+## Components
+
+```mdl
+component Dsl
+  desc: >
+    The `.dx` language (`src/dsl/`): a Lezer grammar, `read` (text to commands plus a semantic
+    diagram), `parse` (laid out synchronously, for an editor), `compile` (the full search), `print`
+    (canonical text of a scene) and `convert` (another language to DSL text). Scene statements
+    position everything; semantic statements state intent and leave layout to an engine.
+```
+
+```mdl
+component SemanticEngine
+  desc: >
+    Lays out `structure` and `dataflow` diagrams: a scored grid search places the boxes, a channel
+    router draws the connectors through the gutters, and the layout objective picks among the routed
+    candidates. When nothing was hinted, it also offers the mermaid engine's placements as
+    candidates; that is internal, and needs no mermaid from the author.
+```
+
+```mdl
+component SequenceEngine
+  desc: >
+    Lays out `sequence` diagrams (`src/sequence-engine.ts`). Deterministic: participants are
+    columns, the timeline is rows, and only the spacings are computed, from the labels. It emits one
+    object per participant (head and lifeline) and one `edges` object with the messages, activation
+    bars, notes and fragments.
+```
+
+```mdl
+component Dataflow
+  desc: >
+    The data-flow roles (`src/dataflow.ts`): the shapes for process, store and external, and the
+    rule checks over the flows. Placement and routing are the semantic engine's.
+```
+
+```mdl
+component Diagnostics
+  desc: >
+    Analyzes any scene, whatever made it: overlaps, connectors through nodes and labels that do
+    not fit are errors, crossings and bends are warnings, plus the metrics the objective scores. A
+    guide line is not counted as a connector, and shapes in a connector's own object are its
+    decoration.
+```
+
+```mdl
+component ContentHandler
+  desc: >
+    The seam to a renderer (`src/content.ts`): maps a scene object onto the renderer's records and
+    reads the scene back from them. Each variant supplies one; plugin-illustrator's `DrawingVariant`
+    wraps it as the variant's builder.
+```
+
+```mdl
+component MermaidDialects
+  desc: >
+    DEPRECATED. `Mermaid.compile` (flowchart), `Uml.compile` (classDiagram) and
+    `MermaidEngine.compile` compile mermaid source. They still work, and `Dsl.convert` turns a
+    mermaid source into DSL text, but nothing new is written in mermaid ([F-4]).
+```
+
+## Features
+
+```mdl
+feat F-1: Diagram kinds
+
+  req F-1.1: `diagram kind=` selects the engine: `structure` (the default), `sequence` or `dataflow`. Every kind reads the same `node`, `edge` and `group` statements.
+
+  req F-1.2: A statement or word that belongs to one kind is an error in the others: `note`, `fragment`, `calls`, `sends` and `returns` outside a sequence diagram, `role=actor` outside a sequence diagram, `role=process|store|external` outside a data-flow diagram.
+
+  req F-1.3: `note`, `fragment` and `else` are contextual keywords. Where they do not start a statement or a section they are ordinary names, so a document that uses one as an id parses, and the printer leaves it unquoted.
+
+  req F-1.4: `Dsl.parse` and `Dsl.compile` give the same result for a sequence diagram; neither searches.
+```
+
+```mdl
+feat F-2: Sequence diagrams
+
+  req F-2.1: Participants are the nodes, in declaration order from left to right; the members of a `group` stay adjacent and are framed together.
+
+  req F-2.2: Messages are the edges, one row each, top to bottom in source order. `edge A -> A` loops back to the same lifeline.
+
+  req F-2.3: `->` is a plain message, `calls` a synchronous call, `sends` an asynchronous message (open head), `returns` a reply (dashed, open head).
+
+  req F-2.4:
+    when: a `calls` message reaches its target
+    then: an activation bar opens on the target and closes at the `returns` that answers it; a nested call stacks a bar offset beside the first
+
+  req F-2.5: A bar that no `returns` closes ends with the fragment section it opened in, or else after the last message its participant takes part in.
+
+  req F-2.6: A `returns` with no open call, or to a participant other than the innermost caller, is drawn and reported as a warning.
+
+  req F-2.7: `note A "…"` sits right of A, `note A:left "…"` left of it, `note A, B "…"` spans both.
+
+  req F-2.8: `fragment alt|opt|loop|par|break|critical ["guard"] { … }` frames its steps with an operator tab and a guard; `alt` and `par` take further sections with `else ["guard"] { … }`, divided by a dashed line; fragments nest. `else` on any other operator is an error.
+
+  req F-2.9: The space between two lifelines grows to fit the widest label, message to self or note between them, so no label overlaps a lifeline it does not belong to.
+
+  req F-2.10: Pins, placement relations, sides, waypoints, buses and relationship words are ignored in a sequence diagram, each with a warning on its own statement.
+
+  req F-2.11: `role=actor` draws a participant as a stick figure with its name under it.
+
+  req F-2.12: A laid-out sequence diagram has no `Diagnostics` errors and no crossings: lifelines, dividers and group frames are guide lines.
+```
+
+```mdl
+feat F-3: Data-flow diagrams
+
+  req F-3.1: Each node has a role: `process` (the default) is drawn as a bubble, `store` as a square box with its id (`D1`, `D2`, … in declaration order) in a compartment on the left, `external` as a shaded square box.
+
+  req F-3.2: Placement, routing, groups and hints work as in a structure diagram.
+
+  req F-3.3: A flow whose ends are both non-processes (external or store) is reported as a warning: data moves only through a process.
+
+  req F-3.4: A process with inputs and no outputs (a black hole), a process with outputs and no inputs (a miracle), and a store that is written and never read are reported as warnings.
+```
+
+```mdl
+feat F-4: Mermaid is deprecated
+
+  req F-4.1: The `generate` operation and the mermaid compilers are marked deprecated and keep working.
+
+  req F-4.2: The agent skills teach the `.dx` DSL and do not ask for mermaid. The UML skill calls `generate` only when the user asks for class members in the boxes, which the DSL cannot show yet.
+
+  req F-4.3: `Dsl.convert` stays, as the way an existing mermaid source becomes DSL text.
+
+  req F-4.4: Neither `Dsl.compile` nor `draw` needs mermaid input. The semantic engine's internal search over the mermaid engine's placements is not author-facing and stays.
+```
+
+## The `draw` call
+
+What happens when an agent calls `draw`. The figure is itself a sequence diagram ([F-2]).
+
+![The agent calls the Draw op with a source; the op calls Dsl.compile, which calls SequenceEngine.solve for kind=sequence and SemanticEngine.compile otherwise; if there are no errors the op applies the commands through the variant builder; it then has Diagnostics analyze the scene and returns the scene and report to the agent.](spec/diagrams/draw.dx.svg)
+
+```diagram
+diagram kind=sequence
+node Agent "Agent" role=actor
+node Op "Draw op" ref="packages/plugins/plugin-illustrator/src/operations/draw.ts"
+node Dsl "Dsl.compile" ref="packages/common/diagram/src/dsl/compile.ts"
+node Engine "Layout engine" ref="packages/common/diagram/src/sequence-engine.ts"
+node Variant "Variant builder" ref="packages/plugins/plugin-illustrator/src/types/IllustratorCapabilities.ts"
+node Diag "Diagnostics" ref="packages/common/diagram/src/diagnostics.ts"
+edge Agent calls Op "draw(source)"
+edge Op calls Dsl "compile"
+fragment alt "kind=sequence" {
+  edge Dsl calls Engine "SequenceEngine.solve"
+  edge Engine returns Dsl "commands"
+} else "structure, dataflow" {
+  edge Dsl calls Engine "SemanticEngine.compile"
+  edge Engine returns Dsl "commands, issues"
+}
+edge Dsl returns Op "commands, problems"
+fragment opt "no errors" {
+  edge Op calls Variant "apply(commands)"
+  edge Variant returns Op "upserted"
+}
+edge Op calls Diag "analyze(scene)"
+edge Diag returns Op "diagnostics"
+edge Op returns Agent "scene, report"
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: A sequence diagram lays out cleanly
+  given: the `LOGIN` source in `src/sequence-engine.test.ts`, with an actor, calls, returns, a note, a loop and an alt with two sections
+  when: it is parsed
+  then:
+    - there are no problems
+    - Diagnostics reports no errors and no crossings
+    - every message is on its own row, lower than the one before
+```
+
+```mdl
+scenario T-2: An activation spans its call and return
+  given: `edge A calls B` followed by `edge B returns A`
+  when: it is laid out
+  then:
+    - one activation bar runs from the call's row to the return's row on B
+```
+
+```mdl
+scenario T-3: Data-flow roles and rules
+  given: the `ORDERS` source in `src/dataflow.test.ts`
+  when: it is parsed
+  then:
+    - processes are ellipses, externals shaded square boxes, the store a box with D1 in its compartment
+    - there are no problems and no layout errors
+    - a source with an external writing straight to a store, a write-only store, a black hole and a miracle reports exactly those four warnings
+```
+
+```mdl
+scenario T-4: The skill examples draw
+  given: the fenced examples in plugin-illustrator's `DrawingSkill`
+  when: each is parsed
+  then:
+    - there is an example for each kind, and none has a problem or a layout error
+```
+
+## Open questions
+
+- The DSL cannot show class members (attributes, methods) in a box, which is the one thing only
+  mermaid's classDiagram still does. Until it can, mermaid cannot be removed.
+- The layout engine's eval corpus (`plugin-illustrator/docs/diagrams/*.mmd`) is mermaid. Moving it
+  to `.dx` changes the corpus snapshots, so it is a change of its own.
+- tldraw and excalidraw records have nowhere to keep `guide`; a sequence diagram replayed onto
+  them reads its lifelines back as plain lines.
+
+## Changelog
+
+```mdl
+decision D-1: The DSL supports sequence diagrams: participants, messages, returns, activations, notes, and alt, loop and opt fragments.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-2]
+  source: https://claude.ai/code/session_01JCCokgAuSJrLXWRkjTSY3V
+```
+
+```mdl
+decision D-2: The DSL supports data-flow diagrams.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-3]
+  source: https://claude.ai/code/session_01JCCokgAuSJrLXWRkjTSY3V
+```
+
+```mdl
+decision D-3: Sequence and data-flow diagrams are written in the `.dx` DSL only, not in mermaid.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-1, F-2, F-3]
+  source: https://claude.ai/code/session_01JCCokgAuSJrLXWRkjTSY3V
+```
+
+```mdl
+decision D-4: Mermaid support is deprecated.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-4, MermaidDialects]
+  source: https://claude.ai/code/session_01JCCokgAuSJrLXWRkjTSY3V
+```
+
+```mdl
+decision D-5: One attribute, `diagram kind=structure|sequence|dataflow`, selects the engine, and every kind reads the same node, edge and group statements. Fills in [D-1], [D-2] and [D-3].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1, DiagramKind, Diagram]
+  why: One grammar keeps one parser, printer, linter and completion; a kind only changes what the statements mean.
+  rejected:
+    - New top-level statements per kind (`participant`, `process`): a second vocabulary for what `node` already says.
+```
+
+```mdl
+decision D-6: A sequence diagram's layout is its statement order: participants are columns in declaration order, messages rows in source order, and only spacings are computed. Placement and routing hints are ignored with a warning. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, F-2.2, F-2.9, F-2.10, F-1.4, SequenceEngine]
+  why: In a sequence diagram the order carries the meaning; a search could only reorder what the author wrote.
+```
+
+```mdl
+decision D-7: Message kinds are words in place of `->`: `calls` opens an activation that the matching `returns` closes, `sends` is asynchronous, and a plain `->` opens none. An unclosed bar ends with its fragment section or after its participant's last message; an unmatched return is a warning. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-2.4, F-2.5, F-2.6]
+  why: Activations derived from calls and returns need no separate activate or deactivate statements, and the words read as the relationship words of a structure diagram do.
+  rejected:
+    - Explicit `activate` and `deactivate` statements: they restate what the calls and returns already say.
+```
+
+```mdl
+decision D-8: Fragments also take `par`, `break` and `critical`, and a participant may be `role=actor`. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.8, F-2.11]
+  why: They are the rest of the UML operators and participant forms in common use, and cost no more than alt, loop and opt.
+```
+
+```mdl
+decision D-9: `note`, `fragment` and `else` are contextual keywords, not reserved words. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: Existing documents and skill examples use `note` as an element id; reserving it would break them.
+```
+
+```mdl
+decision D-10: Lifelines, fragment dividers and participant-group frames are `line` elements with `guide: true`, which Diagnostics does not count as connectors, and the whole timeline is one `edges` object. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.12, Element, Diagnostics, SequenceEngine]
+  why: A lifeline crosses every message by design, and a message passes over other participants' activation bars; counted as routes and obstacles they would report a correct diagram as broken.
+  rejected:
+    - A sequence-specific report: every reader of a scene would need to know which engine drew it.
+```
+
+```mdl
+decision D-11: Data-flow roles are `process` (a bubble, the default), `store` (a square box with its D-number in a left compartment) and `external` (a shaded square box), placed and routed by the semantic engine. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1, F-3.2, Dataflow]
+  why: The shapes are drawn from the existing scene elements, so every variant renders them, and a data-flow diagram is a graph the grid engine already lays out well.
+  rejected:
+    - A new open-ended store shape: every variant and the checks would need to learn it.
+```
+
+```mdl
+decision D-12: A data-flow diagram warns about flows that bypass a process, black holes, miracles and write-only stores. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.3, F-3.4]
+  why: These are the standard data-flow consistency rules, and an agent drawing one can fix them from the report.
+```
+
+```mdl
+decision D-13: Deprecation keeps mermaid working: the `generate` operation and the mermaid compilers are marked deprecated, the skills teach the DSL, `Dsl.convert` stays as the migration path, and the internal mermaid-engine search stays. Fills in [D-4].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4, MermaidDialects]
+  why: The DSL cannot yet show class members, which the UML skill still needs from mermaid's classDiagram.
+  rejected:
+    - Removing mermaid now: it would drop class-member diagrams with no replacement.
+```

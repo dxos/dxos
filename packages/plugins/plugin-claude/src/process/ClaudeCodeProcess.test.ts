@@ -12,12 +12,13 @@ import { expect } from 'vitest';
 
 import { type AgentProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer, waitForMessage } from '@dxos/agent-runtime/testing';
+import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as NodeShell from '@dxos/compute-runtime/node-shell';
 import * as AgentService from '@dxos/compute/AgentService';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { Message } from '@dxos/types';
 
 import * as AcpAgent from '../agents/AcpAgent.ts';
@@ -30,17 +31,25 @@ const FAKE_AGENT = fileURLToPath(new URL('./testing/fake-claude-code-subprocess.
 let definition: AgentProcessDefinition | undefined;
 
 const TestLayer = AssistantTestLayer({
-  types: [Feed.Feed, AccessToken.AccessToken],
+  types: [Feed.Feed, AccessToken.AccessToken, AiContext.Binding, Connection.Connection],
   agent: { processes: () => (definition ? [definition] : []) },
   extraServices: NodeShell.layer,
 });
 
-const setup = Effect.fnUntraced(function* (command: ClaudeCodeProcess.Command, env?: Record<string, string>) {
+const setup = Effect.fnUntraced(function* (
+  command: ClaudeCodeProcess.Command,
+  env?: Record<string, string>,
+  mcpEndpoint?: ClaudeCodeProcess.Options['mcpEndpoint'],
+) {
   const workspace = realpathSync(mkdtempSync(join(tmpdir(), 'claude-code-process-')));
   definition = ClaudeCodeProcess.make({
     id: CLAUDE_CODE_AGENT,
     sessions: yield* AcpAgent.Sessions.make(),
     workspace: () => Effect.succeed(workspace),
+    mcpEndpoint,
+    // Offered as the server's host, so a reply names the servers its session was given.
+    connections: (_, servers) =>
+      Effect.succeed(servers.map(({ url }) => ({ type: 'http', name: new URL(url).host, url, headers: [] }))),
     command: { ...command, env: { ...command.env, ...env } },
   });
   const feed = yield* Database.add(Feed.make());
@@ -78,8 +87,9 @@ describe('ClaudeCodeProcess', () => {
         const [, second] = yield* replies(session.feed, 2);
 
         expect(first).toMatch(/^first pid=\d+ /);
-        // No subscription token is connected, so the agent gets none.
+        // No subscription token or MCP connection is in the space, so the agent gets neither.
         expect(first).toContain(' oauth=none ');
+        expect(first).toContain(' mcp=none ');
         expect(first.endsWith(` cwd=${workspace}`)).toBe(true);
         expect(second).toMatch(/^second pid=\d+/);
         // One agent served both turns: the follow-up did not start it again.
@@ -106,6 +116,32 @@ describe('ClaudeCodeProcess', () => {
         yield* session.submitPrompt('hello');
         const [reply] = yield* replies(session.feed, 1);
         expect(reply).toContain(' oauth=sk-ant-oat01-test ');
+      },
+      Effect.scoped,
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    "offers the agent the space's MCP connections",
+    Effect.fnUntraced(
+      function* (_) {
+        yield* Database.add(
+          Connection.make({ connectorId: 'mcp', mcp: { url: 'https://mcp.example.com/mcp', protocol: 'http' } }),
+        );
+        // A connector's connection stores no endpoint; the host resolves it from the connector registry.
+        yield* Database.add(Connection.make({ connectorId: 'native' }));
+        const { chat } = yield* setup({ command: process.execPath, args: [FAKE_AGENT] }, undefined, (connection) =>
+          connection.connectorId === 'native'
+            ? { url: 'https://native.example.com/mcp', protocol: 'http' }
+            : connection.mcp,
+        );
+        const session = yield* AgentService.getSession(chat);
+        yield* session.submitPrompt('hello');
+        const [reply] = yield* replies(session.feed, 1);
+        expect(reply).toContain(' mcp=mcp.example.com,native.example.com ');
       },
       Effect.scoped,
       Effect.provide(TestLayer),

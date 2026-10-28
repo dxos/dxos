@@ -14,7 +14,6 @@ export default defineConfig({
     'Credential': 'src/Credential.ts',
     'Header': 'src/Header.ts',
     'LayerSpec': 'src/LayerSpec.ts',
-    'McpServer': 'src/McpServer.ts',
     'Operation': 'src/Operation.ts',
     'OperationHandlerSet': 'src/OperationHandlerSet.ts',
     'OperationRegistry': 'src/OperationRegistry.ts',

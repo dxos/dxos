@@ -16,7 +16,6 @@ import { BaseError } from '@dxos/errors';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { type Text } from '@dxos/schema';
 
-import * as McpServer from '../McpServer.ts';
 import * as Operation from '../Operation.ts';
 import * as Template from './Template.ts';
 import * as Trigger from './Trigger.ts';
@@ -25,6 +24,11 @@ import * as Trigger from './Trigger.ts';
  * Skill schema defines the structure for AI assistant skills.
  * Skills contain instructions, tools, and artifacts that guide the AI's behavior.
  * Skills may use tools to create and read artifacts, which are managed by the assistant.
+ *
+ * Follows the Agent Skills spec (https://agentskills.io/specification) as closely as it can, so a skill
+ * means the same here as in any other harness. Add a field the spec lacks only with a strong reason,
+ * and say what it is. Credentials and MCP servers do not belong here: a server is a connection, which
+ * the space owns and each conversation can turn off.
  *
  * The registry `key` and `version` are stored in the object meta — access them via
  * `Obj.getMeta(skill).key` and `Obj.getMeta(skill).version`.
@@ -66,11 +70,6 @@ export class Skill extends Type.makeObject<Skill>(DXN.make('org.dxos.type.skill'
     agentCanEnable: Schema.optional(Schema.Boolean).annotate({
       description: 'Whether an agent is allowed to auto-enable this skill in a conversation.',
     }),
-
-    /**
-     * Array of MCP servers that the AI assistant can use when this skill is active.
-     */
-    mcpServers: Schema.optional(Schema.Array(McpServer.Spec)),
 
     /**
      * Hooks triggered automatically at certain points in the agent's lifecycle.

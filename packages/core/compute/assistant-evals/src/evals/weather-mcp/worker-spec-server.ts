@@ -43,7 +43,7 @@ export const CORS_HEADERS = {
 export type Coordinates = { readonly latitude: number; readonly longitude: number };
 
 export type WorkerSpecServer = {
-  /** The endpoint, ready to hand to a skill's `mcpServers` entry. */
+  /** The endpoint, ready to add as an MCP connection. */
   readonly url: string;
   /** How many `initialize` requests the listener answered: one per client connection. */
   readonly initializations: () => number;

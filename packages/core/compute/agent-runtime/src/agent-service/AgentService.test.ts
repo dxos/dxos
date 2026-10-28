@@ -848,6 +848,40 @@ describe('Agent Service (control plane)', () => {
     ),
   );
   it.effect(
+    'a session spawned under a guard is reused by a caller that names no guard, not by one that names another',
+    Effect.fnUntraced(
+      function* (_) {
+        const processManager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        yield* Database.flush();
+        const target = Obj.getURI(chat);
+        const activePids = Effect.gen(function* () {
+          const processes = yield* processManager.list({ target, key: AGENT_PROCESS_KEY });
+          return processes.filter((process) => !Process.isTerminal(process.status.state)).map(({ pid }) => String(pid));
+        });
+
+        const guard: Process.Guard = { check: () => Effect.void };
+        const guarded = yield* ComputeAgentService.getSession(chat, { guard });
+        const [pid] = yield* activePids;
+
+        // A caller that does not care which guard the chat runs under must not tear the guarded one down.
+        expect(yield* ComputeAgentService.getSession(chat)).toBe(guarded);
+        expect(yield* activePids).toEqual([pid]);
+
+        const other: Process.Guard = { check: () => Effect.void };
+        const regarded = yield* ComputeAgentService.getSession(chat, { guard: other });
+        expect(regarded).not.toBe(guarded);
+        expect(yield* activePids).not.toEqual([pid]);
+
+        yield* regarded.terminate();
+      },
+      Effect.provide(TestLayer()),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'session reuse tracks the model selected on the chat',
     Effect.fnUntraced(
       function* (_) {

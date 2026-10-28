@@ -1,0 +1,27 @@
+diagram
+node Diagram "@dxos/diagram" ref="packages/common/diagram"
+node Illustrator "illustrator" ref="packages/plugins/plugin-illustrator"
+group variants "Renderer variants" {
+  node ReactCanvas "react-ui-canvas" ref="packages/ui/react-ui-canvas"
+  node Canvas "canvas" ref="packages/plugins/plugin-canvas"
+  node Tldraw "tldraw" ref="packages/plugins/plugin-tldraw"
+  node Excalidraw "excalidraw" ref="packages/plugins/plugin-excalidraw"
+}
+group consumers "Consumers" {
+  node Uml "uml" ref="packages/plugins/plugin-uml"
+  node App "drawing-app" ref="packages/apps/drawing-app"
+  node Cli "dx drawing" ref="packages/devtools/cli"
+  node DrawingCli "@dxos/drawing" ref="packages/devtools/drawing"
+  node Code "code" ref="packages/plugins/plugin-code"
+}
+edge Illustrator -> Diagram
+edge ReactCanvas -> Diagram
+edge Canvas -> Illustrator
+edge Canvas -> ReactCanvas
+edge Tldraw -> Illustrator
+edge Excalidraw -> Illustrator
+edge Uml -> Canvas
+edge App -> Canvas
+edge Cli -> Illustrator
+edge DrawingCli -> Diagram
+edge Code -> Diagram

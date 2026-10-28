@@ -433,6 +433,9 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-code-graph/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {
@@ -529,9 +532,6 @@
       "path": "packages/plugins/plugin-kanban/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-labeler/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-lametric/tsconfig.json"
     },
     {
@@ -610,6 +610,9 @@
       "path": "packages/plugins/plugin-qa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-recorder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {
@@ -662,6 +665,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ste/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-stream-deck/tsconfig.json"

@@ -46,7 +46,9 @@ export const CreateSpaceDialog = () => {
       contributed
         .filter(({ hidden }) => !hidden)
         // `icon` seeds the form, which stores a bare name on the space; `glyph` renders the row.
-        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) })),
+        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) }))
+        // Contributed in plugin load order, which means nothing to the user.
+        .sort((first, second) => first.label.localeCompare(second.label)),
     [contributed],
   );
   const [template, setTemplate] = useState<string | undefined>(undefined);

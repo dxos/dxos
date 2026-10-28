@@ -31,7 +31,7 @@ import {
   setSchema,
   setType,
 } from '../common/types/index.ts';
-import { ATTR_META, EntityMetaSchema, SCALAR_META_FIELDS } from '../common/types/meta.ts';
+import { ATTR_META, EntityMetaSchema, SCALAR_META_FIELDS, isTagEntity } from '../common/types/meta.ts';
 import { MetaId } from '../common/types/model-symbols.ts';
 import {
   ATTR_DELETED,
@@ -154,9 +154,10 @@ export const objectFromJSON = async (
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
-    const meta = await Schema.decodeUnknownPromise(EntityMetaSchema)(normalizeMeta(jsonData[ATTR_META]));
+    const { tags: encodedTags, ...encodedMeta } = normalizeMeta(jsonData[ATTR_META]);
+    const meta = await Schema.decodeUnknownPromise(EntityMetaSchema)({ ...encodedMeta, tags: [] });
     invariant(Array.isArray(meta.keys));
-    defineHiddenProperty(obj, MetaId, meta);
+    defineHiddenProperty(obj, MetaId, { ...meta, tags: await resolveTags(encodedTags, refResolver) });
   } else {
     defineHiddenProperty(obj, MetaId, {
       keys: [],
@@ -195,6 +196,20 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
 
   return obj;
+};
+
+/**
+ * Resolves the encoded tag references of a serialized meta to {@link Tag} entities. A tag the
+ * resolver cannot supply is dropped, as an unresolved parent is: `meta.tags` holds entities only.
+ */
+const resolveTags = async (encodedTags: readonly unknown[], refResolver: RefResolver | undefined) => {
+  if (refResolver == null || encodedTags.length === 0) {
+    return [];
+  }
+  const resolved = await Promise.all(
+    encodedTags.map((tag) => (isEncodedReference(tag) ? refResolver.resolveLegacy(URI.make(tag['/'])) : undefined)),
+  );
+  return resolved.filter(isTagEntity);
 };
 
 /**

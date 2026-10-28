@@ -25,6 +25,8 @@ import { ComplexMap } from '@dxos/util';
 import { SpacePlugin } from '#plugin';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+
 describe('SpaceOperation.OpenSettings', () => {
   test('closes the companion once the settings are open', async ({ expect }) => {
     const calls: { op: string; input: unknown }[] = [];

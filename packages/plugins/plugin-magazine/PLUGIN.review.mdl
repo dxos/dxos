@@ -1,0 +1,541 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-magazine/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MagazinePlugin
+
+The plugin works, but the code has moved well past this spec. Feed sync, magazine curation, the
+masonry article, the Post companion and the Magazine skill all exist. Their data model and curation
+flow are different from what the spec says:
+
+- **Data model.** `Feed` is `Subscription`. `Post` is an immutable queue entry with none of the four
+  additions: `readAt` lives in `Subscription.postState`, curated `snippet` and `imageUrl` in
+  `Magazine.postState`, fetched bodies in `PostContent` entries, and star and archive tags in a
+  `TagIndex`.
+- **Magazine.** `Magazine` holds an `Instructions` ref created eagerly by `Magazine.make`, not a
+  lazily created `routine` with a `topic` field. It adds `postState` and `keep`.
+- **Curation.** `CurateMagazine` is not deterministic. It syncs the feeds itself, runs the agent
+  through `RunInstructions`, applies the agent's `completeJob` selection mechanically, and bounds the
+  list by `keep` (starred first, then newest by `published`). `ListCandidatePosts` is an internal
+  helper and `AddPostToMagazine` does not exist.
+
+Solid and tested: `SyncFeed` dedup (`sync-feed.test.ts`), the end-to-end `CurateMagazine` run with a
+scripted agent, the keep bound, candidate exclusion, article extraction and per-post atoms. The UI
+stories that drive the Curate flow carry `!test`, so no automated test covers the toolbar, tiles,
+read state or the companion.
+
+Of 69 items: 2 done, 21 untested, 9 partial, 23 diverged, 14 missing. The spec should be rewritten
+around `Subscription`, per-object state maps and agent-driven `CurateMagazine`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict FeedType: The literals are standard-site, rss and bluesky; there is no atproto.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#FeedType]
+  note: `FeedType = Schema.Literals(['standard-site', 'rss', 'bluesky'])`.
+```
+
+```mdl
+verdict Feed: The feed type is Subscription, with extra keep, contentFeed, postState and tags fields.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#Subscription]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.test.ts]
+  note: Spec fields are present (`feed` is a `Ref<Feed.Feed>` queue), but the type is `Subscription` (`org.dxos.type.subscription.feed`) and carries per-post state maps and a content feed.
+```
+
+```mdl
+verdict Post: Post has none of the four additions; that state lives on other objects.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#Post, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#PostContent, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#PostState]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.test.ts]
+  note: |
+    `Post` is an immutable queue entry with `source`, `title`, `link`, `description`, `content`, `author`, `published`
+    and `guid`. `readAt` is in `Subscription.postState`, `snippet`/`imageUrl` in `Magazine.postState` and `PostContent`,
+    and tags in the subscription's `TagIndex`.
+```
+
+```mdl
+verdict Magazine: Magazine holds an eagerly created Instructions ref, not routine and topic.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#Magazine, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.test.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: |
+    Fields are `name`, `feeds: Ref<Subscription>[]`, `posts`, `instructions: Ref<Instructions>`, `postState` and `keep`.
+    `make` creates the Instructions (topic woven in by `composeInstructions`, skill ref, magazine in `objects`, output
+    contract) at creation time; there is no `topic` or `routine` field.
+```
+
+```mdl
+verdict MagazineArticle: Masonry grid with a Curate toolbar, but no phase tooltip or header slot.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx#MagazineArticle, github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/useToolbar.tsx#useToolbar]
+  note: |
+    Curate invokes `CurateMagazine` alone (sync happens inside the op), the busy label replaces the syncing/curating phase
+    tooltip, progress shows in a footer meter, and there is no `header` slot or `onCurateComplete` event. Adds Clear, a
+    view filter and star toggles. The `CurateFlow` story is tagged `!test`.
+```
+
+```mdl
+verdict MagazineTile: Tile shows image, clamped title and snippet, feed name and date; no author or tags row.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx#MagazineTile]
+  note: Title clamps to 2 lines and snippet to 3; read tiles use `opacity-60`. Author and the tags row are missing; a star button is added. No test.
+```
+
+```mdl
+verdict PostArticle: Panel with a toolbar holding Open original; the body renders the fetched article, not the snippet.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/PostArticle/PostArticle.tsx#PostArticle, github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/PostArticle/PostToolbar.tsx#PostToolbar, github:dxos/dxos/packages/plugins/plugin-magazine/src/components/PostContent/PostContent.tsx#PostContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/PostArticle/PostArticle.stories.tsx]
+  note: `PostContent` renders title, hero image, the Markdown body (fetched content or description) and an author · feed · date line; the spec's snippet body is not shown. The toolbar adds star, archive, mark-unread and refresh.
+```
+
+```mdl
+verdict MagazineSkill: The skill registers under org.dxos.skill.magazine with FetchArticleContent and the completeJob contract.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/skills/magazine-skill.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/capabilities/skill-definition.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: Referenced from the magazine's `Instructions` object rather than a Routine.
+```
+
+```mdl
+verdict SyncFeed: Pulls posts from the subscription URL into its queue, deduplicated.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/FeedOperation.ts#SyncFeed, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/sync-feed.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/sync-feed.test.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/sources/rss.test.ts]
+```
+
+```mdl
+verdict ListCandidatePosts: Not an operation; collectCandidates feeds the agent's input instead.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/util.ts#collectCandidates, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: `collectCandidates` returns uncurated posts from the magazine's feeds; `CurateMagazine` passes their summaries (plus `link`) as the agent's `input.candidates`. No tool or operation key exists.
+```
+
+```mdl
+verdict FetchArticleContent: Returns text and image URLs for a Post ref; errors differ from the spec.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/FeedOperation.ts#FetchArticleContent, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/fetch-article-content.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/sources/article.ts#fetchArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/extraction/article.test.ts]
+  note: Input is `post: Ref<Post>`, not `postId: DXN`. A missing link is an `invariant` defect rather than a typed `NoLink` error, and fetch failures surface as `ArticleFetchError`. The handler itself has no test; extraction does.
+```
+
+```mdl
+verdict AddPostToMagazine: Does not exist; the agent returns a selection and CurateMagazine applies it.
+  status: missing
+  note: Searched `src/` for `AddPostToMagazine` and `addPost`; none. The skill tells the agent "Do not attempt to add Posts yourself".
+```
+
+```mdl
+verdict CurateMagazine: Syncs feeds and runs agent selection; it is not the deterministic description-based path.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/FeedOperation.ts#CurateMagazine, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  walkthrough:
+    - The operation declares the magazine input and synced/curated counts. github:dxos/dxos/packages/plugins/plugin-magazine/src/types/FeedOperation.ts#CurateMagazine
+    - The handler syncs feeds in parallel, collects candidates, runs RunInstructions, then writes posts and post state. github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts
+  note: |
+    No deterministic snippet-from-description pass exists. The handler invokes `SyncFeed` per feed, asks the agent via
+    `AgentOperation.RunInstructions`, appends the selected refs, bounds the list with `applyKeep`, and writes snippet and
+    image into `Magazine.postState`.
+```
+
+```mdl
+verdict F-1.1: Magazine has a create-menu entry with name, feeds and topic.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#CreateMagazineSchema]
+  note: `CreateMagazineSchema` collects name, feeds and an `instructions` (Topic) string; no test.
+```
+
+```mdl
+verdict F-1.2: name is optional and is the label.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#Magazine]
+  note: `LabelAnnotation.set(['name'])`; no test.
+```
+
+```mdl
+verdict F-1.3: feeds defaults to an empty array of Subscription refs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#make]
+  note: `make` sets `feeds: props.feeds ?? []`; refs point to `Subscription`, not `Feed`. No test.
+```
+
+```mdl
+verdict F-1.4: There is no routine or topic field; an Instructions ref is created eagerly.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#make, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#composeInstructions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.test.ts]
+  note: The create dialog's topic is composed into the Instructions text at creation; it is inline-editable in the properties form, not hidden.
+```
+
+```mdl
+verdict F-1.5: posts are re-ordered and bounded after each curation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts#applyKeep, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/util.ts#partitionByKeepBound]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/util.test.ts]
+  note: `applyKeep` keeps starred posts first, then the newest by `published`, up to `keep` (default 10); insertion order is not preserved.
+```
+
+```mdl
+verdict F-2.1: Post gains no new fields; the state lives on Subscription and Magazine.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#Post]
+  note: Old posts load trivially because `Post` did not change.
+```
+
+```mdl
+verdict F-2.2: snippet lives in Magazine.postState and PostContent, not on Post.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#PostState, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#PostContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/atoms/atoms.test.ts]
+  note: The display prefers the agent snippet over the RSS description (tested in `atoms.test.ts`).
+```
+
+```mdl
+verdict F-2.3: imageUrl lives in Magazine.postState and PostContent, not on Post.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#PostState, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#PostContent]
+  note: No test covers the image fallback order.
+```
+
+```mdl
+verdict F-2.4: readAt lives in Subscription.postState keyed by Post id.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#setReadAt, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#getReadAt]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.test.ts]
+  note: Shared across magazines; the Post itself is immutable.
+```
+
+```mdl
+verdict F-2.5: Tags are TagIndex entries on the Subscription and are populated for star and archive.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#setTag, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#hasTag]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.test.ts]
+  note: No `Post.tags` array; star and archive are system `Tag` objects already written by the UI.
+```
+
+```mdl
+verdict F-3.1: The toolbar has a Curate action.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/useToolbar.tsx#useToolbar]
+  note: The only story that clicks it (`CurateFlow`) is tagged `!test`.
+```
+
+```mdl
+verdict F-3.2: Curate disables while busy, but shows no syncing/curating phase tooltip.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/useToolbar.tsx#useToolbar, github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx#MagazineArticle]
+  note: The label switches to `refreshing-magazine.label`; phases are reported to the footer `ProgressMeter` instead. No test.
+```
+
+```mdl
+verdict F-3.3: Feeds sync in parallel and failures are tolerated, inside CurateMagazine.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts]
+  note: `syncFeeds` runs `SyncFeed` with concurrency 8 and turns failures into `false`; the curate tests' feeds have no URL, so no sync runs.
+```
+
+```mdl
+verdict F-3.4: The button invokes CurateMagazine first; feed syncs run inside it.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/useToolbar.tsx#useToolbar, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts]
+  note: The ordering sync-then-select still holds, but within the operation rather than in the article.
+```
+
+```mdl
+verdict F-3.5: The busy flag clears and the posts atom re-renders tiles.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/useToolbar.tsx#useToolbar, github:dxos/dxos/packages/plugins/plugin-magazine/src/atoms/magazine-posts.ts#useVisibleMagazinePosts]
+  note: No test runs the button.
+```
+
+```mdl
+verdict F-3.6: Curate is disabled with 'Add at least one feed first' when there are no feeds.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/useToolbar.tsx#useToolbar]
+  note: Also disabled when the magazine has no Instructions; no test.
+```
+
+```mdl
+verdict F-3.7: Re-clicks while busy are ignored.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/useToolbar.tsx#useToolbar]
+  note: A shared busy atom guards Curate and Clear; no test.
+```
+
+```mdl
+verdict F-4.1: The Instructions bind the magazine as context and candidates arrive as input.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#make, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts]
+  note: There is no `magazine.instructions` Text; the `Instructions` object lists the magazine in `objects`. The scripted-agent test does not inspect context.
+```
+
+```mdl
+verdict F-4.2: The agent never calls ListCandidatePosts; candidates are in its input.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/skills/magazine-skill.ts]
+  note: The skill says candidates are under `input.candidates`.
+```
+
+```mdl
+verdict F-4.3: Relevance filtering is left to the agent under the default methodology.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#DEFAULT_INSTRUCTIONS]
+  note: Model behaviour; no eval exercises it.
+```
+
+```mdl
+verdict F-4.4: FetchArticleContent is optional, not called for each selection.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/skills/magazine-skill.ts]
+  note: The skill says the agent MAY call it when title and description are not enough.
+```
+
+```mdl
+verdict F-4.5: The agent writes a 1-2 sentence snippet and picks an image.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#DEFAULT_INSTRUCTIONS, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#CurationOutput]
+  note: Asks for a 1-2 sentence snippet rather than ~200 characters; no eval.
+```
+
+```mdl
+verdict F-4.6: The agent returns a completeJob selection; there is no AddPostToMagazine.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Magazine.ts#CurationOutput, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts#resolveSelected]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: `CurateMagazine` applies the decoded selection mechanically.
+```
+
+```mdl
+verdict F-4.7: Re-selection is prevented by candidate exclusion and dedup, not by an idempotent op.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/util.ts#collectCandidates, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts#resolveSelected, github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts#applyKeep]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: Curated posts are not offered again, and duplicate ids are dropped.
+```
+
+```mdl
+verdict F-5.1: Tiles sort by published date, not reverse insertion order.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/atoms/magazine-posts.ts]
+  note: The visible-posts atom sorts by `published` descending and filters by the view; no test.
+```
+
+```mdl
+verdict F-5.2: Tiles show image, title, snippet, feed name and date but not author.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx#MagazineTile]
+  note: No author row; no test.
+```
+
+```mdl
+verdict F-5.3: There is no tags row on the tile.
+  status: missing
+  note: `MagazineTile` renders no tags.
+```
+
+```mdl
+verdict F-5.4: Read tiles are dimmed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineTile.tsx#MagazineTile]
+  note: `opacity-60` when read and not current; no test.
+```
+
+```mdl
+verdict F-5.5: Activating a tile opens the post companion.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx#MagazineArticle]
+  note: `itemProps.onActivate` calls `handleOpen`, which calls `showItem`; no test.
+```
+
+```mdl
+verdict F-5.6: Opening sets readAt when unset.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx#MagazineArticle, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#setReadAt]
+  note: `handleOpen` writes `readAt` on the post's subscription; no test.
+```
+
+```mdl
+verdict F-5.7: The empty state reads 'No articles yet.' only.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx#MagazineArticle, github:dxos/dxos/packages/plugins/plugin-magazine/src/translations.ts]
+  note: `empty-magazine.message` is "No articles yet." without "Add feeds and press Curate."
+```
+
+```mdl
+verdict F-5.8: The grid is @dxos/react-ui-masonry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx#MagazineArticle]
+  note: Uses `Masonry.Root`/`Masonry.Viewport`; no test.
+```
+
+```mdl
+verdict F-6.1: PostArticle is registered for Article and Subscription.Post.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/capabilities/react-surface.ts]
+  note: `AppSurface.object(AppSurface.Article, Subscription.Post)`; no test.
+```
+
+```mdl
+verdict F-6.2: Panel and toolbar with Open original; the body shows the article, not the snippet.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/PostArticle/PostArticle.tsx#PostArticle, github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/PostArticle/PostToolbar.tsx#PostToolbar]
+  note: See the PostArticle verdict.
+```
+
+```mdl
+verdict F-6.3: The click sets readAt and calls showItem, but with the magazine's path.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/containers/MagazineArticle/MagazineArticle.tsx#MagazineArticle]
+  note: `path` is `getObjectPathFromObject(subject)` (the magazine), not the post. It also starts `LoadPostContent` for posts with a link. No test.
+```
+
+```mdl
+verdict F-6.4: Mobile layout routing is delegated to useShowItem.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/ui/hooks/useShowItem.ts#useShowItem]
+  note: Behaviour lives in app-toolkit; nothing in this plugin tests it.
+```
+
+```mdl
+verdict F-6.5: Multi layout routing is delegated to useShowItem.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/ui/hooks/useShowItem.ts#useShowItem]
+  note: As F-6.4.
+```
+
+```mdl
+verdict F-6.6: Deck layout routing is delegated to useShowItem.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/ui/hooks/useShowItem.ts#useShowItem]
+  note: As F-6.4.
+```
+
+```mdl
+verdict F-6.7: A companion node under each Magazine resolves the selected Post.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/capabilities/app-graph-builder.ts]
+  note: The companion extension reads the selection and returns the matching post with variant `post`; no test.
+```
+
+```mdl
+verdict F-7.1: There is no Post.tags field.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#Post, github:dxos/dxos/packages/plugins/plugin-magazine/src/types/Subscription.ts#Subscription]
+  note: Tags are a `TagIndex` child of the Subscription.
+```
+
+```mdl
+verdict F-7.2: The tile has no tags row.
+  status: missing
+  note: `MagazineTile` renders no tags.
+```
+
+```mdl
+verdict F-7.3: FetchArticleContent is a standalone, read-only op.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/types/FeedOperation.ts#FetchArticleContent]
+  note: Reusable by design; no test of the handler.
+```
+
+```mdl
+verdict T-1: No test creates a Magazine via the create menu.
+  status: missing
+  note: `plugin.test.ts` checks module activation; the scenario's `instructions` Text expectation is also outdated.
+```
+
+```mdl
+verdict T-2: No backward-compatibility test.
+  status: missing
+  note: Not applicable as written, since Post gained no fields.
+```
+
+```mdl
+verdict T-3: No test renders the article with no feeds.
+  status: missing
+  note: No story or test asserts the disabled Curate button.
+```
+
+```mdl
+verdict T-4: The curate test runs CurateMagazine with a scripted agent, without the button or feed sync.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: Asserts the selected posts are appended and counted; no SyncFeed calls (feeds have no URL), no button, and selection is agent-driven, not deterministic.
+```
+
+```mdl
+verdict T-4a: The agent path is tested through CurateMagazine and completeJob, not the three tools.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.ts, github:dxos/dxos/packages/plugins/plugin-magazine/src/skills/magazine-skill.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: The scripted model calls `completeJob` with a selection; `ListCandidatePosts` and `AddPostToMagazine` do not exist.
+```
+
+```mdl
+verdict T-5: No test fails one feed's sync.
+  status: missing
+  note: Nothing in the curate or sync tests serves a 500.
+```
+
+```mdl
+verdict T-6: Candidate exclusion is tested through a second CurateMagazine run.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/util.ts#collectCandidates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-magazine/src/operations/curate-magazine.test.ts]
+  note: 'does not offer posts it already curated as candidates' checks the second run curates 0; there is no ListCandidatePosts to call.
+```
+
+```mdl
+verdict T-7: No AddPostToMagazine to test.
+  status: missing
+  note: The op does not exist.
+```
+
+```mdl
+verdict T-8: No test checks og:image or img extraction.
+  status: missing
+  note: `article.test.ts` covers chrome stripping and an empty input only.
+```
+
+```mdl
+verdict T-9: No test clicks a tile.
+  status: missing
+  note: No story or test with a play function opens a post.
+```
+
+```mdl
+verdict T-10: No test renders a tile.
+  status: missing
+  note: No MagazineTile story or test.
+```
+
+```mdl
+verdict QA-1: Manual; the matching story is excluded from tests.
+  status: missing
+  note: `CurateFlow` and `MagazineCurate` stories cover similar steps but carry `!test`.
+```
+
+```mdl
+verdict QA-2: Manual; no automation.
+  status: missing
+  note: No automated run opens a tile.
+```
+
+```mdl
+verdict QA-3: A recording script, not a test.
+  status: missing
+  note: `autocue/showcase.mjs` records a clip and asserts nothing.
+```

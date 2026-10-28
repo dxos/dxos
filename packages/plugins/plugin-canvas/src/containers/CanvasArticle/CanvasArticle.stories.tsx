@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
@@ -23,7 +24,10 @@ random.seed(1234);
 
 // The drawing is opened through the illustrator's article surface, as the app opens it, so the story
 // covers the variant dispatch as well as the scene engine it lands on.
-const withDrawing = (seed: (db: Database.Database, canvas: Drawing.Canvas) => void = () => {}) =>
+const withDrawing = (
+  seed: (db: Database.Database, canvas: Drawing.Canvas) => void = () => {},
+  role: typeof AppSurface.Article | typeof AppSurface.Slide = AppSurface.Article,
+) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document],
     plugins: [IllustratorPlugin.make(), CanvasPlugin(), MarkdownPlugin.make()],
@@ -32,7 +36,7 @@ const withDrawing = (seed: (db: Database.Database, canvas: Drawing.Canvas) => vo
       seed(space.db, canvas);
       const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
       await space.db.flush();
-      return [[Cell.article(drawing)]];
+      return [[role === AppSurface.Article ? Cell.article(drawing) : { object: drawing, token: role }]];
     },
   });
 
@@ -104,6 +108,39 @@ export const Test: Story = {
     // The overlays are on by default: navigation, actions and debug each render a toolbar, beside the palette.
     await waitFor(() => expect(canvasElement.querySelectorAll('[role="toolbar"]').length).toBeGreaterThanOrEqual(3));
     await expect(await within(canvasElement).findByTestId('palette')).toBeInTheDocument();
+  },
+};
+
+/**
+ * A drawing on a slide is a picture: read-only, with no toolbar, palette or panels.
+ *
+ * Test:
+ * 1. The scene view mounts through the illustrator's slide surface.
+ * 2. No toolbar and no palette show.
+ */
+export const Slide: Story = {
+  decorators: withDrawing(seedBasic, AppSurface.Slide),
+  play: async ({ canvasElement }) => {
+    const view = within(canvasElement);
+    await expect(await view.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
+    await expect(canvasElement.querySelector('[role="toolbar"]')).toBeNull();
+    await expect(view.queryByTestId('palette')).toBeNull();
+    // Transparent: nothing from the scene up to the article's panel paints a background, so a slide shows through.
+    const scene = await view.findByTestId('scene-view');
+    const panel = scene.closest('.dx-panel');
+    const painted: string[] = [];
+    for (
+      let element: Element | null = scene;
+      element && element !== panel?.parentElement;
+      element = element.parentElement
+    ) {
+      const color = getComputedStyle(element).backgroundColor;
+      if (color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+        painted.push(`${element.tagName}.${element.className}: ${color}`);
+      }
+    }
+    await expect(painted).toEqual([]);
+    await expect(canvasElement.querySelector('[data-testid="scene-background-fill"]')).toBeNull();
   },
 };
 

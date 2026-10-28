@@ -14,6 +14,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { SpacePlugin } from '#plugin';
 import { SpaceEvents, SpaceOperation } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+
 const JSON_SCHEMA = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   type: 'object',

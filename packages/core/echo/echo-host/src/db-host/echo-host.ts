@@ -12,6 +12,7 @@ import {
   isValidDocumentId,
   stringifyAutomergeUrl,
 } from '@automerge/automerge-repo';
+import * as Clock from 'effect/Clock';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -32,15 +33,15 @@ import {
 } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { FeedStore } from '@dxos/feed';
+import { type FeedKey, type FeedOptions, FeedStore, type TrimResult } from '@dxos/feed';
 import { IndexEngine, type IndexingResult, type IndexTransactionLimits } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { countWork, defaultMap } from '@dxos/util';
+import { countWork, defaultMap, markMilestone } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -60,7 +61,7 @@ import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
 import { DataServiceImpl } from './data-service.ts';
 import { type DatabaseRoot } from './database-root.ts';
 import { DeletionResolver } from './deletion.ts';
-import { FeedDataSource } from './feed-data-source.ts';
+import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
@@ -86,6 +87,24 @@ const CLOSURE_YIELD_INTERVAL = 32;
 
 const AUTOMATIC_GARBAGE_COLLECTION = false;
 
+const AUTOMERGE_URL_PREFIX = 'automerge:';
+
+/**
+ * The document id a link spells, without validating it: for matching against ids already known to be
+ * valid, where a `parseAutomergeUrl` checksum per link would cost more than the lookup it guards.
+ */
+const linkedDocumentIdText = (url: string): string => {
+  if (!url.startsWith(AUTOMERGE_URL_PREFIX)) {
+    return '';
+  }
+  // `parseAutomergeUrl` takes the id verbatim up to a sub-document path (`/`) or heads (`#`).
+  let end = AUTOMERGE_URL_PREFIX.length;
+  while (end < url.length && url[end] !== '/' && url[end] !== '#') {
+    end++;
+  }
+  return url.slice(AUTOMERGE_URL_PREFIX.length, end);
+};
+
 /**
  * Idle window before the second indexing step re-tokenizes what the first one wrote, and the
  * ceiling an unbroken write stream cannot push it past. A typing burst then costs one rebuild
@@ -94,6 +113,34 @@ const AUTOMATIC_GARBAGE_COLLECTION = false;
  */
 const FTS_FLUSH_IDLE_MS = 1_000;
 const FTS_FLUSH_MAX_DELAY_MS = 10_000;
+
+/** Trimmed blocks one take of the trimmed log reads, and the takes one index pass makes before it yields to the next. */
+const PURGE_BATCH = 1_000;
+const PURGE_BATCHES_PER_PASS = 10;
+
+const isIndexingDisabled = (options: FeedOptions | undefined): boolean => options?.indexing?.enabled === false;
+
+/** Repeats a bounded trim until it reports nothing left past a limit. */
+const trimUntilDone = Effect.fnUntraced(function* <E, R>(
+  trim: Effect.Effect<TrimResult, E, R>,
+  first: TrimResult = { deleted: 0, more: true },
+) {
+  let result = first;
+  let deleted = result.deleted;
+  while (result.more) {
+    result = yield* trim;
+    deleted += result.deleted;
+  }
+  return deleted;
+});
+
+/** Feeds whose index rows a pass changed outside the index legs, as a hint unconstrained by type or object. */
+type FeedChanges = { spaceIds: Set<SpaceId>; queueIds: Set<EntityId> };
+
+const makeFeedChanges = (): FeedChanges => ({ spaceIds: new Set(), queueIds: new Set() });
+
+const hintFromFeedChanges = (changes: FeedChanges): InvalidationHint | undefined =>
+  changes.queueIds.size === 0 ? undefined : { spaceIds: changes.spaceIds, queueIds: changes.queueIds };
 
 import { type QueryExecutorMode } from '../query/index.ts';
 
@@ -209,6 +256,12 @@ export class EchoHost extends Resource {
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
 
+  /** Whether the first index pass, and the first pass that left nothing behind, are marked on the timeline. */
+  #indexingMarked = false;
+  /** The last document leg read every saved document, so until one is saved again a pass need not rescan them. */
+  #documentsDrained = false;
+  #caughtUpMarked = false;
+
   readonly #secondaryIndexLock = new Mutex();
 
   /** When the oldest unflushed write stops being allowed to wait for an idle moment. */
@@ -301,6 +354,7 @@ export class EchoHost extends Resource {
       // decides a query must await indexing before its first result.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: resolveQueryExecutorMode(queryExecutor),
+      feedStore: this._feedStore,
       debounce: queryDebounce,
       sql: () => {
         invariant(this._sql, 'EchoHost is not open.');
@@ -433,6 +487,13 @@ export class EchoHost extends Resource {
     log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
     log('echo-host: feed store migration done');
+
+    // Age expires with no write to trigger a trim, so open is when expired blocks of an idle feed go.
+    await RuntimeProvider.runPromise(this._runtime)(
+      Effect.gen({ self: this }, function* () {
+        yield* this.#trimSpaces(yield* this._feedStore.listSpacesWithOptions());
+      }),
+    );
 
     // AutomergeHost._open() runs its own migrations (automerge_chunks, heads) before
     // constructing the Repo, so table creation is handled there.
@@ -745,7 +806,12 @@ export class EchoHost extends Resource {
    * Adopts a space root minted elsewhere, so a joining peer records the root the space already has
    * rather than minting a second one over it. Idempotent; the root must name this space.
    */
-  async adoptSpaceRoot(ctx: Context, spaceId: SpaceId, spaceRootUrl: AutomergeUrl): Promise<SpaceRootRefs> {
+  async adoptSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    spaceRootUrl: AutomergeUrl,
+    { fetchFromNetwork = false, timeout }: { fetchFromNetwork?: boolean; timeout?: number } = {},
+  ): Promise<SpaceRootRefs> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const existing = this._spaceStateManager.getSpaceRootRefs(spaceId);
@@ -754,8 +820,9 @@ export class EchoHost extends Resource {
       return existing;
     }
 
-    // Local-only: a caller adopting a root it was merely told about must not block on the network.
-    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork: false });
+    // Local-only by default: a caller adopting a root it was merely told about must not block on the
+    // network. A root edge minted exists nowhere else, so that caller opts in to fetching it.
+    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork, timeout });
     const root = rootHandle?.doc();
     invariant(root && isSpaceRoot(root), 'Space root document must load.');
     invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);
@@ -983,15 +1050,26 @@ export class EchoHost extends Resource {
     await this.#wipeRetiredDocuments(spaceId, DatabaseDirectory.getRetiredDocuments(directory));
     this.#restoreLostRetirements(spaceId, root);
 
+    // Keyed by the id as it is spelled in a link, so the scan below compares strings: decoding every link
+    // (a base58check checksum each) on every directory change saturated the worker on large spaces.
+    const candidates = new Map<string, DocumentId>();
+    for (const [documentId, record] of this._automergeHost.quarantinedDocuments) {
+      if (record.reason === 'load-failed') {
+        candidates.set(documentId, documentId);
+      }
+    }
+    for (const documentId of this.#historyCandidates.keys()) {
+      candidates.set(documentId, documentId);
+    }
+    if (candidates.size === 0) {
+      return;
+    }
+
     const unloadable = new Map<DocumentId, string[]>();
     const bloated = new Map<DocumentId, string[]>();
     for (const [objectId, link] of Object.entries(directory.links ?? {})) {
-      const url = link.toString();
-      if (!isValidAutomergeUrl(url)) {
-        continue;
-      }
-      const documentId = interpretAsDocumentId(url);
-      if (directory.retired?.[documentId] !== undefined) {
+      const documentId = candidates.get(linkedDocumentIdText(link.toString()));
+      if (documentId === undefined || directory.retired?.[documentId] !== undefined) {
         continue;
       }
       if (this._automergeHost.quarantinedDocuments.get(documentId)?.reason === 'load-failed') {
@@ -1596,6 +1674,122 @@ export class EchoHost extends Resource {
   }
 
   /**
+   * Applies each pending feed-options intent to the feed store and clears it. The index side runs
+   * before the store write, so a crash in between redoes it: a disable removes the feed's rows on
+   * every apply, and a re-enable seeds the backfill while the store still holds the disabled options.
+   * A failed apply leaves its intent pending for the next pass.
+   */
+  #applyFeedOptionsIntents(changes: FeedChanges): Effect.Effect<void, never, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      const { maxId, intents } = yield* this.indexEngine.takeFeedOptionsIntents();
+      for (const { spaceId, feedId, namespace, options } of intents) {
+        const feed: FeedKey = { spaceId, feedId, feedNamespace: namespace };
+        yield* Effect.gen({ self: this }, function* () {
+          const previous = yield* this._feedStore.getFeedOptions(feed);
+          if (isIndexingDisabled(options)) {
+            const deleted = yield* this.indexEngine.deleteFeedObjects({ spaceId, queueId: feedId });
+            if (deleted > 0 && EntityId.isValid(feedId)) {
+              changes.spaceIds.add(spaceId);
+              changes.queueIds.add(feedId);
+            }
+          } else if (isIndexingDisabled(previous)) {
+            yield* this.indexEngine.seedCursor({
+              sourceName: this._feedDataSource.sourceName,
+              spaceId,
+              resourceId: backfillResourceId(namespace, feedId),
+              cursor: '',
+            });
+          }
+          const { trim } = yield* this._feedStore.setFeedOptions({ ...feed, options });
+          const now = yield* Clock.currentTimeMillis;
+          yield* trimUntilDone(this._feedStore.trim(feed, now), trim);
+          yield* this.indexEngine.clearFeedOptionsIntents(spaceId, feedId, maxId);
+        }).pipe(
+          Effect.catch((error) =>
+            Effect.sync(() =>
+              log.warn('feed options could not be applied; retrying next pass', { spaceId, feedId, error }),
+            ),
+          ),
+        );
+      }
+    }).pipe(
+      Effect.catch((error) => Effect.sync(() => log.warn('feed-options intents could not be read', { error }))),
+      Effect.withSpan('EchoHost.applyFeedOptionsIntents'),
+    );
+  }
+
+  /** Trims every feed of each space until retention leaves nothing past a limit. */
+  #trimSpaces(spaceIds: Iterable<string>): Effect.Effect<void, never, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      for (const spaceId of spaceIds) {
+        const now = yield* Clock.currentTimeMillis;
+        yield* trimUntilDone(this._feedStore.trimAll(spaceId, now)).pipe(
+          Effect.catch((error) => Effect.sync(() => log.warn('feed retention trim failed', { spaceId, error }))),
+        );
+      }
+    });
+  }
+
+  /** Deletes the backfill cursors the feed source reported finished. */
+  #deleteFinishedBackfills(finished: ReadonlyMap<SpaceId, ReadonlySet<string>>): Effect.Effect<void, never, never> {
+    return Effect.gen({ self: this }, function* () {
+      for (const [spaceId, resourceIds] of finished) {
+        yield* this.indexEngine.deleteFinishedCursors({
+          sourceName: this._feedDataSource.sourceName,
+          spaceId,
+          resourceIds: [...resourceIds],
+          cursor: BACKFILL_FINISHED,
+        });
+      }
+    }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('finished backfill cursors not deleted', { error }))));
+  }
+
+  /**
+   * Removes the index rows of blocks retention deleted, a bounded number per pass, and forgets each
+   * batch once its rows are gone. Returns whether logged blocks remain for a later pass.
+   */
+  #purgeTrimmedBlocks(changes: FeedChanges): Effect.Effect<boolean, never, SqlClient.SqlClient> {
+    return Effect.gen({ self: this }, function* () {
+      for (let batch = 0; batch < PURGE_BATCHES_PER_PASS; batch++) {
+        const { maxId, blocks } = yield* this._feedStore.takeTrimmed({ limit: PURGE_BATCH });
+        if (blocks.length === 0) {
+          return false;
+        }
+        const byFeed = new Map<string, { spaceId: SpaceId; queueId: string; blocks: typeof blocks }>();
+        for (const block of blocks) {
+          if (!SpaceId.isValid(block.spaceId)) {
+            continue;
+          }
+          const key = `${block.spaceId}/${block.feedId}`;
+          const entry = byFeed.get(key) ?? { spaceId: block.spaceId, queueId: block.feedId, blocks: [] };
+          entry.blocks.push(block);
+          byFeed.set(key, entry);
+        }
+        for (const feed of byFeed.values()) {
+          const deleted = yield* this.indexEngine.purgeFeedBlocks(feed);
+          if (deleted > 0 && EntityId.isValid(feed.queueId)) {
+            changes.spaceIds.add(feed.spaceId);
+            changes.queueIds.add(feed.queueId);
+          }
+        }
+        yield* this._feedStore.clearTrimmed(maxId);
+        if (blocks.length < PURGE_BATCH) {
+          return false;
+        }
+      }
+      return true;
+    }).pipe(
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          log.warn('trimmed blocks could not be purged from the index; retrying next pass', { error });
+          return true;
+        }),
+      ),
+      Effect.withSpan('EchoHost.purgeTrimmedBlocks'),
+    );
+  }
+
+  /**
    * One indexing pass over both data sources.
    *
    * Spanned so that a pass is a single trace naming the requests that caused it, instead of one
@@ -1606,7 +1800,7 @@ export class EchoHost extends Resource {
   @trace.span({
     op: 'indexer',
     // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
-    // would be dropped by the exporter rather than reaching SigNoz.
+    // would be dropped by the exporter rather than reaching PostHog.
     attributes: (_ctx: Context, reasons: Record<string, number>) => ({
       reasons: Object.entries(reasons)
         .map(([reason, count]) => `${reason}:${count}`)
@@ -1631,17 +1825,30 @@ export class EchoHost extends Resource {
       return undefined;
     }
     const startedAt = performance.now();
+    if (!this.#indexingMarked) {
+      this.#indexingMarked = true;
+      markMilestone('indexing.started');
+    }
 
     try {
       const combinedResult = _makeEmptyMergedResult();
+      const feedChanges = makeFeedChanges();
       const countCatchUp = this.indexStatus.beginPass();
 
       {
         performance.mark('indexEngine.update.automerge:start');
-        const result = await this.indexEngine
-          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
-          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
-        _mergeInto(combinedResult, result);
+        // A feed append changes no document, yet the document leg reads the heads of every document and
+        // every cursor to find that out; an agent turn appends many times a second.
+        const scanDocuments = !this.#documentsDrained || !_onlyFeedReasons(reasons);
+        const result = scanDocuments
+          ? await this.indexEngine
+              .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
+              .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime))
+          : undefined;
+        if (result) {
+          _mergeInto(combinedResult, result);
+          this.#documentsDrained = result.done && result.drained;
+        }
 
         // Convergence-key duplicates are born from replication, and a replicated write is exactly what
         // was just indexed — so this is the earliest a duplicate can be detected on this device.
@@ -1671,6 +1878,9 @@ export class EchoHost extends Resource {
           }
           log('cleared serviced convergence-key intents', { cleared, upToId: maxId });
         }
+
+        // After the object leg, which recorded them, and before the feed leg, so it reads under the new options.
+        await this.#applyFeedOptionsIntents(feedChanges).pipe(RuntimeProvider.runPromise(this._runtime));
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',
           detail: {
@@ -1679,7 +1889,7 @@ export class EchoHost extends Resource {
               track: 'Indexing',
               trackGroup: 'ECHO', // Group related tracks together
               color: 'tertiary-dark',
-              properties: [['count', result.updated]],
+              properties: [['count', result?.updated ?? 0]],
             },
           },
         });
@@ -1694,6 +1904,25 @@ export class EchoHost extends Resource {
           .update(ctx, this._feedDataSource, { spaceId: null, limit: 50 })
           .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
+
+        const report = this._feedDataSource.takeReport();
+        for (const [spaceId, feedIds] of report.skippedFeeds) {
+          feedChanges.spaceIds.add(spaceId);
+          for (const feedId of feedIds) {
+            if (EntityId.isValid(feedId)) {
+              feedChanges.queueIds.add(feedId);
+            }
+          }
+        }
+        const purgeIncomplete = await Effect.gen({ self: this }, function* () {
+          // An append trims in its own transaction, but at most TRIM_LIMIT blocks; the rest goes here.
+          yield* this.#trimSpaces([...report.spaces]);
+          yield* this.#deleteFinishedBackfills(report.finishedBackfills);
+          return yield* this.#purgeTrimmedBlocks(feedChanges);
+        }).pipe(RuntimeProvider.runPromise(this._runtime));
+        if (purgeIncomplete) {
+          combinedResult.done = false;
+        }
         performance.measure('Index Queues', {
           start: 'indexEngine.update.queue:start',
           detail: {
@@ -1720,7 +1949,9 @@ export class EchoHost extends Resource {
         this.#scheduleFtsFlush();
       }
 
-      const hint = hintFromIndexingResult(combinedResult);
+      const indexHint = hintFromIndexingResult(combinedResult);
+      const feedHint = hintFromFeedChanges(feedChanges);
+      const hint = indexHint && feedHint ? mergeHints(indexHint, feedHint) : (indexHint ?? feedHint);
       const durationMs = performance.now() - startedAt;
       const summary = {
         reasons,
@@ -1750,6 +1981,10 @@ export class EchoHost extends Resource {
 
       if (!this._ctx.disposed && this.isOpen) {
         await this.indexStatus.afterPass(combinedResult);
+      }
+      if (combinedResult.drained && !this.#caughtUpMarked) {
+        this.#caughtUpMarked = true;
+        markMilestone('indexing.caught-up');
       }
 
       return {
@@ -1793,6 +2028,14 @@ type MutableIndexingAccumulator = {
   documents: Set<string>;
   types: Set<string>;
   objects: Set<EntityId>;
+};
+
+/** Index runs a feed append starts; every other reason may follow a document save. */
+const FEED_ONLY_REASONS: ReadonlySet<string> = new Set(['feed-blocks', 'trace-blocks']);
+
+const _onlyFeedReasons = (reasons: Record<string, number>): boolean => {
+  const triggers = Object.keys(reasons);
+  return triggers.length > 0 && triggers.every((reason) => FEED_ONLY_REASONS.has(reason));
 };
 
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({

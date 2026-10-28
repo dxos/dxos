@@ -1,0 +1,80 @@
+diff --git a/dist/combobox.machine.js b/dist/combobox.machine.js
+index 754a6313f52a07ec3531e70b5cbc9495a092c756..2ea022362973209efa2a25db066e75ca7fb8ed5d 100644
+--- a/dist/combobox.machine.js
++++ b/dist/combobox.machine.js
+@@ -45,6 +45,7 @@ var import_combobox = require("./combobox.collection.js");
+ var dom = __toESM(require("./combobox.dom.js"));
+ var { guards, createMachine, choose } = (0, import_core.setup)();
+ var { and, not } = guards;
++var typedValues = /* @__PURE__ */ new WeakMap();
+ var machine = createMachine({
+   props({ props }) {
+     return {
+@@ -839,13 +840,25 @@ var machine = createMachine({
+       syncInputValue({ context, scope, event }) {
+         const inputEl = dom.getInputEl(scope);
+         if (!inputEl) return;
+-        inputEl.value = context.get("inputValue");
++        const value = context.get("inputValue");
++        const typed = typedValues.get(inputEl) ?? [];
++        typedValues.delete(inputEl);
++        const index = typed.indexOf(value);
++        if (index !== -1 && index < typed.length - 1 && inputEl.value === typed[typed.length - 1]) {
++          typedValues.set(inputEl, typed.slice(index + 1));
++          return;
++        }
++        inputEl.value = value;
+         queueMicrotask(() => {
+           if (event.current().type === "INPUT.CHANGE") return;
+           (0, import_dom_query.setCaretToEnd)(inputEl);
+         });
+       },
+-      setInputValue({ context, event }) {
++      setInputValue({ context, event, scope }) {
++        if (event.type === "INPUT.CHANGE") {
++          const inputEl = dom.getInputEl(scope);
++          if (inputEl) typedValues.set(inputEl, [...(typedValues.get(inputEl) ?? []), event.value].slice(-20));
++        }
+         context.set("inputValue", event.value);
+       },
+       clearInputValue({ context }) {
+diff --git a/dist/combobox.machine.mjs b/dist/combobox.machine.mjs
+index f3d8d0b4922094e13d4f4cb945b3f2b564f6081f..5ec5af2ca6b88af51e35056ec41418b38a9a700e 100644
+--- a/dist/combobox.machine.mjs
++++ b/dist/combobox.machine.mjs
+@@ -23,6 +23,7 @@ import { collection } from "./combobox.collection.mjs";
+ import * as dom from "./combobox.dom.mjs";
+ var { guards, createMachine, choose } = setup();
+ var { and, not } = guards;
++var typedValues = /* @__PURE__ */ new WeakMap();
+ var machine = createMachine({
+   props({ props }) {
+     return {
+@@ -817,13 +818,25 @@ var machine = createMachine({
+       syncInputValue({ context, scope, event }) {
+         const inputEl = dom.getInputEl(scope);
+         if (!inputEl) return;
+-        inputEl.value = context.get("inputValue");
++        const value = context.get("inputValue");
++        const typed = typedValues.get(inputEl) ?? [];
++        typedValues.delete(inputEl);
++        const index = typed.indexOf(value);
++        if (index !== -1 && index < typed.length - 1 && inputEl.value === typed[typed.length - 1]) {
++          typedValues.set(inputEl, typed.slice(index + 1));
++          return;
++        }
++        inputEl.value = value;
+         queueMicrotask(() => {
+           if (event.current().type === "INPUT.CHANGE") return;
+           setCaretToEnd(inputEl);
+         });
+       },
+-      setInputValue({ context, event }) {
++      setInputValue({ context, event, scope }) {
++        if (event.type === "INPUT.CHANGE") {
++          const inputEl = dom.getInputEl(scope);
++          if (inputEl) typedValues.set(inputEl, [...(typedValues.get(inputEl) ?? []), event.value].slice(-20));
++        }
+         context.set("inputValue", event.value);
+       },
+       clearInputValue({ context }) {

@@ -18,6 +18,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
+import { markMilestone } from '@dxos/util';
 
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
@@ -143,6 +144,7 @@ export default Capability.makeModule(
           spacesAvailableFired = true;
           // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
           performance.mark('milestone:spaces-ready');
+          markMilestone('spaces.ready');
           const exit = await Effect.gen(function* () {
             yield* Plugin.activate(ClientEvents.SpacesAvailable);
             if (onSpacesAvailable) {

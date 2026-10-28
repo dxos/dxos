@@ -79,6 +79,11 @@
       "types": "./dist/types/src/types/Feature.d.ts",
       "import": "./dist/lib/Feature.mjs"
     },
+    "./FeatureLink": {
+      "source": "./src/types/FeatureLink.ts",
+      "types": "./dist/types/src/types/FeatureLink.d.ts",
+      "import": "./dist/lib/FeatureLink.mjs"
+    },
     "./FeatureMapView": {
       "source": "./src/types/FeatureMapView.ts",
       "types": "./dist/types/src/types/FeatureMapView.d.ts",
@@ -88,6 +93,21 @@
       "source": "./src/types/FeatureOperation.ts",
       "types": "./dist/types/src/types/FeatureOperation.d.ts",
       "import": "./dist/lib/FeatureOperation.mjs"
+    },
+    "./FeatureSpec": {
+      "source": "./src/types/FeatureSpec.ts",
+      "types": "./dist/types/src/types/FeatureSpec.d.ts",
+      "import": "./dist/lib/FeatureSpec.mjs"
+    },
+    "./LegacyFeature": {
+      "source": "./src/types/LegacyFeature.ts",
+      "types": "./dist/types/src/types/LegacyFeature.d.ts",
+      "import": "./dist/lib/LegacyFeature.mjs"
+    },
+    "./LegacyShowcase": {
+      "source": "./src/types/LegacyShowcase.ts",
+      "types": "./dist/types/src/types/LegacyShowcase.d.ts",
+      "import": "./dist/lib/LegacyShowcase.mjs"
     },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
@@ -138,6 +158,11 @@
       "source": "./src/types/Showcase.ts",
       "types": "./dist/types/src/types/Showcase.d.ts",
       "import": "./dist/lib/Showcase.mjs"
+    },
+    "./Spec": {
+      "source": "./src/types/Spec.ts",
+      "types": "./dist/types/src/types/Spec.d.ts",
+      "import": "./dist/lib/Spec.mjs"
     },
     "./Templates": {
       "source": "./src/Templates.ts",
@@ -195,6 +220,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",

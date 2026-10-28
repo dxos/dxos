@@ -65,3 +65,29 @@ export type BuildRunState = Readonly<Record<string, ProjectBuildState | undefine
 export const BuildRun = Capability.makeSingleton<Atom.Writable<BuildRunState>>()(
   `${meta.profile.key}.capability.buildRun`,
 );
+
+/** A local checkout that synced specs resolve against. */
+export type SpecRepoRoot = { readonly repo: string; readonly path: string };
+
+/** The outcome of the last sync pass for one spec. */
+export type SpecSyncEntry = {
+  readonly status: 'synced' | 'pulled' | 'pushed' | 'conflict' | 'unresolved' | 'missing' | 'error';
+  readonly path?: string;
+  readonly error?: string;
+  readonly timestamp: number;
+};
+
+export type SpecSyncState = {
+  /** Whether this host reaches local files at all: the desktop app, or the dev server's route. */
+  readonly available: boolean;
+  readonly roots: ReadonlyArray<SpecRepoRoot>;
+  /** Keyed by `Spec.id`. */
+  readonly specs: Readonly<Record<string, SpecSyncEntry | undefined>>;
+};
+
+/** Two-way sync between specs that carry a `github.com/<owner>/<repo>` meta key and their local checkout. */
+export const SpecSync = Capability.makeSingleton<{
+  readonly state: Atom.Writable<SpecSyncState>;
+  /** Runs a pass now instead of waiting for the next tick. */
+  readonly syncNow: () => void;
+}>()(`${meta.profile.key}.capability.specSync`);

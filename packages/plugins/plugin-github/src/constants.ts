@@ -16,3 +16,9 @@ export const GITHUB_CONNECTOR_IDS: readonly string[] = [GITHUB_PROVIDER_ID, GITH
 
 /** Base URL for the GitHub REST API. */
 export const GITHUB_API_BASE = 'https://api.github.com';
+
+/**
+ * GitHub's remote MCP server. It takes any GitHub token, so both GitHub connectors expose it, acting
+ * as whoever the connection signs in as.
+ */
+export const GITHUB_MCP_ENDPOINT = { url: 'https://api.githubcopilot.com/mcp/', protocol: 'http' } as const;

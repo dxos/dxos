@@ -1,0 +1,1341 @@
+{
+  "order": ["Tech/Hardware", "Tech/Software", "Tech/AI", "Macro", "Macro/FIC", "Macro/TIC", "Macro/MIC", "Personal"],
+  "colors": {
+    "Tech/Hardware": "blue-300",
+    "Tech/Software": "blue-400",
+    "Tech/AI": "blue-600",
+    "Macro/FIC": "green",
+    "Macro/TIC": "blue",
+    "Macro/MIC": "rose",
+    "Personal": "indigo"
+  },
+  "rows": [
+    ["Date", "Category", "Event", "Description", "Image"],
+    [
+      "1923",
+      "Tech/Hardware",
+      "Enigma",
+      "The German rotor cipher machine goes on sale; the military adopts it later in the decade.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg/500px-Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg"
+    ],
+    [
+      "1944-02",
+      "Tech/Hardware",
+      "Colossus",
+      "Bletchley Park’s codebreaking machine, the first programmable electronic digital computer.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Colossus.jpg/500px-Colossus.jpg"
+    ],
+    [
+      "1945-12",
+      "Tech/Hardware",
+      "ENIAC",
+      "The first general-purpose electronic computer runs its first job: a thermonuclear-weapon calculation for Los Alamos.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/ENIAC_Penn1.jpg/500px-ENIAC_Penn1.jpg"
+    ],
+    [
+      "1952-03",
+      "Tech/Hardware",
+      "MANIAC",
+      "The Los Alamos computer runs calculations for the hydrogen bomb.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/The_MANIAC%E2%80%99s_arithmetic_unit_nearing_completion_in_1952.jpg/500px-The_MANIAC%E2%80%99s_arithmetic_unit_nearing_completion_in_1952.jpg"
+    ],
+    [
+      "1954",
+      "Tech/Hardware",
+      "Curta Type 2",
+      "The larger model of Curt Herzstark’s handheld mechanical calculator.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Curta_-_National_Museum_of_Computing.jpg/500px-Curta_-_National_Museum_of_Computing.jpg"
+    ],
+    [
+      "1961-01",
+      "Macro/MIC",
+      "Military–industrial complex named",
+      "In his farewell address, Eisenhower warns against the unwarranted influence of the military–industrial complex.",
+      "https://upload.wikimedia.org/wikipedia/commons/1/15/Eisenhower_farewell.jpg"
+    ],
+    [
+      "1970-01",
+      "Tech/Software",
+      "Unix epoch",
+      "Unix time counts seconds from 00:00:00 UTC on 1 January 1970.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/1000000000_seconds_since_Unix_time_epoch.jpg/500px-1000000000_seconds_since_Unix_time_epoch.jpg"
+    ],
+    [
+      "1977-09",
+      "Tech/Hardware",
+      "Atari 2600",
+      "Atari’s cartridge console brings arcade games home.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Atari-2600-Wood-4Sw-Set.png/500px-Atari-2600-Wood-4Sw-Set.png"
+    ],
+    [
+      "1978-07",
+      "Personal",
+      "Sinclair Enterprise",
+      "99 step programmable calculator.",
+      "https://upload.wikimedia.org/wikipedia/commons/8/89/Sinclair_Enterprise_Calculators.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original"
+    ],
+    [
+      "1980",
+      "Macro",
+      "Globalization era begins",
+      "Trade liberalization and freer capital flows expand worldwide.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Early_migrations_mercator.svg/500px-Early_migrations_mercator.svg.png"
+    ],
+    ["1980-05", "Tech/Software", "Pac-Man", "Namco’s maze game becomes the best-known arcade game of all time.", null],
+    [
+      "1981-03",
+      "Macro/MIC",
+      "Reagan defense buildup",
+      "Peacetime defense spending rises sharply through the decade.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Official_Portrait_of_President_Reagan_1981.jpg/500px-Official_Portrait_of_President_Reagan_1981.jpg"
+    ],
+    [
+      "1981-06",
+      "Macro/FIC",
+      "Volcker shock",
+      "The Fed raises rates to about 20% to break inflation.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Paul_A._Volcker_%28James_D._Wolfensohn%29_am_19._Symposium_1989-HSGH_022-000765_%28cropped%29_%282%29.jpg/500px-Paul_A._Volcker_%28James_D._Wolfensohn%29_am_19._Symposium_1989-HSGH_022-000765_%28cropped%29_%282%29.jpg"
+    ],
+    [
+      "1981-08",
+      "Tech/Hardware",
+      "IBM PC",
+      "IBM’s open-architecture PC makes the personal computer a business standard.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/IBM_Personal_Computer_badge_recreation.svg/500px-IBM_Personal_Computer_badge_recreation.svg.png"
+    ],
+    [
+      "1982",
+      "Tech/Hardware",
+      "ZX Spectrum",
+      "Sinclair’s low-cost home computer brings programming to a generation in the UK.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/ZXSpectrum48k.jpg/500px-ZXSpectrum48k.jpg"
+    ],
+    [
+      "1982-02",
+      "Tech/Software",
+      "Ms. Pac-Man",
+      "The sequel, first built as an unauthorized enhancement, outsells the original in the US.",
+      null
+    ],
+    [
+      "1982-10",
+      "Personal",
+      "West Midlands Ms. Pac-Man champion",
+      "West Midlands Ms. Pac-Man champion, October 1982.",
+      null
+    ],
+    [
+      "1983",
+      "Tech/Software",
+      "Bulletin boards (BBS)",
+      "Dial-up bulletin boards form the first online communities.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/FreePort_Software_banner%2C_inverted.png/500px-FreePort_Software_banner%2C_inverted.png"
+    ],
+    [
+      "1983-03",
+      "Macro/MIC",
+      "Strategic Defense Initiative",
+      "Reagan proposes a space-based missile shield, nicknamed “Star Wars”.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/SDI_Logo.svg/500px-SDI_Logo.svg.png"
+    ],
+    ["1983-04", "Personal", "Published Tornado", "Published Tornado, April 1983.", null],
+    [
+      "1983-09",
+      "Tech/Software",
+      "GNU Project",
+      "Richard Stallman announces a free Unix-like operating system.",
+      "https://thumb.wikimedia.org/wikipedia/en/thumb/2/22/Heckert_GNU_white.svg/500px-Heckert_GNU_white.svg.png"
+    ],
+    [
+      "1984-01",
+      "Macro/TIC",
+      "AT&T breakup",
+      "The Bell System is split into regional operating companies.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Baby_Bells.svg/500px-Baby_Bells.svg.png"
+    ],
+    [
+      "1984-01",
+      "Tech/Hardware",
+      "Macintosh",
+      "Apple’s Macintosh brings the mouse and graphical interface to the mass market.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Computer_macintosh_128k%2C_1984_%28all_about_Apple_onlus%29.jpg/500px-Computer_macintosh_128k%2C_1984_%28all_about_Apple_onlus%29.jpg"
+    ],
+    ["1984-09", "Personal", "Published Music Studio", "Published Music Studio, September 1984.", null],
+    [
+      "1985-09",
+      "Tech/Software",
+      "Microsoft Excel",
+      "Excel ships for the Macintosh; the Windows version follows in 1987.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Microsoft_Office_Excel_%282025%E2%80%93present%29.svg/500px-Microsoft_Office_Excel_%282025%E2%80%93present%29.svg.png"
+    ],
+    [
+      "1985-10",
+      "Tech/Software",
+      "C++",
+      "Cfront 1.0 and Stroustrup’s book make C++ commercially available.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/ISO_C%2B%2B_Logo.svg/500px-ISO_C%2B%2B_Logo.svg.png"
+    ],
+    [
+      "1985-10",
+      "Tech/Hardware",
+      "Intel 386",
+      "Intel’s 32-bit x86 processor.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/KL_Intel_i386DX.jpg/500px-KL_Intel_i386DX.jpg"
+    ],
+    ["1985-11", "Tech/Software", "Microsoft Windows", "Windows 1.0 brings a graphical shell to MS-DOS.", null],
+    [
+      "1986",
+      "Tech/Hardware",
+      "Honda starts humanoid research",
+      "Honda begins the walking-robot program that leads to ASIMO.",
+      null
+    ],
+    [
+      "1986-09",
+      "Personal",
+      "VSEL (Trident launch)",
+      "VSEL (Vickers Shipbuilding and Engineering), Trident launch, September 1986.",
+      "https://upload.wikimedia.org/wikipedia/commons/9/9f/VSEL.png"
+    ],
+    [
+      "1987",
+      "Tech/Hardware",
+      "Commodore Amiga",
+      "Commodore’s multimedia home computer, with custom graphics and sound chips.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Amiga500_system.jpg/500px-Amiga500_system.jpg"
+    ],
+    [
+      "1987-10",
+      "Macro/FIC",
+      "Black Monday",
+      "The Dow falls 22.6% in a single day.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/S%26P_500_index_around_the_time_of_the_crash.png/500px-S%26P_500_index_around_the_time_of_the_crash.png"
+    ],
+    [
+      "1988",
+      "Tech/Hardware",
+      "Zenith SupersPort",
+      "Zenith Data Systems’ line of IBM PC compatible laptops, sold from 1988 to 1993.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Zenith_supersPORT_%281%29.jpg/500px-Zenith_supersPORT_%281%29.jpg"
+    ],
+    [
+      "1989-11",
+      "Macro",
+      "Berlin Wall falls",
+      "The border opens and the Cold War division of Europe ends.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/West_and_East_Germans_at_the_Brandenburg_Gate_in_1989.jpg/500px-West_and_East_Germans_at_the_Brandenburg_Gate_in_1989.jpg"
+    ],
+    [
+      "1989-12",
+      "Tech/Software",
+      "Lotus Notes",
+      "Groupware for email and shared documents, replicated across offices.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/HCL_Notes_Logo_Vertical.svg/500px-HCL_Notes_Logo_Vertical.svg.png"
+    ],
+    [
+      "1989-12",
+      "Macro",
+      "Japan’s bubble peaks",
+      "The Nikkei peaks before decades of stagnation.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Nikkei_225_Index.webp/500px-Nikkei_225_Index.webp"
+    ],
+    [
+      "1990",
+      "Tech/Software",
+      "Unix / SQL client-server",
+      "Workloads move off mainframes to Unix servers and SQL databases.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Client-server-model.svg/500px-Client-server-model.svg.png"
+    ],
+    [
+      "1990-06",
+      "Personal",
+      "Graduated from Sheffield University",
+      "Graduated from Sheffield University, June 1990.",
+      null
+    ],
+    [
+      "1991-01",
+      "Macro/MIC",
+      "Gulf War",
+      "Precision-guided munitions are shown on live television.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/USAF_F-16A_F-15C_F-15E_Desert_Storm_edit2.jpg/500px-USAF_F-16A_F-15C_F-15E_Desert_Storm_edit2.jpg"
+    ],
+    [
+      "1991-02",
+      "Tech/Software",
+      "Python",
+      "Guido van Rossum releases Python 0.9.0.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/500px-Python-logo-notext.svg.png"
+    ],
+    [
+      "1991-04",
+      "Personal",
+      "Sony 株式会社",
+      "Research Engineer, Apr 1991 – Mar 1993.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Sony_logo.svg/500px-Sony_logo.svg.png"
+    ],
+    [
+      "1991-08",
+      "Tech/Software",
+      "World Wide Web",
+      "Tim Berners-Lee publishes the first website at CERN.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Chrome_on_Linux.png/500px-Chrome_on_Linux.png"
+    ],
+    [
+      "1991-09",
+      "Tech/Software",
+      "Linux",
+      "Linus Torvalds releases the Linux kernel.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/500px-Tux.svg.png"
+    ],
+    [
+      "1992",
+      "Tech/Hardware",
+      "Boston Dynamics founded",
+      "Spun out of MIT to build dynamically balanced legged robots.",
+      null
+    ],
+    [
+      "1993-03",
+      "Tech/Hardware",
+      "Pentium",
+      "Intel’s superscalar x86 processor.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Intel_Pentium_2020_logo.svg/500px-Intel_Pentium_2020_logo.svg.png"
+    ],
+    [
+      "1993-04",
+      "Personal",
+      "Goldman Sachs",
+      "Senior Programmer Analyst, Apr 1993 – Apr 1996.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Goldman_Sachs.svg/500px-Goldman_Sachs.svg.png"
+    ],
+    [
+      "1993-07",
+      "Macro/MIC",
+      "“Last Supper”",
+      "The Pentagon urges contractors to consolidate after the Cold War.",
+      null
+    ],
+    [
+      "1994-01",
+      "Tech/Software",
+      "Yahoo!",
+      "Jerry Yang and David Filo start a hand-built directory of the web, which grows into its leading portal.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/Yahoo%21_%282019%29.svg/500px-Yahoo%21_%282019%29.svg.png"
+    ],
+    ["1994-10", "Tech/Software", "Netscape", "The Netscape Navigator browser brings the web to the mainstream.", null],
+    [
+      "1994-12",
+      "Tech/Hardware",
+      "PlayStation",
+      "Sony’s PlayStation launches in Japan, bringing 3D games to the living room.",
+      null
+    ],
+    [
+      "1995-04",
+      "Macro",
+      "Dot-com boom",
+      "The internet opens to commerce and investment pours into web companies.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Nasdaq_Composite_dot-com_bubble.svg/500px-Nasdaq_Composite_dot-com_bubble.svg.png"
+    ],
+    ["1995-05", "Tech/Software", "Java", "Sun announces Java: write once, run anywhere.", null],
+    [
+      "1995-12",
+      "Tech/Software",
+      "JavaScript",
+      "Netscape ships JavaScript, making web pages programmable.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Logo_of_TC39.svg/500px-Logo_of_TC39.svg.png"
+    ],
+    [
+      "1995-12",
+      "Tech/Software",
+      "AltaVista",
+      "DEC launches the first full-text search engine of the web; within two years it serves 80 million queries a day.",
+      "https://upload.wikimedia.org/wikipedia/commons/4/40/Altavista_logo.png"
+    ],
+    [
+      "1996-02",
+      "Macro/TIC",
+      "Telecommunications Act",
+      "Deregulates US telecom and broadcasting.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png"
+    ],
+    [
+      "1996-02",
+      "Macro/TIC",
+      "Section 230",
+      "Shields online platforms from liability for what their users post.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png"
+    ],
+    [
+      "1996-03",
+      "Personal",
+      "D. E. Shaw",
+      "Senior Engineer, Advanced Development Group, Mar 1996 – May 1997.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/D._E._Shaw_%26_Co._Logo.svg/500px-D._E._Shaw_%26_Co._Logo.svg.png"
+    ],
+    [
+      "1997",
+      "Personal",
+      "Industrial Light & Magic",
+      "Senior FX Engineer, 1997 – May 1999.",
+      "https://hoodzpahdesign.com/wp-content/uploads/2023/05/ILM_Legacy_in_Logo.jpg"
+    ],
+    [
+      "1997-05",
+      "Tech/AI",
+      "Deep Blue beats Kasparov",
+      "IBM’s chess computer defeats the world champion in a match.",
+      "https://upload.wikimedia.org/wikipedia/commons/b/be/Deep_Blue.jpg"
+    ],
+    [
+      "1997-06",
+      "Personal",
+      "Filming The Phantom Menace",
+      "Filming Star Wars: Episode I – The Phantom Menace, June 1997.",
+      null
+    ],
+    [
+      "1997-07",
+      "Macro",
+      "Hong Kong returns to China",
+      "Britain hands Hong Kong to China under “one country, two systems”.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Image_shows_the_Union_and_Chinese_Flags_together._MOD_45157410.jpg/500px-Image_shows_the_Union_and_Chinese_Flags_together._MOD_45157410.jpg"
+    ],
+    [
+      "1997-08",
+      "Macro/MIC",
+      "Boeing–McDonnell Douglas merger",
+      "Consolidation leaves a handful of prime defense contractors.",
+      null
+    ],
+    [
+      "1997-08",
+      "Tech/AI",
+      "Skynet becomes self-aware",
+      "Fiction: in Terminator 2, Skynet becomes self-aware on August 29, 1997.",
+      null
+    ],
+    [
+      "1998-02",
+      "Tech/Software",
+      "“Open source”",
+      "The term is coined and Netscape releases its browser’s source code.",
+      null
+    ],
+    [
+      "1998-05",
+      "Macro/TIC",
+      "US v. Microsoft",
+      "Antitrust case over bundling Internet Explorer with Windows.",
+      "https://upload.wikimedia.org/wikipedia/commons/7/78/Seal_of_the_Court_of_Appeals_for_the_District_of_Columbia.png"
+    ],
+    [
+      "1998-06",
+      "Tech/Software",
+      "Colo (Equinix)",
+      "Equinix is founded to run neutral data centers where networks interconnect.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Equinix_logo.svg/500px-Equinix_logo.svg.png"
+    ],
+    [
+      "1998-09",
+      "Tech/Software",
+      "Google",
+      "Google incorporates and launches its PageRank search engine.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Googleplex_HQ_%28cropped%29.jpg/500px-Googleplex_HQ_%28cropped%29.jpg"
+    ],
+    [
+      "1998-09",
+      "Macro/FIC",
+      "LTCM bailout",
+      "The Fed brokers a rescue of the hedge fund Long-Term Capital Management.",
+      null
+    ],
+    [
+      "1998-11",
+      "Macro",
+      "Pets.com",
+      "The online pet store launches; its sock-puppet ads made it the emblem of the dot-com bubble, and it shut down two years later.",
+      null
+    ],
+    [
+      "1999-01",
+      "Tech/Hardware",
+      "BlackBerry",
+      "RIM’s BlackBerry brings push email to mobile devices.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/BlackBerry_Bold9700.jpg/500px-BlackBerry_Bold9700.jpg"
+    ],
+    [
+      "1999-03",
+      "Tech/Software",
+      "Salesforce (SaaS)",
+      "Salesforce launches, selling software as a hosted subscription.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Salesforce.com_logo.svg/500px-Salesforce.com_logo.svg.png"
+    ],
+    ["1999-04", "Personal", "TheBrain", "Vice President, Engineering, Apr 1999 – Sep 2000.", null],
+    [
+      "1999-11",
+      "Macro/FIC",
+      "Glass–Steagall repealed",
+      "Gramm–Leach–Bliley lets commercial and investment banks combine.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png"
+    ],
+    [
+      "2000-03",
+      "Macro",
+      "Dot-com crash",
+      "The Nasdaq falls almost 80% from its peak by 2002.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Nasdaq_Composite_dot-com_bubble.svg/500px-Nasdaq_Composite_dot-com_bubble.svg.png"
+    ],
+    [
+      "2000-11",
+      "Tech/Hardware",
+      "Honda ASIMO",
+      "Honda unveils ASIMO, a walking humanoid robot.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Honda_ASIMO_%28ver._2011%29_2011_Tokyo_Motor_Show.jpg/500px-Honda_ASIMO_%28ver._2011%29_2011_Tokyo_Motor_Show.jpg"
+    ],
+    [
+      "2000-12",
+      "Macro/FIC",
+      "Commodity Futures Modernization Act",
+      "Leaves credit default swaps largely unregulated.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png"
+    ],
+    ["2001-01", "Personal", "Silicongo", "CEO and founder, Jan 2001 – Feb 2003.", null],
+    [
+      "2001-09",
+      "Macro",
+      "9/11",
+      "Terrorist attacks on New York and Washington.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/WTC_smoking_on_9-11.jpeg/500px-WTC_smoking_on_9-11.jpeg"
+    ],
+    [
+      "2001-10",
+      "Macro/MIC",
+      "Patriot Act",
+      "Expands US government surveillance powers.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png"
+    ],
+    [
+      "2001-10",
+      "Macro/MIC",
+      "Afghanistan war",
+      "The US invades Afghanistan; armed Predator drones see combat.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/U.S._Army_firefight_in_Kunar.jpg/500px-U.S._Army_firefight_in_Kunar.jpg"
+    ],
+    [
+      "2001-10",
+      "Tech/Hardware",
+      "iPod",
+      "Apple’s music player, a step toward the iPhone.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/IPod_family.png/500px-IPod_family.png"
+    ],
+    [
+      "2002-09",
+      "Tech/Hardware",
+      "Roomba",
+      "iRobot’s vacuum becomes the first mass-market home robot.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Roomba_original.jpg/500px-Roomba_original.jpg"
+    ],
+    [
+      "2003",
+      "Personal",
+      "Silicongo acquired by Oracle",
+      "Oracle acquires Silicongo, 2003.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Oracle_logo.svg/500px-Oracle_logo.svg.png"
+    ],
+    [
+      "2003-03",
+      "Macro/MIC",
+      "Iraq invasion",
+      "The US-led invasion of Iraq.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/U.S._Marines_with_Iraqi_POWs_-_March_21%2C_2003.jpg/500px-U.S._Marines_with_Iraqi_POWs_-_March_21%2C_2003.jpg"
+    ],
+    [
+      "2003-05",
+      "Macro/MIC",
+      "Palantir",
+      "Palantir is founded to build data analysis software for intelligence agencies.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Palantir_1_2018-09-06.jpg/500px-Palantir_1_2018-09-06.jpg"
+    ],
+    ["2004-02", "Tech/Software", "Facebook", "Facebook launches at Harvard.", null],
+    [
+      "2004-04",
+      "Tech/Software",
+      "Gmail",
+      "Google launches Gmail with a gigabyte of free storage.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Gmail_icon_%282026%29.svg/500px-Gmail_icon_%282026%29.svg.png"
+    ],
+    [
+      "2004-08",
+      "Macro/TIC",
+      "Google IPO",
+      "Google goes public.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Googleplex_HQ_%28cropped%29.jpg/500px-Googleplex_HQ_%28cropped%29.jpg"
+    ],
+    [
+      "2004-10",
+      "Tech/Software",
+      "Web 2.0",
+      "The term names a web of platforms and user-generated content.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Web_2.0_Map.svg/500px-Web_2.0_Map.svg.png"
+    ],
+    [
+      "2004-11",
+      "Personal",
+      "Google",
+      "Firestarter, Nov 2004 – Jan 2014.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/500px-Google_2015_logo.svg.png"
+    ],
+    ["2004-12", "Tech/Software", "MapReduce", "Google publishes MapReduce for processing data across clusters.", null],
+    [
+      "2005",
+      "Tech/Hardware",
+      "BigDog",
+      "Boston Dynamics’ DARPA-funded quadruped walks over rough terrain.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/Big_dog_military_robots.jpg/500px-Big_dog_military_robots.jpg"
+    ],
+    [
+      "2005-02",
+      "Tech/Software",
+      "YouTube",
+      "YouTube launches video sharing for anyone.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/Youtube_interface%2C_showing_search_results_of_Burger_Recipe.png/500px-Youtube_interface%2C_showing_search_results_of_Burger_Recipe.png"
+    ],
+    [
+      "2005-04",
+      "Tech/Software",
+      "Git",
+      "Linus Torvalds writes Git to manage Linux kernel development.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Git-logo.svg/500px-Git-logo.svg.png"
+    ],
+    [
+      "2006",
+      "Personal",
+      "Google Docs",
+      "Google Docs, 2006.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Google_Docs_logo_%282014-2020%29.svg/500px-Google_Docs_logo_%282014-2020%29.svg.png"
+    ],
+    [
+      "2006-03",
+      "Tech/Software",
+      "AWS",
+      "Amazon launches S3 and EC2, starting the public cloud.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/500px-Amazon_Web_Services_Logo.svg.png"
+    ],
+    [
+      "2006-03",
+      "Tech/Hardware",
+      "SpaceX first launch",
+      "Falcon 1’s first flight fails shortly after liftoff.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Falcon_1_Flight_4_liftoff.jpg/500px-Falcon_1_Flight_4_liftoff.jpg"
+    ],
+    [
+      "2006-07",
+      "Tech/Software",
+      "Twitter",
+      "Twitter launches public 140-character messaging.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/X_%28formerly_Twitter%29_logo_late_2025.svg/500px-X_%28formerly_Twitter%29_logo_late_2025.svg.png"
+    ],
+    ["2006-10", "Tech/Software", "Google Docs", "Collaborative documents in the browser.", null],
+    [
+      "2006-11",
+      "Tech/Software",
+      "BigTable",
+      "Google publishes BigTable, the model for a generation of NoSQL stores.",
+      null
+    ],
+    [
+      "2007",
+      "Tech/Software",
+      "Hadoop (NoSQL)",
+      "An open-source MapReduce and distributed file system, built after Google’s papers, that brings big data to everyone.",
+      null
+    ],
+    [
+      "2007-06",
+      "Tech/Hardware",
+      "iPhone",
+      "Apple’s iPhone starts the touchscreen smartphone era.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/IPhone_18_Pro_Vector.svg/500px-IPhone_18_Pro_Vector.svg.png"
+    ],
+    [
+      "2007-06",
+      "Tech/Hardware",
+      "Nvidia CUDA",
+      "General-purpose programming on GPUs, later the engine of deep learning.",
+      "https://upload.wikimedia.org/wikipedia/commons/b/b9/Nvidia_CUDA_Logo.jpg"
+    ],
+    [
+      "2008",
+      "Personal",
+      "Google App Engine",
+      "Google App Engine, 2008.",
+      "https://upload.wikimedia.org/wikipedia/commons/e/e7/Google_App_Engine_icon.jpg"
+    ],
+    [
+      "2008-04",
+      "Tech/Software",
+      "Google App Engine (GCP)",
+      "Google’s hosted app platform, the start of Google Cloud.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/14/Google_Cloud_icon_%282026%29.svg/500px-Google_Cloud_icon_%282026%29.svg.png"
+    ],
+    ["2008-07", "Tech/Software", "App Store", "Apple opens the iPhone to third-party apps.", null],
+    [
+      "2008-09",
+      "Macro",
+      "Financial crisis",
+      "Mortgage and credit default swap losses trigger a global crisis.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Lehman_Brothers_Times_Square_by_David_Shankbone.jpg/500px-Lehman_Brothers_Times_Square_by_David_Shankbone.jpg"
+    ],
+    [
+      "2008-09",
+      "Tech/Software",
+      "Android",
+      "Android 1.0 ships on the HTC Dream, Google’s open answer to the iPhone.",
+      null
+    ],
+    [
+      "2008-09",
+      "Tech/Software",
+      "Chrome",
+      "Google’s browser, with the V8 JavaScript engine.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Google_Chrome_icon_%28February_2022%29.svg/500px-Google_Chrome_icon_%28February_2022%29.svg.png"
+    ],
+    [
+      "2008-09",
+      "Tech/Hardware",
+      "SpaceX reaches orbit",
+      "Falcon 1’s fourth flight is SpaceX’s first success: the first privately developed liquid-fuelled rocket to reach orbit.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Falcon_1_Flight_4_liftoff.jpg/500px-Falcon_1_Flight_4_liftoff.jpg"
+    ],
+    ["2008-10", "Macro/FIC", "TARP bank bailout", "Congress commits $700B to stabilize the banks.", null],
+    [
+      "2008-11",
+      "Macro/FIC",
+      "QE begins",
+      "The Fed starts buying assets at scale.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Government-Vedder-Highsmith-detail-1.jpeg/500px-Government-Vedder-Highsmith-detail-1.jpeg"
+    ],
+    [
+      "2009-03",
+      "Tech/Software",
+      "Uber",
+      "Uber is founded, popularizing the on-demand gig economy.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Uber_offices%2C_Mission_Bay_%28July_2020%29_-2.jpg/500px-Uber_offices%2C_Mission_Bay_%28July_2020%29_-2.jpg"
+    ],
+    [
+      "2009-05",
+      "Tech/Software",
+      "Node.js",
+      "JavaScript on the server, built on V8.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Node.js_logo.svg/500px-Node.js_logo.svg.png"
+    ],
+    [
+      "2010-01",
+      "Macro",
+      "Citizens United",
+      "The Supreme Court allows unlimited independent political spending by corporations.",
+      null
+    ],
+    [
+      "2010-04",
+      "Tech/Hardware",
+      "iPad",
+      "Apple’s tablet.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/IPad_mini_Air_Pro.png/500px-IPad_mini_Air_Pro.png"
+    ],
+    [
+      "2010-05",
+      "Macro/FIC",
+      "Flash crash",
+      "US markets plunge and recover within minutes.",
+      "https://upload.wikimedia.org/wikipedia/commons/b/bb/Flashcrash-2010.png"
+    ],
+    [
+      "2010-07",
+      "Macro/FIC",
+      "Dodd–Frank",
+      "Post-crisis reform of US financial regulation.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png"
+    ],
+    [
+      "2010-08",
+      "Macro/FIC",
+      "China becomes the second-largest economy",
+      "China overtakes Japan as the world’s second-largest economy by nominal GDP.",
+      null
+    ],
+    [
+      "2010-09",
+      "Tech/Software",
+      "Cloudflare",
+      "Cloudflare launches its CDN and security network.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Cloudflare_office_entrance_area.jpg/500px-Cloudflare_office_entrance_area.jpg"
+    ],
+    [
+      "2011",
+      "Tech/AI",
+      "Google Brain",
+      "Jeff Dean, Greg Corrado and Andrew Ng start Google’s deep learning research team.",
+      null
+    ],
+    [
+      "2011-02",
+      "Tech/AI",
+      "Watson wins Jeopardy!",
+      "IBM’s question-answering system beats the show’s champions.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/IBM_Watson.PNG/500px-IBM_Watson.PNG"
+    ],
+    [
+      "2011-10",
+      "Tech/Software",
+      "CRDTs",
+      "Conflict-free replicated data types are formalized for sync without coordination.",
+      null
+    ],
+    ["2012", "Tech/Software", "Quip", "Mobile-first collaborative documents.", null],
+    ["2012-03", "Tech/Hardware", "Amazon buys Kiva", "Amazon acquires Kiva’s warehouse robots for $775M.", null],
+    ["2012-05", "Macro/TIC", "Facebook IPO", "Facebook goes public.", null],
+    [
+      "2012-09",
+      "Tech/AI",
+      "AlexNet (CNNs)",
+      "A convolutional network wins ImageNet, launching modern deep learning.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/AlexNet_block_diagram.svg/500px-AlexNet_block_diagram.svg.png"
+    ],
+    ["2012-12", "Tech/Software", "Gangnam Style", "The first YouTube video to pass a billion views.", null],
+    [
+      "2013",
+      "Personal",
+      "Google Inbox (Matrix)",
+      "Google Inbox (Matrix), 2013.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Inbox_by_Gmail_logo.svg/500px-Google_Inbox_by_Gmail_logo.svg.png"
+    ],
+    [
+      "2013",
+      "Personal",
+      "Google Glass",
+      "Google Glass, 2013.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Google_Glass_photo.JPG/500px-Google_Glass_photo.JPG"
+    ],
+    [
+      "2013-03",
+      "Macro/TIC",
+      "AWS builds the CIA’s cloud",
+      "Amazon wins a $600M contract to build a cloud for the CIA.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/500px-Amazon_Web_Services_Logo.svg.png"
+    ],
+    [
+      "2013-03",
+      "Tech/Software",
+      "Docker",
+      "Containers become a standard way to package and ship software.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Docker_commands_screenshot.webp/500px-Docker_commands_screenshot.webp"
+    ],
+    [
+      "2013-05",
+      "Tech/Software",
+      "React",
+      "Facebook open-sources its component UI library.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/React_Logo_SVG.svg/500px-React_Logo_SVG.svg.png"
+    ],
+    [
+      "2013-06",
+      "Macro",
+      "Snowden leaks",
+      "Edward Snowden reveals NSA mass surveillance, including PRISM access to internet companies.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Edward_Snowden_2013-10-9_%281%29_%28cropped%29.jpg/500px-Edward_Snowden_2013-10-9_%281%29_%28cropped%29.jpg"
+    ],
+    [
+      "2013-07",
+      "Tech/Hardware",
+      "Atlas",
+      "Boston Dynamics unveils the Atlas humanoid for DARPA.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Atlas_during_testing.jpg/500px-Atlas_during_testing.jpg"
+    ],
+    [
+      "2013-12",
+      "Tech/Hardware",
+      "Google buys Boston Dynamics",
+      "One of a string of robotics acquisitions by Google.",
+      null
+    ],
+    [
+      "2014-01",
+      "Macro/TIC",
+      "Google acquires DeepMind",
+      "Google buys the London AI lab for a reported $500M or more.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Platform_37_-_2026-04-25_2.jpg/500px-Platform_37_-_2026-04-25_2.jpg"
+    ],
+    ["2014-02", "Tech/Software", "Slack", "Slack launches team messaging.", null],
+    ["2014-06", "Tech/Software", "Kubernetes", "Google open-sources container orchestration.", null],
+    [
+      "2014-06",
+      "Tech/AI",
+      "GANs",
+      "Generative adversarial networks pit a generator against a discriminator.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Generative_adversarial_network.svg/500px-Generative_adversarial_network.svg.png"
+    ],
+    [
+      "2014-11",
+      "Macro/MIC",
+      "Third Offset strategy",
+      "The Pentagon bets on AI and autonomy to keep its edge.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Hagel_Reagan_Defense_Forum_2014.jpg/500px-Hagel_Reagan_Defense_Forum_2014.jpg"
+    ],
+    ["2015", "Personal", "X-Google", "X-Google, 2015.", null],
+    ["2015-05", "Tech/Software", "Discord", "Discord launches voice and chat communities.", null],
+    [
+      "2015-07",
+      "Tech/Software",
+      "Ethereum",
+      "Ethereum launches programmable smart contracts.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Eth-diamond-%28color%29.svg/500px-Eth-diamond-%28color%29.svg.png"
+    ],
+    [
+      "2015-12",
+      "Tech/Hardware",
+      "Falcon 9 lands",
+      "A Falcon 9 first stage lands upright after an orbital launch, the start of reusable boosters.",
+      null
+    ],
+    [
+      "2015-12",
+      "Macro/TIC",
+      "OpenAI founded",
+      "A non-profit AI lab launches with $1B in pledges from backers including Sam Altman and Elon Musk.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/1515_Third_Street.jpg/500px-1515_Third_Street.jpg"
+    ],
+    [
+      "2016-03",
+      "Tech/AI",
+      "AlphaGo beats Lee Sedol",
+      "DeepMind’s program wins at Go, a decade ahead of expectations.",
+      null
+    ],
+    [
+      "2016-06",
+      "Macro",
+      "Brexit vote",
+      "The UK votes to leave the European Union.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Coat_of_arms_of_the_United_Kingdom_%282024%2C_lesser_arms%29.svg/500px-Coat_of_arms_of_the_United_Kingdom_%282024%2C_lesser_arms%29.svg.png"
+    ],
+    [
+      "2016-11",
+      "Macro",
+      "Trump elected",
+      "Donald Trump wins the US presidency.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/ElectoralCollege2016.svg/500px-ElectoralCollege2016.svg.png"
+    ],
+    [
+      "2017",
+      "Macro/MIC",
+      "Anduril",
+      "Anduril is founded to build autonomous defense systems.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Close_shot_of_Anduril_Sentry_on_a_hill_in_Tecate%2C_CA.jpg/500px-Close_shot_of_Anduril_Sentry_on_a_hill_in_Tecate%2C_CA.jpg"
+    ],
+    [
+      "2017-03",
+      "Macro",
+      "WikiLeaks Vault 7",
+      "WikiLeaks publishes CIA hacking tools and techniques.",
+      "https://upload.wikimedia.org/wikipedia/commons/9/9e/Vault_7.jpg"
+    ],
+    ["2017-04", "Macro/MIC", "Project Maven", "The Pentagon applies machine learning to drone footage.", null],
+    [
+      "2017-06",
+      "Tech/AI",
+      "Transformer paper",
+      "“Attention Is All You Need” introduces the transformer architecture.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Transformer%2C_full_architecture.png/500px-Transformer%2C_full_architecture.png"
+    ],
+    [
+      "2017-12",
+      "Tech/AI",
+      "AlphaZero",
+      "DeepMind’s program masters chess, shogi and Go from self-play alone, with no human games.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Chess_Programming.svg/500px-Chess_Programming.svg.png"
+    ],
+    [
+      "2018-03",
+      "Macro",
+      "Cambridge Analytica",
+      "Data on up to 87 million Facebook users was harvested for political targeting.",
+      null
+    ],
+    [
+      "2018-04",
+      "Macro/TIC",
+      "Zuckerberg testifies",
+      "Mark Zuckerberg testifies to Congress after Cambridge Analytica.",
+      "https://upload.wikimedia.org/wikipedia/commons/1/12/P20260929DT-1655_%2855561811540%29_%28cropped_2%29.jpg"
+    ],
+    [
+      "2018-05",
+      "Macro/TIC",
+      "GDPR takes effect",
+      "The EU’s General Data Protection Regulation sets strict rules on personal data, with fines of up to 4% of global revenue.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/500px-Flag_of_Europe.svg.png"
+    ],
+    [
+      "2018-06",
+      "Macro/MIC",
+      "Google drops Maven",
+      "Google declines to renew the contract after employee protests.",
+      null
+    ],
+    [
+      "2018-06",
+      "Tech/AI",
+      "GPT-1",
+      "OpenAI shows that generative pre-training of a transformer transfers to many language tasks.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Full_GPT_architecture.svg/500px-Full_GPT_architecture.svg.png"
+    ],
+    ["2018-07", "Macro", "US–China trade war", "Tariffs escalate between the two largest economies.", null],
+    [
+      "2018-07",
+      "Macro/TIC",
+      "EU fines Google over Android",
+      "The European Commission fines Google €4.34 billion for tying its apps to Android, the largest EU antitrust fine.",
+      null
+    ],
+    ["2019", "Personal", "Wireline", "Wireline, 2019.", null],
+    [
+      "2019-02",
+      "Tech/AI",
+      "GPT-2",
+      "OpenAI’s 1.5B-parameter model writes fluent text; its release is staged over misuse concerns.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/GPT2-talks-about-GPT2.png/500px-GPT2-talks-about-GPT2.png"
+    ],
+    [
+      "2019-10",
+      "Macro/TIC",
+      "JEDI contract",
+      "The Pentagon awards a $10B cloud contract to Microsoft; it is later canceled.",
+      null
+    ],
+    [
+      "2019-11",
+      "Tech/Software",
+      "Verifiable credentials (SSI)",
+      "The W3C standardizes verifiable credentials for self-sovereign identity.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Identity-concept.svg/500px-Identity-concept.svg.png"
+    ],
+    [
+      "2020-03",
+      "Macro",
+      "COVID",
+      "A global pandemic shuts down economies and accelerates remote work.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Covid-19_SP_-_UTI_V._Nova_Cachoeirinha.jpg/500px-Covid-19_SP_-_UTI_V._Nova_Cachoeirinha.jpg"
+    ],
+    [
+      "2020-03",
+      "Macro/FIC",
+      "Fed backstops corporate bonds",
+      "The Fed buys corporate debt for the first time.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_Federal_Reserve_System.svg/500px-Seal_of_the_United_States_Federal_Reserve_System.svg.png"
+    ],
+    [
+      "2020-03",
+      "Tech/AI",
+      "DeepMind Agent57",
+      "DeepMind’s agent is the first to beat the human benchmark on all 57 Atari games.",
+      null
+    ],
+    ["2020-06", "Tech/Hardware", "Spot on sale", "Boston Dynamics’ Spot quadruped goes on sale.", null],
+    [
+      "2020-06",
+      "Tech/AI",
+      "GPT-3",
+      "A 175B-parameter model, offered through an API, does new tasks from a few examples.",
+      null
+    ],
+    [
+      "2020-06",
+      "Tech/AI",
+      "Diffusion models",
+      "Denoising diffusion (DDPM) makes generating images by reversing added noise practical; the idea dates to 2015.",
+      null
+    ],
+    [
+      "2020-10",
+      "Macro/TIC",
+      "DOJ sues Google",
+      "Antitrust suit over Google’s search monopoly.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/EDVAdc.png/500px-EDVAdc.png"
+    ],
+    [
+      "2020-10",
+      "Tech/AI",
+      "Tesla FSD beta",
+      "Tesla releases its “Full Self-Driving” beta to a first group of owners; drivers must still supervise.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Tesla_Autopilot_Engaged_in_Model_X.jpg/500px-Tesla_Autopilot_Engaged_in_Model_X.jpg"
+    ],
+    [
+      "2020-11",
+      "Tech/Hardware",
+      "Apple M1",
+      "Apple moves the Mac to its own ARM chips.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Mac_Mini_M1_chip.jpg/500px-Mac_Mini_M1_chip.jpg"
+    ],
+    [
+      "2020-11",
+      "Tech/AI",
+      "AlphaFold 2",
+      "DeepMind predicts protein structures at experimental accuracy.",
+      "https://upload.wikimedia.org/wikipedia/commons/e/ee/T1044-alphafold3-layey-by-layer.gif"
+    ],
+    [
+      "2020-12",
+      "Macro/TIC",
+      "FTC sues Facebook",
+      "Antitrust suit over the Instagram and WhatsApp acquisitions.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png/500px-Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png"
+    ],
+    ["2021-01", "Macro/FIC", "GameStop squeeze", "Retail traders squeeze hedge funds shorting GameStop.", null],
+    ["2021-01", "Personal", "SEC settlement", "SEC settlement, Jan 2021.", null],
+    ["2021-04", "Personal", "DXOS", "Founder, Apr 2021 – present.", null],
+    ["2021-04", "Personal", "Braneframe", "CEO and founder, Apr 2021 – present.", null],
+    [
+      "2021-08",
+      "Tech/Hardware",
+      "Tesla Optimus announced",
+      "Tesla announces a humanoid robot at its AI Day.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Optimus_bot_at_Tesla_showroom_-_20251118_-_01.jpg/500px-Optimus_bot_at_Tesla_showroom_-_20251118_-_01.jpg"
+    ],
+    [
+      "2022-02",
+      "Macro",
+      "Russia invades Ukraine",
+      "The largest war in Europe since 1945.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Bucha_after_Russian_invasion_of_Ukraine%2C_President_Zelensky_2_crop.jpg/500px-Bucha_after_Russian_invasion_of_Ukraine%2C_President_Zelensky_2_crop.jpg"
+    ],
+    [
+      "2022-03",
+      "Tech/Hardware",
+      "Nvidia H100",
+      "The data-center GPU that trains the large language models.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/NVIDIA_H100_%28%E6%9E%81%E5%AE%A2%E6%B9%BEGeekerwan%29_025.png/500px-NVIDIA_H100_%28%E6%9E%81%E5%AE%A2%E6%B9%BEGeekerwan%29_025.png"
+    ],
+    ["2022-06", "Macro/MIC", "Arms to Ukraine", "Western weapons such as HIMARS and Javelin flow to Ukraine.", null],
+    ["2022-07", "Tech/AI", "Midjourney", "Text-to-image generation reaches the public.", null],
+    [
+      "2022-08",
+      "Tech/AI",
+      "Stable Diffusion",
+      "An open text-to-image model anyone can run.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/82/Astronaut_Riding_a_Horse_%28SD3.5%29.webp/500px-Astronaut_Riding_a_Horse_%28SD3.5%29.webp"
+    ],
+    [
+      "2022-11",
+      "Tech/AI",
+      "ChatGPT (RLHF)",
+      "OpenAI releases ChatGPT, tuned with reinforcement learning from human feedback.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/OpenAI_logo_2025_%28symbol%29.svg/500px-OpenAI_logo_2025_%28symbol%29.svg.png"
+    ],
+    ["2023", "Personal", "ECHO", "ECHO, 2023.", null],
+    [
+      "2023-01",
+      "Macro/TIC",
+      "Microsoft invests $10B in OpenAI",
+      "Extends Microsoft’s partnership with OpenAI.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/1515_Third_Street.jpg/500px-1515_Third_Street.jpg"
+    ],
+    [
+      "2023-03",
+      "Macro/FIC",
+      "SVB collapse",
+      "Silicon Valley Bank fails in a fast, phone-driven bank run.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/3003_West_Tasman_Drive_entrance_2%2C_Santa_Clara%2C_California.jpg/500px-3003_West_Tasman_Drive_entrance_2%2C_Santa_Clara%2C_California.jpg"
+    ],
+    ["2023-03", "Tech/AI", "Claude", "Anthropic releases its Claude assistant.", null],
+    ["2023-03", "Tech/AI", "GPT-4", "OpenAI’s multimodal successor to GPT-3.5.", null],
+    [
+      "2023-07",
+      "Tech/Software",
+      "Twitter becomes X",
+      "Twitter is rebranded as X.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/X_%28formerly_Twitter%29_logo_late_2025.svg/500px-X_%28formerly_Twitter%29_logo_late_2025.svg.png"
+    ],
+    ["2023-08", "Macro/MIC", "Replicator", "A Pentagon plan to field thousands of autonomous drones.", null],
+    [
+      "2023-10",
+      "Macro",
+      "Gaza war",
+      "War follows the October 7 Hamas attack on Israel.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/October_2023_Gaza%E2%88%92Israel_conflict.svg/500px-October_2023_Gaza%E2%88%92Israel_conflict.svg.png"
+    ],
+    [
+      "2023-11",
+      "Macro/TIC",
+      "OpenAI ousts Sam Altman",
+      "The board fires its CEO; staff and Microsoft push back and he is reinstated five days later.",
+      null
+    ],
+    [
+      "2023-11",
+      "Tech/AI",
+      "Grok",
+      "xAI releases its Grok chatbot to X subscribers.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Grok_chatbot_example_screenshot.webp/500px-Grok_chatbot_example_screenshot.webp"
+    ],
+    [
+      "2024-01",
+      "Macro/FIC",
+      "Spot bitcoin ETFs approved",
+      "Bitcoin enters mainstream brokerage accounts.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Bitcoin.svg/500px-Bitcoin.svg.png"
+    ],
+    [
+      "2024-04",
+      "Tech/Hardware",
+      "Electric Atlas",
+      "Boston Dynamics retires the hydraulic Atlas for an all-electric version.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Atlas_during_testing.jpg/500px-Atlas_during_testing.jpg"
+    ],
+    [
+      "2024-05",
+      "Tech/Hardware",
+      "Unitree G1",
+      "A humanoid for about $16,000 puts legged robots within reach of labs and hobbyists.",
+      null
+    ],
+    [
+      "2024-06",
+      "Tech/Hardware",
+      "Waymo opens to the public in San Francisco",
+      "Fully driverless robotaxi rides become an ordinary paid service at city scale.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Waymo_logo.svg/500px-Waymo_logo.svg.png"
+    ],
+    [
+      "2024-08",
+      "Macro/TIC",
+      "Google ruled a monopolist",
+      "A federal judge rules Google illegally maintained its search monopoly.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png/500px-Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png"
+    ],
+    [
+      "2024-09",
+      "Macro/FIC",
+      "US debt interest passes defense spending",
+      "In fiscal 2024, interest on the federal debt costs more than the defense budget for the first time.",
+      null
+    ],
+    [
+      "2024-10",
+      "Tech/Hardware",
+      "Starship booster caught",
+      "The launch tower’s arms catch a returning Super Heavy booster.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/SpaceX_Starship_ignition_during_IFT-5.jpg/500px-SpaceX_Starship_ignition_during_IFT-5.jpg"
+    ],
+    [
+      "2024-11",
+      "Macro",
+      "Trump re-elected",
+      "Donald Trump wins a second term.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/ElectoralCollege2024.svg/500px-ElectoralCollege2024.svg.png"
+    ],
+    ["2025", "Personal", "Composer", "Composer, 2025.", null],
+    [
+      "2025-01",
+      "Macro/MIC",
+      "Golden Dome",
+      "A US missile-defense shield is ordered.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Golden_Dome_constellation.webp/500px-Golden_Dome_constellation.webp"
+    ],
+    [
+      "2025-01",
+      "Macro/TIC",
+      "“Tech–industrial complex”",
+      "Biden’s farewell address warns of a tech–industrial complex.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/Joe_Biden_presidential_portrait.jpg/500px-Joe_Biden_presidential_portrait.jpg"
+    ],
+    ["2025-01", "Macro/TIC", "Stargate", "A $500B AI infrastructure venture is announced.", null],
+    [
+      "2025-01",
+      "Tech/AI",
+      "DeepSeek R1",
+      "A Chinese open-weight reasoning model rivals the frontier at a fraction of the cost.",
+      null
+    ],
+    [
+      "2025-04",
+      "Tech/Hardware",
+      "First humanoid half-marathon",
+      "Humanoid robots run a half-marathon alongside people in Beijing.",
+      null
+    ],
+    [
+      "2025-07",
+      "Macro/FIC",
+      "GENIUS Act",
+      "The first US federal law regulating stablecoins, requiring them to be fully backed by dollars or short-term Treasuries.",
+      null
+    ],
+    [
+      "2025-08",
+      "Macro/TIC",
+      "US takes stake in Intel",
+      "The US government takes about a 10% stake in Intel, converting CHIPS Act grants into equity.",
+      "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Intel_logo_2023.svg/500px-Intel_logo_2023.svg.png"
+    ],
+    [
+      "2026-03",
+      "Macro/MIC",
+      "US drops Anthropic",
+      "The Pentagon labels Anthropic a supply chain risk after the company refuses to drop limits on surveillance and autonomous weapons.",
+      null
+    ],
+    [
+      "2026-06",
+      "Tech/AI",
+      "SpaceX acquires Cursor",
+      "SpaceX agrees to buy Anysphere, the maker of the Cursor coding editor, for $60B in stock; the deal closes in August.",
+      null
+    ],
+    ["2026-07", "Tech/AI", "ChatGPT attack on Hugging Face", "Reported in July 2026.", null],
+    [
+      "2026-08",
+      "Tech/AI",
+      "Grok Bot",
+      "xAI launches Grok Bot in beta: always-on AI teammates, each with its own cloud computer.",
+      null
+    ],
+    [
+      "2026-09",
+      "Tech/AI",
+      "Meta Muse",
+      "Meta releases Muse, a personal agent that works on long-running tasks on a user’s behalf.",
+      null
+    ],
+    [
+      "2026-09",
+      "Tech/AI",
+      "OpenAI Dots",
+      "OpenAI launches Dots at DevDay: personal agents that pursue goals in the background, an answer to Muse.",
+      null
+    ],
+    [
+      "2026-10",
+      "Macro/MIC",
+      "US restricts Starshield in Ukraine",
+      "Starshield links for Ukrainian forces are slowed, disrupting drone operations; reports that the order came from the White House are denied.",
+      null
+    ],
+    [
+      "2027-02",
+      "Macro/MIC",
+      "Major internet disruption from bot attack",
+      "Speculative: an automated attack takes down large parts of the internet.",
+      null
+    ],
+    [
+      "2028-12",
+      "Macro/TIC",
+      "US takes stake in BigAI",
+      "Speculative: the US government takes ownership stakes in the largest AI companies.",
+      null
+    ]
+  ]
+}

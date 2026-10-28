@@ -369,6 +369,26 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                 ],
               }),
               AppGraphNode.make({
+                id: Devtools.nodeId(Devtools.Agent.id),
+                data: null,
+                type: Devtools.id,
+                properties: {
+                  label: ['agent.label', { ns: meta.profile.key }],
+                  icon: 'ph--robot--regular',
+                },
+                nodes: [
+                  AppGraphNode.make({
+                    id: Devtools.nodeId(Devtools.Agent.Halo),
+                    data: Devtools.Agent.Halo,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['halo.label', { ns: meta.profile.key }],
+                      icon: 'ph--identification-badge--regular',
+                    },
+                  }),
+                ],
+              }),
+              AppGraphNode.make({
                 id: Devtools.nodeId(Devtools.Edge.id),
                 data: null,
                 type: Devtools.id,

@@ -3,9 +3,9 @@
 //
 
 import type * as Atom from 'effect/reactivity/Atom';
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
-import { type ActionGraphProps, ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
@@ -24,32 +24,29 @@ import { type ChatDrawer, type ChatEvent } from '../Chat/events.ts';
  */
 const TOUCH_TARGET = 'max-md:size-11 pointer-coarse:size-11';
 
-export type ChatActionsProps = Util.ThemedClassName<
-  PropsWithChildren<{
-    /** Content before the actions in the same toolbar (the prompt's options and context chips). */
-    leading?: ReactNode;
-    /** The prompt's graph node, which is what contributed actions are filed under. */
-    attendableId?: string;
-    /**
-     * Toolbar actions other plugins filed on this chat's node — the microphone among them. Sourced
-     * the way `MarkdownArticle` sources its own, so a contributor reaches the prompt without either
-     * side importing the other.
-     */
-    customActions?: Atom.Atom<ActionGraphProps>;
-    processing?: boolean;
-    debug?: boolean;
-    /** Whether the prompt holds text and the chat model would accept it; drives the send control's enablement. */
-    canSend?: boolean;
-    drawers?: { available: readonly ChatDrawer[]; open?: ChatDrawer };
-    /** Submits the current prompt; the send control renders only when provided. */
-    onSend?: () => void;
-    onEvent?: (event: ChatEvent) => void;
-  }>
->;
+export type ChatActionsProps = Util.ThemedClassName<{
+  /** Content before the actions in the same toolbar (the prompt's options and context chips). */
+  leading?: ReactNode;
+  /** The prompt's graph node, which is what contributed actions are filed under. */
+  attendableId?: string;
+  /**
+   * Toolbar actions other plugins filed on this chat's node — the microphone among them. Sourced
+   * the way `MarkdownArticle` sources its own, so a contributor reaches the prompt without either
+   * side importing the other.
+   */
+  customActions?: Atom.Atom<ActionGraphProps>;
+  processing?: boolean;
+  debug?: boolean;
+  /** Whether the prompt holds text and the chat model would accept it; drives the send control's enablement. */
+  canSend?: boolean;
+  drawers?: { available: readonly ChatDrawer[]; open?: ChatDrawer };
+  /** Submits the current prompt; the send control renders only when provided. */
+  onSend?: () => void;
+  onEvent?: (event: ChatEvent) => void;
+}>;
 
 export const ChatActions = ({
   classNames,
-  children,
   leading,
   attendableId,
   customActions,
@@ -66,7 +63,6 @@ export const ChatActions = ({
   const showStop = processing && !canSend;
   const controls = (
     <>
-      {children}
       {debug && (
         <Button.Root
           variant='ghost'
@@ -105,17 +101,19 @@ export const ChatActions = ({
     </>
   );
 
-  // One toolbar for the whole row, so the contributed actions and the prompt's own controls share its roving focus.
-  return customActions ? (
-    <ContributedActions actions={customActions} attendableId={attendableId} start={start} classNames={classNames}>
-      {controls}
-    </ContributedActions>
-  ) : (
-    <Toolbar.Root classNames={classNames}>
-      {start}
-      {controls}
-    </Toolbar.Root>
+  // One toolbar for the whole row, so the contributed actions and the prompt's own controls share its roving focus; the
+  // contributions render through the menu's own item dispatch, so a `custom` one (the mic) renders as in a document.
+  const menuActions = useMenuBuilder(
+    (get) =>
+      MenuBuilder.make()
+        .custom('prompt-options', { label: ['prompt-options.label', { ns: meta.profile.key }] }, () => start)
+        .subgraph(customActions && get(customActions))
+        .custom('prompt-controls', { label: ['prompt-controls.label', { ns: meta.profile.key }] }, () => controls)
+        .build(),
+    [start, controls, customActions],
   );
+
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive classNames={classNames} />;
 };
 
 const DRAWER_ICONS: Record<ChatDrawer, string> = {
@@ -149,33 +147,5 @@ const DrawerToggles = ({
         />
       ))}
     </Toolbar.ToggleGroup>
-  );
-};
-
-/**
- * The prompt's toolbar with the contributed actions first, rendered through the menu's own item dispatch rather than a
- * local copy of it — that is what makes a `variant: 'custom'` contribution (the mic's press-and-hold and its options
- * menu) render here exactly as it does in a document toolbar.
- *
- * Its own component so the hook is unconditional; the row renders it only when a caller supplies actions.
- */
-const ContributedActions = ({
-  actions,
-  attendableId,
-  start,
-  classNames,
-  children,
-}: Util.ThemedClassName<
-  PropsWithChildren<{
-    actions: Atom.Atom<ActionGraphProps>;
-    attendableId?: string;
-    start?: ReactNode;
-  }>
->) => {
-  const menuActions = useMenuActions(actions);
-  return (
-    <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive start={start} classNames={classNames}>
-      {children}
-    </ActionToolbar>
   );
 };
