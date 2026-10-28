@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AnimatableAnnotation } from '@dxos/animation';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 
 /** Supported primitive geometry types. */
@@ -15,6 +16,10 @@ export type PrimitiveType = Schema.Schema.Type<typeof PrimitiveType>;
 /** Bundled preset model names. */
 export const PresetType = Schema.Literals(['firetruck', 'race', 'taxi']);
 export type PresetType = Schema.Schema.Type<typeof PresetType>;
+
+/** How an animator stage draws a label (plugin-animator F-8.1): large, a title, across the object, small, or not. */
+export const LabelStyle = Schema.Literals(['hero', 'title', 'inside', 'plain', 'hidden']);
+export type LabelStyle = Schema.Schema.Type<typeof LabelStyle>;
 
 /** Union of all object template types (primitives + presets). */
 export type ObjectTemplate = PrimitiveType | PresetType;
@@ -50,13 +55,18 @@ export type Mesh = Schema.Schema.Type<typeof Mesh>;
  */
 export class Object extends Type.makeObject<Object>(DXN.make('org.dxos.type.spacetime.object', '0.1.0'))(
   Schema.Struct({
-    label: Schema.optional(Schema.String),
+    label: Schema.optional(Schema.String.pipe(AnimatableAnnotation.set('discrete'))),
     primitive: Schema.optional(PrimitiveType),
     mesh: Schema.optional(Mesh.pipe(Annotation.FormInputAnnotation.set(false))),
-    position: Vec3.pipe(Annotation.FormInputAnnotation.set(false)),
-    scale: Vec3.pipe(Annotation.FormInputAnnotation.set(false)),
-    rotation: Vec3.pipe(Annotation.FormInputAnnotation.set(false)),
-    color: Schema.optional(Schema.String),
+    position: Vec3.pipe(Annotation.FormInputAnnotation.set(false), AnimatableAnnotation.set('vec3')),
+    scale: Vec3.pipe(Annotation.FormInputAnnotation.set(false), AnimatableAnnotation.set('vec3')),
+    /** Euler degrees. */
+    rotation: Vec3.pipe(Annotation.FormInputAnnotation.set(false), AnimatableAnnotation.set('rotation')),
+    color: Schema.optional(Schema.String.pipe(AnimatableAnnotation.set('color'))),
+    /** 0 (invisible) to 1 (opaque); opaque when unset. */
+    opacity: Schema.optional(Schema.Number.pipe(AnimatableAnnotation.set('number'))),
+    /** How an animator stage draws the label; `plain` when unset. */
+    labelStyle: Schema.optional(LabelStyle.pipe(AnimatableAnnotation.set('discrete'))),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'teal' }), Annotation.UserType.set()),
 ) {}
 

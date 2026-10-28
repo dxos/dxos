@@ -4,10 +4,19 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { CreateObject, PluginAsset, ReactSurface, Schema, SpacetimeSettings, Translations } from '#capabilities';
+import {
+  AnimatorStage,
+  CreateObject,
+  PluginAsset,
+  ReactSurface,
+  Schema,
+  SpacetimeSettings,
+  Translations,
+} from '#capabilities';
 import { meta } from '#meta';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AnimatorStage),
   Plugin.addModule(CreateObject),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),

@@ -241,10 +241,10 @@ The animator samples the shot's tracks at the clock time and hands the stage a `
 **view** of its objects, never to the objects themselves, so playing an animation does not write to ECHO. Editing at
 a time (auto-key) goes the other way: the stage reports an edit, and the animator writes a key.
 
-| Stage     | Object                 | Camera                                      | Renderers       | Notes                                                                                    |
-| --------- | ---------------------- | ------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
-| Canvas    | `Drawing.Canvas` scene | 2D pan and zoom                             | `2d`, `overlay` | Wraps the existing animated projection                                                   |
-| Spacetime | `Spacetime.Scene`      | Orbit (`alpha`, `beta`, `radius`, `target`) | `3d`, `overlay` | Needs a clock-driven render path in `scene-manager.ts` and annotations on `Model.Object` |
+| Stage     | Object                 | Camera                                      | Renderers       | Notes                                                                                                         |
+| --------- | ---------------------- | ------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------- |
+| Canvas    | `Drawing.Canvas` scene | 2D pan and zoom                             | `2d`, `overlay` | Wraps the existing animated projection                                                                        |
+| Spacetime | `Spacetime.Scene`      | Orbit (`alpha`, `beta`, `radius`, `target`) | `3d`, `overlay` | Its own render per sample (no render loop), annotations on `Model.Object`; CAD or presentation look per scene |
 
 ## 8. Playback and export
 

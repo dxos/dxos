@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/animation"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -68,6 +71,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-animator"
     },
     {
       "path": "../plugin-client"

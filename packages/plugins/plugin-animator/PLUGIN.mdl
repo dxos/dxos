@@ -797,6 +797,40 @@ decision D-29: The effect operations take the verbNoun keys `createEffect`, `upd
     - Seeding built-ins on first use: hidden writes to a space when an article opens.
 ```
 
+```mdl
+decision D-30: A label's style is a discrete `labelStyle` property per target, stored as the object's resting style and keyed per shot; a label morph is two stage-only properties, `labelFrom` (discrete) and `labelMorph` (a number eased from 0 to 1), which a pair of beats writes, so the stage draws the morph from the sample alone. Fills in [D-21].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8.1, F-8.2]
+  why: A sample holds only the values at one time, so the text a label is morphing from and how far the morph has gone must be values too for a scrubbed or exported frame to match playback.
+  rejected:
+    - The stage remembering the previous text: the frame would depend on which frames came before it.
+    - The morph as an overlay effect: labels belong to the stage [D-21].
+```
+
+```mdl
+decision D-31: The spacetime stage renders on demand: a Babylon engine with no render loop draws once per sample and reports `onFrameDrawn` after the render; overlay anchors and labels come from orbit-camera projection computed to match Babylon's `ArcRotateCamera`; `3d` frames draw as thin instances of a unit sphere and cube with per-instance colour and opacity. Fills in [D-15], [D-9].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.3, F-5.4, F-6.1, F-6.2]
+  why: A render per sample keeps the frame on screen the frame for the clock's time; one projection serves the overlay layer and the labels, and is tested against Babylon headless.
+  rejected:
+    - Reusing the editor's render loop: it renders on its own clock.
+```
+
+```mdl
+decision D-32: The presentation material is chosen per scene (`style: cad | presentation` on `Spacetime.Scene`, CAD when unset): lit PBR spheres dithered by the scene's image processing, see-through shells (resting opacity below 1) with a Fresnel rim shader carrying per-pixel noise and a geodesic lattice in the shell's darkened colour, over echo3d's night blue with a faint lattice sphere. Spacetime scenes carry `links` for effects to bind to, and the stage's arrangers are ring, orbit, grid and containment. Fills in [D-20].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.3, F-4.5, F-5.7]
+  why: Every echo3d slide uses one look throughout, so a scene-level choice covers it; packet flow needs named links, which a scene of free objects does not otherwise have.
+  rejected:
+    - A per-object style: no slide mixes the looks.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

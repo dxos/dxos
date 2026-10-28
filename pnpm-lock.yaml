@@ -17867,6 +17867,9 @@ importers:
       '@babylonjs/loaders':
         specifier: 'catalog:'
         version: 7.54.3(@babylonjs/core@7.54.3)(babylonjs-gltf2interface@7.54.3)
+      '@dxos/animation':
+        specifier: workspace:*
+        version: link:../../common/animation
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -17888,6 +17891,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-animator':
+        specifier: workspace:*
+        version: link:../plugin-animator
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
