@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { snapshot } from '../testing/fixtures.ts';
 import { applyUpdate, applyVote, emptySessionState, nextVote } from './session-state.ts';
-import { toMessages } from './trajectory.ts';
+import { PICKS_ROLE, RUN_ROLE, toMessages } from './trajectory.ts';
 
 describe('session state', () => {
   test('events are kept once each, in seq order, after the snapshot', ({ expect }) => {
@@ -40,22 +40,50 @@ describe('toMessages', () => {
     const { session, events, results } = snapshot('reported');
     const messages = toMessages(session, events, results);
     expect(messages.map((message) => message.sender.role)).toEqual(['user', 'assistant']);
-    const tags = messages[1]?.blocks.map((block) => block._tag);
-    expect(tags).toEqual([
-      'status',
-      'toolCall',
-      'toolResult',
-      'surface',
-      'status',
-      'toolCall',
-      'toolResult',
-      'surface',
-      'surface',
+    const blocks = messages[1]?.blocks ?? [];
+    // One run row per narration, then the picks.
+    expect(blocks.map((block) => (block._tag === 'surface' ? block.role : block._tag))).toEqual([
+      RUN_ROLE,
+      RUN_ROLE,
+      PICKS_ROLE,
     ]);
+    const [search, browse] = blocks.flatMap((block) =>
+      block._tag === 'surface' && block.role === RUN_ROLE ? [block.data] : [],
+    );
+    expect(search).toMatchObject({ narration: 'Searching Google Maps for board game cafés.', total: 2 });
+    expect(search?.calls).toEqual([
+      {
+        tool: 'search',
+        args: 'engine=google-maps params={"q":"board game cafe Bangkok"}',
+        ok: true,
+        output: '{"results":12}',
+      },
+    ]);
+    expect(browse).toMatchObject({ narration: 'Opening the cafés with the most games.', total: 3 });
     // Re-deriving gives the same ids, so the thread updates rows in place.
     expect(toMessages(session, events, results).map((message) => message.id)).toEqual(
       messages.map((message) => message.id),
     );
+  });
+
+  test("a vote's feedback prompt reads as one line naming the results", ({ expect }) => {
+    const { session, results } = snapshot('reported');
+    const prompt = [
+      'Feedback on the results panel (rebuild the rating model):',
+      '',
+      'Liked:',
+      `- ${JSON.stringify({ id: 'urn:a', types: [], props: { 'schema:name': ['Meeple Bangkok'] } })}`,
+      'Disliked:',
+      `- ${JSON.stringify({ id: 'urn:b', types: [], props: { 'schema:name': ['Brick & Board'] } })}`,
+    ].join('\n');
+    const [message] = toMessages(
+      session,
+      [{ seq: 1, t: '', kind: 'input', data: { text: prompt, from: 'composer' } }],
+      results,
+    );
+    expect(message?.blocks).toEqual([
+      { _tag: 'text', text: 'Votes: 👍 Meeple Bangkok · 👎 Brick ＆ Board — rebuild the ranking.' },
+    ]);
   });
 
   test('a running session ends with a working status; a failed one with Retry', ({ expect }) => {

@@ -4,10 +4,10 @@
 
 // A session's trajectory as a chat thread, as lighthouse's web UI (`web/src/trajectory.ts`) renders it:
 //
-//   input                → the person's prompt
-//   decide               → an assistant message: its narration as a status line, a toolCall block per call
-//   act (per call)       → the call's toolResult (the output the model saw)
-//   extract (during act) → a `surface` block listing what the call put into the graph, as pills
+//   input                → the person's prompt (a vote's feedback prompt as one line naming the results)
+//   decide               → a run row per narration: the line the agent said, then its tool calls
+//   act (per call)       → the call's outcome on its row: ok or failed, how long, a glance at its output
+//   extract (during act) → the results the call put into the graph, as pills on the same row
 //   report call          → a `surface` block with the picks
 //
 // Message ids derive from the run and event, so re-deriving the thread on every new event updates rows in place.
@@ -21,8 +21,8 @@ import { isResult, kindOf, priceOf, titleOf, urlOf } from './results.ts';
 /** The chip a failed or stopped session ends with; the view turns it into a continue message. */
 export const RETRY = 'Retry';
 
-/** Surface role of the pills a tool call put into the graph. */
-export const RESULTS_ROLE = 'org.dxos.plugin.lighthouse.results';
+/** Surface role of a run row: a narration, its tool calls, and the results they produced. */
+export const RUN_ROLE = 'org.dxos.plugin.lighthouse.run';
 
 /** Surface role of the agent's report: one compact card per pick. */
 export const PICKS_ROLE = 'org.dxos.plugin.lighthouse.picks';
@@ -30,7 +30,11 @@ export const PICKS_ROLE = 'org.dxos.plugin.lighthouse.picks';
 /** A result as a row under the call that found it. */
 export type Pill = { id: string; title: string; url?: string; kind: string; detail?: string };
 
-export type ResultsSurfaceData = { total: number; pills: Pill[]; followed?: boolean };
+/** One tool call in a run row: what it was asked, whether it worked, how long it took, a glance at its output. */
+export type RunCall = { tool: string; args: string; ok?: boolean; error?: string; ms?: number; output?: string };
+
+/** A run row: a narration (when the agent said what it was doing), its tool calls, and the results they produced. */
+export type RunData = { narration?: string; calls: RunCall[]; pills: Pill[]; total: number; followed: number };
 
 export type PicksSurfaceData = { picks: Pick[]; gaps?: string };
 
@@ -41,6 +45,9 @@ const clip = (value: string, length: number) =>
   value.length > length ? `${value.slice(0, length)}… (${value.length - length} more characters)` : value;
 
 const asString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
+const asNumber = (value: unknown): number | undefined =>
+  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 
 const asRecord = (value: unknown): Record<string, unknown> | undefined =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -75,6 +82,68 @@ const errorText = (output: unknown): string => {
 
 /** A user prompt as the thread shows it: the prompt tag's source is rendered raw, so markup characters are swapped. */
 const promptText = (value: string) => value.replace(/&/g, '＆').replace(/</g, '＜').replace(/>/g, '＞');
+
+const FEEDBACK_PREFIX = 'Feedback on the results panel';
+
+/** The results a vote's feedback prompt names, by its Liked and Disliked lists (one JSON entity per line). */
+const feedbackText = (value: string): string | undefined => {
+  if (!value.startsWith(FEEDBACK_PREFIX)) {
+    return undefined;
+  }
+  const names: Record<'Liked' | 'Disliked', string[]> = { Liked: [], Disliked: [] };
+  let list: 'Liked' | 'Disliked' | undefined;
+  for (const line of value.split('\n')) {
+    if (line.startsWith('Liked:') || line.startsWith('Disliked:')) {
+      list = line.startsWith('Liked:') ? 'Liked' : 'Disliked';
+      continue;
+    }
+    if (list && line.startsWith('- ')) {
+      try {
+        const entity = asRecord(JSON.parse(line.slice(2)));
+        const name = asArray(asRecord(entity?.props)?.['schema:name'])[0];
+        names[list].push(typeof name === 'string' ? name : (asString(entity?.id) ?? '?'));
+      } catch {
+        names[list].push(line.slice(2, 60));
+      }
+    }
+  }
+  const parts = [
+    names.Liked.length && `👍 ${names.Liked.join(', ')}`,
+    names.Disliked.length && `👎 ${names.Disliked.join(', ')}`,
+  ].filter(Boolean);
+  return `Votes: ${parts.join(' · ') || 'cleared'} — rebuild the ranking.`;
+};
+
+const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+
+/** Keeps a run row's tag small: very long tags stop the thread's markdown parser. */
+const RUN_BUDGET = 9_000;
+
+const fitRun = (run: RunData): RunData => {
+  let fitted = run;
+  for (const outputChars of [300, 120, 0]) {
+    fitted = {
+      ...run,
+      calls: run.calls.map(({ output, ...call }) =>
+        output && outputChars ? { ...call, output: clip(output, outputChars) } : call,
+      ),
+    };
+    if (JSON.stringify(fitted).length <= RUN_BUDGET) {
+      return fitted;
+    }
+  }
+  return { ...fitted, calls: fitted.calls.slice(-30), pills: fitted.pills.slice(0, 16) };
+};
+
+/** A call's arguments as `key=value` pairs on one line. */
+const argsLine = (args: unknown): string =>
+  clip(
+    Object.entries(asRecord(args) ?? {})
+      .filter(([, value]) => value !== undefined && value !== '' && !(Array.isArray(value) && value.length === 0))
+      .map(([key, value]) => `${key}=${typeof value === 'string' ? value : JSON.stringify(value)}`)
+      .join(' '),
+    200,
+  );
 
 const toPill = (entity: Entity): Pill => {
   const { price } = priceOf(entity);
@@ -119,7 +188,10 @@ type Turn = {
   seq: number;
   created?: string;
   blocks: ContentBlock.Any[];
-  pending: Array<{ id: string; name: string }>;
+  /** The run row the latest calls belong to; its data is filled in as acts arrive, and fitted at flush. */
+  row?: RunData;
+  rows: RunData[];
+  pending: Array<{ name: string; call: RunCall }>;
   extracts: number[];
   shown: Set<string>;
 };
@@ -159,23 +231,45 @@ export const toMessages = (
   const messages: Message.Message[] = [];
   let turn: Turn | undefined;
 
+  const openRow = (current: Turn, narration?: string): RunData => {
+    const row: RunData = { ...(narration ? { narration } : {}), calls: [], pills: [], total: 0, followed: 0 };
+    current.row = row;
+    current.rows.push(row);
+    // A placeholder the flush replaces with the fitted row, so the block order is the order rows opened in.
+    current.blocks.push({ _tag: 'surface', role: RUN_ROLE, data: { index: current.rows.length - 1 } });
+    return row;
+  };
+
   const flush = () => {
     if (!turn) {
       return;
     }
+    const rows = turn.rows;
+    const blocks = turn.blocks.flatMap((block): ContentBlock.Any[] => {
+      if (block._tag !== 'surface' || block.role !== RUN_ROLE) {
+        return [block];
+      }
+      const row = rows[Number(block.data?.index)];
+      // A row with neither calls nor results (all its calls were the report) says nothing.
+      if (!row || (row.calls.length === 0 && row.total === 0)) {
+        return [];
+      }
+      const data: RunData = fitRun(row);
+      return [{ _tag: 'surface', role: RUN_ROLE, data }];
+    });
     messages.push(
       Message.make({
         id: EntityId.deterministic(run, 'decide', turn.seq),
         created: turn.created,
         sender: { role: 'assistant', name: 'Lighthouse' },
-        blocks: turn.blocks,
+        blocks,
       }),
     );
     turn = undefined;
   };
 
-  /** What a call put into the graph: the entities its extractions wrote, each once per answer. */
-  const pushPills = (current: Turn, followed: boolean) => {
+  /** What a call put into the graph: the entities its extractions wrote, each once per message, onto its row. */
+  const addResults = (current: Turn, followed: boolean) => {
     const found = current.extracts.flatMap((seq) => bySeq.get(seq) ?? []);
     current.extracts = [];
     const unique = [...new Map(found.map((entity) => [entity.id, entity])).values()];
@@ -185,26 +279,28 @@ export const toMessages = (
     }
     const real = fresh.filter(isResult);
     const shown = real.length ? real : fresh.filter((entity) => entity.types.includes('lh:SearchResult'));
-    if (shown.length) {
-      const data: ResultsSurfaceData = {
-        total: shown.length,
-        pills: shown.slice(0, 24).map(toPill),
-        ...(followed ? { followed: true } : {}),
-      };
-      current.blocks.push({ _tag: 'surface', role: RESULTS_ROLE, data });
+    if (shown.length === 0) {
+      return;
     }
+    const row = current.row ?? openRow(current);
+    row.total += shown.length;
+    if (followed) {
+      row.followed += shown.length;
+    }
+    row.pills.push(...shown.slice(0, Math.max(0, 24 - row.pills.length)).map(toPill));
   };
 
   for (const event of events) {
     switch (event.kind) {
       case 'input': {
         flush();
+        const prompt = asString(event.data.text) ?? '';
         messages.push(
           Message.make({
             id: EntityId.deterministic(run, 'input', event.seq),
             created: event.t,
             sender: { role: 'user', name: senderName(asString(event.data.from)) },
-            blocks: [text(promptText(asString(event.data.text) ?? ''))],
+            blocks: [text(promptText(feedbackText(prompt) ?? prompt))],
           }),
         );
         break;
@@ -216,38 +312,41 @@ export const toMessages = (
           break;
         }
         const calls = callsOf(event.data);
-        const blocks: ContentBlock.Any[] = [];
         const said = asString(event.data.text)?.trim() ?? '';
         const report = calls.find((call) => call.tool === 'report');
-        // The report speaks for itself (as pick cards); its accompanying prose is dropped.
-        if (said && !report) {
-          blocks.push(calls.length ? status(clip(said.split('\n')[0] ?? said, 240)) : text(clip(said, 700)));
-        }
+        const tools = calls.filter((call) => call.tool !== 'report');
+        // Every turn up to the person's next prompt joins one message.
+        turn ??= {
+          seq: event.seq,
+          created: event.t,
+          blocks: [],
+          rows: [],
+          pending: [],
+          extracts: [],
+          shown: new Set(),
+        };
         if (event.data.error !== undefined) {
-          blocks.push(status(`Model error: ${String(event.data.error).slice(0, 300)}`));
+          turn.blocks.push(status(`Model error: ${String(event.data.error).slice(0, 300)}`));
         }
-        const pending = calls.map((call, index) => ({ id: `${event.seq}-${index}`, name: call.tool }));
-        calls.forEach((call, index) => {
-          if (call.tool !== 'report') {
-            blocks.push({
-              _tag: 'toolCall',
-              toolCallId: `${event.seq}-${index}`,
-              name: call.tool,
-              input: clip(JSON.stringify(call.args ?? {}), 1_500),
-              providerExecuted: false,
-            });
+        if (said && !report && tools.length === 0) {
+          // A final answer with no calls: kept short, and the next calls start a new row.
+          turn.blocks.push(text(clip(said, 700)));
+          turn.row = undefined;
+        }
+        if (tools.length) {
+          // A turn that says what it is doing starts a new row under that line; one that does not joins the row before.
+          const row =
+            said && !report ? openRow(turn, clip(said.split('\n')[0] ?? said, 240)) : (turn.row ?? openRow(turn));
+          for (const tool of tools) {
+            const call: RunCall = { tool: tool.tool, args: argsLine(tool.args) };
+            row.calls.push(call);
+            turn.pending.push({ name: tool.tool, call });
           }
-        });
+        }
         if (report) {
           const data: PicksSurfaceData = picksOf(report.args);
-          blocks.push({ _tag: 'surface', role: PICKS_ROLE, data });
-        }
-        // Every turn up to the person's next prompt joins one message, so the thread folds them into one tool panel.
-        if (turn) {
-          turn.blocks.push(...blocks);
-          turn.pending.push(...pending);
-        } else {
-          turn = { seq: event.seq, created: event.t, blocks, pending, extracts: [], shown: new Set() };
+          turn.blocks.push({ _tag: 'surface', role: PICKS_ROLE, data });
+          turn.row = undefined;
         }
         break;
       }
@@ -261,30 +360,31 @@ export const toMessages = (
         if (!turn) {
           break;
         }
-        const args = asRecord(event.data.args);
-        // A search's automatic follow-up (opening its top results) has no call of its own: it joins the search's.
-        if (args?.followedFrom !== undefined) {
-          pushPills(turn, true);
+        // A search's automatic follow-up (opening its top results) has no call of its own: its results join the row.
+        if (asRecord(event.data.args)?.followedFrom !== undefined) {
+          addResults(turn, true);
           break;
         }
         const index = turn.pending.findIndex((pending) => pending.name === event.data.tool);
         if (index < 0) {
           break;
         }
-        const [call] = turn.pending.splice(index, 1);
-        if (!call || call.name === 'report') {
+        const [pending] = turn.pending.splice(index, 1);
+        if (!pending) {
           break;
         }
-        turn.blocks.push({
-          _tag: 'toolResult',
-          toolCallId: call.id,
-          name: call.name,
-          // Kept short: the panel is for glancing, and very long tags stop the thread's markdown parser.
-          result: clip(outputText(event.data.output), 1_500),
-          ...(event.data.ok === false ? { error: errorText(event.data.output) } : {}),
-          providerExecuted: false,
-        });
-        pushPills(turn, false);
+        const { call } = pending;
+        call.ok = event.data.ok !== false;
+        const ms = asNumber(event.ms);
+        if (ms !== undefined) {
+          call.ms = ms;
+        }
+        if (event.data.ok === false) {
+          call.error = errorText(event.data.output);
+        } else if (event.data.output !== undefined) {
+          call.output = clip(outputText(event.data.output), 600);
+        }
+        addResults(turn, false);
         break;
       }
     }

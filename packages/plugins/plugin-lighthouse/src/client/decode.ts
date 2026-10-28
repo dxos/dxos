@@ -99,7 +99,14 @@ export const toEvent = (value: unknown): TrajectoryEvent | undefined => {
   if (!record || seq === undefined || !kind) {
     return undefined;
   }
-  return { seq, kind, t: asString(record.t) ?? '', data: asRecord(record.data) ?? {} };
+  const ms = asNumber(record.ms);
+  return {
+    seq,
+    kind,
+    t: asString(record.t) ?? '',
+    ...(ms !== undefined ? { ms } : {}),
+    data: asRecord(record.data) ?? {},
+  };
 };
 
 export const toEvents = (value: unknown): TrajectoryEvent[] =>

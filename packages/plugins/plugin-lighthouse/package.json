@@ -165,6 +165,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-assistant": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-feed": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",

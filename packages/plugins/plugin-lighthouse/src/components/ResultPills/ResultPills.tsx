@@ -4,16 +4,19 @@
 
 import React from 'react';
 
+import { TogglePanel } from '@dxos/react-ui-components';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-import { asRecord, asString } from '../../client/decode.ts';
+import { asNumber, asRecord, asString } from '../../client/decode.ts';
 import { type Pick } from '../../client/types.ts';
-import { PICKS_ROLE, type Pill, RESULTS_ROLE } from '../../model/trajectory.ts';
+import { PICKS_ROLE, type Pill, RUN_ROLE, type RunCall, type RunData } from '../../model/trajectory.ts';
 
 const parse = (children: WidgetProps['children']): Record<string, unknown> | undefined => {
   try {
@@ -23,8 +26,10 @@ const parse = (children: WidgetProps['children']): Record<string, unknown> | und
   }
 };
 
+const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+
 const toPills = (value: unknown): Pill[] =>
-  (Array.isArray(value) ? value : []).flatMap((item): Pill[] => {
+  list(value).flatMap((item): Pill[] => {
     const record = asRecord(item);
     const id = asString(record?.id);
     const title = asString(record?.title);
@@ -41,8 +46,38 @@ const toPills = (value: unknown): Pill[] =>
       : [];
   });
 
+const toCalls = (value: unknown): RunCall[] =>
+  list(value).flatMap((item): RunCall[] => {
+    const record = asRecord(item);
+    const tool = asString(record?.tool);
+    if (!record || !tool) {
+      return [];
+    }
+    return [
+      {
+        tool,
+        args: asString(record.args) ?? '',
+        ...(typeof record.ok === 'boolean' ? { ok: record.ok } : {}),
+        ...(asString(record.error) ? { error: asString(record.error) } : {}),
+        ...(asNumber(record.ms) !== undefined ? { ms: asNumber(record.ms) } : {}),
+        ...(asString(record.output) ? { output: asString(record.output) } : {}),
+      },
+    ];
+  });
+
+const toRun = (data: Record<string, unknown>): RunData => {
+  const pills = toPills(data.pills);
+  return {
+    ...(asString(data.narration) ? { narration: asString(data.narration) } : {}),
+    calls: toCalls(data.calls),
+    pills,
+    total: asNumber(data.total) ?? pills.length,
+    followed: asNumber(data.followed) ?? 0,
+  };
+};
+
 const toPicks = (value: unknown): Pick[] =>
-  (Array.isArray(value) ? value : []).flatMap((item): Pick[] => {
+  list(value).flatMap((item): Pick[] => {
     const record = asRecord(item);
     const title = asString(record?.title);
     return title ? [{ title, why: asString(record?.why) ?? '', url: asString(record?.url) }] : [];
@@ -56,6 +91,8 @@ const hostOf = (url?: string) => {
   }
 };
 
+const duration = (ms?: number) => (ms === undefined ? '' : ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`);
+
 const Title = ({ title, url }: { title: string; url?: string }) =>
   url ? (
     <Typography.Link href={url} target='_blank' rel='noreferrer' title={title} classNames='truncate'>
@@ -67,14 +104,16 @@ const Title = ({ title, url }: { title: string; url?: string }) =>
     </span>
   );
 
+const Heading = ({ children }: { children: string }) => (
+  <Typography.Text classNames='text-xs uppercase tracking-wide text-fg-subtle'>{children}</Typography.Text>
+);
+
 /** The agent's report, inline: one compact row per pick, then the gaps in a line. */
 const Picks = ({ picks, gaps }: { picks: Pick[]; gaps?: string }) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Layout.Flex column gap='xs' classNames='py-2 text-sm' data-testid='lighthouse.picks'>
-      <Typography.Text classNames='text-xs uppercase tracking-wide text-fg-subtle'>
-        {t('picks.label', { count: picks.length })}
-      </Typography.Text>
+      <Heading>{t('picks.label', { count: picks.length })}</Heading>
       <Layout.Flex asChild column gap='xs'>
         <ol>
           {picks.map((pick, index) => (
@@ -96,19 +135,19 @@ const Picks = ({ picks, gaps }: { picks: Pick[]; gaps?: string }) => {
   );
 };
 
-/** What one tool call put into the graph, as compact rows under it: title, kind or rank, price. */
-const Results = ({ total, pills, followed }: { total: number; pills: Pill[]; followed: boolean }) => {
+/** The results a run put into the graph, as compact rows: kind or rank, title, price. */
+const PillList = ({ run }: { run: RunData }) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Layout.Flex column gap='xs' classNames='py-2 text-sm' data-testid='lighthouse.results'>
-      <Typography.Text classNames='text-xs uppercase tracking-wide text-fg-subtle'>
-        {t(followed ? 'pills-followed.label' : 'pills.label', { count: total })}
-      </Typography.Text>
-      <Layout.Flex asChild column>
+    <Layout.Flex column gap='xs' classNames='p-2 border-t border-separator text-sm' data-testid='lighthouse.results'>
+      <Heading>
+        {`${t('pills.label', { count: run.total })}${run.followed > 0 ? ` · ${t('pills-followed.label', { count: run.followed })}` : ''}`}
+      </Heading>
+      <Layout.Flex asChild column classNames='max-h-56 overflow-y-auto'>
         <ul>
-          {pills.map((pill) => (
+          {run.pills.map((pill) => (
             <Layout.Grid asChild key={pill.id} cols={['min', 'fill', 'min']} gap='sm' align='center'>
-              <li>
+              <li className='py-0.5'>
                 <span className='text-xs text-fg-subtle whitespace-nowrap'>{pill.kind}</span>
                 <Title title={pill.title} url={pill.url} />
                 <span className='text-xs text-fg-muted tabular-nums whitespace-nowrap'>{pill.detail}</span>
@@ -117,16 +156,115 @@ const Results = ({ total, pills, followed }: { total: number; pills: Pill[]; fol
           ))}
         </ul>
       </Layout.Flex>
-      {total > pills.length && (
-        <span className='text-xs text-fg-subtle'>{t('pills-more.label', { count: total - pills.length })}</span>
+      {run.total > run.pills.length && (
+        <span className='text-xs text-fg-subtle'>{t('pills-more.label', { count: run.total - run.pills.length })}</span>
       )}
     </Layout.Flex>
   );
 };
 
+/** One call: its tool, arguments, outcome and time; its output or error opens below it. */
+const CallRow = ({ call }: { call: RunCall }) => {
+  const failed = call.ok === false;
+  const body = failed ? call.error : call.output;
+  const head = (
+    <Layout.Grid cols={['auto', 'auto', 'fill', 'auto']} gap='sm' align='center' classNames='w-full min-w-0 text-xs'>
+      <Icon.Icon
+        icon={
+          call.ok === undefined ? 'ph--circle-notch--regular' : failed ? 'ph--warning--regular' : 'ph--check--regular'
+        }
+        size='xs'
+        classNames={[call.ok === undefined && 'animate-spin', failed ? 'text-error-text' : 'text-fg-subtle']}
+      />
+      <span
+        className={['font-mono font-medium whitespace-nowrap', failed && 'text-error-text'].filter(Boolean).join(' ')}
+      >
+        {call.tool}
+      </span>
+      <span className='font-mono text-fg-subtle truncate' title={call.args}>
+        {call.args}
+      </span>
+      <span className='text-fg-subtle tabular-nums whitespace-nowrap'>{duration(call.ms)}</span>
+    </Layout.Grid>
+  );
+  if (!body) {
+    return <li className='px-2 py-0.5'>{head}</li>;
+  }
+  return (
+    <li className='px-2 py-0.5'>
+      <Collapsible.Root>
+        <Collapsible.Trigger classNames='w-full min-w-0'>{head}</Collapsible.Trigger>
+        <Collapsible.Content>
+          <pre
+            className={[
+              'ms-6 my-1 p-2 max-h-48 overflow-auto rounded-sm bg-group-surface text-[0.625rem] whitespace-pre-wrap break-words',
+              failed && 'text-error-text',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
+            {body}
+          </pre>
+        </Collapsible.Content>
+      </Collapsible.Root>
+      {failed && <span className='block ms-6 text-xs text-error-text break-words'>{call.error}</span>}
+    </li>
+  );
+};
+
 /**
- * The thread's `surface` widget: a tool call's results as pills, or the report's picks. Other surface roles render
- * nothing, so a block another client wrote never breaks the thread.
+ * One run of tool calls and what they produced, as lighthouse's web UI shows it: collapsed, one line with the
+ * narration, how many calls and results, failures and the time; open, every call, then the results as pills.
+ */
+const RunRow = ({ run }: { run: RunData }) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const failed = run.calls.filter((call) => call.ok === false).length;
+  const running = run.calls.some((call) => call.ok === undefined);
+  const ms = run.calls.reduce((total, call) => total + (call.ms ?? 0), 0);
+  const label = run.narration ?? t('run-commands.label', { count: run.calls.length });
+  return (
+    <TogglePanel.Root classNames='w-0 min-w-full'>
+      <TogglePanel.Header caret='end' classNames='group/disclosure gap-1' data-testid='lighthouse.run-row'>
+        <Layout.Flex gap='sm' align='center' classNames='min-w-0 text-fg-muted tabular-nums'>
+          <Icon.Icon
+            icon={running ? 'ph--circle-notch--regular' : 'ph--wrench--regular'}
+            size='sm'
+            classNames={running ? 'animate-spin' : undefined}
+          />
+          <span className='truncate group-hover/disclosure:text-fg' title={label}>
+            {label}
+          </span>
+          <Layout.Flex gap='sm' classNames='text-xs whitespace-nowrap'>
+            {run.narration && run.calls.length > 0 && <span>{t('run-calls.label', { count: run.calls.length })}</span>}
+            {run.total > 0 && (
+              <span className='text-fg font-medium'>{t('run-results.label', { count: run.total })}</span>
+            )}
+            {failed > 0 && <span className='text-error-text'>{t('run-failed.label', { count: failed })}</span>}
+            {ms > 0 && <span>{duration(ms)}</span>}
+          </Layout.Flex>
+        </Layout.Flex>
+      </TogglePanel.Header>
+      <TogglePanel.Body>
+        <Layout.Flex column classNames='border border-separator rounded-md min-w-0'>
+          {run.calls.length > 0 && (
+            <Layout.Flex asChild column classNames='py-1'>
+              <ul aria-label={t('run-calls-list.label')}>
+                {run.calls.map((call, index) => (
+                  <CallRow key={index} call={call} />
+                ))}
+              </ul>
+            </Layout.Flex>
+          )}
+          {run.pills.length > 0 && <PillList run={run} />}
+        </Layout.Flex>
+      </TogglePanel.Body>
+    </TogglePanel.Root>
+  );
+};
+
+/**
+ * The thread's `surface` widget: a run row (a narration, its calls and their results), or the report's picks. Other
+ * surface roles render nothing, so a block another client wrote never breaks the thread.
  */
 export const ResultPills = ({ role, children }: WidgetProps) => {
   const data = parse(children);
@@ -137,15 +275,9 @@ export const ResultPills = ({ role, children }: WidgetProps) => {
     const picks = toPicks(data.picks);
     return picks.length ? <Picks picks={picks} gaps={asString(data.gaps)} /> : null;
   }
-  if (role === RESULTS_ROLE) {
-    const pills = toPills(data.pills);
-    return pills.length ? (
-      <Results
-        total={typeof data.total === 'number' ? data.total : pills.length}
-        pills={pills}
-        followed={data.followed === true}
-      />
-    ) : null;
+  if (role === RUN_ROLE) {
+    const run = toRun(data);
+    return run.calls.length || run.pills.length ? <RunRow run={run} /> : null;
   }
   return null;
 };

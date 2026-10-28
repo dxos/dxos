@@ -56,6 +56,8 @@ export type TrajectoryEvent = {
   seq: number;
   t: string;
   kind: string;
+  /** How long the event's work took (an act's tool call). */
+  ms?: number;
   data: Record<string, unknown>;
 };
 

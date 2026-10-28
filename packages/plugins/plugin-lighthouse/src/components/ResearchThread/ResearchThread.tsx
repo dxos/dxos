@@ -16,12 +16,18 @@ import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
-import { RETRY } from '../../model/trajectory.ts';
+import { RETRY, RUN_ROLE } from '../../model/trajectory.ts';
 import { ResultPills } from '../ResultPills/ResultPills.tsx';
 
 /** The thread's widgets beyond the assistant defaults: lighthouse results and picks render as pills. */
 const REGISTRY: XmlWidgetRegistry = {
-  surface: { block: true, estimatedHeight: () => 120, heightMode: 'min', Component: ResultPills },
+  surface: {
+    block: true,
+    // A run row is one collapsed line until opened; the picks are a list.
+    estimatedHeight: ({ role }) => (role === RUN_ROLE ? 36 : 160),
+    heightMode: 'min',
+    Component: ResultPills,
+  },
 };
 
 export type ResearchThreadProps = {
