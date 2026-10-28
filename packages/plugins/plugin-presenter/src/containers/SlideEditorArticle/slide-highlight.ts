@@ -57,7 +57,7 @@ const plugin = ViewPlugin.fromClass(
   { decorations: (instance) => instance.decorations.marks },
 );
 
-// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+// Built once: every `EditorView.baseTheme` call mints a new stylesheet, which restyles the whole document.
 const slideHighlightTheme = EditorView.baseTheme({
   // DSL markup is code, not prose, so it reads in the code font (the notes stay prose); descendants too, since the
   // markdown highlighter wraps the same text in spans that set their own font.

@@ -13,7 +13,7 @@ export type SlideCompletionOptions = {
   describeLayout: (layout: LayoutName) => string;
 };
 
-// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+// Built once: every `EditorView.baseTheme` call mints a new stylesheet, which restyles the whole document.
 const slideCompletionTheme = EditorView.baseTheme({
   '.cm-tooltip-autocomplete .cm-completionLabel': { display: 'inline-block', minWidth: '16ch' },
   '.cm-tooltip-autocomplete .cm-completionDetail': {
