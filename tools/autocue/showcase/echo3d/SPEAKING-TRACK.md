@@ -1,7 +1,12 @@
 # ECHO presentation: speaking track
 
 One section per slide, numbered as in the pager (`n / 28`). Each bullet is one spoken sentence. The slide's address
-(`#id`) follows its title, so a section can be opened directly at `http://localhost:7420/#id`.
+(`#id`) follows its title, so a section can be opened directly at `http://localhost:7420/#id`. Lines are paced at about
+150 words a minute (2.5 words a second), starting half a second after the slide is entered, while it moves in; the
+[Timing](#timing) table checks each slide against its hold in `record.mjs`. A line marked _(verify)_ makes a product
+claim the code does not yet support as spoken.
+
+The tone is upbeat, with a light touch of humour: the takeover story is told with a raised eyebrow, not doom.
 
 ## 1. Blank (`#blank`)
 
@@ -9,77 +14,72 @@ One section per slide, numbered as in the pager (`n / 28`). Each bullet is one s
 
 ## 2. In the Beginning (`#beginning`)
 
-- In the beginning, there was your company, and there was software.
+- In the beginning, there was SaaS.
 
 ## 3. Your data lives inside SaaS (`#silo`)
 
-- Your company does its work in apps.
-- And the data that work produces doesn't live with you: it lives inside the SaaS vendor.
+- And it was good.
+- Really, really good.
 
 ## 4. Data in both directions (`#silo-comms`)
 
-- Every day, your teams send data in, and the vendor sends data back.
-- Some of it goes wrong along the way, and you rarely see where.
+- Nothing to install, and no upgrades on a Saturday night.
+- Updates just showed up, and the bill went down.
 
 ## 5. The vendor grows (`#scale`)
 
-- But you are not the vendor's only customer.
-- It holds the data of thousands of companies like yours.
-- And from all of that data it learns something none of you can see: the metadata.
+- Vendors could serve everyone at once.
+- Soon there was an app for everything.
 
 ## 6. Your competitors (`#competitors`)
 
-- Some of those companies are your competitors.
-- Their data and yours sit side by side, feeding the same metadata.
+- But scale rewrote the economics of software.
+- Switching got easier, so every vendor dug a moat.
 
 ## 7. Many silos (`#spread`)
 
-- And it is not one vendor.
-- Your company works across dozens of apps, and each one holds its own piece of your data.
+- Now the average company juggles dozens of apps.
 
 ## 8. Teams and their apps (`#spread-comms`)
 
-- Your teams move data between those apps all day long.
-- Every app is a silo, and every silo is a copy you don't control.
+- Every team has its favourites, each with its own copy of your data.
 
 ## 9. A frontier lab arrives (`#frontier`)
 
-- Now a new kind of vendor has arrived: the frontier AI lab.
-- It is far bigger than any app you use.
+- Then AI showed up.
 
 ## 10. Everyone talks to the lab (`#frontier-comms`)
 
-- Your teams start sending it data, more than they ever sent any app.
-- Because an agent is only as useful as the data it can reach.
+- Your people made friends with agents, and opened the gates to their data.
+- Every vendor rushed out its own AI, with plugins for the frontier platforms.
 
 ## 11. The lab at the centre (`#orbit`)
 
-- Soon the lab sits at the centre of everything.
-- Your apps sit on its edge, and every company is in its orbit, yours included.
-- And the lab builds its own metadata, from everyone.
+- Meanwhile, the frontier labs kept shipping smarter models.
+- And tools that make a lot of those apps look optional.
 
 ## 12. The apps are absorbed (`#absorb`)
 
-- One by one, the lab absorbs the apps it can replace.
-- Their data flows into its metadata, and it grows with every one.
+- One by one, the apps get absorbed.
+- Their data comes along for the ride.
 
 ## 13. Three labs (`#rivals`)
 
-- There is not just one lab; there are several, competing for every company.
+- As the models converge, every lab needs something to set it apart.
 
 ## 14. The labs merge (`#merge-1`)
 
-- But scale rewards the biggest.
-- The labs merge, and then merge again, until there is only one.
+- Cue the partnerships and acquisitions.
+- Keep going, and you end up with one very big company.
 
 ## 15. The Final Frontier (`#final-frontier`)
 
-- The Final Frontier.
+- _(Silence; let the caption read.)_
 
 ## 16. The Singularity (`#engulf`)
 
-- It keeps growing until it holds everything, and every company inside it.
-- Welcome to the Singularity.
+- Which works out great.
+- _(Beat, as the frame goes black.)_ Up to a point.
 
 ## 17. Don't Panic (`#dont-panic`)
 
@@ -88,54 +88,47 @@ One section per slide, numbered as in the pager (`n / 28`). Each bullet is one s
 
 ## 18. Back to your company (`#spread-again`)
 
-- Let's go back to your company, and its apps.
+- Instead of outsourcing your data and your compute,
 
 ## 19. Your data, in ECHO (`#echo-hub`)
 
-- Suppose your data lived with you instead, inside your company.
-- That is what ECHO is for.
+- DXOS lets you build your own agent-driven apps, and keep the keys to your data. _(verify: replicas sync through DXOS EDGE)_
 
 ## 20. The ECHO hypergraph (`#echo-spaces`)
 
-- ECHO is a hypergraph of spaces.
-- Spaces hold your data; they nest, and they link to one another.
-- Your personal work, your company, your partners and your customers each have their own.
+- With the ECHO hypergraph, teams spin up their own private spaces.
+- Each one plugs into the data it needs, inside and out.
 
 ## 21. A graph of objects (`#objects`)
 
-- Inside a space, your data is a graph of objects.
-- Documents, tasks, messages and records, connected to each other.
+- Inside, a constellation of objects: documents, files, records and messages.
 
 ## 22. One object (`#object-detail`)
 
-- Every object is something you can open, share and work on.
+- Composer, the super app, brings over a hundred plugins: components, tools and agent skills.
 
 ## 23. People and agents together (`#object-thread`)
 
-- People and agents work on the same objects, in the same place.
-- Here a team asks an agent to draft an update.
-- And the agent creates a new object, linked to the one it came from.
+- People and agents work side by side, in real time, in the same context.
+- And what they make syncs straight back into the space.
 
 ## 24. Work that builds on itself (`#object-created`)
 
-- That new object becomes the next thing to work on.
-- Meanwhile, other teams are working with their own agents, on their own objects.
-- Each conversation leaves something behind, and it all stays connected.
+- Where everyone else can pick it up.
+- Meanwhile, agents keep the workflows moving between teams.
 
 ## 25. Everyone at work (`#echo-spaces-again`)
 
-- Pull back, and every space is busy.
-- Conversations everywhere, between people and agents, on your data, in your spaces.
+- DXOS becomes the operating system for your enterprise.
+- And ECHO becomes its brain: flexible, secure, and yours.
 
 ## 26. Your company again (`#echo-hub-again`)
 
-- And all of it lives inside your company.
+- Your compute and intelligence, back in house. _(verify: functions run on Cloudflare Workers)_
 
 ## 27. The silos fold in (`#saas-merge`)
 
-- Now the apps you used no longer need their own copies of your data.
-- One by one, that data comes home, into ECHO.
-- And the vendors that held it fade away.
+- And your vendor list gets a little shorter every year.
 
 ## 28. DXOS (`#company-fills`)
 
@@ -143,3 +136,62 @@ One section per slide, numbered as in the pager (`n / 28`). Each bullet is one s
 - Your team.
 - Your apps.
 - Your data.
+
+## Timing
+
+Words and the seconds they need at 2.5 words a second, plus the half-second lead-in, against each slide's hold in
+`record.mjs` (`HOLDS`). **Bold** rows run over and need the proposed hold; slide 14's hold covers both its stages
+(`merge-1` runs on into `merge-2`).
+
+| #   | Slide                | Words | Needs | Hold | Proposed |
+| --- | -------------------- | ----: | ----: | ---: | -------: |
+| 1   | `blank`              |     0 |     — |  1.5 |      1.5 |
+| 2   | `beginning`          |     6 |   2.9 |    4 |        4 |
+| 3   | `silo`               |     7 |   3.3 |  3.5 |      3.5 |
+| 4   | **`silo-comms`**     |    19 |   8.1 |    5 |      8.5 |
+| 5   | **`scale`**          |    13 |   5.7 |  4.5 |        6 |
+| 6   | `competitors`        |    16 |   6.9 |  8.5 |      8.5 |
+| 7   | **`spread`**         |     8 |   3.7 |  3.5 |        4 |
+| 8   | **`spread-comms`**   |    13 |   5.7 |    5 |        6 |
+| 9   | `frontier`           |     4 |   2.1 |  3.5 |      3.5 |
+| 10  | **`frontier-comms`** |    26 |  10.9 |    5 |       11 |
+| 11  | **`orbit`**          |    19 |   8.1 |    5 |      8.5 |
+| 12  | `absorb`             |    14 |   6.1 |  6.5 |      6.5 |
+| 13  | **`rivals`**         |    12 |   5.3 |  4.5 |      5.5 |
+| 14  | `merge-1`            |    16 |   6.9 |    7 |        7 |
+| 15  | `final-frontier`     |     0 |     — |    6 |        6 |
+| 16  | `engulf`             |     8 |   3.7 |   12 |       12 |
+| 17  | `dont-panic`         |     9 |   4.1 |    5 |        5 |
+| 18  | `spread-again`       |     8 |   3.7 |    4 |        4 |
+| 19  | **`echo-hub`**       |    15 |   6.5 |    4 |      6.5 |
+| 20  | **`echo-spaces`**    |    22 |   9.3 |  5.5 |      9.5 |
+| 21  | `objects`            |    10 |   4.5 |    5 |        5 |
+| 22  | **`object-detail`**  |    14 |   6.1 |    5 |      6.5 |
+| 23  | **`object-thread`**  |    24 |  10.1 |   10 |     10.5 |
+| 24  | `object-created`     |    15 |   6.5 |   14 |       14 |
+| 25  | `echo-spaces-again`  |    17 |   7.3 |   10 |       10 |
+| 26  | `echo-hub-again`     |     7 |   3.3 |    4 |        4 |
+| 27  | `saas-merge`         |    10 |   4.5 |    9 |        9 |
+| 28  | `company-fills`      |     9 |   4.1 |   10 |       10 |
+
+The current holds run 2:50.5; the proposed ones run 3:16.0. 11 slides run over
+(4, 5, 7, 8, 10, 11, 13, 19, 20, 22, 23).
+
+## 60-second cut
+
+About 136 words, 54 seconds spoken, which leaves room for the beats. The cut keeps the slides named in bold;
+each line starts as its slide is entered.
+
+- **2. In the Beginning:** In the beginning, there was SaaS, and it was really, really good.
+- **6. Your competitors:** But scale rewrote the economics, and every vendor dug a moat.
+- **7. Many silos:** Now the average company juggles dozens of apps.
+- **10. Everyone talks to the lab:** Then AI showed up, and your people opened the gates to their data.
+- **11. The lab at the centre:** The frontier labs made a lot of those apps look optional.
+- **14. The labs merge:** Keep going, and you end up with one very big company.
+- **16. The Singularity:** Which works out great. Up to a point.
+- **17. Don't Panic:** Don't panic. It doesn't have to be this way.
+- **19. Your data, in ECHO:** DXOS lets you build your own agent-driven apps, and keep the keys to your data.
+- **20. The ECHO hypergraph:** Teams spin up private spaces, plugged into the data they need.
+- **23. People and agents together:** People and agents work side by side, in real time.
+- **25. Everyone at work:** And ECHO becomes the brain of your organization.
+- **28. DXOS:** This is DXOS. Your team. Your apps. Your data.
