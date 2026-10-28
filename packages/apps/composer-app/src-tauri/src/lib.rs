@@ -383,6 +383,14 @@ pub fn run() {
                     Ok(proxy) => window_builder.proxy_url(proxy.parse().expect("TAURI_WEBDRIVER_PROXY is a URL")),
                     Err(_) => window_builder,
                 };
+                // `TAURI_WEBDRIVER_SPACE` names the Space (a SkyLight managed space id) the window opens on, so a
+                // driven take never lands on whichever desktop the user is looking at: hidden until it has moved there.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                let space = std::env::var("TAURI_WEBDRIVER_SPACE")
+                    .ok()
+                    .map(|space| space.parse::<u64>().expect("TAURI_WEBDRIVER_SPACE is a space id"));
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                let window_builder = window_builder.visible(space.is_none());
                 let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
@@ -419,6 +427,12 @@ pub fn run() {
                         set(view, selector, false);
                     }
                 })?;
+
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                if let Some(space) = space {
+                    move_to_space(&main_window, space)?;
+                    main_window.show()?;
+                }
 
                 // Before anything runs in the page: the client opens its storage during boot.
                 #[cfg(target_os = "linux")]
@@ -528,4 +542,32 @@ pub fn run() {
                 }
             }
         });
+}
+
+/// Moves the window to a Space through SkyLight SPI, which a process may use on its own windows.
+#[cfg(all(feature = "webdriver", target_os = "macos"))]
+fn move_to_space(window: &tauri::WebviewWindow, space: u64) -> anyhow::Result<()> {
+    use core_foundation::{array::CFArray, base::TCFType, number::CFNumber};
+    use std::ffi::{c_char, c_int, c_void};
+    extern "C" {
+        fn dlopen(path: *const c_char, mode: c_int) -> *mut c_void;
+        fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
+        fn sel_registerName(name: *const c_char) -> *const c_void;
+        fn objc_msgSend();
+    }
+    unsafe {
+        let skylight = dlopen(c"/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight".as_ptr(), 2);
+        anyhow::ensure!(!skylight.is_null(), "SkyLight is unavailable");
+        let connection = dlsym(skylight, c"SLSMainConnectionID".as_ptr());
+        let move_windows = dlsym(skylight, c"SLSMoveWindowsToManagedSpace".as_ptr());
+        anyhow::ensure!(!connection.is_null() && !move_windows.is_null(), "SkyLight lacks the Space calls");
+        let connection: unsafe extern "C" fn() -> c_int = std::mem::transmute(connection);
+        let move_windows: unsafe extern "C" fn(c_int, *const c_void, u64) = std::mem::transmute(move_windows);
+        let window_number: unsafe extern "C" fn(*mut c_void, *const c_void) -> isize =
+            std::mem::transmute(objc_msgSend as *const ());
+        let number = window_number(window.ns_window()?, sel_registerName(c"windowNumber".as_ptr()));
+        let windows = CFArray::from_CFTypes(&[CFNumber::from(number as i64)]);
+        move_windows(connection(), windows.as_concrete_TypeRef() as *const c_void, space);
+    }
+    Ok(())
 }
