@@ -9,10 +9,11 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 
+import { type Clock, createClock } from '@dxos/animation';
+
 import {
   type Bounds,
   type Camera,
-  type Clock,
   type ElementId,
   type Endpoint,
   type LayerId,
@@ -24,7 +25,6 @@ import {
   type Side,
   type Tool,
   type ViewId,
-  createClock,
 } from '../model/index.ts';
 import { type Clipboard, type PartKey } from '../utils/index.ts';
 

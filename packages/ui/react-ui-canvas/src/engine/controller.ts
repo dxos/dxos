@@ -6,6 +6,17 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
+  clampTime,
+  createTimeline,
+  getPath,
+  keyTimes,
+  moveKeys,
+  removeKey as removeTimelineKey,
+  setKey,
+  timelineFps,
+} from '@dxos/animation';
+
+import {
   type BackgroundGrid,
   type Bounds,
   type Camera,
@@ -23,22 +34,14 @@ import {
   type ViewId,
   type ViewMap,
   type ViewStore,
-  clampTime,
-  createTimeline,
   getElement,
-  getPath,
   isInstanceNode,
   isLink,
   isViewNode,
-  keyTimes,
-  moveKeys,
   nodeAnimatable,
   nodeDef,
   pruneOrphaned,
-  removeKey as removeTimelineKey,
-  setKey,
   storeVersions,
-  timelineFps,
 } from '../model/index.ts';
 import {
   DRILL_ANIMATION_MS,

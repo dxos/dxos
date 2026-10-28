@@ -6,12 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
+import { type Timeline, createTimeline, setKey } from '@dxos/animation';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { ViewBuilder } from '../../builder/index.ts';
-import { type Timeline, type View, createMemoryStore, createTimeline, setKey } from '../../model/index.ts';
+import { type View, createMemoryStore } from '../../model/index.ts';
 import { Canvas } from './Canvas.tsx';
 
 /** A node drawn on the scene itself, not inside an instance (which draws its composite's nodes under their own ids). */

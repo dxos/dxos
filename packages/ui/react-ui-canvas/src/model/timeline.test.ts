@@ -4,23 +4,19 @@
 
 import { describe, test } from 'vitest';
 
-import { ViewBuilder } from '../builder/index.ts';
-import { reduceIntent } from '../engine/index.ts';
 import {
-  BASE_ANIMATABLE,
   animatableProperties,
-  applyCameraKey,
-  cameraKey,
   createTimeline,
-  ease,
   keyTimes,
   moveKeys,
   removeKey,
-  sampleCamera,
-  sampleView,
   setKey,
   trackValue,
-} from './timeline.ts';
+} from '@dxos/animation';
+
+import { ViewBuilder } from '../builder/index.ts';
+import { reduceIntent } from '../engine/index.ts';
+import { BASE_ANIMATABLE, applyCameraKey, cameraKey, sampleCamera, sampleView } from './timeline.ts';
 import { CAMERA_TARGET, InstanceNode, RectNode, type View } from './types.ts';
 
 const {
@@ -39,25 +35,6 @@ const animated = (): View => {
   timeline = setKey(timeline, 'a', 'style.opacity', { t: 1, value: 1 });
   return { ...base, timeline };
 };
-
-describe('easing', () => {
-  test('named curves start at 0, end at 1, and bend as named', ({ expect }) => {
-    for (const easing of ['linear', 'ease-in', 'ease-out', 'ease-in-out'] as const) {
-      expect(ease(easing, 0)).toBe(0);
-      expect(ease(easing, 1)).toBe(1);
-    }
-    expect(ease('ease-in', 0.5)).toBeLessThan(0.5);
-    expect(ease('ease-out', 0.5)).toBeGreaterThan(0.5);
-    expect(ease('step', 0.99)).toBe(0);
-  });
-
-  test('a bezier matches CSS: ease is (0.25, 0.1, 0.25, 1), and a y past 1 overshoots', ({ expect }) => {
-    expect(ease({ bezier: [0.25, 0.1, 0.25, 1] }, 0.5)).toBeCloseTo(0.8024, 3);
-    const back = { bezier: [0.34, 1.56, 0.64, 1] as [number, number, number, number] };
-    const peak = Math.max(...Array.from({ length: 50 }, (_, index) => ease(back, index / 50)));
-    expect(peak).toBeGreaterThan(1);
-  });
-});
 
 describe('sampleView', () => {
   test('a scene without a timeline is returned as it is', ({ expect }) => {

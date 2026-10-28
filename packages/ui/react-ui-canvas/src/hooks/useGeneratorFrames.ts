@@ -4,12 +4,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import {
-  type GeneratorCompiler,
-  type GeneratorFrames,
-  GeneratorHost,
-  type GeneratorSource,
-} from '../generator/index.ts';
+import { type ModuleCompiler } from '@dxos/animation';
+
+import { type GeneratorFrames, GeneratorHost, type GeneratorSource } from '../generator/index.ts';
 import { type View, isGeneratorNode } from '../model/index.ts';
 
 export type UseGeneratorFramesOptions = {
@@ -18,7 +15,7 @@ export type UseGeneratorFramesOptions = {
   /** The clock's time. */
   time: number;
   sources: Readonly<Record<string, GeneratorSource>>;
-  compile?: GeneratorCompiler;
+  compile?: ModuleCompiler;
   createWorker?: () => Worker;
 };
 

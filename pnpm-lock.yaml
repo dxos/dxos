@@ -3412,6 +3412,19 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
 
+  packages/common/animation:
+    dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      esbuild-wasm:
+        specifier: 'catalog:'
+        version: 0.28.0
+    devDependencies:
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+
   packages/common/async:
     dependencies:
       '@dxos/context':
@@ -9450,6 +9463,9 @@ importers:
 
   packages/plugins/plugin-canvas:
     dependencies:
+      '@dxos/animation':
+        specifier: workspace:*
+        version: link:../../common/animation
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -23132,6 +23148,43 @@ importers:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
 
+  packages/ui/react-ui-animation:
+    dependencies:
+      '@dxos/animation':
+        specifier: workspace:*
+        version: link:../../common/animation
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)(react@19.2.7)(scheduler@0.27.0)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../ui-theme
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.3.4'
+        version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+
   packages/ui/react-ui-assistant:
     dependencies:
       '@codemirror/view':
@@ -23403,6 +23456,9 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.13
+      '@dxos/animation':
+        specifier: workspace:*
+        version: link:../../common/animation
       '@dxos/diagram':
         specifier: workspace:*
         version: link:../../common/diagram
@@ -23415,6 +23471,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
+      '@dxos/react-ui-animation':
+        specifier: workspace:*
+        version: link:../react-ui-animation
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -23436,9 +23495,6 @@ importers:
       d3:
         specifier: 'catalog:'
         version: 7.9.0
-      esbuild-wasm:
-        specifier: 'catalog:'
-        version: 0.28.0
     devDependencies:
       '@dxos/log':
         specifier: workspace:*

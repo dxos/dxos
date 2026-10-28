@@ -8,6 +8,8 @@
 // functions here that return the scenes and intents the view applies, so each is one undoable step.
 //
 
+import { type Timeline, type Track } from '@dxos/animation';
+
 import {
   type Bounds,
   type Endpoint,
@@ -21,8 +23,6 @@ import {
   type Point,
   type Port,
   type Side,
-  type Timeline,
-  type Track,
   type View,
   type ViewId,
   type ViewMap,

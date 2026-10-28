@@ -14,13 +14,14 @@ import {
   useState,
 } from 'react';
 
+import { type Timeline } from '@dxos/animation';
+
 import { type CanvasAtoms, type Drag } from '../../engine/index.ts';
 import {
   type Bounds,
   type Camera,
   type Point,
   type Size,
-  type Timeline,
   type ViewId,
   applyCameraKey,
   sampleCamera,

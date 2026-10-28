@@ -5,8 +5,10 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import { createClock, createTimeline, setKey } from '@dxos/animation';
+
 import { ViewBuilder } from '../builder/index.ts';
-import { type Intent, type View, createClock, createMemoryStore, createTimeline, setKey } from '../model/index.ts';
+import { type Intent, type View, createMemoryStore } from '../model/index.ts';
 import { animate, rewriteIntent } from './animate.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
 

@@ -13,21 +13,17 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
   type AnimatableKind,
-  BASE_ANIMATABLE,
   type Clock,
-  type Intent,
-  type Node,
-  type NodeValues,
   type Timeline,
-  type View,
   createTimeline,
   getPath,
   hasTrack,
   removePath,
-  sampleView,
   setKey,
   setPath,
-} from '../model/index.ts';
+} from '@dxos/animation';
+
+import { BASE_ANIMATABLE, type Intent, type Node, type NodeValues, type View, sampleView } from '../model/index.ts';
 import { resizeNode } from '../utils/index.ts';
 import { type Projection } from './projection.ts';
 

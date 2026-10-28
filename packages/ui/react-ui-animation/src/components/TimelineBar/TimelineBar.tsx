@@ -7,12 +7,12 @@ import React, { type KeyboardEvent, type PointerEvent, useCallback, useRef, useS
 import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { FLOATING_BAR } from '../../../utils/index.ts';
-import { type PanelProps } from '../types.ts';
-
-export type TimelinePanelProps = PanelProps & {
+export type TimelineBarProps = Util.ThemedClassName<{
+  /** Shows its controls without letting them change the keys. */
+  readonly?: boolean;
   /** Seconds. */
   time: number;
   duration: number;
@@ -30,7 +30,7 @@ export type TimelinePanelProps = PanelProps & {
   onRemoveKey?: () => void;
   /** Moves the selection's keys at `from` to `to`; offered, a diamond drags along the track. */
   onMoveKey?: (from: number, to: number) => void;
-};
+}>;
 
 /** The timeline's controls show no focus ring: focus is visible as the playhead and keys respond to the keyboard. */
 const NO_RING = 'focus-visible:ring-0';
@@ -52,13 +52,13 @@ export const formatTime = (t: number, fps: number): string => {
 };
 
 /**
- * The collapsed timeline (ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
+ * The collapsed timeline (react-ui-canvas ANIMATION.md §5.8): play and pause, a track to scrub the playhead along with the selection's
  * keys on it, the time, the key toggle and the auto-key toggle. Dragging the track scrubs; clicking a diamond moves the
  * playhead to it. On the track, the arrows step a frame (with Shift, a second), ⌘ or Ctrl with an arrow jumps to the
  * previous or next key (the start or end when there is none that way), and Delete removes the key under the playhead. On the play button, Left and Right jump to the
  * keys (or ends) with ⌘ or Ctrl and scrub otherwise, Enter keys the playhead, Delete removes the key there and Space plays and pauses.
  */
-export const TimelinePanel = ({
+export const TimelineBar = ({
   classNames,
   time,
   duration,
@@ -73,7 +73,7 @@ export const TimelinePanel = ({
   onAddKey,
   onRemoveKey,
   onMoveKey,
-}: TimelinePanelProps) => {
+}: TimelineBarProps) => {
   const current = keyAt(keys, time, fps);
   // The key being dragged and where it would land; a press that never moves stays a click that seeks.
   const [dragging, setDragging] = useState<{ from: number; to: number }>();
@@ -129,7 +129,7 @@ export const TimelinePanel = ({
   );
   const at = (t: number) => `${duration > 0 ? (t / duration) * 100 : 0}%`;
   return (
-    <Toolbar.Root classNames={mx('min-w-[24rem]', FLOATING_BAR, classNames)} data-testid='timeline'>
+    <Toolbar.Root classNames={mx('min-w-[24rem]', classNames)} data-testid='timeline'>
       <Button.Root
         variant='ghost'
         iconOnly

@@ -4,10 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { type GeneratorNode, type View, createTimeline, setKey } from '../model/index.ts';
+import { createTimeline, setKey } from '@dxos/animation';
+import { createEsbuildCompiler } from '@dxos/animation';
+
+import { type GeneratorNode, type View } from '../model/index.ts';
 import { pathBounds } from '../utils/index.ts';
 import { checkGenerator } from './check.ts';
-import { createEsbuildCompiler, loadGenerator } from './compile.ts';
+import { loadGenerator } from './compile.ts';
 import { GeneratorHost } from './host.ts';
 import { along, andThen, jitter, orbit, seeded, settle } from './motion.ts';
 import { GeneratorRunner } from './runner.ts';

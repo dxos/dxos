@@ -1,6 +1,6 @@
 # plugin-animator — Tasks
 
-_Resume: start Phase 1 (extract `@dxos/animation` from react-ui-canvas). Uncommitted: none. Last: open questions resolved; `PLUGIN.mdl` written._
+_Resume: finish Phase 1 (script compiler), then Phase 2 (scaffold plugin-animator). Uncommitted: none. Last: Phase 1 neutral core extracted (`@dxos/animation`, `@dxos/react-ui-animation`)._
 
 ## Phase 0: Review and design
 
@@ -16,12 +16,16 @@ paths), design the plugin, and turn the approved design into an MDL spec.
 
 ## Phase 1: Neutral core
 
-- [ ] **Extract `@dxos/animation`** from react-ui-canvas (schemas, timeline functions, clock, effect runtime); no re-exports.
-- [ ] **Extract `@dxos/react-ui-animation`** (timeline bar, clock hooks).
-- [ ] **Serializable `AnimatableAnnotation`** replacing the raw key; migrate react-ui-canvas.
-- [ ] **Value kinds**: vec3, rotation (slerp), colour (OKLab).
-- [ ] **Script compiler**: beats → keys, deterministic; hand keys win (DESIGN.md §5.3, F-3).
-- [ ] **Canvas regression**: existing canvas animation tests and stories pass unchanged.
+- [x] **Extract `@dxos/animation`** from react-ui-canvas (schemas, timeline functions, clock, effect runtime); no re-exports.
+      The generator worker entry, `GeneratorCore`/`GeneratorHost` and the motion library stay in react-ui-canvas: they
+      depend on the canvas `View`, its geometry and its bundle entry.
+- [x] **Extract `@dxos/react-ui-animation`** (`TimelineBar`, `useClock`, `useExposedClock`).
+- [x] **Serializable `AnimatableAnnotation`** replacing the raw key; migrate react-ui-canvas.
+- [x] **Value kinds**: vec3, rotation (slerp), colour (OKLab); a track's optional `kind` names the interpolation.
+- [ ] **Script compiler**: beats → keys, deterministic; hand keys win (DESIGN.md §5.3, F-3). Effects and captions
+      compile to spans beside the timeline.
+- [x] **Canvas regression**: existing canvas node tests pass unchanged (the easing and timeline-bar tests moved with
+      their code). Storybook play tests not run in this phase.
 
 ## Phase 2: plugin-animator and the canvas stage
 

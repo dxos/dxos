@@ -6,13 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { waitFor, within } from 'storybook/test';
 
+import { EXPOSED_CLOCK_KEY } from '@dxos/animation';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Canvas, EXPOSED_CLOCK_KEY, createCanvasAtoms, useRegistry } from '@dxos/react-ui-canvas/scene';
+import { Canvas, createCanvasAtoms, useRegistry } from '@dxos/react-ui-canvas/scene';
 import { Loading } from '@dxos/react-ui/testing';
 import { createStoryDecorators } from '@dxos/storybook-testing';
 

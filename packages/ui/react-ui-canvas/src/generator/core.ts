@@ -7,10 +7,11 @@
 // it: it holds the loaded modules, the scene, and one runner per generator node, and answers frame requests.
 //
 
+import { type RunnerOptions, hashSeed } from '@dxos/animation';
+
 import { type NodeId, type View, isGeneratorNode } from '../model/index.ts';
 import { loadGenerator } from './compile.ts';
-import { hashSeed } from './motion.ts';
-import { GeneratorRunner, type RunnerOptions } from './runner.ts';
+import { GeneratorRunner } from './runner.ts';
 import { type GeneratorFrame, type GeneratorModule } from './types.ts';
 
 /** A generator node to draw: which compiled module (by key) and its parameter schema. */

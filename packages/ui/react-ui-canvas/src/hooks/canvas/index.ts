@@ -7,7 +7,6 @@ export * from './useCanvasHistory.ts';
 export * from './useDocumentCommands.ts';
 export * from './useEditMode.ts';
 export * from './useElementHandlers.ts';
-export * from './useExposedClock.ts';
 export * from './useGesturePreview.ts';
 export * from './useNodeDrop.ts';
 export * from './useObjectActions.ts';

@@ -4,6 +4,7 @@
 
 import type * as Atom from 'effect/reactivity/Atom';
 
+import { type Timeline } from '@dxos/animation';
 import { createContext } from '@dxos/react-hooks';
 
 import {
@@ -35,7 +36,6 @@ import {
   type SceneLook,
   type Size,
   type ThemeRegistry,
-  type Timeline,
   type View,
   type ViewId,
   type ViewStore,

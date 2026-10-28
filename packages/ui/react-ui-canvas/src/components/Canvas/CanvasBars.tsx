@@ -12,12 +12,13 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
+import { keyTimes, timelineFps } from '@dxos/animation';
+import { TimelineBar } from '@dxos/react-ui-animation';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { keyTimes, timelineFps } from '../../model/index.ts';
-import { NOMINAL_ZOOM } from '../../utils/index.ts';
-import { DisplayPanel, TimelinePanel, ToolsPanel } from '../panels/index.ts';
+import { FLOATING_BAR, NOMINAL_ZOOM } from '../../utils/index.ts';
+import { DisplayPanel, ToolsPanel } from '../panels/index.ts';
 import {
   ActionToolbar,
   type CameraActions,
@@ -244,7 +245,8 @@ export const CanvasTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1
   }
   return (
     <div className={mx(barFrame, 'max-w-[calc(100%-2rem)]', classNames)}>
-      <TimelinePanel
+      <TimelineBar
+        classNames={FLOATING_BAR}
         time={time}
         duration={timeline.duration}
         playing={playing}

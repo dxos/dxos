@@ -10,6 +10,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Timeline, trackId } from '@dxos/animation';
 import { type ContentMap } from '@dxos/diagram';
 import {
   BackgroundGrid,
@@ -23,7 +24,6 @@ import {
   OPACITY_PATH,
   StyleClass,
   type StyleMap,
-  Timeline,
   type View,
   type ViewId,
   ViewKind,
@@ -33,7 +33,6 @@ import {
   isViewNode,
   orphanViews,
   sortByZ,
-  trackId,
   withLegacyNodeType,
   withLegacyParams,
 } from '@dxos/react-ui-canvas/headless';

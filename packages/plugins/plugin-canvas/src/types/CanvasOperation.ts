@@ -6,11 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Easing } from '@dxos/animation';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Bounds, Easing } from '@dxos/react-ui-canvas/headless';
+import { Bounds } from '@dxos/react-ui-canvas/headless';
 
 import * as Generator from './Generator.ts';
 

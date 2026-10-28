@@ -11,6 +11,8 @@
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
+import { removeTargets } from '@dxos/animation';
+
 import {
   type Capabilities,
   type Intent,
@@ -21,7 +23,6 @@ import {
   type ViewId,
   type ViewStore,
   endpointNode,
-  removeTargets,
   updateView,
 } from '../model/index.ts';
 import { type LatticeSpec, layoutView, reduceLayerIntent, resizeNode } from '../utils/index.ts';

@@ -11,16 +11,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AnimatableAnnotation, Timeline } from '@dxos/animation';
 import { Scene as Dsl } from '@dxos/diagram';
 import { Annotation } from '@dxos/echo';
 import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
-
-/**
- * Marks a node property the timeline may key (ANIMATION.md §5.2): its value kind, which picks the interpolator. A host
- * type annotates its own fields the same way.
- */
-export const AnimatableAnnotationId = '@dxos/react-ui-canvas/annotation/Animatable';
-export type AnimatableKind = 'number' | 'point' | 'size' | 'discrete';
 
 export const Point = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Point = Schema.Schema.Type<typeof Point>;
@@ -47,10 +41,10 @@ const gridNumber = (title: string) => Schema.Number.annotate({ title, [StepAnnot
 /** `Point` and `Size` for a node's own frame, laid out as one row each in the properties form. */
 const NodeCenter = Schema.Struct({ x: gridNumber('X'), y: gridNumber('Y') })
   .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('x', 'y') }))
-  .annotate({ [AnimatableAnnotationId]: 'point' });
+  .pipe(AnimatableAnnotation.set('point'));
 const NodeSize = Schema.Struct({ width: gridNumber('Width'), height: gridNumber('Height') })
   .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('width', 'height') }))
-  .annotate({ [AnimatableAnnotationId]: 'size' });
+  .pipe(AnimatableAnnotation.set('size'));
 
 export const Bounds = Schema.Struct({
   x: Schema.Number,
@@ -148,11 +142,9 @@ export const styleFields = {
   tone: Schema.optional(NodeTone),
   /** How opaque the whole node draws, 0 to 1; unset is 1. */
   opacity: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))).annotate({
-      title: 'Opacity',
-      [StepAnnotationId]: 0.1,
-      [AnimatableAnnotationId]: 'number',
-    }),
+    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 })))
+      .annotate({ title: 'Opacity', [StepAnnotationId]: 0.1 })
+      .pipe(AnimatableAnnotation.set('number')),
   ),
   lineStyle: lineStyleFields.lineStyle,
   rounded: Schema.optional(Schema.Boolean),
@@ -185,11 +177,9 @@ export const nodeBase = {
   size: NodeSize,
   /** Degrees clockwise about `center`; unset is 0. */
   rotation: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: -360, maximum: 360 }))).annotate({
-      title: 'Rotation',
-      [StepAnnotationId]: 15,
-      [AnimatableAnnotationId]: 'number',
-    }),
+    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: -360, maximum: 360 })))
+      .annotate({ title: 'Rotation', [StepAnnotationId]: 15 })
+      .pipe(AnimatableAnnotation.set('number')),
   ),
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
@@ -644,45 +634,8 @@ export type Layer = Schema.Schema.Type<typeof Layer>;
 // Timeline (ANIMATION.md §5.2)
 //
 
-/** How the span that ends at a key is shaped; the named curves are cubic, `bezier` a CSS cubic-bezier. */
-export const Easing = Schema.Union([
-  Schema.Literals(['linear', 'step', 'ease-in', 'ease-out', 'ease-in-out']),
-  Schema.Struct({ bezier: Schema.Tuple([Schema.Number, Schema.Number, Schema.Number, Schema.Number]) }),
-]);
-export type Easing = Schema.Schema.Type<typeof Easing>;
-
-/** A property's value at a time; `easing` shapes the span from the previous key to this one. */
-export const Keyframe = Schema.Struct({
-  t: Schema.Number,
-  value: Schema.Unknown,
-  easing: Schema.optional(Easing),
-});
-export type Keyframe = Schema.Schema.Type<typeof Keyframe>;
-
-/** The target of the camera's tracks; a node track names the node's id. */
+/** The target of the camera's tracks; a node track names the node's id. The camera's are `x`, `y` and `zoom`. */
 export const CAMERA_TARGET = 'camera';
-
-/**
- * One property of one target over time, keys sorted by `t`. `property` is a dot path into the node (`center`,
- * `params.rate`); the camera's are `x` and `y` (the scene point at the view's centre) and `zoom`.
- */
-export const Track = Schema.Struct({
-  target: Schema.String,
-  property: Schema.String,
-  keys: Schema.Array(Keyframe),
-});
-export type Track = Schema.Schema.Type<typeof Track>;
-
-/** A scene's animation: its length, and its tracks by id (`<target>:<property>`). */
-export const Timeline = Schema.Struct({
-  /** Seconds. */
-  duration: Schema.Number,
-  loop: Schema.optional(Schema.Boolean),
-  /** Frames per second that frame stepping and export use; 30 when unset. */
-  fps: Schema.optional(Schema.Number),
-  tracks: Schema.Record(Schema.String, Track),
-});
-export type Timeline = Schema.Schema.Type<typeof Timeline>;
 
 /** A plain View, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
 export const ViewKind = Schema.Literals(['view', 'composite']);

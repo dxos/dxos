@@ -3,22 +3,23 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
+import { createClock } from '@dxos/animation';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { useClock, useRegistry } from '../../../hooks/index.ts';
-import { createClock } from '../../../model/index.ts';
-import { TimelinePanel, keyAt } from './TimelinePanel.tsx';
+import { useClock } from '../../hooks/index.ts';
+import { TimelineBar, keyAt } from './TimelineBar.tsx';
 
 type StoryArgs = { duration: number; fps: number; readonly?: boolean };
 
-/** The bar over a real view clock, as `Canvas.Timeline` drives it, with keys kept in local state. */
+/** The bar over a real clock, as react-ui-canvas's `Canvas.Timeline` drives it, with keys kept in local state. */
 const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
-  const registry = useRegistry();
+  const registry = useContext(RegistryContext);
   const clock = useMemo(() => createClock(), []);
   useClock(clock, { duration });
   const time = useAtomValue(clock.time);
@@ -26,7 +27,7 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
   const [keys, setKeys] = useState<number[]>([0, 1.5]);
   const [autoKey, setAutoKey] = useState(true);
   return (
-    <TimelinePanel
+    <TimelineBar
       time={time}
       duration={duration}
       playing={playing}
@@ -49,7 +50,7 @@ const DefaultStory = ({ duration, fps, readonly }: StoryArgs) => {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'ui/react-ui-canvas/components/panels/TimelinePanel',
+  title: 'ui/react-ui-animation/components/TimelineBar',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations: uiTranslations },

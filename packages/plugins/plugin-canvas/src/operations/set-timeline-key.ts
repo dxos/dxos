@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { createTimeline, setKey, trackId } from '@dxos/animation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { createTimeline, setKey, trackId } from '@dxos/react-ui-canvas/headless';
 
 import { CanvasOperation } from '#types';
 

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { jumpTarget } from './TimelinePanel.tsx';
+import { jumpTarget } from './TimelineBar.tsx';
 
 describe('jumpTarget', () => {
   test('goes to the next or previous key, and to the end or start when there is none that way', ({ expect }) => {

@@ -4,9 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { createTimeline, setKey } from '@dxos/animation';
+
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type Node, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
+import { type InstanceNode, type Node, type View, isInstanceNode } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,

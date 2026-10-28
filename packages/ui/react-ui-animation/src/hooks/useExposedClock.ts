@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { useEffect, useRef } from 'react';
 
-import { type Clock, type Timeline, exposeClock, timelineFps } from '../../model/index.ts';
-import { type useRegistry } from '../useRegistry.ts';
+import { type Clock, type Timeline, exposeClock, timelineFps } from '@dxos/animation';
 
 /**
- * Publishes the view's clock for a frame renderer, which seeks the clock rather than faking the browser's
- * (ANIMATION.md §7.2); `exportable` off, nothing is published.
+ * Publishes a clock for a frame renderer, which seeks the clock rather than faking the browser's
+ * (react-ui-canvas ANIMATION.md §7.2); `exportable` off, nothing is published.
  */
 export const useExposedClock = (
-  registry: ReturnType<typeof useRegistry>,
+  registry: Registry.AtomRegistry,
   clock: Clock,
   timeline: Timeline | undefined,
   exportable: boolean | undefined,

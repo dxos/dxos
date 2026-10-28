@@ -4,6 +4,7 @@
 
 import { type ReactNode } from 'react';
 
+import { type ModuleCompiler } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
 
 import {
@@ -14,7 +15,7 @@ import {
   type InspectorMode,
   type Projection,
 } from '../../engine/index.ts';
-import { type GeneratorCompiler, type GeneratorSource } from '../../generator/index.ts';
+import { type GeneratorSource } from '../../generator/index.ts';
 import { type SceneDisplay } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
@@ -118,7 +119,7 @@ export type CanvasRootProps = Util.ThemedClassName<{
   /** The generators the scene's generator nodes reference, by reference (ANIMATION.md §6.6). */
   generators?: Readonly<Record<string, GeneratorSource>>;
   /** Compiles a generator's source (`createEsbuildCompiler`); without it generator nodes draw nothing. */
-  compileGenerator?: GeneratorCompiler;
+  compileGenerator?: ModuleCompiler;
   /** Starts the generator worker; without it generators run in the page. */
   createGeneratorWorker?: () => Worker;
   children?: ReactNode;

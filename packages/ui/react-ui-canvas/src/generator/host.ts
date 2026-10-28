@@ -8,8 +8,9 @@
 // runs the same core in-process (a headless check; tests).
 //
 
+import { type ModuleCompiler } from '@dxos/animation';
+
 import { type NodeId, type View, isGeneratorNode } from '../model/index.ts';
-import { type GeneratorCompiler } from './compile.ts';
 import { type CoreRequest, type CoreResponse, GeneratorCore, type GeneratorFrameNode } from './core.ts';
 import { type GeneratorFrame, type GeneratorSource } from './types.ts';
 
@@ -17,7 +18,7 @@ import { type GeneratorFrame, type GeneratorSource } from './types.ts';
 export type GeneratorFrames = { t: number; frames: Record<NodeId, GeneratorFrame> };
 
 export type GeneratorHostOptions = {
-  compile: GeneratorCompiler;
+  compile: ModuleCompiler;
   /** A worker running `generator/worker.ts`; without one, generators run in-process. */
   createWorker?: () => Worker;
   onFrames: (frames: GeneratorFrames) => void;

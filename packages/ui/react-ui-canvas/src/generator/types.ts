@@ -7,6 +7,8 @@
 // generator never touches the DOM; it returns `Shape` lists, plain data the generator layer draws.
 //
 
+import { type EffectStatus, type StatefulEffect, type StatelessEffect } from '@dxos/animation';
+
 import { type Bounds, type Node, type Point, type View } from '../model/index.ts';
 
 /** What a generator draws, in scene coordinates. A hue is a theme hue; `color` a CSS colour, which wins over it. */
@@ -56,23 +58,12 @@ export type GeneratorContext<P = Record<string, unknown>> = {
 };
 
 /** Content that is a function of time alone: sampled anywhere, in any order. */
-export type StatelessGenerator<P = Record<string, unknown>> = {
-  sample: (ctx: GeneratorContext<P>) => Shape[];
-};
+export type StatelessGenerator<P = Record<string, unknown>> = StatelessEffect<GeneratorContext<P>, Shape>;
 
 /** Content with memory, stepped forward at a fixed rate from `init`; `draw` turns a state into shapes. */
-export type StatefulGenerator<P = Record<string, unknown>, S = unknown> = {
-  /** Seconds stepped before t = 0, so the content is already under way when the timeline starts. */
-  warmup?: number;
-  init: (ctx: GeneratorContext<P>) => S;
-  step: (state: S, ctx: GeneratorContext<P>) => S;
-  draw: (state: S, ctx: GeneratorContext<P>) => Shape[];
-};
+export type StatefulGenerator<P = Record<string, unknown>, S = unknown> = StatefulEffect<GeneratorContext<P>, Shape, S>;
 
 export type GeneratorModule<P = Record<string, unknown>, S = unknown> = StatelessGenerator<P> | StatefulGenerator<P, S>;
-
-export const isStateful = (module: GeneratorModule): module is StatefulGenerator =>
-  'init' in module && 'step' in module && 'draw' in module;
 
 /** The source of a generator as the canvas loads it: the host resolves a node's `generator` reference to this. */
 export type GeneratorSource = {
@@ -85,13 +76,10 @@ export type GeneratorSource = {
   version: number;
 };
 
-/** How a generator run stands: running, or paused by an error or by going over its time budget. */
-export type GeneratorStatus = { state: 'running' } | { state: 'paused'; reason: 'error' | 'budget'; message: string };
-
 /** One generator's output for one time. */
 export type GeneratorFrame = {
   shapes: Shape[];
-  status: GeneratorStatus;
+  status: EffectStatus;
   /** Mean milliseconds per step (or sample) over the recent window. */
   stepMs: number;
 };

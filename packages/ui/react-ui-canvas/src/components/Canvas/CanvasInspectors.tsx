@@ -12,6 +12,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { createTimeline } from '@dxos/animation';
 import * as Button from '@dxos/react-ui/Button';
 
 import { type CanvasController } from '../../engine/index.ts';
@@ -24,7 +25,6 @@ import {
   type View,
   type ViewId,
   type ViewStore,
-  createTimeline,
   getElement,
   isInstanceNode,
   isLink,

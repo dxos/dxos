@@ -8,15 +8,16 @@
 // give the same shapes when reached in a different order (from different checkpoints), and draws a contact sheet.
 //
 
+import { type EffectStatus, type ModuleCompiler, STEP_BUDGET_MS, hashSeed } from '@dxos/animation';
+
 import { type Bounds, type NodeId, type View } from '../model/index.ts';
 import { nodeBounds, unionBounds } from '../utils/index.ts';
-import { type GeneratorCompiler, loadGenerator } from './compile.ts';
-import { hashSeed } from './motion.ts';
-import { GeneratorRunner, STEP_BUDGET_MS } from './runner.ts';
-import { type GeneratorStatus, type Shape } from './types.ts';
+import { loadGenerator } from './compile.ts';
+import { GeneratorRunner } from './runner.ts';
+import { type Shape } from './types.ts';
 
 export type CheckOptions = {
-  compile: GeneratorCompiler;
+  compile: ModuleCompiler;
   source: string;
   /** The parameter schema, for bindings. */
   schema?: Record<string, unknown>;
@@ -35,7 +36,7 @@ export type CheckFrame = { t: number; shapes: number };
 export type CheckReport = {
   /** Compile or load errors; nothing else is reported when there are any. */
   errors?: string[];
-  status?: GeneratorStatus;
+  status?: EffectStatus;
   timing?: { meanMs: number; budgetMs: number };
   /** Whether every time gave the same shapes run forward and run backward (restoring from checkpoints). */
   deterministic?: boolean;

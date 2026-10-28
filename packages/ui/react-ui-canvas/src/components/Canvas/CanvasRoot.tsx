@@ -13,6 +13,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { useClock, useExposedClock } from '@dxos/react-ui-animation';
 import { mx } from '@dxos/ui-theme';
 
 import { animate, createCanvasAtoms, noHistory, readonlyCapabilities } from '../../engine/index.ts';
@@ -21,11 +22,9 @@ import {
   SceneLookContext,
   useCanvasController,
   useCanvasHistory,
-  useClock,
   useDocumentCommands,
   useEditMode,
   useElementHandlers,
-  useExposedClock,
   useGeneratorFrames,
   useGesturePreview,
   useNodeDrop,

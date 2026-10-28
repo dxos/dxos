@@ -16,6 +16,9 @@
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
+      "path": "packages/common/animation/tsconfig.json"
+    },
+    {
       "path": "packages/sdk/app-framework/tsconfig.json"
     },
     {
@@ -776,6 +779,9 @@
     },
     {
       "path": "packages/ui/react-ui/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-animation/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-assistant/tsconfig.json"

@@ -8,10 +8,10 @@
 // video's pixels with the origin at the frame's centre, so `EndCard`'s sizes and offsets carry over as they are.
 //
 
+import { type Easing } from '@dxos/animation';
 import { DXOS_HORIZONTAL_LOCKUP, DXOS_LOCKUP_GLYPHS, type DXOSLockupGlyph } from '@dxos/brand/paths';
 import {
   type Bounds,
-  type Easing,
   type InstanceNode,
   type Node,
   type NoteNode,

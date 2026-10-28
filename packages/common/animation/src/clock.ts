@@ -3,16 +3,17 @@
 //
 
 //
-// A view's clock (ANIMATION.md §5.1): the time the view shows, and whether it plays. One rAF loop owned by the clock
-// (`useClock`) advances it while playing; export and tests set `time` directly and never start the loop. Nothing else
-// in the view reads animation-frame timestamps or `performance.now()` to animate, so every animated thing agrees.
+// The clock (react-ui-canvas ANIMATION.md §5.1): the time shown, and whether it plays. One rAF loop owned by the clock
+// (`useClock`, @dxos/react-ui-animation) advances it while playing; export and tests set `time` directly and never
+// start the loop. Nothing else reads animation-frame timestamps or `performance.now()` to animate, so every animated
+// thing agrees.
 //
 
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 export type Clock = {
-  /** Seconds into the scene's timeline. */
+  /** Seconds into the timeline. */
   time: Atom.Writable<number>;
   playing: Atom.Writable<boolean>;
   /** Playback speed; 1 is real time. */
@@ -29,8 +30,8 @@ export const createClock = (): Clock => ({
 export const MAX_CLOCK_STEP = 0.1;
 
 /**
- * What a page offers a frame renderer (`scripts/render-story.mjs`): it seeks the clock, then waits until every element
- * marked `data-frame-time` shows that time, rather than faking the browser's clock.
+ * What a page offers a frame renderer (react-ui-canvas `scripts/render-story.mjs`): it seeks the clock, then waits
+ * until every element marked `data-frame-time` shows that time, rather than faking the browser's clock.
  */
 export type ExposedClock = {
   /** Seconds of the timeline to render. */

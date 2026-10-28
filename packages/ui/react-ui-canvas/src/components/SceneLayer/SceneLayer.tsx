@@ -21,11 +21,13 @@ import React, {
   useState,
 } from 'react';
 
+import { type EffectStatus } from '@dxos/animation';
+import { frameTimeAttribute } from '@dxos/animation';
 import { SvgFile } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
 import { mx } from '@dxos/ui-theme';
 
-import { type GeneratorFrames, type GeneratorStatus, type Shape } from '../../generator/index.ts';
+import { type GeneratorFrames, type Shape } from '../../generator/index.ts';
 import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
@@ -45,7 +47,6 @@ import {
   type StyleMap,
   type View,
   type ViewStore,
-  frameTimeAttribute,
   isDiagramNode,
   isGeneratorNode,
   isInstanceNode,
@@ -485,7 +486,7 @@ const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale,
 };
 
 /** A paused generator's reason, shown over its frame. */
-const GeneratorWarning = ({ status }: { status: Extract<GeneratorStatus, { state: 'paused' }> }) => (
+const GeneratorWarning = ({ status }: { status: Extract<EffectStatus, { state: 'paused' }> }) => (
   <div
     className='absolute top-1 left-1 right-1 flex items-start gap-1 p-1 rounded-sm text-xs bg-modal-surface text-error-text pointer-events-none'
     data-testid='generator-paused'
