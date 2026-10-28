@@ -8,7 +8,9 @@ import React, {
   type KeyboardEventHandler,
   type ReactNode,
   forwardRef,
+  useEffect,
   useMemo,
+  useState,
 } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
@@ -89,6 +91,36 @@ export type PlankProps = Util.ThemedClassName<{
  * (close/solo/etc.) and framework surfaces (NavbarEnd/MenuFooter) are supplied by the container via
  * slots so this component stays free of capabilities/operations.
  */
+/**
+ * False for the first commit of each subject, so the plank's shell paints before the article renders: the article's
+ * render and layout cost more than the rest of the plank, and an open should show at once. A hidden page has no frames
+ * to wait for.
+ */
+const useArticleReady = (id: string): boolean => {
+  const [readyId, setReadyId] = useState<string | undefined>(() =>
+    typeof document === 'undefined' || document.visibilityState === 'hidden' ? id : undefined,
+  );
+  useEffect(() => {
+    if (readyId === id) {
+      return;
+    }
+    if (document.visibilityState === 'hidden') {
+      setReadyId(id);
+      return;
+    }
+    // A task queued from the next frame runs once that frame, the shell's, has painted.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const frame = requestAnimationFrame(() => {
+      timer = setTimeout(() => setReadyId(id));
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
+  }, [id, readyId]);
+  return readyId === id;
+};
+
 export const Plank = forwardRef<HTMLDivElement, PlankProps>(
   (
     {
@@ -117,6 +149,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     // Each plank is a focus area of the shell; its companion follows it.
     const landmark = Main.useMainLandmark(1, onKeyDown);
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
+    const articleReady = useArticleReady(node.id);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
     const label = Theme.toLocalizedString(
@@ -221,7 +254,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           </Pane.Toolbar>
         )}
         <Pane.Content>
-          {node.data === undefined ? (
+          {node.data === undefined || !articleReady ? (
             // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
             // no Article to ask for. The same shell stands in until the Article's own module lands,
             // so the plank does not change under the reader on the way there.
