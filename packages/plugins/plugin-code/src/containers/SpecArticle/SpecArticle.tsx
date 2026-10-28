@@ -37,7 +37,7 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -122,9 +122,9 @@ const shortRef = (ref: string): string => ref.replace(/^origin\//, '');
 const declarationOf = (id: string) =>
   new RegExp(`^\\s*[a-z]+\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(?::|$)`);
 
-export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
+export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<SpecDocument.SpecDocument>, 'subject'> & {
   /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */
-  subject?: Spec.Spec;
+  subject?: SpecDocument.SpecDocument;
   /** Static MDL content, rendered read-only when no `subject` is provided. */
   content?: string;
   /** `github:` key of static content; an ECHO Spec's key comes from its meta keys. */

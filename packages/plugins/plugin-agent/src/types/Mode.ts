@@ -56,3 +56,21 @@ export const getCurrent = (chat: Chat.Chat): string =>
 export const setCurrent = (chat: Obj.Mutable<Chat.Chat>, name: string): void => {
   Annotation.set(chat, CurrentModeAnnotation, name);
 };
+
+/**
+ * The skills mode switches bound to the chat, which the next switch may unbind: never one the chat started with
+ * or one bound any other way.
+ */
+export const ModeSkillsAnnotation = Annotation.make({
+  id: 'org.dxos.agent.chatModeSkills',
+  schema: Schema.Array(Schema.String),
+});
+
+/** The keys of the skills mode switches bound to the chat; `undefined` for a chat no switch has recorded. */
+export const getModeSkills = (chat: Chat.Chat): readonly string[] | undefined =>
+  Annotation.get(chat, ModeSkillsAnnotation).pipe(Option.getOrUndefined);
+
+/** Records the skills mode switches bound to the chat; call inside the caller's `Obj.update`. */
+export const setModeSkills = (chat: Obj.Mutable<Chat.Chat>, keys: readonly string[]): void => {
+  Annotation.set(chat, ModeSkillsAnnotation, [...keys]);
+};

@@ -34,6 +34,7 @@ export default defineConfig({
     'ProjectsEvents': 'src/types/ProjectsEvents.ts',
     'Settings': 'src/types/Settings.ts',
     'Showcase': 'src/types/Showcase.ts',
+    'Spec': 'src/types/Spec.ts',
     'types': 'src/types/index.ts',
   },
   jsx: 'react',

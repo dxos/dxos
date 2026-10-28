@@ -8,9 +8,9 @@ import { useMemo } from 'react';
 
 import { type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Spec, Task } from '@dxos/types';
+import { SpecDocument, Task } from '@dxos/types';
 
-import { Feature, Showcase } from '#types';
+import { Feature, Showcase, Spec } from '#types';
 
 import {
   type FeatureGraphInput,
@@ -84,8 +84,6 @@ export const useFeatureGraph = (
     () => [...new Map([...members, ...dependencies, ...dependents].map((feature) => [feature.id, feature])).values()],
     [members, dependencies, dependents],
   );
-  // Subfeatures name their parent rather than the parent listing them, so they are found among the space's features.
-  const allFeatures = useQuery(scope && db, Filter.type(Feature.Feature));
   // Tasks and showcases matter only for the scope's own cards; a neighbour is shown by its name and status.
   const implementsTasks = useQuery(scope && db, scopeQuery.targetOf(Feature.Implements));
   const demonstrates = useQuery(scope && db, scopeQuery.targetOf(Showcase.Demonstrates));
@@ -106,7 +104,7 @@ export const useFeatureGraph = (
       specPaths
         ? Query.select(
             Filter.foreignKeys(
-              Spec.Spec,
+              SpecDocument.SpecDocument,
               specPaths.split('\n').map((id) => ({ source: Feature.SPEC_KEY_SOURCE, id })),
             ),
           )
@@ -134,7 +132,10 @@ export const useFeatureGraph = (
         const input: FeatureGraphInput = {
           features: features.filter(Feature.instanceOf).map((feature) => {
             const snapshot = get(Obj.atom(feature));
-            const { id, name, description, requirements, status, specs, parent, code } = snapshot;
+            const { id, name, description, requirements, status, specs, code } = snapshot;
+            // The feature this one breaks down: the owner of the spec that lists it.
+            const container = Spec.getContainer(feature);
+            const parent = container && Spec.getOwner(container);
             return {
               id,
               name,
@@ -142,14 +143,25 @@ export const useFeatureGraph = (
               requirements,
               status,
               specs,
-              parent: parent && entityId(parent.uri),
+              spec: container?.id,
+              parent: parent?.id,
               link: Feature.getLink(snapshot),
               code,
             };
           }),
-          children: allFeatures.flatMap((feature) => {
-            const { id, name, status, parent } = get(Obj.atom(feature));
-            return parent ? [[{ id, name, status }, entityId(parent.uri)] as const] : [];
+          // A feature's subfeatures are the features of the spec that breaks it down, read through atoms so an added
+          // one or a changed status reaches the card.
+          children: features.filter(Feature.instanceOf).flatMap((feature) => {
+            const { spec } = get(Obj.atom(feature));
+            const breakdown = spec && get(Obj.atomReactive(spec));
+            if (!Spec.instanceOf(breakdown)) {
+              return [];
+            }
+            const members = get(Obj.atomReactive(get(Obj.atom(breakdown)).features));
+            return members.filter(Feature.instanceOf).map((member) => {
+              const { id, name, status } = get(Obj.atom(member));
+              return [{ id, name, status }, feature.id] as const;
+            });
           }),
           dependsOn: edges,
           implementedBy: implementsTasks.flatMap((relation) => {
@@ -185,7 +197,7 @@ export const useFeatureGraph = (
         const models = buildFeatureModels(input);
         return { features: models, lookup: makeFeatureLookup(models) };
       }),
-    [features, allFeatures, edges, implementsTasks, demonstrates, specObjects],
+    [features, edges, implementsTasks, demonstrates, specObjects],
   );
   return useAtomValue(graphAtom);
 };

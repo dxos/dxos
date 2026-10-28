@@ -19,7 +19,7 @@ import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers.ts';
-import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
+import { makeCreateInvitationUrl, makeCreateJoinUrl, makeCreateObjectUrl } from './helpers.ts';
 
 export * from './app-graph-builder/index.ts';
 export * from './settings-sync/index.ts';
@@ -132,12 +132,19 @@ export const ObservabilityMappings = AppCapability.observabilityMappings(() => i
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   environments: ['browser', 'node', 'tauri'],
-  provides: [SpaceOperationConfig],
-  props: (options: SpaceSchema.SpacePluginOptions) => ({
-    createInvitationUrl: makeCreateInvitationUrl(options),
-    createJoinUrl: makeCreateJoinUrl(options),
-  }),
 });
+export const OperationConfig = Capability.lazyModule(
+  'SpaceOperationConfig',
+  {
+    provides: [SpaceOperationConfig],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({
+      createInvitationUrl: makeCreateInvitationUrl(options),
+      createJoinUrl: makeCreateJoinUrl(options),
+      createObjectUrl: makeCreateObjectUrl(options),
+    }),
+  },
+  () => import('./operation-config.ts'),
+);
 export const Translations = AppCapability.translations([
   ...translations,
   ...componentsTranslations,

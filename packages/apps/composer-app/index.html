@@ -4,10 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="description" content="DXOS Composer" />
     <!-- NOTE: viewport-fit=cover defines safe-area-inset-top, etc. for iOS. -->
-    <meta
-      name="viewport"
-      content="width=device-width,initial-scale=1.0,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover" />
+    <!--
+      `interactive-widget=resizes-content` makes an on-screen keyboard shrink the layout. WebKit (Safari,
+      every iOS browser, the macOS desktop app) doesn't recognise the key and logs an error on every load,
+      so it is added only on other engines.
+    -->
+    <script>
+      if (!/AppleWebKit/.test(navigator.userAgent) || /Chrome|Chromium/.test(navigator.userAgent)) {
+        document.querySelector('meta[name="viewport"]').content += ',interactive-widget=resizes-content';
+      }
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="msapplication-TileColor" content="#003E70" />
