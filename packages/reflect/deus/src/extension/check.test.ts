@@ -267,6 +267,43 @@ describe('parseMdlBlocks', () => {
     ]);
     expect(blocks[0].body).toBe('  fields:\n    name?: string\n');
   });
+
+  test('ignores mdl fences inside an enclosing four-backtick or tilde fence', ({ expect }) => {
+    const text = [
+      '````md',
+      '```mdl',
+      'feat F-1: Example',
+      '```',
+      '````',
+      '',
+      '~~~md',
+      '```mdl',
+      'feat F-2: Example',
+      '```',
+      '~~~',
+      '',
+      '```mdl',
+      'feat F-3: Real',
+      '  req F-3.1: A requirement.',
+      '```',
+    ].join('\n');
+    const blocks = parseMdlBlocks(text);
+    expect(blocks.map(({ type, id }) => ({ type, id }))).toEqual([{ type: 'feat', id: 'F-3' }]);
+    expect(blocks[0].body).toBe('  req F-3.1: A requirement.\n');
+  });
+
+  test('a fence line with an info string does not end a block', ({ expect }) => {
+    const text = ['```mdl', 'feat F-1: Start', '```ts', 'code', '```'].join('\n');
+    const blocks = parseMdlBlocks(text);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].body).toBe('```ts\ncode\n');
+  });
+
+  test('an unclosed block runs to the end of the text', ({ expect }) => {
+    const blocks = parseMdlBlocks(['```mdl', 'feat F-1: Start', '  req F-1.1: Open.'].join('\n'));
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].body).toBe('  req F-1.1: Open.');
+  });
 });
 
 describe('mdl references and dependencies', () => {

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parseMdlBlocks } from './blocks.ts';
+import { parseMdlBlocks, scanFenceLines } from './blocks.ts';
 
 /** A `<spec id>#<item>` reference, with the offsets of the whole reference text. */
 export type SpecRef = { id: string; item: string; from: number; to: number };
@@ -18,27 +18,12 @@ const REF = /(?<![\w/:.#-])([a-z][a-z0-9-]*(?:\.[a-zA-Z0-9-]+)+)#([\w$.-]*\w)/g;
  * Calls `visit` for each line of prose and of `mdl` fences, with the line's offset in the text.
  * Every other fenced block is skipped, since it holds code rather than spec text.
  */
-export const scanSpecLines = (text: string, visit: (line: string, offset: number) => void): void => {
-  let fence: { char: string; length: number; scan: boolean } | undefined;
-  let offset = 0;
-  for (const line of text.split('\n')) {
-    const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
-    const info = marker?.[2].trim() ?? '';
-    if (fence) {
-      // Close only on the opener's character, at least as long, with no info string (CommonMark).
-      if (marker && marker[1][0] === fence.char && marker[1].length >= fence.length && info === '') {
-        fence = undefined;
-      } else if (fence.scan) {
-        visit(line, offset);
-      }
-    } else if (marker && !(marker[1][0] === '`' && info.includes('`'))) {
-      fence = { char: marker[1][0], length: marker[1].length, scan: info === 'mdl' };
-    } else {
+export const scanSpecLines = (text: string, visit: (line: string, offset: number) => void): void =>
+  scanFenceLines(text, ({ line, offset, kind, mdl }) => {
+    if (kind === 'prose' || (kind === 'body' && mdl)) {
       visit(line, offset);
     }
-    offset += line.length + 1;
-  }
-};
+  });
 
 /** Finds `<spec id>#<item>` references in prose and in `mdl` fences (comments included). */
 export const findSpecRefs = (text: string): SpecRef[] => {
