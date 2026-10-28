@@ -187,8 +187,12 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
     }
   }
 
+  // The changelog is append-only, so a decision that predates this rule keeps the key it was written with.
+  const changelog = changelogRange(text);
   for (const { from, to } of findSpecKeys(text)) {
-    report('mdl/ref', from, to, 'Refer to a spec by id (`<id>#<item>`), not by a github: key.');
+    if (!changelog || from < changelog.from || from >= changelog.to) {
+      report('mdl/ref', from, to, 'Refer to a spec by id (`<id>#<item>`), not by a github: key.');
+    }
   }
   return diagnostics;
 };
@@ -250,6 +254,17 @@ export type ChangelogEntry = {
 };
 
 const CHANGELOG_HEADING = /^## Changelog[ \t]*$/m;
+
+/** The offsets of the `## Changelog` section, up to the next `## ` heading. */
+const changelogRange = (text: string): { from: number; to: number } | undefined => {
+  const heading = CHANGELOG_HEADING.exec(text);
+  if (!heading) {
+    return undefined;
+  }
+  const after = heading.index + heading[0].length;
+  const next = text.slice(after).search(/^## /m);
+  return { from: heading.index, to: next === -1 ? text.length : after + next };
+};
 const DECISION_ID = /^D-(\d+)$/;
 const DECISION_REF = /\[(D-\d+)\]/g;
 

@@ -320,6 +320,27 @@ describe('mdl references and dependencies', () => {
     ]);
   });
 
+  test('github key to a spec in the changelog is kept', ({ expect }) => {
+    const message = 'Refer to a spec by id (`<id>#<item>`), not by a github: key.';
+    const text = spec(
+      [
+        'See github:dxos/dxos/a/SPEC.mdl#F-1.',
+        '',
+        '## Changelog',
+        '',
+        block('decision D-1: Uses github:dxos/dxos/a/SPEC.mdl#F-1.\n  date: 2026-10-27\n  by: user:alice'),
+        '',
+        '## Appendix',
+        '',
+        'See github:dxos/dxos/a/SPEC.mdl#F-1.',
+      ].join('\n'),
+    );
+    expect(lint(text)).toEqual([
+      { source: 'mdl/ref', message },
+      { source: 'mdl/ref', message },
+    ]);
+  });
+
   test('github key to code is allowed', ({ expect }) => {
     expect(lint(spec('See github:dxos/dxos/a/file.ts#Foo.'))).toEqual([]);
   });
