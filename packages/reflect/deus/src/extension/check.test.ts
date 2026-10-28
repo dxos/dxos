@@ -342,7 +342,7 @@ describe('mdl references and dependencies', () => {
   test('spec id declared by more than one file', ({ expect }) => {
     const message = 'Spec id `org.test.twice` is declared by more than one file.';
     expect(lint(spec(`${uses('org.test.twice')}\nSee org.test.twice#T-1.`))).toEqual([
-      { source: 'mdl/ref', message },
+      { source: 'mdl/uses', message },
       { source: 'mdl/ref', message },
     ]);
   });
@@ -375,8 +375,16 @@ describe('mdl references and dependencies', () => {
     expect(lint(text)).toEqual([]);
   });
 
-  test('a reference to the spec itself is allowed', ({ expect }) => {
-    expect(lint(spec('See org.test.self#X.'))).toEqual([]);
+  test('a reference to an item of the spec itself is allowed', ({ expect }) => {
+    expect(lint(spec(`${block('feat X: One\n  req X.1: Do it')}\nSee org.test.self#X and org.test.self#X.1.`))).toEqual(
+      [],
+    );
+  });
+
+  test('a reference to a missing item of the spec itself', ({ expect }) => {
+    expect(lint(spec('See org.test.self#X.'))).toEqual([
+      { source: 'mdl/ref', message: '`org.test.self` has no item `X`.' },
+    ]);
   });
 
   test('a cycle is allowed', ({ expect }) => {
@@ -408,7 +416,7 @@ describe('mdl references and dependencies', () => {
 
   test('dependsOn of an ambiguous spec', ({ expect }) => {
     expect(lint(spec(dependsOn('org.test.twice')))).toEqual([
-      { source: 'mdl/ref', message: 'Spec id `org.test.twice` is declared by more than one file.' },
+      { source: 'mdl/uses', message: 'Spec id `org.test.twice` is declared by more than one file.' },
     ]);
   });
 

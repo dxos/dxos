@@ -29,14 +29,14 @@ extends?:  URI[]         # specs this document extends (transitive)
 All blocks use the `mdl` fence. The first line of the body declares the block
 type, optional identifier, and optional title:
 
-```
+````
 ```mdl
 <type> [<id>][: <title>]
   key: value
   key?: TypeExpr
   key: a | b | c
 ```
-```
+````
 
 - `<type>` must be declared in the Extensions section of this document or an ancestor.
 - `<id>` is an optional locally-scoped identifier (e.g. `F-1.1`, `Board`).
@@ -60,13 +60,13 @@ key:                      # multi-line value
 When an extension declares `inline-prose: true`, prose may appear between
 the header line and the first key-value pair:
 
-```
+````
 ```mdl
 feat F-1: Start Game
   A new Board is created with pieces in starting positions.  ← inline prose
   req F-1.1: White moves first.
 ```
-```
+````
 
 ### Cross-References
 
@@ -76,7 +76,7 @@ The linter verifies that all references resolve to a declared block.
 ### External References
 
 A spec names a block of another spec as `<spec id>#<item>`, where the item is a block id or `req` id
-(`org.dxos.ui.react-ui-canvas#F-3.1`), and declares that spec under `## Dependencies` (below). A
+(`com.acme.canvas#F-3.1`), and declares that spec under `## Dependencies` (below). A
 block may name code, or anything else outside the specs, by **source key**:
 `github:<owner>/<repo>/<path>[#<fragment>]`, with the path relative to the repository root.
 

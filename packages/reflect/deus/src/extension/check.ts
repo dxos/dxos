@@ -4,9 +4,9 @@
 
 import { type Diagnostic } from '@codemirror/lint';
 
-import { frontmatter } from '../spec-index/parse.ts';
+import { frontmatter, reqIds } from '../spec-index/parse.ts';
 import { type SpecIndex } from '../spec-index/spec-index.ts';
-import { type BlockHeader, parseBlockHeaders } from './blocks.ts';
+import { type BlockHeader, parseBlockHeaders, parseMdlBlocks } from './blocks.ts';
 import { BLOCK_TYPES } from './constants.ts';
 import { findSpecKeys, findSpecRefs, specDependencies } from './refs.ts';
 
@@ -94,7 +94,7 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
     if (id === selfId) {
       report('mdl/uses', from, to, 'A spec cannot use itself.');
     } else if (id in index.duplicates) {
-      report('mdl/ref', from, to, duplicateSpecMessage(id));
+      report('mdl/uses', from, to, duplicateSpecMessage(id));
     } else if (!(id in index.specs)) {
       report('mdl/uses', from, to, unknownSpecMessage(id));
     } else if (via === 'uses' && dependsOn.has(id)) {
@@ -107,8 +107,19 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
 
   const isReference = specReferenceFilter(index);
   const dependencyIds = new Set(dependencies.map(({ id }) => id));
+  // The spec's own items come from its text, since the index may predate the edit being linted.
+  let ownItems: Set<string> | undefined;
   for (const { id, item, from, to } of findSpecRefs(text)) {
-    if (id === selfId || !isReference(id)) {
+    if (id === selfId) {
+      ownItems ??= new Set(
+        parseMdlBlocks(text).flatMap(({ id: own, body }) => [...(own ? [own] : []), ...reqIds(body)]),
+      );
+      if (!ownItems.has(item)) {
+        report('mdl/ref', from, to, missingItemMessage(id, item));
+      }
+      continue;
+    }
+    if (!isReference(id)) {
       continue;
     }
     if (id in index.duplicates) {
