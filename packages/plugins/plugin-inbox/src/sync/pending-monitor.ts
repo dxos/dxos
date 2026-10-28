@@ -48,23 +48,14 @@ export const withPendingSyncMonitor = <A, E, R>(
       Effect.tapError((error) =>
         Effect.sync(() => handle.fail(error instanceof Error ? error.message : String(error))),
       ),
-      // An abandoned request reaches neither branch below, and its meter would otherwise spin forever.
+      // An abandoned request never reaches the timeout below, and its meter would otherwise spin forever.
       Effect.onInterrupt(() => Effect.sync(() => handle.remove())),
     );
 
     // Timed from the end of the request, not the click: a request still in flight (a routine form left
     // open) is not a run that failed to report, and clearing it would re-enable Sync mid-request.
-    yield* Effect.sleep(timeoutMs).pipe(
-      Effect.andThen(
-        Effect.sync(() => {
-          // A superseded handle's `remove` touches nothing, so a run that took over is left alone.
-          if (registry.snapshot().tasks.some((task) => task.name === key && task.status === 'running')) {
-            handle.remove();
-          }
-        }),
-      ),
-      Effect.forkDetach,
-    );
+    // A superseded handle's `remove` touches nothing, so a run that took over is left alone.
+    yield* Effect.sleep(timeoutMs).pipe(Effect.andThen(Effect.sync(() => handle.remove())), Effect.forkDetach);
 
     return result;
   });
