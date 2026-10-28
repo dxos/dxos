@@ -208,7 +208,8 @@ export const runChecks = (
     .filter(([, copies]) => copies.length > 1)
     .map(([gmailId, copies]) => ({ class: 'DATA', gmailId, message: `synced ${copies.length} times` }));
 
-  const content: Failure[] = due.flatMap((expected) => {
+  // Every copy that arrived is compared, however new: the grace only gives a missing copy time to arrive.
+  const content: Failure[] = seeded.flatMap((expected) => {
     const actual = synced.get(expected.gmailId)?.[0];
     const mismatches = actual ? contentMismatches(expected, actual) : [];
     return mismatches.length > 0
