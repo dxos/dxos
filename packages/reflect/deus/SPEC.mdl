@@ -616,3 +616,9 @@ decision D-61: In a reference, the spec id's segments after the first may be cam
   affects: [F-7.3]
   why: Plugin ids such as `org.dxos.plugin.fileSystem` are camelCase, and a lowercase-only grammar never recognised a reference into them.
 ```
+
+```mdl
+decision D-62: Approve [D-59], [D-60] and [D-61].
+  date: 2026-10-27
+  by: user:richburdon
+```
