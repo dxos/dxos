@@ -254,6 +254,8 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                     </Typography.Link>
                   )}
 
+                  {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
+
                   {source && (
                     <Typography.Link href={source} classNames='text-sm text-fg-muted'>
                       {t('source.label')}
@@ -264,8 +266,6 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
                       />
                     </Typography.Link>
                   )}
-
-                  {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
                 </Layout.Flex>
               </Section.Body>
             </Section.Root>

@@ -7,6 +7,7 @@
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { type Database, DXN, Obj, Ref, Relation } from '@dxos/echo';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, SpecDocument, Task } from '@dxos/types';
 
@@ -24,7 +25,7 @@ export const types = [
   Feature.Implements,
   Project.Project,
   Instructions.Instructions,
-  Showcase.Showcase,
+  Markdown.Document,
   Showcase.Demonstrates,
   Task.Task,
   Milestone.Milestone,
@@ -107,8 +108,9 @@ export const seed = (
       db.add(Feature.makeImplements({ [Relation.Source]: task, [Relation.Target]: feature }));
     }
     for (const { name: showcaseName } of model.showcases) {
+      // A document stands in for the deck, whose type is plugin-presenter's: that plugin depends on this one.
       const showcase = db.add(
-        Showcase.make({
+        Markdown.make({
           name: showcaseName,
           content: `# ${showcaseName}\n\nWhat was shown, and how to reproduce it:\n\n1. Open the feature.\n2. Follow the steps.\n`,
         }),

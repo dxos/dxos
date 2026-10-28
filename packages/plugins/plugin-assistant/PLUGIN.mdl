@@ -504,7 +504,9 @@ test QA-3: The prompt carries context, commands and the agent's settings
     - name: Remove an object from context
       do: Click the x beside Rich Burdon in the context drawer.
       expect: Rich Burdon leaves Context; the message that mentioned them is unchanged
+```
 
+```mdl
 test QA-4: A chat's MCP servers come from connections and built-in servers
   desc: |
     MCP tools reach a chat from two places: the built-in servers plugins ship (Browser), which start

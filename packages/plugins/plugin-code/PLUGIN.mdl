@@ -18,7 +18,7 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - Schema: the SpecDocument and CodeProject types
     - Settings: repos to sync and build settings
     - SkillDefinition: the Coder skill
-    - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (plugin-github spec/FILE-SYNC.mdl F-6)
+    - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
 ```
@@ -43,6 +43,28 @@ The plugin reuses `react-ui-editor`'s `Editor.Root` / `Editor.Toolbar` /
 `Editor.Content` together with the existing `mdl()` CodeMirror extensions
 instead of a bespoke editor implementation.
 
+## Dependencies
+
+```mdl
+uses org.dxos.echo: Spec and CodeProject are ECHO objects, read and written through its Database.
+```
+
+```mdl
+uses org.dxos.plugin.fileSystem: Its FileSystem service is the only way spec sync reaches local files.
+```
+
+```mdl
+uses org.dxos.plugin.devShell: Its dev-only `bash` route is the pattern the sync dev route follows.
+```
+
+```mdl
+uses org.dxos.plugin.github.file-sync: Its FileMapping contract, which the `.mdl` mapping implements.
+```
+
+```mdl
+uses org.dxos.spec.review: The review dialect whose verdicts the spec viewer reads and marks.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -59,6 +81,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `decision`  | `org.dxos.mdl.decision@1.0`   |
 | `plugin`    | `org.dxos.mdl.plugin@1.0`     |
+| `uses`      | `dxos.spec.core/uses`         |
 
 ## Types
 
@@ -174,8 +197,8 @@ component SpecArticle
     │ key · sync status        │ [Defs|Review|Code|…]         │
     ├──────────────────────────┼──────────────────────────────┤
     │ ```mdl   [</> make][Done]│  ┌─────┐   ┌ ─ ─ ─ ┐         │
-    │ feat F-1: …   [Missing]  │  │ F-1 │──▶  Obj (echo)      │
-    │   github:…SPEC.mdl#Obj   │  └─────┘   └ ─ ─ ─ ┘         │
+    │ feat F-1: …   [Missing]  │  │ F-1 │──▶  Database        │
+    │  org.dxos.echo#Database  │  └─────┘   └ ─ ─ ─ ┘         │
     └──────────────────────────┴──────────────────────────────┘
 ```
 
@@ -407,7 +430,7 @@ op importSpec
   errors:
     - CodeOperationError: not a spec key, no checkout of the repository, or no such file
   effects: [fs, echo:write]
-  requires: [github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl#FileSystem]
+  requires: [org.dxos.plugin.fileSystem#FileSystem]
 ```
 
 ```mdl
@@ -416,7 +439,7 @@ op importSpecFile
   desc: |
     The import of the `.mdl` FileMapping: creates a SpecDocument for a new file, or applies the remote
     change to SpecDocument.content with TextMerge.applyAt as of the heads of the last sync.
-  input: FileImportInput        # github:dxos/dxos/packages/plugins/plugin-github/spec/FILE-SYNC.mdl#FileMapping
+  input: FileImportInput        # org.dxos.plugin.github.file-sync#FileMapping
   output: FileImportOutput
   effects: [echo:read, echo:write]
 ```
@@ -438,7 +461,7 @@ op listLocalSpecs
     (none)
   output: { roots: { repo: string, path: string }[], keys: string[] }
   effects: [fs]
-  requires: [github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl#FileSystem]
+  requires: [org.dxos.plugin.fileSystem#FileSystem]
 ```
 
 ## Skills
@@ -714,10 +737,10 @@ feat F-14: Two-way spec sync with a local checkout
     for specs that live in the repository.
 
   req F-14.1: Sync reaches local files only through plugin-file-system's
-              github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl#FileSystem service: the
+              org.dxos.plugin.fileSystem#FileSystem service: the
               Tauri fs plugin in the desktop app, and a dev-only route in a
               Composer dev server, the same pattern as
-              github:dxos/dxos/packages/plugins/plugin-dev-shell/PLUGIN.mdl#bash.
+              org.dxos.plugin.devShell#bash.
               Sync writes only `.mdl` files; a deployed web app has neither
               backend and leaves sync off.
   req F-14.2: A key's repository resolves to a checkout from the `repos` setting
@@ -737,8 +760,8 @@ feat F-14: Two-way spec sync with a local checkout
 ```mdl
 feat F-15: Source-key references to other specs
   desc: |
-    A spec names a block of another spec by source key with a fragment, e.g.
-    github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database. Links to the code
+    A spec names a block of another spec by the spec's id and the block's id, e.g.
+    org.dxos.echo#Database. Links to the code
     that implements a spec are not spec text; they are annotations (F-16.5).
 
   req F-15.1: The definitions graph draws each named external block as a dashed
@@ -754,7 +777,7 @@ feat F-15: Source-key references to other specs
 feat F-16: Compliance review annotations
   desc: |
     The `spec-review` skill writes `<SPEC>.review.mdl` beside a spec: one verdict
-    per item (github:dxos/dxos/packages/reflect/deus/lang/review.mdl).
+    per item, in the review dialect (`org.dxos.spec.review`).
 
   req F-16.1: SpecArticle reads the review beside the spec from the checkout and
               re-reads it every 3 seconds.
@@ -1311,6 +1334,22 @@ decision D-28: The `Spec` type is renamed `SpecDocument`, typename `org.dxos.typ
   by: user:dmaretskyi
   affects: [F-1.5, F-1.6, F-2.2, T-1]
   why: `Spec` now names plugin-projects' feature map, which holds at most one SpecDocument as its normative text.
+```
+
+```mdl
+decision D-29: The spec refers to another spec's item as `<spec id>#<item>`, never by a `github:` key into a `.mdl` file, and declares every spec it refers to as a dependency. A reference names the spec by id ([F-15]).
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-15, F-14.1, importSpec, listLocalSpecs, importSpecFile, SpecArticle]
+```
+
+```mdl
+decision D-30: plugin-code declares its dependencies with `uses` (it has no runtime plugin dependencies in dx.config.ts): `org.dxos.echo`, `org.dxos.plugin.fileSystem`, `org.dxos.plugin.devShell`, `org.dxos.plugin.github.file-sync` and `org.dxos.spec.review`, each with a one-line reason. The SpecArticle layout mock shows `org.dxos.echo#Database` as its example reference. Fills in [D-29].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15, F-16, SpecArticle]
+  why: Each id is a spec the body already referred to by path or key; the review dialect is named without an item, and ECHO's Database is the example F-15 already used.
 ```
 
 ---

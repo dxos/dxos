@@ -913,7 +913,9 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
       expect: neither "QA:" space remains on either profile
   then:
     - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
+```
 
+```mdl
 test QA-15: Showcase clip
   desc: |
     The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
@@ -1013,7 +1015,9 @@ test QA-14: Bramble — Kai locks the Spring Blend
     - name: Close
       do: Return to the Inbox and hold.
       expect: the inbox, as the take began
+```
 
+```mdl
 test QA-16: Hot-reload a plugin capability
   desc: |
     Dev-server demo of plugin hot replacement: edits to plugin-space's app-graph builder (a capability with

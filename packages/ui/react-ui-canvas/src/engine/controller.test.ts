@@ -344,6 +344,14 @@ describe('CanvasController', () => {
       expect(Object.keys(views())).toEqual(['root']);
     });
 
+    test('group refuses a selection holding a view node, since an Object cannot contain a View', ({ expect }) => {
+      const { controller, scene, views } = setup({ tree: nested() });
+      controller.selection.select(['a', 'child']);
+      expect(controller.selection.group()).toBeUndefined();
+      expect(scene().nodes.child).toBeDefined();
+      expect(Object.values(views()).some((view) => view.kind === 'composite')).toBe(false);
+    });
+
     test("ungroup puts an anonymous Object's contents back where they were and deletes its definition", ({
       expect,
     }) => {

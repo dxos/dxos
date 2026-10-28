@@ -189,8 +189,11 @@ export const useFeatureGraph = (
             if (!source) {
               return [];
             }
-            const showcase = get(Obj.atom(source));
-            return [[{ id: showcase.id, name: showcase.name }, entityId(Relation.getTargetURI(relation))] as const];
+            // Subscribes, so renaming the deck re-derives the graph.
+            get(Obj.atom(source));
+            return [
+              [{ id: source.id, name: Obj.getLabel(source) ?? '' }, entityId(Relation.getTargetURI(relation))] as const,
+            ];
           }),
           specObjects,
         };

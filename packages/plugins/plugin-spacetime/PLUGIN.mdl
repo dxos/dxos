@@ -538,7 +538,9 @@ test QA-1: Create a scene, add an object, and export it
       do: Right-click "QA Scene" in the navtree and choose Delete.
       expect: the row leaves the navtree and its plank closes
       note: NO invoke — no step captures a Scene reference to bind, per the test desc.
+```
 
+```mdl
 test QA-2: Build a scene from templates
   desc: |
     The toolbar's object templates and the orbit camera: a primitive and two vehicle presets added to a new
@@ -563,7 +565,9 @@ test QA-2: Build a scene from templates
     - name: Orbit the scene
       do: Drag across the canvas and scroll to zoom in.
       expect: the camera orbits the scene and moves closer
+```
 
+```mdl
 test QA-3: Showcase clip
   desc: |
     The 10s showcase clip: Orbit a 3D scene. Recorded light at 60 fps with no ident, captions or

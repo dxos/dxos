@@ -26,6 +26,7 @@ import {
   type ViewMap,
   endpointNode,
   isInstanceNode,
+  isViewNode,
   pruneOrphaned,
 } from '../model/index.ts';
 import { unionBounds } from './hit.ts';
@@ -234,7 +235,8 @@ export const composeSelection = (
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
   const bounds = unionBounds(nodes.map(nodeBounds));
-  if (nodes.length === 0 || !bounds || nodes.some((node) => node.locked)) {
+  // A View moved into an Object would be repeated at every placement (SPEC.mdl F-9.9).
+  if (nodes.length === 0 || !bounds || nodes.some((node) => node.locked || isViewNode(node))) {
     return undefined;
   }
   const inside = new Set(nodes.map((node) => node.id));

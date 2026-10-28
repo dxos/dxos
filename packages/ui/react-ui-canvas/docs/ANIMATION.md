@@ -82,61 +82,42 @@ Each of these cost a render or a fix in the sample. The design removes the cause
 
 ### 4.1 Model
 
-A **composite** is a scene marked as a definition. An **instance** is a node that draws a composite at its own
-place and size.
+Composite objects are the engine's **Objects**: a View record with `kind: 'composite'`, placed by `instance` nodes.
+The model, Group and Ungroup, the library and isolation are specified in `SPEC.mdl` (Ontology, `type:View`,
+`type:BuiltinNode`, [F-9]); the reasoning is in `VIEWS.md`. What is particular to animation:
 
 ```ts
-Scene = { id, name?, nodes, links, kind?: 'scene' | 'composite', timeline?: Timeline };
-
 Instance = NodeBase & {
   type: 'instance';
-  composite: ViewId; // the definition
-  overrides?: Record<NodeId, Partial<Node>>; // per inner node, shallow per field as §4c resolves prototypes
+  composite: ViewId; // the Object
+  overrides?: Record<NodeId, Partial<Node>>; // per inner node, shallow per field as DESIGN.md §4c resolves prototypes
+  fit?: 'fit' | 'fill' | 'none';
   time?: { offset: number; rate?: number; loop?: boolean }; // the instance's clock against its parent's (§5.7)
 };
 ```
 
-- The instance's `size` scales the composite's content bounds to fit, so resizing an instance scales it uniformly
-  (an option on the instance chooses `fit`, `fill` or `none`).
 - Overrides reuse the instance-prototype rule of `DESIGN.md` §4c: an unset value is read from the definition, and
-  `resetOverride` clears one. Identity, links and the inner scene's structure are never overridden. Changing the
+  `resetOverride` clears one. Identity, links and the inner structure are never overridden. Changing the
   structure means editing the definition, which changes every instance.
-- A composite's own ports are the ports of the inner nodes marked `exposed: true`, drawn on the instance's frame
+- An Object's own ports are the ports of the inner nodes marked `exposed: true`, drawn on the instance's frame
   where the inner node meets it. Links from outside attach to those.
-- `Frame` (a portal to a child scene) stays as it is. A frame is a place to drill into; an instance is a symbol you
-  repeat. Converting one to the other is a menu action that swaps the node type and keeps the scene.
+- A `view` node is a place to drill into; an Instance is a symbol you repeat.
 
 ### 4.2 Actions
 
-| Action              | Effect                                                                                                                                                                                                                                                                                            |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Group as object** | Creates a composite scene from the selection: the nodes and the links wholly inside it move into it, re-centred on their bounds. One instance replaces them in place. Links that crossed the selection edge reattach to exposed ports, created on the fly. One undoable intent (`compose {ids}`). |
-| **Duplicate**       | Copies the instance node. Both share the definition.                                                                                                                                                                                                                                              |
-| **Make unique**     | Copies the definition scene and points this instance at the copy.                                                                                                                                                                                                                                 |
-| **Ungroup**         | Replaces the instance with the definition's nodes, overrides applied, at the instance's place. The definition remains while other instances use it.                                                                                                                                               |
-| **Place**           | Drags a composite from the Objects panel onto the canvas, creating an instance.                                                                                                                                                                                                                   |
-| **Edit**            | Opens the definition in isolation (§4.3). Double-clicking an instance does the same.                                                                                                                                                                                                              |
-
-The palette lists composites under a "Objects" group, so the existing palette drop path places them.
+| Action          | Effect                                                                                        |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| **Group**       | `SPEC.mdl` [F-9.2]. Keyed tracks of the grouped nodes move into the Object.                   |
+| **Ungroup**     | `SPEC.mdl` [F-9.3]: the tracks come back out, mapped through the Instance's transform.        |
+| **Duplicate**   | Copies the instance node. Both share the definition.                                          |
+| **Make unique** | Copies the definition and points this instance at the copy; disabled for an anonymous Object. |
+| **Place**       | Drags an Object from the Objects panel onto the canvas, creating an instance.                 |
+| **Edit**        | Opens the definition in isolation (`SPEC.mdl` [F-1.8]).                                       |
 
 ### 4.3 Objects panel
 
-`ObjectsPanel` sits beside `LayersPanel` in the inspector dock and is built the same way: a `Panel` with a toolbar
-and an `OrderedList` of rows.
-
-- **Rows.** One per composite in the document: a thumbnail (the canvas2d preview tier), the name (renamed in place
-  on a double-click, as a layer is), and the number of instances.
-- **Toolbar.** Group selection as object, place, duplicate definition, delete (disabled while instances exist,
-  with a menu item to delete them too).
-- **Selecting a row** opens the composite in isolation. The view drills into the definition scene as it drills into
-  a frame, and the breadcrumbs show `Objects › <name>`. The camera fits the composite's bounds; the canvas behind
-  dims to a plain surface, so the object reads as if inside its own frame. Escape or the breadcrumb returns to the
-  scene and the camera the user left.
-- **Selecting an instance** on the canvas highlights its row; selecting a row while instances are selected offers
-  "swap to this object".
-
-Because the isolated view is a normal `Canvas` on the composite scene, everything else works there: editing,
-layers, and the composite's own timeline (§5.7).
+`SPEC.mdl` `component:ObjectsInspector`. In isolation the canvas is a normal `Canvas` on the Object, so editing
+and the Object's own timeline (§5.7) work there.
 
 ## 5. Timeline
 

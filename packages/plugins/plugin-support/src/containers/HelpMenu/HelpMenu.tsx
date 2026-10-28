@@ -105,7 +105,11 @@ export const HelpMenu = () => {
           onClick={openDialog(ABOUT_DIALOG)}
         />
         {version && (
-          <Layout.Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
+          // Indented like menu.css indents an icon-less item, so the text starts in line with the labels.
+          <Layout.Flex
+            column
+            classNames='ps-[calc(var(--dx-gap-size)*2.5+var(--dx-icon-size))] pe-[calc(var(--dx-gap-size)*1.5)] pb-2 text-xs text-fg-muted'
+          >
             <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
               {version}
             </a>

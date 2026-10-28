@@ -5,7 +5,7 @@
 import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 
-import { FENCE_REGEX } from './check.ts';
+import { FENCE_REGEX } from './blocks.ts';
 
 // Standard fields for each block type.
 // In future this will be derived from resolved `ext` definitions.
