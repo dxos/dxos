@@ -9,10 +9,14 @@ export {
   type MdlBlock,
   MISSING_DECISION,
   checkChangelogChange,
+  duplicateSpecMessage,
   isTrivialEdit,
   lintMdl,
+  missingItemMessage,
   parseChangelog,
   parseMdlBlocks,
+  specReferenceFilter,
+  unknownSpecMessage,
 } from './check.ts';
 export { mdlLint } from './lint.ts';
 export { mdlComplete } from './complete.ts';

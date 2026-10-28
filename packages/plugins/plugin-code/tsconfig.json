@@ -15,6 +15,7 @@
     "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "src/sync/gen/*.json",
     "src/*.ts"
   ],
   "references": [

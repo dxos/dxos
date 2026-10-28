@@ -4,6 +4,7 @@
 
 import { EditorSelection } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
+import { useAtomSet, useAtomValue } from '@effect/atom-react';
 import React, {
   type KeyboardEvent,
   type PointerEvent,
@@ -68,11 +69,13 @@ import {
 import { meta } from '#meta';
 import {
   type SourceKey,
+  SPEC_INDEX,
   findSourceKeys,
   formatSourceKey,
   getSpecKey,
   isSpecKey,
   parseSourceKey,
+  pendingReveal,
   reviewKeyOf,
 } from '#sync';
 import { CodeOperation } from '#types';
@@ -258,10 +261,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const decisions = useMemo(() => parsedDecisions, [decisionsKey]);
 
     const viewRef = useRef<EditorView | undefined>(undefined);
-    const reveal = useCallback((id: string, focus = true) => {
+    /** Scrolls to the declaration of `id`; false when the editor is not up or does not declare it. */
+    const reveal = useCallback((id: string, focus = true): boolean => {
       const editor = viewRef.current;
       if (!editor) {
-        return;
+        return false;
       }
       const pattern = declarationOf(id);
       for (let number = 1; number <= editor.state.doc.lines; number++) {
@@ -274,10 +278,20 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           if (focus) {
             editor.focus();
           }
-          return;
+          return true;
         }
       }
+      return false;
     }, []);
+
+    // Another article that opened this spec at an item left it pending; the text may arrive after mount.
+    const pending = useAtomValue(pendingReveal);
+    const setPendingReveal = useAtomSet(pendingReveal);
+    useEffect(() => {
+      if (pending && key && pending.path === key.path && reveal(pending.item)) {
+        setPendingReveal(undefined);
+      }
+    }, [pending, key, text, reveal, setPendingReveal]);
 
     const showCode = useCallback((target: SourceKey) => {
       setCodeTarget(target);
@@ -291,7 +305,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           return;
         }
         if (key && fileKey(target) === fileKey(key)) {
-          target.fragment && reveal(target.fragment);
+          if (target.fragment) {
+            reveal(target.fragment);
+          }
           return;
         }
         // Another spec opens as its own synced Spec in this space; outside a space it is shown read-only here.
@@ -303,6 +319,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           );
           const other = data && (await data.spec.load());
           if (other) {
+            setPendingReveal(target.fragment ? { path: target.path, item: target.fragment } : undefined);
             await invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(other)] });
             return;
           }
@@ -310,7 +327,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         }
         showCode(target);
       },
-      [key, space, invokePromise, reveal, showCode],
+      [key, space, invokePromise, reveal, showCode, setPendingReveal],
     );
 
     const activate = useCallback(
@@ -335,8 +352,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
-          mdl(),
-          sourceLinks((target) => void open(target)),
+          mdl({ index: SPEC_INDEX }),
+          sourceLinks((target) => void open(target), SPEC_INDEX),
           ViewPlugin.define((editor) => {
             viewRef.current = editor;
             return { destroy: () => viewRef.current === editor && (viewRef.current = undefined) };

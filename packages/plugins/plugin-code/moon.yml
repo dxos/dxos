@@ -9,6 +9,25 @@ tags:
   - storybook
 
 tasks:
+  build:
+    deps:
+      - ~:prebuild-spec-index
+  test:
+    deps:
+      - ~:prebuild-spec-index
+  test-storybook:
+    deps:
+      - ~:prebuild-spec-index
+  # The spec index the viewer resolves `<spec id>#<item>` references through; named directly in the deps above since
+  # a same-project `~:#prebuild` tag dep resolves to nothing for a tag-inherited task.
+  prebuild-spec-index:
+    script: mkdir -p src/sync/gen && pnpm --filter @dxos/deus exec node --conditions=source bin/deus.ts index --out $projectRoot/src/sync/gen/spec-index.json
+    inputs:
+      - /**/*.mdl
+    outputs:
+      - src/sync/gen/spec-index.json
+    tags:
+      - prebuild
   check-module-structure:
     command: >-
       bun $workspaceRoot/tools/dx-trace-imports/cli.js

@@ -119,6 +119,24 @@ export type LintOptions = {
 
 const namespace = (id: string): string => id.split('.').slice(0, 2).join('.');
 
+/** Lint message for an id the index does not hold. */
+export const unknownSpecMessage = (id: string): string => `Unknown spec \`${id}\`.`;
+
+/** Lint message for a reference to an item the spec does not declare. */
+export const missingItemMessage = (id: string, item: string): string => `\`${id}\` has no item \`${item}\`.`;
+
+/** Lint message for an id more than one file claims. */
+export const duplicateSpecMessage = (id: string): string => `Spec id \`${id}\` is declared by more than one file.`;
+
+/**
+ * Whether a `<id>#<item>` candidate is a spec reference rather than prose (a file name, an external schema id):
+ * its id is indexed, or shares its first two dotted segments with an indexed id.
+ */
+export const specReferenceFilter = (index: SpecIndex): ((id: string) => boolean) => {
+  const namespaces = new Set([...Object.keys(index.specs), ...Object.keys(index.duplicates)].map(namespace));
+  return (id) => namespaces.has(namespace(id));
+};
+
 const lintReferences = (text: string, index: SpecIndex, selfId: string | undefined): Diagnostic[] => {
   const diagnostics: Diagnostic[] = [];
   const report = (source: string, from: number, to: number, message: string) =>
@@ -126,20 +144,24 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
   const dependencies = specDependencies(text);
   const dependsOn = new Set(dependencies.filter(({ via }) => via === 'dependsOn').map(({ id }) => id));
   const declared = new Set<string>();
-  const duplicate = (id: string): string => `Spec id \`${id}\` is declared by more than one file.`;
 
   if (selfId && selfId in index.duplicates) {
     const idLine = /^id:.*$/m.exec(text);
-    report('mdl/uses', idLine?.index ?? 0, (idLine?.index ?? 0) + (idLine?.[0].length ?? 0), duplicate(selfId));
+    report(
+      'mdl/uses',
+      idLine?.index ?? 0,
+      (idLine?.index ?? 0) + (idLine?.[0].length ?? 0),
+      duplicateSpecMessage(selfId),
+    );
   }
 
   for (const { id, via, from, to } of dependencies) {
     if (id === selfId) {
       report('mdl/uses', from, to, 'A spec cannot use itself.');
     } else if (id in index.duplicates) {
-      report('mdl/ref', from, to, duplicate(id));
+      report('mdl/ref', from, to, duplicateSpecMessage(id));
     } else if (!(id in index.specs)) {
-      report('mdl/uses', from, to, `Unknown spec \`${id}\`.`);
+      report('mdl/uses', from, to, unknownSpecMessage(id));
     } else if (via === 'uses' && dependsOn.has(id)) {
       report('mdl/uses', from, to, `\`${id}\` is in dependsOn; do not repeat it under uses.`);
     } else if (declared.has(id)) {
@@ -148,21 +170,20 @@ const lintReferences = (text: string, index: SpecIndex, selfId: string | undefin
     declared.add(id);
   }
 
-  // Candidates outside every indexed namespace are prose (a file name, an external schema id), not references.
-  const namespaces = new Set([...Object.keys(index.specs), ...Object.keys(index.duplicates)].map(namespace));
+  const isReference = specReferenceFilter(index);
   const dependencyIds = new Set(dependencies.map(({ id }) => id));
   for (const { id, item, from, to } of findSpecRefs(text)) {
-    if (id === selfId || !namespaces.has(namespace(id))) {
+    if (id === selfId || !isReference(id)) {
       continue;
     }
     if (id in index.duplicates) {
-      report('mdl/ref', from, to, duplicate(id));
+      report('mdl/ref', from, to, duplicateSpecMessage(id));
     } else if (!(id in index.specs)) {
-      report('mdl/ref', from, to, `Unknown spec \`${id}\`.`);
+      report('mdl/ref', from, to, unknownSpecMessage(id));
     } else if (!dependencyIds.has(id)) {
       report('mdl/ref', from, to, `\`${id}\` is not a dependency; add \`uses ${id}: …\` under ## Dependencies.`);
     } else if (!index.specs[id].items.includes(item)) {
-      report('mdl/ref', from, to, `\`${id}\` has no item \`${item}\`.`);
+      report('mdl/ref', from, to, missingItemMessage(id, item));
     }
   }
 
