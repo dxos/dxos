@@ -4,7 +4,7 @@
 
 import { afterEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { Trigger } from '@dxos/async';
+import { TimeoutError, Trigger } from '@dxos/async';
 
 import { BootCacheStore, ServicesUnavailableError } from '../services/boot-cache/index.ts';
 import { TestBuilder } from '../testing/index.ts';
@@ -22,15 +22,6 @@ const writeSnapshot = async (testBuilder: TestBuilder) => {
   await client.destroy();
   expect(await new BootCacheStore().read()).toBeDefined();
 };
-
-const settledWithin = (promise: Promise<unknown>, ms: number) =>
-  Promise.race([
-    promise.then(
-      () => 'resolved' as const,
-      () => 'rejected' as const,
-    ),
-    new Promise<'pending'>((resolve) => setTimeout(() => resolve('pending'), ms)),
-  ]);
 
 describe('Client readiness with a boot cache', () => {
   afterEach(async () => {
@@ -51,11 +42,11 @@ describe('Client readiness with a boot cache', () => {
     await client.initialize();
     expect(client.initialized).toBe(true);
     expect(client.servicesReady).toBe(false);
-    const servicesReady = client.waitUntilServicesReady();
-    expect(await settledWithin(servicesReady, 100)).toEqual('pending');
+    // The gate is still closed, so the services cannot have answered.
+    await expect(client.waitUntilServicesReady({ timeout: 100 })).rejects.toBeInstanceOf(TimeoutError);
 
     gate.wake();
-    await expect(servicesReady).resolves.toBeUndefined();
+    await expect(client.waitUntilServicesReady()).resolves.toBeUndefined();
     expect(client.servicesReady).toBe(true);
   });
 

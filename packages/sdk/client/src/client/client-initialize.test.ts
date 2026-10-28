@@ -94,11 +94,7 @@ describe('Client.waitUntilServicesReady', () => {
     await client.initialize();
     await client.destroy();
     expect(client.servicesReady).toBe(false);
-    const settled = await Promise.race([
-      client.waitUntilServicesReady().then(() => 'settled' as const),
-      new Promise<'pending'>((resolve) => setTimeout(() => resolve('pending'), 100)),
-    ]);
-    expect(settled).toEqual('pending');
+    await expect(client.waitUntilServicesReady({ timeout: 100 })).rejects.toBeInstanceOf(TimeoutError);
 
     await client.initialize();
     await expect(client.waitUntilServicesReady({ timeout: 100 })).resolves.toBeUndefined();
