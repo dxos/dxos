@@ -21,7 +21,7 @@ import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { findSpecRefs, mdl, mdlBlockDescription, specReferenceFilter } from '@dxos/deus/extension';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
@@ -65,6 +65,7 @@ import {
   decisionGutter,
   parseReview,
   pendingReveal,
+  resolveSpecRef,
   reviewGutter,
   sourceLinks,
 } from '#components';
@@ -109,6 +110,9 @@ const isView = (value: string): value is View => (VIEWS as readonly string[]).in
 const MIN_SPLIT = 0.2;
 const MAX_SPLIT = 0.8;
 const SPLIT_STEP = 0.05;
+
+/** Whether a `<spec id>#<item>` reference names a spec the bundled index could describe. */
+const isIndexedSpec = specReferenceFilter(SPEC_INDEX);
 
 const isDiffAgainst = (value: string): value is DiffAgainst => value === 'base' || value === 'head';
 
@@ -221,6 +225,10 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             .map(({ key }) => key)
             .filter(isSpecKey)
             .map(fileKey),
+          ...findSpecRefs(ownText)
+            .filter(({ id }) => isIndexedSpec(id))
+            .map(({ id }) => resolveSpecRef(SPEC_INDEX, id))
+            .flatMap((resolved) => ('error' in resolved ? [] : [fileKey(resolved)])),
         ].filter(isTruthy),
       [reviewKey, spec, key, codeTarget, ownText],
     );
@@ -345,6 +353,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       [reveal],
     );
 
+    // A review keeps its `github:` evidence keys, which the index would report as errors.
+    const isReviewFile = key?.path.endsWith('.review.mdl') ?? false;
     const extensions = useMemo(
       () =>
         [
@@ -352,7 +362,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
-          mdl({ index: SPEC_INDEX }),
+          mdl(isReviewFile ? {} : { index: SPEC_INDEX }),
           sourceLinks((target) => void open(target), SPEC_INDEX),
           ViewPlugin.define((editor) => {
             viewRef.current = editor;
@@ -389,7 +399,21 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open, readLatest, baseText, fold],
+      [
+        identity,
+        space,
+        spec?.id,
+        target,
+        themeMode,
+        readOnly,
+        isReviewFile,
+        decisions,
+        review,
+        open,
+        readLatest,
+        baseText,
+        fold,
+      ],
     );
 
     const syncEntry = spec ? sync.specs[spec.id] : undefined;
@@ -532,6 +556,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                       content={text}
                       base={baseText}
                       specs={specs}
+                      index={SPEC_INDEX}
                       review={review}
                       onActivate={activate}
                     />

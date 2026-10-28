@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { type SpecIndex } from '@dxos/deus/spec-index';
+
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
 import TRIP_SPEC from '../../../../plugin-trip/PLUGIN.mdl?raw';
 import {
@@ -140,5 +142,43 @@ describe('spec model', () => {
     const [join] = buildApiModel(spec).groups[0].endpoints;
     expect(join.inputs.map(({ name, type }) => `${name}: ${type}`)).toEqual(['peers: Map<string, Peer>', 'id: string']);
     expect(join.output).toBe('Peer[]');
+  });
+});
+
+describe('spec references', () => {
+  const index: SpecIndex = {
+    specs: { 'org.test.alpha': { path: 'packages/alpha/PLUGIN.mdl', items: ['F-1', 'Scene'] } },
+    duplicates: {},
+  };
+  const fence = (body: string) => ['```mdl', body, '```'].join('\n');
+  const spec = [
+    fence(['feat F-1: Draws things', '  desc: Renders an org.test.alpha#Scene, not foo.bar#Thing.'].join('\n')),
+    fence('type Scene'),
+    fence('type Thing'),
+  ].join('\n\n');
+
+  test('a reference to an indexed spec becomes an external node keyed by its file', ({ expect }) => {
+    const graph = buildDefinitionGraph(spec, new Map(), [], index);
+    const id = 'github:dxos/dxos/packages/alpha/PLUGIN.mdl#Scene';
+    expect(graph.definitions.find((definition) => definition.id === id)).toMatchObject({
+      external: {
+        target: 'spec',
+        key: { owner: 'dxos', repo: 'dxos', path: 'packages/alpha/PLUGIN.mdl', fragment: 'Scene' },
+        fragment: 'Scene',
+      },
+    });
+    expect(graph.edges).toContainEqual(expect.objectContaining({ from: 'F-1', to: id }));
+  });
+
+  test('a reference’s item is not read as a local block of the same name', ({ expect }) => {
+    const graph = buildDefinitionGraph(spec, new Map(), [], index);
+    expect(graph.edges).not.toContainEqual(expect.objectContaining({ from: 'F-1', to: 'Scene' }));
+  });
+
+  test('a reference outside the indexed namespaces creates nothing', ({ expect }) => {
+    const graph = buildDefinitionGraph(spec, new Map(), [], index);
+    expect(graph.definitions.filter(({ external }) => external).map(({ id }) => id)).toEqual([
+      'github:dxos/dxos/packages/alpha/PLUGIN.mdl#Scene',
+    ]);
   });
 });
