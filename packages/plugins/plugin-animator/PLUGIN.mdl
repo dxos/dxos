@@ -220,7 +220,7 @@ component AnimatorArticle
 
 ```mdl
 op CreateAnimation
-  key: org.dxos.operation.animator.animation.create
+  key: org.dxos.operation.animator.createAnimation
   desc: Creates an Animation with one shot per given stage object, each with an empty timeline.
   input:
     name?: string
@@ -232,8 +232,8 @@ op CreateAnimation
 ```
 
 ```mdl
-op Key
-  key: org.dxos.operation.animator.timeline.key
+op SetKey
+  key: org.dxos.operation.animator.setKey
   desc: Keys a target property, an effect parameter or the camera at a time in a shot.
   input:
     animation: Ref<Animation>
@@ -250,7 +250,7 @@ op Key
 
 ```mdl
 op SetScript
-  key: org.dxos.operation.animator.script.set
+  key: org.dxos.operation.animator.setScript
   desc: Replaces a shot's script and compiles it to keys, returning compile errors by beat.
   input:
     animation: Ref<Animation>
@@ -637,6 +637,16 @@ decision D-21: Screen text (captions, side title, image headline, curtain) belon
 ```
 
 ---
+
+```mdl
+decision D-22: The implemented operation keys take the repository's `<root>.operation.<package>.<verbNoun>` shape: `animator.createAnimation`, `animator.setKey` (the `Key` operation renamed `SetKey`) and `animator.setScript`. Fills in [D-2].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:CreateAnimation, op:SetKey, op:SetScript]
+  why: The `operation-key-shape` lint rule rejects dotted subject paths such as `animator.timeline.key`, and a red lint fails CI.
+  rejected: Keeping the dotted keys and disabling the rule for this package.
+```
 
 ## Appendix: Extension Definitions
 

@@ -11,6 +11,7 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
+import * as AnimatorPlugin from '@dxos/plugin-animator/AnimatorPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -340,6 +341,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
  */
 // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
 const experimental: Plugin.Plugin[] = [
+  AnimatorPlugin.make(),
   BloggerPlugin.make(),
   BlueskyPlugin.make(),
   BrainPlugin.make(),

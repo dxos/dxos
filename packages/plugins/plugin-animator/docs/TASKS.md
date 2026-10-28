@@ -29,7 +29,10 @@ paths), design the plugin, and turn the approved design into an MDL spec.
 
 ## Phase 2: plugin-animator and the canvas stage
 
-- [ ] Scaffold the package (`"private": true`), `Animation` type, article, `Stage` capability.
+- [x] Scaffold the package (`"private": true`), `Animation` and `Effect` types, `AnimatorCapabilities.Stage`
+      (`@dxos/plugin-animator/AnimatorCapabilities`), playback core (`src/model`: sequencing, script compile and merge,
+      sampling), `AnimatorArticle` with a story over an in-story dots stage, and the `CreateAnimation`, `SetKey` and
+      `SetScript` operations. Registered in composer-app's experimental set, off by default.
 - [ ] Canvas stage in plugin-canvas; remove canvas `View.timeline` in favour of `Animation` (F-2.3).
 
 ## Phase 3: 3D

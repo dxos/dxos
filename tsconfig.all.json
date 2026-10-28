@@ -388,6 +388,9 @@
       "path": "packages/plugins/plugin-agent/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-animator/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {

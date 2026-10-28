@@ -251,6 +251,7 @@
     [
       "@dxos/cli",
       "@dxos/plugin-agent",
+      "@dxos/plugin-animator",
       "@dxos/plugin-assistant",
       "@dxos/plugin-atproto",
       "@dxos/plugin-attention",
