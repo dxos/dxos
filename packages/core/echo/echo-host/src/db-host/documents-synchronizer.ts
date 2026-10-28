@@ -362,7 +362,7 @@ export class DocumentsSynchronizer extends Resource {
     syncState.lastSentHead = A.getHeads(doc);
     countWork('automerge.mutationsSent');
     countWork('automerge.mutationSentBytes', mutation.length);
-    return { documentId, mutation, passive: syncState.passive ? passiveObject(doc) : undefined };
+    return { documentId, mutation, passive: syncState.passive ? passiveObject(doc, since) : undefined };
   }
 
   private async _writeMutation(ctx: Context, documentId: DocumentId, mutation: Uint8Array): Promise<void> {
@@ -395,16 +395,47 @@ export class DocumentsSynchronizer extends Resource {
   }
 }
 
-const passiveObject = (doc: A.Doc<DatabaseDirectory>): DataService.DocumentUpdate['passive'] => {
+const passiveObject = (
+  doc: A.Doc<DatabaseDirectory>,
+  since: Heads | undefined,
+): DataService.DocumentUpdate['passive'] => {
   const heads = A.getHeads(doc);
   const [entry] = Object.entries(doc.objects ?? {});
-  return {
-    heads,
-    json: entry && backingJson(doc, entry[1], objectStructureToJson(entry[0] as EntityId, entry[1])),
-    updatedAt: lastChangeTime(doc, heads),
-    // Read without knowing which document is a space root: a client applies it only to the root it holds unloaded.
-    directory: entry ? undefined : directoryJson(doc),
-  };
+  const updatedAt = lastChangeTime(doc, heads);
+  if (entry) {
+    return {
+      heads,
+      json: backingJson(doc, entry[1], objectStructureToJson(entry[0] as EntityId, entry[1])),
+      updatedAt,
+    };
+  }
+  // Read without knowing which document is a space root: a client applies it only to the root it holds unloaded.
+  const links = since && linkDelta(A.diff(doc, since, heads));
+  return links
+    ? { heads, updatedAt, directoryDelta: { base: [...since], links: JSON.stringify(links) } }
+    : { heads, updatedAt, directory: directoryJson(doc) };
+};
+
+/**
+ * The link entries a change set put or deleted, or undefined when it touched anything else: a root gains an
+ * object per created object, so resending its whole directory on each would cost a client time in its size.
+ */
+const linkDelta = (patches: A.Patch[]): Record<string, string | null> | undefined => {
+  const links: Record<string, string | null> = {};
+  for (const patch of patches) {
+    if (patch.path.length !== 2 || patch.path[0] !== 'links') {
+      return undefined;
+    }
+    const objectId = String(patch.path[1]);
+    if (patch.action === 'del') {
+      links[objectId] = null;
+    } else if (patch.action === 'put' && (typeof patch.value === 'string' || patch.value instanceof A.RawString)) {
+      links[objectId] = patch.value.toString();
+    } else {
+      return undefined;
+    }
+  }
+  return links;
 };
 
 const lastChangeTime = (doc: A.Doc<unknown>, heads: A.Heads): number | undefined => {

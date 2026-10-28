@@ -157,6 +157,26 @@ describe('DocHandleProxy', () => {
     expect(handle.doc().links).toEqual({ a: 'automerge:a' });
   });
 
+  test('a link delta from heads the handle does not show is not applied', () => {
+    const base = A.from<{ links: Record<string, string> }>({ links: {} });
+    const handle = new DocHandleProxy<{ links: Record<string, string> }>({
+      documentId: DOCUMENT_ID,
+      passive: { bytes: A.save(base), heads: A.getHeads(base) },
+      onDelete: () => {},
+    });
+    const deltas: (string | undefined)[] = [];
+    handle.on('passive', ({ directoryLinks }) => deltas.push(directoryLinks));
+    const links = JSON.stringify({ a: 'automerge:a' });
+
+    handle._integratePassiveUpdate(undefined, { heads: ['other'], directoryDelta: { base: ['elsewhere'], links } });
+    expect(deltas).toEqual([undefined]);
+    expect(handle.passiveHeads).toEqual(A.getHeads(base));
+
+    handle._integratePassiveUpdate(undefined, { heads: ['next'], directoryDelta: { base: A.getHeads(base), links } });
+    expect(deltas).toEqual([undefined, links]);
+    expect(handle.passiveHeads).toEqual(['next']);
+  });
+
   test('a document the host cannot produce fails its waiters', async () => {
     const handle = new DocHandleProxy<{ text: string }>({ documentId: DOCUMENT_ID, onDelete: () => {} });
     const ready = handle.whenReady();

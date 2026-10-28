@@ -41,9 +41,17 @@ export type ClientDocHandleEvents<T> = {
   /**
    * A passive handle took a change from the host: what its document's one object now shows, read at
    * `heads`. No `json` when the object cannot be shown without loading the document; `directory` is the
-   * document read as a space directory, set when it holds no inline objects.
+   * document read as a space directory, set when it holds no inline objects; `directoryLinks` is set instead
+   * when only links changed since the heads the handle showed, mapping each to its url or `null` once removed.
    */
-  passive: { handle: DocHandleProxy<T>; heads: A.Heads; json?: string; directory?: string; updatedAt?: number };
+  passive: {
+    handle: DocHandleProxy<T>;
+    heads: A.Heads;
+    json?: string;
+    directory?: string;
+    directoryLinks?: string;
+    updatedAt?: number;
+  };
   /** A passive handle loaded its stored changes; emitted once, before the call that loaded it returns. */
   activated: { handle: DocHandleProxy<T> };
 };
@@ -570,10 +578,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   /**
    * @internal
    */
-  _integratePassiveUpdate(
-    mutation: Uint8Array | undefined,
-    passive: { heads: A.Heads; json?: string; directory?: string; updatedAt?: number } | undefined,
-  ): void {
+  _integratePassiveUpdate(mutation: Uint8Array | undefined, passive: PassiveUpdate | undefined): void {
     const held = this.#body;
     invariant(held?.kind === 'passive', 'Not a passive handle.');
     if (mutation?.length) {
@@ -581,11 +586,22 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       held.size += mutation.length;
     }
     const json = held.size <= BACKED_OBJECT_LIMIT ? passive?.json : undefined;
-    const directory = held.size <= BACKED_DIRECTORY_LIMIT ? passive?.directory : undefined;
-    if (passive && (json !== undefined || directory !== undefined)) {
+    const backsDirectory = held.size <= BACKED_DIRECTORY_LIMIT;
+    const directory = backsDirectory ? passive?.directory : undefined;
+    // A delta applies only to the heads it was taken from; from any others the document has to load.
+    const delta = passive?.directoryDelta;
+    const directoryLinks = backsDirectory && delta && sameHeads(delta.base, held.heads) ? delta.links : undefined;
+    if (passive && (json !== undefined || directory !== undefined || directoryLinks !== undefined)) {
       held.heads = passive.heads;
     }
-    this.emit('passive', { handle: this, heads: held.heads, json, directory, updatedAt: passive?.updatedAt });
+    this.emit('passive', {
+      handle: this,
+      heads: held.heads,
+      json,
+      directory,
+      directoryLinks,
+      updatedAt: passive?.updatedAt,
+    });
   }
 
   /**
@@ -626,6 +642,15 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     });
   }
 }
+
+/** What the host sends with a passive handle's change; see `DataService.DocumentUpdate.passive`. */
+export type PassiveUpdate = {
+  heads: A.Heads;
+  json?: string;
+  directory?: string;
+  directoryDelta?: { base: A.Heads; links: string };
+  updatedAt?: number;
+};
 
 const joinChunks = (passive: PassiveBody): Uint8Array => {
   if (passive.chunks.length !== 1) {

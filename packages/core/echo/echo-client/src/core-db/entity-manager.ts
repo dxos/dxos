@@ -220,9 +220,10 @@ export class EntityManager implements IDatabaseBinding {
 
   /**
    * The space root read from JSON while its handle stays passive, so routing never loads Automerge; undefined once
-   * the root is loaded, after which its document is read directly. `text` is kept for the working-set export.
+   * the root is loaded, after which its document is read directly. `text` is the JSON as last serialized, kept for
+   * the working-set export and dropped when a link delta changes the view.
    */
-  #directory: { json: DirectoryJson; text: string } | undefined = undefined;
+  #directory: { json: DirectoryJson; text?: string } | undefined = undefined;
 
   /** Stops following the passive root's host updates and activation. */
   #unwatchRoot: CleanupFn | undefined = undefined;
@@ -637,7 +638,7 @@ export class EntityManager implements IDatabaseBinding {
     }
     const rootRow: WorkingSetRow = { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes };
     // A passive root's text is what the host sent at these heads; a loaded one is acknowledged, so its doc is at them.
-    const rootJson = this.#directory?.text ?? directoryJson(root.doc());
+    const rootJson = this.#directory ? this.#directoryText(this.#directory) : directoryJson(root.doc());
     if (rootJson !== undefined) {
       rootRow.directoryJson = rootJson;
     }
@@ -2063,10 +2064,19 @@ export class EntityManager implements IDatabaseBinding {
     };
   }
 
-  /** Moves the passive root's view to the directory the host sent, or loads the root when it sent none. */
-  #onRootPassiveUpdate(handle: DocHandleProxy<DatabaseDirectory>, { directory }: PassiveUpdate): void {
+  #directoryText(directory: { json: DirectoryJson; text?: string }): string {
+    directory.text ??= JSON.stringify(directory.json);
+    return directory.text;
+  }
+
+  /** Moves the passive root's view to the directory or link delta the host sent, or loads the root when it sent neither. */
+  #onRootPassiveUpdate(handle: DocHandleProxy<DatabaseDirectory>, { directory, directoryLinks }: PassiveUpdate): void {
     const before = this.#directory;
     if (this.#closing || handle !== this._spaceRootDocHandle || !handle.passiveHeads || !before) {
+      return;
+    }
+    if (directoryLinks !== undefined) {
+      this.#applyLinkDelta(handle, before, JSON.parse(directoryLinks));
       return;
     }
     if (directory === undefined) {
@@ -2096,6 +2106,30 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
+  /** Applies a link delta to the view in place, which costs the size of the delta rather than of the directory. */
+  #applyLinkDelta(
+    handle: DocHandleProxy<DatabaseDirectory>,
+    directory: { json: DirectoryJson; text?: string },
+    delta: Record<string, string | null>,
+  ): void {
+    const links = (directory.json.links ??= {});
+    const removed: string[] = [];
+    const changedLinks: SpaceDocumentLinks = {};
+    for (const [objectId, url] of Object.entries(delta)) {
+      if (url === null) {
+        delete links[objectId];
+        removed.push(objectId);
+      } else {
+        links[objectId] = url;
+        if (isValidAutomergeUrl(url)) {
+          changedLinks[objectId] = url;
+        }
+      }
+    }
+    directory.text = undefined;
+    this.#applyRouting(handle, removed, changedLinks, []);
+  }
+
   /**
    * Applies a directory change read from JSON rather than from patches: the same evictions, link loads and inline
    * object creations `_onDocumentUpdate` makes for a loaded root.
@@ -2108,16 +2142,8 @@ export class EntityManager implements IDatabaseBinding {
     const beforeLinks = before.links ?? {};
     const afterLinks = after.links ?? {};
     const removed = [...Object.keys(beforeLinks), ...Object.keys(before.objects ?? {})].filter(
-      (objectId) =>
-        afterLinks[objectId] == null &&
-        after.objects?.[objectId] == null &&
-        (this._objects.has(objectId) || this._objectDocumentHandles.has(objectId)) &&
-        !this._pendingDocumentCreations.has(objectId),
+      (objectId) => afterLinks[objectId] == null && after.objects?.[objectId] == null,
     );
-    for (const objectId of removed) {
-      this._objects.delete(objectId);
-      this._releaseObject(objectId, { releaseDocument: true });
-    }
     const changedLinks: SpaceDocumentLinks = {};
     for (const [objectId, url] of Object.entries(afterLinks)) {
       const value = url.toString();
@@ -2126,6 +2152,25 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
     const created = Object.keys(after.objects ?? {}).filter((objectId) => !this._objects.has(objectId));
+    this.#applyRouting(handle, removed, changedLinks, created);
+  }
+
+  /** Evicts the objects whose entry went, loads the links that came or moved, and creates new inline objects. */
+  #applyRouting(
+    handle: DocHandleProxy<DatabaseDirectory>,
+    removedIds: string[],
+    changedLinks: SpaceDocumentLinks,
+    created: string[],
+  ): void {
+    const removed = removedIds.filter(
+      (objectId) =>
+        (this._objects.has(objectId) || this._objectDocumentHandles.has(objectId)) &&
+        !this._pendingDocumentCreations.has(objectId),
+    );
+    for (const objectId of removed) {
+      this._objects.delete(objectId);
+      this._releaseObject(objectId, { releaseDocument: true });
+    }
     this._createInlineObjects(handle, created);
     this._onObjectLinksUpdated(changedLinks);
     if (removed.length > 0 || created.length > 0) {

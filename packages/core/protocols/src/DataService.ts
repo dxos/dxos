@@ -126,6 +126,17 @@ export const DocumentUpdate = Schema.Struct({
        * `@dxos/echo-protocol`), so a client holding the space root unloaded routes objects from it.
        */
       directory: Schema.optional(Schema.String),
+      /**
+       * Sent instead of `directory` when only link entries changed since `base`, the heads the client last
+       * shown the directory at: `links` is JSON mapping each changed object id to its document url, or to
+       * `null` where the link was removed. A client showing other heads loads the document instead.
+       */
+      directoryDelta: Schema.optional(
+        Schema.Struct({
+          base: mutableArray(Schema.String),
+          links: Schema.String,
+        }),
+      ),
     }),
   ),
 });
