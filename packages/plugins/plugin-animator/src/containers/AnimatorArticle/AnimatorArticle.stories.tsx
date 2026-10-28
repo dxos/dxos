@@ -9,6 +9,7 @@ import { createTimeline, setKey } from '@dxos/animation';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { BUILTIN_EFFECTS } from '#effects';
@@ -111,6 +112,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    withAttention('story'),
     withPluginManager({ capabilities: [Capability.contribute(AnimatorCapabilities.Stage, dotsStage)] }),
   ],
   parameters: {
