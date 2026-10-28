@@ -6,3 +6,8 @@ export * from './ResearchThread/index.ts';
 export * from './ResultCard/index.ts';
 export * from './ResultDetail/index.ts';
 export * from './ResultPills/index.ts';
+export * from './LighthouseMeta/index.ts';
+export * from './ModelPanel/index.ts';
+export * from './RelationsPanel/index.ts';
+export * from './SubjectGraph/index.ts';
+export * from './TracePanel/index.ts';

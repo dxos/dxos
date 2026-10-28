@@ -11,12 +11,19 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
+import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';
 import { Research } from '#types';
 
-import { RESULT_COMPANION, RESULT_COMPANION_DATA } from '../constants.ts';
+import {
+  LIGHTHOUSE_CONNECTOR_ID,
+  META_COMPANION,
+  META_COMPANION_DATA,
+  RESULT_COMPANION,
+  RESULT_COMPANION_DATA,
+} from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -33,6 +40,25 @@ export default Capability.makeModule(
               label: ['result.companion.label', { ns: meta.profile.key }],
               icon: 'ph--binoculars--regular',
               data: RESULT_COMPANION_DATA,
+            }),
+          ]),
+      }),
+
+      // Lighthouse itself (plugins, vocabulary, issues, storage), beside a Lighthouse connection.
+      AppGraphBuilder.createExtension({
+        id: 'lighthouseMeta',
+        relation: AppNode.companion,
+        match: (node) =>
+          Connection.instanceOf(node.data) && node.data.connectorId === LIGHTHOUSE_CONNECTOR_ID
+            ? Option.some(node.data)
+            : Option.none(),
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: META_COMPANION,
+              label: ['meta.companion.label', { ns: meta.profile.key }],
+              icon: 'ph--lighthouse--regular',
+              data: META_COMPANION_DATA,
             }),
           ]),
       }),

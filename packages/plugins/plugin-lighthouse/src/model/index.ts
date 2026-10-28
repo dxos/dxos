@@ -8,3 +8,5 @@ export * from './rating.ts';
 export * from './results.ts';
 export * from './session-state.ts';
 export * from './trajectory.ts';
+export * from './explain.ts';
+export * from './model-panel.ts';

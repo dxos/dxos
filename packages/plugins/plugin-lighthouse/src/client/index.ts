@@ -8,3 +8,4 @@ export * from './client.ts';
 export * from './decode.ts';
 export * from './sse.ts';
 export * from './types.ts';
+export * from './decode-meta.ts';

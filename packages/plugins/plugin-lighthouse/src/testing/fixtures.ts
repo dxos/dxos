@@ -14,6 +14,10 @@ import {
 } from '#client';
 
 import { type RatingModel } from '../model/rating.ts';
+import { explainFixture } from './explain-fixture.ts';
+import { graphFixture, nodeFactsFixture } from './graph-fixture.ts';
+import { issuesFixture, pluginsFixture, predicatesFixture, storageFixture } from './meta-fixture.ts';
+import { FUEGO_CHILD, fuegoDishes } from './research-fixture.ts';
 
 /** The URL scheme the fixture client answers; a story's connection points at it. */
 export const FIXTURE_URL = 'fixture://lighthouse';
@@ -126,7 +130,20 @@ export const extensions: Extension[] = [
     description: 'What it serves, with prices.',
     appliesTo: ['schema:CafeOrCoffeeShop'],
     fields: ['highlights', 'priceRange'],
-    research: { item: 'dish', items: 'dishes', link: 'lh:menuItem', budget: { minutes: 4, usd: 0.04, pages: 10 } },
+    research: {
+      item: 'dish',
+      items: 'dishes',
+      link: 'lh:menuItem',
+      class: 'schema:MenuItem',
+      fields: {
+        name: 'schema:name',
+        price: 'lh:price',
+        currency: 'lh:currency',
+        section: 'lh:menuSection',
+        description: 'schema:description',
+      },
+      budget: { minutes: 6, usd: 0.06, pages: 14 },
+    },
   },
 ];
 
@@ -233,7 +250,9 @@ export const makeFixtureClient = (status: Session['status'] = 'reported'): Light
     ]),
   listExtensions: () => Effect.succeed(extensions),
   createSession: () => Effect.succeed({ run: RUN }),
-  getSession: () => Effect.succeed(session(status)),
+  getSession: (run) => Effect.succeed(run === FUEGO_CHILD.run ? FUEGO_CHILD : session(status)),
+  listSessions: () => Effect.succeed([session(status), FUEGO_CHILD]),
+  listResults: (run) => Effect.succeed(run === FUEGO_CHILD.run ? fuegoDishes : []),
   sendMessage: () => Effect.void,
   stopSession: () => Effect.void,
   sendFeedback: () => Effect.void,
@@ -248,6 +267,17 @@ export const makeFixtureClient = (status: Session['status'] = 'reported'): Light
           provenance: [{ extractor: 'google.maps.search@1.2.0', source: 'https://www.google.com/maps', at: at(9) }],
         }))[0],
     ),
+  getGraph: () => Effect.succeed(graphFixture),
+  getGraphNode: (iri) => Effect.succeed(nodeFactsFixture(iri)),
+  explain: () => Effect.succeed(explainFixture),
+  listPlugins: () => Effect.succeed(pluginsFixture),
+  listPredicates: () => Effect.succeed(predicatesFixture),
+  listIssues: () => Effect.succeed(issuesFixture),
+  commentIssue: (id) => Effect.succeed(issuesFixture.find((issue) => issue.id === id)),
+  setIssueStatus: (id) => Effect.succeed(issuesFixture.find((issue) => issue.id === id)),
+  getStorage: () => Effect.succeed(storageFixture),
+  clearCache: () => Effect.succeed(storageFixture),
+  pruneSnapshots: () => Effect.succeed(storageFixture),
   streamSession: (_run, onUpdate) =>
     Effect.sync(() => {
       onUpdate({ type: 'connection', connected: true });

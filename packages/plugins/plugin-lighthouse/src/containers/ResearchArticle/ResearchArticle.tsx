@@ -11,6 +11,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as Operation from '@dxos/compute/Operation';
 import { Filter, Format, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Attention, useSelection } from '@dxos/react-ui-attention';
@@ -27,13 +28,14 @@ import * as Status from '@dxos/react-ui/Status';
 import { Tag as TagChip } from '@dxos/react-ui/Tag';
 
 import { type Entity, type Session } from '#client';
-import { ResearchThread, ResultCard } from '#components';
-import { useEngines, useLighthouseClient, useSession } from '#hooks';
+import { ModelPanel, ResearchThread, ResultCard, SubjectGraph, TracePanel } from '#components';
+import { useEngines, useExplain, useLighthouseClient, useSession, useSubjectGraph } from '#hooks';
 import { meta } from '#meta';
 import {
   BUDGETS,
   type CardModel,
   type Rating,
+  type RatingOverrides,
   applyVote,
   formatBudget,
   isResult,
@@ -145,6 +147,9 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   );
 
   const [view, setView] = useState<'all' | 'findings'>('all');
+  // Results (the ranked masonry), Graph (the subjects' neighbourhood) or Trace (the trajectory as a tree).
+  const [mode, setMode] = useState<'results' | 'graph' | 'trace'>('results');
+  const [showModel, setShowModel] = useState(false);
   const [error, setError] = useState<string>();
   const spaceId = db?.spaceId;
 
@@ -324,6 +329,40 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   );
 
   const busy = session?.busy ?? false;
+
+  // An entity session ("everything about X") opens on its subjects' graph; a list session on the ranked results.
+  const intent = session?.intent;
+  const roots = useMemo(
+    () =>
+      session?.subjects ??
+      session?.report?.subjects ??
+      (intent === 'entity' ? picks.flatMap(({ entity }) => (entity ? [entity.id] : [])) : []),
+    [session?.subjects, session?.report?.subjects, intent, picks],
+  );
+  const defaulted = useRef<string>(undefined);
+  useEffect(() => {
+    if (session && defaulted.current !== session.run) {
+      defaulted.current = session.run;
+      setMode(session.intent === 'entity' ? 'graph' : 'results');
+    }
+  }, [session]);
+
+  const subjectGraph = useSubjectGraph(mode === 'graph' ? client : undefined, roots);
+  const trace = useExplain(mode === 'trace' ? client : undefined, snapshot.run, state.lastSeq);
+
+  const handleOverrides = useCallback(
+    (overrides: RatingOverrides) => {
+      const run = snapshot.run;
+      update((state) => ({ ...state, rating: { ...state.rating, overrides } }));
+      if (client && run) {
+        void EffectEx.runPromise(client.setOverrides(run, overrides)).catch((err: unknown) =>
+          setError(err instanceof Error ? err.message : String(err)),
+        );
+      }
+    },
+    [client, snapshot.run, update],
+  );
+
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().group(
       'view',
@@ -347,6 +386,42 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         );
       },
     );
+    builder.group(
+      'mode',
+      {
+        label: ['view-mode.label', { ns: meta.profile.key }],
+        variant: 'toggleGroup',
+        selectCardinality: 'single',
+        value: mode,
+      },
+      (group) => {
+        group.action(
+          'results',
+          { label: ['mode-results.label', { ns: meta.profile.key }], icon: 'ph--squares-four--regular' },
+          () => setMode('results'),
+        );
+        group.action(
+          'graph',
+          { label: ['mode-graph.label', { ns: meta.profile.key }], icon: 'ph--graph--regular' },
+          () => setMode('graph'),
+        );
+        group.action(
+          'trace',
+          { label: ['mode-trace.label', { ns: meta.profile.key }], icon: 'ph--tree-structure--regular' },
+          () => setMode('trace'),
+        );
+      },
+    );
+    if (state.rating.model && mode === 'results') {
+      builder.action(
+        'model',
+        {
+          label: ['model-toggle.label', { ns: meta.profile.key }],
+          icon: showModel ? 'ph--sliders-horizontal--fill' : 'ph--sliders-horizontal--regular',
+        },
+        () => setShowModel((show) => !show),
+      );
+    }
     if (busy) {
       builder.action(
         'stop',
@@ -355,7 +430,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       );
     }
     return builder.build();
-  }, [view, busy, handleStop]);
+  }, [view, mode, showModel, state.rating.model, busy, handleStop]);
 
   const hasConnection = !!snapshot.connection || connections.length > 0;
   const budget = snapshot.budget ?? 'quick';
@@ -375,7 +450,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
             <Layout.Flex column gap='sm' classNames='p-trim-md border-b border-separator'>
               <Form.Root
                 schema={ResearchFormSchema}
-                values={{ goal: snapshot.goal, budget }}
+                values={{ goal: snapshot.goal || session?.goal || '', budget }}
                 autoSave
                 onSave={handleSave}
               >
@@ -422,30 +497,70 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
             {snapshot.run && <ResearchThread messages={messages} busy={busy} disabled={!client} onSend={handleSend} />}
           </Layout.Flex>
 
-          {tiles.length === 0 ? (
-            <Status.Empty classNames='h-full'>
-              {t(
-                view === 'findings'
-                  ? 'no-findings.message'
-                  : snapshot.run
-                    ? 'no-results-yet.message'
-                    : 'no-results.message',
-              )}
-            </Status.Empty>
+          {mode === 'graph' ? (
+            subjectGraph.graph && subjectGraph.graph.nodes.length > 0 ? (
+              <SubjectGraph
+                graph={subjectGraph.graph}
+                selectedId={currentId}
+                onSelect={handleSelect}
+                onMore={subjectGraph.expand}
+                classNames='h-full'
+              />
+            ) : (
+              <Status.Empty classNames='h-full'>
+                {t(
+                  subjectGraph.error
+                    ? 'graph-error.message'
+                    : subjectGraph.loading
+                      ? 'graph-loading.message'
+                      : 'graph-empty.message',
+                  { error: subjectGraph.error },
+                )}
+              </Status.Empty>
+            )
+          ) : mode === 'trace' ? (
+            <TracePanel tree={trace.tree} loading={trace.loading} error={trace.error} />
           ) : (
-            <Masonry.Root Tile={TileAdapter} minColumnWidth={18} maxColumnWidth={24}>
-              <Masonry.Content padding>
-                <Masonry.Viewport
-                  getId={(data) => data.tile.id}
-                  items={tiles.map((tile) => ({
-                    tile,
-                    onToggleStar: handleToggleStar,
-                    onVote: view === 'all' ? handleVote : undefined,
-                  }))}
-                  itemProps={itemProps}
-                />
-              </Masonry.Content>
-            </Masonry.Root>
+            <Layout.Flex column classNames='h-full min-h-0'>
+              {showModel && state.rating.model && (
+                <Layout.Flex column classNames='max-h-[50%] overflow-y-auto border-b border-separator'>
+                  <ModelPanel
+                    model={state.rating.model}
+                    overrides={state.rating.overrides}
+                    items={items}
+                    onChange={handleOverrides}
+                    onClose={() => setShowModel(false)}
+                  />
+                </Layout.Flex>
+              )}
+              <Layout.Flex column grow>
+                {tiles.length === 0 ? (
+                  <Status.Empty classNames='h-full'>
+                    {t(
+                      view === 'findings'
+                        ? 'no-findings.message'
+                        : snapshot.run
+                          ? 'no-results-yet.message'
+                          : 'no-results.message',
+                    )}
+                  </Status.Empty>
+                ) : (
+                  <Masonry.Root Tile={TileAdapter} minColumnWidth={18} maxColumnWidth={24}>
+                    <Masonry.Content padding>
+                      <Masonry.Viewport
+                        getId={(data) => data.tile.id}
+                        items={tiles.map((tile) => ({
+                          tile,
+                          onToggleStar: handleToggleStar,
+                          onVote: view === 'all' ? handleVote : undefined,
+                        }))}
+                        itemProps={itemProps}
+                      />
+                    </Masonry.Content>
+                  </Masonry.Root>
+                )}
+              </Layout.Flex>
+            </Layout.Flex>
           )}
         </Layout.Grid>
       </Panel.Body>

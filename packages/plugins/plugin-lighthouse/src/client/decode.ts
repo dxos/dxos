@@ -137,8 +137,10 @@ const toReport = (value: unknown): Report | undefined => {
   }
   // The legacy server names the picks `findings`; /v1 names them `picks`.
   const picks = asArray(record.picks ?? record.findings).flatMap((item) => toPick(item) ?? []);
+  const subjects = asStrings(record.subjects);
   return {
     picks,
+    ...(subjects.length ? { subjects } : {}),
     ...(asString(record.answer) ? { answer: asString(record.answer) } : {}),
     ...(asString(record.gaps) ? { gaps: asString(record.gaps) } : {}),
     ...(asString(record.next) ? { next: asString(record.next) } : {}),
@@ -178,7 +180,22 @@ export const toSession = (value: unknown): Session | undefined => {
   const legacyBudget = asRecord(record.budget)?.budget !== undefined ? asRecord(record.budget) : undefined;
   const model = asRecord(record.model);
   const report = toReport(record.report);
+  const intent = record.intent === 'entity' || record.intent === 'list' ? record.intent : undefined;
+  const parent = asRecord(record.parent);
+  const parentRun = asString(parent?.run);
+  const subjects = asStrings(record.subjects);
   return {
+    ...(intent ? { intent } : {}),
+    ...(parentRun
+      ? {
+          parent: {
+            run: parentRun,
+            ...(asString(parent?.subject) ? { subject: asString(parent?.subject) } : {}),
+            ...(asString(parent?.extension) ? { extension: asString(parent?.extension) } : {}),
+          },
+        }
+      : {}),
+    ...(subjects.length ? { subjects } : {}),
     run,
     goal: asString(record.goal) ?? '',
     status,
@@ -356,6 +373,13 @@ export const toExtension = (value: unknown): Extension | undefined => {
             item: asString(research.item) ?? 'item',
             items: asString(research.items) ?? 'items',
             link: asString(research.link) ?? '',
+            ...(asString(research.class) ? { class: asString(research.class) } : {}),
+            fields: Object.fromEntries(
+              Object.entries(asRecord(research.fields) ?? {}).flatMap(([field, spec]) => {
+                const predicate = asString(asRecord(spec)?.predicate);
+                return predicate ? [[field, predicate]] : [];
+              }),
+            ),
             budget: toBudget(research.budget),
           },
         }

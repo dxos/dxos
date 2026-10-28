@@ -8,11 +8,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Connection } from '@dxos/link';
 
-import { ResearchArticle, ResultArticle } from '#containers';
+import { LighthouseMetaArticle, ResearchArticle, ResultArticle } from '#containers';
 import { Research } from '#types';
 
-import { RESULT_COMPANION_DATA } from '../constants.ts';
+import { LIGHTHOUSE_CONNECTOR_ID, META_COMPANION_DATA, RESULT_COMPANION_DATA } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -37,6 +38,20 @@ export default Capability.makeModule(() =>
           companionTo,
           attendableId,
         }),
+      }),
+      // Lighthouse's own state, as a companion to a Lighthouse connection.
+      Surface.create({
+        id: 'metaCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, META_COMPANION_DATA),
+          AppSurface.companion(
+            AppSurface.Article,
+            (value): value is Connection.Connection =>
+              Connection.instanceOf(value) && value.connectorId === LIGHTHOUSE_CONNECTOR_ID,
+          ),
+        ),
+        component: LighthouseMetaArticle,
+        props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
       }),
     ]),
   ),

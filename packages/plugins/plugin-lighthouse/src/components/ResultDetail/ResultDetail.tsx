@@ -28,6 +28,65 @@ const Heading = ({ children }: { children: string }) => (
   <Typography.Text classNames='text-xs uppercase tracking-wide text-fg-subtle'>{children}</Typography.Text>
 );
 
+const first = (entity: Entity, predicate: string | undefined) =>
+  predicate ? entity.props[predicate]?.at(-1) : undefined;
+
+/** A deep extension's items (a menu's dishes), grouped by their section, with prices. */
+const ResearchItems = ({
+  extension,
+  research,
+}: {
+  extension: Extension;
+  research: { status: string; busy: boolean; items: readonly Entity[] };
+}) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const fields = extension.research?.fields ?? {};
+  const sections = new Map<string, Entity[]>();
+  for (const item of research.items) {
+    const section = String(first(item, fields.section) ?? '');
+    sections.set(section, [...(sections.get(section) ?? []), item]);
+  }
+  return (
+    <Layout.Flex column gap='xs' data-testid={`lighthouse.research.${extension.id}`}>
+      <span className='text-sm text-fg-muted'>
+        {research.busy
+          ? t('research-running.label')
+          : t('research-items.label', { count: research.items.length, items: extension.research?.items ?? '' })}
+      </span>
+      {research.items.length > 0 && (
+        <Layout.Flex column gap='sm' classNames='max-h-96 overflow-y-auto pe-1'>
+          {[...sections.entries()].map(([section, items]) => (
+            <Layout.Flex key={section || '-'} column gap='xs'>
+              {section && <Heading>{section}</Heading>}
+              {items.map((item) => {
+                const price = first(item, fields.price);
+                const currency = first(item, fields.currency);
+                const description = first(item, fields.description);
+                return (
+                  <Layout.Grid key={item.id} cols={['fill', 'min']} gap='sm' align='start' classNames='text-sm'>
+                    <Layout.Flex column classNames='min-w-0'>
+                      <span>{String(first(item, fields.name ?? 'schema:name') ?? item.id)}</span>
+                      {description !== undefined && (
+                        <span className='text-xs text-fg-muted line-clamp-2'>{String(description)}</span>
+                      )}
+                    </Layout.Flex>
+                    {price !== undefined && (
+                      <span className='tabular-nums whitespace-nowrap'>
+                        {typeof price === 'number' ? price.toLocaleString() : String(price)}
+                        {currency !== undefined ? ` ${String(currency)}` : ''}
+                      </span>
+                    )}
+                  </Layout.Grid>
+                );
+              })}
+            </Layout.Flex>
+          ))}
+        </Layout.Flex>
+      )}
+    </Layout.Flex>
+  );
+};
+
 export type ResultDetailProps = {
   entity: Entity;
   card: CardModel;
@@ -42,6 +101,8 @@ export type ResultDetailProps = {
   busy?: Readonly<Record<string, boolean>>;
   /** The agent's reason, when the result is a pick. */
   why?: string;
+  /** Deep extensions' research sessions, by extension id: their status and the items they collected. */
+  research?: Readonly<Record<string, { status: string; busy: boolean; items: readonly Entity[] }>>;
   onToggleStar?: () => void;
   onVote?: (vote: 'up' | 'down') => void;
   onExtend?: (extension: string, deep: boolean) => void;
@@ -62,6 +123,7 @@ export const ResultDetail = ({
   extensionNodes = {},
   busy = {},
   why,
+  research = {},
   onToggleStar,
   onVote,
   onExtend,
@@ -69,8 +131,8 @@ export const ResultDetail = ({
 }: ResultDetailProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const facts = factsOf(entity);
-  const read = extensions.filter((extension) => extensionNodes[extension.id]);
-  const unread = extensions.filter((extension) => !extensionNodes[extension.id]);
+  const read = extensions.filter((extension) => extensionNodes[extension.id] || research[extension.id]);
+  const unread = extensions.filter((extension) => !extensionNodes[extension.id] && !research[extension.id]);
 
   return (
     <Layout.Flex column gap='md' classNames='p-trim-md' data-testid='lighthouse.detail'>
@@ -204,8 +266,23 @@ export const ResultDetail = ({
           .filter((row) => row.values.length > 0);
         return (
           <Layout.Flex key={extension.id} column gap='xs' data-testid={`lighthouse.extension.${extension.id}`}>
-            <Layout.Grid cols={['fill', 'min']} gap='sm' align='center'>
+            <Layout.Grid cols={['fill', 'min', 'min']} gap='sm' align='center'>
               <Heading>{extension.label}</Heading>
+              {onExtend && extension.research && !research[extension.id] ? (
+                <Button.Root
+                  variant='ghost'
+                  iconOnly
+                  icon={
+                    busy[`${extension.id}:deep`] ? 'ph--circle-notch--regular' : 'ph--list-magnifying-glass--regular'
+                  }
+                  label={t('extension-research.label')}
+                  disabled={busy[`${extension.id}:deep`]}
+                  onClick={() => onExtend(extension.id, true)}
+                  data-testid={`lighthouse.research-start.${extension.id}`}
+                />
+              ) : (
+                <span />
+              )}
               {onExtend && (
                 <Button.Root
                   variant='ghost'
@@ -217,6 +294,9 @@ export const ResultDetail = ({
                 />
               )}
             </Layout.Grid>
+            {research[extension.id] && extension.research && (
+              <ResearchItems extension={extension} research={research[extension.id]} />
+            )}
             {rows.length ? (
               <dl className='grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm'>
                 {rows.map((row) => (
@@ -227,7 +307,7 @@ export const ResultDetail = ({
                 ))}
               </dl>
             ) : (
-              <span className='text-sm text-fg-muted'>{t('extension-empty.message')}</span>
+              !research[extension.id] && <span className='text-sm text-fg-muted'>{t('extension-empty.message')}</span>
             )}
           </Layout.Flex>
         );
@@ -258,6 +338,7 @@ export const ResultDetail = ({
                   label={t('extension-research.label')}
                   disabled={busy[`${extension.id}:deep`]}
                   onClick={() => onExtend(extension.id, true)}
+                  data-testid={`lighthouse.research-start.${extension.id}`}
                 />
               ) : (
                 <span />

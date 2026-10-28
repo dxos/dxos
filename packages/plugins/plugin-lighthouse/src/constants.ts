@@ -16,3 +16,9 @@ export const RESULT_COMPANION = 'result';
 
 /** The companion's subject: a sentinel, since the result it shows is read live and is not an ECHO object. */
 export const RESULT_COMPANION_DATA = 'org.dxos.plugin.lighthouse.result';
+
+/** Companion variant of a lighthouse connection's meta (plugins, vocabulary, issues, storage). */
+export const META_COMPANION = 'lighthouse';
+
+/** The meta companion's subject: a sentinel, like the result companion's. */
+export const META_COMPANION_DATA = 'org.dxos.plugin.lighthouse.meta';

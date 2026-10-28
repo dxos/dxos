@@ -15,13 +15,21 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { useSelection } from '@dxos/react-ui-attention';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 
 import { type Entity } from '#client';
-import { ResultDetail } from '#components';
-import { useExtensions, useLighthouseClient, useSession } from '#hooks';
+import { RelationsPanel, ResultDetail } from '#components';
+import {
+  useChildResearch,
+  useExtensionNodes,
+  useExtensions,
+  useLighthouseClient,
+  useSession,
+  useSubjectGraph,
+} from '#hooks';
 import { meta } from '#meta';
 import { applyOverrides, applyVote, matchPicks, nextVote, rateAll, toCard } from '#model';
 import { Finding, LighthouseOperation, Research } from '#types';
@@ -77,7 +85,10 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
   const entity = useMemo((): Entity | undefined => {
     const finding = kept.at(-1);
     const base: Entity | undefined = live ?? (finding && findingEntity(finding));
-    return base && graph ? { ...base, props: { ...base.props, ...graph.props }, provenance: graph.provenance } : base;
+    // A graph node that is no result of this session (a person's employer, a co-author) is read from the graph alone.
+    return base && graph
+      ? { ...base, props: { ...base.props, ...graph.props }, provenance: graph.provenance }
+      : (base ?? graph);
   }, [live, kept, graph]);
 
   const rating = useMemo(() => {
@@ -100,16 +111,22 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
         : [],
     [extensions, entity],
   );
-  const extensionNodes = useMemo(
+  // Extension nodes and deep research are re-read after a read lands; a deep read's child run is kept until listed.
+  const [extensionVersion, setExtensionVersion] = useState(0);
+  const [childRuns, setChildRuns] = useState<Record<string, string>>({});
+  const extensionNodes = useExtensionNodes(client, iri, applicable, extensionVersion);
+  const childResearch = useChildResearch(client, iri, applicable, childRuns);
+  const deepResearch = useMemo(
     () =>
       Object.fromEntries(
-        applicable.flatMap((extension) => {
-          const node = state.results.find((candidate) => candidate.id === `${iri}#ext-${extension.id}`);
-          return node ? [[extension.id, node]] : [];
-        }),
+        Object.entries(childResearch).map(([extension, { session, items }]) => [
+          extension,
+          { status: session.status, busy: session.busy, items },
+        ]),
       ),
-    [applicable, state.results, iri],
+    [childResearch],
   );
+  const relations = useSubjectGraph(client, iri ? [iri] : undefined, { depth: 1, limit: 40 });
 
   const [busy, setBusy] = useState<Record<string, boolean>>({});
 
@@ -166,11 +183,24 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
       }
       const key = deep ? `${extension}:deep` : extension;
       setBusy((busy) => ({ ...busy, [key]: true }));
-      void invoke(LighthouseOperation.ExtendFinding, { research: Ref.make(research), iri, extension, deep }).finally(
-        () => setBusy((busy) => ({ ...busy, [key]: false })),
-      );
+      void invoke(LighthouseOperation.ExtendFinding, { research: Ref.make(research), iri, extension, deep })
+        .then((result) => {
+          if (result?.child) {
+            const child = result.child;
+            setChildRuns((runs) => ({ ...runs, [extension]: child }));
+          }
+          setExtensionVersion((version) => version + 1);
+        })
+        .finally(() => setBusy((busy) => ({ ...busy, [key]: false })));
     },
     [iri, invoke, research],
+  );
+
+  const handleSelect = useCallback(
+    (selected: string) => {
+      void invokePromise(LayoutOperation.Select, { contextId, subject: { mode: 'single', id: selected } });
+    },
+    [invokePromise, contextId],
   );
 
   const handleClose = useCallback(() => {
@@ -182,22 +212,26 @@ export const ResultArticle = ({ role, companionTo: research, attendableId }: Res
       <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            {entity && card ? (
-              <ResultDetail
-                entity={entity}
-                card={card}
-                rating={rating}
-                starred={starred}
-                vote={vote}
-                why={why}
-                extensions={applicable}
-                extensionNodes={extensionNodes}
-                busy={busy}
-                onToggleStar={handleToggleStar}
-                onVote={snapshot.run ? handleVote : undefined}
-                onExtend={snapshot.run ? handleExtend : undefined}
-                onClose={handleClose}
-              />
+            {entity && card && iri ? (
+              <Layout.Flex column>
+                <ResultDetail
+                  entity={entity}
+                  card={card}
+                  rating={rating}
+                  starred={starred}
+                  vote={vote}
+                  why={why}
+                  extensions={applicable}
+                  extensionNodes={extensionNodes}
+                  research={deepResearch}
+                  busy={busy}
+                  onToggleStar={handleToggleStar}
+                  onVote={snapshot.run ? handleVote : undefined}
+                  onExtend={snapshot.run ? handleExtend : undefined}
+                  onClose={handleClose}
+                />
+                <RelationsPanel graph={relations.graph} iri={iri} onSelect={handleSelect} />
+              </Layout.Flex>
             ) : (
               <Status.Empty classNames='h-full'>{t('no-result-selected.message')}</Status.Empty>
             )}

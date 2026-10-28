@@ -9,6 +9,11 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { meta } from '#meta';
 import { Finding, Research } from '#types';
 
+import { metaTranslations } from './components/LighthouseMeta/translations.ts';
+import { modelTranslations } from './components/ModelPanel/translations.ts';
+import { graphTranslations } from './components/SubjectGraph/translations.ts';
+import { traceTranslations } from './components/TracePanel/translations.ts';
+
 export const translations = [
   ...formTranslations,
   {
@@ -26,7 +31,24 @@ export const translations = [
         'typename.label_other': 'Findings',
       },
       [meta.profile.key]: {
+        ...graphTranslations,
+        ...traceTranslations,
+        ...modelTranslations,
+        ...metaTranslations,
         'plugin.name': 'Lighthouse',
+        'view-mode.label': 'View',
+        'mode-results.label': 'Results',
+        'mode-graph.label': 'Graph',
+        'mode-trace.label': 'Trace',
+        'model-toggle.label': 'Rating model',
+        'graph-loading.message': 'Loading the graph…',
+        'graph-empty.message': 'No subjects to draw yet: the graph appears once the agent identifies them.',
+        'graph-error.message': 'The graph could not be read: {{error}}',
+        'relations.heading': 'Relations',
+        'research-items.label_one': '{{count}} {{items}}',
+        'research-items.label_other': '{{count}} {{items}}',
+        'research-running.label': 'Researching…',
+        'meta.companion.label': 'Lighthouse',
         'result.companion.label': 'Result',
         'run.label': 'Run',
         'run-again.label': 'Run again',

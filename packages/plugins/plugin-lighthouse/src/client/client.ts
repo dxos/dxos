@@ -7,16 +7,33 @@ import * as Effect from 'effect/Effect';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 import { type RatingOverrides } from '../model/rating.ts';
-import { asRecord, asString, toEngines, toEntity, toExtensions, toSession, toUpdate } from './decode.ts';
+import {
+  toExplainNode,
+  toIssue,
+  toIssues,
+  toNodeFacts,
+  toPlugins,
+  toPredicates,
+  toSubjectGraph,
+} from './decode-meta.ts';
+import { asRecord, asString, toEngines, toEntities, toEntity, toExtensions, toSession, toUpdate } from './decode.ts';
 import { createSseParser } from './sse.ts';
 import {
   type Budget,
   type Engine,
   type Entity,
+  type ExplainNode,
   type Extension,
+  type Issue,
+  type IssueStatus,
+  type NodeFacts,
+  type Plugin,
+  type Predicate,
   type Session,
   type SessionUpdate,
   type Status,
+  type StorageReport,
+  type SubjectGraph,
   type Vote,
 } from './types.ts';
 
@@ -53,6 +70,10 @@ export interface LighthouseClient {
   listExtensions(): Effect.Effect<Extension[], LighthouseError>;
   createSession(input: { goal: string; budget?: Budget }): Effect.Effect<{ run: string }, LighthouseError>;
   getSession(run: string): Effect.Effect<Session, LighthouseError>;
+  /** Every session, archived ones included (a deep extension's research sessions are archived when they report). */
+  listSessions(): Effect.Effect<Session[], LighthouseError>;
+  /** A session's results (`GET /sessions/:run/results`), unranked, up to `limit`. */
+  listResults(run: string, options?: { limit?: number }): Effect.Effect<Entity[], LighthouseError>;
   sendMessage(run: string, text: string, options?: { model?: string }): Effect.Effect<void, LighthouseError>;
   stopSession(run: string): Effect.Effect<void, LighthouseError>;
   sendFeedback(run: string, id: string, vote: Vote): Effect.Effect<void, LighthouseError>;
@@ -64,6 +85,23 @@ export interface LighthouseClient {
   /** One subject's current facts with provenance. */
   getEntity(iri: string): Effect.Effect<Entity | undefined, LighthouseError>;
   streamSession(run: string, onUpdate: (update: SessionUpdate) => void): Effect.Effect<never>;
+  /** The roots' neighbourhood in the graph (`GET /v1/graph?iri=a,b&depth=&limit=`). */
+  getGraph(
+    iris: readonly string[],
+    options?: { depth?: number; limit?: number },
+  ): Effect.Effect<SubjectGraph, LighthouseError>;
+  /** One node's facts with provenance (`GET /v1/graph/node?iri=`). */
+  getGraphNode(iri: string): Effect.Effect<NodeFacts, LighthouseError>;
+  /** The session's trajectory as a tree (`GET /v1/sessions/:run/explain`). */
+  explain(run: string): Effect.Effect<ExplainNode, LighthouseError>;
+  listPlugins(): Effect.Effect<Plugin[], LighthouseError>;
+  listPredicates(): Effect.Effect<Predicate[], LighthouseError>;
+  listIssues(): Effect.Effect<Issue[], LighthouseError>;
+  commentIssue(id: string, text: string): Effect.Effect<Issue | undefined, LighthouseError>;
+  setIssueStatus(id: string, status: IssueStatus, note?: string): Effect.Effect<Issue | undefined, LighthouseError>;
+  getStorage(): Effect.Effect<StorageReport, LighthouseError>;
+  clearCache(namespace?: string): Effect.Effect<StorageReport, LighthouseError>;
+  pruneSnapshots(options: { olderThanDays?: number; dryRun?: boolean }): Effect.Effect<StorageReport, LighthouseError>;
 }
 
 const RECONNECT_DELAY = '2 seconds';
@@ -200,6 +238,16 @@ export const makeClient = (endpoint: LighthouseEndpoint): LighthouseClient => {
             : Effect.fail(new LighthouseError(undefined, 'bad_response', { message: `No session ${run}.` }));
         }),
       ),
+    listSessions: () =>
+      Effect.all([get('/sessions?archived=0'), get('/sessions?archived=1')]).pipe(
+        Effect.map(([live, archived]) =>
+          [...(Array.isArray(live) ? live : []), ...(Array.isArray(archived) ? archived : [])].flatMap(
+            (item) => toSession(item) ?? [],
+          ),
+        ),
+      ),
+    listResults: (run, options) =>
+      get(`${session(run)}/results?limit=${options?.limit ?? 500}`).pipe(Effect.map(toEntities)),
     sendMessage: (run, text, options) =>
       post(`${session(run)}/messages`, { text, ...options, from: CLIENT_NAME }).pipe(Effect.asVoid),
     stopSession: (run) => post(`${session(run)}/stop`).pipe(Effect.asVoid),
@@ -218,5 +266,41 @@ export const makeClient = (endpoint: LighthouseEndpoint): LighthouseClient => {
       ),
     getEntity: (iri) => get(`/entities?iri=${encodeURIComponent(iri)}&provenance=1`).pipe(Effect.map(toEntity)),
     streamSession,
+    getGraph: (iris, options) => {
+      const query = new URLSearchParams({ iri: iris.join(',') });
+      if (options?.depth !== undefined) {
+        query.set('depth', String(options.depth));
+      }
+      if (options?.limit !== undefined) {
+        query.set('limit', String(options.limit));
+      }
+      return get(`/graph?${query}`).pipe(Effect.map(toSubjectGraph));
+    },
+    getGraphNode: (iri) => get(`/graph/node?iri=${encodeURIComponent(iri)}`).pipe(Effect.map(toNodeFacts)),
+    explain: (run) =>
+      get(`${session(run)}/explain`).pipe(
+        Effect.flatMap((json) => {
+          const tree = toExplainNode(json);
+          return tree
+            ? Effect.succeed(tree)
+            : Effect.fail(new LighthouseError(undefined, 'bad_response', { message: `No trace for ${run}.` }));
+        }),
+      ),
+    listPlugins: () => get('/plugins').pipe(Effect.map(toPlugins)),
+    listPredicates: () => get('/predicates').pipe(Effect.map(toPredicates)),
+    listIssues: () => get('/issues').pipe(Effect.map(toIssues)),
+    commentIssue: (id, text) =>
+      post(`/issues/${encodeURIComponent(id)}/comment`, { text, from: CLIENT_NAME }).pipe(Effect.map(toIssue)),
+    setIssueStatus: (id, status, note) =>
+      request('PUT', `/issues/${encodeURIComponent(id)}/status`, {
+        status,
+        ...(note ? { note } : {}),
+        from: CLIENT_NAME,
+      }).pipe(Effect.map(toIssue)),
+    getStorage: () => get('/storage').pipe(Effect.map((json) => asRecord(json) ?? {})),
+    clearCache: (namespace) =>
+      post('/storage/cache/clear', namespace ? { namespace } : {}).pipe(Effect.map((json) => asRecord(json) ?? {})),
+    pruneSnapshots: (options) =>
+      post('/storage/snapshots/prune', options).pipe(Effect.map((json) => asRecord(json) ?? {})),
   };
 };

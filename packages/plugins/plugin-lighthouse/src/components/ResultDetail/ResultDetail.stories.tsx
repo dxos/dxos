@@ -11,6 +11,7 @@ import { translations } from '#translations';
 import { rateAll } from '../../model/rating.ts';
 import { toCard } from '../../model/results.ts';
 import { entities, extensionNode, extensions, meeple, ratingModel } from '../../testing/fixtures.ts';
+import { fuegoDishes } from '../../testing/research-fixture.ts';
 import { ResultDetail } from './ResultDetail.tsx';
 
 const entity = {
@@ -45,5 +46,15 @@ export const Default: Story = {
     onExtend: () => {},
     onToggleStar: () => {},
     onClose: () => {},
+  },
+};
+
+/** A deep extension's research: a menu's dishes, grouped by section, from a child research session. */
+export const DeepResearch: Story = {
+  args: {
+    ...Default.args,
+    entity,
+    card: toCard(entity),
+    research: { menu: { status: 'reported', busy: false, items: fuegoDishes } },
   },
 };

@@ -19,6 +19,12 @@ import { LIGHTHOUSE_CONNECTOR_ID } from '../constants.ts';
 /** Input schema for creating a Research; types the `props` passed to createObject. */
 const CreateResearchSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  run: Schema.optional(
+    Schema.String.annotate({
+      title: 'Existing session',
+      description: 'A lighthouse run id, to open a session started elsewhere (the CLI, the web UI)',
+    }),
+  ),
 });
 
 export default Capability.makeModule(
@@ -34,6 +40,7 @@ export default Capability.makeModule(
           );
           const object = Research.make({
             name: props.name ?? 'New research',
+            ...(props.run?.trim() ? { run: props.run.trim() } : {}),
             ...(connections[0] ? { connection: Ref.make(connections[0]) } : {}),
           });
           return yield* Operation.invoke(
