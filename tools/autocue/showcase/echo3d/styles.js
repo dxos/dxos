@@ -40,7 +40,9 @@ const rimMaterial = (color) =>
       varying vec3 vView;
       void main() {
         float rim = pow(1.0 - abs(dot(vNormal, vView)), 3.0);
-        gl_FragColor = vec4(mix(uColor, vec3(1.0), 0.35), rim * uOpacity);
+        // A pixel of noise, so the rim's long, faint falloff dithers instead of banding.
+        float noise = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+        gl_FragColor = vec4(mix(uColor, vec3(1.0), 0.35), rim * uOpacity + noise / 255.0);
       }
     `,
     transparent: true,
@@ -50,7 +52,13 @@ const rimMaterial = (color) =>
 // A shaded sphere; below full opacity it is a see-through glass shell (with a rim), so the spheres nested inside stay
 // visible and the shell still reads as a ball.
 const shadedSphere = (spec, opacity) => {
-  const material = new THREE.MeshStandardMaterial({ color: spec.color, roughness: 0.6, transparent: true });
+  // Dithered, so the smooth shading across a large sphere does not band into visible steps in 8-bit colour.
+  const material = new THREE.MeshStandardMaterial({
+    color: spec.color,
+    roughness: 0.6,
+    transparent: true,
+    dithering: true,
+  });
   const geometry = new THREE.SphereGeometry(spec.size, 64, 32);
   const mesh = new THREE.Mesh(geometry, material);
   if (opacity >= 1) {
@@ -69,6 +77,7 @@ const shadedSphere = (spec, opacity) => {
       // Much darker than the shell's colour, so the far wall reads as depth rather than a lit surface.
       color: new THREE.Color(spec.color).multiplyScalar(BACK_SHADE),
       roughness: 0.6,
+      dithering: true,
       transparent: true,
       side: THREE.BackSide,
     });

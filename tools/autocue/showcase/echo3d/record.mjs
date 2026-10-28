@@ -8,7 +8,7 @@
  * into ffmpeg. A live screencast drops frames, so camera moves would judder; this cannot.
  *
  *   node record.mjs [--out echo3d.mp4] [--fps 60] [--url http://localhost:7420] [--width 1920] [--height 1080]
- *     [--from blank] [--to company-fills] [--quality 92]
+ *     [--from blank] [--to company-fills] [--supersample 1]
  *
  * Each slide holds for HOLDS[id] seconds from the moment it is entered, then the next one starts. Sound is not
  * recorded: the page synthesises it live, so it would be laid in afterwards.
@@ -28,7 +28,9 @@ const { values } = parseArgs({
     height: { type: 'string', default: '1080' },
     from: { type: 'string', default: 'blank' },
     to: { type: 'string', default: 'company-fills' },
-    quality: { type: 'string', default: '92' },
+    // Pixel density the page renders at; 2 renders at twice the size and scales down, smoothing edges, but thins
+    // one-pixel lines (the lattice) and takes about four times as long.
+    supersample: { type: 'string', default: '1' },
   },
 });
 
@@ -104,7 +106,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--ignore-gpu-blocklist', '--enable-gpu-rasterization', '--use-angle=metal', '--hide-scrollbars'],
 });
-const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: Number(values.supersample) });
 await page.addInitScript(virtualClock);
 // The pager is for presenting; it has no place in the video.
 await page.addInitScript(() => {
@@ -131,12 +133,18 @@ const ffmpeg = spawn(
     String(fps),
     '-i',
     '-',
+    // Area-average the supersampled frame down to the output size.
+    '-vf',
+    `scale=${width}:${height}:flags=area`,
     '-c:v',
     'libx264',
     '-preset',
-    'medium',
+    'slow',
+    // Low CRF and the grain tune keep the renderer's dither, which a smoother encode would flatten back into bands.
     '-crf',
-    '16',
+    '12',
+    '-tune',
+    'grain',
     '-pix_fmt',
     'yuv420p',
     '-movflags',
@@ -155,7 +163,8 @@ for (;;) {
   const count = Math.round(hold * fps);
   for (let frame = 0; frame < count; frame++) {
     await page.evaluate((milliseconds) => window.__step(milliseconds), frameMs);
-    const image = await page.screenshot({ type: 'jpeg', quality: Number(values.quality) });
+    // Lossless frames: JPEG's own 8x8 blocks band smooth gradients.
+    const image = await page.screenshot({ type: 'png' });
     if (!ffmpeg.stdin.write(image)) {
       await once(ffmpeg.stdin, 'drain');
     }
