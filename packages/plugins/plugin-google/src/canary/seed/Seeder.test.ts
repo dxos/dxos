@@ -125,4 +125,20 @@ describe('Seeder.rotate', () => {
     }
     expect(calls).toEqual([]);
   });
+
+  test('refuses a pool smaller than the count before writing anything', async ({ expect }) => {
+    const writes: string[] = [];
+    const gmail: SeederGmail = {
+      ensureLabel: (name) => Effect.succeed(`label:${name}`),
+      listIds: () => Effect.succeed(['newest', 'oldest']),
+      getMessage: () => Effect.sync(() => void writes.push('getMessage')).pipe(Effect.as(POOL_MESSAGE)),
+      insert: () => Effect.sync(() => void writes.push('insert')).pipe(Effect.as('copy')),
+      trash: () => Effect.sync(() => void writes.push('trash')),
+      getMetadata: (id) => Effect.succeed({ id, internalDate: 0, headers: {} }),
+    };
+
+    const exit = await EffectEx.runPromise(new Seeder(gmail).rotate({ count: 3, now: NOW }).pipe(Effect.exit));
+    expect(Exit.isFailure(exit)).toBe(true);
+    expect(writes).toEqual([]);
+  });
 });

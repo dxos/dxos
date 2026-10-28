@@ -26,12 +26,14 @@ describe('CanaryMailbox', () => {
     expect(new Set(ids).size).toBe(1_200);
   });
 
-  test('returns only the asked-for headers, matched without regard to case', async ({ expect }) => {
+  test('returns only the asked-for headers, keyed by the names asked for', async ({ expect }) => {
     const mailbox = new CanaryMailbox(await EffectEx.runPromise(mockApi()));
     const message = dataset.messages[0];
-    const metadata = await EffectEx.runPromise(mailbox.getMetadata(message.id, ['subject', 'From']));
+    const subject = message.payload.headers.find((header) => header.name === 'Subject')?.value;
+    const metadata = await EffectEx.runPromise(mailbox.getMetadata(message.id, ['subject', 'From', 'X-Absent']));
     expect(metadata.internalDate).toBe(Number(message.internalDate));
-    expect(Object.keys(metadata.headers).sort()).toEqual(['From', 'Subject']);
+    expect(Object.keys(metadata.headers).sort()).toEqual(['From', 'subject']);
+    expect(metadata.headers.subject).toBe(subject);
   });
 
   test('retries Gmail quota errors and gives up on anything else', async ({ expect }) => {

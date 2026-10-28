@@ -79,16 +79,17 @@ export class CanaryMailbox {
     return this.#call((api) => api.getRawMessage(USER, id)).pipe(Effect.map((message) => decode(message.raw)));
   }
 
+  /** The named headers, keyed by the names asked for, since header names are case-insensitive and Gmail keeps the sender's case. */
   getMetadata(id: string, headerNames: readonly string[]): Effect.Effect<MessageMetadata, CanaryMailboxError> {
-    const wanted = new Set(headerNames.map((name) => name.toLowerCase()));
     return this.#call((api) => api.getMessage(USER, id)).pipe(
       Effect.map((message) => ({
         id: message.id,
         internalDate: Number(message.internalDate),
         headers: Object.fromEntries(
-          message.payload.headers
-            .filter((header) => wanted.has(header.name.toLowerCase()))
-            .map((header) => [header.name, header.value]),
+          headerNames.flatMap((name) => {
+            const header = message.payload.headers.find((header) => header.name.toLowerCase() === name.toLowerCase());
+            return header ? [[name, header.value]] : [];
+          }),
         ),
       })),
     );

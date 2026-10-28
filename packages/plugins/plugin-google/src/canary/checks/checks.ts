@@ -112,8 +112,8 @@ export type CheckOptions = {
 const MINUTE = 60_000;
 // An invocation may stay open this long before it counts as killed.
 const CLOSURE_GRACE_MS = 10 * MINUTE;
-// A seeded copy may take this long to appear in the mailbox feed.
-const ARRIVAL_GRACE_MS = 25 * MINUTE;
+/** How long a seeded copy may take to appear in the mailbox feed before C5 counts it missing. */
+export const ARRIVAL_GRACE_MS = 25 * MINUTE;
 // Slack on top of the sync's cron interval, to absorb scheduler jitter.
 const CADENCE_SLACK_MS = 2 * MINUTE;
 

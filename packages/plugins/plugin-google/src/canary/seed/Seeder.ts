@@ -56,6 +56,10 @@ export class Seeder {
       const poolLabel = yield* this.#gmail.ensureLabel(POOL_LABEL);
       // Gmail lists newest first, so the oldest pool messages are at the end.
       const poolIds = yield* this.#gmail.listIds(`label:${POOL_LABEL}`);
+      // A short pool would seed fewer copies, and an empty one none, leaving C5 and C7 nothing to fail on.
+      if (poolIds.length < count) {
+        return yield* new CanaryError({ message: `the pool holds ${poolIds.length} messages, fewer than ${count}` });
+      }
       const nonce = now.toISOString().replace(/[^0-9]/g, '');
       const seeded = yield* Effect.forEach(
         poolIds.slice(-count),
