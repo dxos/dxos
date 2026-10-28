@@ -340,6 +340,45 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(statusUpdates.at(-1)?.progress?.key).toBe(MailSync.createSyncProgressKey(mailbox));
   });
 
+  // The progress sink removes a monitor on `progress.complete`, so a capped run reporting it would drop
+  // the meter (and re-enable Sync) between every continuation of one backfill.
+  test('only the final run of a capped sync reports the terminal status', async ({ expect }) => {
+    const now = new Date();
+    const dataset = generateGmailDataset({ count: 25, seed: 29, start: subDays(now, 5), end: subDays(now, 1) });
+    const { db, binding } = await seedGmailBinding(builder);
+
+    const runOnce = async () => {
+      const messages: (string | undefined)[] = [];
+      const traceLayer = Trace.testTraceService().pipe(
+        Layer.provide(
+          Layer.succeed(Trace.TraceSink, {
+            write: (message) => {
+              for (const event of Trace.flatten(message)) {
+                if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                  messages.push(event.data.message);
+                }
+              }
+            },
+          }),
+        ),
+      );
+      const exit = await EffectEx.runPromise(
+        Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: 10 })).pipe(
+          Effect.provide(googleSyncTestServices(db, dataset, { traceLayer })),
+        ),
+      );
+      return { exit, messages };
+    };
+
+    let run = await runOnce();
+    expect(Exit.isFailure(run.exit)).toBe(true);
+    while (Exit.isFailure(run.exit)) {
+      expect(run.messages).not.toContain(Progress.STATUS_COMPLETE);
+      run = await runOnce();
+    }
+    expect(run.messages.at(-1)).toBe(Progress.STATUS_COMPLETE);
+  });
+
   // One meter for the whole chain: each run's total sizes the backfill it has left (Gmail's
   // `resultSizeEstimate`), not just its own capped share, and its count is the messages it keeps. The
   // progress sink places each run's numbers after the chain's, so the total is known from the first run.

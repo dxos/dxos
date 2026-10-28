@@ -15,7 +15,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import { Trigger as AsyncTrigger } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -270,16 +272,24 @@ describe('Binding.sync', () => {
   /** Ids of the toasts the sync raised. */
   const toasts: string[] = [];
 
+  /** What the force-run does while it is in flight — stands in for the run reporting its own progress. */
+  let duringRun = () => {};
+
   const recordingMonitor: Trigger.Manager = {
     triggers: Atom.make<readonly Trigger.State[]>([]),
     localDispatcherEnabled: false,
     // Refuses a switched-off trigger the way the real monitor does.
     invokeTrigger: ({ trigger }) =>
       trigger.enabled
-        ? Effect.sync(() => void fired.push(trigger.id))
+        ? Effect.sync(() => {
+            fired.push(trigger.id);
+            duringRun();
+          })
         : Effect.fail(new Trigger.TriggerDisabledError(trigger.id)),
     resetTrigger: () => Effect.void,
   };
+
+  let progress: AppCapabilities.ProgressRegistry;
 
   const toastHandler = LayoutOperation.AddToast.pipe(
     Operation.withHandler((toast) => Effect.sync(() => void toasts.push(toast.id))),
@@ -291,6 +301,46 @@ describe('Binding.sync', () => {
     await run(target);
 
     expect(fired).toEqual([trigger.id]);
+  });
+
+  // The run reports progress only once it executes — on EDGE, a round trip after the press — so the
+  // target shows as syncing from the fire, until the run's own monitor takes over.
+  test('shows each bound target syncing while the force-run is in flight', async ({ expect }) => {
+    const { target } = await setup();
+    const key = Progress.createSyncKey(target);
+    let during: string | undefined;
+    duringRun = () => {
+      during = progress.snapshot().tasks.find((task) => task.name === key)?.status;
+    };
+
+    await run(target);
+
+    expect(during).toBe('running');
+    // The run reported nothing, so nothing should claim a sync is still going.
+    expect(progress.snapshot().tasks).toEqual([]);
+  });
+
+  test('leaves the run’s own monitor in place when the force-run settles', async ({ expect }) => {
+    const { target } = await setup();
+    const key = Progress.createSyncKey(target);
+    duringRun = () => void progress.register(key, { label: 'Syncing Inbox' });
+
+    await run(target);
+
+    expect(progress.snapshot().tasks.map((task) => task.name)).toEqual([key]);
+  });
+
+  test('does not take over a monitor a run is already reporting into', async ({ expect }) => {
+    const { target } = await setup();
+    const key = Progress.createSyncKey(target);
+    const live = progress.register(key, { label: 'Syncing Inbox' });
+
+    await run(target);
+    live.set(5);
+
+    expect(progress.snapshot().tasks.map(({ name, current }) => ({ name, current }))).toEqual([
+      { name: key, current: 5 },
+    ]);
   });
 
   test('says the routine is switched off instead of running a disabled trigger', async ({ expect }) => {
@@ -347,12 +397,15 @@ describe('Binding.sync', () => {
       interface: Capabilities.ServiceResolver,
       implementation: ServiceResolver.fromContext(Context.make(Trigger.ManagerService, recordingMonitor)),
     });
+    manager.contribute({ module: 'test', interface: AppCapabilities.ProgressRegistry, implementation: progress });
     return manager;
   };
 
   const setup = async () => {
     fired.length = 0;
     toasts.length = 0;
+    duringRun = () => {};
+    progress = Progress.makeRegistry(Registry.make());
     const { db, graph } = await builder.createDatabase();
     graph.registry.add([
       Connection.Connection,

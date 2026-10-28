@@ -7,12 +7,15 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Routine from '@dxos/compute/Routine';
@@ -645,6 +648,11 @@ export const runSync = ({
 /**
  * {@link fireTrigger} through the space's monitor. A monitor that cannot be resolved means the sync never started
  * ({@link ConnectionSyncError}); a switched-off trigger fails as itself so UI callers can point at its routine.
+ *
+ * Every target the run will sync shows as syncing from the moment it is fired: the run reports its own progress
+ * under the same key, but only once it is executing, which on EDGE is a network round trip away. The run's first
+ * report replaces the optimistic monitor; one still in place when the force-run settles means the run reported
+ * nothing (it failed, or found no binding to sync), so it is removed.
  */
 const fireSyncTrigger = ({
   trigger,
@@ -657,15 +665,73 @@ const fireSyncTrigger = ({
   spaceId: Key.SpaceId;
   priority?: string;
 }): Effect.Effect<void, ConnectionSyncError | Trigger.TriggerDisabledError, Capability.Service> =>
-  fireTrigger(trigger, priority ? { priority } : undefined).pipe(
-    Effect.provide(
-      triggerMonitorLayer(spaceId).pipe(
-        Layer.catch((cause) =>
-          Layer.effect(Trigger.ManagerService, Effect.fail(new ConnectionSyncError({ connectorId, cause }))),
+  Effect.gen(function* () {
+    const monitors = yield* registerSyncMonitors(trigger);
+    yield* fireTrigger(trigger, priority ? { priority } : undefined).pipe(
+      Effect.provide(
+        triggerMonitorLayer(spaceId).pipe(
+          Layer.catch((cause) =>
+            Layer.effect(Trigger.ManagerService, Effect.fail(new ConnectionSyncError({ connectorId, cause }))),
+          ),
         ),
       ),
-    ),
-  );
+      // `remove` is a no-op on a handle the run's own report has already replaced.
+      Effect.ensuring(Effect.sync(() => monitors.forEach((monitor) => monitor.remove()))),
+    );
+  });
+
+/**
+ * Registers a running sync monitor for each live target of the connection the trigger's input names. Best
+ * effort: with no progress registry (headless) or no resolvable connection, nothing shows early and the run's
+ * own reports still do.
+ */
+const registerSyncMonitors = (
+  trigger: Trigger.Trigger,
+): Effect.Effect<AppCapabilities.ProgressMonitor[], never, Capability.Service> =>
+  Effect.gen(function* () {
+    const [registry] = yield* Capability.getAll(AppCapabilities.ProgressRegistry);
+    const db = Obj.getDatabase(trigger);
+    const connectionRef = trigger.input?.connection;
+    if (!registry || !db || !Ref.isRef(connectionRef)) {
+      return [];
+    }
+
+    const targets = yield* Effect.gen(function* () {
+      const connection = yield* Database.load(connectionRef);
+      if (!Obj.instanceOf(Connection.Connection, connection)) {
+        return [];
+      }
+      const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
+      const bound = cursors.filter((cursor): cursor is Cursor.ExternalCursor => isForConnection(cursor, connection));
+      const loaded = yield* Effect.forEach(bound, (cursor) => Database.load(cursor.spec.target).pipe(Effect.option));
+      return loaded.flatMap((target) => (Option.isSome(target) ? [target.value] : []));
+    }).pipe(
+      Effect.provide(Database.layer(db)),
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          log.info('sync targets not resolved; no early progress', { error });
+          return [];
+        }),
+      ),
+    );
+
+    // A target already syncing keeps its monitor: the run reporting into it holds that handle, and
+    // re-registering would leave it writing to one the registry no longer shows.
+    const running = new Set(
+      registry
+        .snapshot()
+        .tasks.filter((task) => task.status === 'running')
+        .map((task) => task.name),
+    );
+    return targets.flatMap((target) => {
+      const key = Progress.createSyncKey(target);
+      if (running.has(key)) {
+        return [];
+      }
+      const label = Obj.getLabel(target);
+      return [registry.register(key, { label: label ? `Syncing ${label}` : 'Syncing' })];
+    });
+  });
 
 /**
  * {@link runSync} with the sync button's recreation path: when the account's sync Routine is missing
