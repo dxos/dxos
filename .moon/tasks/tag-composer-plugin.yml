@@ -29,6 +29,10 @@ tasks:
       # output fails the task when nothing was written.
       - file: src/capabilities/gen
         optional: true
+    options:
+      # An optional output is never checked on a cache hit, so a checkout without the gitignored gen
+      # files (the CI workspace snapshot) reuses outputs that are not there; the task takes under a second.
+      cache: false
     tags:
       - prebuild
   build:
