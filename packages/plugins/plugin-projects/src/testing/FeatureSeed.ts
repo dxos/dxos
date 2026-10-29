@@ -47,7 +47,10 @@ export const seed = (
     project = db.add(Project.make({ name })),
   }: { name?: string; features?: readonly FeatureModel[]; project?: Project.Project } = {},
 ): Spec.Spec => {
-  const spec = db.add(Spec.make({ name, project: Ref.make(project) }));
+  const spec = db.add(Spec.make({ name }));
+  Obj.update(project, (project) => {
+    project.spec = Ref.make(spec);
+  });
   const objects = new Map<string, Feature.Feature>();
   for (const model of features) {
     const feature = db.add(

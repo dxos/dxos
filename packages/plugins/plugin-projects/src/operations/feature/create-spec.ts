@@ -9,23 +9,26 @@ import { Database, Obj } from '@dxos/echo';
 
 import { FeatureOperation } from '#types';
 
-import { addSpec, ensureBreakdown, ensureProjectFree } from './util.ts';
+import { addSpec, ensureBreakdown } from './util.ts';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.CreateSpec> = FeatureOperation.CreateSpec.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, description, project, feature: featureRef }) {
       if (featureRef) {
         const feature = yield* Database.load(featureRef);
-        const hadSpec = !!feature.spec;
-        if (!hadSpec) {
-          yield* ensureProjectFree(project);
+        if (project) {
+          return yield* Effect.fail(
+            new FeatureOperation.BreakdownSpecError({
+              message: `The spec breaking down "${feature.name}" belongs to it; its work is tracked in the project above it.`,
+            }),
+          );
         }
+        const hadSpec = !!feature.spec;
         const spec = yield* ensureBreakdown(feature);
         if (!hadSpec) {
           Obj.update(spec, (spec) => {
             spec.name = name;
             spec.description = description;
-            spec.project = project;
           });
         }
         yield* Database.flush();

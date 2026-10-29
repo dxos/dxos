@@ -9,14 +9,16 @@ import { Database, Obj } from '@dxos/echo';
 
 import { FeatureOperation } from '#types';
 
-import { ensureProjectFree } from './util.ts';
+import { clearProject, setProject } from './util.ts';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.UpdateSpec> = FeatureOperation.UpdateSpec.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ spec: specRef, name, description, project }) {
       const spec = yield* Database.load(specRef);
-      if (project) {
-        yield* ensureProjectFree(project, spec);
+      if (project === null) {
+        clearProject(spec);
+      } else if (project !== undefined) {
+        yield* setProject(spec, project);
       }
       Obj.update(spec, (spec) => {
         if (name !== undefined) {
@@ -24,11 +26,6 @@ const handler: Operation.WithHandler<typeof FeatureOperation.UpdateSpec> = Featu
         }
         if (description !== undefined) {
           spec.description = description;
-        }
-        if (project === null) {
-          delete spec.project;
-        } else if (project !== undefined) {
-          spec.project = project;
         }
       });
       yield* Database.flush();

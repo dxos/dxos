@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Project from '@dxos/compute/Project';
-import { Annotation, type Database, DXN, Filter, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { SpecDocument } from '@dxos/types';
 
 import * as Feature from './Feature.ts';
@@ -25,10 +25,10 @@ export type Layout = Schema.Schema.Type<typeof Layout>;
 
 /**
  * A feature map: the features a product area should reach, laid out on a canvas. A spec nests by a feature owning a
- * spec of its own, which breaks that feature down. It may name the project whose tasks deliver it, and hold the
- * normative `.mdl` document its features were extracted from.
+ * spec of its own, which breaks that feature down. A top-level spec may be owned by the project whose tasks deliver it
+ * (`Project.spec`), and may hold the normative `.mdl` document its features were extracted from.
  */
-export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.1.0'))(
+export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
 
@@ -50,9 +50,6 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
 
     layout: Schema.optional(Layout.pipe(Annotation.FormInputAnnotation.set(false))),
 
-    /** The project whose tasks deliver the spec's features; not owned, so deleting the project keeps the spec. */
-    project: Schema.optional(Ref.Ref(Project.Project).pipe(Schema.annotate({ title: 'Project' }))),
-
     /** The normative text the features were extracted from; owned, since a document lives only within its spec. */
     document: Schema.optional(
       Ref.Ref(SpecDocument.SpecDocument).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
@@ -72,13 +69,10 @@ export const make = (props: MakeProps): Spec => Obj.make(Spec, { features: [], .
 
 export const instanceOf = (value: unknown): value is Spec => Obj.instanceOf(Spec, value);
 
-/** Matches the specs that name the project; the operations keep that to one. */
-export const projectFilter = (project: Project.Project) => Filter.type(Spec, { project: Ref.make(project) });
-
-/** The project's spec: the one whose `project` names it. */
-export const getForProject = async (db: Database.Database, project: Project.Project): Promise<Spec | undefined> => {
-  const [spec] = await db.query(projectFilter(project)).run();
-  return spec;
+/** The project that owns the spec: its ECHO parent; undefined for a breakdown or a spec no project owns. */
+export const getProject = (spec: Spec): Project.Project | undefined => {
+  const parent = Obj.getParent(spec);
+  return Obj.instanceOf(Project.Project, parent) ? parent : undefined;
 };
 
 /** The spec whose map lists the feature: its ECHO parent. */
@@ -113,6 +107,8 @@ export const getAncestry = (spec: Spec | undefined): Spec[] => {
 export const isWithin = (spec: Spec, feature: Feature.Feature): boolean =>
   getAncestry(spec).some((current) => getOwner(current)?.id === feature.id);
 
-/** The project that tracks the feature's work: its spec's, else the nearest one up the chain of specs. */
-export const findProject = (feature: Feature.Feature): Ref.Ref<Project.Project> | undefined =>
-  getAncestry(getContainer(feature)).find((spec) => spec.project)?.project;
+/** The project that tracks the feature's work: the one owning the top-level spec above it. */
+export const findProject = (feature: Feature.Feature): Project.Project | undefined => {
+  const top = getAncestry(getContainer(feature)).at(-1);
+  return top && getProject(top);
+};

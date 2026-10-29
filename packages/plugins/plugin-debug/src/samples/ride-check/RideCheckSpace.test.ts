@@ -30,7 +30,6 @@ type Archived = {
   'title'?: string;
   'status'?: string;
   'specs'?: string[];
-  'project'?: { '/': string };
   'document'?: { '/': string };
   'spec'?: { '/': string };
   'features'?: Array<{ '/': string }>;
@@ -90,7 +89,7 @@ describe('Ride Check template', () => {
       const all = ofType('type.feature:');
       const byRef = (ref: { '/': string } | undefined) =>
         objects.find((object) => `echo:///${object.id}` === ref?.['/']);
-      const map = ofType('type.projects.spec:').find((spec) => spec.project);
+      const map = byRef(project.spec);
       const features = (map?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
       const tasks = ofType('type.task:');
 
@@ -105,7 +104,7 @@ describe('Ride Check template', () => {
       const subfeatures = (byRef(features[0].spec)?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
       expect(subfeatures.map((feature) => feature.name)).toEqual(['Rain rule', 'Wind rule']);
       expect(all).toHaveLength(features.length + subfeatures.length);
-      expect(map?.project?.['/']).toBe(`echo:///${project.id}`);
+      expect(map?.['@type']).toContain('type.projects.spec:');
       expect(features.map((feature) => feature.specs)).toEqual(
         ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
       );

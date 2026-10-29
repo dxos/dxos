@@ -9,7 +9,7 @@ import * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { Feature, LegacyFeature, Showcase, Spec } from '#types';
+import { Feature, LegacyFeature, LegacySpec, Showcase, Spec } from '#types';
 
 /**
  * `Feature` 0.1.0 → 0.2.0: `in-progress` leaves the status (work is read from linked tasks), and each subfeature record
@@ -123,8 +123,16 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
     let spec = state.byProject.get(project.id);
     if (!spec) {
       // A spec made for this project by an earlier run is reused rather than duplicated.
-      const existing = await Spec.getForProject(db, project);
-      spec = existing ?? db.add(Spec.make({ name: project.name ?? '', project: Ref.make(project) }));
+      const existing = await project.spec?.tryLoad();
+      if (Spec.instanceOf(existing)) {
+        spec = existing;
+      } else {
+        const made = db.add(Spec.make({ name: project.name ?? '' }));
+        Obj.update(project, (project) => {
+          project.spec = Ref.make(made);
+        });
+        spec = made;
+      }
       state.byProject.set(project.id, spec);
     }
     return spec;
@@ -133,11 +141,11 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   if (state.unplaced) {
     return state.unplaced;
   }
-  // Reused across runs: the top-level spec of that name that names no project.
-  const candidates = await db
+  // Reused across runs: the top-level spec of that name that no project owns.
+  const [existing] = await db
     .query(Filter.and(Filter.type(Spec.Spec, { name: UNPLACED_NAME }), Filter.hasParent(false)))
     .run();
-  const unplaced = candidates.find((spec) => !spec.project) ?? db.add(Spec.make({ name: UNPLACED_NAME }));
+  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME }));
   state.unplaced = unplaced;
   return unplaced;
 };
@@ -194,11 +202,42 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
   });
 };
 
+/**
+ * `Spec` 0.1.0 → 0.2.0: the project owns its spec (`Project.spec`, which makes it the spec's ECHO parent) where the spec
+ * used to name the project. A project that already owns a spec keeps it, and a breakdown keeps the feature that owns
+ * it; either way the spec simply stops naming the project.
+ */
+export const makeSpecOwners = (): Migration.ObjectMigration => {
+  // The project each spec named, read in the transform while its refs are still live.
+  const owners = new Map<string, Project.Project>();
+  return Migration.define({
+    from: LegacySpec.Spec,
+    to: Spec.Spec,
+    transform: async ({ id, project, name, description, features, layout, document }) => {
+      const owner = await project?.tryLoad();
+      if (Obj.instanceOf(Project.Project, owner)) {
+        owners.set(id, owner);
+      }
+      return { name, description, features, layout, document };
+    },
+    onMigration: async ({ object }) => {
+      const owner = owners.get(object.id);
+      owners.delete(object.id);
+      if (owner && !owner.spec && !Obj.getParent(object)) {
+        Obj.update(owner, (owner) => {
+          owner.spec = Ref.make(object);
+        });
+      }
+    },
+  });
+};
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(ClientCapabilities.Migration, [
       featureSubfeatures,
       makeFeatureSpecs(),
+      makeSpecOwners(),
       Showcase.demonstratesMigration,
     ]);
   }),

@@ -23,26 +23,68 @@ export const endpoints = (relation: Relation.Unknown): readonly [string, string]
   entityId(Relation.getTargetURI(relation)),
 ];
 
-/** Fails when a spec other than `spec` already names the project: a project has at most one spec. */
-export const ensureProjectFree = Effect.fn(function* (project: Ref.Ref<Project.Project> | undefined, spec?: Spec.Spec) {
-  if (!project) {
-    return;
-  }
-  const target = yield* Database.load(project);
-  const existing = (yield* Database.query(Spec.projectFilter(target)).run).find((other) => other.id !== spec?.id);
-  if (existing) {
+/** The spec the project owns, if any; a ref to a deleted or foreign object reads as none. */
+export const loadProjectSpec = Effect.fn(function* (project: Project.Project) {
+  const owned = yield* Effect.promise(async () => project.spec?.tryLoad());
+  return Spec.instanceOf(owned) ? owned : undefined;
+});
+
+/** Fails when the project owns a spec other than `spec`: a project has at most one. */
+export const ensureProjectFree = Effect.fn(function* (project: Project.Project, spec?: Spec.Spec) {
+  const existing = yield* loadProjectSpec(project);
+  if (existing && existing.id !== spec?.id) {
     return yield* Effect.fail(
       new FeatureOperation.ProjectHasSpecError({
-        message: `Project "${target.name ?? target.id}" already has a spec: "${existing.name}" (${existing.id}).`,
+        message: `Project "${project.name ?? project.id}" already has a spec: "${existing.name}" (${existing.id}).`,
       }),
     );
   }
 });
 
-/** Adds a top-level spec, refused when its project already has one. */
-export const addSpec = Effect.fn(function* (props: Spec.MakeProps) {
-  yield* ensureProjectFree(props.project);
-  return yield* Database.add(Spec.make(props));
+/**
+ * Makes the project own the spec, which makes it the spec's ECHO parent. Refused when the project owns another spec,
+ * or when a feature owns this one: a breakdown's work is tracked in the project above it.
+ */
+export const setProject = Effect.fn(function* (spec: Spec.Spec, projectRef: Ref.Ref<Project.Project>) {
+  const project = yield* Database.load(projectRef);
+  if (Spec.getOwner(spec)) {
+    return yield* Effect.fail(
+      new FeatureOperation.BreakdownSpecError({
+        message: `"${spec.name}" breaks down a feature, so its work is tracked in the project above it.`,
+      }),
+    );
+  }
+  yield* ensureProjectFree(project, spec);
+  clearProject(spec);
+  Obj.update(project, (project) => {
+    project.spec = Ref.make(spec);
+  });
+});
+
+/** Releases the spec from the project that owns it, leaving the spec top-level. */
+export const clearProject = (spec: Spec.Spec): void => {
+  const project = Spec.getProject(spec);
+  if (project) {
+    Obj.update(project, (project) => {
+      delete project.spec;
+    });
+    Obj.setParent(spec, undefined);
+  }
+};
+
+/** Adds a top-level spec, owned by the project when one is given. */
+export const addSpec = Effect.fn(function* ({
+  project,
+  ...props
+}: Spec.MakeProps & { project?: Ref.Ref<Project.Project> }) {
+  if (project) {
+    yield* ensureProjectFree(yield* Database.load(project));
+  }
+  const spec = yield* Database.add(Spec.make(props));
+  if (project) {
+    yield* setProject(spec, project);
+  }
+  return spec;
 });
 
 /** The spec that breaks the feature down, made (named after it) when it has none. */

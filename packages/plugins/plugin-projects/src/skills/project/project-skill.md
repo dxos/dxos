@@ -286,10 +286,11 @@ A **feature** is a goal state the product should reach ("Compose & send works ag
 Features live on **specs**. A spec is a map of the features one product area should reach; every feature is on
 exactly one spec's map. Features **nest** through specs: a feature may own one spec of its own that breaks it down,
 and the features on that spec are its **subfeatures**, each a feature in its own right with its own description,
-requirements, status, dependencies and tasks. A reader zooms into a feature to see its subfeatures. A spec may name
-the **project** whose tasks deliver it, and may hold the normative `.mdl` document its features came from. A project
-has at most one spec: naming a project that already has one is refused, and the error names that spec. A breakdown
-spec needs no project of its own, since its work is tracked in the project of the spec above it.
+requirements, status, dependencies and tasks. A reader zooms into a feature to see its subfeatures. A top-level spec
+may be owned by the **project** whose tasks deliver it, and may hold the normative `.mdl` document its features came
+from. A project has at most one spec: giving a spec to a project that already has one is refused, and the error names
+that spec. A breakdown spec belongs to its feature, so no project can own it; its work is tracked in the project of
+the spec above it.
 A dependency may cross specs: a feature can need a feature on another spec's map.
 
 **Keep every string short.** A feature map is read at a glance, so write the fewest words that say it:
@@ -306,7 +307,7 @@ become features and requirements: extract them rather than linking to the spec.
   the map and on the specs nested beneath it, with its description, status, requirements, spec, parent,
   dependencies, linked tasks and showcases.
 - Make a spec with `projects-create-spec { name, project?, feature? }`; pass `feature` for the spec that breaks that
-  feature down. Rename it or change its project with `projects-update-spec`.
+  feature down. Rename it, move it to another project, or release it (`project: null`) with `projects-update-spec`.
 - Extract features from a spec document with
   `projects-import-spec-features { path, text, spec? | feature? | name?, project? }`: pass the repo path and the
   text. The text becomes the spec's document, and each `feat` block becomes a feature (its prose the description,

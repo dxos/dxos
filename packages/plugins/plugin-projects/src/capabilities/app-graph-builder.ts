@@ -98,15 +98,15 @@ export default Capability.makeModule(
       type: Spec.Spec,
       connector: () => Effect.succeed([featureCompanion()]),
     });
-    // The same companion beside a project, while a spec names it: the project's Spec tab shows that spec's map.
+    // The same companion beside a project, while it owns a spec: the project's Spec tab shows that spec's map.
     const projectFeatureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
       id: 'projectFeatureCompanion',
       relation: AppNode.companion,
       type: Project.Project,
       connector: (project, get) => {
-        const db = Obj.getDatabase(project);
-        const specs = db ? get(db.query(Spec.projectFilter(project)).atom) : [];
-        return Effect.succeed(specs.length > 0 ? [featureCompanion()] : []);
+        const specRef = get(Obj.atom(project)).spec;
+        const spec = specRef && get(Obj.atomReactive(specRef));
+        return Effect.succeed(Spec.instanceOf(spec) ? [featureCompanion()] : []);
       },
     });
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [

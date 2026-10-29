@@ -8,15 +8,15 @@ import { useMemo } from 'react';
 
 import type * as Project from '@dxos/compute/Project';
 import { Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 
 import { Feature, Spec } from '#types';
 
-/** The project's spec, live: it appears when a spec comes to name the project and goes when it stops. */
+/** The spec the project owns, live: it follows `Project.spec` as it is set, changed or cleared. */
 export const useProjectSpec = (project: Project.Project): Spec.Spec | undefined => {
-  const filter = useMemo(() => Spec.projectFilter(project), [project]);
-  const [spec] = useQuery(Obj.getDatabase(project), filter);
-  return spec;
+  const [specRef] = useObject(project, 'spec');
+  const spec = useResolveRef(specRef);
+  return Spec.instanceOf(spec) ? spec : undefined;
 };
 
 /**

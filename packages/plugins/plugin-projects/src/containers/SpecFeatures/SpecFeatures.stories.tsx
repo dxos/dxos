@@ -32,8 +32,8 @@ type StoryArgs = { attendableId: string };
 
 const DefaultStory = ({ attendableId }: StoryArgs) => {
   const [space] = useSpaces();
-  // The seeded spec is the top-level one; the subfeatures' specs are owned by their features.
-  const [spec] = useQuery(space?.db, Filter.and(Filter.type(Spec.Spec), Filter.hasParent(false)));
+  // The seeded spec is the project's; the subfeatures' specs are owned by their features.
+  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !Spec.getOwner(spec));
   if (!spec) {
     return <Loading data={{ db: !!space?.db, spec: !!spec }} />;
   }

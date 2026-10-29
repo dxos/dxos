@@ -139,30 +139,36 @@ describe('FeatureOperation.CreateSpec', () => {
       const error = yield* Effect.flip(createSpec.handler({ name: 'Outbox', project: ref(project) }));
       expect(error).toBeInstanceOf(FeatureOperation.ProjectHasSpecError);
       expect(error.message).toContain('"Inbox"');
-      const breakdown = yield* Effect.exit(
+      const breakdown = yield* Effect.flip(
         createSpec.handler({ name: 'Sync', feature: ref(sync), project: ref(project) }),
       );
-      expect(Exit.isFailure(breakdown)).toBe(true);
+      expect(breakdown).toBeInstanceOf(FeatureOperation.BreakdownSpecError);
       expect(sync.spec).toBeUndefined();
       expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(1);
-      const { db } = yield* Database.Service;
-      expect((yield* Effect.promise(() => Spec.getForProject(db, project)))?.id).toBe(inbox.id);
+      expect(Spec.getProject(inbox)?.id).toBe(project.id);
     }).pipe(Effect.provide(testLayer())),
   );
 });
 
 describe('FeatureOperation.UpdateSpec', () => {
-  it.effect('keeps a spec on its own project and refuses moving another onto it', () =>
+  it.effect('moves a spec between projects, refuses a project that has one, and releases it on null', () =>
     Effect.gen(function* () {
-      const project = yield* Database.add(Project.make({ name: 'Mail' }));
-      const inbox = yield* Database.add(Spec.make({ name: 'Inbox', project: ref(project) }));
+      const mail = yield* Database.add(Project.make({ name: 'Mail' }));
+      const chat = yield* Database.add(Project.make({ name: 'Chat' }));
+      const { spec: inbox } = yield* createSpec.handler({ name: 'Inbox', project: ref(mail) });
       const outbox = yield* addSpec('Outbox');
 
-      yield* updateSpec.handler({ spec: ref(inbox), name: 'Inbox v2', project: ref(project) });
-      expect(inbox.name).toBe('Inbox v2');
-      const error = yield* Effect.flip(updateSpec.handler({ spec: ref(outbox), project: ref(project) }));
-      expect(error.message).toContain('"Inbox v2"');
-      expect(outbox.project).toBeUndefined();
+      const error = yield* Effect.flip(updateSpec.handler({ spec: ref(outbox), project: ref(mail) }));
+      expect(error.message).toContain('"Inbox"');
+      expect(Spec.getProject(outbox)).toBeUndefined();
+
+      yield* updateSpec.handler({ spec: ref(inbox), project: ref(chat) });
+      expect(Spec.getProject(inbox)?.id).toBe(chat.id);
+      expect(mail.spec).toBeUndefined();
+
+      yield* updateSpec.handler({ spec: ref(inbox), project: null });
+      expect(Spec.getProject(inbox)).toBeUndefined();
+      expect(chat.spec).toBeUndefined();
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -188,7 +194,7 @@ feat F-1: Sync
       expect(first.created).toHaveLength(1);
       const [target] = yield* Database.query(Filter.type(Spec.Spec)).run;
       expect(target).toMatchObject({ id: first.spec, name: 'Inbox' });
-      expect(target.project?.target?.id).toBe(project.id);
+      expect(Spec.getProject(target)?.id).toBe(project.id);
       const document = target.document && (yield* Database.load(target.document));
       expect(document?.name).toBe('packages/a/PLUGIN.mdl');
       const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;

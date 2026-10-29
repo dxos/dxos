@@ -249,7 +249,7 @@ test QA-6: Walk a spec's feature map
   status: passing            # 2026-10-27, recorded by autocue/spec-map.mjs
   given:
     - storybook serves plugin-projects
-    - the seeded spec "Inbox and agents" names a project and holds eight features
+    - the seeded spec "Inbox and agents" is owned by a project and holds eight features
   steps:
     - name: Open a spec's feature map
       do: Open the spec.
@@ -343,4 +343,13 @@ decision D-8: The minted key's suffix is eight random hex digits rather than six
   affects: [QA-2]
   supersedes: D-7
   why: Six digits give 16.8 million keys, so a thousand projects collide with about a 3% chance, and a collision refuses the later publisher.
+```
+
+```mdl
+decision D-9: A project owns its spec: `Project.spec` is a ref that makes the project the spec's ECHO parent, and the spec no longer names the project. A project has at most one spec, and a breakdown spec belongs to its feature, so no project can own it. Replaces the part of [D-1] where a spec names its project.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [QA-6]
+  supersedes: D-1
+  why: Deleting a project takes its spec with it, and a project reads its spec directly instead of querying for the spec that names it.
 ```
