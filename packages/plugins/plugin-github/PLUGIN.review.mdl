@@ -1,0 +1,595 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-github/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: GitHubPlugin
+
+The polling sync, the push path and the pull-request review UI are solid. `syncRepoBinding` reads the repository
+hourly, the organization daily, a conditional issue delta and one GraphQL batch for pull requests, then pushes
+diverged fields through `pushRepoUpdates`; `sync-poll.test.ts` and `sync.test.ts` cover the delta, pull-request
+mirroring, Repo description and issue title/status push, repo-rename and PR-status suppression. The review article
+(Overview, Walkthrough and Files tabs, check runs, artifact pills, reviewed-file tracking) is covered by stories, and
+the browser-extension import is covered end to end by two Playwright specs.
+
+Gaps are in connection setup and discovery: nothing tests `onTokenCreated`, the App token's account naming, or
+`GetGitHubRepositories` (sorting, `ghs_` installation repos). The organization success path (Organization and
+member Persons) and `maxDaysBack` are untested.
+
+Two divergences matter. Organizations are read once a day per binding (`membersReadAt` on the binding's snapshot),
+not once per sync pass across bindings, so two repositories of one org each read it (F-3.4, T-8). And an
+inaccessible repository records `GitHubRepoInaccessibleError` from `formatGitHubSyncFailure` as `lastError` and as
+the error toast's text, not the spec's "Repository not accessible to integration token" (F-7.2, F-7.5).
+
+Of 76 items: 35 done, 26 untested, 6 partial, 2 diverged, 7 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict SyncTargetDescriptor: Discovery returns ConnectorSpec.RemoteTarget entries with id, name, description and repo metadata.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#RemoteTarget, github:dxos/dxos/packages/plugins/plugin-github/src/operations/get-repositories.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/materialize-target.test.ts]
+  note: The descriptor also carries `metadata` (owner, name, url, description, default branch) so materialization needs no second read.
+```
+
+```mdl
+verdict SyncOptions: SyncOptions has an optional maxDaysBack.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#SyncOptions]
+  note: No test sets `maxDaysBack`.
+```
+
+```mdl
+verdict GitHubUser: The user schema covers the spec's fields plus bio, company and type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubUser]
+  note: No test decodes a user payload; the sync fixtures carry no assignees or authors.
+```
+
+```mdl
+verdict GitHubOrg: The org schema covers the spec's fields plus location.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubOrg]
+  note: The sync tests answer `/orgs/{owner}` with 404 or 403 only, so no org payload is decoded.
+```
+
+```mdl
+verdict GitHubRepo: The repo schema covers the spec's fields; owner is reduced to id and login.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubRepo]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict GitHubIssue: The issue schema covers the spec's fields; state is a string rather than an open/closed literal.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubIssue]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict GitHubLabel: The label schema holds name.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubLabelSchema]
+  note: No fixture carries labels.
+```
+
+```mdl
+verdict GitHubPullRef: The pull-request marker holds url and merged_at.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubPullRefSchema]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict GitHubComment: The comment schema matches the spec.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubComment]
+  note: `fetchIssueComments` has no caller in tests.
+```
+
+```mdl
+verdict RepoSnapshot: The repository snapshot holds name and description, plus etag, readAt and membersReadAt.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#RepoSnapshot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict TaskSnapshot: The task snapshot holds title, description and a todo/done status.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#TaskSnapshot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict SyncResult: SyncResult has the spec's counters.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#SyncResult]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict GetGitHubRepositories: Discovery lists the reachable repos, sorted case-insensitively by full_name, and writes nothing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#GetGitHubRepositories, github:dxos/dxos/packages/plugins/plugin-github/src/operations/get-repositories.ts, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchReachableRepos]
+  walkthrough:
+    - The operation takes the connector's GetSyncTargetsInput and returns its targets. github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#GetGitHubRepositories
+    - The handler reads reachable repos, sorts them by lower-cased full_name and maps them to targets. github:dxos/dxos/packages/plugins/plugin-github/src/operations/get-repositories.ts
+    - An installation token reads /installation/repositories; any other reads /user/repos. github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchReachableRepos
+  note: No test invokes it. `Unauthorized` and `NetworkError` are not typed errors; failures surface as HTTP client errors.
+```
+
+```mdl
+verdict MaterializeGitHubTarget: Materialization finds or creates the Repo and its issue TaskSet by the repo's GitHub id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#MaterializeGitHubTarget, github:dxos/dxos/packages/plugins/plugin-github/src/operations/materialize-target.ts#toTargetDescriptor, github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.ts#ensureRepo, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#ensureIssueSet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/materialize-target.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.test.ts]
+  walkthrough:
+    - toTargetDescriptor reads owner and name from the target's metadata, or splits its owner/name label. github:dxos/dxos/packages/plugins/plugin-github/src/operations/materialize-target.ts#toTargetDescriptor
+    - ensureRepo returns the Repo keyed by the GitHub id, or files a new one. github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.ts#ensureRepo
+    - ensureIssueSet finds or creates the TaskSet with the same key. github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#ensureIssueSet
+```
+
+```mdl
+verdict SyncGitHubRepositories: The sync polls every binding of the connection, pulls, pushes and folds the counters.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#SyncGitHubRepositories, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+  walkthrough:
+    - Binding.syncAll runs every bound cursor, isolating failures, with the priority cursor first. github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll
+    - syncRepoBinding reads metadata, the issue delta and the pull-request batch and upserts the mirrors. github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding
+    - pushRepoUpdates PATCHes diverged repo and issue fields. github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates
+  note: There is no `REPO_CONCURRENCY` in plugin-github; repository fan-out is `Binding.syncAll`'s. `RepositoryNotAccessible` is `GitHubRepoInaccessibleError`.
+```
+
+```mdl
+verdict ImportPullRequest: Import parses the reference, returns a held pull request unchanged, else fetches and files it via AddObject.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#ImportPullRequest, github:dxos/dxos/packages/plugins/plugin-github/src/operations/import-pull-request.ts#fetchPullRequestWithFallback, github:dxos/dxos/packages/plugins/plugin-github/src/operations/import-pull-request.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/import-pull-request.test.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts]
+  note: An unparseable reference dies with `GitHubPullRequestReferenceError` (a defect) rather than failing with it. The output also carries an optional `repo` ref.
+```
+
+```mdl
+verdict ImportPullRequestFromSnapshot: The page action reads only source.url, delegates to ImportPullRequest and answers with the id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#ImportPullRequestFromSnapshot, github:dxos/dxos/packages/plugins/plugin-github/src/operations/import-pull-request-from-snapshot.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx-extension.spec.ts]
+```
+
+```mdl
+verdict SubmitPullRequestApproval: Approval submits a review and falls back to a marked comment only on 403 or 422.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#SubmitPullRequestApproval, github:dxos/dxos/packages/plugins/plugin-github/src/operations/submit-pull-request-approval.ts, github:dxos/dxos/packages/plugins/plugin-github/src/approval.ts#isApprovalRefused, github:dxos/dxos/packages/plugins/plugin-github/src/approval.ts#approvalCommentBody]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/approval.test.ts]
+  walkthrough:
+    - The handler resolves the pull request and the connection's write credentials, then posts an approving review. github:dxos/dxos/packages/plugins/plugin-github/src/operations/submit-pull-request-approval.ts
+    - isApprovalRefused admits only 403 and 422 to the fallback. github:dxos/dxos/packages/plugins/plugin-github/src/approval.ts#isApprovalRefused
+    - approvalCommentBody puts the summary above the standing text and the marker. github:dxos/dxos/packages/plugins/plugin-github/src/approval.ts#approvalCommentBody
+```
+
+```mdl
+verdict F-1.1: The user connector declares GitHub OAuth, which plugin-connector runs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/connector.ts]
+  note: No plugin-github test covers the connector entry.
+```
+
+```mdl
+verdict F-1.2: onTokenCreated calls /user and sets accessToken.account to the login.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/connector.ts#onTokenCreated, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchUser]
+  note: No test.
+```
+
+```mdl
+verdict F-1.3: The source is github.com and the user connector id is github.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/constants.ts#GITHUB_SOURCE, github:dxos/dxos/packages/plugins/plugin-github/src/constants.ts#GITHUB_PROVIDER_ID]
+  note: No test asserts the connector ids or source.
+```
+
+```mdl
+verdict F-1.4: The App connector resolves EDGE-minted tokens through CredentialsService; an unresolvable one reads anonymously and fails writes and sync.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/pull-request.ts#githubAccess, github:dxos/dxos/packages/plugins/plugin-github/src/operations/pull-request.ts#githubWriteCredentials, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fromAccessToken, github:dxos/edge/packages/services/kms-service/src/oauth/github-app.ts#checkInstallationAuthority, github:dxos/edge/packages/services/kms-service/src/oauth/github-app.ts#mintInstallationToken]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/pull-request.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.test.ts]
+  walkthrough:
+    - EDGE checks which installations the user administers and mints installation tokens for the grant. github:dxos/edge/packages/services/kms-service/src/oauth/github-app.ts#checkInstallationAuthority
+    - githubAccess resolves the managed placeholder and reads anonymously when it cannot. github:dxos/dxos/packages/plugins/plugin-github/src/operations/pull-request.ts#githubAccess
+    - githubWriteCredentials and fromAccessToken fail writes and sync when no token resolves. github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fromAccessToken
+  note: The EDGE installation flow has no test found in kms-service.
+```
+
+```mdl
+verdict F-1.5: onAppTokenCreated names the connection after the account from /installation/repositories.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/connector.ts#onAppTokenCreated, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchInstallationAccount]
+  note: No test.
+```
+
+```mdl
+verdict F-2.1: Discovery returns all reachable repos sorted by full_name, case-insensitively.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/get-repositories.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-2.2: Discovery creates no ECHO objects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/get-repositories.ts]
+  note: The handler only reads; no test asserts it.
+```
+
+```mdl
+verdict F-2.3: /user/repos is called with GitHub's default affiliation, which includes owner, collaborator and org member.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchUserRepos]
+  note: No explicit `affiliation` parameter is sent; no test.
+```
+
+```mdl
+verdict F-2.4: A ghs_ token lists /installation/repositories in discovery and in the sync's rebind lookup.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchReachableRepos, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchInstallationRepos]
+  note: No test uses a `ghs_` token.
+```
+
+```mdl
+verdict F-3.1: An owning org is upserted as an Organization with name, description, website and image.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertOrganization, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#readRepoMetadata]
+  note: The sync tests never answer `/orgs/{owner}` with an org, so the success path is not run.
+```
+
+```mdl
+verdict F-3.2: Org members are upserted as Persons linked to the Organization.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertPerson, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#readRepoMetadata]
+  note: Not exercised; see F-3.1.
+```
+
+```mdl
+verdict F-3.3: A 404 from /orgs/{owner} skips the org and member pull and the sync continues.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#readRepoMetadata]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-3.4: The org is read at most once a day per binding, not once per pass across bindings.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#readRepoMetadata]
+  note: |
+    `readRepoMetadata` gates the org read on `membersReadAt` in that binding's repository snapshot
+    (`MEMBERS_READ_INTERVAL_MS`, 24 h). Two bindings for repos of one org each read `/orgs/{owner}` when due; only
+    Person upserts are deduplicated, per binding, by the semaphore and login cache.
+```
+
+```mdl
+verdict F-4.1: A new mirror is a Repo keyed github.com/<id> with a TaskSet carrying the same key.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.ts#ensureRepo, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#ensureIssueSet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-4.2: Repo name and description merge three-way against the snapshot on the hourly repository read.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertRepo, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#readRepoMetadata]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-4.3: A binding that targets the TaskSet is rewired to the Repo found among reachable repos.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#resolveBoundRepo]
+  note: Every sync test binds a Repo; none binds a TaskSet.
+```
+
+```mdl
+verdict F-5.1: Issues become Tasks with title, description, status, assignee and milestone, listed by the issue TaskSet.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertTask, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#setTaskContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-5.2: Existing Tasks merge three-way against the snapshot.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertTask]
+  note: The tests cover the push side of the snapshot diff; none changes an issue remotely and checks the merged Task.
+```
+
+```mdl
+verdict F-5.3: Pull requests are PullRequests with repository set, pulled through the delta and a GraphQL batch, never pushed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertPullRequest, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchPullRequestDetails]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-5.4: The first poll uses maxDaysBack as since; later polls use the watermark.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#sinceFromOptions, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding]
+  note: The watermark is tested (sync-poll T-6); `maxDaysBack` is not.
+```
+
+```mdl
+verdict F-6.1: A diverged Repo.description PATCHes /repos/{owner}/{repo}.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#updateRepo]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-6.2: A diverged Task title or description PATCHes the issue with only the diverged fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#updateIssue]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-6.3: A diverged status on a non-PR issue PATCHes state.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-6.4: A diverged PR status is logged at warn and not pushed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-6.5: A local repo rename is logged and never pushed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-7.1: A failing binding records lastError on its cursor; syncAll lets the other bindings finish.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  note: `Cursor.recordError` stamps the failure; no plugin-github test runs two bindings with one failing.
+```
+
+```mdl
+verdict F-7.2: An inaccessible repo records the error's name, not the spec's message.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/errors.ts#GitHubRepoInaccessibleError, github:dxos/dxos/packages/plugins/plugin-github/src/errors.ts#formatGitHubSyncFailure]
+  note: |
+    `formatGitHubSyncFailure` returns `GitHubRepoInaccessibleError` (with its context as JSON when set), and that is
+    what `Cursor.recordError` stores. The error's own message, "Repository is not accessible to the connection
+    token.", is not used. No test.
+```
+
+```mdl
+verdict F-7.3: 429, 5xx, transport errors and timeouts retry with jittered exponential backoff, 500 ms base, 3 retries.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#shouldRetry, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#githubRequest]
+  note: No test drives a 429 or 5xx.
+```
+
+```mdl
+verdict F-7.4: A successful sync fires a success toast, unless the delta answered 304.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding]
+  note: A quiet (not-modified) poll fires no toast. The tests stub `Operation.Service` to fail every invoke, which the toast call ignores.
+```
+
+```mdl
+verdict F-7.5: A failed sync fires an error toast, but its description is the formatted error tag, not a readable message.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding, github:dxos/dxos/packages/plugins/plugin-github/src/errors.ts#formatGitHubSyncFailure]
+  note: The description is `formatGitHubSyncFailure(error)`, e.g. `GitHubRepoInaccessibleError` or `HTTP 403`. No test.
+```
+
+```mdl
+verdict F-8.1: githubLinks renders repository, pull-request and issue URLs as anchor chips.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/extensions/links.ts#githubLinks, github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/markdown-extension.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/extensions/links.test.ts]
+```
+
+```mdl
+verdict F-8.2: The LinkResolver answers with an in-memory Repo, PullRequest or Issue and stores nothing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/link-resolver.ts]
+  note: `link-resolver.test.ts` covers only `connectionTokens`, not `resolve`.
+```
+
+```mdl
+verdict F-8.3: A contributed LinkSource wins; otherwise each GitHub connection token is tried in turn, then anonymous.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/link-resolver.ts#connectionTokens, github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubCapabilities.ts#LinkSource]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/link-resolver.test.ts]
+  note: It tries every GitHub connection's token, not one connection's.
+```
+
+```mdl
+verdict F-8.4: GitHubCard is the CardContent for Repo and Issue; PullRequestCard wraps it for PullRequest.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/cards/GitHubCard.tsx#GitHubCard, github:dxos/dxos/packages/plugins/plugin-github/src/cards/PullRequestCard.tsx#PullRequestCard, github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/cards/GitHubCard.stories.tsx]
+```
+
+```mdl
+verdict F-9.1: An Import pull request action opens a dialog that runs ImportPullRequest and opens the result.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-github/src/containers/ImportPullRequestDialog/ImportPullRequestDialog.tsx#ImportPullRequestDialog]
+  note: No story or e2e drives the dialog.
+```
+
+```mdl
+verdict F-9.2: The article's subject is the PullRequest, with a Generate walkthrough action when none exists.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/containers/PullRequestArticle/PullRequestArticle.tsx#PullRequestArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/stories/PullRequestArticle.stories.tsx]
+```
+
+```mdl
+verdict F-9.3: The Walkthrough tab renders the walkthrough's prose and chunks; the action label switches to regenerate.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/containers/PullRequestArticle/PullRequestArticle.tsx#PullRequestArticle, github:dxos/dxos/packages/plugins/plugin-github/src/components/WalkthroughView/WalkthroughView.tsx#WalkthroughView]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/stories/Walkthrough.stories.tsx]
+```
+
+```mdl
+verdict F-9.4: WalkthroughArticle loads the narrated pull request and renders PullRequestArticle for it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/containers/WalkthroughArticle/WalkthroughArticle.tsx#WalkthroughArticle]
+  note: No test or story opens a Walkthrough directly.
+```
+
+```mdl
+verdict F-9.5: The extension's page action imports the page's pull request and the extension opens it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/page-action.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/import-pull-request-from-snapshot.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx-extension.spec.ts]
+```
+
+```mdl
+verdict F-9.6: The Overview tab shows the description as markdown with the Claude Code footer and preview block removed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestOverview/PullRequestOverview.tsx#PullRequestOverview, github:dxos/dxos/packages/plugins/plugin-github/src/pull-request-body.ts#parsePullRequestBody]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/stories/PullRequestOverview.stories.tsx, github:dxos/dxos/packages/plugins/plugin-github/src/pull-request-body.test.ts]
+```
+
+```mdl
+verdict F-9.7: Artifact links render as previewing pills and are listed with the preview and session as related cards.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestOverview/ArtifactPill.tsx#ArtifactPill, github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestOverview/RelatedCards.tsx#RelatedCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/stories/PullRequestOverview.stories.tsx, github:dxos/dxos/packages/plugins/plugin-github/src/pull-request-body.test.ts]
+```
+
+```mdl
+verdict F-9.8: The Overview lists every check run, failures first, with outcome, duration and a provider link.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestOverview/CheckRunList.tsx#CheckRunList, github:dxos/dxos/packages/plugins/plugin-github/src/operations/pull-request.ts#toCheckRun]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/stories/PullRequestOverview.stories.tsx, github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestOverview/CheckRunList.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/pull-request.test.ts]
+```
+
+```mdl
+verdict F-9.9: A details card shows reference, state, CI and branches as a read-only form.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestOverview/PullRequestDetails.tsx#PullRequestDetailsSchema]
+  note: The Overview stories do not assert the details card.
+```
+
+```mdl
+verdict F-9.10: The Files tab shows one file's diff beside a tree with change counts, with previous and next in the toolbar.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestFiles/PullRequestFiles.tsx#PullRequestFiles, github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestFiles/FileTree.tsx#FileTree]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/stories/PullRequestArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestFiles/files.test.ts]
+```
+
+```mdl
+verdict F-9.11: Reviewed files persist in localStorage at each file's change signature; the toolbar action steps on.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/hooks/usePullRequestFiles.ts#usePullRequestFiles, github:dxos/dxos/packages/plugins/plugin-github/src/containers/PullRequestArticle/PullRequestArticle.tsx#PullRequestArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/stories/PullRequestFiles.stories.tsx, github:dxos/dxos/packages/plugins/plugin-github/src/components/PullRequestFiles/files.test.ts]
+```
+
+```mdl
+verdict T-1: No test runs onTokenCreated.
+  status: missing
+  note: Searched plugin-github tests for `onTokenCreated` and `fetchUser`; none.
+```
+
+```mdl
+verdict T-2: No test invokes GetGitHubRepositories.
+  status: missing
+  note: No test covers discovery's sort or its lack of writes.
+```
+
+```mdl
+verdict T-3: The first-poll test checks the Repo key, the TaskSet, a Task and a PullRequest, not status mapping or snapshots.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: No assertion on open/closed to todo/done or on the written Repo and Task snapshots.
+```
+
+```mdl
+verdict T-4: No test changes an issue title remotely and checks the Task and snapshot.
+  status: missing
+  note: The push tests seed snapshots and local edits; none feeds a remote title change through `upsertTask`.
+```
+
+```mdl
+verdict T-5: The push tests cover a title edit and its snapshot refresh, not a description edit.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+  note: `locally-edited issue title PATCHes only diverged fields` checks the PATCH body and snapshot for `title`; no test diverges `description`.
+```
+
+```mdl
+verdict T-6: A test checks that PR status divergence is not pushed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-7: No test runs an inaccessible repo through the sync.
+  status: missing
+  note: `GitHubRepoInaccessibleError` is asserted only in the import tests; the recorded text would also differ (see F-7.2).
+```
+
+```mdl
+verdict T-8: No test syncs two repos of one org.
+  status: missing
+  note: The code reads the org per binding, so the scenario's single fetch would not hold (see F-3.4).
+```
+
+```mdl
+verdict T-9: The poll tests run with /orgs/{owner} answering 404 and the sync continuing; none asserts no Organization.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#readRepoMetadata]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: The fake GitHub answers 404 for the org by default; no test queries for Organization objects afterwards.
+```
+
+```mdl
+verdict T-10: No test sets maxDaysBack.
+  status: missing
+  note: `sinceFromOptions` is not exercised.
+```
+
+```mdl
+verdict QA-1: No automation connects, discovers, materializes and syncs.
+  status: missing
+  note: The OAuth step is manual; no Playwright spec covers discovery or the sync round-trip.
+```
+
+```mdl
+verdict QA-2: A poll test edits a Task title and sees the PATCH on the next poll; GitHub read-back and revert are not run.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: `a locally edited issue pushes when GitHub next reports it` runs the edit-and-resync steps against a fake GitHub only.
+```
+
+```mdl
+verdict QA-3: The e2e specs run the import and the idempotent re-import; the walkthrough step is not automated.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/import-pull-request-from-snapshot.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx-extension.spec.ts]
+  note: `generateWalkthrough` needs an AI provider and no spec runs it.
+```

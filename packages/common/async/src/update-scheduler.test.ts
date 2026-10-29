@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
 
-import { sleep } from './timeout.ts';
+import { asyncTimeout, sleep } from './timeout.ts';
 import { UpdateScheduler } from './update-scheduler.ts';
 
 describe('update-scheduler', () => {
@@ -213,5 +213,34 @@ describe('update-scheduler', () => {
     await ctx.dispose();
 
     await expect(parked).resolves.toBeUndefined();
+  });
+
+  // Cloudflare Workers throw from `setTimeout` outside a request, e.g. in a FinalizationRegistry callback.
+  test('a refused throttle timer does not wedge later runs', async ({ expect }) => {
+    const errors: Error[] = [];
+    const ctx = new Context({ onError: (error) => void errors.push(error) });
+    let runs = 0;
+    const scheduler = new UpdateScheduler(
+      ctx,
+      async () => {
+        runs++;
+      },
+      { maxFrequency: 1 },
+    );
+    await scheduler.runBlocking(); // Consume the allowance, so the next trigger waits out the throttle.
+
+    const refused = vi.spyOn(globalThis, 'setTimeout').mockImplementationOnce(() => {
+      throw new Error('Disallowed operation called within global scope.');
+    });
+    scheduler.trigger();
+    await new Promise((resolve) => setImmediate(resolve)); // Let the runner reach its throttle.
+    expect(refused.mock.results[0]?.type).toBe('throw');
+    expect(scheduler.scheduled).toBe(false);
+    refused.mockRestore();
+
+    await asyncTimeout(scheduler.runBlocking(), 1_000);
+    expect(runs).toBe(2);
+    expect(errors).toEqual([]);
+    await ctx.dispose();
   });
 });

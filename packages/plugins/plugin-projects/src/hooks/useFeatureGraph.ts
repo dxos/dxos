@@ -8,9 +8,9 @@ import { useMemo } from 'react';
 
 import { type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Spec, Task } from '@dxos/types';
+import { SpecDocument, Task } from '@dxos/types';
 
-import { Feature, Showcase } from '#types';
+import { Feature, Showcase, Spec } from '#types';
 
 import {
   type FeatureGraphInput,
@@ -32,6 +32,9 @@ const sourceOf = <R extends Relation.Unknown>(relation: R): Relation.SourceOf<R>
 };
 
 const DONE: ReadonlySet<Task.Status> = new Set(['done', 'duplicate', 'cancelled']);
+
+/** A task someone is working on now; a feature with one is active, whatever its status. */
+const ACTIVE: ReadonlySet<Task.Status> = new Set(['started', 'review']);
 
 export type FeatureGraph = {
   /** The scoped features, joined with their relations. */
@@ -101,7 +104,7 @@ export const useFeatureGraph = (
       specPaths
         ? Query.select(
             Filter.foreignKeys(
-              Spec.Spec,
+              SpecDocument.SpecDocument,
               specPaths.split('\n').map((id) => ({ source: Feature.SPEC_KEY_SOURCE, id })),
             ),
           )
@@ -129,17 +132,36 @@ export const useFeatureGraph = (
         const input: FeatureGraphInput = {
           features: features.filter(Feature.instanceOf).map((feature) => {
             const snapshot = get(Obj.atom(feature));
-            const { id, name, description, status, specs, subfeatures, code } = snapshot;
+            const { id, name, description, requirements, status, specs, code } = snapshot;
+            // The feature this one breaks down: the owner of the spec that lists it.
+            const container = Spec.getContainer(feature);
+            const parent = container && Spec.getOwner(container);
             return {
               id,
               name,
               description,
+              requirements,
               status,
               specs,
-              subfeatures: subfeatures ?? [],
+              spec: container?.id,
+              parent: parent?.id,
               link: Feature.getLink(snapshot),
               code,
             };
+          }),
+          // A feature's subfeatures are the features of the spec that breaks it down, read through atoms so an added
+          // one or a changed status reaches the card.
+          children: features.filter(Feature.instanceOf).flatMap((feature) => {
+            const { spec } = get(Obj.atom(feature));
+            const breakdown = spec && get(Obj.atomReactive(spec));
+            if (!Spec.instanceOf(breakdown)) {
+              return [];
+            }
+            const members = get(Obj.atomReactive(get(Obj.atom(breakdown)).features));
+            return members.filter(Feature.instanceOf).map((member) => {
+              const { id, name, status } = get(Obj.atom(member));
+              return [{ id, name, status }, feature.id] as const;
+            });
           }),
           dependsOn: edges,
           implementedBy: implementsTasks.flatMap((relation) => {
@@ -155,6 +177,7 @@ export const useFeatureGraph = (
                   id: task.id,
                   title: task.title,
                   done: task.status !== undefined && DONE.has(task.status),
+                  active: task.status !== undefined && ACTIVE.has(task.status),
                   milestone: milestone?.name,
                 },
                 entityId(Relation.getTargetURI(relation)),
@@ -166,8 +189,11 @@ export const useFeatureGraph = (
             if (!source) {
               return [];
             }
-            const showcase = get(Obj.atom(source));
-            return [[{ id: showcase.id, name: showcase.name }, entityId(Relation.getTargetURI(relation))] as const];
+            // Subscribes, so renaming the deck re-derives the graph.
+            get(Obj.atom(source));
+            return [
+              [{ id: source.id, name: Obj.getLabel(source) ?? '' }, entityId(Relation.getTargetURI(relation))] as const,
+            ];
           }),
           specObjects,
         };

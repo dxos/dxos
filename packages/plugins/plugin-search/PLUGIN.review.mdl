@@ -1,0 +1,195 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-search/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SearchPlugin
+
+The operations and surfaces are solid. `OpenSearch` and `SelectObject` are declared and handled.
+`SearchDialog` and `SearchArticle` query the space's FTS5 index through `ObjectCombobox.searchQuery`.
+The mailbox filters with the same `Filter.text(..., { type: 'full-text' })` and highlights matches.
+The spec's data model is out of date: no `SearchQuery` or `MatchField` exists, and results are the
+`SearchResult` of `@dxos/react-ui-search` (`id`, `label`, `snippet`, `icon`, `object`), with no
+matched-field list. The debounce is the 200 ms default of `SearchList.Root`, not 400 ms.
+
+The biggest divergence is the global filter (F-2). `SearchContextProvider` is mounted only inside
+each search surface, so views elsewhere in the deck never see the query. Also, `filterObjectsSync`
+pushes every object that has a text field without testing `match`, so the filter does not narrow
+anything.
+
+Of 22 items: 2 done, 7 untested, 2 partial, 5 diverged, 6 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict SearchQuery: No SearchQuery type exists; the query is a bare string passed to ObjectCombobox.searchQuery.
+  status: missing
+  note: Searched plugin-search and react-ui-search for a `SearchQuery` type; none. `SearchDialog` and `SearchArticle` hold a `string` in state, and the space comes from props, not from a `spaceId` field.
+```
+
+```mdl
+verdict MatchField: No MatchField type exists; results carry a single snippet, not a list of matched fields.
+  status: missing
+  note: Searched plugin-search and react-ui-search. `toSearchResults` builds one `snippet` from `mapObjectToTextFields`, so a result does not name the field that matched.
+```
+
+```mdl
+verdict SearchResult: The code's SearchResult has id, label, snippet, icon and object, not objectId, typeName and fields.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-search/src/types/SearchResult.ts#SearchResult, github:dxos/dxos/packages/plugins/plugin-search/src/hooks/search-query.ts#toSearchResults]
+  note: The type lives in `@dxos/react-ui-search`. It has `id`, optional `type` (a kind such as "user"), `label`, `match`, `snippet`, `icon` and `object`. It has no typename and no `MatchField[]`.
+```
+
+```mdl
+verdict SearchDialog: The dialog searches FTS, opens a picked result, or hands it to SelectObject's handle.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.tsx#SearchDialog, github:dxos/dxos/packages/plugins/plugin-search/src/capabilities/SearchSurfaces.tsx#SearchDialogSurface]
+  tests: [github:dxos/dxos/packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.stories.tsx, github:dxos/dxos/packages/plugins/plugin-search/src/select-handle.test.ts]
+  walkthrough:
+    - The surface resolves the space from SelectObject's spaceId or the active space, and dismisses the handle if none. github:dxos/dxos/packages/plugins/plugin-search/src/capabilities/SearchSurfaces.tsx#SearchDialogSurface
+    - The dialog runs the FTS query, renders rows and an empty state, and opens or returns the picked object. github:dxos/dxos/packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.tsx#SearchDialog
+    - The handle settles once on select, or with nothing on dismiss. github:dxos/dxos/packages/plugins/plugin-search/src/select-handle.ts#makeSelectHandle
+```
+
+```mdl
+verdict SearchArticle: The panel searches the FTS index of its space and shows results in a stack.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/containers/SearchArticle/SearchArticle.tsx#SearchArticle, github:dxos/dxos/packages/plugins/plugin-search/src/capabilities/SearchSurfaces.tsx#SearchCompanionSurface]
+  note: The story `SearchArticle.stories.tsx` has no play test. Each surface mounts its own `SearchContextProvider`, so the panel does not share a context with SearchDialog as the desc says.
+```
+
+```mdl
+verdict OpenSearch: The op opens SEARCH_DIALOG through LayoutOperation.UpdateDialog.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/types/SearchOperation.ts#OpenSearch, github:dxos/dxos/packages/plugins/plugin-search/src/operations/open-search.ts]
+  walkthrough:
+    - The op declares a void input and output. github:dxos/dxos/packages/plugins/plugin-search/src/types/SearchOperation.ts#OpenSearch
+    - The handler invokes UpdateDialog with the SEARCH_DIALOG subject. github:dxos/dxos/packages/plugins/plugin-search/src/operations/open-search.ts
+  note: No test invokes the operation; the dialog story mounts the dialog directly.
+```
+
+```mdl
+verdict F-1.1: The OpenSearch operation opens SearchDialog.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/operations/open-search.ts, github:dxos/dxos/packages/plugins/plugin-search/src/capabilities/react-surface.ts]
+  note: The handler and the dialog surface exist; no test invokes the op and checks the dialog.
+```
+
+```mdl
+verdict F-1.2: The query is debounced 200 ms, not 400 ms, and runs against the FTS5 index, not a regex over all objects.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-search/src/components/SearchList/SearchList.tsx, github:dxos/dxos/packages/sdk/app-toolkit/src/ui/components/ObjectCombobox/ObjectCombobox.tsx#searchQuery]
+  note: |
+    `SearchList.Root` debounces with `debounceMs = 200` and neither container overrides it. The query is
+    `Filter.text(text, { type: 'full-text' })` scoped to listed user-facing types, so not all objects in the space match.
+```
+
+```mdl
+verdict F-1.3: A row shows icon, label and a snippet; it does not show the matched field key.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/hooks/search-query.ts#toSearchResults]
+  tests: [github:dxos/dxos/packages/plugins/plugin-search/src/hooks/search-query.test.ts]
+  note: The match is FTS, not a regex. The snippet is `content`, `description` or the first field that is not the label, whichever is found, not the field that matched. The dialog rows show only icon and label.
+```
+
+```mdl
+verdict F-1.4: An empty query selects Filter.nothing, so no results show.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/app-toolkit/src/ui/components/ObjectCombobox/ObjectCombobox.tsx#searchQuery, github:dxos/dxos/packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.tsx#SearchDialog]
+  note: '`searchQuery` returns `Query.select(Filter.nothing())` for blank text and the containers map an empty query to `[]`; no test covers the clear path.'
+```
+
+```mdl
+verdict F-2.1: The provider hands a filter to GlobalFilterProvider, but only inside the search surfaces, and the filter does not test the match.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/hooks/useGlobalSearch.tsx#SearchContextProvider, github:dxos/dxos/packages/plugins/plugin-search/src/hooks/sync.ts#filterObjectsSync]
+  note: |
+    `SearchContextProvider` is mounted only in `SearchSurfaces.tsx`, around SearchDialog or SearchArticle, so
+    `useGlobalFilteredObjects` in plugin-table never sees it. `filterObjectsSync` pushes every object on its first text
+    field (`.some(() => { results.push(...); return true; })`) without testing `match`.
+```
+
+```mdl
+verdict F-2.2: A cleared query sets match undefined and the filter returns the objects unchanged.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/hooks/useGlobalSearch.tsx#SearchContextProvider]
+  note: '`filterFn` returns `objects` when `match` is unset; no test covers it.'
+```
+
+```mdl
+verdict F-3.1: The deck companion search surface renders SearchArticle for the space.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-search/src/capabilities/SearchSurfaces.tsx#SearchCompanionSurface]
+  tests: [github:dxos/dxos/packages/plugins/plugin-search/src/plugin.test.ts]
+  note: '`plugin.test.ts` checks the companion node is contributed to the graph; nothing checks that SearchArticle renders in it.'
+```
+
+```mdl
+verdict F-3.2: SearchArticle uses the same debounced SearchList and FTS query as SearchDialog.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-search/src/containers/SearchArticle/SearchArticle.tsx#SearchArticle]
+  note: The two containers share `SearchList.Root` and `ObjectCombobox.searchQuery`; the article story has no play test.
+```
+
+```mdl
+verdict F-4.1: The mailbox search box filters messages through the full-text index.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/util/search-selection.ts#buildSearchSelection, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx#MailboxArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/mailbox-search.test.ts]
+  walkthrough:
+    - The selection builds `Filter.text(text, { type: 'full-text' })` from the search box. github:dxos/dxos/packages/plugins/plugin-inbox/src/util/search-selection.ts#buildSearchSelection
+    - The mailbox queries messages with that selection. github:dxos/dxos/packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx#MailboxArticle
+```
+
+```mdl
+verdict F-4.2: Message tiles render a highlighted best-match snippet while a search is active.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-inbox/src/components/InboxStack/InboxStack.tsx]
+  note: '`InboxStack` renders `<Highlighted text={searchSnippet} query={searchQuery} />`; the `SearchFilter` story checks the narrowing, not the highlight.'
+```
+
+```mdl
+verdict T-1: No automated test triggers OpenSearch and checks the dialog and focus.
+  status: missing
+  note: The dialog story mounts SearchDialog in a Dialog.Root directly; no test invokes the op. No Playwright spec covers search.
+```
+
+```mdl
+verdict T-2: The dialog story types a term and waits for a result; it does not check the field key or value.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-search/src/containers/SearchDialog/SearchDialog.stories.tsx]
+  note: The `Test` play types "the" and expects at least one option. The spec's matched field key and value do not exist in the UI (see F-1.3).
+```
+
+```mdl
+verdict T-3: No test clears the query and checks for an empty list.
+  status: missing
+  note: Searched plugin-search stories and tests.
+```
+
+```mdl
+verdict T-4: No test types into SearchArticle and checks views that use useGlobalFilteredObjects.
+  status: missing
+  note: Searched plugin-search and plugin-table tests; the provider is not mounted around other views in any test.
+```
+
+```mdl
+verdict T-5: SearchResultList is tested for an empty set, but not the dialog's empty slot for a non-matching query.
+  status: diverged
+  tests: [github:dxos/dxos/packages/plugins/plugin-search/src/components/SearchResultList/SearchResultList.test.tsx]
+  note: '`renders no rows for an empty result set` tests a component the dialog does not use; nothing types "xyzzy" and checks `SearchList.Empty`.'
+```
+
+```mdl
+verdict QA-1: Manual QA only; no automation runs the open, type and select round trip.
+  status: missing
+  note: The QA test is `actors: both` and unverified. The dialog story covers only the typing step (see T-2).
+```

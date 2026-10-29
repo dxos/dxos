@@ -3,4 +3,4 @@
 //
 
 export * as IdeogramEvents from './IdeogramEvents.ts';
-export * as IdeogramPlugin from './IdeogramPlugin.ts';
+export * as IdeogramPlugin from '#meta';

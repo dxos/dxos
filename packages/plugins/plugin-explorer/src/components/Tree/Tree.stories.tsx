@@ -20,13 +20,16 @@ type StoryArgs = Pick<TreeComponentProps, 'variant'>;
 
 const DefaultStory = ({ variant }: StoryArgs) => {
   const data = useMemo(() => treeTypeToTreeNode(createTree([3, [2, 4], [1, 3]]).tree), []);
+  // Inject the ECHO-aware leaf fill (radial/edge variants) now that the renderer is domain-agnostic.
+  // Boundary cast: the generic node `data` is an ECHO object here (the renderer carries it opaquely).
+  const slots = useMemo(
+    () => ({ nodeFill: (data: unknown) => getNodeFillForObject(data as Obj.Unknown | undefined) }),
+    [],
+  );
   if (!data) {
     return <Loading />;
   }
 
-  // Inject the ECHO-aware leaf fill (radial/edge variants) now that the renderer is domain-agnostic.
-  // Boundary cast: the generic node `data` is an ECHO object here (the renderer carries it opaquely).
-  const slots = { nodeFill: (data: unknown) => getNodeFillForObject(data as Obj.Unknown | undefined) };
   return <Tree data={data} variant={variant} slots={slots} />;
 };
 

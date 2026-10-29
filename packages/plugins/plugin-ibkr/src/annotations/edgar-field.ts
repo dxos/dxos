@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation } from '@dxos/echo';
 
-import { meta } from '../meta.ts';
+import { IbkrNamespace } from '../namespace.ts';
 
 const EdgarConceptSourceSchema = Schema.Struct({
   concepts: Schema.Array(Schema.String),
@@ -30,18 +30,18 @@ export type EdgarFieldSource = Schema.Schema.Type<typeof EdgarFieldSourceSchema>
 
 /** Place on schema fields to drive SEC EDGAR company-facts extraction. */
 export const EdgarFieldAnnotation = Annotation.make({
-  id: `${meta.profile.key}.annotation.edgarField`,
+  id: `${IbkrNamespace.key}.annotation.edgarField`,
   schema: EdgarFieldSourceSchema,
 });
 
 /** Marks a record field that receives all us-gaap concepts not mapped elsewhere on the schema. */
 export const EdgarAdditionalFactsAnnotation = Annotation.make({
-  id: `${meta.profile.key}.annotation.edgarAdditionalFacts`,
+  id: `${IbkrNamespace.key}.annotation.edgarAdditionalFacts`,
   schema: Schema.Boolean,
 });
 
 /** Ordered concept groups used to derive {@link Ibkr.FundamentalsSnapshot.asOf} filing date. */
 export const EdgarAsOfConceptsAnnotation = Annotation.make({
-  id: `${meta.profile.key}.annotation.edgarAsOf`,
+  id: `${IbkrNamespace.key}.annotation.edgarAsOf`,
   schema: Schema.Array(Schema.Array(Schema.String)),
 });

@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Equal from 'effect/Equal';
+import * as Hash from 'effect/Hash';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { DXN, EID, EntityId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import * as Type from '../../Type.ts';
 import { EchoObjectSchema, getObjectEchoUri } from '../Entity/index.ts';
 import { createObject } from '../Obj/index.ts';
-import { Ref, getReferenceAst } from './ref.ts';
+import { Ref, StaticRefResolver, getReferenceAst, setRefResolver } from './ref.ts';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
@@ -27,6 +29,22 @@ const Contact = Schema.Struct({
 type Contact = Type.InstanceType<typeof Contact>;
 
 describe('Ref', () => {
+  test('refs to one object are equal only within one resolver', ({ expect }) => {
+    const { uri } = Ref.make(createObject(Task, { title: 'Shared' }));
+    const [first, second] = [new StaticRefResolver(), new StaticRefResolver()];
+    const make = (resolver: StaticRefResolver) => {
+      const ref = Ref.fromURI(uri);
+      setRefResolver(ref, resolver);
+      return ref;
+    };
+
+    // One database mints a fresh ref per change; those must share a cache entry.
+    expect(Equal.equals(make(first), make(first))).toBe(true);
+    // Two clients in one page hold the same object; each must resolve through its own database.
+    expect(Equal.equals(make(first), make(second))).toBe(false);
+    expect(Hash.hash(make(first))).toBe(Hash.hash(make(second)));
+  });
+
   test('Schema is', () => {
     Ref(Contact).pipe(Schema.is)(Ref.fromURI(EID.make({ entityId: EntityId.random() })));
   });
@@ -87,6 +105,13 @@ describe('Ref', () => {
     const contact = Schema.decodeUnknownSync(Type.getSchema(Contact))(contactData);
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
     expect(contact.tasks[0].uri.toString()).toEqual(`echo:/${id}`);
+  });
+
+  test('decode rejects a malformed echo URI', ({ expect }) => {
+    const uri = `echo:///${EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() })}`;
+    const decode = Schema.decodeUnknownSync(Schema.Struct({ task: Ref(Task) }));
+
+    expect(() => decode({ task: { '/': uri } })).toThrow(`Invalid echo URI: ${uri}`);
   });
 
   // A rejection message is what a remote caller gets back: `InvalidOperationInput` interpolates it

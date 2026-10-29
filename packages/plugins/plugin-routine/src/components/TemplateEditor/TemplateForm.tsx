@@ -14,8 +14,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { TemplateEditor } from './TemplateEditor.tsx';
 
 /**
@@ -35,7 +34,7 @@ export type TemplateFormProps = {
 };
 
 export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   usePromptInputs(template, onChange);
 
   const handleInputKindChange = useCallback(

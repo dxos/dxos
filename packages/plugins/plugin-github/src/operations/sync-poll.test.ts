@@ -34,6 +34,8 @@ type FakeGitHub = {
   pageSize: number;
   /** A delta page that answers 404, to interrupt a run midway. */
   failPage?: number;
+  /** The repository GitHub serves; `REPO` unless set. */
+  repo?: GitHubApi.GitHubRepo;
   /** What `/orgs/dxos` answers; 404 (a user-owned repository) unless set. */
   orgStatus?: number;
   requests: string[];
@@ -66,8 +68,9 @@ const fakeFetch =
     const ifNoneMatch = request.headers.get('if-none-match');
 
     if (url.pathname === '/repos/dxos/composer') {
-      const etag = etagOf(REPO);
-      return ifNoneMatch === etag ? new Response(null, { status: 304 }) : Response.json(REPO, { headers: { etag } });
+      const repo = server.repo ?? REPO;
+      const etag = etagOf(repo);
+      return ifNoneMatch === etag ? new Response(null, { status: 304 }) : Response.json(repo, { headers: { etag } });
     }
     if (url.pathname === '/repos/dxos/composer/milestones') {
       return Response.json([]);
@@ -375,6 +378,55 @@ describe('plugin-github polling sync (spec/SYNC.mdl)', () => {
     expect(await db.query(Filter.type(Task.Task)).run()).toHaveLength(12);
     expect(binding.max).toBe(String(Date.parse('2026-10-12T10:00:00Z') - 5_000));
     expect(binding.spec.token).toBeDefined();
+  });
+
+  test('a backfill chunk updated within the overlap is read to its end rather than repeated', async ({ expect }) => {
+    const { db, binding, github, poll } = await setup({ pageSize: 1 });
+    github.items = Array.from({ length: 12 }, (_, index) => issue(index + 1, '2026-10-01T10:00:00Z'));
+
+    await expect(poll()).rejects.toThrow();
+    expect(await db.query(Filter.type(Task.Task)).run()).toHaveLength(10);
+
+    // Ten more pages from the same watermark would not move it, so this run reads every page.
+    const { requests } = await poll();
+    expect(requests.filter((request) => request.includes('/issues'))).toHaveLength(10 + 12);
+    expect(await db.query(Filter.type(Task.Task)).run()).toHaveLength(12);
+    expect(binding.spec.token).toBeDefined();
+  });
+
+  test('a local repository description is pushed on a quiet poll', async ({ expect }) => {
+    const { repo, github, poll } = await setup();
+    github.items = [issue(1, '2026-10-01T10:00:00Z')];
+    await poll();
+    await poll();
+    Obj.update(repo, (repo) => {
+      repo.description = 'rewritten';
+    });
+
+    // The pending edit is merged against a fresh, conditional read of the repository before it is pushed.
+    const { result, requests } = await poll();
+    expect(requests).toEqual([
+      'GET /repos/dxos/composer',
+      'GET /repos/dxos/composer/issues',
+      'PATCH /repos/dxos/composer',
+    ]);
+    expect(result).toMatchObject({ notModified: true, pushed: { repos: 1, issues: 0 } });
+  });
+
+  test('a GitHub description edit made since the last read is not overwritten by a local one', async ({ expect }) => {
+    const { repo, github, poll } = await setup();
+    github.items = [issue(1, '2026-10-01T10:00:00Z')];
+    await poll();
+    await poll();
+    github.repo = { ...REPO, description: 'edited on GitHub' };
+    Obj.update(repo, (repo) => {
+      repo.description = 'edited in Composer';
+    });
+
+    const { requests } = await poll();
+
+    expect(requests).not.toContain('PATCH /repos/dxos/composer');
+    expect(repo.description).toBe('edited on GitHub');
   });
 
   test('settled checks are re-read on the hourly schedule, since a re-run does not move updated_at', async ({

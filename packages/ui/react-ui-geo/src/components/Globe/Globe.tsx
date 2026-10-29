@@ -120,9 +120,12 @@ const SPHERE = { type: 'Sphere' } as const;
  * The scale at zoom 1. With a `fit`, the sphere's projected bounds are measured at unit scale and
  * scaled to fit inside (`contain`) or fill (`cover`) the canvas, whatever the projection's shape.
  */
+/** The unfitted globe's diameter as a fraction of the shorter side, so at rest it does not touch the edges. */
+const GLOBE_EXTENT = 0.9;
+
 const baseScale = (projection: GeoProjection, size: { width: number; height: number }, fit?: GlobeFit): number => {
   if (!fit) {
-    return Math.min(size.width, size.height) / 2;
+    return (Math.min(size.width, size.height) / 2) * GLOBE_EXTENT;
   }
   const [[x0, y0], [x1, y1]] = geoPath(projection.scale(1).translate([0, 0]).rotate([0, 0, 0])).bounds(SPHERE);
   const ratios = [size.width / (x1 - x0), size.height / (y1 - y0)];

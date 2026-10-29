@@ -11,7 +11,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { callTool } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
@@ -378,6 +378,25 @@ describe('worker sandbox', () => {
       expect(tasks.map((task) => task.title)).toEqual(['Review the PR']);
     }, 60_000);
 
+    test('passes an object that lives in a feed to an operation as that object', async () => {
+      const { db, runWith } = await setup();
+      const feed = db.add(Feed.make());
+      const task = Obj.make(Task, { title: 'Reply to Dana', status: 'open' });
+      await db.appendToFeed(feed, [task]);
+      await db.flush();
+
+      // A feed item is outside the space's index, so the host finds it by its URI.
+      const output = await runWith(
+        EffectDialect,
+        `
+        const task = yield* Database.resolve('${Obj.getURI(task)}');
+        const result = yield* Operation.invoke((yield* Database.resolve('${FILE_KEY}')), { object: task });
+        yield* print(result.received, result.object.id === task.id);
+      `,
+      );
+      expect(output).toEqual(`stored ${TASK_TYPENAME} open true`);
+    }, 60_000);
+
     test('passes a reference to an operation as a reference', async () => {
       const { runWith } = await setup();
 
@@ -387,6 +406,21 @@ describe('worker sandbox', () => {
         const owner = yield* Database.add(Obj.make((yield* Database.resolve('${PERSON_DXN}')), { name: 'Ada' }));
         const task = yield* Database.add(Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Write the docs', status: 'open' }));
         const result = yield* Operation.invoke((yield* Database.resolve('${FILE_KEY}')), { object: task, owner: Ref.make(owner) });
+        yield* print(result.received);
+      `,
+      );
+      expect(output).toEqual(`stored ${TASK_TYPENAME} open owner Ada`);
+    }, 60_000);
+
+    test('passes an object where the operation expects a reference to it, as that reference', async () => {
+      const { runWith } = await setup();
+
+      const output = await runWith(
+        EffectDialect,
+        `
+        const owner = yield* Database.add(Obj.make((yield* Database.resolve('${PERSON_DXN}')), { name: 'Ada' }));
+        const task = yield* Database.add(Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Write the docs', status: 'open' }));
+        const result = yield* Operation.invoke((yield* Database.resolve('${FILE_KEY}')), { object: task, owner });
         yield* print(result.received);
       `,
       );
@@ -420,7 +454,7 @@ const setup = async () => {
   await builder.open();
   onTestFinished(async () => void (await builder.close()));
 
-  const peer = await builder.createPeer({ types: [Task, Person, Tagged] });
+  const peer = await builder.createPeer({ types: [Task, Person, Tagged, Feed.Feed] });
   const db = await peer.createDatabase();
 
   const makeSandbox = (entry: URL) =>

@@ -19,7 +19,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { StudioPlugin } from '#plugin';
+import * as StudioPlugin from '#meta';
 import { translations } from '#translations';
 import { Frame, MediaArtifact, Storyboard, Variant } from '#types';
 
@@ -109,11 +109,11 @@ const meta = {
               });
             }),
         }),
-        StudioPlugin(),
+        StudioPlugin.make(),
         StubProjectsPlugin(),
         StubDeckPlugin(),
         MockProviderPlugin(),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),
       ],

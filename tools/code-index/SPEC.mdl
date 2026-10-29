@@ -472,7 +472,9 @@ feat F-11: An MCP server over the index
   req F-11.4: A SELECT is capped at the engine (default 200 rows, at most 2000) and reports truncation.
   req F-11.5: `stats` counts derived graphs with a grouped SPARQL count, never by materialising quads.
   req F-11.6: `usages` finds every symbol that uses a declaration, through barrels, re-exports, namespaces and bare specifiers, grouped by package.
+```
 
+```mdl
 feat F-12: `serve` keeps the index current
   desc: |
     The server holds the store, and the store admits one process, so no other command can refresh

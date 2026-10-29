@@ -1,0 +1,101 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-illustrator/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: IllustratorPlugin
+
+The host plugin is in place: `Drawing` and `Canvas` types, the `VariantProvider` capability, the SVG
+variant (`SvgBuilder` over `SvgHandler`), the `.dx` drawing skill with its examples checked by a test, the
+deprecated mermaid dialect in `@dxos/diagram`, and the `dx drawing` commands. Tests cover schema
+registration, `convert`, the skill examples, the `.dx.svg` round trip and the CLI commands. The `create`
+operation has no test of its own, and the three QA flows are only partly automated: no test drives the
+`create`/`edit`/`read`/`generate` operations end to end.
+
+Of 10 items: 6 done, 1 untested, 3 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Drawing: An ECHO type with an optional name and a Ref to its Canvas.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#Drawing]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/plugin.test.ts, github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/convert.test.ts]
+```
+
+```mdl
+verdict Canvas: An opaque content record keyed by a renderer schema, with optional styles.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#Canvas]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/plugin.test.ts, github:dxos/dxos/packages/plugins/plugin-illustrator/src/model/drawing-file.test.ts]
+```
+
+```mdl
+verdict VariantProvider: A capability supplying canvas type, factory, scene builder and surfaces; operations resolve variants from it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/IllustratorCapabilities.ts#VariantProvider, github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/IllustratorCapabilities.ts#DrawingVariant]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/convert.test.ts]
+```
+
+```mdl
+verdict create: The handler picks the requested or first variant, persists a fresh canvas and returns the Drawing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/create.ts]
+  note: No test invokes `DrawingOperation.Create` or its handler; `convert.test.ts` builds drawings directly with `Drawing.make`.
+```
+
+```mdl
+verdict MermaidFlowchart: The deprecated flowchart dialect parses nodes, subgraphs and edges and compiles them to scene commands.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/mermaid.ts#parse, github:dxos/dxos/packages/common/diagram/src/mermaid.ts#compile]
+  tests: [github:dxos/dxos/packages/common/diagram/src/mermaid.test.ts]
+```
+
+```mdl
+verdict SvgVariant: The plugin-owned SVG variant stores the scene DSL verbatim and renders it read-only.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/capabilities/svg-variant.ts, github:dxos/dxos/packages/plugins/plugin-illustrator/src/model/builder.ts#SvgBuilder, github:dxos/dxos/packages/plugins/plugin-illustrator/src/components/SceneSvg.tsx]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/model/drawing-file.test.ts]
+  walkthrough:
+    - The capability contributes the svg variant with SvgBuilder and SvgArticle surfaces. github:dxos/dxos/packages/plugins/plugin-illustrator/src/capabilities/svg-variant.ts
+    - SvgBuilder applies and reads scene commands through the diagram SvgHandler. github:dxos/dxos/packages/plugins/plugin-illustrator/src/model/builder.ts#SvgBuilder
+```
+
+```mdl
+verdict DrawingSkill: The skill teaches the .dx semantic statements per diagram kind and scene statements, and each example draws cleanly.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts#semanticDiagrams]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.test.ts]
+```
+
+```mdl
+verdict QA-1: A test round-trips scene commands through SvgBuilder, but none runs the create, edit and read operations.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/model/builder.ts#SvgBuilder]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/model/drawing-file.test.ts]
+  note: `drawing-file.test.ts` applies scene commands to an SVG canvas and reads them back; no test invokes `create`, `edit` or `read` as operations or places the drawing in a collection.
+```
+
+```mdl
+verdict QA-2: The classDiagram compiler is tested, but no test runs the generate operation on a drawing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/common/diagram/src/uml.ts#compile, github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/generate.ts]
+  tests: [github:dxos/dxos/packages/common/diagram/src/uml.test.ts]
+  note: `uml.test.ts` compiles class diagrams to one object per class; nothing invokes `generate` to replace a drawing's contents.
+```
+
+```mdl
+verdict QA-3: A test renders a .dx file, imports the .dx.svg, lists and exports it, but not the edit-and-re-render step.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/commands/drawing/render.ts, github:dxos/dxos/packages/plugins/plugin-illustrator/src/commands/drawing/import.ts, github:dxos/dxos/packages/plugins/plugin-illustrator/src/commands/drawing/list.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/commands/drawing/drawing.test.ts]
+  note: `drawing.test.ts` covers render (node and crossing counts), import, list and export; it does not edit the source and re-render, and uses a 3-node fixture rather than the 7/10-node pipeline.
+```

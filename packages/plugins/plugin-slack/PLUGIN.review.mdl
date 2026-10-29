@@ -1,0 +1,380 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-slack/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SlackPlugin
+
+The Slack API client, discovery, message mapping and the Slack channel backend are built and match the
+spec closely. The channel backend (F-6) is the best-tested part: `channel-backend.test.ts` covers posting,
+thread replies, DMs, the `missing_scope` reason, mirror dedup and the feed-backend migration. The sync
+path has a single test (`sync.test.ts`), which checks the added count, the join/leave filter and progress
+reporting, but not cursors, incrementality, failures or name mirroring.
+
+The biggest divergence is in failure handling. The spec says a failed target writes `lastError` and the
+operation still returns a result. The code records the error on the binding's `Cursor`, but
+`Binding.syncAll` then fails the whole operation with the first failure. Concurrency is
+`SYNC_CONCURRENCY = 2` in plugin-connector, not 3. Toasts are shown once per binding, not once per
+operation. Channel creation also moved out of the first sync into the connector's `MaterializeSlackTarget`
+operation, which runs when a binding is created. The spec's `Integration`/`target.cursor` vocabulary
+predates `Connection` and `Cursor`. Most acceptance scenarios have no automated test.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ConversationKind: No literal type; discovery maps conversation flags to free-text kind labels.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/get-slack-channels.ts#conversationKind]
+  note: |
+    No `ConversationKind` schema or union exists in `src/`. `conversationKind` derives a plain-text label
+    ('channel', 'private channel', 'group', 'direct message', 'group direct message') from the `is_*` flags
+    and writes it into `RemoteTarget.description`.
+```
+
+```mdl
+verdict RemoteTarget: The output schema has id, name, optional description and metadata.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/types/SlackOperation.ts#RemoteTarget]
+  note: The fields match. No test calls `GetSlackChannels` or decodes its output.
+```
+
+```mdl
+verdict PullResult: Sync returns `{ pulled: { added } }`, summed across bindings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#PullResult]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict SlackCredentials: A Context service holds `{ token }`, but it is built by fromAccessToken/fromConnection, not fromIntegration.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#SlackCredentials, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#fromAccessToken, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#fromConnection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+  note: |
+    The service shape matches the spec. There is no `fromIntegration(ref)`: discovery uses
+    `fromConnection`, sync uses `fromAccessToken` on the cursor's `spec.source`, and the backend provides
+    the config's token directly.
+```
+
+```mdl
+verdict SlackChannel: The config type has accessToken, conversationId, optional teamId and an owned feed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/types/SlackChannel.ts#SlackChannel, github:dxos/dxos/packages/plugins/plugin-slack/src/types/SlackChannel.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict GetSlackChannels: Lists public and private channels from the connection's token, with labels and no ECHO writes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/types/SlackOperation.ts#GetSlackChannels, github:dxos/dxos/packages/plugins/plugin-slack/src/operations/get-slack-channels.ts]
+  walkthrough:
+    - The operation declares a Connection ref input and a list of targets. github:dxos/dxos/packages/plugins/plugin-slack/src/types/SlackOperation.ts#GetSlackChannels
+    - The handler drains `conversations.list` and maps each conversation to a target. github:dxos/dxos/packages/plugins/plugin-slack/src/operations/get-slack-channels.ts
+    - `fetchConversations` defaults to `public_channel,private_channel` and follows `next_cursor`. github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#fetchConversations
+  note: Matches the spec. No test invokes the operation.
+```
+
+```mdl
+verdict SyncSlackChannel: Syncs every bound channel, but with concurrency 2, a whole-operation failure on any binding, and no channel narrowing input.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/types/SlackOperation.ts#SyncSlackChannel, github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.test.ts]
+  walkthrough:
+    - The operation takes `ConnectorSpec.SyncInput` (connection, priority) and returns `pulled.added`. github:dxos/dxos/packages/plugins/plugin-slack/src/types/SlackOperation.ts#SyncSlackChannel
+    - `Binding.syncAll` fans out over the connection's cursors with `SYNC_CONCURRENCY = 2`. github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll
+    - The handler fetches history since the cursor, maps it and appends it to the mirror feed. github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts
+  note: |
+    The input has `priority`, not `channel?: Ref<Channel>`. Concurrency is 2, not `TARGET_CONCURRENCY=3`.
+    A failed binding records `lastError` on its cursor, but `syncAll` then fails the operation with that
+    error. The error is `ConnectorSync.DatabaseMissingError`, not `IntegrationDatabaseMissingError`.
+    Channels are materialized by `MaterializeSlackTarget` when a binding is created, not on first sync.
+```
+
+```mdl
+verdict F-1.1: The connector registers source slack.com with the seven scopes; EDGE requests them as the bot scope.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/connector.ts, github:dxos/dxos/packages/plugins/plugin-slack/src/constants.ts#SLACK_SCOPES, github:dxos/edge/packages/services/kms-service/src/oauth/provider.ts#getSlackAuthProviderSpec]
+  walkthrough:
+    - The connector module contributes a `ConnectorSpec.Connector` for `slack.com` with Slack OAuth. github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/connector.ts
+    - The scope list holds the seven scopes the spec names. github:dxos/dxos/packages/plugins/plugin-slack/src/constants.ts#SLACK_SCOPES
+    - EDGE runs Slack's v2 authorize flow with `scope=`, which yields the bot token. github:dxos/edge/packages/services/kms-service/src/oauth/provider.ts#getSlackAuthProviderSpec
+  note: It is now a `ConnectorSpec.Connector`, not an `IntegrationProvider`. `plugin.test.ts` only checks module activation, not the contributed scopes.
+```
+
+```mdl
+verdict F-1.4: An old grant keeps syncing, and its posts fail with an actionable missing_scope reason.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/errors.ts#slackFailureReason]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-1.2: onTokenCreated calls auth.test and sets account to user@team, with fallbacks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/connector.ts#onTokenCreated, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#fetchAuthTest]
+  note: The hook skips tokens that already have an account. No test exercises it.
+```
+
+```mdl
+verdict F-1.3: Every Slack call is a form-urlencoded POST with the token in the body.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#authedPost]
+  note: The tests' fake fetch matches only on the method name in the URL. Nothing asserts the body encoding.
+```
+
+```mdl
+verdict F-2.1: Discovery drains all conversations.list pages, one target per conversation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#fetchConversations, github:dxos/dxos/packages/plugins/plugin-slack/src/operations/get-slack-channels.ts]
+  note: The `next_cursor` loop exists. No test runs a multi-page discovery.
+```
+
+```mdl
+verdict F-2.2: Discovery creates no Channel; materialization is a separate operation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/get-slack-channels.ts, github:dxos/dxos/packages/plugins/plugin-slack/src/operations/materialize-target.ts]
+  note: The discovery handler makes no ECHO writes. Materialization happens in `MaterializeSlackTarget` when a binding is created, not on first sync. No test checks this.
+```
+
+```mdl
+verdict F-2.3: An unnamed IM is labelled 'DM with <user-id>', but discovery never requests IMs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/get-slack-channels.ts#conversationLabel]
+  note: The label logic matches. `fetchConversations` defaults to `public_channel,private_channel`, so this branch is unreachable from discovery. Nothing tests it.
+```
+
+```mdl
+verdict F-3.1: The Channel is keyed by slack.com/conversationId and history starts empty, but it is created at materialization, not first sync.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#findOrCreateChannelForTarget, github:dxos/dxos/packages/plugins/plugin-slack/src/operations/materialize-target.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.test.ts]
+  note: |
+    `findOrCreateChannelForTarget` creates the keyed Channel when the connector materializes a binding.
+    Sync requires an existing target and returns `added: 0` when the target is not a Channel. The first
+    sync passes `oldest: undefined`, so it fetches full history as the spec says.
+```
+
+```mdl
+verdict F-3.2: Later syncs fetch history with oldest set to the binding cursor.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#fetchHistory]
+  note: The handler passes `binding.max` as `oldest`. No test runs a second sync.
+```
+
+```mdl
+verdict F-3.3: A successful sync advances the cursor to the newest ts seen.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts]
+  note: Done by `Cursor.advance(binding, newestTs)` on the cursor object, not a `target.cursor` field. The sync test does not assert the cursor.
+```
+
+```mdl
+verdict F-3.4: A failed binding records lastError and siblings finish, but the operation then fails instead of returning a result.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/Binding.ts#syncAll]
+  note: |
+    `Cursor.recordError` writes the readable string from `formatSlackSyncFailure`. `syncAll` collects
+    every binding's outcome and then `Effect.fail`s with the first failure, so the caller gets no
+    `pulled` result. Untested.
+```
+
+```mdl
+verdict F-3.5: channel_join and channel_leave messages are dropped by the mapper.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#mapSlackMessage]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-4.1: The mapper sets created, threadId, the layered sender name, the email and one text block.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#mapSlackMessage, github:dxos/dxos/packages/plugins/plugin-slack/src/mirror.ts#tsToIso]
+  note: The fallback order matches the spec. The sync test checks only the count of appended messages, not their fields.
+```
+
+```mdl
+verdict F-4.2: Only the plain text field is mapped; rich-text blocks are ignored.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#mapSlackMessage]
+  note: Matches by design. No test asserts the block shape.
+```
+
+```mdl
+verdict F-4.3: Users resolve via users.info with concurrency 4, per-sync dedup and silent fallback.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#resolveUsers]
+  note: The sync test's fake answers `users.info`, but nothing asserts the resolved name or the failure fallback.
+```
+
+```mdl
+verdict F-4.4: Bots resolve via bots.info with the same concurrency and fallback.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#resolveBots, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#fetchBot]
+  note: No test covers bot messages.
+```
+
+```mdl
+verdict F-5.1: Transient failures retry with jittered exponential backoff.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#runRequest, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#shouldRetry]
+  note: |
+    `Schedule.upTo({ times: 3 })` allows 3 retries, which is 4 attempts, not "up to 3 attempts". Retries
+    cover transport errors, 429, 5xx and timeout. No test exercises retry.
+```
+
+```mdl
+verdict F-5.2: An ok:false body becomes SlackApiError with its code, and it is not retried.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#runRequest, github:dxos/dxos/packages/plugins/plugin-slack/src/errors.ts#SlackApiError]
+  note: The missing_scope backend test relies on the error code but does not check that there is no retry.
+```
+
+```mdl
+verdict F-5.3: An error toast is shown per failed binding, not for an operation-level failure.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts]
+  note: |
+    `LayoutOperation.AddToast` with the `formatSlackSyncFailure` string fires inside each binding's sync.
+    Failures outside a binding, such as an unresolvable connection, show no toast. Untested.
+```
+
+```mdl
+verdict F-5.4: A success toast is shown once per synced binding, not once per operation.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts]
+  note: A sync of N channels shows N success toasts with the same id. The sync test stubs the toast to fail and asserts nothing about it.
+```
+
+```mdl
+verdict F-6.1: The plugin contributes the org.dxos.channel.backend.slack backend, whose subscribe reads the mirror feed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#slackChannelBackend]
+  note: The backend's send, thread and DM paths are tested. `subscribe` is not exercised by any test.
+```
+
+```mdl
+verdict F-6.2: send posts with chat.postMessage, mirrors the post by ts and returns the receipt.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#post, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#postMessage]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-6.3: threads.send replies by ts, or posts top-level into a DM id; only the own conversation is mirrored.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#slackChannelBackend, github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#TS_PATTERN]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-6.4: openDirect reads the slack identity and returns the conversations.open id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#slackChannelBackend, github:dxos/dxos/packages/plugins/plugin-slack/src/services/slack-api.ts#openConversation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-6.5: Slack refusals map to actionable reasons in SlackChannelError.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/errors.ts#slackFailureReason, github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#withToken]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-6.6: readOnly always returns true.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#slackChannelBackend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-6.7: appendToMirror skips messages whose ts the feed already holds.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/mirror.ts#appendToMirror]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-6.8: upgradeChannel moves a feed-backed channel onto the Slack backend and keeps its feed, idempotently.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/mirror.ts#upgradeChannel, github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.ts#findOrCreateChannelForTarget]
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+```
+
+```mdl
+verdict F-6.9: The backend declares no connection; real-time receive is not built.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.ts#slackChannelBackend]
+  note: The provider has no connection member, which matches the deferral. No test is needed to assert it.
+```
+
+```mdl
+verdict T-1: No test runs onTokenCreated.
+  status: missing
+  note: Searched `plugin-slack/src` for tests of `onTokenCreated` or `auth.test`; none found.
+```
+
+```mdl
+verdict T-2: No test runs GetSlackChannels.
+  status: missing
+  note: No test file references `GetSlackChannels` or `get-slack-channels.ts`.
+```
+
+```mdl
+verdict T-3: The sync test syncs a pre-materialized channel and checks the added count only.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.test.ts]
+  note: The test checks the feed append via `pulled.added`. It does not assert the Channel key, backend config, name or cursor, and the Channel is created before the sync runs.
+```
+
+```mdl
+verdict T-4: No test runs a second, incremental sync.
+  status: missing
+  note: `sync.test.ts` has one test with a single sync and no cursor value.
+```
+
+```mdl
+verdict T-5: No test covers a per-target failure.
+  status: missing
+  note: No test runs two bindings or a failing history call. The code would fail the operation here, see F-3.4.
+```
+
+```mdl
+verdict T-6: The sync test's history includes a channel_join and expects added to be 2.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-7: No test checks threadId mapping.
+  status: missing
+  note: No test message in `sync.test.ts` carries `thread_ts`.
+```
+
+```mdl
+verdict T-8: Dedup by ts is tested on appendToMirror directly, not through the sync operation.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+  note: The test appends a history batch that holds an existing ts and checks that only the new message is appended. It does not invoke `SyncSlackChannel` or check `pulled.added`.
+```
+
+```mdl
+verdict T-9: The backend posts, then appendToMirror skips the same ts; the sync operation is not run.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-slack/src/capabilities/channel-backend.test.ts]
+  note: The test covers the dedup that the sync uses, but stands in `appendToMirror` for `SyncSlackChannel`.
+```
+
+```mdl
+verdict QA-1: No automated test runs the connect-and-sync flow.
+  status: missing
+  note: The QA test needs a real Slack OAuth grant. No Playwright or e2e test covers it.
+```

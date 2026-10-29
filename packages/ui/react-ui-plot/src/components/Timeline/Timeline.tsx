@@ -1049,7 +1049,7 @@ const EventCard = ({ event, side, getAnchorElement, color, onClose, onHover, onL
       onPointerLeave={onLeave}
     >
       {event.image && <CardImage src={event.image} />}
-      <div className='flex flex-col gap-1 p-3'>
+      <div className='flex flex-col gap-1 p-trim-md'>
         <Popover.Title>{event.label}</Popover.Title>
         <div className='text-sm font-medium' style={{ color }}>
           <span style={{ fontVariantNumeric: 'tabular-nums' }}>{event.date}</span> · {event.column}

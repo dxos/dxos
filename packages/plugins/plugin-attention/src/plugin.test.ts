@@ -8,15 +8,16 @@ import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin'
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 
-import { meta } from '#meta';
-import { AttentionPlugin } from '#plugin';
+import * as AttentionPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { AttentionNamespace } from './namespace.ts';
+
+const moduleId = (name: string) => `${AttentionNamespace.key}.module.${name}`;
 
 describe('AttentionPlugin', () => {
   test('modules activate on startup', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [GraphPlugin.make(), ProcessManagerPlugin.make(), AttentionPlugin()],
+      plugins: [GraphPlugin.make(), ProcessManagerPlugin.make(), AttentionPlugin.make()],
     });
 
     // All modules are dependency-mode and activate during the startup dependency pass. `#plugin`

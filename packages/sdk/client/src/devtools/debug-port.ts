@@ -9,6 +9,15 @@ export const DEBUG_PORT = 9321;
 export const DEBUG_PORT_RECONNECT_MS = 2_000;
 
 /**
+ * Ceiling of the backoff while the debug server stays unreachable, since the browser logs every refused poll and
+ * the one-shot server is down between commands — keep in sync with `composer-recovery.js`.
+ */
+export const DEBUG_PORT_RECONNECT_MAX_MS = 30_000;
+
+/** The retry interval after `delay`: doubled, up to {@link DEBUG_PORT_RECONNECT_MAX_MS}. */
+export const nextReconnectDelay = (delay: number): number => Math.min(delay * 2, DEBUG_PORT_RECONNECT_MAX_MS);
+
+/**
  * Debug server origin matching the page scheme.
  * HTTPS pages must use an HTTPS debug server (mixed content blocks http://127.0.0.1).
  */
@@ -82,6 +91,7 @@ export const runDebugPortLoop = async ({
   log('(Copy the session id above into every composer-recovery.js command.)');
 
   let waitingLogged = false;
+  let delay = DEBUG_PORT_RECONNECT_MS;
 
   while (!signal?.aborted) {
     let command: DebugCommand | undefined;
@@ -95,11 +105,13 @@ export const runDebugPortLoop = async ({
         log('Waiting for debug server…');
         waitingLogged = true;
       }
-      await sleep(DEBUG_PORT_RECONNECT_MS, signal);
+      await sleep(delay, signal);
+      delay = nextReconnectDelay(delay);
       continue;
     }
 
     waitingLogged = false;
+    delay = DEBUG_PORT_RECONNECT_MS;
 
     if (!command) {
       continue;

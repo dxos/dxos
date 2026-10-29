@@ -214,7 +214,7 @@ const Scorecard = ({ store, root, atoms, engine, scorers = DEFAULT_SCORERS }: Sc
     <Layout.Flex
       column
       gap='lg'
-      classNames='p-3 overflow-y-auto text-sm border-l border-separator'
+      classNames='p-trim-md overflow-y-auto text-sm border-l border-separator'
       data-testid='scene-view.scorecard'
     >
       <Section title='Score'>

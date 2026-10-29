@@ -81,14 +81,7 @@ export const CardMasonry = ({
           // Zoomed here rather than on the viewport: the viewport measures its own box, so only an
           // ancestor's zoom widens what it measures. In flow, nothing above depends on this height.
           <div className={zoom} data-testid='cardMasonry'>
-            <Masonry.Viewport
-              items={tiles}
-              getId={getTileId}
-              scroll={false}
-              // The section around the grid already spaces it, so the masonry's own top and bottom
-              // gap would double it.
-              classNames='-my-3'
-            />
+            <Masonry.Viewport items={tiles} getId={getTileId} scroll={false} />
           </div>
         ) : (
           <Masonry.Content classNames={zoom} data-testid='cardMasonry'>

@@ -11,11 +11,16 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
-import { log } from '@dxos/log';
 
 import { type Translations } from '../app/index.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
+import * as CommandsAdapter from './CommandsAdapter.ts';
+import * as PluginAssetAdapter from './PluginAssetAdapter.ts';
+import * as SchemaAdapter from './SchemaAdapter.ts';
+import * as SpaceTemplatesAdapter from './SpaceTemplatesAdapter.ts';
+import * as SurfaceAdapter from './SurfaceAdapter.ts';
+import * as TranslationsAdapter from './TranslationsAdapter.ts';
 
 /**
  * Type of a maker built by {@link Capability$.moduleMaker}. Naming it keeps declaration emit
@@ -172,52 +177,23 @@ export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> 
   { activatesOn: ActivationEvents.Startup, environments: ['browser', 'tauri'] },
 );
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-
-/**
- * The roles the surfaces in a module body's result bind that `declared` omits. Read structurally —
- * a contribution's `values`, and the `role` (one or several) `Surface.create` resolves from each
- * definition's filter — so this headless module need not load React's `Surface`.
- */
-export const undeclaredSurfaceRoles = (result: unknown, declared: readonly string[]): string[] => {
-  const bound = (Array.isArray(result) ? result : [result])
-    .flatMap((contribution) =>
-      isRecord(contribution) &&
-      contribution.capability === Capabilities.ReactSurface &&
-      Array.isArray(contribution.values)
-        ? contribution.values
-        : [],
-    )
-    .flatMap((value) => (Array.isArray(value) ? value : [value]))
-    .flatMap((surface) => (isRecord(surface) ? [surface.role].flat() : []))
-    .filter((role): role is string => typeof role === 'string');
-  return [...new Set(bound)].filter((role) => !declared.includes(role));
-};
-
 /**
  * Reports, when a role-gated module loads, any role its surfaces bind but do not declare: a request
  * for only that role never loads the module, so the surface silently renders nothing wherever no
  * declared role was requested first.
  */
-const withDeclaredRolesCheck =
-  <Props, Requires extends readonly Capability$.AnyTag[], Provides extends readonly Capability$.AnyTag[]>(
-    loader: Capability$.LoadModule<Props, Requires, Provides>,
-    roles: readonly string[],
-  ): Capability$.LoadModule<Props, Requires, Provides> =>
-  () =>
-    loader().then((module) => ({
-      default: (props: Props) =>
-        module.default(props).pipe(
-          Effect.tap((result) =>
-            Effect.sync(() => {
-              const undeclared = undeclaredSurfaceRoles(result, roles);
-              if (undeclared.length > 0) {
-                log.error('surface module binds roles missing from its declared roles', { undeclared, roles });
-              }
-            }),
-          ),
-        ),
-    }));
+const withDeclaredRolesCheck = <
+  Props,
+  Requires extends readonly Capability$.AnyTag[],
+  Provides extends readonly Capability$.AnyTag[],
+>(
+  loader: Capability$.LoadModule<Props, Requires, Provides>,
+  roles: readonly string[],
+): Capability$.LoadModule<Props, Requires, Provides> =>
+  Capability$.wrapLoader(() => loader().then((module) => SurfaceAdapter.default(module, { roles })), loader, {
+    module: '@dxos/app-toolkit/SurfaceAdapter',
+    args: { roles },
+  });
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
   'ReactSurface',
@@ -280,17 +256,30 @@ export const anchorSort: Maker<typeof AppCapabilities.AnchorSort> = Capability$.
 
 /** Module contributing translations. */
 export const translations = (
-  resources: Translations.Resource | Translations.Resource[],
+  resources:
+    | Translations.Resource
+    | Translations.Resource[]
+    | (() => Promise<{ translations: Translations.Resource | Translations.Resource[] }>),
   options?: { name?: string; environments?: readonly Capability$.Environment[] },
 ) => {
+  const spec = {
+    provides: [AppCapabilities.Translations],
+    environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+  } as const;
+  // The loader form keeps the strings in their own chunk, out of the plugin definition's closure.
+  if (typeof resources === 'function') {
+    const loader = resources;
+    return Capability$.lazyModule<readonly [typeof AppCapabilities.Translations]>(
+      options?.name ?? 'translations',
+      spec,
+      Capability$.wrapLoader(() => loader().then(TranslationsAdapter.default), loader, {
+        module: '@dxos/app-toolkit/TranslationsAdapter',
+      }),
+    );
+  }
   const value: Translations.Resource[] = Array.isArray(resources) ? resources : [resources];
-  return Capability$.inlineModule(
-    options?.name ?? 'translations',
-    {
-      provides: [AppCapabilities.Translations],
-      environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
-    },
-    () => Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
+  return Capability$.inlineModule(options?.name ?? 'translations', spec, () =>
+    Effect.succeed([Capability$.contribute(AppCapabilities.Translations, value)]),
   );
 };
 
@@ -309,10 +298,12 @@ export const schema = (
   } as const;
   if (typeof types === 'function') {
     const loader = types;
-    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(options?.name ?? 'schema', spec, () =>
-      loader().then(({ default: values }) => ({
-        default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
-      })),
+    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(
+      options?.name ?? 'schema',
+      spec,
+      Capability$.wrapLoader(() => loader().then(SchemaAdapter.default), loader, {
+        module: '@dxos/app-toolkit/SchemaAdapter',
+      }),
     );
   }
   return Capability$.inlineModule(options?.name ?? 'schema', spec, () =>
@@ -369,11 +360,10 @@ export const pluginAsset = (
       provides: [AppCapabilities.PluginAsset],
       environments: options?.environments ?? ['browser', 'tauri'],
     },
-    () =>
-      content().then(({ default: text }) => ({
-        default: () =>
-          Effect.succeed([Capability$.contribute(AppCapabilities.PluginAsset, { ...asset, content: text })]),
-      })),
+    Capability$.wrapLoader(() => content().then((loaded) => PluginAssetAdapter.default(loaded, asset)), content, {
+      module: '@dxos/app-toolkit/PluginAssetAdapter',
+      args: asset,
+    }),
   );
 
 /**
@@ -407,10 +397,9 @@ export const spaceTemplates = (
       provides: [AppCapabilities.SpaceTemplate],
       environments: options?.environments ?? ['browser', 'tauri'],
     },
-    () =>
-      loader().then(({ default: templates }) => ({
-        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SpaceTemplate, templates)]),
-      })),
+    Capability$.wrapLoader(() => loader().then(SpaceTemplatesAdapter.default), loader, {
+      module: '@dxos/app-toolkit/SpaceTemplatesAdapter',
+    }),
   );
 
 export const commands = (
@@ -424,10 +413,12 @@ export const commands = (
   } as const;
   if (typeof values === 'function') {
     const loader = values;
-    return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(options?.name ?? 'cli-commands', spec, () =>
-      loader().then(({ default: commands }) => ({
-        default: () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, commands)]),
-      })),
+    return Capability$.lazyModule<readonly [typeof Capabilities.Command]>(
+      options?.name ?? 'cli-commands',
+      spec,
+      Capability$.wrapLoader(() => loader().then(CommandsAdapter.default), loader, {
+        module: '@dxos/app-toolkit/CommandsAdapter',
+      }),
     );
   }
 

@@ -39,7 +39,9 @@ type CodeGraph
     grouped?: boolean        # frame boxes by package (illustrator layout and drawing)
     nodes: Node[]
     edges: Edge[]
+```
 
+```mdl
 type Node
   desc: One box.
   fields:
@@ -48,17 +50,23 @@ type Node
     kind: NodeKind
     group?: string         # the package directory; the illustrator frames boxes by it
     position?: Position    # where the user dragged the box
+```
 
+```mdl
 type Edge
   desc: One arrow, from the subject to the object of a triple.
   fields:
     from: string
     to: string
     kind?: string          # the predicate's local name, e.g. imports, usesPackage
+```
 
+```mdl
 type NodeKind
   literals: package | file | symbol | module | spec | other
+```
 
+```mdl
 type Layout
   literals: illustrator | force | rank | diagram
 ```
@@ -69,35 +77,51 @@ type Layout
 op query
   key: org.dxos.operation.codeGraph.query
   desc: Runs a SPARQL SELECT over the index and returns the rows; draws nothing.
+```
 
+```mdl
 op inspect
   key: org.dxos.operation.codeGraph.inspect
   desc: Returns one resource's outgoing facts and incoming counts.
+```
 
+```mdl
 op read
   key: org.dxos.operation.codeGraph.read
   desc: Returns a graph's boxes, arrows and layout.
+```
 
+```mdl
 op addFromQuery
   key: org.dxos.operation.codeGraph.addFromQuery
   desc: Runs a SELECT and draws its rows; ?from/?to rows are arrows, ?node rows are boxes.
+```
 
+```mdl
 op addNodes
   key: org.dxos.operation.codeGraph.addNodes
   desc: Adds boxes for resources and connects every box pair the index links by imports or usesPackage.
+```
 
+```mdl
 op addNeighbors
   key: org.dxos.operation.codeGraph.addNeighbors
   desc: Adds the neighbours of boxes along one predicate, outward, inward or both.
+```
 
+```mdl
 op remove
   key: org.dxos.operation.codeGraph.remove
   desc: Removes boxes and their arrows, or everything.
+```
 
+```mdl
 op setLayout
   key: org.dxos.operation.codeGraph.setLayout
   desc: Chooses the layout, optionally forgets dragged positions, and optionally turns grouping by package on or off.
+```
 
+```mdl
 op runCommand
   key: org.dxos.operation.codeGraph.runCommand
   desc: Carries out one short command with its own fast model, which may only add SPARQL results or remove boxes by a text filter; a decision model ends the loop.
@@ -110,16 +134,24 @@ component CodeGraphArticle
   desc: The article surface. A toolbar picks the layout, groups by package and resets positions; the body is the canvas or the drawing, with a details panel for the selected box and the same panel as a card on hover.
   props:
     subject: CodeGraph
+```
 
+```mdl
 component CodeGraphCanvas
   desc: react-ui-canvas's dynamic projection with one box per resource, as plugin-projects' FeatureCanvas uses it. Arrangement and an overlay of positions place the boxes. A box shows a symbol's own name and a coloured tag of its kind from the index. Package frames are the canvas's own diagram nodes, on a backdrop layer under the boxes and arrows.
+```
 
+```mdl
 component CodeGraphDiagram
   desc: plugin-illustrator's SceneSvg drawing of the semantic layout, read-only, with package frames and routed arrows.
+```
 
+```mdl
 component NodeDetails
   desc: The selected resource's facts, with expand and remove actions.
+```
 
+```mdl
 component CommandBar
   desc: A floating button (or `/`) that opens a one-line command field over the canvas, with a microphone toggle for spoken commands and a line for the outcome and the trailer.
 ```
@@ -131,19 +163,25 @@ feat F-1: Read the index from the app
   req F-1.1: A same-origin dev-server route answers read-only code-index tools by running `code-index mcp` as a child process.
   req F-1.2: The route accepts only loopback callers and JSON requests, so other pages and machines cannot read the source tree.
   req F-1.3: Without the route (a deployed build), every operation fails with an error that names the missing route.
+```
 
+```mdl
 feat F-2: The assistant shapes the graph
   req F-2.1: The Code Graph skill offers query, inspect, read, addFromQuery, addNodes, addNeighbors, remove and setLayout, and the space's addObject to create a graph.
   req F-2.2: A chat about a CodeGraph object carries the skill (SkillsAnnotation).
   req F-2.3: Adding never duplicates a box or an arrow, and a box an arrow needs is added with it.
   req F-2.4: An addition that would take a graph past 300 boxes fails whole with `LimitError`.
+```
 
+```mdl
 feat F-3: Two layouts on one canvas
   req F-3.1: The illustrator layout solves the graph as semantic DSL and places canvas boxes at the solved centres; when the graph is grouped it frames each package's boxes, the package box included, in a tinted frame titled with the package's name, one colour per package.
   req F-3.2: The force layout uses the canvas's own force arrangement; rank uses its fewest-crossings arrangement.
   req F-3.3: Dragging a box saves only its position; boxes the user did not move stay under the layout.
   req F-3.4: The diagram layout renders the illustrator's full drawing with SceneSvg.
+```
 
+```mdl
 feat F-4: Inspect a box
   req F-4.1: Double-clicking a box opens its facts from the index.
   req F-4.2: The details panel expands the box's dependencies or dependents, or removes it.
@@ -152,7 +190,7 @@ feat F-4: Inspect a box
 feat F-5: Single commands
   req F-5.1: A command bar, apart from the chat assistant, takes one typed or spoken command and runs it with RunCommand.
   req F-5.2: The command model sees the graph as it is and may only add the rows of a SPARQL SELECT or remove boxes matching a text filter (`*`, `kind:<kind>`, `/regex/`, or text).
-  req F-5.3: Between turns a decision model judges whether the command is done; a failed or empty action earns another turn without asking, and a turn that only removed boxes ends the command; at most 3 turns.
+  req F-5.3: Between turns a decision model (the space's default, Clef on Workers AI unless configured) judges whether the command is done; a failed or empty action earns another turn without asking, and a turn that only removed boxes ends the command; at most 3 turns.
   req F-5.4: A command adds at most 40 boxes; the rest are left out and summarised in a trailer (counts by kind and package, and a few names) shown to the user and the model.
   req F-5.5: Speaking uses Whistle on the device: with the microphone on, each pause ends a command.
   req F-5.6: Before the first model call, the packages and exported symbols the command names are looked up in the index and given to the model as exact IRIs; the lookup is skipped after 1.5 s.
@@ -165,7 +203,9 @@ scenario T-1: Draw package dependencies
   given: an index of this repository, and composer-app under `vite dev`
   when: the assistant is asked to draw the @dxos packages plugin-markdown depends on
   then: a code graph shows plugin-markdown with an arrow to each dependency, laid out by the illustrator
+```
 
+```mdl
 scenario T-2: Switch layout
   given: a code graph with boxes
   when: the user picks the force layout
@@ -389,4 +429,12 @@ decision D-15: RunCommand returns a trace of timed steps, and the command bar sh
   by: user:dmaretskyi
   affects: [F-5.7, CommandBar]
   why: A slow or wrong command could not be explained from the outcome line; the trace shows where the time went and which query the model ran.
+```
+
+```mdl
+decision D-16: The judge is the space's default decision model, which is Cloudflare's Clef unless configured, and Code Graph depends on the TypeSafe plugin so that a decision model is always there. Fills in [D-11].
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-5.3]
+  why: With TypeSafe off (it defaults on only in dev builds) no resolver served decision models, so every command stopped after its first turn; Clef answers through EDGE with no key, in about 0.3 s once signed in.
 ```

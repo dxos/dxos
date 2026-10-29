@@ -15,10 +15,10 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { wireTriggers } from '../../util/index.ts';
 import {
   FrequencyDefaults,
@@ -311,7 +311,7 @@ export type TriggerSectionProps = {
  * includes {@link triggerFieldMap}.
  */
 export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const values = useFormValues<TriggerFormInput>('TriggerEditor.TriggerSection', TRIGGER_PATH);
   const kind = values?.kind;
 
@@ -320,10 +320,8 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
     <Layout.Flex column classNames={[kind && 'px-2 pb-2 dx-card-surface border border-separator rounded-xs']}>
       {kind ? (
         <>
-          <Layout.Flex align='center'>
-            <Field.Root>
-              <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
-            </Field.Root>
+          <Field.Header>
+            <Typography.Text truncate>{t(`trigger-kind.${kind}.label`)}</Typography.Text>
             {!readonly && (
               <Button.Root
                 variant='ghost'
@@ -333,7 +331,7 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
                 onClick={onClear}
               />
             )}
-          </Layout.Flex>
+          </Field.Header>
           <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
         </>
       ) : (

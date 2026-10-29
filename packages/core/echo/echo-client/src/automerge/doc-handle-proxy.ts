@@ -7,7 +7,7 @@ import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@auto
 import { EventEmitter } from 'eventemitter3';
 
 import { Trigger, TriggerState } from '@dxos/async';
-import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
+import { BACKED_DIRECTORY_LIMIT, BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
 import { runInCommit } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -53,16 +53,34 @@ export type ClientDocHandleEvents<T> = {
  */
 export type PassiveDocument = { bytes: Uint8Array; heads: A.Heads };
 
+/** A space directory held unloaded: its stored changes, the heads it is shown at, and its JSON at those heads. */
+export type PassiveDirectory = PassiveDocument & { json?: string };
+
 export type DocHandleProxyOptions<T> = {
   initialValue?: T;
   documentId?: DocumentId;
   /** Bytes the client already holds: the handle starts passive and loads them on first use. */
   passive?: PassiveDocument;
+  /**
+   * The handle holds a space directory: it keeps the JSON the host shows it with, under
+   * {@link BACKED_DIRECTORY_LIMIT}, and without `passive` it starts passive and empty, shown once the host's first
+   * send arrives (see {@link DocHandleProxy.whenPassiveShown}).
+   */
+  directory?: boolean | { json?: string };
   onDelete: () => void;
 };
 
 /** Stored changes held unloaded, off the wasm heap, which never shrinks. */
-type PassiveBody = { readonly kind: 'passive'; chunks: Uint8Array[]; size: number; heads: A.Heads };
+type PassiveBody = {
+  readonly kind: 'passive';
+  chunks: Uint8Array[];
+  size: number;
+  heads: A.Heads;
+  /** A directory's JSON at {@link heads}, kept for a handle that holds a directory. */
+  json?: string;
+  /** Holds nothing yet: the host is asked for the whole document, and its first send fills the body. */
+  awaiting?: boolean;
+};
 
 type LoadedBody<T> = {
   readonly kind: 'loaded';
@@ -126,8 +144,13 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   private _state: Exclude<DocHandleProxyState, 'passive'> = 'pending';
   /** Undefined once deleted. */
   #body: PassiveBody | LoadedBody<T> | undefined;
+  /** The last {@link _heldState} save of a loaded doc, reused while its heads are unchanged. */
+  #saved?: PassiveDocument;
   /** Open write scopes; see {@link batch}. */
   #depth = 0;
+  readonly #directory: boolean;
+  /** Woken by the host's first send to a handle that started empty; see {@link whenPassiveShown}. */
+  readonly #shown = new Trigger();
   /**
    * Identifier for internal usage.
    * @internal
@@ -142,18 +165,24 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   #url?: { documentId: DocumentId; url: AutomergeUrl } = undefined;
   private readonly _onDelete: () => void;
 
-  constructor({ documentId, initialValue, passive, onDelete }: DocHandleProxyOptions<T>) {
+  constructor({ documentId, initialValue, passive, directory, onDelete }: DocHandleProxyOptions<T>) {
     super();
     this._documentId = documentId;
     this._onDelete = onDelete;
+    this.#directory = directory !== undefined && directory !== false;
+    const json = typeof directory === 'object' ? directory.json : undefined;
     if (passive) {
-      this.#body = { kind: 'passive', chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
+      this.#body = { kind: 'passive', chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads, json };
+      this.#shown.wake();
+    } else if (this.#directory) {
+      this.#body = { kind: 'passive', chunks: [], size: 0, heads: [], awaiting: true };
     } else {
       // T should really be constrained to extend `Record<string, unknown>` (an automerge doc can't be
       // e.g. a primitive, an array, etc. - it must be an object). But adding that constraint creates
       // a bunch of other problems elsewhere so for now we'll just cast it here to make Automerge happy.
       const doc = initialValue ? A.emptyChange<T>(A.from(initialValue as Record<string, unknown>) as T) : A.init<T>();
       this.#body = { kind: 'loaded', doc, hostHeads: [], fromBytes: false };
+      this.#shown.wake();
     }
   }
 
@@ -191,6 +220,20 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return body?.kind === 'passive' ? { bytes: joinChunks(body), heads: body.heads } : undefined;
   }
 
+  /** The JSON a passive directory handle is shown with, read at {@link passiveHeads}; undefined once loaded. */
+  get passiveJson(): string | undefined {
+    const body = this.#body;
+    return body?.kind === 'passive' ? body.json : undefined;
+  }
+
+  /**
+   * Resolves once a passive handle that started empty holds the host's first send, at once for any other.
+   * Rejects with {@link DocumentUnavailableError} if the host reports it cannot produce the document.
+   */
+  async whenPassiveShown(): Promise<void> {
+    await this.#shown.wait();
+  }
+
   /** The heads a passive handle shows, without joining its stored changes; undefined once loaded. */
   get passiveHeads(): A.Heads | undefined {
     const body = this.#body;
@@ -211,8 +254,39 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     await this._ready.wait();
   }
 
+  /**
+   * Resolves once the doc can be read and written: at once for one loaded from stored changes the client
+   * held, which the host already has, otherwise once the host delivers it.
+   */
+  async whenUsable(): Promise<void> {
+    this.#loaded();
+    if (this.isLoaded()) {
+      return;
+    }
+    await this._ready.wait();
+  }
+
   isReady(): boolean {
     return this._ready.state === TriggerState.RESOLVED;
+  }
+
+  /**
+   * The stored changes and the heads the host holds them at, for persisting the doc outside the host;
+   * undefined while a change exists only here. A loaded doc is saved once per heads.
+   * @internal
+   */
+  _heldState(): PassiveDocument | undefined {
+    const body = this.#body;
+    if (body?.kind === 'passive') {
+      return { bytes: joinChunks(body), heads: body.heads };
+    }
+    if (body?.kind !== 'loaded' || body.hostHeads.length === 0 || !A.equals(A.getHeads(body.doc), body.hostHeads)) {
+      return undefined;
+    }
+    if (!this.#saved || !A.equals(this.#saved.heads, body.hostHeads)) {
+      this.#saved = { bytes: A.save(body.doc), heads: body.hostHeads };
+    }
+    return this.#saved;
   }
 
   /** Whether the document can be read and written now: ready, or loaded from bytes the client held. */
@@ -397,7 +471,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   _subscription(): { heads?: A.Heads; passive?: true } {
     const body = this.#body;
     if (body?.kind === 'passive') {
-      return { heads: body.heads, passive: true };
+      return body.awaiting ? { passive: true } : { heads: body.heads, passive: true };
     }
     return body !== undefined && body.hostHeads.length > 0 ? { heads: body.hostHeads } : {};
   }
@@ -407,12 +481,19 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * loaded handle the host has taken every change of back to stored changes, dropping its document.
    * @internal
    */
-  _setPassive(passive: PassiveDocument): void {
+  _setPassive(passive: PassiveDirectory): void {
     invariant(
       this.#body?.kind === 'passive' || (this.#depth === 0 && this._isAcknowledged()),
       'A document with unsent changes cannot go passive.',
     );
-    this.#body = { kind: 'passive', chunks: [passive.bytes], size: passive.bytes.length, heads: passive.heads };
+    this.#body = {
+      kind: 'passive',
+      chunks: [passive.bytes],
+      size: passive.bytes.length,
+      heads: passive.heads,
+      json: this.#directory ? passive.json : undefined,
+    };
+    this.#shown.wake();
   }
 
   /**
@@ -491,6 +572,18 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   }
 
   /**
+   * Fails {@link whenPassiveShown} for a passive handle still waiting on the host's first send, which the host
+   * reports it cannot produce; a no-op for any other handle.
+   * @internal
+   */
+  _failPassiveWait(documentId: string): void {
+    const body = this.#body;
+    if (body?.kind === 'passive' && body.awaiting && this.#shown.state === TriggerState.WAITING) {
+      this.#shown.throw(new DocumentUnavailableError({ documentId }));
+    }
+  }
+
+  /**
    * Get pending changes since last write.
    * @internal
    */
@@ -546,9 +639,19 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       held.chunks.push(mutation);
       held.size += mutation.length;
     }
-    const json = held.size <= BACKED_OBJECT_LIMIT ? passive?.json : undefined;
-    if (json !== undefined) {
-      held.heads = passive!.heads;
+    const json =
+      held.size <= (this.#directory ? BACKED_DIRECTORY_LIMIT : BACKED_OBJECT_LIMIT) ? passive?.json : undefined;
+    if (passive && json !== undefined) {
+      held.heads = passive.heads;
+      if (this.#directory) {
+        held.json = json;
+      }
+    }
+    if (held.awaiting) {
+      // Consumed by whoever waits on the first send, which reads the body rather than this event.
+      held.awaiting = false;
+      this.#shown.wake();
+      return;
     }
     this.emit('passive', { handle: this, heads: held.heads, json, updatedAt: passive?.updatedAt });
   }

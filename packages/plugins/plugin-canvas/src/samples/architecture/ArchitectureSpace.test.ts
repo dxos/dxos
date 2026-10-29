@@ -73,7 +73,7 @@ describe('ArchitectureSpace', () => {
     await EffectEx.runPromise(SampleSpace.applyTo(definition, { db, properties }));
 
     const drawings = await db.query(Filter.type(Drawing.Drawing)).run();
-    expect(drawings).toHaveLength(12);
+    expect(drawings).toHaveLength(15);
     // Reference diagrams open read-only for a viewer who has not chosen to edit.
     const canvases = await Promise.all(drawings.map((drawing) => drawing.canvas.load()));
     expect(canvases.every((canvas) => canvasRecordOf(canvas.content)?.readonly === true)).toBe(true);
@@ -84,6 +84,7 @@ describe('ArchitectureSpace', () => {
       'Composer',
       'DXOS',
       'EDGE',
+      'ECHO design',
       'ECHO',
       'Overview',
       'CF Workers',
@@ -95,15 +96,30 @@ describe('ArchitectureSpace', () => {
     expect(deck?.description).toMatch(/^ECHO, the DXOS object database/);
     expect(deck?.theme).toEqual({ accent: '#0891b2', font: 'space-grotesk', monoFont: 'fira' });
 
-    // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure.
-    const [metrics] = await db.query(Filter.type(Sheet.Sheet)).run();
+    // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure, and the busiest
+    // plugins' PRs as a pie.
+    const sheets = await db.query(Filter.type(Sheet.Sheet)).run();
+    const metrics = sheets.find((sheet) => sheet.name === 'Plugin metrics');
     expect(metrics?.rows).toHaveLength(21);
     expect(metrics?.columns).toHaveLength(5);
     const charts = await Promise.all((metrics?.charts ?? []).map((ref) => ref.load()));
     expect(charts).toEqual([
       expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
+      expect.objectContaining({ range: 'A1:B9', type: 'pie', header: true }),
     ]);
     expect(metrics && unstyledHeaders(metrics)).toEqual([]);
+
+    // The ECHO design document has eight chapters and embeds the three ECHO diagrams and the benchmarks sheet.
+    const design = listedObjects.find((object) => Obj.getLabel(object) === 'ECHO design');
+    const designText = Obj.instanceOf(Markdown.Document, design) ? (await design.content.load()).content : '';
+    expect(designText.match(/^## /gm)).toHaveLength(8);
+    const benchmarks = sheets.find((sheet) => sheet.name === 'ECHO benchmarks');
+    const embedded = [...designText.matchAll(/!\[[^\]]*\]\(echo:\/\/\/([A-Z0-9]+)\)/g)].map(([, id]) => id);
+    expect(embedded).toEqual(
+      ['ECHO data model', 'ECHO replication', 'ECHO queries']
+        .map((name) => drawings.find((drawing) => drawing.name === name)?.id)
+        .concat(benchmarks?.id),
+    );
 
     // The root document links the other two by id and embeds the Composer drawing.
     const docs = await db.query(Filter.type(Markdown.Document)).run();

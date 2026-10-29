@@ -11,6 +11,7 @@ export const BLOCK_TYPES = [
   'type',
   'op',
   'feat',
+  'feature',
   'scenario',
   'test',
   'component',
@@ -19,7 +20,9 @@ export const BLOCK_TYPES = [
   'module',
   'suite',
   'decision',
+  'question',
   'verdict',
   'plugin',
+  'uses',
   'table',
 ] as const;

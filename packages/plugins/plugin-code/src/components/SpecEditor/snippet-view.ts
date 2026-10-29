@@ -7,9 +7,8 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView, lineNumbers } from '@codemirror/view';
 
+import { type Snippet } from '@dxos/deus/review';
 import { defaultStyles } from '@dxos/ui-editor';
-
-import { type Snippet } from '../CodeView/symbol.ts';
 
 /** The editor's own syntax colours, so a snippet reads like the file it came from. */
 const HIGHLIGHT = {

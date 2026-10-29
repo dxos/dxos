@@ -27,6 +27,7 @@ import {
   ChatThread as NaturalChatThread,
 } from '@dxos/react-ui-assistant';
 import {
+  type FeedModel,
   type MessageRange,
   type OutlineMarker,
   Outline as OutlineRail,
@@ -43,7 +44,6 @@ import { type Actor, Message, Task } from '@dxos/types';
 import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
-import { meta } from '#meta';
 import { AssistantOperation, ChatSurface } from '#types';
 
 import {
@@ -54,6 +54,7 @@ import {
   projectSelfWakes,
   resolveRewind,
 } from '../../chat-model/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -225,9 +226,15 @@ const ChatRoot = ({
         AssistantOperation.RespondToRequest,
         { chat, messageId, requestId, optionId },
         spaceId ? { spaceId } : undefined,
-      ).then(({ error }) => {
+      ).then(({ data, error }) => {
         if (error) {
           event.emit({ type: 'error', error });
+        } else if (data && !data.answered) {
+          // Otherwise the click looks like it did nothing.
+          event.emit({
+            type: 'error',
+            error: new Error('The assistant is no longer waiting for this answer. Ask it again to retry.'),
+          });
         }
       });
     });
@@ -567,8 +574,21 @@ type ChatThreadProps = Util.ThemedClassName<{
   onViewUsage?: () => void;
 }>;
 
+/**
+ * Tells the feed model when a message changes in place: a feed query re-emits only when its set of
+ * ids changes, so an edit (a permission card recording its answer) reaches its row only this way.
+ */
+const useInPlaceUpdates = (model: FeedModel, messages: readonly Message.Message[]) => {
+  useEffect(() => {
+    const unsubscribes = messages
+      .filter((message) => Obj.isObject(message))
+      .map((message) => Obj.subscribe(message, () => model.update(message.id)));
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+  }, [model, messages]);
+};
+
 const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
@@ -597,6 +617,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
   // arrive as updates on one identity, and the window is told — the old `MessageSyncer`'s cursor
   // and range table have no equivalent left.
   const model = useFeedModel(messages, { stops: 'prompt' });
+  useInPlaceUpdates(model, messages);
   const streaming = useAtomValue(getChatModelState(chatModel).streaming);
   useEffect(() => {
     // The answer streams above any prompts still waiting for the agent, which end the thread.
@@ -891,7 +912,7 @@ const CHAT_TASK_ROWS = 4;
 
 const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
 
   // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
   const [chatSnapshot] = useObject(chat);

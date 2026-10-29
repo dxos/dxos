@@ -8,14 +8,14 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '../../meta.ts';
+import { OnboardingNamespace } from '../../namespace.ts';
 
 /**
  * Shown after the native app has been successfully opened via custom scheme.
  * Gives the user the option to stay in the browser instead.
  */
 export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(OnboardingNamespace.key);
 
   return (
     <Layout.Flex column center gap='2xl' classNames='h-full'>

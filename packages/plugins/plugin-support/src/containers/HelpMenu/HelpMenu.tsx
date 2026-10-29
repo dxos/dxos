@@ -17,9 +17,8 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import { isTauri } from '@dxos/util';
 
-import { meta } from '#meta';
-
 import { ABOUT_DIALOG, SHORTCUTS_DIALOG } from '../../constants.ts';
+import { SupportNamespace } from '../../namespace.ts';
 import { downloadUrl } from './download.ts';
 import { UpdateMenuItem } from './UpdateMenuItem.tsx';
 
@@ -28,7 +27,7 @@ const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 
 export const HelpMenu = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const config = useConfig();
   const updateManager = Hooks.useOptionalCapability(AppCapabilities.UpdateManager);
@@ -105,7 +104,11 @@ export const HelpMenu = () => {
           onClick={openDialog(ABOUT_DIALOG)}
         />
         {version && (
-          <Layout.Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
+          // Indented like menu.css indents an icon-less item, so the text starts in line with the labels.
+          <Layout.Flex
+            column
+            classNames='ps-[calc(var(--dx-gap-size)*2.5+var(--dx-icon-size))] pe-[calc(var(--dx-gap-size)*1.5)] pb-2 text-xs text-fg-muted'
+          >
             <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
               {version}
             </a>

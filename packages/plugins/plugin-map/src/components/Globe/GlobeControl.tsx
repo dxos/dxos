@@ -38,7 +38,10 @@ const distanceSq = (a: LatLngLiteral, b: LatLngLiteral): number => {
 };
 
 export const GlobeControl = Util.composable<HTMLDivElement, GlobeControlProps>(
-  ({ center, zoom, markers = [], lines = [], selected = [], onSelect, onToggle, onChange, ...props }, forwardedRef) => {
+  (
+    { center, zoom, markers = [], lines = [], tour, selected = [], onSelect, onToggle, onChange, ...props },
+    forwardedRef,
+  ) => {
     const themeMode = Hooks.useThemeMode();
     const styles = globeStyles(themeMode);
 
@@ -126,7 +129,7 @@ export const GlobeControl = Util.composable<HTMLDivElement, GlobeControlProps>(
 
     const selectedPoints = useMemo<LatLngLiteral[]>(() => {
       if (selected?.length === 0) {
-        return features.points;
+        return tour?.length ? tour : features.points;
       }
 
       const points = selected
@@ -137,7 +140,7 @@ export const GlobeControl = Util.composable<HTMLDivElement, GlobeControlProps>(
         .filter(isNonNullable);
 
       return points;
-    }, [markers, selected]);
+    }, [markers, selected, tour]);
 
     const [moved, setMoved] = useState(false);
     // emitChange updates the local zoom level (for topology LOD) and propagates the new view to the

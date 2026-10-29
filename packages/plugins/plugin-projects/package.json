@@ -13,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -37,19 +24,16 @@
       "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
+      "node": "./dist/lib/ProjectsPlugin.node.mjs",
+      "default": "./dist/lib/ProjectsPlugin.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -94,6 +78,21 @@
       "types": "./dist/types/src/types/FeatureOperation.d.ts",
       "import": "./dist/lib/FeatureOperation.mjs"
     },
+    "./FeatureSpec": {
+      "source": "./src/types/FeatureSpec.ts",
+      "types": "./dist/types/src/types/FeatureSpec.d.ts",
+      "import": "./dist/lib/FeatureSpec.mjs"
+    },
+    "./LegacyFeature": {
+      "source": "./src/types/LegacyFeature.ts",
+      "types": "./dist/types/src/types/LegacyFeature.d.ts",
+      "import": "./dist/lib/LegacyFeature.mjs"
+    },
+    "./LegacyShowcase": {
+      "source": "./src/types/LegacyShowcase.ts",
+      "types": "./dist/types/src/types/LegacyShowcase.d.ts",
+      "import": "./dist/lib/LegacyShowcase.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
@@ -125,8 +124,10 @@
       "import": "./dist/lib/ProjectSkill.mjs"
     },
     "./ProjectsPlugin": {
-      "source": "./src/ProjectsPlugin.ts",
-      "types": "./dist/types/src/ProjectsPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
+      "node": "./dist/lib/ProjectsPlugin.node.mjs",
       "import": "./dist/lib/ProjectsPlugin.mjs"
     },
     "./ProjectView": {
@@ -143,6 +144,11 @@
       "source": "./src/types/Showcase.ts",
       "types": "./dist/types/src/types/Showcase.d.ts",
       "import": "./dist/lib/Showcase.mjs"
+    },
+    "./Spec": {
+      "source": "./src/types/Spec.ts",
+      "types": "./dist/types/src/types/Spec.d.ts",
+      "import": "./dist/lib/Spec.mjs"
     },
     "./Templates": {
       "source": "./src/Templates.ts",

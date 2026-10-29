@@ -5,16 +5,31 @@
   ],
   "references": [
     {
+      "path": "../../packages/common/node-std"
+    },
+    {
+      "path": "../../packages/plugins/plugin-deck"
+    },
+    {
       "path": "../../packages/ui/brand"
     },
     {
       "path": "../../packages/ui/react-ui"
     },
     {
+      "path": "../../packages/ui/react-ui-attention"
+    },
+    {
       "path": "../../packages/ui/react-ui-canvas"
     },
     {
+      "path": "../../packages/ui/react-ui-dnd"
+    },
+    {
       "path": "../../packages/ui/ui-theme"
+    },
+    {
+      "path": "../vite-plugin-import-source"
     }
   ]
 }

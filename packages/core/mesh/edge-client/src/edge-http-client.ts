@@ -251,7 +251,9 @@ export type EdgeAiService =
   | 'deepseek'
   | 'typesafe'
   /** TypeSafe's System One wire, answered by Workers AI's `typesafe/jev` on EDGE's Cloudflare account. */
-  | 'workers-ai/typesafe';
+  | 'workers-ai/typesafe'
+  /** Cloudflare's Clairic extraction model on Workers AI, on EDGE's Cloudflare account. */
+  | 'workers-ai/clairic';
 
 export class EdgeHttpClient extends BaseHttpClient {
   constructor(baseUrl: string, options?: EdgeHttpClientOptions) {
@@ -397,6 +399,36 @@ export class EdgeHttpClient extends BaseHttpClient {
       ...args,
       body,
       method: 'POST',
+      auth: true,
+    });
+  }
+
+  /**
+   * Asks edge to migrate a legacy space: edge mints the space root and credentials documents from the
+   * chain it already holds and returns the root in force. Idempotent and write-once, so every member
+   * that asks is handed the same root.
+   */
+  public async migrateSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ rootDocumentUrl: string }> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/root`, this.baseUrl), {
+      ...args,
+      method: 'POST',
+      auth: true,
+    });
+  }
+
+  /** The space root edge has in force, or null while the space is still on its control feed. */
+  public async getSpaceRoot(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<{ rootDocumentUrl: string | null }> {
+    return this._call(ctx, new URL(`/db/spaces/${spaceId}/root`, this.baseUrl), {
+      ...args,
+      method: 'GET',
       auth: true,
     });
   }

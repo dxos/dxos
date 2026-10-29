@@ -1,0 +1,184 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-messenger/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MessengerPlugin
+
+The plugin matches its spec closely and is well tested. `materialize.test.ts` covers storing contacts'
+messages under the verified sender, leaving non-contacts pending, acking undecodable payloads,
+storing a redelivered envelope once across two devices, and converging concurrent containers.
+`sender.test.ts` covers delivery and the typed errors. The `TwoUsers` and `Invitation` stories run
+end to end under `ts-test-storybook`: send, tile, badge, click-to-read, and invitation Join.
+
+The gaps are in the UI paths no test exercises: the tile menu's mark-unread and delete, the filters,
+the R0 companion badge itself (the stories render their own badge from the same
+`Notifications.countUnread`), and the invitation toast being shown only on the storing device. Minor
+differences: `NotificationsPanel` takes the containers list rather than one `Notifications`, and
+`InboxSendError` also includes `InboxAccountRequiredError`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Notifications: The non-user type has an owned feed and readKeys; the lowest id wins on a race.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#Notifications, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#select, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#converge]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.test.ts]
+```
+
+```mdl
+verdict StoredMessage: Stored messages carry the verified sender, attachments, subject and an inbox meta key.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.ts#materialize, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#INBOX_KEY_SOURCE]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.test.ts]
+```
+
+```mdl
+verdict MessengerCapabilities.Sender: The sender resolves the DID via contacts and relays through halo.inbox with typed errors.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/types/MessengerCapabilities.ts#Sender, github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/sender.ts#makeSender, github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/sender.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/sender.test.ts]
+  walkthrough:
+    - The capability declares send with the InboxSendError union. github:dxos/dxos/packages/plugins/plugin-messenger/src/types/MessengerCapabilities.ts#Sender
+    - makeSender resolves the contact, encodes the message and calls inbox.sendMessage. github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/sender.ts#makeSender
+    - The module contributes it bound to the client's HALO. github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/sender.ts
+```
+
+```mdl
+verdict MessengerCapabilities.NotificationsContainers: The atom holds the default space's containers, ordered lowest id first.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/types/MessengerCapabilities.ts#NotificationsContainers, github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/inbox-materializer.ts]
+  note: Unit tests call the materializer directly; nothing reads the capability atom in a test.
+```
+
+```mdl
+verdict InboxMaterializer: The startup module runs non-overlapping passes that filter, decode, dedupe, flush and ack.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/inbox-materializer.ts#startInboxMaterializer, github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.ts#materialize, github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/inbox-materializer.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.test.ts, github:dxos/dxos/packages/plugins/plugin-messenger/src/stories/Messenger.stories.tsx]
+  walkthrough:
+    - The capability starts the materializer on SpacesAvailable and toasts newly written invitations. github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/inbox-materializer.ts
+    - The loop reruns a pass on inbox, contact or space changes, one at a time. github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/inbox-materializer.ts#startInboxMaterializer
+    - Each pass keeps contacts' messages, decodes, skips stored envelopes, appends, flushes and acks. github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.ts#materialize
+```
+
+```mdl
+verdict NotificationTile: The tile shows unread state, subject, time, invitation or text, and a menu.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/components/NotificationsPanel/NotificationTile.tsx#NotificationTile]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/stories/Messenger.stories.tsx]
+  note: The open action is exercised by the stories; the menu's mark-read, mark-unread and delete are not.
+```
+
+```mdl
+verdict NotificationsPanel: The panel has the toggle-group filter, Mark all as read, and a stack of tiles.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/components/NotificationsPanel/NotificationsPanel.tsx#NotificationsPanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/stories/Messenger.stories.tsx]
+  note: It takes `containers` (all live containers) instead of one `notifications`.
+```
+
+```mdl
+verdict MessengerCompanion: The messenger companion renders invitations and opens the first attachment, with an unread badge.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/containers/MessengerCompanion/MessengerCompanion.tsx#MessengerCompanion, github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/app-graph-builder.ts]
+  walkthrough:
+    - The graph builder adds the messenger companion with a badge atom of the unread count. github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/app-graph-builder.ts
+    - The companion renders the panel, invitations via SpaceInvitation, and opens attachments. github:dxos/dxos/packages/plugins/plugin-messenger/src/containers/MessengerCompanion/MessengerCompanion.tsx#MessengerCompanion
+  note: The stories render NotificationsPanel in their own harness, not the companion.
+```
+
+```mdl
+verdict send: The send op builds a Message from text, subject and link and calls the Sender.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/types/MessengerOperation.ts#Send, github:dxos/dxos/packages/plugins/plugin-messenger/src/operations/send.ts]
+  walkthrough:
+    - The op declares recipientDid, text, subject and link. github:dxos/dxos/packages/plugins/plugin-messenger/src/types/MessengerOperation.ts#Send
+    - The handler builds the message from the local identity and calls Sender.send. github:dxos/dxos/packages/plugins/plugin-messenger/src/operations/send.ts
+  note: The stories and sender tests call the Sender directly; no test invokes the op.
+```
+
+```mdl
+verdict F-1.1: A contact's message is stored once in the default space feed and then acked.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.ts#materialize]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.test.ts, github:dxos/dxos/packages/plugins/plugin-messenger/src/stories/Messenger.stories.tsx]
+```
+
+```mdl
+verdict F-1.2: A non-contact's message stays pending.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.ts#materialize]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.test.ts]
+  note: The test checks it stays pending; no test then adds the contact and sees it appear, though the loop reruns on contact changes.
+```
+
+```mdl
+verdict F-1.3: Two devices store one copy and both ack.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.ts#materialize, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#envelopeQuery]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/materialize.test.ts]
+```
+
+```mdl
+verdict F-1.4: Only the storing device toasts an invitation with Join.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/inbox-materializer.ts]
+  note: The toast is raised for the pass's newly written invitations; no test checks it or its absence on the other device.
+```
+
+```mdl
+verdict F-2.1: The companion badge in R0 shows the unread count.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#countUnread]
+  note: The stories assert a story-local badge built on `countUnread`, not the deck companion badge.
+```
+
+```mdl
+verdict F-2.2: Clicking a tile marks it read and opens its first linked object.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/components/NotificationsPanel/NotificationsPanel.tsx#NotificationsPanel, github:dxos/dxos/packages/plugins/plugin-messenger/src/containers/MessengerCompanion/MessengerCompanion.tsx#MessengerCompanion]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/stories/Messenger.stories.tsx]
+```
+
+```mdl
+verdict F-2.3: The filter lists all, unread or invitation notifications.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/components/NotificationsPanel/NotificationsPanel.tsx#NOTIFICATION_FILTERS]
+  note: No story or test switches the filter.
+```
+
+```mdl
+verdict F-2.4: The tile menu marks unread or deletes the message from the feed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/components/NotificationsPanel/NotificationsPanel.tsx#NotificationsPanel, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#markUnread, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/Notifications.ts#remove]
+  note: No test uses the menu, `markUnread` or `remove`.
+```
+
+```mdl
+verdict F-3.1: Sending relays to contacts; non-contacts and oversized messages fail with typed errors.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/sender.ts#makeSender, github:dxos/dxos/packages/plugins/plugin-messenger/src/types/errors.ts#UnknownRecipientError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/materializer/sender.test.ts]
+```
+
+```mdl
+verdict T-1: The TwoUsers story runs the scenario end to end.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/stories/Messenger.stories.tsx]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-messenger/src/components/NotificationsPanel/NotificationsPanel.tsx#NotificationsPanel]
+```
+
+```mdl
+verdict QA-1: The TwoUsers story automates the QA steps.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-messenger/src/stories/Messenger.stories.tsx]
+```

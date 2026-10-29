@@ -55,6 +55,7 @@ import { FRAME_MODULE, injectModule } from './inject.mjs';
 import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { recordingInfo } from './recording.mjs';
 import { launchTauri } from './tauri/launch.mjs';
 
 const parseArgs = () => {
@@ -117,6 +118,12 @@ const parseArgs = () => {
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
+    // Every flag takes a value, so a trailing flag, or one followed by the next flag, would otherwise be misread;
+    // `--chromium-args` is exempt because its value is itself a list of `--` flags.
+    if (value === undefined || (value.startsWith('--') && key !== 'chromium-args')) {
+      console.error(`--${key} needs a value`);
+      process.exit(1);
+    }
     options[key] = /^[\d.]+$/.test(value) ? Number(value) : value;
   }
   // A person recording their own screen wants the product on camera, not the agent's narration of it.
@@ -1045,10 +1052,12 @@ const handlers = {
       return { browser: 'left open; closing the window ends the driver' };
     }
     const timelineFile = path.join(options.out, 'timeline.json');
+    // Read while the page is still open: the app's own config is the only record of the EDGE it talked to.
+    const recording = await recordingInfo({ page, flowFile: flow.file, appUrl: options.url, target: options.target });
     // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
     writeFileSync(
       timelineFile,
-      JSON.stringify({ started, flow: flow.file, steps: timeline, speed: speedChanges }, null, 2),
+      JSON.stringify({ started, flow: flow.file, recording, steps: timeline, speed: speedChanges }, null, 2),
     );
     let recorded;
     try {

@@ -107,7 +107,7 @@ const meta: Meta<typeof StackArticle> = {
         MarkdownPlugin.make(),
         IllustratorPlugin.make(),
         TldrawPlugin.make(),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
       ],
     }),

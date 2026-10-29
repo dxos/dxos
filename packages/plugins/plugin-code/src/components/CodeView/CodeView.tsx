@@ -8,6 +8,7 @@ import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { findSymbolLine } from '@dxos/deus/review';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -23,9 +24,7 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
-
-import { findSymbolLine } from './symbol.ts';
+import { CodeNamespace } from '../../namespace.ts';
 
 /** Highlights the symbol's line and scrolls it to the top third of the view once the editor has laid out. */
 const revealLine = (line: number): Extension => [
@@ -69,13 +68,15 @@ export type CodeViewProps = {
   /** The symbol to reveal (`MyClass`, `Spec.make`). */
   symbol?: string;
   error?: string;
+  /** Where the text was read from, when not the local checkout (e.g. `GitHub @ 6b7cb08`). */
+  source?: string;
   /** Opens the file in the desktop editor, when the host can. */
   onOpenExternal?: (line?: number) => void;
 };
 
 /** A read-only source file revealed at a symbol: where Ctrl/⌘-click on a code key in a spec lands. */
-export const CodeView = ({ label, path, content, symbol, error, onOpenExternal }: CodeViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+export const CodeView = ({ label, path, content, symbol, error, source, onOpenExternal }: CodeViewProps) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const themeMode = Hooks.useThemeMode();
   const line = useMemo(() => (content && symbol ? findSymbolLine(content, symbol) : undefined), [content, symbol]);
   const extensions = useMemo(
@@ -96,6 +97,11 @@ export const CodeView = ({ label, path, content, symbol, error, onOpenExternal }
           <Toolbar.Text classNames='font-mono text-xs'>
             <span title={label}>{label}</span>
           </Toolbar.Text>
+          {source && (
+            <Toolbar.Text classNames='text-fg-subtle text-xs' data-testid='code-view.source'>
+              {source}
+            </Toolbar.Text>
+          )}
           {symbol && line === undefined && content !== undefined && (
             <Toolbar.Text classNames='text-warning-text text-xs'>{t('code-view.symbol-not-found.label')}</Toolbar.Text>
           )}
@@ -112,7 +118,9 @@ export const CodeView = ({ label, path, content, symbol, error, onOpenExternal }
       </Panel.Header>
       <Panel.Body>
         {error ? (
-          <Layout.Flex classNames='p-4 text-error-text'>{error}</Layout.Flex>
+          <Layout.Flex classNames='p-4 text-error-text' role='alert' data-testid='code-view.error'>
+            {error}
+          </Layout.Flex>
         ) : content === undefined ? (
           <Layout.Flex classNames='p-4 text-description'>{t('code-view.loading.label')}</Layout.Flex>
         ) : (

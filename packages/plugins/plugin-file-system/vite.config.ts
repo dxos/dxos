@@ -7,14 +7,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    FileSystemPlugin: 'src/FileSystemPlugin.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
-    meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
+    FileSystem: 'src/types/FileSystem.ts',
     FileSystemCapabilities: 'src/types/FileSystemCapabilities.ts',
     FileSystemEvents: 'src/types/FileSystemEvents.ts',
     FileSystemOperation: 'src/types/FileSystemOperation.ts',

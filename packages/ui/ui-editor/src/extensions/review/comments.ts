@@ -19,6 +19,7 @@ import {
   type Rect,
   RectangleMarker,
   ViewPlugin,
+  type ViewUpdate,
   keymap,
   layer,
 } from '@codemirror/view';
@@ -118,9 +119,13 @@ export const comments = (options: CommentsOptions): Extension => {
     ViewPlugin.fromClass(
       class {
         private readonly unsubscribe: () => void;
+        private readonly updateComments: () => void;
+        // Whether the last `setComments` dropped a comment whose cursor this replica cannot resolve yet.
+        private missing = false;
+
         constructor(view: EditorView) {
           const { id } = options;
-          const updateComments = () => {
+          this.updateComments = () => {
             const comments = options.getComments?.() ?? [];
             // Local `id` const so the truthiness narrowing survives into the microtask closure.
             if (id && id === view.state.facet(documentId)) {
@@ -128,11 +133,27 @@ export const comments = (options: CommentsOptions): Extension => {
             }
           };
 
-          this.unsubscribe = options.subscribe?.(updateComments) ?? (() => {});
+          this.unsubscribe = options.subscribe?.(this.updateComments) ?? (() => {});
           // Prime the initial decoration pass: `subscribe` may not emit for an already-resolved source
           // (e.g. an ECHO query whose results resolved before mount), so read once now that the source is
           // subscribed. Owning this here means adapters never have to prime manually.
-          updateComments();
+          this.updateComments();
+        }
+
+        update(update: ViewUpdate) {
+          for (const tr of update.transactions) {
+            for (const effect of tr.effects) {
+              if (effect.is(setComments)) {
+                const sent = effect.value.comments.filter((comment) => comment.cursor).length;
+                this.missing = update.state.field(commentsState).comments.length < sent;
+              }
+            }
+          }
+
+          // A comment can replicate before the edits its cursor cites; retry once more text arrives.
+          if (update.docChanged && this.missing) {
+            this.updateComments();
+          }
         }
 
         destroy = () => {

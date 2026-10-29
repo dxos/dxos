@@ -285,7 +285,7 @@ const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigge
         <Wrapper>{editor}</Wrapper>
       </div>
       <div className='dx-expand p-1'>
-        <pre className='dx-fill border border-separator-subtle rounded-sm p-3 overflow-auto'>
+        <pre className='dx-fill border border-separator-subtle rounded-sm p-trim-md overflow-auto'>
           <code className='font-mono text-fg-muted text-sm'>{text}</code>
         </pre>
       </div>

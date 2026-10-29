@@ -13,7 +13,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 
 import { useConnectionStates, useMcpConnections } from '#hooks';
-import { meta } from '#meta';
+
+import { AssistantNamespace } from '../../namespace.ts';
 
 export type ChatAddMenuProps = {
   db: Database.Database;
@@ -35,7 +36,7 @@ export const ChatAddMenu = ({
   onCommands,
   onManageConnections,
 }: ChatAddMenuProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const mcpConnections = useMcpConnections(db);
   const connectionStates = useConnectionStates(context);
 

@@ -165,7 +165,7 @@ const Scores = ({ title, compiled }: { title: string; compiled?: Compiled }) => 
     ['area', `${metrics.width} × ${metrics.height}`],
   ];
   return (
-    <div className='p-3 space-y-3 text-xs' data-testid='constraints.scores'>
+    <div className='p-trim-md space-y-3 text-xs' data-testid='constraints.scores'>
       <div className='text-sm font-medium'>{title}</div>
       <Layout.Grid cols={['fill', 'min']} gap='xs' classNames='font-mono'>
         {rows.map(([label, value]) => (

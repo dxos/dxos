@@ -18,6 +18,7 @@ import fs from 'node:fs';
 //   moon run autocue:render-all                      # everything except the TRAIL stub (--exclude TRAIL)
 //   moon run autocue:render -- --version 2           # file suffix _v02
 //   moon run autocue:render -- --id CLOSE --theme light --logo-color sky   # file suffix _light_sky
+//   moon run autocue:render -- --id COMPOSER --fps 60  # file suffix _60fps
 //
 // Set REMOTION_BROWSER to a Chrome/Chromium path to skip Remotion's browser download.
 import path from 'node:path';
@@ -33,7 +34,19 @@ const only = { ids: opt('id')?.split(','), length: opt('length'), format: opt('f
 const version = String(opt('version') ?? '1').padStart(2, '0');
 // The palette (see src/components/Ident/theme.tsx): every composition takes it as props, and the file name carries it.
 const inputProps = { theme: opt('theme') ?? 'dark', logoColor: opt('logo-color') };
-const variant = `${inputProps.theme === 'light' ? '_light' : ''}${inputProps.logoColor ? `_${inputProps.logoColor}` : ''}`;
+// A showcase cut runs at 60 fps; the compositions time everything from `fps`, so they render at any rate.
+const fpsOverride = (() => {
+  if (!args.includes('--fps')) {
+    return undefined;
+  }
+  const fps = Number(opt('fps'));
+  if (opt('fps')?.startsWith('--') || !Number.isFinite(fps) || fps <= 0) {
+    console.error(`--fps takes a positive number, not ${opt('fps') ?? 'nothing'}`);
+    process.exit(2);
+  }
+  return fps;
+})();
+const variant = `${inputProps.theme === 'light' ? '_light' : ''}${inputProps.logoColor ? `_${inputProps.logoColor}` : ''}${fpsOverride ? `_${fpsOverride}fps` : ''}`;
 const browserExecutable = process.env.REMOTION_BROWSER || null;
 // The DXOS trail is WebGL; headless Chrome's default GL backend cannot run its float-texture shaders.
 const chromiumOptions = { gl: 'angle' };
@@ -76,7 +89,10 @@ if (!selected.length) {
   process.exit(1);
 }
 
-for (const comp of selected) {
+for (const base of selected) {
+  const comp = fpsOverride
+    ? { ...base, fps: fpsOverride, durationInFrames: Math.round((base.durationInFrames / base.fps) * fpsOverride) }
+    : base;
   const [id, length, format] = comp.id.split('-');
   const file = path.join(outDir, id, `DXOS_SI_${id}_${length}_${format}${variant}_v${version}.mp4`);
   fs.mkdirSync(path.dirname(file), { recursive: true });

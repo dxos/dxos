@@ -23,6 +23,27 @@ export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
  */
 export const KEY_FEED_BLOCK = 'org.dxos.key.feed-block';
 
+/**
+ * Foreign-key source for the branch of an item. On read the store stamps the branch it inferred for the
+ * block (absent on the root branch); on write it names the branch the item continues.
+ */
+export const KEY_FEED_BRANCH = 'org.dxos.key.feed-branch';
+
+/**
+ * Foreign-key source the store stamps on read on the base block of a branch: its presence is the fork
+ * flag, and its value is the id of the predecessor block, the fork point.
+ */
+export const KEY_FEED_FORK = 'org.dxos.key.feed-fork';
+
+/** Foreign-key source the store stamps on read: the id of the predecessor block. */
+export const KEY_FEED_PREV = 'org.dxos.key.feed-prev';
+
+/**
+ * Foreign-key source a writer puts on an object it appends as the base of a new branch: the id of the
+ * block the branch forks at. The store turns it into the fork flag and the predecessor of the block.
+ */
+export const KEY_FEED_FORK_AT = 'org.dxos.key.feed-fork-at';
+
 import * as Schema from 'effect/Schema';
 import * as Tuple from 'effect/Tuple';
 
@@ -47,6 +68,19 @@ export const encodeFeedCursor = (token: string, insertionId: number): FeedCursor
 export const decodeFeedCursor = (cursor: FeedCursor): { token: string; insertionId: number } => {
   const [token, insertionId] = cursor.split('|');
   return { token, insertionId: Number(insertionId) };
+};
+
+/**
+ * The id of a block within its feed, `<sequence>@<actorId>`. The sequence comes first: it is always
+ * digits, so the first separator splits the id even when the actor id contains one.
+ */
+export const formatBlockId = (actorId: string, sequence: number): string => `${sequence}@${actorId}`;
+
+/** Splits a block id made by {@link formatBlockId}; `undefined` when it is malformed. */
+export const parseBlockId = (id: string): { actorId: string; sequence: number } | undefined => {
+  const separator = id.indexOf('@');
+  const sequence = Number(id.slice(0, separator));
+  return separator > 0 && Number.isInteger(sequence) ? { sequence, actorId: id.slice(separator + 1) } : undefined;
 };
 
 /**
@@ -90,6 +124,13 @@ export const Block = Schema.Struct({
   prevSequence: Schema.NullOr(Schema.Number),
 
   /**
+   * Set on the base block of a new branch, whose predecessor is the fork point; absent on a block that
+   * continues the branch of its predecessor. Replicated in clear, so a store infers the branch of a
+   * block without decrypting it.
+   */
+  fork: Schema.optional(Schema.Boolean),
+
+  /**
    * Globally ordered position assigned by a position authority.
    * Unlike `sequence` (per-feed causal order), this enables merged incremental reads across feeds.
    */
@@ -122,6 +163,12 @@ export const Block = Schema.Struct({
    */
   // TODO(dmaretskyi): Remove. Use cursors.
   insertionId: Schema.optional(Schema.Number),
+
+  /**
+   * The branch the store inferred for the block: its own block id on a fork block, else the branch of
+   * its predecessor; `null` on the root branch. Local, not replicated: each store infers it on insert.
+   */
+  branch: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export interface Block extends Schema.Schema.Type<typeof Block> {}
 

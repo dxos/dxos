@@ -1,0 +1,375 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-tldraw/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TldrawPlugin
+
+As the spec's own note says, plugin-tldraw is now a renderer variant of plugin-illustrator's
+`Drawing`: it contributes `TldrawArticle`/`TldrawCard`, a store adapter, settings and the
+`TldrawBuilder` scene compiler, while the `Drawing`/`Canvas` types and the create/read/edit
+operations live in `@dxos/plugin-illustrator` and the Scene DSL types in `@dxos/diagram`. The DSL
+path is the strongest part: `scene.test.ts` covers deterministic ids and meta, element upserts,
+binding cleanup and bbox-derived origins, and `variant.test.ts` runs create → edit → read → edit →
+remove through the real operations with the tldraw variant. The roles diverge in detail (slide zoom
+is capped at 1, not 1.5; section embeds show the toolbar once focused), comments are unanchored, the
+skill is `org.dxos.skill.drawing`, and the dialect registry exists but nothing uses it. Persistence,
+collaboration, roles and grid have no tests.
+
+Of 47 items: 16 done, 11 untested, 6 partial, 6 diverged, 8 missing. Findings:
+
+- **F-5 diverged/missing.** The Drawing comment config is `unanchored`, so the toolbar's comment
+  action makes a document-level thread; no thread anchor is stored with the drawing.
+- **F-4.2 zoom cap.** `zoomToFit` caps zoom at 1 for every auto-centred role; nothing caps the
+  slide role at 1.5×.
+- **No browser test of the whiteboard.** T-2 to T-6 (reload, collaboration, slide, grid, attention)
+  have no automation; only the DSL path is tested.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Canvas: Drawing.Canvas (plugin-illustrator) holds schema, a content record and optional styles.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#Canvas, github:dxos/dxos/packages/plugins/plugin-tldraw/src/types/Tldraw.ts#TLDRAW_SCHEMA]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts, github:dxos/dxos/packages/plugins/plugin-illustrator/src/plugin.test.ts]
+  note: Lives in plugin-illustrator; tldraw stores its records there under schema `tldraw.com/2`.
+```
+
+```mdl
+verdict Sketch: The wrapper is now plugin-illustrator's Drawing (name, canvas Ref); plugin-tldraw has no Sketch type.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#Drawing, github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/LegacySketch.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts]
+  note: Same fields under a different typename and owner; LegacySketch remains for migration.
+```
+
+```mdl
+verdict SketchGrid: GridSchema declares mesh and dotted.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/types/Settings.ts#GridSchema]
+  note: No test.
+```
+
+```mdl
+verdict Settings: Settings has optional showGrid and gridType and is contributed as a settings atom.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-tldraw/src/capabilities/settings.ts]
+  note: No test.
+```
+
+```mdl
+verdict Scene: The Scene schema of world objects lives in @dxos/diagram, compiled to tldraw records with meta.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#Scene, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/render.ts#renderObject, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/read.ts#readScene]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+```
+
+```mdl
+verdict WorldObject: WorldObject has id, origin, scale and elements.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#WorldObject, github:dxos/dxos/packages/common/diagram/src/scene.ts#Element]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+  note: Elements are Box, Circle, Polyline, Curve, Arc, Text, Arrow and Portal rather than the spec's ten names.
+```
+
+```mdl
+verdict Command: The five commands exist as a Schema union.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#Command]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+```
+
+```mdl
+verdict SketchArticle: TldrawArticle renders the canvas for article, section and slide roles as an illustrator variant surface.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/containers/TldrawArticle/TldrawArticle.tsx#TldrawArticle, github:dxos/dxos/packages/plugins/plugin-tldraw/src/capabilities/drawing-variant.ts]
+  note: Renamed and driven by plugin-illustrator's Drawing surface; its createThread uses the generic comment action, which makes an unanchored thread. No test renders it.
+```
+
+```mdl
+verdict SketchSettings: There is no SketchSettings component; the settings schema renders in the generic settings form.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/capabilities/settings.ts]
+  note: `AppCapabilities.Settings` is contributed with `Settings.Settings`; the canvas also writes showGrid back when tldraw's grid mode changes.
+```
+
+```mdl
+verdict createSketch: plugin-illustrator's Create picks the variant, adds a canvas and a Drawing to the database and returns it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts]
+  walkthrough:
+    - The operation takes name and optional variant id. github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Create
+    - The handler resolves the variant, persists the canvas and the Drawing. github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/create.ts
+```
+
+```mdl
+verdict readSketch: Read returns the derived scene and unmanaged count from the canvas records.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Read, github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/read.ts, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/read.ts#readScene]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+  walkthrough:
+    - The operation takes a Drawing Ref. github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Read
+    - The handler dispatches to the variant builder. github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/read.ts
+    - The tldraw reader derives world objects from record meta and boxes. github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/read.ts#readScene
+```
+
+```mdl
+verdict editSketch: Edit applies scene commands through the tldraw builder and returns scene, upserted and removed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Edit, github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/edit.ts, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/builder.ts#applyCommands]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+  walkthrough:
+    - The operation takes a Drawing Ref and Scene commands. github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Edit
+    - The handler dispatches to the variant builder. github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/edit.ts
+    - applyCommands rewrites only the addressed records. github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/builder.ts#applyCommands
+```
+
+```mdl
+verdict F-1.1: Each Drawing references one Canvas whose content holds the tldraw records.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#Drawing, github:dxos/dxos/packages/plugins/plugin-tldraw/src/hooks/adapter.ts#TLDrawStoreAdapter]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts]
+```
+
+```mdl
+verdict F-1.2: Canvas content is a plain record map in ECHO.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#Canvas]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/hooks/adapter.test.ts]
+```
+
+```mdl
+verdict F-1.3: The store is built with tldraw's default shape utils.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/hooks/adapter.ts#TLDrawStoreAdapter]
+  note: Images are not uploaded (TODO in the adapter). No test draws each shape type.
+```
+
+```mdl
+verdict F-2.1: Local store changes are batched and saved to ECHO after a debounce.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/hooks/adapter.ts#TLDrawStoreAdapter]
+  note: adapter.test.ts tests migration only.
+```
+
+```mdl
+verdict F-2.2: The adapter hydrates the tldraw store from Canvas.content on open.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/hooks/adapter.ts#TLDrawStoreAdapter]
+  note: No reload test.
+```
+
+```mdl
+verdict F-2.3: Canvas is a separate ECHO object from Drawing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#Canvas, github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/plugin.test.ts]
+```
+
+```mdl
+verdict F-3.1: Peer edits arrive through ECHO replication and the adapter's remote-change path.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/hooks/adapter.ts#TLDrawStoreAdapter]
+  note: No two-peer test.
+```
+
+```mdl
+verdict F-3.2: Offline edits merge through ECHO CRDT semantics.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/hooks/adapter.ts#TLDrawStoreAdapter]
+  note: Inherited from ECHO; no test.
+```
+
+```mdl
+verdict F-4.1: In the article role the UI hides without attention (always shown on Tauri).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/containers/TldrawArticle/TldrawArticle.tsx#TldrawArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-4.2: The slide role is read-only, but zoom is capped at 1, not 1.5.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/containers/TldrawArticle/TldrawArticle.tsx#TldrawArticle, github:dxos/dxos/packages/plugins/plugin-tldraw/src/components/Canvas/Canvas.tsx#CanvasComponent]
+  note: `zoomToFit` caps zoom at 1 for every auto-centred role; nothing applies a 1.5× cap.
+```
+
+```mdl
+verdict F-4.3: The section role auto-fits content, but shows the toolbar once the embed has attention.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/containers/TldrawArticle/TldrawArticle.tsx#TldrawArticle]
+  note: `hideUi` is `!hasAttention` in sections, so a focused section shows the UI.
+```
+
+```mdl
+verdict F-5.1: The comment action creates an unanchored thread, not one anchored to the selection.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/containers/TldrawArticle/TldrawArticle.tsx#TldrawArticle, github:dxos/dxos/packages/plugins/plugin-illustrator/src/capabilities/comment-config.ts]
+  note: Drawing's CommentConfig is `unanchored`; plugin-review's comment action then uses a timestamp anchor.
+```
+
+```mdl
+verdict F-5.2: No thread anchor positions are stored with the drawing.
+  status: missing
+  note: Comments are unanchored; searched plugin-tldraw and plugin-illustrator for anchor storage.
+```
+
+```mdl
+verdict F-6.1: showGrid drives tldraw's grid mode.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/components/Canvas/Canvas.tsx#CanvasComponent]
+  note: The grid also hides when the UI is hidden. No test.
+```
+
+```mdl
+verdict F-6.2: gridType mesh selects MeshGrid (the default).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/components/Canvas/Canvas.tsx#CanvasComponent, github:dxos/dxos/packages/plugins/plugin-tldraw/src/components/custom/MeshGrid.tsx]
+  note: No test.
+```
+
+```mdl
+verdict F-6.3: gridType dotted selects DottedGrid.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/components/Canvas/Canvas.tsx#CanvasComponent, github:dxos/dxos/packages/plugins/plugin-tldraw/src/components/custom/DottedGrid.tsx]
+  note: No test.
+```
+
+```mdl
+verdict F-7.1: The create operation is contributed by plugin-illustrator, not plugin-tldraw.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/DrawingOperation.ts#Create]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts]
+  note: plugin-tldraw contributes a VariantProvider; the spec's own note records the move.
+```
+
+```mdl
+verdict F-7.2: Create returns a Drawing and Canvas, adding both to the database rather than to a target collection.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts]
+  note: No collection target is taken; placement is a separate addObject.
+```
+
+```mdl
+verdict F-8.1: The scene model in @dxos/diagram imports no tldraw; tldraw is one builder.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/diagram/src/scene.ts#Scene, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/builder.ts#TldrawBuilder]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+  note: The model moved from plugin-tldraw src/model to @dxos/diagram.
+```
+
+```mdl
+verdict F-8.2: Rendered records carry meta {object, element, kind, scale, dialect} and ids shape:<object>/<element>.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/render.ts#renderObject, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/render.ts#shapeId]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+```
+
+```mdl
+verdict F-8.3: upsert-elements replaces matching element records and keeps siblings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/builder.ts#applyCommands]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+```
+
+```mdl
+verdict F-8.4: Removing an arrow target drops its bindings.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/builder.ts#applyCommands]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+```
+
+```mdl
+verdict F-8.5: readScene derives origin from the bounding box top-left.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/read.ts#readScene, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/read.ts#elementBoxes]
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+  note: Tested after render and move-object, not after a UI drag.
+```
+
+```mdl
+verdict F-8.6: The drawing skill is org.dxos.skill.drawing with create/read/draw/edit/score tools.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts#key, github:dxos/dxos/packages/plugins/plugin-illustrator/src/types/Drawing.ts#SKILL_KEY]
+  tests: [github:dxos/dxos/packages/plugins/plugin-illustrator/src/skills/DrawingSkill.test.ts]
+  note: The key is not org.dxos.skill.sketch, it is owned by plugin-illustrator, and its instructions steer to the semantic `draw` DSL rather than scene coordinates.
+```
+
+```mdl
+verdict F-8.7: DialectRegistry and sceneDialect exist in @dxos/diagram but nothing uses them.
+  status: partial
+  evidence: [github:dxos/dxos/packages/common/diagram/src/dialect.ts#DialectRegistry, github:dxos/dxos/packages/common/diagram/src/dialect.ts#sceneDialect]
+  note: No package imports the registry; mermaid and other engines are called directly. No test.
+```
+
+```mdl
+verdict T-1: variant.test.ts creates a drawing through Create but does not assert its name, empty canvas or space listing.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts]
+  note: The test goes straight on to editing.
+```
+
+```mdl
+verdict T-2: No test reloads a drawing.
+  status: missing
+  note: No browser or adapter round-trip test.
+```
+
+```mdl
+verdict T-3: No two-peer test.
+  status: missing
+  note: Not automated.
+```
+
+```mdl
+verdict T-4: No test renders the slide role.
+  status: missing
+  note: Not automated.
+```
+
+```mdl
+verdict T-5: No test toggles the grid.
+  status: missing
+  note: Not automated.
+```
+
+```mdl
+verdict T-6: No test checks the toolbar against attention.
+  status: missing
+  note: Not automated.
+```
+
+```mdl
+verdict T-7: variant.test.ts runs the face, hat, replace and remove round-trip; scene.test.ts covers binding cleanup.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts, github:dxos/dxos/packages/plugins/plugin-tldraw/src/model/scene.test.ts]
+```
+
+```mdl
+verdict T-8: The live-AI scenario is manual only.
+  status: missing
+  note: The spec marks the storybook tests `!test`; no automation runs them.
+```
+
+```mdl
+verdict QA-1: No automation runs the create-draw-reload QA flow.
+  status: missing
+  note: autocue/showcase.mjs drives QA-3 only.
+```
+
+```mdl
+verdict QA-2: variant.test.ts runs create and the face and hat edits, but its hat edit also touches the face.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-tldraw/src/variant.test.ts]
+  note: The test's follow-up replaces the smile, so `upserted` includes face; QA-2's hat-only assert and the collection placement are not exercised.
+```

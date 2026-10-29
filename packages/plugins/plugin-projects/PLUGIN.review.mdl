@@ -1,0 +1,32 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-projects/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ProjectsPlugin
+
+The spec has one reviewable item: QA-1, building a Composer plugin with an agent in the desktop app. The
+template (`src/templates/composer-plugin.ts`) and the autocue flow that walks it
+(`autocue/composer-plugin-desktop.mjs`) both exist. The flow is a demo recording that someone runs by hand
+against a desktop release build and a live model. No e2e or CI test runs the template. QA-2 and QA-3 sit in the
+same fenced block and are not listed as items.
+
+Of 1 item: 0 done, 0 untested, 0 partial, 0 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-1: No automated test builds a plugin with an agent; the autocue flow is a recorded demo run by hand.
+  status: missing
+  note: |
+    `autocue/composer-plugin-desktop.mjs` drives the desktop app through `driver.mjs --target tauri`, but it needs
+    a live model, a release build and a person to run it; no e2e or CI test exercises the template run.
+```

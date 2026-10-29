@@ -36,8 +36,8 @@ runs:
         git config core.checkStat minimal
         git config core.trustctime false
 
-    # Outputs and moon's local cache ship with the snapshot, so projects unchanged since it hit locally.
-    # A failed build still ships whatever built.
+    # moon's local cache ships with the snapshot, so projects unchanged since it restore without a network
+    # round trip. A failed build still ships whatever built.
     - name: Build into moon's local cache
       shell: bash
       run: |
@@ -48,13 +48,60 @@ runs:
         moon exec --on-failure continue :build || echo "::warning:::build failed; shipping the partial cache"
         rm -rf .moon/certs
 
+    # The outputs themselves do not ship: moon deletes a stale output before restoring it, and a `lint`
+    # running beside it (it does not wait on builds) fails on a `dist` file it listed a moment before.
+    - name: Drop build outputs
+      shell: bash
+      run: git clean -ffdxq -e node_modules -e /.moon/cache
+
     # `moon setup` installs node and pnpm without proto's bins, which a mounted job puts on PATH.
     - name: Link toolchain binaries
       shell: bash
       run: proto regen --bin
 
-    # One image, three trees, gathered under one root by bind mounts: the workspace, proto's toolchain and
-    # moon's home. zstd level 3 keeps reads cheap; heavier levels move the cost into every job's reads.
+    # Every browser, plus the apt lists and packages for whatever system dependencies this runner image
+    # lacks, so `.github/actions/playwright` installs with no network: the Ubuntu mirror has stalled
+    # `apt-get update` for a whole job. A failure here ships no bundle, and jobs install as before.
+    - name: Stage Playwright
+      shell: bash
+      run: |
+        bundle="$HOME/.cache/playwright-offline"
+        stage() (
+          set -euo pipefail
+          timeout 600 pnpm exec playwright install chromium firefox webkit
+          bash .github/actions/playwright/ubuntu-sources-only.sh
+          for attempt in 1 2 3; do sudo timeout 240 apt-get update -q && break; [ "$attempt" = 3 ] && exit 1; done
+          mapfile -t pkgs < <(pnpm exec playwright install-deps --dry-run chromium firefox webkit 2>&1 | sed -n 's/^  //p')
+          mkdir -p "$bundle/archives/partial" "$bundle/lists"
+          # `--reinstall` keeps a package this runner already has, which a job on another image may lack.
+          # The mirror has stalled mid-download; apt resumes from `partial/`, so each attempt picks up where the
+          # last one stopped.
+          if [ "${#pkgs[@]}" -gt 0 ]; then
+            for attempt in 1 2 3; do
+              sudo timeout --kill-after=15 180 env DEBIAN_FRONTEND=noninteractive apt-get install -y -q \
+                --no-install-recommends --download-only --reinstall -o Acquire::http::Timeout=30 -o Acquire::Retries=3 \
+                -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}" && break
+              [ "$attempt" = 3 ] && exit 1
+            done
+          fi
+          sudo cp -a /var/lib/apt/lists/. "$bundle/lists/"
+          sudo rm -rf "$bundle/lists/partial" "$bundle/lists/lock" "$bundle/archives/partial" "$bundle/archives/lock"
+          sudo chown -R "$(id -u):$(id -g)" "$bundle"
+          echo "staged ${#pkgs[@]} packages ($(du -sh "$bundle/archives" | cut -f1)), browsers $(du -sh "$HOME/.cache/ms-playwright" | cut -f1)"
+        )
+        set +e
+        stage
+        status=$?
+        set -e
+        if [ "$status" -ne 0 ]; then
+          echo "::warning::Playwright staging failed; the snapshot ships without it."
+          sudo rm -rf "$bundle" "$HOME/.cache/ms-playwright"
+        fi
+
+    # Two files, each a squashfs of trees gathered under one root by bind mounts: `workspace.sqfs` holds the
+    # workspace, proto's toolchain and moon's home, which every job mounts; `playwright.sqfs` holds the
+    # browsers and their apt bundle, which only browser jobs fetch. zstd level 3 keeps reads cheap; heavier
+    # levels move the cost into every job's reads.
     - name: Build image
       id: image
       shell: bash
@@ -62,17 +109,27 @@ runs:
         sudo apt-get update -qq
         sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends squashfs-tools >/dev/null
         mkdir -p "$HOME/.moon"
-        sudo mkdir -p /mnt/stage/ws /mnt/stage/proto /mnt/stage/moon /mnt/snapshot
+        sudo mkdir -p /mnt/snapshot
         sudo chown "$(id -u):$(id -g)" /mnt/snapshot
-        sudo mount --bind "$GITHUB_WORKSPACE" /mnt/stage/ws
-        sudo mount --bind "$HOME/.proto" /mnt/stage/proto
-        sudo mount --bind "$HOME/.moon" /mnt/stage/moon
-        SECONDS=0
-        mksquashfs /mnt/stage /mnt/snapshot/workspace.sqfs -comp zstd -Xcompression-level 3 -noappend -no-progress -quiet
-        for target in /mnt/stage/ws /mnt/stage/proto /mnt/stage/moon; do sudo umount "$target"; done
-        size=$(stat -c %s /mnt/snapshot/workspace.sqfs)
-        echo "squashfs: ${SECONDS}s, $((size / 1000000)) MB"
-        echo "size=$size" >> "$GITHUB_OUTPUT"
+        squash() {
+          local file=$1; shift
+          local root="/mnt/stage/${file%.sqfs}" staged=()
+          for pair in "$@"; do
+            local name=${pair%%:*} source=${pair#*:}
+            [ -d "$source" ] || continue
+            sudo mkdir -p "$root/$name"
+            sudo mount --bind "$source" "$root/$name"
+            staged+=("$root/$name")
+          done
+          [ "${#staged[@]}" -gt 0 ] || return 0
+          SECONDS=0
+          mksquashfs "$root" "/mnt/snapshot/$file" -comp zstd -Xcompression-level 3 -noappend -no-progress -quiet
+          for target in "${staged[@]}"; do sudo umount "$target"; done
+          echo "$file: ${SECONDS}s, $(($(stat -c %s "/mnt/snapshot/$file") / 1000000)) MB"
+        }
+        squash workspace.sqfs "ws:$GITHUB_WORKSPACE" "proto:$HOME/.proto" "moon:$HOME/.moon"
+        squash playwright.sqfs "playwright:$HOME/.cache/ms-playwright" "playwright-apt:$HOME/.cache/playwright-offline"
+        echo "size=$(stat -c %s /mnt/snapshot/workspace.sqfs)" >> "$GITHUB_OUTPUT"
 
     - name: Push
       shell: bash
@@ -88,6 +145,8 @@ runs:
         echo "$PASSWORD" | oras login ghcr.io -u "$USERNAME" --password-stdin
         cd /mnt/snapshot
         read -ra tags <<< "$TAGS"
-        oras push --no-tty "$REPOSITORY:${tags[0]}" workspace.sqfs:application/octet-stream >/dev/null
+        files=(workspace.sqfs:application/octet-stream)
+        [ -f playwright.sqfs ] && files+=(playwright.sqfs:application/octet-stream)
+        oras push --no-tty "$REPOSITORY:${tags[0]}" "${files[@]}" >/dev/null
         for tag in "${tags[@]:1}"; do oras tag "$REPOSITORY:${tags[0]}" "$tag" >/dev/null; done
         echo "pushed $REPOSITORY:{${TAGS// /,}}"

@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { FileSystemNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [FileSystemNamespace.key]: {
         'plugin.name': 'FileSystem',
         'open-directory.label': 'Open folder',
         'open-directory.description': 'Open a folder from your filesystem as a workspace',

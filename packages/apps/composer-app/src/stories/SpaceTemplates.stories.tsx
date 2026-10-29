@@ -36,6 +36,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
@@ -49,10 +50,12 @@ import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -62,6 +65,7 @@ import { isNonNullable } from '@dxos/util';
 const TEMPLATES = {
   aiBriefing: 'org.dxos.plugin.magazine.template.ai-briefing',
   architecture: 'org.dxos.plugin.canvas.template.architecture',
+  demo: 'org.dxos.plugin-debug.template.demo',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
   presenter: 'org.dxos.plugin-debug.template.presenter',
@@ -243,6 +247,7 @@ const meta = {
         InboxPlugin.make(),
         KanbanPlugin.make(),
         MagazinePlugin.make(),
+        MapPlugin.make(),
         MarkdownPlugin.make(),
         PipelinePlugin.make(),
         PresenterPlugin.make(),
@@ -250,9 +255,11 @@ const meta = {
         ReviewPlugin.make(),
         ScriptPlugin.make(),
         SheetPlugin.make(),
+        SpacetimePlugin.make(),
         TablePlugin.make(),
         TasksPlugin.make(),
         ThreadPlugin.make(),
+        VoxelPlugin.make(),
       ],
     })),
     withIframePath,
@@ -318,6 +325,8 @@ export const AiBriefing: Story = {
 };
 
 export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };
+
+export const Demo: Story = { args: { template: TEMPLATES.demo }, play };
 
 export const AlienLabs: Story = { args: { template: TEMPLATES.fieldstone }, play };
 

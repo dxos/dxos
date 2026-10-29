@@ -11,9 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
 import type { Database, Obj } from '@dxos/echo';
 
-import { meta } from '#meta';
-
-import type * as FeatureMapView from './FeatureMapView.ts';
+import { ProjectsNamespace } from '../namespace.ts';
 
 /**
  * Id of the built-in default template. Declared here (rather than on the template itself) so callers
@@ -47,13 +45,11 @@ export type Template = {
    * `Database.Service` may still be used for read-only lookups (e.g. loading a subject's feed ref).
    */
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Project.Project, Error, Database.Service>;
-  /** How the new project's Features tab first shows its features; the user's own choice wins after that. */
-  featureView?: FeatureMapView.Mode;
 };
 
-export const Template = Capability.make<Template>()(`${meta.profile.key}.capability.template`);
+export const Template = Capability.make<Template>()(`${ProjectsNamespace.key}.capability.template`);
 
 // Inline import so the `Settings` namespace does not collide with the capability of the same name.
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${ProjectsNamespace.key}.capability.settings`,
 );

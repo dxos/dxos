@@ -191,7 +191,109 @@ const seedTags = Effect.gen(function* () {
   return { spaceId, ids } satisfies Fixture;
 });
 
+/**
+ * Dependency chains for the deletion and strong-dependency walks: rows that share a parent, chains
+ * past the depth bound, relation endpoints, and dependencies that are themselves dependency-broken.
+ */
+const seedChains = Effect.gen(function* () {
+  const sqlClient = yield* SqlClient.SqlClient;
+  const meta = new EntityMetaIndex(sqlClient);
+  const bodies = new ObjectSnapshotIndex(sqlClient);
+  yield* meta.migrate();
+  yield* bodies.migrate();
+  yield* new ReverseRefIndex(sqlClient).migrate();
+
+  const spaceId = SpaceId.random();
+  const chainLength = 12;
+  const names = [
+    'root',
+    'mid',
+    'leafA',
+    'leafB',
+    'relToLeaf',
+    'orphan',
+    'orphanChild',
+    'relToOrphanChild',
+    'brokenTag',
+    'taggedBroken',
+    'liveTag',
+    'taggedLive',
+    ...Array.from({ length: chainLength }, (_, index) => `c${index}`),
+  ];
+  const ids = Object.fromEntries(names.map((name) => [name, EntityId.random()])) as Fixture['ids'];
+  const at = (id: EntityId) => EID.make({ entityId: id });
+  const doc = (id: EntityId, type: URI.URI, extra: Record<string, unknown> = {}): IndexerObject => ({
+    spaceId,
+    documentId: `doc-${id}`,
+    queueId: null,
+    queueNamespace: null,
+    queuePosition: null,
+    recordId: null,
+    createdAt: 1000,
+    updatedAt: 2000,
+    data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...extra },
+    heads: [`heads-${id}`],
+  });
+  const tags = (tag: EntityId) => ({ [ATTR_META]: { keys: [], tags: [{ '/': at(tag) }] } });
+  const objects = [
+    doc(ids.root, PROJECT, { [ATTR_DELETED]: true }),
+    doc(ids.mid, PROJECT, { [ATTR_PARENT]: at(ids.root) }),
+    doc(ids.leafA, TASK, { [ATTR_PARENT]: at(ids.mid) }),
+    doc(ids.leafB, TASK, { [ATTR_PARENT]: at(ids.mid) }),
+    doc(ids.relToLeaf, HAS_MANAGER, { [ATTR_RELATION_SOURCE]: at(ids.leafA), [ATTR_RELATION_TARGET]: at(ids.c11) }),
+    doc(ids.orphan, PROJECT, { [ATTR_PARENT]: at(EntityId.random()) }),
+    doc(ids.orphanChild, TASK, { [ATTR_PARENT]: at(ids.orphan) }),
+    doc(ids.relToOrphanChild, HAS_MANAGER, {
+      [ATTR_RELATION_SOURCE]: at(ids.c11),
+      [ATTR_RELATION_TARGET]: at(ids.orphanChild),
+    }),
+    doc(ids.brokenTag, TAG, { [ATTR_PARENT]: at(ids.orphan) }),
+    doc(ids.taggedBroken, TASK, tags(ids.brokenTag)),
+    doc(ids.liveTag, TAG),
+    doc(ids.taggedLive, TASK, tags(ids.liveTag)),
+    ...Array.from({ length: chainLength }, (_, index) =>
+      doc(
+        ids[`c${index}`],
+        PROJECT,
+        index === 0 ? { [ATTR_DELETED]: true } : { [ATTR_PARENT]: at(ids[`c${index - 1}`]) },
+      ),
+    ),
+  ];
+  yield* meta.update(objects);
+  yield* meta.lookupRecordIds(objects);
+  yield* bodies.update(objects);
+  return { spaceId, ids } satisfies Fixture;
+});
+
 describe('SqlPlanCompiler', () => {
+  it.effect('cascades deletion and withholds broken dependencies along chains, to the executor depth', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seedChains;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const live = yield* run(fixture, Query.select(Filter.everything()).from(scope));
+      // c1..c10 reach the deleted c0 within ten hops; c11 does not. `mid` and both leaves descend
+      // from the deleted root, and `relToLeaf` from a cascade-deleted endpoint. `orphan` has a
+      // missing parent, which withholds its child, the relation to that child, and the tag (and the
+      // object tagged with it) parented under it.
+      expect(
+        names(
+          fixture,
+          live.rows.map((row) => row.objectId),
+        ).sort(),
+      ).toEqual(['c11', 'liveTag', 'taggedLive'].sort());
+
+      const deleted = yield* run(fixture, Query.select(Filter.everything()).from(scope).options({ deleted: 'only' }));
+      expect(
+        names(
+          fixture,
+          deleted.rows.map((row) => row.objectId),
+        ).sort(),
+      ).toEqual(
+        ['root', 'mid', 'leafA', 'leafB', 'relToLeaf', ...Array.from({ length: 11 }, (_, index) => `c${index}`)].sort(),
+      );
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('tags are strong dependencies, stored as references or legacy bare URIs', () =>
     Effect.gen(function* () {
       const fixture = yield* seedTags;

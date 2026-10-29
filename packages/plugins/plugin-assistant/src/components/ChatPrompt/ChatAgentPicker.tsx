@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { Fragment, useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Agent from '@dxos/assistant/Agent';
@@ -15,9 +15,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 
 import { useChatAgent } from '#hooks';
-import { meta } from '#meta';
 import { type AssistantCapabilities, type AssistantPreset } from '#types';
 
+import { AssistantNamespace } from '../../namespace.ts';
 import { type AgentOption, type AgentPlacement, optionForHarness } from '../../util/agent-options.ts';
 
 const LOCATION_ICONS: Record<AssistantCapabilities.AgentLocation, string> = {
@@ -25,13 +25,16 @@ const LOCATION_ICONS: Record<AssistantCapabilities.AgentLocation, string> = {
   edge: 'ph--cloud--regular',
 };
 
+/** The settings an agent may let a chat choose, in the order the picker shows them. */
+const AGENT_SETTINGS: readonly AssistantCapabilities.AgentSetting[] = ['agentModel', 'agentEffort', 'agentMode'];
+
 export type ChatAgentPickerProps = AssistantPreset.ChatPresetProps & {
   chat?: Chat.Chat;
   started?: boolean;
 };
 
 export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange }: ChatAgentPickerProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { current: harness, options } = useChatAgent(chat);
   const option = optionForHarness(options, harness);
   const { placements, location, offered, select } = usePlacement(chat, option, harness);
@@ -60,8 +63,24 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
     [placements, harness, option, select],
   );
 
+  const [session] = useObject(chat, 'session');
+  const choices = option?.choices ?? {};
+
+  const handleChoiceChange = useCallback(
+    (setting: AssistantCapabilities.AgentSetting, value: string) => {
+      if (chat) {
+        Obj.update(chat, (chat) => {
+          chat.session = { ...chat.session, [setting]: value || undefined };
+        });
+      }
+    },
+    [chat],
+  );
+
   const agentLabel = option?.label ?? harness;
-  const label = option?.ownModel || !model ? agentLabel : `${agentLabel} · ${model.label}`;
+  const agentModel = choices.agentModel?.find(({ id }) => id === session?.agentModel);
+  const shownModel = option?.ownModel ? agentModel : model;
+  const label = shownModel ? `${agentLabel} · ${shownModel.label}` : agentLabel;
 
   return (
     <Menu.Root>
@@ -118,6 +137,35 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
             </Menu.RadioItemGroup>
           </>
         )}
+
+        {AGENT_SETTINGS.map((setting) => {
+          const offered = choices[setting] ?? [];
+          if (offered.length === 0) {
+            return null;
+          }
+          const value = offered.find(({ id }) => id === session?.[setting])?.id ?? '';
+          return (
+            <Fragment key={setting}>
+              <Menu.Separator />
+              <Menu.RadioItemGroup value={value} onValueChange={({ value }) => handleChoiceChange(setting, value)}>
+                <Menu.ItemGroupLabel>
+                  {t(started ? `agent-setting.${setting}.locked.label` : `agent-setting.${setting}.label`)}
+                </Menu.ItemGroupLabel>
+                <Menu.RadioItem
+                  item={{ value: '', label: t('agent-setting-default.label'), disabled: started }}
+                  data-testid={`assistant.${setting}.unset`}
+                />
+                {offered.map(({ id, label }) => (
+                  <Menu.RadioItem
+                    key={id}
+                    item={{ value: id, label, disabled: started }}
+                    data-testid={`assistant.${setting}.${id}`}
+                  />
+                ))}
+              </Menu.RadioItemGroup>
+            </Fragment>
+          );
+        })}
 
         {!option?.ownModel && (presets?.length ?? 0) > 0 && (
           <>

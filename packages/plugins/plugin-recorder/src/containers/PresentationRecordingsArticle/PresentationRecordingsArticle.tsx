@@ -18,10 +18,10 @@ import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } fro
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
-import { meta } from '#meta';
 import { RecorderCapabilities, Take } from '#types';
 
 import { useStartRecording } from '../../hooks/index.ts';
+import { RecorderNamespace } from '../../namespace.ts';
 import { downloadBlob, exportVoiceOver } from '../../recorder/index.ts';
 import TakePlayer from '../TakePlayer/index.ts';
 
@@ -49,7 +49,7 @@ export const PresentationRecordingsArticle = ({
   attendableId,
   presentation,
 }: PresentationRecordingsArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(RecorderNamespace.key);
   const recorder = Hooks.useOptionalCapability(RecorderCapabilities.Recorder);
   const { invokePromise } = Hooks.useOperationInvoker();
   const handleRecord = useStartRecording(recorder, presentation);
@@ -127,7 +127,7 @@ export const PresentationRecordingsArticle = ({
         .action(
           'record',
           {
-            label: ['record.label', { ns: meta.profile.key }],
+            label: ['record.label', { ns: RecorderNamespace.key }],
             icon: 'ph--record--regular',
             disposition: 'toolbar',
             disabled: !recorder,
@@ -139,7 +139,7 @@ export const PresentationRecordingsArticle = ({
         .action(
           'download',
           {
-            label: ['download-voice-over.label', { ns: meta.profile.key }],
+            label: ['download-voice-over.label', { ns: RecorderNamespace.key }],
             icon: 'ph--download-simple--regular',
             disposition: 'toolbar',
             disabled: voiced.length === 0 || exporting,
@@ -150,7 +150,7 @@ export const PresentationRecordingsArticle = ({
         .action(
           'play-all',
           {
-            label: [play.all ? 'stop-voice-over.label' : 'play-voice-over.label', { ns: meta.profile.key }],
+            label: [play.all ? 'stop-voice-over.label' : 'play-voice-over.label', { ns: RecorderNamespace.key }],
             icon: play.all ? 'ph--stop-circle--regular' : 'ph--play-circle--regular',
             disposition: 'toolbar',
             disabled: voiced.length === 0,

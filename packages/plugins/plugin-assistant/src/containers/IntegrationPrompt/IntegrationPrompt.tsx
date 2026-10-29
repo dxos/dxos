@@ -15,9 +15,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { ConnectorAuthMenu } from '#components';
-import { meta } from '#meta';
 
 import { useChatReportContext } from '../../components/Chat/context.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 
 const INTEGRATION_PROMPT_NAME = 'IntegrationPrompt';
 
@@ -37,7 +37,7 @@ export type IntegrationPromptProps = {
  * silently.
  */
 export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPromptProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const space = ToolkitHooks.useActiveSpace();
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
@@ -50,7 +50,7 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   }
 
   return (
-    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
+    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-trim-md border border-separator-subtle rounded-sm'>
       <Layout.Flex gap='sm' align='center'>
         <Icon.Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
         <Layout.Flex column classNames='min-w-0'>
