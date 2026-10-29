@@ -17,8 +17,8 @@ import { Migrations } from './migrations.ts';
 
 /** Multiplies `count` on every test object. */
 const scaleCount = (factor: number) =>
-  Migration.defineTransaction((transaction, { db }) =>
-    Effect.gen(function* () {
+  Migration.defineTransaction(
+    Effect.fnUntraced(function* (transaction, { db }) {
       const objects = yield* Effect.promise(() =>
         db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run(),
       );
