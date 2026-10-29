@@ -203,7 +203,7 @@ describe('fitLabel', () => {
   test('labels that do not fit at the minimum are cut short, keeping the prefix', ({ expect }) => {
     const { text, fontSize } = fitLabel({ prefix: '1987', text: 'Black Monday' }, 60, measure, sizes);
     expect(fontSize).to.eq(10);
-    expect(text).to.eq('Black...');
+    expect(text).to.eq('Black\u2026');
   });
 });
 

@@ -89,7 +89,7 @@ export const testId = (parts: readonly string[]): string =>
   createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 16);
 
 const truncate = (text: string): string =>
-  text.length <= MAX_ERROR_LENGTH ? text : `${text.slice(0, MAX_ERROR_LENGTH - 1)}...`;
+  text.length <= MAX_ERROR_LENGTH ? text : `${text.slice(0, MAX_ERROR_LENGTH - 1)}\u2026`;
 
 /** Playwright wraps failure messages in ANSI colour even when the reporter output is a file. */
 // eslint-disable-next-line no-control-regex

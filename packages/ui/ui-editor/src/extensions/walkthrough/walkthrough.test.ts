@@ -95,7 +95,7 @@ describe('DiffBlockWidget', () => {
     expect(dom.querySelector('.cm-diff-stat-added')?.textContent).to.eq('+1');
     expect(dom.querySelector('.cm-diff-stat-removed')?.textContent).to.eq('-1');
     expect(dom.querySelector('.cm-diff-lang')?.textContent).to.eq('TypeScript');
-    expect(dom.querySelector('.cm-diff-range')?.textContent).to.eq('Lines 10-12');
+    expect(dom.querySelector('.cm-diff-range')?.textContent).to.eq('Lines 10\u201312');
   });
 
   test('splits a pure insertion into a coloured line and a filler', () => {

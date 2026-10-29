@@ -33,11 +33,11 @@ describe('markdown utils', () => {
 
           This document is about the decetralized platform DXOS.
         `,
-        expected: 'This document is about the...',
+        expected: 'This document is about the\u2026',
       },
       {
         content: 'Pneumonoultramicroscopicsilicovolcanoconiosis',
-        expected: 'Pneumonoultramicroscopicsilicovo...',
+        expected: 'Pneumonoultramicroscopicsilicovo\u2026',
       },
     ];
 

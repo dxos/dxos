@@ -171,7 +171,7 @@ describe('nodeToJson', () => {
     const registry = { reasoning: { block: true } };
     const elements = parseElements(xml, registry);
     expect(elements).toHaveLength(1);
-    expect(elements[0].children).toEqual(['arrow -> and hex ->']);
+    expect(elements[0].children).toEqual(['arrow \u2192 and hex \u2192']);
   });
 
   test('should parse tag with multiple blank lines in content', ({ expect }) => {
