@@ -19,6 +19,7 @@ import {
   CreateIcoSphere,
   CreateLines,
   CreateLineSystem,
+  CreatePlane,
   CreateSphere,
   DirectionalLight,
   Engine,
@@ -176,6 +177,9 @@ export class SceneRenderer3D {
   readonly #highlight: HighlightLayer;
   #selection: string;
   readonly #boxes = new Map<string, { mesh: LinesMesh; min: Vector3; max: Vector3 }>();
+  /** The selected face: the item's key and the face's axis-aligned outward normal, drawn as a pane over that side. */
+  #faceSelection?: { key: string; normal: Model.Vec3 };
+  #faceMesh?: { mesh: Mesh; center: Vector3 };
 
   constructor({ canvas, engine, theme, background, selection = DEFAULT_SELECTION }: SceneRenderer3DOptions) {
     this.#theme = theme;
@@ -241,6 +245,20 @@ export class SceneRenderer3D {
     return this.#snap ? { move: SNAP.move, rotate: SNAP.rotate, scale: SNAP.scale } : { move: 0, rotate: 0, scale: 0 };
   }
 
+  /** The selected face as drawn: the item, its normal, the pane's centre and colour. */
+  get face(): { key: string; normal: Model.Vec3; center: Vector3; color: string } | undefined {
+    return this.#faceSelection && this.#faceMesh
+      ? { ...this.#faceSelection, center: this.#faceMesh.center, color: this.#selection }
+      : undefined;
+  }
+
+  /** Marks the face of item `key` that `normal` (an axis) points out of; none when `key` is undefined. */
+  selectFace(key: string | undefined, normal?: Model.Vec3): void {
+    this.#faceSelection = key === undefined || !normal ? undefined : { key, normal };
+    this.#drawFace();
+    this.#view && this.#scene.render();
+  }
+
   /** Changes the selection colour, e.g. when the theme does. */
   setSelectionColor(color: string): void {
     if (color === this.#selection) {
@@ -290,6 +308,7 @@ export class SceneRenderer3D {
   ): void {
     this.#updateItems(list.items, geometry);
     this.#outline();
+    this.#drawFace();
     this.#updateLinks(list);
     this.#updateInstances(effects);
     this.#pose(camera);
@@ -402,6 +421,8 @@ export class SceneRenderer3D {
 
   dispose(): void {
     this.#clearBoxes();
+    this.#faceSelection = undefined;
+    this.#drawFace();
     this.#highlight.dispose();
     this.#gizmos?.dispose();
     this.#layers?.normal.dispose();
@@ -494,6 +515,41 @@ export class SceneRenderer3D {
     mesh.alpha = 0.8;
     mesh.isPickable = false;
     return { mesh, min: min.clone(), max: max.clone() };
+  }
+
+  /** A translucent pane over the selected face of its item's world-aligned bounds, a little proud of it. */
+  #drawFace(): void {
+    this.#faceMesh?.mesh.dispose();
+    this.#faceMesh = undefined;
+    const selection = this.#faceSelection;
+    const surface = selection ? this.#items.get(selection.key)?.surface : undefined;
+    if (!selection || !surface) {
+      return;
+    }
+    surface.computeWorldMatrix(true);
+    const { minimumWorld: min, maximumWorld: max } = surface.getBoundingInfo().boundingBox;
+    const { x: nx, y: ny, z: nz } = selection.normal;
+    const size = max.subtract(min);
+    const middle = min.add(max).scale(0.5);
+    const lift = 0.002;
+    const center = new Vector3(
+      nx === 0 ? middle.x : (nx > 0 ? max.x : min.x) + nx * lift,
+      ny === 0 ? middle.y : (ny > 0 ? max.y : min.y) + ny * lift,
+      nz === 0 ? middle.z : (nz > 0 ? max.z : min.z) + nz * lift,
+    );
+    // A plane lies in x/y facing -z; its width and height are the face's two other extents.
+    const [width, height] = nx !== 0 ? [size.z, size.y] : ny !== 0 ? [size.x, size.z] : [size.x, size.y];
+    const mesh = CreatePlane(`face-${selection.key}`, { width, height, sideOrientation: Mesh.DOUBLESIDE }, this.#scene);
+    mesh.position = center;
+    mesh.rotation =
+      nx !== 0 ? new Vector3(0, Math.PI / 2, 0) : ny !== 0 ? new Vector3(Math.PI / 2, 0, 0) : Vector3.Zero();
+    const material = new StandardMaterial(`face-${selection.key}`, this.#scene);
+    material.emissiveColor = Color3.FromHexString(this.#selection);
+    material.disableLighting = true;
+    material.alpha = 0.35;
+    mesh.material = material;
+    mesh.isPickable = false;
+    this.#faceMesh = { mesh, center: center.clone() };
   }
 
   #clearBoxes(): void {

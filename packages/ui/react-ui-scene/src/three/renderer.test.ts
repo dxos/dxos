@@ -87,6 +87,22 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.boxes).toEqual({});
   });
 
+  test("a selected face is drawn over that side of the item's bounds in the selection colour, and cleared", () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    view.selectFace('a', { x: 1, y: 0, z: 0 });
+    expect(view.face?.key).toBe('a');
+    expect(view.face?.center.x).toBeCloseTo(2);
+    expect(view.face?.center.y).toBeCloseTo(2);
+    expect(view.face?.center.z).toBeCloseTo(3);
+    expect(view.face?.color).toBe('#ff8800');
+    view.selectFace(undefined);
+    expect(view.face).toBeUndefined();
+    view.selectFace('a', { x: 0, y: -1, z: 0 });
+    expect(view.face?.center.y).toBeCloseTo(0);
+    view.dispose();
+    expect(view.face).toBeUndefined();
+  });
+
   test('with snapping on, a gizmo moves by the grid unit, turns by 15 degrees and scales by a tenth; off, freely', () => {
     const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     view.setSnap(true);

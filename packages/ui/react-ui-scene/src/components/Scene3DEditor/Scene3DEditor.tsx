@@ -26,9 +26,11 @@ import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
 import {
+  type FaceSelection,
   type Tool3D,
   clickCreates,
   clickSelects,
+  doubleClickTarget,
   editableTool,
   groundSnap,
   menuSelection,
@@ -70,6 +72,9 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   onEdit: (layout: string) => void;
   /** The orbit camera, each time it moves. */
   onCameraChange?: (camera: Scene.Camera3D) => void;
+  /** The selected face, set by a double-click on a plain element; Extrude acts on it. */
+  face?: FaceSelection;
+  onFaceChange?: (face: FaceSelection | undefined) => void;
   /** A right-click, where it was and on what; an unselected element is selected first. */
   onContextMenu?: (at: { x: number; y: number }, kind: 'element' | 'canvas') => void;
 }>;
@@ -117,6 +122,8 @@ export const Scene3DEditor = ({
   onEdit,
   onCameraChange,
   onContextMenu,
+  face,
+  onFaceChange,
 }: Scene3DEditorProps) => {
   const tool = editableTool(toolProp, readonly);
   // Locked, every edit stops here, whichever gesture or key would have made it.
@@ -206,6 +213,11 @@ export const Scene3DEditor = ({
     renderer?.select(selection.flatMap((id) => keys.get(id)?.key ?? []));
   }, [renderer, selection, keys, shown]);
 
+  useLayoutEffect(() => {
+    const key = face === undefined ? undefined : keys.get(face.element)?.key;
+    renderer?.selectFace(key, face?.normal);
+  }, [renderer, face, keys, shown]);
+
   // The gizmo sits on the one selected element; a drag's end becomes an intent in the edited layout's coordinates.
   const single = selection.length === 1 ? selection[0] : undefined;
   const singleKey = single === undefined ? undefined : keys.get(single)?.key;
@@ -252,6 +264,9 @@ export const Scene3DEditor = ({
     (point: { x: number; y: number }, shift: boolean, free = false) => {
       const { hit, element, frame } = elementAt(point);
       frame !== undefined && setFrameHint(frame);
+      if (face && element !== face.element) {
+        onFaceChange?.(undefined);
+      }
       if (clickCreates(tool, element) && typeof tool === 'object') {
         // A layout that is not drawn has nowhere to put an element; an object may not be placed inside its own parts.
         if (!hit?.point || unplaced || ('place' in tool && placesCycle(doc, editing, tool.place))) {
@@ -294,20 +309,43 @@ export const Scene3DEditor = ({
         onSelect([element]);
       }
     },
-    [elementAt, tool, unplaced, doc, transform, layout, editing, linkFrom, selection, onIntent, onSelect, snap],
+    [
+      elementAt,
+      tool,
+      unplaced,
+      doc,
+      transform,
+      layout,
+      editing,
+      linkFrom,
+      selection,
+      onIntent,
+      onSelect,
+      snap,
+      face,
+      onFaceChange,
+    ],
   );
 
   const onDoubleClick = useCallback(
     (point: { x: number; y: number }) => {
       const { hit, element } = elementAt(point);
-      const parts = element === undefined ? undefined : resolved[element]?.parts;
-      if (parts !== undefined) {
+      const target = doubleClickTarget(
+        element,
+        element === undefined ? undefined : resolved[element]?.parts,
+        hit?.normal,
+      );
+      if (target && 'drill' in target) {
         onSelect([]);
+        onFaceChange?.(undefined);
         hit?.item && setFrameHint(hit.item);
-        onEdit(parts);
+        onEdit(target.drill);
+      } else if (target) {
+        onSelect([target.face.element]);
+        onFaceChange?.(target.face);
       }
     },
-    [elementAt, resolved, onEdit, onSelect],
+    [elementAt, resolved, onEdit, onSelect, onFaceChange],
   );
 
   // A face drag with the extrude tool: where it started, and the face it started on.
@@ -351,12 +389,13 @@ export const Scene3DEditor = ({
       if (intent?.kind === 'extrude') {
         // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
         onIntent(editing, { ...intent, distance: Math.round((intent.distance / transform.scale) * 1000) / 1000 });
+        onFaceChange?.(undefined);
         onSelect([id]);
         return true;
       }
       return false;
     },
-    [view, size, layout, editing, transform, onIntent, onSelect],
+    [view, size, layout, editing, transform, onIntent, onSelect, onFaceChange],
   );
 
   const press = useRef<{ x: number; y: number }>(undefined);
@@ -387,8 +426,16 @@ export const Scene3DEditor = ({
         if (tool === 'extrude' && event.button === 0 && !isHandDrag(event)) {
           const screen = local(event);
           const { hit, element } = elementAt(screen);
-          extruding.current =
-            element !== undefined && hit?.normal && hit.point
+          // A selected face is the one extruded, wherever the drag starts; otherwise the face pressed on.
+          const selectedFace = face && renderer?.face;
+          extruding.current = selectedFace
+            ? {
+                screen,
+                element: face.element,
+                normal: face.normal,
+                point: { x: selectedFace.center.x, y: selectedFace.center.y, z: selectedFace.center.z },
+              }
+            : element !== undefined && hit?.normal && hit.point
               ? { screen, element, normal: hit.normal, point: hit.point }
               : undefined;
           extruding.current && event.currentTarget.setPointerCapture(event.pointerId);
@@ -431,7 +478,9 @@ export const Scene3DEditor = ({
         if (event.target !== event.currentTarget) {
           return;
         }
-        if (event.key === 'Escape' && drilled && scene) {
+        if (event.key === 'Escape' && face) {
+          onFaceChange?.(undefined);
+        } else if (event.key === 'Escape' && drilled && scene) {
           onSelect([]);
           onEdit(scene.layout);
         } else if ((event.key === 'Delete' || event.key === 'Backspace') && selection.length > 0) {

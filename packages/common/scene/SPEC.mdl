@@ -812,3 +812,17 @@ decision D-85: The 3D Properties form edits an element's layer with 2D's layer f
   for: user:richburdon
   why: Each of these is the same control in both dimensions; locking layers only in 3D would break the parity rule.
 ```
+
+```mdl
+decision D-86: In 3D a double-click selects the face of a plain element it lands on; on a composite it still opens its parts.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-87: A selected face is the element and the axis its picked normal snaps to, held by the view (not stored); it is drawn as a translucent pane in the selection colour over that side of the element's bounds, shown read-only in Properties as `+Y` and so on, used by Extrude wherever its drag starts, and cleared by Escape, a click on another element or an extrusion. 2D has no counterpart: its shapes have no faces, and a link's ends are already picked by the Link tool. Fills in [D-86].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Faces exist only in 3D, so the parity rule leaves 2D unchanged; snapping to the axis keeps a face stable on rounded and mesh surfaces.
+```

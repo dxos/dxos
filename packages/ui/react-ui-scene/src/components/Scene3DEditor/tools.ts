@@ -2,7 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Scene } from '@dxos/scene';
+
 import { type GizmoMode } from '../../three/index.ts';
+import { axisOf } from './gizmo.ts';
 
 /** What a left-button press does in the editor. */
 export type Tool3D = 'select' | 'orbit' | GizmoMode | 'link' | 'extrude' | { create: string } | { place: string };
@@ -40,3 +43,30 @@ export const groundSnap = (
 /** The selection a right-click acts on: an unselected element becomes the selection; otherwise it stays as it is. */
 export const menuSelection = (selection: readonly string[], element: string | undefined): string[] =>
   element === undefined || selection.includes(element) ? [...selection] : [element];
+
+/** A selected face: the element and the axis its face points out along. */
+export type FaceSelection = { element: string; normal: Scene.Vec3 };
+
+/**
+ * What a double-click does: on a composite (`parts`), drill into its parts; on a plain element, select the face its
+ * picked normal points out of; elsewhere, nothing.
+ */
+export const doubleClickTarget = (
+  element: string | undefined,
+  parts: string | undefined,
+  normal: Scene.Vec3 | undefined,
+): { drill: string } | { face: FaceSelection } | undefined =>
+  element === undefined
+    ? undefined
+    : parts !== undefined
+      ? { drill: parts }
+      : normal
+        ? { face: { element, normal: axisOf(normal) } }
+        : undefined;
+
+/** A face's name: the sign and axis its normal points along, e.g. `+Y` for the top. */
+export const faceName = (normal: Scene.Vec3): string => {
+  const { x, y, z } = axisOf(normal);
+  const [axis, sign] = x !== 0 ? ['X', x] : y !== 0 ? ['Y', y] : ['Z', z];
+  return `${sign > 0 ? '+' : '−'}${axis}`;
+};

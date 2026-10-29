@@ -7,7 +7,9 @@ import { describe, expect, test } from 'vitest';
 import {
   clickCreates,
   clickSelects,
+  doubleClickTarget,
   editableTool,
+  faceName,
   groundSnap,
   menuSelection,
   orbitButtons,
@@ -57,5 +59,20 @@ describe('tools', () => {
     expect(menuSelection(['a'], 'b')).toEqual(['b']);
     expect(menuSelection(['a', 'b'], 'b')).toEqual(['a', 'b']);
     expect(menuSelection(['a'], undefined)).toEqual(['a']);
+  });
+
+  test('a double-click drills into a composite, selects the picked face of a plain element, and else does nothing', () => {
+    expect(doubleClickTarget('team', 'team-parts', { x: 0.2, y: 0.9, z: 0 })).toEqual({ drill: 'team-parts' });
+    expect(doubleClickTarget('box', undefined, { x: 0.2, y: 0.9, z: 0.1 })).toEqual({
+      face: { element: 'box', normal: { x: 0, y: 1, z: 0 } },
+    });
+    expect(doubleClickTarget('box', undefined, undefined)).toBeUndefined();
+    expect(doubleClickTarget(undefined, undefined, { x: 0, y: 1, z: 0 })).toBeUndefined();
+  });
+
+  test('a face is named by the axis it points out along', () => {
+    expect(faceName({ x: 0, y: 1, z: 0 })).toBe('+Y');
+    expect(faceName({ x: -1, y: 0, z: 0 })).toBe('−X');
+    expect(faceName({ x: 0, y: 0, z: 1 })).toBe('+Z');
   });
 });

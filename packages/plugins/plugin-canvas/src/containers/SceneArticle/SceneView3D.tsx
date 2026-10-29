@@ -33,10 +33,12 @@ import {
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import {
+  type FaceSelection,
   Scene3DEditor,
   Scene3DView,
   type Tool3D,
   exportSTL,
+  faceName,
   fitCamera,
   importMesh,
   loadManifold,
@@ -152,6 +154,11 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   const [selection, setSelection] = useState<string[]>([]);
   const [editing, setEditing] = useState<string>();
   const [notice, setNotice] = useState<string>();
+  const [face, setFace] = useState<FaceSelection>();
+  // A face belongs to its element: selecting anything else lets it go.
+  useEffect(() => {
+    face && !selection.includes(face.element) && setFace(undefined);
+  }, [face, selection]);
 
   // Every 3D layout the scene reaches, by key, as the objects edits are written to.
   const layouts = useMemo(
@@ -773,6 +780,8 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               onIntent={handleIntent}
               onEdit={(layout) => setEditing(layout === document.scenes[0]?.layout ? undefined : layout)}
               onContextMenu={(at, kind) => setMenuAt({ at, kind })}
+              face={face}
+              onFaceChange={setFace}
               camera={view.camera}
               onCameraChange={view.onCameraChange}
               onResize={setViewport}
@@ -832,6 +841,11 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
           )}
           {selected && (
             <InspectorSection section={{ ...SECTIONS_3D.properties, title: t('properties.label') }}>
+              {face && (
+                <p className='px-2 pt-2 text-sm text-fg-muted' data-testid='properties-face'>
+                  {t('face.label')}: {faceName(face.normal)}
+                </p>
+              )}
               <LayersContext.Provider value={layers}>
                 <Form.Root
                   key={selected.id}
