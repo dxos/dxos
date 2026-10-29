@@ -121,7 +121,6 @@
     "vscode": "^1.74.0"
   },
   "devDependencies": {
-    "@dxos/mdl-language-server": "workspace:*",
     "@types/vscode": "catalog:",
     "@vscode/vsce": "catalog:",
     "esbuild": "catalog:",

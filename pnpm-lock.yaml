@@ -26947,9 +26947,6 @@ importers:
         specifier: 'catalog:'
         version: 9.0.1
     devDependencies:
-      '@dxos/mdl-language-server':
-        specifier: workspace:*
-        version: link:../mdl-language-server
       '@types/vscode':
         specifier: 'catalog:'
         version: 1.104.0
