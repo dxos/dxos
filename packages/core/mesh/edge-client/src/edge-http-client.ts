@@ -42,6 +42,7 @@ import {
   type JoinSpaceResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
+  type PushSendersRequest,
   type PushSubscribeRequest,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
@@ -533,6 +534,18 @@ export class EdgeHttpClient extends BaseHttpClient {
       ...args,
       body: { endpoint },
       method: 'DELETE',
+      auth: true,
+    });
+  }
+
+  /**
+   * Sets whose notices are pushed to this identity's devices; EDGE pushes every sender until a list is set.
+   */
+  public async putPushSenders(ctx: Context, request: PushSendersRequest, args?: EdgeHttpCallArgs): Promise<void> {
+    await this._call(ctx, new URL('/push/senders', this.baseUrl), {
+      ...args,
+      body: request,
+      method: 'PUT',
       auth: true,
     });
   }

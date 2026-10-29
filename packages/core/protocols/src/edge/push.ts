@@ -31,6 +31,15 @@ export const PushUnsubscribeRequestSchema = Schema.Struct({
 export type PushUnsubscribeRequest = Schema.Schema.Type<typeof PushUnsubscribeRequestSchema>;
 
 /**
+ * Body of `PUT /push/senders`: the identity DIDs whose notices are pushed to this identity's devices, replacing any
+ * earlier list. EDGE still stores notices from anyone else; it just does not push them. At most 1000 DIDs.
+ */
+export const PushSendersRequestSchema = Schema.Struct({
+  senders: Schema.Array(Schema.String),
+});
+export type PushSendersRequest = Schema.Schema.Type<typeof PushSendersRequestSchema>;
+
+/**
  * Response of `GET /push/vapid-public-key`; EDGE answers 404 when push is not configured.
  */
 export const VapidPublicKeyResponseSchema = Schema.Struct({
