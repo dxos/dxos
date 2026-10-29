@@ -5,7 +5,10 @@
 // Uploads the `cli:bundle` binaries, their checksums, `latest.json` and `install.sh` to the
 // agent-artifacts R2 bucket, so a sandbox installs `dx` with one curl and no npm.
 //
-//   bun ./scripts/publish-r2.ts [--no-latest]
+//   bun ./scripts/publish-r2.ts [--release] [--no-latest]
+//
+// --release publishes under the package version alone; otherwise the commit is appended.
+// --no-latest leaves cli/latest.json and cli/install.sh as they are (snapshots).
 //
 // Needs R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY (see the hosting-artifacts skill).
 
@@ -29,10 +32,11 @@ const upload = async (file: string, key: string, type: string) => {
   }
 };
 
-// The commit is part of the version: the same package version is built from many commits between releases.
+// Outside a release the commit is part of the version: one package version is built from many commits.
 const { version: packageVersion } = await Bun.file('package.json').json();
-const sha = (await Bun.$`git rev-parse --short HEAD`.text()).trim();
-const version = `${packageVersion}-${sha}`;
+const version = process.argv.includes('--release')
+  ? packageVersion
+  : `${packageVersion}-${(await Bun.$`git rev-parse --short HEAD`.text()).trim()}`;
 const skipLatest = process.argv.includes('--no-latest');
 
 const files: Record<string, { key: string; sha256: string }> = {};
