@@ -76,6 +76,13 @@ export interface Halo {
   updateProfile(profile: ProfileDocument): Promise<Identity>;
 
   /**
+   * Has EDGE move the identity's credentials off its HALO control feed onto a space root document,
+   * and adopts that root on this device. Other devices of the identity adopt the same root when they
+   * next open. Idempotent; resolves to the root URL, which `identity.haloSpaceRootUrl` then reports.
+   */
+  migrateIdentityRoot(): Promise<string>;
+
+  /**
    * Closes and deletes every space and the identity itself, then wipes the storage they left
    * behind (automerge documents, hypercore feeds, the feed store, the index tables and the
    * keyring). The client stays open, so {@link createIdentity} may be called straight afterwards.

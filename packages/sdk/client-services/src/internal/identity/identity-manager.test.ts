@@ -8,8 +8,9 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { credentialPayload, getCredentialAssertion } from '@dxos/credentials';
-import { type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
+import { SPACE_ROOT_TYPE, type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
 import { HypercoreFactory, HypercoreStore } from '@dxos/feed-store';
+import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
@@ -119,6 +120,74 @@ describe('identity/identity-manager', () => {
     const types = store.read().map((entry) => getCredentialAssertion(entry.credential).$typeName);
     expect(types).to.include('dxos.halo.credentials.SpaceGenesis');
     expect(types).to.include('dxos.halo.credentials.AuthorizedDevice');
+  });
+
+  describe('HALO migration executed by edge', () => {
+    /**
+     * An identity without the flag, plus a HALO root built locally the way edge would mint it, and a
+     * stand-in for edge that reports it. `pending` is how many migrate calls edge answers "not yet".
+     */
+    const setupHaloWithEdgeRoot = async () => {
+      const peer = await createServiceContext();
+      await peer.open(new Context());
+      onTestFinished(() => peer.close());
+      await peer.createIdentity();
+      const identity = peer.identityManager.identity;
+      invariant(identity, 'Identity not initialized.');
+      expect(peer.echoHost.getSpaceRootRefs(identity.haloSpaceId)).to.be.undefined;
+
+      const directory = await peer.echoHost.createSpaceRoot(new Context(), identity.haloSpaceKey);
+      const rootHandle = await peer.echoHost.automergeHost.createDoc<SpaceRoot>({
+        type: SPACE_ROOT_TYPE,
+        spaceId: identity.haloSpaceId,
+        directory: directory.url,
+      });
+      await peer.echoHost.automergeHost.flush(new Context(), { documentIds: [rootHandle.documentId] });
+
+      const edge = { root: null as string | null, migrations: 0, pending: 0 };
+      const edgeHttpClient = {
+        getSpaceRoot: async () => ({ rootDocumentUrl: edge.root }),
+        migrateSpaceRoot: async () => {
+          edge.migrations++;
+          if (edge.root === null || edge.pending > 0) {
+            edge.pending--;
+            throw new Error('HALO root not available yet');
+          }
+          return { rootDocumentUrl: edge.root };
+        },
+      };
+      return { peer, identity, edge, edgeHttpClient, rootUrl: rootHandle.url };
+    };
+
+    test('a HALO adopts the root edge holds, with the flag off', async () => {
+      const { peer, identity, edge, edgeHttpClient, rootUrl } = await setupHaloWithEdgeRoot();
+      edge.root = rootUrl;
+
+      await peer.identityManager.setEdgeServices({ edgeHttpClient });
+
+      expect(peer.echoHost.getSpaceRootRefs(identity.haloSpaceId)?.spaceRootDocUrl).to.equal(rootUrl);
+      expect(identity.haloSpaceRootUrl).to.equal(rootUrl);
+      expect(edge.migrations).to.equal(0);
+
+      // Adopting mirrors the chain into the credentials document, as anchoring does.
+      const store = await openCredentialsDocument(new Context(), peer.echoHost, identity.haloSpaceId);
+      await waitForCondition({ condition: () => store.read().length >= identity.space.spaceState.credentials.length });
+    });
+
+    test('migrating on edge retries until edge can anchor, then adopts its root', async () => {
+      const { peer, identity, edge, edgeHttpClient, rootUrl } = await setupHaloWithEdgeRoot();
+      await peer.identityManager.setEdgeServices({ edgeHttpClient });
+      edge.root = rootUrl;
+      edge.pending = 2;
+
+      const haloSpaceRootUrl = await peer.identityManager.migrateHaloRootOnEdge(new Context());
+      expect(haloSpaceRootUrl).to.equal(rootUrl);
+      expect(identity.haloSpaceRootUrl).to.equal(rootUrl);
+      expect(edge.migrations).to.equal(3);
+
+      // Idempotent: asking again returns the same root and does not re-adopt.
+      expect(await peer.identityManager.migrateHaloRootOnEdge(new Context())).to.equal(rootUrl);
+    });
   });
 
   test('reload from storage', async () => {
