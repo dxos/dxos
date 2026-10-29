@@ -12,7 +12,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { type Node, type StyleClass, type View } from '@dxos/react-ui-canvas/headless';
+import { type Node, type StyleClass, type View, createNode } from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -33,7 +33,7 @@ import { CanvasBuilder } from './builder.ts';
 import { openScene } from './canvas-document.ts';
 import { updateCanvasRecord, writeStyles, writeViews } from './content.ts';
 import { bindLayoutStore } from './layout-store.ts';
-import { migrateSceneDrawing } from './migrate-scenes.ts';
+import { legacyDocument, migrateSceneDrawing } from './migrate-scenes.ts';
 import { bindCanvasStore, createCanvas } from './store.ts';
 
 const SAMPLES = {
@@ -114,6 +114,7 @@ describe('migrateSceneDrawing', () => {
       const after = registry.get(bound.store.views);
       bound.dispose();
       expect(bound.root, name).toBe(legacyRoot);
+      expect(Object.keys(after).sort(), name).toEqual(Object.keys(before).sort());
       expect(after, name).toEqual(Object.fromEntries(Object.keys(after).map((id) => [id, before[id]])));
     }
   });
@@ -134,25 +135,58 @@ describe('migrateSceneDrawing', () => {
     expect(drawing.canvas.target).toBe(canvas);
   });
 
-  test('a portal to another drawing keeps its link', async () => {
+  test('a portal to another drawing stays a portal, with its scene and link', async () => {
     const other = db.add(Drawing.make({ name: 'Other', canvas: db.add(createCanvas()) }));
-    const tree = createNestedSimpleTree();
+    const tree = createSquareTree();
     const root = tree.views.find((view) => view.id === tree.root);
-    const portal = root && Object.values(root.nodes).find((node) => node.type === 'view');
-    if (!root || !portal) {
-      throw new Error('The nested sample has a portal at its root.');
+    if (!root) {
+      throw new Error('The square sample has a root View.');
     }
-    // A frame's link is a field of the view node type, which `Node` (the shared fields) does not list.
-    const withLink: Node & Record<string, unknown> = { ...portal, link: { object: Ref.make(other) } };
-    const linked: View = { ...root, nodes: { ...root.nodes, [portal.id]: withLink } };
+    // A frame's link and scene are fields of the view node type, which `Node` (the shared fields) does not list; the
+    // scene names a View of the other drawing, not one of this one.
+    const portal: Node & Record<string, unknown> = {
+      ...createNode({
+        type: 'view',
+        id: 'portal',
+        z: 'z9',
+        center: { x: 512, y: 0 },
+        size: { width: 256, height: 128 },
+        scene: 'other-drawing-view',
+      }),
+      link: { object: Ref.make(other) },
+    };
+    const linked: View = { ...root, nodes: { ...root.nodes, portal } };
     const drawing = legacyDrawing([linked, ...tree.views.filter((view) => view !== root)], tree.root);
     await db.flush();
     expect(await migrate(drawing)).toBe(true);
     const scene = openScene(migratedCanvas(drawing));
-    const layout = scene?.layout.target;
-    const element = Obj.instanceOf(Scene.Layout2D, layout) ? layout.elements[portal.id] : undefined;
-    const link: unknown = element?.props?.canvas?.link?.object;
+    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+      throw new Error('The migrated canvas opens a 2D scene.');
+    }
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, scene);
+    const node: unknown = registry.get(bound.store.views)[bound.root].nodes.portal;
+    bound.dispose();
+    expect(node).toMatchObject({ type: 'view', scene: 'other-drawing-view' });
+    const link: unknown = isRecord(node) && isRecord(node.link) ? node.link.object : undefined;
     expect(Ref.isRef(link) ? link.uri.toString() : JSON.stringify(link)).toContain(other.id);
+  });
+
+  test("each node's and link's DSL identity is carried onto its element", () => {
+    const node = { type: 'rect', id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+    const peer = { ...node, id: 'b', z: 'a1', center: { x: 128, y: 0 } };
+    const link = { type: 'line', id: 'ab', z: 'a2', source: { node: 'a' }, target: { node: 'b' } };
+    const doc = legacyDocument({
+      'canvas': { kind: 'canvas', root: 'root' },
+      'scene:root': { kind: 'scene', id: 'root' },
+      'node:a': { kind: 'node', scene: 'root', node, dsl: { object: 'server', element: 'server' } },
+      'node:b': { kind: 'node', scene: 'root', node: peer },
+      'link:ab': { kind: 'link', scene: 'root', link, dsl: { object: 'calls', element: 'calls' } },
+    });
+    const elements = doc.layouts[0].elements;
+    expect(elements.a.props?.dsl).toEqual({ object: 'server', element: 'server' });
+    expect(elements.ab.props?.dsl).toEqual({ object: 'calls', element: 'calls' });
+    expect(elements.b.props?.dsl).toBeUndefined();
   });
 
   test('named style classes and settings move onto the Canvas', async () => {
@@ -179,5 +213,12 @@ describe('migrateSceneDrawing', () => {
     const drawing = legacyDrawing(tree.views, tree.root);
     expect(await migrate(drawing)).toBe(true);
     expect(IllustratorCapabilities.variantFor(drawing.canvas.target, [LEGACY_VARIANT])).toBeUndefined();
+    // A client from before `Canvas` finds a variant by the base canvas's schema, which a `Canvas` has none of: it
+    // shows the drawing as unsupported and has nothing to write it with.
+    const target: unknown = drawing.canvas.target;
+    const schema = isRecord(target) && typeof target.schema === 'string' ? target.schema : '';
+    expect([LEGACY_VARIANT].find((entry) => Drawing.isSameFormat(entry.id, schema))).toBeUndefined();
   });
 });
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;

@@ -22,6 +22,8 @@ import { Canvas } from '#types';
 import {
   canvasRecordOf,
   clone,
+  isLinkRecord,
+  isNodeRecord,
   migrateContent,
   migrateLayers,
   pruneOrphanedViews,
@@ -32,6 +34,31 @@ import {
 
 /** The one model a migrated canvas's portals and instances place their objects from. */
 const MODEL_ID = 'model';
+
+/** The object id an `instance` node of a composite places, which an unplaced composite takes as well. */
+const COMPOSITE_PREFIX = 'instance:';
+
+/** Each record's DSL identity as its element's `props.dsl`, which the illustrator's commands find elements by. */
+const withIdentities = (layout: Scene.LayoutRecord2D, content: Drawing.Canvas['content']): Scene.LayoutRecord2D => {
+  const identities = new Map(
+    Object.values(content).flatMap((record) =>
+      isNodeRecord(record) && record.dsl
+        ? [[record.node.id, record.dsl] as const]
+        : isLinkRecord(record) && record.dsl
+          ? [[record.link.id, record.dsl] as const]
+          : [],
+    ),
+  );
+  return {
+    ...layout,
+    elements: Object.fromEntries(
+      Object.entries(layout.elements).map(([id, element]) => {
+        const dsl = identities.get(id);
+        return [id, dsl ? { ...element, props: { ...element.props, dsl: clone(dsl) } } : element];
+      }),
+    ),
+  };
+};
 
 /** A View's scene: its layout, seen from the middle of what it holds at zoom 1, since v2 stored no viewport. */
 const sceneOf = (layout: Scene.LayoutRecord2D): Scene.SceneRecord2D => {
@@ -62,8 +89,17 @@ export const legacyDocument = (content: Drawing.Canvas['content']): Scene.SceneD
   const layouts = views.map((view) => {
     const { layout, objects: placed } = fromCanvasView(view);
     placed.forEach((object) => (objects[object.id] = object));
-    return layout;
+    return withIdentities(layout, copy);
   });
+  // A composite no node places yet (a library definition) is reached through an object of its own, or a canvas
+  // opened at its root would never read it.
+  const placedParts = new Set(Object.values(objects).flatMap((object) => (object.parts ? [object.parts] : [])));
+  for (const layout of layouts.slice(1)) {
+    if (!placedParts.has(layout.id)) {
+      const id = `${COMPOSITE_PREFIX}${layout.id}`;
+      objects[id] = { id, kind: 'rect', parts: layout.id };
+    }
+  }
   const hasModel = Object.keys(objects).length > 0;
   const withModel = layouts.map((layout) => (hasModel ? { ...layout, model: MODEL_ID } : layout));
   return {

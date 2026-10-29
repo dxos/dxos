@@ -59,6 +59,8 @@ export type TypedCanvasVariant = VariantBase & {
   /** The canvas object type a drawing of this variant references. */
   canvasType: Type.AnyObj;
   createCanvas: (input?: Record<string, any>) => Effect.Effect<Obj.Unknown, Error, Database.Service>;
+  /** Removes a canvas of this type with the objects it owns; a conversion that replaces it calls this. */
+  removeCanvas?: (canvas: Obj.Unknown) => Effect.Effect<void, never, Database.Service>;
   card?: ComponentType<DrawingVariantSurfaceProps<Obj.Unknown>>;
   article?: ComponentType<DrawingVariantSurfaceProps<Obj.Unknown>>;
 };

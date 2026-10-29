@@ -107,13 +107,37 @@ export const addScene = (canvas: Canvas.Canvas, scene: Scene.Scene2D, camera: Sc
   return added;
 };
 
-/** Whether any of the canvas's scenes, or a composite object of its model, still shows `layout`. */
-const layoutInUse = (canvas: Canvas.Canvas, layout: StoredLayout): boolean => {
-  const model = canvas.model?.target;
-  return (
-    canvas.scenes.some((ref) => isStoredScene(ref.target) && ref.target.layout.target === layout) ||
-    (isStoredModel(model) && Object.values(model.objects).some((object) => object.parts?.target === layout))
+/** The canvas's model and every model one of its layouts places objects from. */
+const canvasModels = (canvas: Canvas.Canvas): Set<StoredModel> =>
+  new Set(
+    [
+      canvas.model?.target,
+      ...canvas.layouts.map((ref) => (isStoredLayout(ref.target) ? ref.target.model?.target : undefined)),
+    ].filter(isStoredModel),
   );
+
+/** Whether any of the canvas's scenes, or a composite object of any of its models, still shows `layout`. */
+const layoutInUse = (canvas: Canvas.Canvas, layout: StoredLayout): boolean =>
+  canvas.scenes.some((ref) => isStoredScene(ref.target) && ref.target.layout.target === layout) ||
+  [...canvasModels(canvas)].some((model) =>
+    Object.values(model.objects).some((object) => object.parts?.target === layout),
+  );
+
+/** Removes a canvas from its database together with the scenes, layouts and models it lists. */
+export const removeCanvas = (canvas: Canvas.Canvas) => {
+  const db = Obj.getDatabase(canvas);
+  if (!db) {
+    return;
+  }
+  const owned = [
+    ...canvas.scenes.map((ref) => ref.target).filter(isStoredScene),
+    ...canvas.layouts.map((ref) => ref.target).filter(isStoredLayout),
+    ...canvasModels(canvas),
+  ];
+  db.remove(canvas);
+  for (const object of owned) {
+    db.remove(object);
+  }
 };
 
 /**

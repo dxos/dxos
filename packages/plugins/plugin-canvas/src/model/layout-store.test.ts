@@ -18,7 +18,14 @@ import {
   nodeBounds,
   toDiagramObjects,
 } from '@dxos/react-ui-canvas';
-import { type View, createMemoryStore, readPath, reduceIntent, storeVersions } from '@dxos/react-ui-canvas/headless';
+import {
+  type View,
+  createMemoryStore,
+  createNode,
+  readPath,
+  reduceIntent,
+  storeVersions,
+} from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
   createModelViewTree,
@@ -27,10 +34,13 @@ import {
 } from '@dxos/react-ui-canvas/testing';
 import { Scene, toEcho } from '@dxos/scene';
 
+import { Canvas } from '#types';
+
 import { makeCanvas } from './canvas-document.ts';
 import { writeViews } from './content.ts';
 import { bindLayoutStore, liveLayoutStore } from './layout-store.ts';
 import { legacyDocument } from './migrate-scenes.ts';
+import { isConstrainedModel, layoutModelAtom } from './projection-model.ts';
 
 /** A 2D exemplar in ECHO form, its root narrowed to the Scene2D it is. */
 const stored = (name: keyof typeof EXEMPLARS) => {
@@ -155,6 +165,89 @@ describe('bindLayoutStore writes', () => {
   });
 });
 
+describe('bindLayoutStore keeps what it does not own', () => {
+  test('a .dx layout read again after one move shows every element', () => {
+    const { root } = stored('links');
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, root);
+    const views = registry.get(bound.store.views);
+    registry.set(bound.store.views, { ...views, [bound.root]: moveNode(views[bound.root], 'a', { x: 64, y: 64 }) });
+    bound.dispose();
+    const again = Registry.make();
+    const reopened = bindLayoutStore(again, root);
+    const view = again.get(reopened.store.views)[reopened.root];
+    reopened.dispose();
+    expect(Object.keys(view.nodes).sort()).toEqual(['a', 'b', 'c']);
+    expect(Object.keys(view.links).sort()).toEqual(['ab', 'bc']);
+  });
+
+  test("renaming a View keeps the constrained model kept in its layout's props", () => {
+    const { root, layouts } = stored('links');
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, root);
+    const layout = layouts.get(bound.root);
+    if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+      throw new Error('links is a 2D exemplar.');
+    }
+    const model = { nodes: [{ id: 'a' }], constraints: [] };
+    const constrained = layoutModelAtom(registry, layout, ['constrained'], isConstrainedModel, {
+      nodes: [],
+      constraints: [],
+    });
+    registry.set(constrained.atom, model);
+    const views = registry.get(bound.store.views);
+    registry.set(bound.store.views, { ...views, [bound.root]: { ...views[bound.root], name: 'Renamed' } });
+    expect(layout.name).toBe('Renamed');
+    expect(layout.props?.constrained).toEqual(model);
+    constrained.dispose();
+    bound.dispose();
+  });
+});
+
+describe('bindLayoutStore lists what it makes on the Canvas', () => {
+  const layoutKeys = (canvas: Canvas.Canvas) =>
+    canvas.layouts.flatMap((ref) => (Obj.instanceOf(Scene.Layout2D, ref.target) ? [ref.target.key] : []));
+
+  test('a portal and its View a write makes are listed on the canvas, and removed with the portal', () => {
+    const { canvas, layout, scene } = makeCanvas();
+    if (!Obj.instanceOf(Scene.Layout2D, layout) || !Obj.instanceOf(Scene.Scene2D, scene)) {
+      throw new Error('A 2D canvas has 2D objects.');
+    }
+    // A canvas migrated without portals has no model until a write places one.
+    Obj.update(layout, (layout) => {
+      layout.model = undefined;
+    });
+    Obj.update(canvas, (canvas) => {
+      canvas.model = undefined;
+    });
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, scene, { canvas });
+    const views = registry.get(bound.store.views);
+    const size = { width: 128, height: 128 };
+    const inner: View = {
+      id: 'g',
+      nodes: { x: createNode({ type: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
+      links: {},
+    };
+    const portal = createNode({ type: 'view', id: 'p', z: 'a5', center: { x: 0, y: 0 }, size, scene: 'g' });
+    const rootView = views[bound.root];
+    registry.set(bound.store.views, {
+      ...views,
+      g: inner,
+      [bound.root]: { ...rootView, nodes: { ...rootView.nodes, p: portal } },
+    });
+    expect(layoutKeys(canvas)).toContain('g');
+    const model = canvas.model?.target;
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['view:g']).toBeTruthy();
+    expect(layout.model?.target).toBe(model);
+
+    registry.set(bound.store.views, { [bound.root]: rootView });
+    expect(layoutKeys(canvas)).not.toContain('g');
+    expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['view:g']).toBeUndefined();
+    bound.dispose();
+  });
+});
+
 describe('bindLayoutStore versions', () => {
   let builder: EchoTestBuilder;
 
@@ -187,7 +280,32 @@ describe('bindLayoutStore versions', () => {
     expect(versions.read(path, before)).toEqual(readPath(views, path));
     bound.dispose();
   });
+
+  test('a layout and a model of one key keep their own heads', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Scene.Scene2D, Scene.Layout2D, Scene.Model2D]);
+    const model = db.add(Obj.make(Scene.Model2D, { key: 'shared', objects: {} }));
+    const size = { width: 64, height: 64 };
+    const layout = db.add(
+      Obj.make(Scene.Layout2D, {
+        key: 'shared',
+        model: Ref.make(model),
+        elements: { a: { id: 'a', kind: 'rect', center: { x: 0, y: 0 }, size } },
+      }),
+    );
+    const root = db.add(
+      Obj.make(Scene.Scene2D, { key: 'scene', layout: Ref.make(layout), camera: { center: { x: 0, y: 0 }, zoom: 1 } }),
+    );
+    await db.flush();
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, root);
+    const heads: unknown = bound.store.versions?.heads();
+    expect(isRecord(heads) && Object.keys(heads)).toHaveLength(2);
+    bound.dispose();
+  });
 });
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 describe('lattice mode on Layout2D', () => {
   /** The lattice sample migrated into layouts, bound as the article binds a lattice canvas. */

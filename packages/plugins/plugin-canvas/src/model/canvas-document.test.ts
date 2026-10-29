@@ -9,7 +9,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Scene } from '@dxos/scene';
 
 import types from '../capabilities/schema.ts';
-import { addScene, canvasDocument, deleteScene, makeCanvas, openScene } from './canvas-document.ts';
+import { addScene, canvasDocument, deleteScene, makeCanvas, openScene, removeCanvas } from './canvas-document.ts';
 
 describe('canvas document', () => {
   let builder: EchoTestBuilder;
@@ -98,6 +98,37 @@ describe('canvas document', () => {
     });
     deleteScene(canvas, scene);
     expect(canvas.layouts.map((ref) => ref.target)).toEqual([layout]);
+  });
+
+  test("deleteScene keeps a layout a composite object of another layout's model shows", () => {
+    const { canvas, layout, scene } = makeCanvas();
+    if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+      throw new Error('A 2D canvas has a 2D layout.');
+    }
+    // A model a write attached to a parts layout, which the canvas does not list as its own.
+    const other = Obj.make(Scene.Model2D, {
+      key: 'other',
+      objects: { frame: { id: 'frame', kind: 'rect', parts: Ref.make(layout) } },
+    });
+    const holder = Obj.make(Scene.Layout2D, { key: 'holder', model: Ref.make(other), elements: {} });
+    Obj.update(canvas, (canvas) => {
+      canvas.layouts.push(Ref.make(holder));
+    });
+    deleteScene(canvas, scene);
+    expect(canvas.layouts.map((ref) => ref.target)).toContain(layout);
+  });
+
+  test('removeCanvas removes the canvas with its model, layouts and scenes', async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add(types);
+    const { canvas, model, layout, scene } = makeCanvas();
+    [model, layout, scene, canvas].forEach((object) => db.add(object));
+    await db.flush();
+    removeCanvas(canvas);
+    await db.flush();
+    expect(await db.query(Filter.type(Scene.Layout2D)).run()).toHaveLength(0);
+    expect(await db.query(Filter.type(Scene.Scene2D)).run()).toHaveLength(0);
+    expect(await db.query(Filter.type(Scene.Model2D)).run()).toHaveLength(0);
   });
 
   test('adding a scene keeps one layout and two cameras', () => {

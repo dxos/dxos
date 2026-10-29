@@ -15,6 +15,8 @@ import { type View, type ViewId, type ViewMap } from '@dxos/react-ui-canvas/head
 import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
 import { Scene, reachedObjects } from '@dxos/scene';
 
+import { type Canvas } from '#types';
+
 /** A deep copy free of ECHO proxies, writable as a new record of an object. */
 export const plain = <T>(value: T): Types.DeepMutable<T> => JSON.parse(JSON.stringify(value));
 
@@ -87,8 +89,16 @@ const writeLayout = (
       if (layout.name !== record.name) {
         layout.name = record.name;
       }
-      if (!same(layout.props, record.props)) {
-        layout.props = record.props === undefined ? undefined : plain(record.props);
+      // Only the canvas's own props are written: the projections keep their models beside them, under other keys.
+      const canvas = record.props?.canvas;
+      if (!same(layout.props?.canvas, canvas)) {
+        if (canvas === undefined) {
+          layout.props && delete layout.props.canvas;
+        } else if (layout.props) {
+          layout.props.canvas = plain(canvas);
+        } else {
+          layout.props = { canvas: plain(canvas) };
+        }
       }
     }
   });
@@ -109,8 +119,16 @@ export type LayoutWriter = {
   write: (views: ViewMap, previous?: ViewMap, decorate?: DecorateLayout) => void;
 };
 
+/** The object an `instance` node of a composite places, which an unplaced composite takes too, so it is reached. */
+const COMPOSITE_PREFIX = 'instance:';
+
+export type LayoutWriterOptions = {
+  /** The canvas the scene belongs to: the layouts and model a write makes are listed on it. */
+  canvas?: Canvas.Canvas;
+};
+
 /** A writer of Views onto the layouts `scene` reaches. */
-export const makeLayoutWriter = (scene: Scene.Scene2D): LayoutWriter => {
+export const makeLayoutWriter = (scene: Scene.Scene2D, { canvas }: LayoutWriterOptions = {}): LayoutWriter => {
   const db: Database.Database | undefined = Obj.getDatabase(scene);
   const root: ViewId = scene.layout.target?.key ?? scene.key;
   const layouts = new Map<string, Scene.Layout2D>();
@@ -134,8 +152,16 @@ export const makeLayoutWriter = (scene: Scene.Scene2D): LayoutWriter => {
     if (isModel2D(existing) || !layout) {
       return isModel2D(existing) ? existing : undefined;
     }
-    const model = Obj.make(Scene.Model2D, { key: `${root}:model`, objects: {} });
-    db?.add(model);
+    // The canvas's own model, when it has one, before a new one.
+    const listed = canvas?.model?.target;
+    const model = isModel2D(listed) ? listed : Obj.make(Scene.Model2D, { key: `${root}:model`, objects: {} });
+    if (model !== listed) {
+      db?.add(model);
+      canvas &&
+        Obj.update(canvas, (canvas) => {
+          canvas.model = Ref.make(model);
+        });
+    }
     Obj.update(layout, (layout) => {
       layout.model = Ref.make(model);
     });
@@ -150,6 +176,10 @@ export const makeLayoutWriter = (scene: Scene.Scene2D): LayoutWriter => {
     }
     const layout = Obj.make(Scene.Layout2D, { key: view.id, elements: {} });
     db?.add(layout);
+    canvas &&
+      Obj.update(canvas, (canvas) => {
+        canvas.layouts.push(Ref.make(layout));
+      });
     layouts.set(view.id, layout);
     return layout;
   };
@@ -179,6 +209,18 @@ export const makeLayoutWriter = (scene: Scene.Scene2D): LayoutWriter => {
       placed.push(...objects);
       written.push({ layout: layoutFor(view), view, record: decorate(record) });
     }
+    // A composite View no node places (a definition in the library) is reached through an object of its own.
+    const parts = new Set(placed.flatMap((object) => (object.parts ? [object.parts] : [])));
+    const reachedBy = (key: string) =>
+      parts.has(key) ||
+      [...models.values()].some((model) =>
+        Object.values(model.objects).some((object) => object.parts?.target === layouts.get(key)),
+      );
+    for (const { view } of written) {
+      if (view.id !== root && !reachedBy(view.id)) {
+        placed.push({ id: `${COMPOSITE_PREFIX}${view.id}`, kind: 'rect', parts: view.id });
+      }
+    }
     const model = placed.length > 0 ? rootModel() : undefined;
     if (model) {
       const missing = placed.filter((object) => !same(plainObject(model.objects[object.id]), object));
@@ -200,6 +242,30 @@ export const makeLayoutWriter = (scene: Scene.Scene2D): LayoutWriter => {
         });
       }
       writeLayout(layout, view, previous[view.id], record, objectOf(layout));
+    }
+    // A View the store let go of (its portal deleted, say) goes with the objects that showed it.
+    const removed = Object.keys(previous).filter((id) => !(id in views) && id !== root);
+    for (const id of removed) {
+      const layout = layouts.get(id);
+      if (!layout) {
+        continue;
+      }
+      for (const owner of models.values()) {
+        const showing = Object.entries(owner.objects).filter(([, object]) => object.parts?.target === layout);
+        showing.length > 0 &&
+          Obj.update(owner, (owner) => {
+            for (const [objectId] of showing) {
+              delete owner.objects[objectId];
+            }
+          });
+      }
+      canvas &&
+        Obj.update(canvas, (canvas) => {
+          const index = canvas.layouts.findIndex((ref) => ref.target === layout);
+          index >= 0 && canvas.layouts.splice(index, 1);
+        });
+      layouts.delete(id);
+      db?.remove(layout);
     }
   };
 

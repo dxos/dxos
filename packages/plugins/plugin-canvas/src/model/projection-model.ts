@@ -60,8 +60,18 @@ export const layoutModelAtom = <M>(
     }
     writing = true;
     try {
+      // Only its own key is written, so a model and the canvas's props beside it merge field by field.
+      const [key, ...rest] = path;
       Obj.update(layout, (layout) => {
-        layout.props = writeAt(plain({ ...layout.props }), path, plain(next));
+        const value =
+          rest.length === 0
+            ? plain(next)
+            : writeAt(layout.props?.[key] === undefined ? {} : plain(layout.props[key]), rest, plain(next));
+        if (layout.props) {
+          layout.props[key] = value;
+        } else {
+          layout.props = { [key]: value };
+        }
       });
     } finally {
       writing = false;

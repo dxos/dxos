@@ -19,7 +19,7 @@ import {
   createSquareTree,
   createViewTree,
 } from '@dxos/react-ui-canvas/testing';
-import { type Scene } from '@dxos/scene';
+import { type Scene, readDocument, toEcho } from '@dxos/scene';
 
 import { fromCanvasView, toCanvasView, toCanvasViews } from './adapter.ts';
 
@@ -219,5 +219,72 @@ describe('fromCanvasView', () => {
     const { layout, objects } = fromCanvasView(root ?? EVERY_TYPE);
     expect(layout.elements['logo-1'].object).toBe('instance:logo');
     expect(objects.filter((object) => object.id === 'instance:logo')).toHaveLength(1);
+  });
+
+  test('a portal to a View outside the drawing stays a portal, with its scene and link, through ECHO', () => {
+    const portal = {
+      type: 'view',
+      id: 'p',
+      z: 'a0',
+      center: { x: 0, y: 0 },
+      size: { width: 128, height: 128 },
+      scene: 'other-drawing-view',
+      link: { object: 'dxn:echo:@:other' },
+    };
+    const view: View = { id: 'root', nodes: { p: portal }, links: {} };
+    const { layout, objects } = fromCanvasView(view);
+    const rootLayout: Scene.LayoutRecord2D = { ...layout, model: 'model' };
+    const doc: Scene.SceneDocument = {
+      scenes: [{ id: 'root', dim: '2d', layout: 'root', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+      layouts: [rootLayout],
+      models: [{ id: 'model', dim: '2d', objects: Object.fromEntries(objects.map((object) => [object.id, object])) }],
+    };
+    expect(toCanvasView(doc, rootLayout).nodes.p).toEqual(portal);
+    const stored = toEcho(doc);
+    const back = readDocument({ scenes: [stored.root] });
+    const backLayout = back.layouts[0];
+    if (backLayout.dim !== '2d') {
+      throw new Error('The layout read back is 2D.');
+    }
+    expect(toCanvasView(back, backLayout).nodes.p).toEqual(portal);
+  });
+
+  test('a link whose stored hue is not a canvas hue reads back without one', () => {
+    const { layout } = fromCanvasView({
+      id: 'root',
+      nodes: {
+        a: { type: 'rect', id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } },
+        b: { type: 'rect', id: 'b', z: 'a1', center: { x: 128, y: 0 }, size: { width: 64, height: 64 } },
+      },
+      links: { ab: { type: 'line', id: 'ab', z: 'a2', source: { node: 'a' }, target: { node: 'b' } } },
+    });
+    const bogus = {
+      ...layout,
+      elements: { ...layout.elements, ab: { ...layout.elements.ab, style: { hue: 'bogus' } } },
+    };
+    const doc: Scene.SceneDocument = { scenes: [], layouts: [bogus], models: [] };
+    expect(toCanvasView(doc, bogus).links.ab.style?.hue).toBeUndefined();
+  });
+
+  test('a .dx layout with one canvas-written element shows every element, hidden ones left out', () => {
+    const { document } = Dsl.readScenes(EXEMPLARS.links);
+    const layout = document.layouts[0];
+    if (layout.dim !== '2d') {
+      throw new Error('links is a 2D exemplar.');
+    }
+    const written = toCanvasView(document, layout);
+    const { layout: rewritten } = fromCanvasView(written);
+    const mixed: Scene.LayoutRecord2D = {
+      ...layout,
+      elements: {
+        ...layout.elements,
+        a: { ...rewritten.elements.a, object: layout.elements.a.object },
+        c: { ...layout.elements.c, hidden: true },
+      },
+    };
+    const view = toCanvasView({ ...document, layouts: [mixed] }, mixed);
+    expect(Object.keys(view.nodes).sort()).toEqual(['a', 'b']);
+    expect(Object.keys(view.links).sort()).toEqual(['ab']);
+    expect(view.nodes.b.type).toBe('rect');
   });
 });

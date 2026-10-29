@@ -125,28 +125,57 @@ const SceneCanvasArticle = ({
   );
   const mode = CanvasFormat.projectionOf(settings);
   const layout = bound ? openScene(canvas)?.layout.target : undefined;
+  // The projection's own model lives in the layout, so it persists with the arrangement; its atoms follow the layout
+  // until the mode or layout changes, then let it go.
+  const models = useMemo(() => {
+    if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+      return undefined;
+    }
+    if (mode === 'constrained') {
+      return {
+        mode,
+        model: layoutModelAtom(registry, layout, ['constrained'], isConstrainedModel, EMPTY_CONSTRAINED),
+      } as const;
+    }
+    if (mode === 'dynamic') {
+      return {
+        mode,
+        graph: layoutModelAtom(registry, layout, ['dynamic', 'graph'], isGraphModel, EMPTY_GRAPH),
+        overlay: layoutModelAtom(registry, layout, ['dynamic', 'overlay'], isOverlay, EMPTY_OVERLAY),
+      } as const;
+    }
+    return undefined;
+  }, [registry, mode, layout]);
+  useEffect(
+    () => () => {
+      if (models?.mode === 'constrained') {
+        models.model.dispose();
+      } else if (models?.mode === 'dynamic') {
+        models.graph.dispose();
+        models.overlay.dispose();
+      }
+    },
+    [models],
+  );
   const createProjection = useMemo<CreateProjection | undefined>(() => {
     if (mode === 'lattice') {
       return createLatticeProjection;
     }
-    if (!Obj.instanceOf(Scene.Layout2D, layout) || (mode !== 'constrained' && mode !== 'dynamic')) {
-      return undefined;
+    if (models?.mode === 'constrained') {
+      return ({ registry }) =>
+        createConstrainedProjection({ registry, model: models.model.atom, options: { nodes: defaultNodeRegistry } });
     }
-    // The projection's own model lives in the layout, so it persists with the arrangement.
-    return ({ registry }) =>
-      mode === 'constrained'
-        ? createConstrainedProjection({
-            registry,
-            model: layoutModelAtom(registry, layout, ['constrained'], isConstrainedModel, EMPTY_CONSTRAINED).atom,
-            options: { nodes: defaultNodeRegistry },
-          })
-        : createDynamicProjection({
-            registry,
-            graph: layoutModelAtom(registry, layout, ['dynamic', 'graph'], isGraphModel, EMPTY_GRAPH).atom,
-            overlay: layoutModelAtom(registry, layout, ['dynamic', 'overlay'], isOverlay, EMPTY_OVERLAY).atom,
-            options: { nodes: defaultNodeRegistry },
-          });
-  }, [mode, layout]);
+    if (models?.mode === 'dynamic') {
+      return ({ registry }) =>
+        createDynamicProjection({
+          registry,
+          graph: models.graph.atom,
+          overlay: models.overlay.atom,
+          options: { nodes: defaultNodeRegistry },
+        });
+    }
+    return undefined;
+  }, [mode, models]);
   return (
     <CanvasArticleView
       {...props}

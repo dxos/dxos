@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { CanvasArticle, CanvasCard, LegacyCanvasArticle, LegacyCanvasCard } from '#containers';
-import { CanvasBuilder, CanvasLayoutBuilder, addCanvas } from '#model';
+import { CanvasBuilder, CanvasLayoutBuilder, addCanvas, removeCanvas } from '#model';
 import { Canvas } from '#types';
 
 // New drawings are a `Canvas` over a model, layouts and scenes; a conversion asks for `diagramShapes`, so a laid-out
@@ -19,6 +19,10 @@ const variant: IllustratorCapabilities.DrawingVariant = {
   icon: 'ph--graph--regular',
   canvasType: Canvas.Canvas,
   createCanvas: (input) => addCanvas(input?.diagramShapes === true ? { diagramShapes: true } : {}),
+  removeCanvas: (canvas) =>
+    Effect.sync(() => {
+      Canvas.isCanvas(canvas) && removeCanvas(canvas);
+    }),
   builder: CanvasLayoutBuilder,
   card: CanvasCard,
   article: CanvasArticle,

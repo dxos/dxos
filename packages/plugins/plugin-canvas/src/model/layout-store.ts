@@ -41,8 +41,11 @@ export type BoundLayoutStore = {
 /** How long the camera must rest before it is written to the scene, so a pan is one change rather than hundreds. */
 export const CAMERA_SETTLE = 500;
 
-/** Each layout's and model's Automerge heads, by its `key`. */
+/** Each layout's and model's Automerge heads, by `layout:<key>` and `model:<key>`, since a layout and a model may share a key. */
 export type LayoutHeads = Readonly<Record<string, readonly string[]>>;
+
+const headsKey = (object: Obj.Any & { key: string }): string =>
+  `${isLayout2D(object) ? 'layout' : 'model'}:${object.key}`;
 
 const isLayoutHeads = (value: unknown): value is LayoutHeads =>
   typeof value === 'object' &&
@@ -73,7 +76,7 @@ export const bindLayoutStore = (
   { canvas }: BindLayoutStoreOptions = {},
 ): BoundLayoutStore => {
   const db: Database.Database | undefined = Obj.getDatabase(scene);
-  const writer = makeLayoutWriter(scene);
+  const writer = makeLayoutWriter(scene, { canvas });
   const { root, layouts, models } = writer;
   let disposed = false;
   const subscriptions = new Map<Obj.Any, () => void>();
@@ -88,7 +91,7 @@ export const bindLayoutStore = (
   /** The store as it read at `heads`: each layout and model at its heads, or as it is now when it has none there. */
   const readAt = (heads: LayoutHeads): ViewMap => {
     const at = <T extends Obj.Any & { key: string }>(object: T): T | Obj.Snapshot<T> => {
-      const version = heads[object.key];
+      const version = heads[headsKey(object)];
       return version && version.length > 0 ? Obj.getVersion(object, version) : object;
     };
     const doc: Scene.SceneDocument = {
@@ -130,7 +133,9 @@ export const bindLayoutStore = (
   const versions: VersionedSource | undefined = db
     ? {
         heads: (): LayoutHeads =>
-          Object.fromEntries([...layouts.values(), ...models.values()].map((object) => [object.key, headsOf(object)])),
+          Object.fromEntries(
+            [...layouts.values(), ...models.values()].map((object) => [headsKey(object), headsOf(object)]),
+          ),
         read: (path, heads) =>
           heads === undefined ? current.read(path) : isLayoutHeads(heads) ? readPath(readAt(heads), path) : undefined,
         write: current.write,

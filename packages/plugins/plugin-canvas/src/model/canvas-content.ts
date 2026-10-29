@@ -106,7 +106,7 @@ export const writeCanvasContent = (canvas: Canvas.Canvas, content: ContentMap, p
   });
   const views: ViewMap = readViews(clone(content));
   const before: Record<string, View> | undefined = previous && readViews(clone(previous));
-  makeLayoutWriter(scene).write(views, before, decorate);
+  makeLayoutWriter(scene, { canvas }).write(views, before, decorate);
 
   const record = canvasRecordOf(content);
   if (record) {

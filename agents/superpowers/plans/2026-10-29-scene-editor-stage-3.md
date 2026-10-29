@@ -76,7 +76,9 @@ scenes: Ref<Scene>[] }`; the open scene's type picks the viewport (decisions 6, 
 ## Review Focus
 
 1. A scene drawing opened by an old client after a new client migrated it: the old client finds a `canvas` Ref to a
-   type it does not know and must show "update to open", not create an empty canvas over the migrated content.
+   type it does not know; its lookup by the base canvas's schema finds no variant, so it shows the drawing as
+   unsupported ("Unsupported drawing variant") and writes nothing, rather than create an empty canvas over the
+   migrated content.
 2. A layout shared by two scenes (two saved views of one 2D drawing): an edit through either shows in both, and
    deleting one scene keeps the layout and the other scene.
 3. Undo in 3D after a remote edit to the same element: `patchSource` must skip it, not clobber it.
@@ -280,7 +282,7 @@ written into a v2 `Drawing.Canvas` with `writeViews`.
       create objects, so the migration runs when a scene drawing is opened for writing (the article surface) and from a
       space-level `MigrateDrawings` operation; a read-only viewer keeps reading the legacy canvas. The existing
       `dxos.org/scene/1 → 2` content migration stays, so a v1 canvas reaches v2 first. An article that finds no variant
-      for its canvas shows "update to open". SPEC decision (agent, for user): "plugin-canvas's `Canvas` keeps settings
+      for its canvas shows it as unsupported and writes nothing. SPEC decision (agent, for user): "plugin-canvas's `Canvas` keeps settings
       and style classes; drawing content lives in its model, layouts and scenes." Fills in [D-26] and [D-27].
 - [ ] **Step 4: Run, expect PASS.**
 - [ ] **Step 5: Commit** `plugin-canvas: Canvas type over model, layouts and scenes, migrated from scene canvases`.

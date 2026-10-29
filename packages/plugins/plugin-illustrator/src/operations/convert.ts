@@ -43,7 +43,12 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
         // A hidden canvas no drawing references is orphaned; one another drawing still uses must stay.
         const sharing = yield* Database.query(Filter.type(Drawing.Drawing, { canvas: Ref.make(source) })).run;
         if (sharing.length === 0) {
-          yield* Database.remove(source);
+          // A typed canvas owns other objects (a scene canvas its layouts, say), which its variant removes with it.
+          if (from.canvasType !== undefined && from.removeCanvas) {
+            yield* from.removeCanvas(source);
+          } else {
+            yield* Database.remove(source);
+          }
         }
       } else {
         result = Drawing.make({ name: drawing.name, canvas: target });

@@ -11,6 +11,7 @@ import {
   type MemoryViewStore,
   type Node,
   type NodeStyle,
+  STYLE_HUES,
   type StyleHue,
   type View,
   type ViewId,
@@ -139,16 +140,17 @@ const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.El
   const style = isRecord(node.style) ? sceneStyle(node.style) : undefined;
   const extra = canvasExtra(fields, NODE_SLOTS, node.style);
   let placed: { object: string } | { kind: string };
+  // The node type and its scene or composite are kept too: a portal to a View outside the drawing places an object
+  // whose parts resolve to no layout, and must still read back as that portal.
   if (node.type === 'view' && typeof fields.scene === 'string') {
     const object = { id: `${VIEW_PREFIX}${fields.scene}`, kind: 'rect', parts: fields.scene };
     objects.set(object.id, object);
     placed = { object: object.id };
-    delete extra.scene;
+    extra.type = 'view';
   } else if (node.type === 'instance' && typeof fields.composite === 'string') {
     const object = { id: `${INSTANCE_PREFIX}${fields.composite}`, kind: 'rect', parts: fields.composite };
     objects.set(object.id, object);
     placed = { object: object.id };
-    delete extra.composite;
     extra.type = 'instance';
   } else {
     placed = { kind: node.type };
@@ -233,7 +235,12 @@ const canvasNode = (element: Resolved2D, canvas: Fields): Node | undefined => {
     return undefined;
   }
   const { style: extraStyle, type: storedType, ...extra } = canvas;
-  const type = element.parts === undefined ? element.kind : storedType === 'instance' ? 'instance' : 'view';
+  const type =
+    storedType === 'view' || storedType === 'instance'
+      ? storedType
+      : element.parts === undefined
+        ? element.kind
+        : 'view';
   const style = canvasStyle(element.style, extraStyle);
   return {
     ...extra,
@@ -274,7 +281,7 @@ const LINK_TYPES_BY_NAME: Readonly<Record<string, LinkType>> = {
   smart: 'smart',
 };
 
-const isStyleHue = (hue: string | undefined): hue is StyleHue => hue !== undefined;
+const isStyleHue = (hue: string | undefined): hue is StyleHue => STYLE_HUES.some((candidate) => candidate === hue);
 
 /** A link element written by {@link fromCanvasView} as the link it was. */
 const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
@@ -313,20 +320,35 @@ export const toCanvasView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecor
 };
 
 const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D, canvas: Fields): View => {
+  const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
+  // Elements a `.dx` document wrote have no canvas fields: they draw as `toView` draws them, among the rest.
+  const native = elements.filter((element) => !isRecord(element.props?.canvas));
+  const keys = initialKeys(native.length);
+  const keyOf = (element: Resolved2D) => element.order ?? keys[native.indexOf(element)];
   const nodes: Record<string, Node> = {};
   const links: Record<string, Link> = {};
-  for (const element of Object.values(resolveLayout2D(doc, layout))) {
+  for (const element of elements) {
     const stored = element.props?.canvas;
-    const fields = isRecord(stored) ? stored : {};
-    if (element.kind === 'link') {
-      const link = canvasLink(element, fields);
-      link && (links[link.id] = link);
-    } else {
-      const node = canvasNode(element, fields);
-      node && (nodes[node.id] = node);
+    if (!isRecord(stored) || element.kind === 'link') {
+      continue;
     }
+    const node = canvasNode(element, stored);
+    node && (nodes[node.id] = node);
+  }
+  for (const element of native) {
+    const node = toNode(element, keyOf(element));
+    node && (nodes[node.id] = node);
+  }
+  for (const element of elements) {
+    const stored = element.props?.canvas;
+    if (element.kind !== 'link') {
+      continue;
+    }
+    const link = isRecord(stored) ? canvasLink(element, stored) : toLink(element, keyOf(element), nodes);
+    link && (links[link.id] = link);
   }
   return {
+    ...(native.length > 0 ? { layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } } : {}),
     ...pick(canvas, ['layers', 'kind', 'anonymous']),
     id: layout.id,
     ...(layout.name !== undefined ? { name: layout.name } : {}),
