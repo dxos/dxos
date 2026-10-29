@@ -52,4 +52,12 @@ describe('echo', () => {
     const doc: Scene.SceneDocument = { ...document, layouts: [...document.layouts, layout2D('loose', [])] };
     expect(toEcho(doc).layouts.has('loose')).toBe(true);
   });
+
+  test("keeps a layout's props", () => {
+    const doc: Scene.SceneDocument = {
+      ...document,
+      layouts: [{ ...main, props: { canvas: { layers: { base: { id: 'base', name: 'Base', z: 'a0' } } } } }, detail],
+    };
+    expect(fromEcho(toEcho(doc).root)).toEqual(doc);
+  });
 });

@@ -17,3 +17,4 @@ export * from './model/versioned.ts';
 export * from './utils/compose.ts';
 export * from './utils/layers.ts';
 export * from './utils/order.ts';
+export * from './utils/shapes.ts';

@@ -45,10 +45,13 @@ const isStoredModel = (value: unknown): value is StoredModel =>
   Obj.instanceOf(Model2D, value) || Obj.instanceOf(Model3D, value);
 
 const storeLayout = (record: LayoutRecord): StoredLayout => {
-  const name = record.name === undefined ? {} : { name: record.name };
+  const fields = {
+    ...(record.name === undefined ? {} : { name: record.name }),
+    ...(record.props === undefined ? {} : { props: record.props }),
+  };
   return record.dim === '2d'
-    ? Obj.make(Layout2D, { key: record.id, ...name, elements: record.elements })
-    : Obj.make(Layout3D, { key: record.id, ...name, elements: record.elements });
+    ? Obj.make(Layout2D, { key: record.id, ...fields, elements: record.elements })
+    : Obj.make(Layout3D, { key: record.id, ...fields, elements: record.elements });
 };
 
 const storeObject = <O extends Object2D | Object3D>(
@@ -173,6 +176,7 @@ export const fromEcho = (root: StoredScene): SceneDocument => {
       id: layout.key,
       ...(layout.name === undefined ? {} : { name: layout.name }),
       ...(model ? { model: model.key } : {}),
+      ...(layout.props === undefined ? {} : { props: plain({ ...layout.props }) }),
     };
     if (Obj.instanceOf(Layout2D, layout)) {
       const elements: Record<string, Element2D> = plain({ ...layout.elements });

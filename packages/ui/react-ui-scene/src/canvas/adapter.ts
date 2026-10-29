@@ -17,7 +17,7 @@ import {
   createMemoryStore,
   createNode,
   initialKeys,
-} from '@dxos/react-ui-canvas';
+} from '@dxos/react-ui-canvas/headless';
 import { type Resolved2D, type Scene, resolveLayout2D, rootScene, sceneLayout } from '@dxos/scene';
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */

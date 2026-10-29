@@ -39,8 +39,8 @@ play an animation.
 - [ ] **Publish `@dxos/scene` and `@dxos/animation`** (user, 2026-10-29) — published `@dxos/diagram` and
       react-ui-canvas depend on them. First publish and trusted publisher via `scripts/publish-package.mjs`
       (`npm-publishing` skill); remove `"private": true` only after the trusted publisher exists.
-- [ ] Edits to parts layouts do not reach a playing stage: `useSceneDocument` follows the scene, its layout and its
-      model, not the layouts that composite objects' parts name.
+- [x] Edits to parts layouts reach a playing stage: `useSceneDocument` follows every object `reachedObjects` lists
+      (stage 3 Task 2).
 - [ ] `bind` reads the stored scene (`fromEcho`) on every sample.
 - [ ] `fromEcho` reads only the scene it is given and what it reaches; other scenes of a canvas are read through the
       canvas (stage 3, Task 4).
@@ -64,5 +64,7 @@ stage 3; the work stays in dxos/dxos#14282.
       decided 2026-10-29 (decisions 1–13).
 - [x] **Write the stage 3 plan** — `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md`, 21 tasks in four
       phases (A 9, B 6, C 4, D 2), rewritten in Model, Layout and Scene terms (2026-10-29).
-- [ ] **Execute the plan** — waits for the user's review of the plan.
+- [ ] **Execute the plan** — phase A in progress (approved 2026-10-29); stop for the user's check after Task 9.
+  - [x] Task 1 — lossless View ⇄ Layout2D mapping.
+  - [x] Task 2 — ViewStore over Layout2D objects (`bindLayoutStore`), `reachedObjects`.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.

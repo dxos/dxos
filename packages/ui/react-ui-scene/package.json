@@ -18,6 +18,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./canvas": {
+      "source": "./src/canvas/index.ts",
+      "types": "./dist/types/src/canvas/index.d.ts",
+      "import": "./dist/lib/canvas.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
