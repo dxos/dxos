@@ -51,6 +51,20 @@ describe('writeModelIntent', () => {
     expect(Obj.instanceOf(Scene.Model3D, model) && model.objects.lamp).toMatchObject({ kind: 'cylinder' });
   });
 
+  test('define stores only the fields an object has, so a record carrying others (a label) still writes', async () => {
+    const { canvas, model } = await canvas3D();
+    const object = {
+      id: 'crate',
+      kind: 'mesh',
+      label: 'Crate',
+      props: { mesh: { key: 'k', positions: [0, 0, 0], indices: [0, 0, 0] } },
+    };
+    expect(writeModelIntent(canvas, { kind: 'define', model: 'model', object })).toEqual([]);
+    const stored = Obj.instanceOf(Scene.Model3D, model) ? model.objects.crate : undefined;
+    expect(stored).toMatchObject({ id: 'crate', kind: 'mesh' });
+    expect(stored && 'label' in stored).toBe(false);
+  });
+
   test('extract stores the parts layout, lists it on the canvas, and Refs it from the new object', async () => {
     const { canvas, model, layout } = await canvas3D();
     const problems = writeModelIntent(canvas, {

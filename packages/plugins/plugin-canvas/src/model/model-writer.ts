@@ -81,6 +81,9 @@ export const writeModelIntent = (canvas: Canvas.Canvas, intent: ModelIntent): Pr
       continue;
     }
     const ids = new Set([...Object.keys(stored.objects), ...Object.keys(record.objects)]);
+    // ECHO stores exactly the object schema's fields, so a record carrying others (an imported file's label) keeps
+    // only those rather than have the whole write refused.
+    const known = new Set(Object.keys(record.dim === '3d' ? Scene.Object3D.fields : Scene.Object2D.fields));
     Obj.update(stored, (stored) => {
       for (const id of ids) {
         const object = record.objects[id];
@@ -89,6 +92,9 @@ export const writeModelIntent = (canvas: Canvas.Canvas, intent: ModelIntent): Pr
           continue;
         }
         const { parts, ...fields } = object;
+        for (const key of Object.keys(fields)) {
+          known.has(key) || Reflect.deleteProperty(fields, key);
+        }
         const target = parts === undefined ? undefined : layouts.get(parts);
         const next = { ...plain(fields), ...(target ? { parts: Ref.make(target) } : {}) };
         const current = stored.objects[id];
