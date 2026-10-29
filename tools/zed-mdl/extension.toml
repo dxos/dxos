@@ -10,7 +10,7 @@ repository = "https://github.com/dxos/dxos"
 # install of an unmerged change, point `repository` at your checkout (`file:///path/to/dxos`) and `rev` at its HEAD.
 [grammars.mdl]
 repository = "https://github.com/dxos/dxos"
-rev = "GRAMMAR_REV"
+rev = "e02e1b26b05a635e6623b942b9159abf549e12df"
 path = "tools/tree-sitter-mdl"
 
 [language_servers.mdl-language-server]
