@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { STYLE_FIELDS, STYLE_FIELD_OVERRIDES, StyleGridField, applyStyleChoice } from './StyleGrid.tsx';
+import { STYLE_FIELD_OVERRIDES, STYLE_FIELDS, StyleGridField, applyStyleChoice } from './StyleGrid.tsx';
 
 describe('style fields', () => {
   test('a pick with fills sets the hue and its tone together, keeping the rest of the style', () => {

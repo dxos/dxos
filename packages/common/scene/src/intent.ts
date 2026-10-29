@@ -205,10 +205,13 @@ const reduce = <E extends Element>(
         elements[intent.id] === undefined &&
         inputs.length > 0 &&
         inputs.every((id) => id !== intent.id && elements[id] !== undefined);
-      const element = valid ? solid(intent) : undefined;
-      if (!element) {
+      const made = valid ? solid(intent) : undefined;
+      if (!made) {
         return undefined;
       }
+      // A solid stands for its base operand (the first), so it keeps that operand's look.
+      const style = elements[inputs[0]]?.style;
+      const element = style ? { ...made, style } : made;
       // A solid draws in place of its operands, so they are hidden (and shown again when it is deleted).
       return {
         ...elements,

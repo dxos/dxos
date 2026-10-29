@@ -151,6 +151,21 @@ describe('solid intents', () => {
     ]);
   });
 
+  test("a solid takes its base operand's style, so a subtraction keeps the colour it was cut from", () => {
+    const styled = applyIntent(parts(), { kind: 'update', id: 'box', path: ['style'], value: { hue: 'red', tone: 2 } });
+    expect(applyIntent(styled, { kind: 'subtract', id: 'd', base: 'box', tool: 'hole' }).elements.d.style).toEqual({
+      hue: 'red',
+      tone: 2,
+    });
+    expect(applyIntent(styled, { kind: 'join', id: 'u', operands: ['box', 'other'] }).elements.u.style).toEqual({
+      hue: 'red',
+      tone: 2,
+    });
+    expect(
+      applyIntent(parts(), { kind: 'join', id: 'u', operands: ['box', 'other'] }).elements.u.style,
+    ).toBeUndefined();
+  });
+
   test('extrude adds a solid over its target with the face and distance', () => {
     const after = applyIntent(parts(), {
       kind: 'extrude',
