@@ -1,11 +1,12 @@
 {
   "name": "vscode-mdl",
   "displayName": "DEUS MDL",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Syntax highlighting for DEUS `.mdl` specifications and their ```mdl fenced blocks.",
+  "description": "DEUS `.mdl` specs: syntax highlighting, lint, completion, go-to-definition, links, hovers and review verdicts.",
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Linters"
   ],
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,6 +18,10 @@
   "author": "info@dxos.org",
   "publisher": "dxos",
   "type": "module",
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onLanguage:mdl"
+  ],
   "contributes": {
     "grammars": [
       {
@@ -60,17 +65,72 @@
         ],
         "configuration": "./language-configuration.block.json"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "mdl.restartServer",
+        "title": "Restart Language Server",
+        "category": "MDL"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "mdl.restartServer",
+          "when": "editorLangId == mdl"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "DEUS MDL",
+      "properties": {
+        "mdl.review.codeLens": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show each reviewed item's verdict and the code it cites as code lenses above its declaration (from the `<SPEC>.review.mdl` beside the spec)."
+        },
+        "mdl.review.inlayHints": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show the same verdict chips as inlay hints at the end of the declaration line."
+        },
+        "mdl.review.gutter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Colour each reviewed item's line in the margin and the overview ruler by its verdict."
+        },
+        "mdl.server.path": {
+          "type": "string",
+          "default": "",
+          "description": "Run this language server script instead of the bundled one, e.g. a local build of `tools/mdl-language-server/dist/server.cjs`."
+        },
+        "mdl.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Trace the communication between VS Code and the language server."
+        }
+      }
+    }
   },
   "engines": {
     "vscode": "^1.74.0"
   },
   "devDependencies": {
+    "@types/vscode": "catalog:",
     "@vscode/vsce": "catalog:",
+    "esbuild": "catalog:",
     "shiki": "catalog:",
     "tm-grammars": "catalog:",
     "vitest": "catalog:",
     "vscode-oniguruma": "catalog:",
     "vscode-textmate": "catalog:"
+  },
+  "dependencies": {
+    "vscode-languageclient": "catalog:"
   }
 }

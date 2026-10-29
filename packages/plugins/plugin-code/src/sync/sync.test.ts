@@ -5,26 +5,12 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import { findSourceKeys, formatSourceKey, parseGitHubRemote, parseSourceKey, reviewKeyOf } from '@dxos/deus/review';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
-import {
-  detectRepo,
-  parseGitConfigRemote,
-  parseGitHubRemote,
-  parseRepoEntry,
-  resolvePath,
-  resolveRoots,
-} from './repo-roots.ts';
-import {
-  findSourceKeys,
-  formatSourceKey,
-  fromMetaKey,
-  keyFromTreeUrl,
-  parseSourceKey,
-  reviewKeyOf,
-  toMetaKey,
-} from './spec-key.ts';
+import { detectRepo, parseGitConfigRemote, parseRepoEntry, resolvePath, resolveRoots } from './repo-roots.ts';
+import { fromMetaKey, keyFromTreeUrl, toMetaKey } from './spec-key.ts';
 import { reconcile } from './spec-sync.ts';
 
 /** An in-memory file service; `roots` stands in for the dev server's own checkout. */
