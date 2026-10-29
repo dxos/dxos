@@ -25,7 +25,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
-import { FEATURE_COMPANION, meta } from '#meta';
+import { FEATURE_COMPANION, SPEC_DOCUMENT_COMPANION, meta } from '#meta';
 import { ProjectOperation, Spec } from '#types';
 
 import { refId } from '../operations/feature/util.ts';
@@ -98,6 +98,7 @@ export default Capability.makeModule(
           }),
         ]),
     });
+    const documentCompanionExtensions = yield* createSpecDocumentCompanionExtension();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
       ...specSectionExtensions,
@@ -110,6 +111,7 @@ export default Capability.makeModule(
       ...taskExtensions,
       ...mailboxExtensions,
       ...featureCompanionExtensions,
+      ...documentCompanionExtensions,
     ]);
   }),
 );
@@ -164,6 +166,35 @@ export const createSpecBreakdownsExtension = () =>
  * dependency direction); injecting actions into another plugin's nodes is the established pattern
  * (e.g. plugin-brain's mailbox Analyze action).
  */
+/** The spec's `.mdl` document as a companion beside the spec plank; absent while the spec holds none. */
+export const createSpecDocumentCompanionExtension = () =>
+  AppGraphBuilder.createTypeExtension({
+    id: 'specDocumentCompanion',
+    relation: AppNode.companion,
+    type: Spec.Spec,
+    connector: (spec, get) => {
+      const ref = get(Obj.atom(spec)).document;
+      if (!ref) {
+        return Effect.succeed([]);
+      }
+      // Subscribed through the atom so the node re-runs once the document loads, then the live target is handed on.
+      get(Obj.atom(ref));
+      const document = ref.target;
+      return Effect.succeed(
+        document
+          ? [
+              AppNode.makeCompanion({
+                variant: SPEC_DOCUMENT_COMPANION,
+                label: ['spec-document-companion.label', { ns: meta.profile.key }],
+                icon: 'ph--file-text--regular',
+                data: document,
+              }),
+            ]
+          : [],
+      );
+    },
+  });
+
 export const createMailboxProjectExtension = () =>
   AppGraphBuilder.createExtension({
     id: 'mailboxProjectActions',
