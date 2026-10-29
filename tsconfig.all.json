@@ -889,6 +889,9 @@
       "path": "packages/ui/react-ui-rdf/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-scene/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
