@@ -147,12 +147,12 @@ const VariantsStory = ({ size }: SizeArgs) => {
         <NumberInput defaultValue='1250' align='end' stepper='split' data-testid={`aligned-${size}`} />
       </Field.Root>
       <Field.Root>
-        <Field.Label>Hover start</Field.Label>
-        <NumberInput defaultValue='12' align='end' stepper='start' stepperOnHover data-testid={`leading-${size}`} />
+        <Field.Label>Hover right-aligned</Field.Label>
+        <NumberInput defaultValue='12' align='end' stepperOnHover data-testid={`leading-${size}`} />
       </Field.Root>
       <Field.Root>
-        <Field.Label>Hover end</Field.Label>
-        <NumberInput defaultValue='3' align='end' stepperOnHover data-testid={`hover-${size}`} />
+        <Field.Label>Hover left-aligned</Field.Label>
+        <NumberInput defaultValue='3' stepperOnHover data-testid={`hover-${size}`} />
       </Field.Root>
       <Field.Root>
         <Field.Label>Volume</Field.Label>
@@ -186,7 +186,7 @@ export const Variants: Story = {
 
 /**
  * `split` puts decrement before the input and increment after it, each inside the row; `align='end'` right-aligns the
- * figures; `stepperOnHover` steppers are hidden until the row is hovered or focused; the slider button opens a slider that drives the value.
+ * figures; `stepperOnHover` steppers sit opposite the number and are hidden until the row is hovered or focused; the slider button opens a slider that drives the value.
  */
 export const VariantsTest: Story = {
   render: VariantsStory,
@@ -243,8 +243,11 @@ export const VariantsTest: Story = {
     // Synthetic pointer events cannot set CSS `:hover`; focus reveals the pair through the same rule.
     await userEvent.click(within(hover).getByRole('spinbutton'));
     await waitFor(() => expect(within(hover).getByRole('button', { name: 'Increment' })).toBeVisible());
+    await expect(
+      within(hover).getByRole('button', { name: 'Decrement' }).getBoundingClientRect().left,
+    ).toBeGreaterThanOrEqual(within(hover).getByRole('spinbutton').getBoundingClientRect().right);
     await userEvent.click(within(hover).getByRole('button', { name: 'Increment' }));
-    await waitFor(() => expect(canvas.getByRole('spinbutton', { name: 'Hover end' })).toHaveValue('4'));
+    await waitFor(() => expect(canvas.getByRole('spinbutton', { name: 'Hover left-aligned' })).toHaveValue('4'));
 
     const sliderRow = byTestId(md, 'slider-md');
     // A trailing slider button takes the same end cell as a trailing stepper, so end-aligned figures line up.

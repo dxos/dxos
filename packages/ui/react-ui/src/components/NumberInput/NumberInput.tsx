@@ -49,7 +49,10 @@ export type NumberInputProps = ThemedClassName<
   'placeholder'?: string;
   'autoFocus'?: boolean;
   'stepper'?: NumberInputStepper;
-  /** Shows the stepper only while the row is hovered or focused; it keeps its place, so the number never moves. */
+  /**
+   * Shows the stepper only while the row is hovered or focused, on the side away from the number (`start` when
+   * `align='end'`, `end` otherwise) in place of `stepper`'s placement; it keeps its place, so the number never moves.
+   */
   'stepperOnHover'?: boolean;
   /** Aligns the number to the row's end, as figures in a column do. */
   'align'?: 'start' | 'end';
@@ -96,7 +99,8 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
-    const placement = stepper === true ? 'end' : stepper;
+    const placement =
+      stepper && stepperOnHover ? (align === 'end' ? 'start' : 'end') : stepper === true ? 'end' : stepper;
     const reveal = stepperOnHover ? '' : undefined;
     const decrement = (
       <NumberInputPrimitive.DecrementTrigger asChild>
