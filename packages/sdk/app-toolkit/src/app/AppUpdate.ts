@@ -121,6 +121,8 @@ export const followUpdate = (
 ): (() => void) => {
   let released = false;
   let found = false;
+  let phase: Status['kind'] | undefined;
+  let completed = -1;
   let installing = false;
   let applying = false;
   let deadline: ReturnType<typeof setTimeout> | undefined;
@@ -152,8 +154,11 @@ export const followUpdate = (
     }
     set(next);
     const budget = budgetFor(status);
-    if (budget !== undefined) {
+    const progressed = status.kind === 'downloading' && (status.progress?.completed ?? -1) > completed;
+    if (budget !== undefined && (status.kind !== phase || progressed)) {
       found = true;
+      phase = status.kind;
+      completed = status.kind === 'downloading' ? (status.progress?.completed ?? -1) : -1;
       clearTimeout(deadline);
       deadline = setTimeout(release, budget);
     }

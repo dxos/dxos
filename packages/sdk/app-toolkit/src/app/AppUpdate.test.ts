@@ -93,7 +93,7 @@ describe('followUpdate', () => {
     reported.cleanup();
   });
 
-  test('releases a check at its budget however its status moves, and a download that stops progressing', () => {
+  test('releases a check at its budget however its status moves, and a download that stops progressing however often it reports', () => {
     const checking = setup();
     vi.advanceTimersByTime(AppUpdate.BOOT_GATE_CHECK_BUDGET - 1);
     checking.emit({ kind: 'checking' });
@@ -103,8 +103,15 @@ describe('followUpdate', () => {
     checking.cleanup();
 
     const downloading = setup();
-    downloading.emit({ kind: 'downloading' });
+    const at = (completed: number) => ({
+      kind: 'downloading' as const,
+      progress: { completed, total: 100, unit: 'bytes' as const },
+    });
+    downloading.emit(at(10));
     vi.advanceTimersByTime(AppUpdate.BOOT_GATE_STALL_BUDGET - 1);
+    downloading.emit(at(20));
+    vi.advanceTimersByTime(AppUpdate.BOOT_GATE_STALL_BUDGET - 1);
+    downloading.emit(at(20));
     expect(downloading.states.at(-1)?.pending).toBe(true);
     vi.advanceTimersByTime(1);
     expect(downloading.states.at(-1)).toEqual({ pending: false });
