@@ -3,18 +3,17 @@
 //
 
 import { basename, dirname, relative } from 'node:path';
-import {
-  type RunnableDevEnvironment,
-  type Plugin as VitePlugin,
-  createRunnableDevEnvironment,
-  defaultServerConditions,
-  resolveConfig,
-} from 'vite';
+import type * as Vite from 'vite';
+import { type RunnableDevEnvironment, type Plugin as VitePlugin } from 'vite';
 
 import * as Capability from '../../core/capability.ts';
 import type * as Plugin from '../../core/plugin.ts';
 
 const CONFIG_FILE = /\/dx\.config\.ts$/;
+
+// A specifier Bun cannot follow: the CLI bundles this entry for `dx registry publish`, and Vite's own
+// optional imports do not resolve there.
+const VITE_MODULE = 'vite';
 
 const MODULE_REF = Symbol.for('@dxos/app-framework/vite-plugin/ModuleRef');
 
@@ -150,6 +149,9 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
   let evaluator: Promise<RunnableDevEnvironment> | undefined;
   const getEvaluator = (root: string) =>
     (evaluator ??= (async () => {
+      const { createRunnableDevEnvironment, defaultServerConditions, resolveConfig }: typeof Vite = await import(
+        VITE_MODULE
+      );
       const config = await resolveConfig(
         {
           configFile: false,
