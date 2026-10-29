@@ -98,7 +98,10 @@ export const semanticDiagrams = trim`
   - Fans: \`edge A -> B, C\` is one arrow per target. Add \`bus\` (\`edge A -> B, C "label" bus\`) to
     draw one trunk that splits, labelled once; \`edge B, C -> A bus\` gathers many sources into one
     trunk with one arrowhead at A, and lines the sources up across the flow. To keep a label per
-    branch, give separate edges with the same source (or target) the same \`bus=<name>\`. A bus
+    branch, give separate edges with the same source (or target) the same \`bus=<name>\`.
+    Same-label edges from one node bundle automatically: separate \`edge A -> B "content"\` and
+    \`edge A -> C "content"\` share one port and one trunk labelled once, and same-label edges into
+    one node gather the same way. Give edges one label only when they are one property. A bus
     the engine cannot draw as one trunk is drawn as separate edges with a warning.
   - Waypoints: \`via X,_\` makes the route run vertically at x=X, \`via _,Y\` horizontally at y=Y,
     \`via X,Y\` passes the point; several waypoints are visited in order. In grid units,

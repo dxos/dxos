@@ -120,16 +120,12 @@ const SIBLING_WEIGHT = 40;
 
 /**
  * Soft relations that line up the spokes of one trunk across the flow — the subtypes of one
- * abstraction, or the far ends of a `bus` — so the trunk can gather them from one side.
+ * abstraction, the far ends of a `bus` or of one property — so the trunk can gather them from one side.
  */
 const siblingRelations = (diagram: Semantic.Diagram): Place.PlaceRelation[] => {
   const kind = diagram.flow === 'down' || diagram.flow === 'up' ? 'same-row' : 'same-col';
   const families = new Map<string, string[]>();
-  for (const edge of diagram.edges) {
-    const key = edge.bus ?? Semantic.inheritanceKey(edge);
-    if (key === undefined) {
-      continue;
-    }
+  for (const [edge, key] of Semantic.busKeys(diagram)) {
     const spoke = key.endsWith('|in') ? edge.from.node : edge.to.node;
     const family = families.get(key) ?? [];
     if (!family.includes(spoke)) {
@@ -508,7 +504,14 @@ const draw = (
     } else {
       elements.push(...SvgFile.connectorElements(id, points, style ?? {}));
     }
-    const text = bus ? (part === 'trunk' ? bus.label : edge?.label) : (edge?.label ?? orphaned.get(part));
+    // A spoke repeats no text its trunk already carries.
+    const text = bus
+      ? part === 'trunk'
+        ? bus.label
+        : edge?.label === bus.label
+          ? undefined
+          : edge?.label
+      : (edge?.label ?? orphaned.get(part));
     if (text) {
       // A spoke's label falls back to the trunk it shares only when its own runs have no room.
       const trunk =
@@ -873,9 +876,11 @@ export const compile = async (source: Semantic.Diagram, options: SolveOptions = 
   }
   const ids = new Set(source.nodes.map((node) => node.id));
   const seeds = result.ranked.slice(0, 4).map((entry) => cellsOf(entry.candidate.commands, ids));
+  // The mermaid engine draws no trunks, so its own layout would undo the buses the diagram asks for.
+  const bused = Semantic.buses(source).buses.some((bus) => !bus.implicit);
   return solve(source, {
     ...options,
     seeds: [...(options.seeds ?? []), ...seeds],
-    alternatives: [...(options.alternatives ?? []), restyle(source, result.commands)],
+    alternatives: [...(options.alternatives ?? []), ...(bused ? [] : [restyle(source, result.commands)])],
   });
 };

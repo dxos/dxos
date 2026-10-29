@@ -96,8 +96,10 @@ edge PM -> RPM:top "spawn on EDGE"
   - waypoints: `via x,_`, `via _,y`, `via cell(1.5,_)` for the gutter between columns 1 and 2, or
     `via cell(_,1.5)` for the gutter between rows 1 and 2;
   - shared trunks: `edge A -> B, C bus` fans out of A; `edge B, C -> A bus` gathers into A with one
-    arrowhead; `bus=<name>` joins separate edges. A bus the engine cannot draw is drawn as separate
-    edges with a warning.
+    arrowhead; `bus=<name>` joins separate edges. Same-label edges from one node bundle automatically:
+    three `edge Drawing -> X "content"` edges leave through one port on one trunk, labelled once (and
+    same-label edges into one node gather the same way), so give edges one label only when they are
+    one property. A bus the engine cannot draw is drawn as separate edges with a warning.
 - **Units:** `gap`, `grid`, `box`, `@ x,y` and `via x,_` are pixels; `cell(…)` and `max-width` are grid
   cells.
 - **Precedence:** pins, then hard relations, then `~` relations and `~` sides. A relation between

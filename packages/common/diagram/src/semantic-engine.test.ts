@@ -628,6 +628,124 @@ describe('semantic engine', { timeout: 120_000 }, () => {
     expect(first.some((run) => second.some((other) => sharedRun(run, other) > 0))).toBe(false);
   });
 
+  describe('property buses', () => {
+    const connectorsOf = (objects: readonly Scene.WorldObject[]) =>
+      objects.find((entry) => entry.id === 'edges')?.elements ?? [];
+    const trunksOf = (objects: readonly Scene.WorldObject[]) =>
+      connectorsOf(objects).filter((element) => element.kind === 'line' && element.id.endsWith('-trunk'));
+    const labelsOf = (objects: readonly Scene.WorldObject[], text: string) =>
+      connectorsOf(objects).filter((element) => element.kind === 'text' && element.text === text);
+
+    test('same-label edges out of one node share one port and one trunk', ({ expect }) => {
+      const { objects, problems } = sceneOf(`
+        diagram flow=down
+        node Drawing
+        node TL
+        node EX
+        node Canvas
+        edge Drawing -> TL "content"
+        edge Drawing -> EX "content"
+        edge Drawing -> Canvas "content"
+      `);
+      expect(problems).toEqual([]);
+      const trunks = trunksOf(objects);
+      expect(trunks).toHaveLength(1);
+      const trunk = trunks[0].kind === 'line' ? trunks[0].points : [];
+      const drawing = rectOf(objects, 'Drawing');
+      const port = trunk[0];
+      expect(
+        port.y === drawing.y ||
+          port.y === drawing.y + drawing.h ||
+          port.x === drawing.x ||
+          port.x === drawing.x + drawing.w,
+      ).toBe(true);
+      const junction = trunk.at(-1);
+      for (const id of ['Drawing-TL-0', 'Drawing-EX-1', 'Drawing-Canvas-2']) {
+        expect(pathOf(objects, id)[0]).toEqual(junction);
+      }
+      expect(labelsOf(objects, 'content')).toHaveLength(1);
+    });
+
+    test('edges with different labels out of one node keep their own routes', ({ expect }) => {
+      const { objects } = sceneOf(`
+        diagram flow=down
+        node Drawing
+        node TL
+        node EX
+        node Canvas
+        edge Drawing -> TL "content"
+        edge Drawing -> EX "preview"
+        edge Drawing -> Canvas "source"
+      `);
+      expect(trunksOf(objects)).toHaveLength(0);
+      for (const text of ['content', 'preview', 'source']) {
+        expect(labelsOf(objects, text)).toHaveLength(1);
+      }
+    });
+
+    test('unlabelled edges out of one node keep their own routes', ({ expect }) => {
+      const { objects } = sceneOf(`
+        diagram flow=down
+        node Drawing
+        node TL
+        node EX
+        edge Drawing -> TL
+        edge Drawing -> EX
+      `);
+      expect(trunksOf(objects)).toHaveLength(0);
+    });
+
+    test('same-label edges into one node gather into one trunk with one arrowhead', ({ expect }) => {
+      const { objects, problems } = sceneOf(`
+        diagram flow=down
+        node A
+        node B
+        node C
+        node T
+        edge A -> T "feeds"
+        edge B -> T "feeds"
+        edge C -> T "feeds"
+      `);
+      expect(problems).toEqual([]);
+      const t = rectOf(objects, 'T');
+      const arrows = connectorsOf(objects).filter((element) => element.kind === 'arrow');
+      expect(arrows).toHaveLength(1);
+      expect(trunksOf(objects)).toHaveLength(0);
+      const junction = arrows[0].kind === 'arrow' ? arrows[0].start : undefined;
+      for (const id of ['A-T-0', 'B-T-1', 'C-T-2']) {
+        expect(pathOf(objects, id).at(-1)).toEqual(junction);
+      }
+      const end = arrows[0].kind === 'arrow' ? arrows[0].end : undefined;
+      expect(
+        end !== undefined &&
+          [t.x, t.x + t.w].includes(end.x) !== [t.y, t.y + t.h].includes(end.y) &&
+          end.x >= t.x &&
+          end.x <= t.x + t.w &&
+          end.y >= t.y &&
+          end.y <= t.y + t.h,
+      ).toBe(true);
+      expect(labelsOf(objects, 'feeds')).toHaveLength(1);
+    });
+
+    test('compile keeps the shared trunk when nothing was hinted', async ({ expect }) => {
+      const { commands } = await EffectEx.runPromise(
+        compile(`
+          diagram flow=down
+          node Drawing
+          node TL
+          node EX
+          node Canvas
+          edge Drawing -> TL "content"
+          edge Drawing -> EX "content"
+          edge Drawing -> Canvas "content"
+        `),
+      );
+      const { objects } = toScene(commands);
+      expect(trunksOf(objects)).toHaveLength(1);
+      expect(labelsOf(objects, 'content')).toHaveLength(1);
+    });
+  });
+
   test('scene statements in the same document pass through after the layout', ({ expect }) => {
     const { commands } = parse('node A\nnode B\nedge A -> B\nelements A { text note 0,-30 "hi" }');
     expect(commands[commands.length - 1]).toMatchObject({ op: 'upsert-elements', objectId: 'A' });

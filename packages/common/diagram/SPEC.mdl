@@ -295,6 +295,20 @@ feat F-4: Mermaid is deprecated
   req F-4.4: Neither `Dsl.compile` nor `draw` needs mermaid input. The semantic engine's internal search over the mermaid engine's placements is not author-facing and stays.
 ```
 
+```mdl
+feat F-5: Shared trunks
+
+  req F-5.1: `edge A -> B, C bus` fans out of A through one port and one trunk; `edge B, C -> A bus` gathers into A with one arrowhead; `bus=<name>` joins separate edges.
+
+  req F-5.2: Edges out of one node (from one side, when the side is pinned) that carry the same label and style are one property with several targets: they share one port and one trunk that fans out, as a `bus` does, without the author writing `bus`.
+
+  req F-5.3: Edges into one node that carry the same label and style gather into one trunk the same way. An edge that already fans out with others is not gathered again.
+
+  req F-5.4: A shared label is drawn once, on the trunk; unlabelled edges and edges with different labels are routed on their own.
+
+  req F-5.5: A trunk the router cannot draw falls back to separate edges, with a warning on the first edge.
+```
+
 ## The `draw` call
 
 What happens when an agent calls `draw`. The figure is itself a sequence diagram ([F-2]).
@@ -498,4 +512,31 @@ decision D-13: Deprecation keeps mermaid working: the `generate` operation and t
   why: The DSL cannot yet show class members, which the UML skill still needs from mermaid's classDiagram.
   rejected:
     - Removing mermaid now: it would drop class-member diagrams with no replacement.
+```
+
+```mdl
+decision D-14: Links from a common property share a common port and trunk: edges from one node with the same label fan out of one port and one trunk, edges into one node with the same label gather the same way, the label is drawn once on the trunk, and a group the router cannot draw falls back to separate edges with a warning.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.2, F-5.3, F-5.4, F-5.5]
+```
+
+```mdl
+decision D-15: Edges join a property trunk only when label, relation, arrowheads, stroke, colour and the hub's pinned side all match, and fanning out claims an edge before gathering in does. Fills in [D-14].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.2, F-5.3]
+  why: The trunk is drawn in its first edge's style, so only edges that would look the same can share it; an edge can sit in one trunk only, and the source owns the property.
+  rejected:
+    - Key on label alone: a dashed and a solid edge would merge and one style would be lost.
+```
+
+```mdl
+decision D-16: A diagram with a property or `bus` trunk keeps the mermaid engine's placements as search seeds but not its own layout as a candidate. Fills in [D-14].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.2]
+  why: The mermaid engine draws no trunks, so its layout winning would silently undo them.
 ```
