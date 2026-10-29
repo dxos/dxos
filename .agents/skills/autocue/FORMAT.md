@@ -10,7 +10,7 @@ flow that drove it, and a prompt that tells an agent how to record it again. The
 | Claude Artifact | publish `artifact.html` with the `files` map `pack.mjs` prints               | 15 MB per video file; private until shared |
 | Archive         | `pack.mjs --zip`; unzip and open `index.html` from disk                      | none; plays offline                        |
 
-**Share the dx.pub link.** It is the bucket's `autocue/` prefix served by edge's `demo-service` Worker. Until that
+**Share the dx.pub link.** It is the bucket's `autocue/` prefix, served by the edge router's `/demo` route on the dx.pub apex. Until that
 route answers, `pack.mjs` says so and prints the same bundle's r2.dev URL instead (`--host r2` asks for it outright).
 
 ## Only committed flows are packed
