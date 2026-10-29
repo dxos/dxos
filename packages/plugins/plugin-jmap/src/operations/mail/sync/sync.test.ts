@@ -636,6 +636,68 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(ids.length).toBe(base.emails.length + 1);
   });
 
+  test('a delta during a reopened backfill advances the token on capped runs and lands every message once', async ({
+    expect,
+  }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateJmapDataset({ count: 5, seed: 91, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, connection, binding } = await seed({ options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runJmapSync({ connection: Ref.make(connection), now }).pipe(
+        Effect.provide(jmapSyncTestServices(db, { ...base, state: 'state-0' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('state-0');
+
+    // Widening the window reopens the backfill below the old horizon while the delta carries an import
+    // dated in that unwalked range, one inside the synced range, and a normal arrival.
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind === 'external') {
+        binding.spec.options = { ...(binding.spec.options ?? {}), syncBackDays: 30 };
+      }
+    });
+    const older = generateJmapDataset({
+      count: 25,
+      seed: 92,
+      start: subDays(now, 28),
+      end: subDays(now, 16),
+      idPrefix: 'old',
+    });
+    const single = (seed: number, startDays: number, endDays: number, idPrefix: string) =>
+      generateJmapDataset({ count: 1, seed, start: subDays(now, startDays), end: subDays(now, endDays), idPrefix })
+        .emails[0];
+    const importedOld = single(93, 20, 19, 'imported-old');
+    const importedMid = single(94, 5, 3, 'imported-mid');
+    const arrival = single(95, 1, 0, 'arrival');
+    const dataset = {
+      ...base,
+      emails: [...base.emails, ...older.emails, importedOld, importedMid, arrival],
+      state: 'state-1',
+      changeLog: [
+        { sinceState: 'state-0', newState: 'state-1', created: [importedOld.id, importedMid.id, arrival.id] },
+      ],
+    };
+
+    let runs = 0;
+    let exit: Exit.Exit<unknown, unknown>;
+    do {
+      exit = await EffectEx.runPromise(
+        Effect.exit(runJmapSync({ connection: Ref.make(connection), maxMessages: 10, now })).pipe(
+          Effect.provide(jmapSyncTestServices(db, dataset)),
+        ),
+      );
+      runs += 1;
+      // The first run is capped by the backfill, yet the delta it consumed is not read again.
+      expect(tokenOf(binding)).toBe('state-1');
+    } while (Exit.isFailure(exit) && runs < 10);
+
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(runs).toBeGreaterThan(1);
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(base.emails.length + older.emails.length + 3);
+  });
+
   test('marks mail from an already-known sender as important', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const dataset = generateJmapDataset({ count: 3, seed: 91, start: subDays(now, 6), end: subDays(now, 2) });

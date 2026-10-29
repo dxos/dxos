@@ -5,12 +5,12 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Project from '@dxos/compute/Project';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { SpecDocument } from '@dxos/types';
 
-import { Feature, LegacyFeature, Spec } from '#types';
+import { Feature, LegacyFeature, LegacyShowcase, Showcase, Spec } from '#types';
 
 import { featureSubfeatures, makeFeatureSpecs } from './migrations.ts';
 
@@ -123,5 +123,28 @@ describe('feature migrations', () => {
     const features = await db.query(Filter.type(Feature.Feature)).run();
     expect(features.find(({ name }) => name === 'Sync')?.spec?.target?.id).toBe(earlier.id);
     expect(earlier.features.map((ref) => ref.target?.name)).toEqual(['Gmail']);
+  });
+
+  test('Demonstrates 0.1.0 edges become 0.2.0 with their endpoints, before the showcase itself migrates', async ({
+    expect,
+  }) => {
+    const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
+    graph.registry.add([Feature.Feature, LegacyShowcase.Showcase, LegacyShowcase.Demonstrates, Showcase.Demonstrates]);
+    const feature = db.add(Feature.make({ name: 'Compose', status: 'operational' }));
+    const showcase = db.add(
+      Obj.make(LegacyShowcase.Showcase, { name: 'Reply', content: Ref.make(Text.make()), artifacts: [] }),
+    );
+    const edge = db.add(
+      Relation.make(LegacyShowcase.Demonstrates, { [Relation.Source]: showcase, [Relation.Target]: feature }),
+    );
+    await db.flush();
+
+    await db.runMigrations([Showcase.demonstratesMigration]);
+
+    expect(await db.query(Filter.type(LegacyShowcase.Demonstrates)).run()).toHaveLength(0);
+    const [migrated] = await db.query(Filter.type(Showcase.Demonstrates)).run();
+    expect(migrated.id).toBe(edge.id);
+    const shown = await db.query(Query.select(Filter.id(feature.id)).targetOf(Showcase.Demonstrates).source()).run();
+    expect(shown.map(({ id }) => id)).toEqual([showcase.id]);
   });
 });

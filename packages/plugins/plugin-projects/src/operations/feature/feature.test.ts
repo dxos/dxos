@@ -8,15 +8,15 @@ import * as Exit from 'effect/Exit';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, SpecDocument, Task } from '@dxos/types';
 
 import { Feature, Showcase, Spec } from '#types';
 
 import addDependency from './add-dependency.ts';
-import createShowcase from './create-showcase.ts';
 import createSpec from './create-spec.ts';
 import create from './create.ts';
 import deleteFeature from './delete.ts';
@@ -37,7 +37,7 @@ const testLayer = () =>
       Feature.Implements,
       Project.Project,
       Instructions.Instructions,
-      Showcase.Showcase,
+      Markdown.Document,
       Showcase.Demonstrates,
       Task.Task,
       Milestone.Milestone,
@@ -277,41 +277,6 @@ describe('FeatureOperation.LinkTask', () => {
   );
 });
 
-describe('FeatureOperation.CreateShowcase', () => {
-  it.effect('writes nothing when a target does not resolve', () =>
-    Effect.gen(function* () {
-      const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));
-      yield* Database.remove(gone);
-      yield* Database.flush();
-      const exit = yield* Effect.exit(createShowcase.handler({ name: 'Orphan', content: '', targets: [ref(gone)] }));
-      expect(Exit.isFailure(exit)).toBe(true);
-      expect(yield* Database.query(Filter.type(Showcase.Showcase)).run).toHaveLength(0);
-    }).pipe(Effect.provide(testLayer())),
-  );
-
-  it.effect('demonstrates every target and keeps its artifacts as refs', () =>
-    Effect.gen(function* () {
-      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'operational' }));
-      const task = yield* Database.add(Task.make({ title: 'Send through Gmail' }));
-      const pullRequest = yield* Database.add(
-        PullRequest.make({ owner: 'dxos', repo: 'dxos', number: 1, title: 'Send', state: 'open' }),
-      );
-      const { showcase } = yield* createShowcase.handler({
-        name: 'Sending a reply',
-        content: 'Reply from the inbox.',
-        targets: [ref(compose), ref(task)],
-        artifacts: [ref(pullRequest)],
-      });
-      for (const target of [compose, task]) {
-        const shown = yield* Database.query(Query.select(Filter.id(target.id)).targetOf(Showcase.Demonstrates).source())
-          .run;
-        expect(shown.map(({ id }) => id)).toEqual([showcase.id]);
-      }
-      expect(showcase.artifacts).toHaveLength(1);
-    }).pipe(Effect.provide(testLayer())),
-  );
-});
-
 describe('FeatureOperation.Delete', () => {
   it.effect('takes the feature off its spec and deletes its breakdown with it', () =>
     Effect.gen(function* () {
@@ -343,11 +308,9 @@ describe('FeatureOperation.GetFeatures', () => {
       const task = yield* Database.add(Task.make({ title: 'Send through Gmail', status: 'started' }));
       yield* addDependency.handler({ feature: ref(compose), dependsOn: ref(sync) });
       yield* linkTask.handler({ task: ref(task), feature: ref(compose) });
-      const { showcase } = yield* createShowcase.handler({
-        name: 'Sending a reply',
-        content: 'Reply from the inbox.',
-        targets: [ref(compose)],
-      });
+      // Any object can be the source; plugin-presenter's handler makes a deck, covered by its own tests.
+      const showcase = yield* Database.add(Markdown.make({ name: 'Sending a reply' }));
+      yield* Database.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: compose }));
 
       yield* Database.flush();
 

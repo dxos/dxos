@@ -6,9 +6,11 @@
 
 import * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 
 import * as Trace from '@dxos/compute/Trace';
+import { log } from '@dxos/log';
 
 /**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).
@@ -66,13 +68,21 @@ export interface SwarmRemoteTraceMonitorOptions {
 /**
  * Build a swarm-backed {@link Monitor} (DX-1125). Derives the coarse subscription tag from the filter,
  * subscribes over the injected transport, decodes each broadcast (restoring ref meta from the envelope
- * tags), and re-applies the exact filter.
+ * tags), and re-applies the exact filter. A payload that does not decode is dropped, not raised.
  */
 export const createSwarmRemoteTraceMonitor = ({ subscribe }: SwarmRemoteTraceMonitorOptions): Monitor => ({
   subscribeToTraceMessages: (filter) => {
     const tag = Trace.subscriptionTagForFilter(filter);
     return subscribe(tag ? [tag] : []).pipe(
-      Stream.map((message) => Trace.decodeTraceMessage(message.payload, message.tags)),
+      // A throw here would end the subscription, and with it every remote progress meter, for the session.
+      Stream.filterMap((message) => {
+        try {
+          return Result.succeed(Trace.decodeTraceMessage(message.payload, message.tags));
+        } catch (error) {
+          log.warn('dropped a remote trace broadcast that does not decode', { error });
+          return Result.failVoid;
+        }
+      }),
       Stream.filter((message) => Trace.matchesFilter(message, filter)),
     );
   },
