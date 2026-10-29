@@ -5,7 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, test } from 'vitest';
 
-import { Trigger, asyncTimeout, latch, sleep, waitForCondition } from '@dxos/async';
+import { Trigger, asyncTimeout, latch, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   type CredentialsDocument,
@@ -168,8 +168,8 @@ describe('DataSpaceManager', () => {
     await peer.dataSpaceManager.close();
     await peer.dataSpaceManager.open();
     await getFirstSpace(peer).activate(new Context());
-    await expect.poll(() => edgeHttpClient.lookups, { timeout: 5_000 }).to.be.greaterThan(0);
-    await sleep(200);
+    // A second lookup is the retry of an attempt that finished unsettled, so the first minted nothing.
+    await expect.poll(() => edgeHttpClient.lookups, { timeout: 5_000 }).to.be.greaterThan(1);
     expect(peer.echoHost.getSpaceRootRefs(space.id)).to.be.undefined;
   });
 
