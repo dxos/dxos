@@ -3,6 +3,7 @@
 //
 
 import type { RatingModel, RatingOverrides } from '../model/rating.ts';
+import type { ResultsView } from '../model/view.ts';
 
 /** A property value as lighthouse returns it. */
 export type Value = string | number | boolean;
@@ -72,6 +73,8 @@ export type TrajectoryEvent = {
 export type RatingState = {
   model?: RatingModel;
   overrides?: RatingOverrides;
+  /** The person's own filters and sort (results-view.json); they cut the list and never change a score. */
+  view?: ResultsView;
   feedback: Record<string, 'up' | 'down'>;
 };
 

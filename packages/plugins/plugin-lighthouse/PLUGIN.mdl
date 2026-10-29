@@ -510,6 +510,33 @@ test QA-4: Areas on the map
     - name: Open a result
       do: Click a card.
       expect: the companion shows its location row with the popover, and "outside your areas" when it is
+
+test QA-5: Filters and sort
+  desc: The person's own filters and sort on a session's results, beside the agent's ranking: they cut the cards and the map's pins, keep and count unknowns, sort by any number, and are saved with the session.
+  actors: both
+  status: passing            # 2026-10-29; autocue/filters.mjs against web-20261028-110009, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon has /v1 GET|PUT /sessions/:run/view and holds web-20261028-110009 (123 results) with its rating model; its filters and sort are cleared first
+  steps:
+    - name: Open the panel
+      do: Open the session as a Research and press Filters in the toolbar.
+      expect: controls derived from the results — ranges with a histogram and min/max (total monthly cost, floor area, rooms), checkbox lists with counts (district), toggles; "N of M"; a Sort select
+    - name: Cost and rooms
+      do: Set the total monthly cost to at most 6000 and the rooms to at least 2.
+      expect: fewer results; each range says "Include N without this"
+    - name: Has a balcony
+      do: Turn on Has a balcony (under More filters when not shown), untick Include … without this, tick it again.
+      expect: known balconies only cut the list further; ticking it again keeps the unknowns
+    - name: Sort by floor area
+      do: Pick Floor area (m²) ↓ highest first.
+      expect: 39 of 123, the cards largest first; the picks join the sorted list marked Pick #N; the map shows only the 39 kept
+    - name: Chips
+      do: Close the panel.
+      expect: the filters as chips above the cards with "incl. N unknown", the sort chip and Clear all
+    - name: Saved
+      do: Reload.
+      expect: the same chips and "39 of 123"
 ```
 
 ## Open questions
@@ -711,4 +738,20 @@ decision D-23: Cards and the companion have no thumbs up or down (the agent's ra
   by: user:dmaretskyi
   affects: [ResultCard, ResultDetail, ModelPanel, ResearchArticle, ResultArticle]
   why: Votes made the model guess preferences wrongly; areas shown only as one combined term could not be deleted from the panel.
+```
+
+```mdl
+decision D-24: A Research has the person's own filters and sort beside the agent's ranking, ported from lighthouse 1a137e8: view.ts as pure logic, a Filters panel and active-filter chips in Composer's kit, filters cutting the masonry and the map's pins while scores stay computed over every result, the picks folding into a sort of the person's, saved through /v1 /sessions/:run/view and read back from the rating state.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResearchArticle, FiltersPanel, ResultsMap, QA-5]
+```
+
+```mdl
+decision D-25: A view save that fails is retried a few times with a growing delay instead of failing at once, and a missing `view` in the rating state reads as no filters. Fills in [D-24].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResearchArticle]
+  why: The daemon running when the panel was built predated the view route and answered "No such route" until it restarted.
 ```

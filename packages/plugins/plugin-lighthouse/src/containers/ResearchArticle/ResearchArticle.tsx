@@ -30,7 +30,9 @@ import * as Typography from '@dxos/react-ui/Typography';
 
 import { type Entity, type Session } from '#client';
 import {
+  ActiveFilters,
   type AreaNote,
+  FiltersPanel,
   ModelPanel,
   ResearchThread,
   ResultCard,
@@ -46,8 +48,12 @@ import {
   type CardModel,
   type Rating,
   type RatingOverrides,
+  type ResultsView,
+  applyView,
+  deriveFacets,
   formatBudget,
   imagesOf,
+  isActive,
   isResult,
   isThin,
   locationOf,
@@ -89,6 +95,10 @@ type TileData = {
   /** While areas are drawn: beyond them all ("outside your areas"), or no point to place ("no location"). */
   areaNote?: AreaNote;
 };
+
+/** How often a view save is retried, and the base delay between tries. */
+const VIEW_SAVE_RETRIES = 5;
+const VIEW_RETRY_DELAY = 5_000;
 
 /** Edits to drawn areas re-rank at once; the save follows once they settle (lighthouse SessionView waits 400 ms). */
 const AREA_SAVE_DELAY = 400;
@@ -168,6 +178,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   // Bumped by the rating model panel's "Draw an area on the map": the map starts a lasso.
   const [drawRequest, setDrawRequest] = useState(0);
   const [showModel, setShowModel] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   // A double-click refocuses the graph on a node; Back to subjects returns to the session's roots.
   const [focus, setFocus] = useState<string>();
   const [editing, setEditing] = useState(false);
@@ -212,6 +223,18 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   const located = useMemo(() => items.some((entity) => locationOf(entity)), [items]);
   const areas = state.rating.overrides?.areas;
 
+  // The person's own filters and sort (lighthouse results-view.json): they cut the masonry and the map's pins and
+  // order the list; the scores stay the model's, computed over every result.
+  const resultsView = useMemo<ResultsView>(() => state.rating.view ?? {}, [state.rating.view]);
+  const facets = useMemo(() => deriveFacets(items, state.rating.model), [items, state.rating.model]);
+  const viewContext = useMemo(() => ({ ratings, areas }), [ratings, areas]);
+  const applied = useMemo(() => applyView(ranked, resultsView, viewContext), [ranked, resultsView, viewContext]);
+  const filtering = (resultsView.filters ?? []).some(isActive);
+  const activeFilters = (resultsView.filters ?? []).filter(isActive).length;
+  // Sorted by the person (area, price…), the picks join the sorted list, still marked, instead of leading it.
+  const ownSort = !!resultsView.sort && resultsView.sort.by !== 'score';
+  const passing = useMemo(() => new Set(applied.results.map((entity) => entity.id)), [applied]);
+
   const tiles = useMemo<TileData[]>(() => {
     if (view === 'findings') {
       const latest = new Map(findings.map((finding) => [finding.iri, finding]));
@@ -248,7 +271,13 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
               Number(!!b.entity && imagesOf(b.entity).length > 0) - Number(!!a.entity && imagesOf(a.entity).length > 0),
           )
         : uniquePicks;
-    const pickTiles = orderedPicks.map((matched): TileData => {
+    const shownPicks = orderedPicks.filter(
+      (matched) => !filtering || (matched.entity !== undefined && passing.has(matched.entity.id)),
+    );
+    const pickNumber = new Map(
+      uniquePicks.flatMap((matched) => (matched.entity ? [[matched.entity.id, matched.index + 1] as const] : [])),
+    );
+    const pickTiles = (ownSort ? [] : shownPicks).map((matched): TileData => {
       const card = matched.entity
         ? toCard(matched.entity)
         : {
@@ -276,13 +305,16 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     const withPictures =
       session?.intent === 'entity'
         ? [...ranked].sort((a, b) => Number(imagesOf(b).length > 0) - Number(imagesOf(a).length > 0))
-        : ranked;
+        : applied.results;
     const rest = withPictures
-      .filter((entity) => !picked.has(entity.id))
+      .filter((entity) => (filtering ? passing.has(entity.id) : true) && (ownSort || !picked.has(entity.id)))
       .slice(0, MAX_TILES)
       .map((entity): TileData => ({
         id: entity.id,
-        card: toCard(entity),
+        card:
+          ownSort && pickNumber.has(entity.id)
+            ? { ...toCard(entity), eyebrow: t('pick.label', { index: (pickNumber.get(entity.id) ?? 1) - 1 }) }
+            : toCard(entity),
         entity,
         rating: ratings?.get(entity.id),
         current: entity.id === currentId,
@@ -309,6 +341,10 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     picks,
     ranked,
     ratings,
+    applied,
+    filtering,
+    passing,
+    ownSort,
     currentId,
     starredIris,
     state.rating.feedback,
@@ -495,6 +531,35 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     [saveOverrides],
   );
 
+  // Filters and sort re-cut the list at once; the save follows once they settle, and is retried while the daemon
+  // does not answer it (a daemon older than the view route says "No such route" until it restarts).
+  const viewTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const saveView = useCallback(
+    (next: ResultsView, attempt = 0) => {
+      const run = snapshot.run;
+      if (!client || !run) {
+        return;
+      }
+      void EffectEx.runPromise(client.setView(run, next)).catch((err: unknown) => {
+        if (attempt < VIEW_SAVE_RETRIES) {
+          viewTimer.current = setTimeout(() => saveView(next, attempt + 1), VIEW_RETRY_DELAY * (attempt + 1));
+        } else {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      });
+    },
+    [client, snapshot.run],
+  );
+  const handleView = useCallback(
+    (next: ResultsView) => {
+      update((state) => ({ ...state, rating: { ...state.rating, view: next } }));
+      clearTimeout(viewTimer.current);
+      viewTimer.current = setTimeout(() => saveView(next), AREA_SAVE_DELAY);
+    },
+    [saveView, update],
+  );
+  useEffect(() => () => clearTimeout(viewTimer.current), []);
+
   const handleMap = useCallback((draw?: boolean) => {
     setMode('map');
     if (draw) {
@@ -583,6 +648,16 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
         () => setShowModel((show) => !show),
       );
     }
+    if (items.length > 0 && (mode === 'results' || mode === 'map')) {
+      builder.action(
+        'filters',
+        {
+          label: ['filters-toggle.label', { ns: meta.profile.key, count: activeFilters }],
+          icon: showFilters || activeFilters > 0 ? 'ph--funnel--fill' : 'ph--funnel--regular',
+        },
+        () => setShowFilters((show) => !show),
+      );
+    }
     if (busy) {
       builder.action(
         'stop',
@@ -591,7 +666,19 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       );
     }
     return builder.build();
-  }, [view, mode, focus, located, showModel, state.rating.model, busy, handleStop]);
+  }, [
+    view,
+    mode,
+    focus,
+    located,
+    showModel,
+    showFilters,
+    activeFilters,
+    items.length,
+    state.rating.model,
+    busy,
+    handleStop,
+  ]);
 
   const hasConnection = !!snapshot.connection || connections.length > 0;
   const budget = snapshot.budget ?? 'quick';
@@ -712,9 +799,23 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                   />
                 </Layout.Flex>
               )}
+              {showFilters && (
+                <Layout.Flex column classNames='max-h-[50%] overflow-y-auto border-b border-separator'>
+                  <FiltersPanel
+                    facets={facets}
+                    items={items}
+                    view={resultsView}
+                    ctx={viewContext}
+                    shown={applied.results.length}
+                    hasAreas={!!areas?.length}
+                    onChange={handleView}
+                    onClose={() => setShowFilters(false)}
+                  />
+                </Layout.Flex>
+              )}
               {mode === 'map' && (
                 <ResultsMap
-                  items={items}
+                  items={filtering ? applied.results : items}
                   ratings={ratings}
                   overrides={state.rating.overrides}
                   describe={describePin}
@@ -722,6 +823,16 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                   selected={currentId}
                   onOverrides={handleAreaOverrides}
                   onSelect={handleSelect}
+                />
+              )}
+              {view === 'all' && (
+                <ActiveFilters
+                  view={resultsView}
+                  unknown={applied.unknown}
+                  shown={applied.results.length}
+                  total={items.length}
+                  onChange={handleView}
+                  onOpen={() => setShowFilters(true)}
                 />
               )}
               <Layout.Flex column grow>

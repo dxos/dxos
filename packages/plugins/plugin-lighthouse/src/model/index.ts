@@ -11,3 +11,4 @@ export * from './trajectory.ts';
 export * from './explain.ts';
 export * from './location.ts';
 export * from './model-panel.ts';
+export * from './view.ts';

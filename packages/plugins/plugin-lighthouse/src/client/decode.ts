@@ -15,6 +15,7 @@ import {
   cleanAreas,
   cleanShape,
 } from '../model/rating.ts';
+import { cleanView } from '../model/view.ts';
 import {
   type Budget,
   type Engine,
@@ -367,9 +368,12 @@ export const toRating = (value: unknown): RatingState => {
   }
   const overrides = toOverrides(record?.overrides);
   const ratingModel = toRatingModel(model);
+  // A daemon older than the view route sends no `view`; cleanView drops anything it cannot read.
+  const view = record?.view ? cleanView(record.view) : undefined;
   return {
     ...(ratingModel ? { model: ratingModel } : {}),
     ...(overrides ? { overrides } : {}),
+    ...(view && (view.filters?.length || view.sort) ? { view } : {}),
     feedback,
   };
 };

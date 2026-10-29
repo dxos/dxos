@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 import { type RatingOverrides } from '../model/rating.ts';
+import { type ResultsView, cleanView } from '../model/view.ts';
 import {
   toExplainNode,
   toIssue,
@@ -78,6 +79,10 @@ export interface LighthouseClient {
   stopSession(run: string): Effect.Effect<void, LighthouseError>;
   sendFeedback(run: string, id: string, vote: Vote): Effect.Effect<void, LighthouseError>;
   setOverrides(run: string, overrides: RatingOverrides): Effect.Effect<void, LighthouseError>;
+  /** The person's filters and sort (`GET /sessions/:run/view`); empty when the daemon predates the route. */
+  getView(run: string): Effect.Effect<ResultsView, LighthouseError>;
+  /** Saves the person's filters and sort (`PUT /sessions/:run/view`); the saved view as the daemon cleaned it. */
+  setView(run: string, view: ResultsView): Effect.Effect<ResultsView, LighthouseError>;
   extend(
     run: string,
     input: { subject: string; extension: string; deep?: boolean },
@@ -257,6 +262,15 @@ export const makeClient = (endpoint: LighthouseEndpoint): LighthouseClient => {
       const body = { terms: overrides.terms ?? {}, require: overrides.require ?? {}, areas: overrides.areas ?? [] };
       return request('PUT', `${session(run)}/rating/overrides`, body).pipe(Effect.asVoid);
     },
+    getView: (run) =>
+      get(`${session(run)}/view`).pipe(
+        Effect.map(cleanView),
+        Effect.catchIf(
+          (error) => /No such route/.test(error.message),
+          () => Effect.succeed<ResultsView>({}),
+        ),
+      ),
+    setView: (run, view) => request('PUT', `${session(run)}/view`, cleanView(view)).pipe(Effect.map(cleanView)),
     extend: (run, input) =>
       post(`${session(run)}/extend`, input).pipe(
         Effect.map((json) => {

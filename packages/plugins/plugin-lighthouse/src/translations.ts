@@ -9,6 +9,7 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { meta } from '#meta';
 import { Finding, Research } from '#types';
 
+import { filtersTranslations } from './components/FiltersPanel/translations.ts';
 import { metaTranslations } from './components/LighthouseMeta/translations.ts';
 import { geoTranslations } from './components/LocationPopover/translations.ts';
 import { modelTranslations } from './components/ModelPanel/translations.ts';
@@ -37,6 +38,7 @@ export const translations = [
         ...traceTranslations,
         ...modelTranslations,
         ...mapTranslations,
+        ...filtersTranslations,
         ...metaTranslations,
         ...geoTranslations,
         'plugin.name': 'Lighthouse',
@@ -47,6 +49,7 @@ export const translations = [
         'mode-graph.label': 'Graph',
         'mode-trace.label': 'Trace',
         'model-toggle.label': 'Rating model',
+        'filters-toggle.label': 'Filters',
         'graph-loading.message': 'Loading the graph…',
         'graph-empty.message': 'No subjects to draw yet: the graph appears once the agent identifies them.',
         'graph-error.message': 'The graph could not be read: {{error}}',

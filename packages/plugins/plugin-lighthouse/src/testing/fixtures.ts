@@ -257,6 +257,8 @@ export const makeFixtureClient = (status: Session['status'] = 'reported'): Light
   stopSession: () => Effect.void,
   sendFeedback: () => Effect.void,
   setOverrides: () => Effect.void,
+  getView: () => Effect.succeed({}),
+  setView: (_run, view) => Effect.succeed(view),
   extend: () => Effect.succeed({}),
   getEntity: (iri) =>
     Effect.succeed(
