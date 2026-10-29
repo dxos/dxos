@@ -3,27 +3,24 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { AiSession } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Assistant } from '#types';
 
 import { type AiServicePreset, ChatModel } from '../chat-model/index.ts';
+import { useAiSession } from './useAiSession.ts';
 
 export type UseChatModelProps = {
   db?: Database.Database;
@@ -54,29 +51,7 @@ export const useChatModel = ({
   const [feedSnapshot] = useObject(chat?.feed);
   const feed = Obj.getReactiveOrUndefined(feedSnapshot);
 
-  const [session, setSession] = useState<AiSession.Session>();
-  UiHooks.useAsyncEffect(async () => {
-    if (!db || !chat || !feed) {
-      return;
-    }
-
-    const runtime = await EffectEx.runAndForwardErrors(
-      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(db))),
-    );
-    const session = new AiSession.Session({
-      feed,
-      runtime,
-      registry: observableRegistry,
-    });
-    const openedAt = performance.now();
-    await session.open();
-    log('session opened', { chat: chat.id, duration: Math.round(performance.now() - openedAt) });
-    setSession(session);
-    return () => {
-      void session.close();
-      setSession(undefined);
-    };
-  }, [db, chat, feed]);
+  const session = useAiSession({ db, chat, feed });
 
   const serviceResolver = Hooks.useCapability(Capabilities.ServiceResolver);
   // Primitives rather than the object, so an inline `sender` literal does not rebuild the chat model each render.
