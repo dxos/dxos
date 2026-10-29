@@ -25,6 +25,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
+import type { Selection } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
@@ -371,6 +372,8 @@ export type CommentConfig = Readonly<{
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
   scrollToAnchor?: Operation.Definition.Any;
+  /** The anchor a new comment on `selection` stores, when the object's anchors are not the selection's own form. */
+  anchorFromSelection?: (obj: any, selection: Selection.Selection | undefined) => string | undefined;
 }>;
 
 /**

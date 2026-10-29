@@ -20,9 +20,7 @@ export default Capability.makeModule(() =>
           return 0;
         }
 
-        return !anchorA.anchor || !anchorB.anchor
-          ? 0
-          : SheetUtil.compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
+        return !anchorA.anchor || !anchorB.anchor ? 0 : SheetUtil.compareAnchors(sheet, anchorA.anchor, anchorB.anchor);
       },
     }),
   ),
