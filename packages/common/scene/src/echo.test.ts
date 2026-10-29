@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { fromEcho, toEcho } from './echo.ts';
+import { fromEcho, readDocument, toEcho } from './echo.ts';
 import type * as Scene from './Scene.ts';
 import { layout2D, model2D, scene2D } from './testing.ts';
 
@@ -59,5 +59,17 @@ describe('echo', () => {
       layouts: [{ ...main, props: { canvas: { layers: { base: { id: 'base', name: 'Base', z: 'a0' } } } } }, detail],
     };
     expect(fromEcho(toEcho(doc).root)).toEqual(doc);
+  });
+
+  test('readDocument reads every scene, layout and model given, reached or not', () => {
+    const doc: Scene.SceneDocument = {
+      scenes: [document.scenes[0], { ...scene2D('zoomed', 'main'), camera: { center: { x: 0, y: 0 }, zoom: 2 } }],
+      layouts: [main, detail, layout2D('loose', [])],
+      models: [parts],
+    };
+    const { scenes, layouts, models } = toEcho(doc);
+    expect(
+      readDocument({ scenes: [...scenes.values()], layouts: [...layouts.values()], models: [...models.values()] }),
+    ).toEqual(doc);
   });
 });

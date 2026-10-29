@@ -441,3 +441,20 @@ decision D-35: The 2D kinds include every built-in canvas node type (cloud, poly
   for: user:richburdon
   why: Validation would otherwise report every migrated cloud or polyline as a kind a 2D scene cannot hold.
 ```
+
+```mdl
+decision D-36: plugin-canvas's `Canvas` keeps the drawing's settings and named style classes; the drawing's content lives in the model, layouts and scenes it lists, and the first scene is the one the drawing opens at. Fills in [D-26] and [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Settings and style classes belong to the drawing as a whole, not to one layout; everything else has a scene type already.
+```
+
+```mdl
+decision D-37: A scene canvas migrates as one Layout2D and one Scene2D per View, the root View's first, with the objects its portals and instances place in one Model2D; each scene's camera centres on what its layout holds at zoom 1, since v2 content stored no viewport. The legacy canvas is kept, unreferenced. Fills in [D-36].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A View is both an arrangement and a place a portal opens, so it needs a layout and a scene; keeping the legacy canvas loses nothing if a migration has to be redone.
+  rejected: Removing the legacy canvas once migrated.
+```

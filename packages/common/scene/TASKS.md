@@ -42,8 +42,7 @@ play an animation.
 - [x] Edits to parts layouts reach a playing stage: `useSceneDocument` follows every object `reachedObjects` lists
       (stage 3 Task 2).
 - [ ] `bind` reads the stored scene (`fromEcho`) on every sample.
-- [ ] `fromEcho` reads only the scene it is given and what it reaches; other scenes of a canvas are read through the
-      canvas (stage 3, Task 4).
+- [x] Every scene, layout and model a canvas lists is read through `readDocument` (`canvasDocument`, stage 3 Task 4).
 - [ ] An object id that is a `.dx` keyword (`node`, `group`, …) prints quoted in its `object` statement; consider
       reporting it, as an object id that is a kind is.
 - [ ] Manifold load failure is unhandled and cached; until it loads, solids draw as unit boxes.
@@ -67,4 +66,7 @@ stage 3; the work stays in dxos/dxos#14282.
 - [ ] **Execute the plan** — phase A in progress (approved 2026-10-29); stop for the user's check after Task 9.
   - [x] Task 1 — lossless View ⇄ Layout2D mapping.
   - [x] Task 2 — ViewStore over Layout2D objects (`bindLayoutStore`), `reachedObjects`.
+  - [x] Task 3 — `Drawing.canvas` accepts any canvas type (`variantFor`, `VariantSurface`).
+  - [x] Task 4 — plugin-canvas `Canvas` type, `makeCanvas`/`openScene`/`canvasDocument`/`deleteScene`, and
+        `migrateSceneDrawing` (wired to the article and a space-wide operation in Task 9).
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.

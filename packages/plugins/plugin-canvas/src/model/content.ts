@@ -12,7 +12,6 @@ import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
-  BackgroundGrid,
   DEFAULT_LAYER,
   Layer,
   LINE_STYLES,
@@ -34,6 +33,8 @@ import {
   withLegacyParams,
 } from '@dxos/react-ui-canvas/headless';
 
+import { Canvas } from '#types';
+
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
  * the drawing a portal element shows.
@@ -51,25 +52,7 @@ export type DslIdentity = Schema.Schema.Type<typeof DslIdentity>;
 export const CanvasRecord = Schema.Struct({
   kind: Schema.Literal('canvas'),
   root: Schema.String,
-  /** Shapes snap to the lattice's cells and links route along its gutters. */
-  lattice: Schema.optional(Schema.Boolean),
-  /** Minor grid spacing in scene px; the engine's default when unset. */
-  grid: Schema.optional(Schema.Number),
-  /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
-  readonly: Schema.optional(Schema.Boolean),
-  /** The theme every collaborator sees, over each one's own default; an id the theme registry resolves. */
-  theme: Schema.optional(Schema.String),
-  /** Overrides the theme's style set. */
-  styleSet: Schema.optional(Schema.String),
-  /** Overrides the theme's background. */
-  background: Schema.optional(Schema.String),
-  /** Overrides the background's grid. */
-  backgroundGrid: Schema.optional(BackgroundGrid),
-  /**
-   * The illustrator DSL's elements draw as the diagram's own SVG renderer draws them (diagram nodes and connectors)
-   * rather than as canvas shapes: a laid-out diagram brought onto the canvas keeps the look it had.
-   */
-  diagramShapes: Schema.optional(Schema.Boolean),
+  ...Canvas.CanvasSettings.fields,
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 

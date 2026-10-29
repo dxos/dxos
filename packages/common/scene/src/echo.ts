@@ -131,8 +131,27 @@ const readObject = <O extends StoredObject2D | StoredObject3D>({
     : { record: plain(object) };
 };
 
-/** Reads a scene, its layout, and every loaded model and parts layout they reach, back into record form. */
-export const fromEcho = (root: StoredScene): SceneDocument => {
+const readScene = (scene: StoredScene): SceneRecord => {
+  const layout = scene.layout.target;
+  const base = plain({ id: scene.key, name: scene.name, theme: scene.theme });
+  return Obj.instanceOf(Scene2D, scene)
+    ? { ...base, dim: '2d', layout: layout?.key ?? '', camera: plain(scene.camera) }
+    : { ...base, dim: '3d', layout: layout?.key ?? '', camera: plain(scene.camera) };
+};
+
+/**
+ * Reads scenes, layouts and models back into record form: the scenes given, in order, and every layout and model
+ * they reach, then any of `layouts` and `models` they do not (a canvas's unused layouts, say), each once.
+ */
+export const readDocument = ({
+  scenes,
+  layouts: extraLayouts = [],
+  models: extraModels = [],
+}: {
+  scenes: readonly StoredScene[];
+  layouts?: readonly StoredLayout[];
+  models?: readonly StoredModel[];
+}): SceneDocument => {
   const layouts: LayoutRecord[] = [];
   const models: ModelRecord[] = [];
   const seenLayouts = new Set<string>();
@@ -188,11 +207,14 @@ export const fromEcho = (root: StoredScene): SceneDocument => {
     model && visitModel(model);
   };
 
-  const layout = root.layout.target;
-  const base = plain({ id: root.key, name: root.name, theme: root.theme });
-  const scene: SceneRecord = Obj.instanceOf(Scene2D, root)
-    ? { ...base, dim: '2d', layout: layout?.key ?? '', camera: plain(root.camera) }
-    : { ...base, dim: '3d', layout: layout?.key ?? '', camera: plain(root.camera) };
-  layout && visitLayout(layout);
-  return { scenes: [scene], layouts, models };
+  for (const scene of scenes) {
+    const layout = scene.layout.target;
+    isStoredLayout(layout) && visitLayout(layout);
+  }
+  extraLayouts.forEach(visitLayout);
+  extraModels.forEach(visitModel);
+  return { scenes: scenes.map(readScene), layouts, models };
 };
+
+/** Reads a scene, its layout, and every loaded model and parts layout they reach, back into record form. */
+export const fromEcho = (root: StoredScene): SceneDocument => readDocument({ scenes: [root] });
