@@ -4,7 +4,7 @@
 
 import { Type } from '@dxos/echo';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
-import { LAYOUTS_3D, Scene } from '@dxos/scene';
+import { ARRANGERS_3D, Scene } from '@dxos/scene';
 
 import { camera2DValues, camera3DValues, sceneBinding, sceneTargets } from '../../model/scene-stage.ts';
 import { SceneStage } from './SceneStage.tsx';
@@ -52,7 +52,7 @@ export const scene3dStage: AnimatorCapabilities.StageDef = {
     },
   },
   renderers: ['3d', 'overlay'],
-  layouts: { ...LAYOUTS_3D },
+  layouts: { ...ARRANGERS_3D },
   scriptProperties: { position: 'center', opacity: 'style.opacity' },
   bind: (object, sample) => {
     const document = sceneDocumentOf(object);

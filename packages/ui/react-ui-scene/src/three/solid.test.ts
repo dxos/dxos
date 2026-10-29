@@ -5,25 +5,21 @@
 import type { ManifoldToplevel } from 'manifold-3d';
 import { beforeAll, describe, expect, test } from 'vitest';
 
-import { type Scene } from '@dxos/scene';
+import { type Resolved3D } from '@dxos/scene';
 
-import { evaluateSolid, solidVolume } from './solid.ts';
+import { type Elements3D, evaluateSolid, solidVolume } from './solid.ts';
 
-const scene = (elements: Scene.Element3D[]): Scene.SceneRecord3D => ({
-  id: 's',
-  dim: '3d',
-  camera: { target: { x: 0, y: 0, z: 0 }, yaw: 0, pitch: 30, distance: 10, fov: 0.8, projection: 'perspective' },
-  elements: Object.fromEntries(elements.map((element) => [element.id, element])),
-});
+const scene = (elements: Resolved3D[]): Elements3D =>
+  Object.fromEntries(elements.map((element) => [element.id, element]));
 
-const box: Scene.Element3D = {
+const box: Resolved3D = {
   id: 'box',
   kind: 'cube',
   center: { x: 0, y: 0, z: 0 },
   scale: { x: 2, y: 2, z: 2 },
   hidden: true,
 };
-const hole: Scene.Element3D = {
+const hole: Resolved3D = {
   id: 'hole',
   kind: 'cylinder',
   center: { x: 0, y: 0, z: 0 },

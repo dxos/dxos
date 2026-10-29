@@ -15,7 +15,7 @@ import {
   createNode,
   initialKeys,
 } from '@dxos/react-ui-canvas';
-import { Scene } from '@dxos/scene';
+import { type Resolved2D, Scene, resolveLayout2D, rootScene, sceneLayout } from '@dxos/scene';
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {
@@ -23,7 +23,6 @@ const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {
   ellipse: 'ellipse',
   polygon: 'polygon',
   note: 'note',
-  scene: 'view',
 };
 
 const MARKERS = ['arrow', 'circle', 'triangle'] as const;
@@ -44,14 +43,15 @@ const nodeStyle = (style: Scene.Style | undefined): NodeStyle | undefined => {
   };
 };
 
-const toNode = (element: Scene.Element2D, z: string): Node | undefined => {
-  const type = NODE_TYPES[element.kind];
+/** A composite element (its object has parts) is a `view` node over its parts layout's View. */
+const toNode = (element: Resolved2D, z: string): Node | undefined => {
+  const type = element.parts !== undefined ? 'view' : NODE_TYPES[element.kind];
   if (!type || !element.center) {
     return undefined;
   }
   const style = nodeStyle(element.style);
   return {
-    ...createNode({ type, id: element.id, z, center: element.center, size: element.size, scene: element.scene }),
+    ...createNode({ type, id: element.id, z, center: element.center, size: element.size, scene: element.parts }),
     layer: DEFAULT_LAYER.id,
     ...(element.label !== undefined ? { label: element.label } : {}),
     ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
@@ -63,7 +63,7 @@ const endpoint = ({ element, anchor }: Scene.Binding) =>
   anchor === undefined ? { node: element } : { node: element, port: anchor };
 
 /** A link both of whose ends are in the scene; a link to a missing element is not drawn (Review Focus 1). */
-const toLink = (element: Scene.Element2D, z: string, nodes: Readonly<Record<string, Node>>): Link | undefined => {
+const toLink = (element: Resolved2D, z: string, nodes: Readonly<Record<string, Node>>): Link | undefined => {
   const { from, to } = element;
   if (element.kind !== 'link' || !from || !to || !nodes[from.element] || !nodes[to.element]) {
     return undefined;
@@ -82,8 +82,8 @@ const toLink = (element: Scene.Element2D, z: string, nodes: Readonly<Record<stri
   };
 };
 
-const toView = (scene: Scene.SceneRecord2D): View => {
-  const elements = Object.values(scene.elements).filter((element) => !element.hidden);
+const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View => {
+  const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
   const keys = initialKeys(elements.length);
   const nodes: Record<string, Node> = {};
   elements.forEach((element, index) => {
@@ -95,15 +95,22 @@ const toView = (scene: Scene.SceneRecord2D): View => {
     const link = toLink(element, element.order ?? keys[index], nodes);
     link && (links[link.id] = link);
   });
-  return { id: scene.id, name: scene.name, nodes, links, layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } };
+  return { id: layout.id, name: layout.name, nodes, links, layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } };
 };
 
 /**
- * A document's 2D scenes as react-ui-canvas Views, one per scene, in a store the canvas reads; a `scene` element
- * becomes a `view` node over its child scene's View. 3D scenes are left out.
+ * A document's 2D layouts as react-ui-canvas Views, one per layout, in a store the canvas reads; the scene's layout is
+ * the root and comes first, and a composite element is a `view` node over its parts layout's View. 3D layouts are
+ * left out.
  */
-export const toCanvasViews = (doc: Scene.SceneDocument): { views: View[]; store: MemoryViewStore; root: ViewId } => {
-  const views = doc.scenes.flatMap((scene) => (scene.dim === '2d' ? [toView(scene)] : []));
+export const toCanvasViews = (
+  doc: Scene.SceneDocument,
+  scene: Scene.SceneRecord | undefined = rootScene(doc),
+): { views: View[]; store: MemoryViewStore; root: ViewId } => {
+  const rootLayout = sceneLayout(doc, scene)?.id;
+  const views = doc.layouts
+    .flatMap((layout) => (layout.dim === '2d' ? [toView(doc, layout)] : []))
+    .sort((left, right) => Number(right.id === rootLayout) - Number(left.id === rootLayout));
   const root = views[0]?.id ?? '';
   return { views, store: createMemoryStore(views, {}, { root }), root };
 };

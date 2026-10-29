@@ -31,24 +31,38 @@ statement {
   EdgeDecl |
   NoteDecl |
   FragmentDecl |
-  SceneDecl
+  SceneDecl |
+  LayoutDecl |
+  ModelDecl
 }
 
 //
-// Scene-model statements (`@dxos/scene`): one block per scene, its camera, and one line per element.
-// The words are contextual, so documents that already use `scene`, `camera` or `element` as ids keep parsing.
+// Scene-model statements (`@dxos/scene`): a scene views a layout through a camera; a layout positions elements; a
+// model holds the reusable objects elements place. The words are contextual, so documents that already use `scene`,
+// `camera`, `element`, `layout` or `model` as ids keep parsing.
 //
 
-// scene <id> [dim=2d|3d] [theme=…] [name="…"] [component=true] { camera … element … }
+// scene <id> dim=2d|3d layout=<id> [theme=…] [name="…"] { camera … }
 SceneDecl { ckw<"scene"> Id Attribute* SceneBody }
-SceneBody { "{" (CameraStmt | ElementStmt)* "}" }
+SceneBody { "{" CameraStmt* "}" }
 
 // camera center=x,y zoom=… (2D) | camera target=x,y,z yaw=… pitch=… distance=… fov=… projection=… (3D)
 CameraStmt { ckw<"camera"> Attribute* }
 
-// element <id> <kind> ["label"] [@ x,y | @ x,y,z] [name=value]*
+// layout <id> dim=2d|3d [model=<id>] [name="…"] { element … }
+LayoutDecl { ckw<"layout"> Id Attribute* LayoutBody }
+LayoutBody { "{" ElementStmt* "}" }
+
+// element <id> <kind | object id> ["label"] [@ x,y | @ x,y,z] [name=value]*
 ElementStmt { ckw<"element"> Id Word Label? Position? Attribute* }
 Position { "@" (Point3 | Point) }
+
+// model <id> dim=2d|3d [name="…"] { object … }
+ModelDecl { ckw<"model"> Id Attribute* ModelBody }
+ModelBody { "{" ModelObjectStmt* "}" }
+
+// object <id> <kind> [size=WxH | scale=…] [parts=<layout id>] [name=value]*
+ModelObjectStmt { kw<"object"> Id Word Attribute* }
 
 // object <id> [@ x,y] [scale=…] [index=…] [ref=…] { … }
 ObjectDecl { kw<"object"> Id ObjectAttr* Body }

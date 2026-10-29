@@ -43,14 +43,14 @@ export const manifoldGeometry = (wasm: ManifoldToplevel): GeometrySource => {
     if (item.kind !== 'solid') {
       return undefined;
     }
-    const key = solidKey(item.scene, item.id);
+    const key = solidKey(item.elements, item.id);
     if (!solids.has(key)) {
-      const result = evaluateSolid(item.scene, item.id, wasm);
+      const result = evaluateSolid(item.elements, item.id, wasm);
       if ('error' in result && !reported.has(item.key)) {
         reported.add(item.key);
         log.warn('solid draws its operands instead', { solid: item.key, error: result.error });
       }
-      solids.set(key, 'mesh' in result ? result.mesh : fallbackMesh(item.scene, item.id, wasm));
+      solids.set(key, 'mesh' in result ? result.mesh : fallbackMesh(item.elements, item.id, wasm));
     }
     return solids.get(key);
   };

@@ -7,7 +7,7 @@ import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'r
 
 import { type Camera, Canvas, createCanvasAtoms } from '@dxos/react-ui-canvas';
 import type * as Util from '@dxos/react-ui/Util';
-import { type Scene } from '@dxos/scene';
+import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { toCanvasViews } from '../../canvas/index.ts';
@@ -16,6 +16,8 @@ import { Scene3DView } from '../Scene3DView/index.ts';
 
 export type Scene2DViewProps = Util.ThemedClassName<{
   document: Scene.SceneDocument;
+  /** The scene to draw, by id; the document's root scene when unset. */
+  scene?: string;
   /** A react-ui-canvas theme name (flat, outline, glass, classic); the scene's own when unset. */
   theme?: string;
   /** Where to look: the camera given, or `fit` to frame the whole scene. */
@@ -35,28 +37,34 @@ const centredCamera = (camera: Scene.Camera2D, size: { width: number; height: nu
   zoom: camera.zoom,
 });
 
-/** Draws a document's root 2D scene, read-only; child scenes draw inside their frames. */
+/** Draws a document's 2D scene, read-only: its layout through its camera, composites' parts inside their frames. */
 export const Scene2DView = ({ renderer = 'dom', camera3d, theme3d, ...props }: Scene2DViewProps) => {
   const lifted = useMemo(() => (renderer === '3d' ? liftScene(props.document) : undefined), [renderer, props.document]);
   return lifted ? (
-    <Scene3DView classNames={props.classNames} document={lifted} camera={camera3d} theme={theme3d} />
+    <Scene3DView
+      classNames={props.classNames}
+      document={lifted}
+      scene={props.scene}
+      camera={camera3d}
+      theme={theme3d}
+    />
   ) : (
-    <CanvasView key={props.document.scenes[0]?.id} {...props} />
+    <CanvasView key={props.scene ?? rootScene(props.document)?.id} {...props} />
   );
 };
 
-const CanvasView = ({ classNames, document, theme, camera = 'fit' }: Scene2DViewProps) => {
+const CanvasView = ({ classNames, document, scene: sceneId, theme, camera = 'fit' }: Scene2DViewProps) => {
   const registry = useContext(RegistryContext);
-  const rootId = document.scenes[0]?.id ?? '';
+  const scene = sceneId === undefined ? rootScene(document) : findScene(document, sceneId);
   // One store and one set of canvas atoms per root; later documents (an animation's samples) are written into them,
   // so the canvas updates in place rather than remounting each frame.
-  const [{ store, atoms }] = useState(() => ({
-    store: toCanvasViews(document).store,
-    atoms: createCanvasAtoms(rootId),
-  }));
+  const [{ store, atoms, rootId }] = useState(() => {
+    const { store, root } = toCanvasViews(document, scene);
+    return { store, atoms: createCanvasAtoms(root), rootId: root };
+  });
   useLayoutEffect(() => {
-    registry.set(store.views, Object.fromEntries(toCanvasViews(document).views.map((view) => [view.id, view])));
-  }, [registry, store, document]);
+    registry.set(store.views, Object.fromEntries(toCanvasViews(document, scene).views.map((view) => [view.id, view])));
+  }, [registry, store, document, scene]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number }>();
@@ -79,7 +87,6 @@ const CanvasView = ({ classNames, document, theme, camera = 'fit' }: Scene2DView
     }
   }, [registry, atoms, camera, size]);
 
-  const scene = document.scenes[0];
   return (
     <div ref={containerRef} className={mx('relative dx-fill overflow-hidden', classNames)} data-testid='scene.2d'>
       <Canvas.Root

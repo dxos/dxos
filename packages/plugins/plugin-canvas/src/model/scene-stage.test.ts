@@ -35,24 +35,34 @@ describe('scene stage', () => {
 
   test('no target is called camera', () => {
     const doc = read('links');
-    const root = doc.scenes[0];
-    const withCamera =
-      root.dim === '2d'
-        ? { scenes: [{ ...root, elements: { ...root.elements, camera: { ...root.elements.a, id: 'camera' } } }] }
-        : doc;
+    const withCamera = {
+      ...doc,
+      layouts: doc.layouts.map((layout) =>
+        layout.dim === '2d'
+          ? { ...layout, elements: { ...layout.elements, camera: { ...layout.elements.a, id: 'camera' } } }
+          : layout,
+      ),
+    };
     expect(sceneTargets(withCamera).map((target) => target.id)).not.toContain('camera');
   });
 
-  test('applySample patches a nested path and leaves the rest of the style', () => {
-    const doc = applySample(read('links'), {
+  test("a target's resting size is its object's when the element sets none", () => {
+    const target = sceneTargets(read('links')).find((candidate) => candidate.id === 'b');
+    expect(target?.values.size).toEqual({ width: 128, height: 128 });
+  });
+
+  test('applySample patches a nested path in a copy and leaves the rest of the style', () => {
+    const original = read('links');
+    const doc = applySample(original, {
       t: 0,
       values: { a: { 'style.opacity': 0.5, 'center': { x: 10, y: 20 } } },
     });
-    const root = doc.scenes[0];
-    expect(root.dim === '2d' && root.elements.a).toMatchObject({
+    const [layout] = doc.layouts;
+    expect(layout.dim === '2d' && layout.elements.a).toMatchObject({
       center: { x: 10, y: 20 },
-      style: { opacity: 0.5, hue: 'blue', surface: 'solid' },
+      style: { opacity: 0.5, hue: 'blue' },
     });
+    expect(original.layouts[0].elements.a.center).toEqual({ x: 0, y: 0 });
   });
 
   test('a 3D binding is plain data the effect worker can be sent', () => {

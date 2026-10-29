@@ -15,8 +15,16 @@ const isStoredScene = (stage: unknown): stage is Scene.Scene2D | Scene.Scene3D =
 export const sceneDocumentOf = (stage: unknown): Scene.SceneDocument | undefined =>
   isStoredScene(stage) ? fromEcho(stage) : undefined;
 
-/** The stage object's scene document, read again whenever the stored root scene changes. */
+/**
+ * The stage object's scene document, read again whenever the stored scene, its layout or the layout's model changes;
+ * the elements live in the layout, so following the scene alone would miss every element edit.
+ */
 export const useSceneDocument = (stage: Obj.Unknown | undefined): Scene.SceneDocument | undefined => {
-  const [snapshot] = useObject(isStoredScene(stage) ? stage : undefined);
-  return useMemo(() => sceneDocumentOf(stage), [stage, snapshot]);
+  const scene = isStoredScene(stage) ? stage : undefined;
+  const [sceneSnapshot] = useObject(scene);
+  const layout = scene?.layout.target;
+  const [layoutSnapshot] = useObject(layout);
+  const model = layout?.model?.target;
+  const [modelSnapshot] = useObject(model);
+  return useMemo(() => sceneDocumentOf(stage), [stage, sceneSnapshot, layoutSnapshot, modelSnapshot]);
 };

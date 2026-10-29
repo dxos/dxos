@@ -8,78 +8,123 @@ import { EXEMPLAR_NAMES, EXEMPLARS } from '../testing.ts';
 import { parse } from './parse.ts';
 import { printScenes, readScenes } from './scene-model.ts';
 
-const LINKS = `scene root dim=2d theme=flat {
+const LINKS = `scene root dim=2d layout=main theme=flat {
   camera center=200,0 zoom=1
-  element a rect "A" @ 0,0 size=100x60 surface=solid border=true rounded=true
+}
+
+layout main dim=2d model=shapes {
+  element a box "A" @ 0,0 surface=solid
   element b rect "B" @ 200,0 size=100x60
   element ab link from=a to=b end=arrow
+}
+
+model shapes dim=2d {
+  object box rect size=100x60 border=true rounded=true
 }
 `;
 
 describe('readScenes', () => {
-  test('parses a 2D scene with a camera and three elements', () => {
+  test('reads a scene, the layout it views and the model the layout places objects from', () => {
     const { document, problems } = readScenes(LINKS);
     expect(problems).toEqual([]);
-    const [scene] = document.scenes;
-    expect(scene).toMatchObject({
-      id: 'root',
-      dim: '2d',
-      theme: 'flat',
-      camera: { center: { x: 200, y: 0 }, zoom: 1 },
-    });
-    expect(scene.elements.a).toMatchObject({
-      kind: 'rect',
+    expect(document.scenes).toEqual([
+      { id: 'root', dim: '2d', theme: 'flat', layout: 'main', camera: { center: { x: 200, y: 0 }, zoom: 1 } },
+    ]);
+    const [layout] = document.layouts;
+    expect(layout).toMatchObject({ id: 'main', dim: '2d', model: 'shapes' });
+    expect(layout.elements.a).toEqual({
+      id: 'a',
+      object: 'box',
       label: 'A',
       center: { x: 0, y: 0 },
-      size: { width: 100, height: 60 },
-      style: { surface: 'solid', border: true, rounded: true },
+      style: { surface: 'solid' },
     });
-    expect(scene.elements.ab).toMatchObject({
+    expect(layout.elements.b).toMatchObject({ kind: 'rect', size: { width: 100, height: 60 } });
+    expect(layout.elements.ab).toMatchObject({
       kind: 'link',
       from: { element: 'a' },
       to: { element: 'b' },
       props: { end: 'arrow' },
     });
+    expect(document.models).toEqual([
+      {
+        id: 'shapes',
+        dim: '2d',
+        objects: {
+          box: { id: 'box', kind: 'rect', size: { width: 100, height: 60 }, style: { border: true, rounded: true } },
+        },
+      },
+    ]);
   });
 
-  test('parses a 3D point and a WxHxD scale', () => {
-    const { document, problems } = readScenes(`scene s dim=3d {
+  test('reads a 3D point, a WxHxD scale and an object with parts', () => {
+    const { document, problems } = readScenes(`scene s dim=3d layout=l {
   camera target=0,0,0 yaw=-45 pitch=30 distance=14 fov=0.8 projection=perspective
+}
+
+layout l dim=3d model=m {
   element c cube @ 1,2,3 scale=2x1x0.5 rotation=0,45,0
+  element t team @ 4,0,0
+}
+
+layout inner dim=3d {
+}
+
+model m dim=3d {
+  object team sphere scale=3 parts=inner
 }
 `);
     expect(problems).toEqual([]);
-    expect(document.scenes[0].elements.c).toMatchObject({
+    expect(document.layouts[0].elements.c).toMatchObject({
       center: { x: 1, y: 2, z: 3 },
       scale: { x: 2, y: 1, z: 0.5 },
       rotation: { x: 0, y: 45, z: 0 },
     });
+    expect(document.layouts[0].elements.t).toMatchObject({ object: 'team' });
+    expect(document.models[0].objects.team).toEqual({
+      id: 'team',
+      kind: 'sphere',
+      scale: { x: 3, y: 3, z: 3 },
+      parts: 'inner',
+    });
   });
 
-  test('an id called scene still parses in an object statement', () => {
-    const { problems } = parse('object scene {\n  rect element 0,0 10x10\n}\n');
+  test('an id called scene, layout or model still parses in an object statement', () => {
+    const { problems } = parse('object scene {\n  rect layout 0,0 10x10\n  rect model 0,0 10x10\n}\n');
     expect(problems).toEqual([]);
   });
 
   test('reports a link to a missing element', () => {
-    const { problems } = readScenes(`scene s dim=2d {
-  camera center=0,0 zoom=1
+    const { problems } = readScenes(`layout s dim=2d {
   element ab link from=a to=b
 }
 `);
     expect(problems.map((problem) => problem.message).join()).toContain('"a"');
   });
+
+  test("reports a scene whose layout is missing, at the scene's statement", () => {
+    const text = 'scene s dim=2d layout=gone {\n  camera center=0,0 zoom=1\n}\n';
+    const { problems } = readScenes(text);
+    expect(problems).toMatchObject([{ message: 'Layout "gone" is not in the document.', from: 0 }]);
+  });
 });
 
-test('readScenes reports a child-scene cycle', () => {
-  const { problems } = readScenes(`scene a dim=2d {
+test('readScenes reports a cycle through composite objects', () => {
+  const { problems } = readScenes(`scene s dim=2d layout=a {
   camera center=0,0 zoom=1
-  element to-b scene @ 0,0 size=10x10 scene=b
 }
 
-scene b dim=2d {
-  camera center=0,0 zoom=1
-  element to-a scene @ 0,0 size=10x10 scene=a
+layout a dim=2d model=m {
+  element to-b of-b @ 0,0 size=10x10
+}
+
+layout b dim=2d model=m {
+  element to-a of-a @ 0,0 size=10x10
+}
+
+model m dim=2d {
+  object of-a rect parts=a
+  object of-b rect parts=b
 }
 `);
   expect(problems.map((problem) => problem.message).join()).toContain('cycle');
@@ -93,7 +138,7 @@ describe('printScenes', () => {
   });
 
   test('an intent-only cluster prints with positions', () => {
-    const intent = EXEMPLARS.cluster.replace(/(element s\d sphere "S\d") @ [^ ]+/g, '$1');
+    const intent = EXEMPLARS.cluster.replace(/(element s\d spoke "S\d") @ [^ \n]+/g, '$1');
     expect(intent).not.toBe(EXEMPLARS.cluster);
     const { document, problems } = readScenes(intent);
     expect(problems).toEqual([]);

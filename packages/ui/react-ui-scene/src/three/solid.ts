@@ -10,9 +10,12 @@
 
 import type { Manifold, ManifoldToplevel, Vec3 as ManifoldVec3 } from 'manifold-3d';
 
-import { type Scene } from '@dxos/scene';
+import { type Resolved3D, type Scene } from '@dxos/scene';
 
 import { type MeshData } from './renderer.ts';
+
+/** A layout's elements by id, resolved against its model, which a solid's operands are named among. */
+export type Elements3D = Readonly<Record<string, Resolved3D>>;
 
 const UNIT: Scene.Vec3 = { x: 1, y: 1, z: 1 };
 const ZERO: Scene.Vec3 = { x: 0, y: 0, z: 0 };
@@ -120,8 +123,8 @@ const extrude = (solid: Manifold, normal: Scene.Vec3, distance: number): Manifol
 };
 
 /** Builds an element as a solid in its scene's coordinates; `path` guards against a solid that names itself. */
-const build = (scene: Scene.SceneRecord3D, id: string, wasm: ManifoldToplevel, path: readonly string[]): Manifold => {
-  const element = scene.elements[id];
+const build = (elements: Elements3D, id: string, wasm: ManifoldToplevel, path: readonly string[]): Manifold => {
+  const element = elements[id];
   if (!element) {
     throw new SolidError(`Operand "${id}" is missing.`);
   }
@@ -150,7 +153,7 @@ const build = (scene: Scene.SceneRecord3D, id: string, wasm: ManifoldToplevel, p
       const solids: Manifold[] = [];
       try {
         for (const operand of operands) {
-          solids.push(build(scene, operand, wasm, next));
+          solids.push(build(elements, operand, wasm, next));
         }
       } catch (error) {
         solids.forEach((solid) => solid.delete());
@@ -170,7 +173,7 @@ const build = (scene: Scene.SceneRecord3D, id: string, wasm: ManifoldToplevel, p
       if (!target || !face) {
         throw new SolidError(`Solid "${id}" needs a target and a face to extrude.`);
       }
-      return extrude(build(scene, target, wasm, next), face, numberProp(element, 'distance') ?? 0);
+      return extrude(build(elements, target, wasm, next), face, numberProp(element, 'distance') ?? 0);
     }
     default:
       throw new SolidError(`Solid "${id}" has no operation "${op ?? ''}".`);
@@ -199,12 +202,12 @@ export const toMeshData = (solid: Manifold): MeshData => {
 
 /** A solid element's triangles in its scene's coordinates, or why it cannot be built (Review Focus 4). */
 export const evaluateSolid = (
-  scene: Scene.SceneRecord3D,
+  elements: Elements3D,
   id: string,
   wasm: ManifoldToplevel,
 ): { mesh: MeshData } | { error: string } => {
   try {
-    const solid = build(scene, id, wasm, []);
+    const solid = build(elements, id, wasm, []);
     try {
       // An operand of size 0, or a difference that removes everything, builds a valid solid with nothing in it.
       if (solid.isEmpty()) {
@@ -221,10 +224,10 @@ export const evaluateSolid = (
 };
 
 /** The elements a solid is built from, itself included, so equal trees can share one result. */
-export const solidKey = (scene: Scene.SceneRecord3D, id: string): string => {
+export const solidKey = (elements: Elements3D, id: string): string => {
   const seen = new Set<string>();
   const visit = (name: string) => {
-    const element = scene.elements[name];
+    const element = elements[name];
     if (!element || seen.has(name)) {
       return;
     }
@@ -232,13 +235,13 @@ export const solidKey = (scene: Scene.SceneRecord3D, id: string): string => {
     [...(stringProp(element, 'operands') ?? '').split(/\s+/), stringProp(element, 'target') ?? ''].forEach(visit);
   };
   visit(id);
-  return JSON.stringify([...seen].sort().map((name) => scene.elements[name]));
+  return JSON.stringify([...seen].sort().map((name) => elements[name]));
 };
 
 /** The volume of a solid element, for checks; NaN when it cannot be built. */
-export const solidVolume = (scene: Scene.SceneRecord3D, id: string, wasm: ManifoldToplevel): number => {
+export const solidVolume = (elements: Elements3D, id: string, wasm: ManifoldToplevel): number => {
   try {
-    const solid = build(scene, id, wasm, []);
+    const solid = build(elements, id, wasm, []);
     const volume = solid.volume();
     solid.delete();
     return volume;
@@ -267,17 +270,17 @@ const concat = (meshes: readonly MeshData[]): MeshData => {
 };
 
 /** What a solid that cannot be built draws instead: its operands that do exist, each as itself (Review Focus 4). */
-export const fallbackMesh = (scene: Scene.SceneRecord3D, id: string, wasm: ManifoldToplevel): MeshData | undefined => {
-  const element = scene.elements[id];
+export const fallbackMesh = (elements: Elements3D, id: string, wasm: ManifoldToplevel): MeshData | undefined => {
+  const element = elements[id];
   if (!element) {
     return undefined;
   }
   const names = [...(stringProp(element, 'operands') ?? '').split(/\s+/), stringProp(element, 'target') ?? ''];
   const meshes = names.flatMap((name) => {
-    if (!name || name === id || !scene.elements[name]) {
+    if (!name || name === id || !elements[name]) {
       return [];
     }
-    const result = evaluateSolid(scene, name, wasm);
+    const result = evaluateSolid(elements, name, wasm);
     return 'mesh' in result ? [result.mesh] : [];
   });
   return meshes.length > 0 ? concat(meshes) : undefined;

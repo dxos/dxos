@@ -6,7 +6,7 @@ import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 're
 
 import { type Instance3D } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
-import { type Scene } from '@dxos/scene';
+import { type Scene, findScene, resolveLayout3D, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -25,11 +25,13 @@ import {
 
 export type Scene3DViewProps = Util.ThemedClassName<{
   document: Scene.SceneDocument;
+  /** The scene to draw, by id; the document's root scene when unset. */
+  scene?: string;
   /** `cad` or `presentation`; the scene's own when unset. */
   theme?: Theme3D;
   /** Where to look; the root scene's camera when unset. */
   camera?: Scene.Camera3D;
-  /** Element values that replace the root scene's, as an animation sample does. */
+  /** Element values that replace those of the scene's layout, as an animation sample does. */
   overrides?: Readonly<Record<string, Partial<Scene.Element3D>>>;
   /** Geometry for items Babylon has no builder for; Manifold's, loaded when the scene has solids, by default. */
   geometry?: GeometrySource;
@@ -52,12 +54,12 @@ const cssColorToHex = (color: string, fallback: string): string => {
   return `#${[red, green, blue].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 };
 
-/** Whether drawing the document needs Manifold: it has a solid or a rounded cube. */
+/** Whether drawing the document needs Manifold: a layout has a solid or a rounded cube. */
 const needsManifold = (doc: Scene.SceneDocument): boolean =>
-  doc.scenes.some(
-    (scene) =>
-      scene.dim === '3d' &&
-      Object.values(scene.elements).some(
+  doc.layouts.some(
+    (layout) =>
+      layout.dim === '3d' &&
+      Object.values(resolveLayout3D(doc, layout)).some(
         (element) => element.kind === 'solid' || (element.kind === 'cube' && element.style?.rounded === true),
       ),
   );
@@ -91,10 +93,11 @@ const DEFAULT_CAMERA: Scene.Camera3D = {
   projection: 'perspective',
 };
 
-/** Draws a document's root 3D scene with Babylon, once per change of its inputs, with HTML labels on top. */
+/** Draws a document's 3D scene with Babylon, once per change of its inputs, with HTML labels on top. */
 export const Scene3DView = ({
   classNames,
   document: doc,
+  scene: sceneId,
   theme,
   camera,
   overrides,
@@ -104,7 +107,7 @@ export const Scene3DView = ({
   onFrameDrawn,
 }: Scene3DViewProps) => {
   const geometry = useManifoldGeometry(doc, givenGeometry);
-  const root = doc.scenes[0];
+  const root = sceneId === undefined ? rootScene(doc) : findScene(doc, sceneId);
   const look: Theme3D = theme ?? (isTheme3D(root?.theme) ? root.theme : 'cad');
   const given = camera ?? (root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
   // The pointer's camera, until a new one is given.
@@ -189,7 +192,7 @@ export const Scene3DView = ({
     };
   }, [orbit, given]);
 
-  const list = useMemo(() => renderList(doc, overrides), [doc, overrides]);
+  const list = useMemo(() => renderList(doc, root, overrides), [doc, root, overrides]);
   useLayoutEffect(() => {
     if (!renderer || size.width === 0) {
       return;

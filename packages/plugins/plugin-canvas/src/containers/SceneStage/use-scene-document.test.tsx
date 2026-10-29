@@ -14,19 +14,29 @@ import { toEcho } from '@dxos/scene';
 import { useSceneDocument } from './use-scene-document.ts';
 
 describe('useSceneDocument', () => {
+  test("follows edits to the stored scene's layout", () => {
+    const { root, layouts } = toEcho(Dsl.readScenes(EXEMPLARS.links).document);
+    const layout = layouts.get('links');
+    const { result } = renderHook(() => useSceneDocument(root));
+    const label = () => result.current?.layouts[0]?.elements.a?.label;
+    expect(label()).toBe('A');
+    act(() => {
+      layout &&
+        Obj.update(layout, (layout) => {
+          layout.elements.a.label = 'Alpha';
+        });
+    });
+    expect(label()).toBe('Alpha');
+  });
+
   test('follows edits to the stored scene', () => {
     const { root } = toEcho(Dsl.readScenes(EXEMPLARS.links).document);
     const { result } = renderHook(() => useSceneDocument(root));
-    const label = () => {
-      const scene = result.current?.scenes[0];
-      return scene?.dim === '2d' ? scene.elements.a.label : undefined;
-    };
-    expect(label()).toBe('A');
     act(() => {
       Obj.update(root, (root) => {
-        root.elements.a.label = 'Alpha';
+        root.name = 'Renamed';
       });
     });
-    expect(label()).toBe('Alpha');
+    expect(result.current?.scenes[0].name).toBe('Renamed');
   });
 });

@@ -19,7 +19,7 @@ const DEPTH = 0.04;
 
 const FOV = 0.8;
 
-/** The 3D kind each 2D kind is drawn as; a kind missing here keeps its name (links, groups, labels, child scenes). */
+/** The 3D kind each 2D kind is drawn as; a kind missing here keeps its name (links, groups, labels). */
 const KINDS: Readonly<Record<string, string>> = {
   rect: 'cube',
   note: 'cube',
@@ -45,29 +45,65 @@ export const camera2DTo3D = (camera: Scene.Camera2D, viewport: Viewport): Scene.
   };
 };
 
-const liftElement = ({ center, size, rotation, layout: _layout, ...element }: Scene.Element2D): Scene.Element3D => ({
-  ...element,
-  kind: KINDS[element.kind] ?? element.kind,
-  ...(center ? { center: toGround(center) } : {}),
-  ...(size ? { scale: { x: size.width / PIXELS_PER_UNIT, y: DEPTH, z: size.height / PIXELS_PER_UNIT } } : {}),
-  ...(rotation !== undefined ? { rotation: { x: 0, y: rotation, z: 0 } } : {}),
-  ...(element.kind === 'scene' ? { props: { shape: 'cube', ...element.props } } : {}),
+const liftKind = (kind: string): string => KINDS[kind] ?? kind;
+
+const liftSize = ({ width, height }: Scene.Size2): Scene.Vec3 => ({
+  x: width / PIXELS_PER_UNIT,
+  y: DEPTH,
+  z: height / PIXELS_PER_UNIT,
 });
 
-/** A 2D scene as a 3D one on the ground plane; a scene already 3D is kept. */
-const liftRecord = (scene: Scene.SceneRecord): Scene.SceneRecord3D =>
+const liftElement = ({ center, size, rotation, arrange: _arrange, ...element }: Scene.Element2D): Scene.Element3D => ({
+  ...element,
+  ...(element.kind !== undefined ? { kind: liftKind(element.kind) } : {}),
+  ...(center ? { center: toGround(center) } : {}),
+  ...(size ? { scale: liftSize(size) } : {}),
+  ...(rotation !== undefined ? { rotation: { x: 0, y: rotation, z: 0 } } : {}),
+});
+
+const liftObject = ({ size, ...object }: Scene.Object2D): Scene.Object3D => ({
+  ...object,
+  kind: liftKind(object.kind),
+  ...(size ? { scale: liftSize(size) } : {}),
+});
+
+const liftLayout = (layout: Scene.LayoutRecord): Scene.LayoutRecord3D =>
+  layout.dim === '3d'
+    ? layout
+    : {
+        id: layout.id,
+        dim: '3d',
+        ...(layout.name !== undefined ? { name: layout.name } : {}),
+        ...(layout.model !== undefined ? { model: layout.model } : {}),
+        elements: Object.fromEntries(
+          Object.entries(layout.elements).map(([key, element]) => [key, liftElement(element)]),
+        ),
+      };
+
+const liftModel = (model: Scene.ModelRecord): Scene.ModelRecord3D =>
+  model.dim === '3d'
+    ? model
+    : {
+        id: model.id,
+        dim: '3d',
+        ...(model.name !== undefined ? { name: model.name } : {}),
+        objects: Object.fromEntries(Object.entries(model.objects).map(([key, object]) => [key, liftObject(object)])),
+      };
+
+const liftSceneRecord = (scene: Scene.SceneRecord): Scene.SceneRecord3D =>
   scene.dim === '3d'
     ? scene
     : {
         id: scene.id,
         dim: '3d',
         ...(scene.name !== undefined ? { name: scene.name } : {}),
-        ...(scene.component !== undefined ? { component: scene.component } : {}),
+        layout: scene.layout,
         camera: camera2DTo3D(scene.camera, { width: 800, height: 600 }),
-        elements: Object.fromEntries(
-          Object.entries(scene.elements).map(([key, element]) => [key, liftElement(element)]),
-        ),
       };
 
-/** Every scene of a document lifted onto the ground plane, so the 3D renderer draws a 2D drawing. */
-export const liftScene = (doc: Scene.SceneDocument): Scene.SceneDocument => ({ scenes: doc.scenes.map(liftRecord) });
+/** Every scene, layout and model of a document lifted onto the ground plane, so the 3D renderer draws a 2D drawing. */
+export const liftScene = (doc: Scene.SceneDocument): Scene.SceneDocument => ({
+  scenes: doc.scenes.map(liftSceneRecord),
+  layouts: doc.layouts.map(liftLayout),
+  models: doc.models.map(liftModel),
+});

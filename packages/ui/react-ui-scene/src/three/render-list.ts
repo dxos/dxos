@@ -2,24 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Scene, bounds3D, fitChild, radiusOf } from '@dxos/scene';
+import {
+  type Resolved3D,
+  Scene,
+  bounds3D,
+  findLayout,
+  fitChild,
+  radiusOf,
+  resolveLayout3D,
+  rootScene,
+} from '@dxos/scene';
 
 type Vec3 = Scene.Vec3;
 
-/** Something to draw, in world space: an element of the root scene or of a child scene inside its frame. */
+/** Something to draw, in world space: an element of the scene's layout or of a composite's parts inside its frame. */
 export type RenderItem = {
   /** Unique across the tree: the element ids on the path to it, joined by `/`. */
   key: string;
   id: string;
-  /** The scene record the element belongs to, which a solid evaluates its operation tree against. */
-  scene: Scene.SceneRecord3D;
+  /** The resolved elements of the layout the element belongs to, which a solid evaluates its operation tree against. */
+  elements: Readonly<Record<string, Resolved3D>>;
   kind: string;
   label?: string;
   center: Vec3;
   scale: Vec3;
   rotation: Vec3;
   style?: Scene.Style;
-  /** Set on a child-scene element, which draws as a frame round its child. */
+  /** Set on a composite element, which draws as a frame round its parts. */
   frame?: boolean;
 };
 
@@ -53,25 +62,33 @@ const compose = (outer: Transform, inner: Transform): Transform => ({
 });
 
 /**
- * Everything a document's root 3D scene draws, in world space: elements and links, with each child scene placed
- * inside its frame (design call 23). Hidden elements, groups and unplaced elements draw nothing; a link whose end is
- * missing is skipped (Review Focus 1); a child scene already on the path is not entered again (Review Focus 2).
+ * Everything a document's 3D scene draws, in world space: its layout's elements and links, with each composite's parts
+ * layout placed inside its frame (design call 23). Hidden elements, groups and unplaced elements draw nothing; a link
+ * whose end is missing is skipped (Review Focus 1); a layout already on the path is not entered again (Review Focus 2).
  */
 export const renderList = (
   doc: Scene.SceneDocument,
+  scene: Scene.SceneRecord | undefined = rootScene(doc),
   overrides?: Readonly<Record<string, Partial<Scene.Element3D>>>,
 ): RenderList => {
-  const byId = new Map(doc.scenes.map((scene) => [scene.id, scene]));
   const items: RenderItem[] = [];
   const links: RenderLink[] = [];
 
-  const visit = (scene: Scene.SceneRecord3D, transform: Transform, prefix: string, path: readonly string[]) => {
+  const visit = (layout: Scene.LayoutRecord3D, transform: Transform, prefix: string, path: readonly string[]) => {
     const keyOf = (id: string) => (prefix ? `${prefix}/${id}` : id);
-    const elementOf = (element: Scene.Element3D): Scene.Element3D =>
-      prefix === '' && overrides?.[element.id] ? { ...element, ...overrides[element.id] } : element;
+    // Overrides apply to the scene's own layout only, before resolving, as an element's own values would.
+    const own =
+      prefix === '' && overrides
+        ? {
+            ...layout,
+            elements: Object.fromEntries(
+              Object.entries(layout.elements).map(([key, element]) => [key, { ...element, ...overrides[element.id] }]),
+            ),
+          }
+        : layout;
+    const elements = resolveLayout3D(doc, own);
     const placed = new Map<string, Vec3>();
-    for (const raw of Object.values(scene.elements)) {
-      const element = elementOf(raw);
+    for (const element of Object.values(elements)) {
       // A solid's geometry is its operands', placed where they are, so it needs no position of its own.
       const local = element.center ?? (element.kind === 'solid' ? ZERO : undefined);
       if (element.hidden || !local || element.kind === 'link' || element.kind === 'group') {
@@ -79,27 +96,27 @@ export const renderList = (
       }
       const center = apply(transform, local);
       placed.set(element.id, center);
+      const composite = element.parts !== undefined;
       const item: RenderItem = {
         key: keyOf(element.id),
         id: element.id,
-        scene,
-        kind: element.kind === 'scene' ? (stringProp(element, 'shape') ?? 'cube') : element.kind,
+        elements,
+        kind: element.kind,
         center,
         scale: scaled(element.scale ?? UNIT, transform.scale),
         rotation: element.rotation ?? ZERO,
         ...(element.label !== undefined ? { label: element.label } : {}),
         ...(element.style ? { style: element.style } : {}),
-        ...(element.kind === 'scene' ? { frame: true } : {}),
+        ...(composite ? { frame: true } : {}),
       };
       items.push(item);
-      const child = element.scene === undefined ? undefined : byId.get(element.scene);
-      if (child?.dim === '3d' && !path.includes(child.id)) {
-        const fit = fitChild({ center: local, radius: radiusOf(element) }, bounds3D(child));
-        visit(child, compose(transform, fit), item.key, [...path, child.id]);
+      const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
+      if (parts?.dim === '3d' && !path.includes(parts.id)) {
+        const fit = fitChild({ center: local, radius: radiusOf(element) }, bounds3D(resolveLayout3D(doc, parts)));
+        visit(parts, compose(transform, fit), item.key, [...path, parts.id]);
       }
     }
-    for (const raw of Object.values(scene.elements)) {
-      const element = elementOf(raw);
+    for (const element of Object.values(elements)) {
       if (element.kind !== 'link' || element.hidden || !element.from || !element.to) {
         continue;
       }
@@ -111,14 +128,9 @@ export const renderList = (
     }
   };
 
-  const root = doc.scenes[0];
-  if (root?.dim === '3d') {
-    visit(root, IDENTITY, '', [root.id]);
+  const layout = scene && findLayout(doc, scene.layout);
+  if (scene?.dim === '3d' && layout?.dim === '3d') {
+    visit(layout, IDENTITY, '', [layout.id]);
   }
   return { items, links };
-};
-
-const stringProp = (element: Scene.Element3D, name: string): string | undefined => {
-  const value = element.props?.[name];
-  return typeof value === 'string' ? value : undefined;
 };

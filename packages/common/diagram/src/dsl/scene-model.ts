@@ -4,7 +4,7 @@
 
 import type { SyntaxNode } from '@lezer/common';
 
-import { Scene as Model, applyLayout, sceneTree, validateDocument } from '@dxos/scene';
+import { Scene as Model, type Part, applyArrangement, layoutTree, validateDocument } from '@dxos/scene';
 
 import { parser } from './gen/diagram.ts';
 import { type Problem, type Range, childrenOf, optional, unquote } from './parse.ts';
@@ -27,7 +27,7 @@ const DEFAULT_CAMERA_3D: Model.Camera3D = {
 const STYLE_KEYS = ['hue', 'tone', 'surface', 'border', 'rounded', 'opacity'] as const;
 const SURFACES = ['solid', 'tint', 'glass', 'none'] as const;
 const TONES = [0, 1, 2, 3] as const;
-const LAYOUT_PARAM = 'layout-';
+const ARRANGE_PARAM = 'arrange-';
 
 const isVec2 = (value: AttrValue | undefined): value is Model.Vec2 =>
   typeof value === 'object' && 'x' in value && !('z' in value);
@@ -49,8 +49,8 @@ const parseBinding = (value: AttrValue | undefined): Model.Binding | undefined =
 };
 
 /**
- * Reads every `scene { … }` block into the record form of `@dxos/scene`, lays out group members that have no position
- * yet, and reports grammar errors and model problems. Statements outside scene blocks belong to `read`.
+ * Reads every `scene`, `layout` and `model` block into the record form of `@dxos/scene`, arranges 3D group members that
+ * have no position yet, and reports grammar errors and document problems. Other statements belong to `read`.
  */
 export const readScenes = (text: string): { document: Model.SceneDocument; problems: Problem[] } => {
   const problems: Problem[] = [];
@@ -140,24 +140,23 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
   };
 
   /** The fields every element shares, read from its statement; geometry is the caller's. */
-  const readBase = (statement: SyntaxNode, attrs: Map<string, AttrValue>) => {
+  const readBase = (statement: SyntaxNode, attrs: Map<string, AttrValue>, objects: ReadonlySet<string>) => {
     const id = readId(statement.getChild('Id')) ?? '';
-    const kind = slice(statement.getChild('Word') ?? statement);
+    // The word after the id names an object of the layout's model when there is one of that id, and a kind otherwise.
+    const word = slice(statement.getChild('Word') ?? statement);
     const labelNode = statement.getChild('Label');
     const style = readStyle(attrs, statement);
-    const layoutParams = Object.fromEntries(
+    const arrangeParams = Object.fromEntries(
       [...attrs]
-        .filter(([key]) => key.startsWith(LAYOUT_PARAM))
-        .map(([key, value]) => [key.slice(LAYOUT_PARAM.length), value]),
+        .filter(([key]) => key.startsWith(ARRANGE_PARAM))
+        .map(([key, value]) => [key.slice(ARRANGE_PARAM.length), value]),
     );
-    const layoutKind = asString(attrs.get('layout'));
+    const arrangeKind = asString(attrs.get('arrange'));
     const members = asString(attrs.get('members'))?.split(/\s+/).filter(Boolean);
-    const props = Object.fromEntries(
-      [...attrs].filter(([key]) => !ELEMENT_KEYS.has(key) && !key.startsWith(LAYOUT_PARAM)),
-    );
+    const props = readProps(attrs, ELEMENT_KEYS);
     return {
       id,
-      kind,
+      ...(objects.has(word) ? { object: word } : { kind: word }),
       ...(labelNode ? { label: unquote(slice(labelNode)) } : {}),
       ...optionalString('order', attrs.get('order')),
       ...optionalString('layer', attrs.get('layer')),
@@ -168,18 +167,29 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       ...optionalBinding('from', attrs.get('from')),
       ...optionalBinding('to', attrs.get('to')),
       ...(members ? { members } : {}),
-      ...(layoutKind
+      ...(arrangeKind
         ? {
-            layout:
-              Object.keys(layoutParams).length > 0 ? { kind: layoutKind, params: layoutParams } : { kind: layoutKind },
+            arrange:
+              Object.keys(arrangeParams).length > 0
+                ? { kind: arrangeKind, params: arrangeParams }
+                : { kind: arrangeKind },
           }
         : {}),
-      ...optionalString('scene', attrs.get('scene')),
-      ...(Object.keys(props).length > 0 ? { props } : {}),
+      ...(props ? { props } : {}),
     };
   };
 
-  const readElement2D = (statement: SyntaxNode): Model.Element2D => {
+  /** Attributes no field takes, which become `props`; arrangement parameters are the group's, not props. */
+  const readProps = (attrs: Map<string, AttrValue>, keys: ReadonlySet<string>) => {
+    const props = Object.fromEntries([...attrs].filter(([key]) => !keys.has(key) && !key.startsWith(ARRANGE_PARAM)));
+    return Object.keys(props).length > 0 ? props : undefined;
+  };
+
+  /** A uniform `scale=2` or a per-axis `scale=2x1x0.5`. */
+  const readScale = (value: AttrValue | undefined): Model.Vec3 | undefined =>
+    isVec3(value) ? value : typeof value === 'number' ? { x: value, y: value, z: value } : undefined;
+
+  const readElement2D = (statement: SyntaxNode, objects: ReadonlySet<string>): Model.Element2D => {
     const attrs = readAttrs(statement);
     const position = statement.getChild('Position');
     const at = position && readPosition(position);
@@ -189,29 +199,24 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       report(position, 'A 2D element takes an x,y position.');
     }
     return {
-      ...readBase(statement, attrs),
+      ...readBase(statement, attrs, objects),
       ...(at && isVec2(at) ? { center: at } : {}),
       ...(isSize2(size) ? { size } : {}),
       ...(rotation !== undefined ? { rotation } : {}),
     };
   };
 
-  const readElement3D = (statement: SyntaxNode): Model.Element3D => {
+  const readElement3D = (statement: SyntaxNode, objects: ReadonlySet<string>): Model.Element3D => {
     const attrs = readAttrs(statement);
     const position = statement.getChild('Position');
     const at = position && readPosition(position);
-    const scaleValue = attrs.get('scale');
-    const scale = isVec3(scaleValue)
-      ? scaleValue
-      : typeof scaleValue === 'number'
-        ? { x: scaleValue, y: scaleValue, z: scaleValue }
-        : undefined;
+    const scale = readScale(attrs.get('scale'));
     const rotation = attrs.get('rotation');
     if (at && !isVec3(at)) {
       report(position, 'A 3D element takes an x,y,z position.');
     }
     return {
-      ...readBase(statement, attrs),
+      ...readBase(statement, attrs, objects),
       ...(at && isVec3(at) ? { center: at } : {}),
       ...(scale ? { scale } : {}),
       ...(isVec3(rotation) ? { rotation } : {}),
@@ -261,49 +266,122 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     }
   } while (cursor.next());
 
-  const scenes: Model.SceneRecord[] = [];
-  for (const statement of childrenOf(tree.topNode).filter((child) => child.name === 'SceneDecl')) {
+  const statementsOf = (name: string) => childrenOf(tree.topNode).filter((child) => child.name === name);
+  const bodyOf = (statement: SyntaxNode, body: string, name: string) => {
+    const node = statement.getChild(body);
+    return node ? childrenOf(node).filter((child) => child.name === name) : [];
+  };
+  /** The block's id, attributes and dimension; a block with no dimension is reported and skipped. */
+  const readHead = (part: Part, statement: SyntaxNode) => {
     const id = readId(statement.getChild('Id')) ?? '';
     const attrs = readAttrs(statement);
-    const body = statement.getChild('SceneBody');
-    const statements = body ? childrenOf(body) : [];
-    const camera = statements.find((child) => child.name === 'CameraStmt');
-    const elementStatements = statements.filter((child) => child.name === 'ElementStmt');
     const dim = attrs.get('dim');
     if (dim !== '2d' && dim !== '3d') {
-      report(statement, `scene "${id}" needs dim=2d or dim=3d.`);
+      report(statement, `${part} "${id}" needs dim=2d or dim=3d.`);
+      return undefined;
+    }
+    ranges.set(`${part}:${id}`, statement);
+    return { id, attrs, dim, name: optionalString('name', attrs.get('name')) };
+  };
+
+  // Models first, so a layout can tell an object it places from an inline kind.
+  const models: Model.ModelRecord[] = [];
+  for (const statement of statementsOf('ModelDecl')) {
+    const head = readHead('model', statement);
+    if (!head) {
       continue;
     }
-    ranges.set(id, statement);
-    const base = {
-      id,
-      ...optionalString('name', attrs.get('name')),
-      ...optionalString('theme', attrs.get('theme')),
-      ...optionalBoolean('component', attrs.get('component')),
+    /** The fields an object has in either dimension; its size or scale is the caller's. */
+    const readObject = (object: SyntaxNode, attrs: Map<string, AttrValue>) => {
+      const id = readId(object.getChild('Id')) ?? '';
+      const style = readStyle(attrs, object);
+      const props = readProps(attrs, OBJECT_KEYS);
+      ranges.set(`model:${head.id}/${id}`, object);
+      return {
+        id,
+        kind: slice(object.getChild('Word') ?? object),
+        ...optionalString('parts', attrs.get('parts')),
+        ...(style ? { style } : {}),
+        ...(props ? { props } : {}),
+      };
     };
-    if (dim === '2d') {
-      const elements: Record<string, Model.Element2D> = {};
-      for (const element of elementStatements) {
-        const record = readElement2D(element);
-        ranges.set(`${id}/${record.id}`, element);
-        elements[keyFor(elements, record.id, element)] = record;
+    const statements = bodyOf(statement, 'ModelBody', 'ModelObjectStmt');
+    if (head.dim === '2d') {
+      const objects: Record<string, Model.Object2D> = {};
+      for (const object of statements) {
+        const attrs = readAttrs(object);
+        const size = attrs.get('size');
+        const record = { ...readObject(object, attrs), ...(isSize2(size) ? { size } : {}) };
+        objects[keyFor(objects, record.id, object)] = record;
       }
-      scenes.push({ ...base, dim, camera: readCamera2D(camera), elements });
+      models.push({ id: head.id, dim: '2d', ...head.name, objects });
     } else {
-      const elements: Record<string, Model.Element3D> = {};
-      for (const element of elementStatements) {
-        const record = readElement3D(element);
-        ranges.set(`${id}/${record.id}`, element);
-        elements[keyFor(elements, record.id, element)] = record;
+      const objects: Record<string, Model.Object3D> = {};
+      for (const object of statements) {
+        const attrs = readAttrs(object);
+        const scale = readScale(attrs.get('scale'));
+        const record = { ...readObject(object, attrs), ...(scale ? { scale } : {}) };
+        objects[keyFor(objects, record.id, object)] = record;
       }
-      scenes.push(applyLayout({ ...base, dim, camera: readCamera3D(camera), elements }));
+      models.push({ id: head.id, dim: '3d', ...head.name, objects });
     }
   }
 
-  const document: Model.SceneDocument = { scenes };
-  for (const problem of [...validateDocument(document), ...sceneTree(document).problems]) {
-    const range = ranges.get(problem.element ? `${problem.scene}/${problem.element}` : problem.scene) ??
-      ranges.get(problem.scene) ?? { from: 0, to: 0 };
+  const layouts: Model.LayoutRecord[] = [];
+  for (const statement of statementsOf('LayoutDecl')) {
+    const head = readHead('layout', statement);
+    if (!head) {
+      continue;
+    }
+    const modelId = asString(head.attrs.get('model'));
+    const model = models.find((candidate) => candidate.id === modelId && candidate.dim === head.dim);
+    const objects = new Set(model ? Object.keys(model.objects) : []);
+    const base = { id: head.id, ...head.name, ...optional('model', modelId) };
+    const statements = bodyOf(statement, 'LayoutBody', 'ElementStmt');
+    if (head.dim === '2d') {
+      const elements: Record<string, Model.Element2D> = {};
+      for (const element of statements) {
+        const record = readElement2D(element, objects);
+        ranges.set(`layout:${head.id}/${record.id}`, element);
+        elements[keyFor(elements, record.id, element)] = record;
+      }
+      layouts.push({ ...base, dim: '2d', elements });
+    } else {
+      const elements: Record<string, Model.Element3D> = {};
+      for (const element of statements) {
+        const record = readElement3D(element, objects);
+        ranges.set(`layout:${head.id}/${record.id}`, element);
+        elements[keyFor(elements, record.id, element)] = record;
+      }
+      layouts.push(applyArrangement({ ...base, dim: '3d', elements }));
+    }
+  }
+
+  const scenes: Model.SceneRecord[] = [];
+  for (const statement of statementsOf('SceneDecl')) {
+    const head = readHead('scene', statement);
+    if (!head) {
+      continue;
+    }
+    const camera = bodyOf(statement, 'SceneBody', 'CameraStmt')[0];
+    const base = {
+      id: head.id,
+      ...head.name,
+      ...optionalString('theme', head.attrs.get('theme')),
+      layout: asString(head.attrs.get('layout')) ?? '',
+    };
+    scenes.push(
+      head.dim === '2d'
+        ? { ...base, dim: '2d', camera: readCamera2D(camera) }
+        : { ...base, dim: '3d', camera: readCamera3D(camera) },
+    );
+  }
+
+  const document: Model.SceneDocument = { scenes, layouts, models };
+  for (const problem of [...validateDocument(document), ...layoutTree(document).problems]) {
+    const at = `${problem.part}:${problem.id}`;
+    const range = (problem.element ? ranges.get(`${at}/${problem.element}`) : undefined) ??
+      ranges.get(at) ?? { from: 0, to: 0 };
     report(range, problem.message);
   }
   return { document, problems };
@@ -314,7 +392,7 @@ const keyFor = (elements: Record<string, unknown>, id: string, statement: Syntax
   id in elements ? `${id}@${statement.from}` : id;
 
 /** Attributes the element reader maps to fields; any other attribute goes into `props`. */
-const ELEMENT_KEYS = new Set([
+const ELEMENT_KEYS: ReadonlySet<string> = new Set([
   'size',
   'scale',
   'rotation',
@@ -326,10 +404,12 @@ const ELEMENT_KEYS = new Set([
   'from',
   'to',
   'members',
-  'layout',
-  'scene',
+  'arrange',
   ...STYLE_KEYS,
 ]);
+
+/** Attributes the object reader maps to fields; any other attribute goes into `props`. */
+const OBJECT_KEYS: ReadonlySet<string> = new Set(['size', 'scale', 'parts', ...STYLE_KEYS]);
 
 const optionalString = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asString(value));
 const optionalBoolean = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asBoolean(value));
@@ -380,6 +460,12 @@ const formatScale = (scale: Model.Vec3): string =>
     ? formatNumber(scale.x)
     : `${formatNumber(scale.x)}x${formatNumber(scale.y)}x${formatNumber(scale.z)}`;
 
+/** Style tokens, then props, the order every element and object ends with. */
+const formatStyleAndProps = (item: { style?: Model.Style; props?: Record<string, unknown> }): string[] => [
+  ...STYLE_KEYS.flatMap((key) => attr(key, item.style?.[key])),
+  ...Object.entries(item.props ?? {}).flatMap(([key, value]) => attr(key, value)),
+];
+
 /** The attributes every element shares, in the canonical order after its geometry. */
 const formatBase = (element: Model.Element): string[] => [
   ...attr('order', element.order),
@@ -390,20 +476,19 @@ const formatBase = (element: Model.Element): string[] => [
   ...(element.from ? [`from=${formatBinding(element.from)}`] : []),
   ...(element.to ? [`to=${formatBinding(element.to)}`] : []),
   ...(element.members ? [`members=${formatString(element.members.join(' '))}`] : []),
-  ...attr('layout', element.layout?.kind),
-  ...Object.entries(element.layout?.params ?? {}).flatMap(([key, value]) => attr(`${LAYOUT_PARAM}${key}`, value)),
-  ...attr('scene', element.scene),
-  ...STYLE_KEYS.flatMap((key) => attr(key, element.style?.[key])),
-  ...Object.entries(element.props ?? {}).flatMap(([key, value]) => attr(key, value)),
+  ...attr('arrange', element.arrange?.kind),
+  ...Object.entries(element.arrange?.params ?? {}).flatMap(([key, value]) => attr(`${ARRANGE_PARAM}${key}`, value)),
+  ...formatStyleAndProps(element),
 ];
 
 const formatBinding = ({ element, anchor }: Model.Binding): string =>
   formatWord(anchor === undefined ? element : `${element}#${anchor}`);
 
+/** `element <id> <object or kind> ["label"]`; an element placing an object names it where a kind would go. */
 const formatHead = (element: Model.Element): string[] => [
   'element',
   formatId(element.id),
-  formatWord(element.kind),
+  formatWord(element.object ?? element.kind ?? ''),
   ...(element.label === undefined ? [] : [formatString(element.label)]),
 ];
 
@@ -425,6 +510,17 @@ const formatElement3D = (element: Model.Element3D): string =>
     ...formatBase(element),
   ].join(' ');
 
+const formatObject = (object: Model.Object2D | Model.Object3D): string =>
+  [
+    'object',
+    formatId(object.id),
+    formatWord(object.kind),
+    ...('size' in object ? attr('size', object.size) : []),
+    ...('scale' in object && object.scale ? [`scale=${formatScale(object.scale)}`] : []),
+    ...attr('parts', object.parts),
+    ...formatStyleAndProps(object),
+  ].join(' ');
+
 const formatCamera = (scene: Model.SceneRecord): string =>
   scene.dim === '2d'
     ? ['camera', ...attr('center', scene.camera.center), ...attr('zoom', scene.camera.zoom)].join(' ')
@@ -438,24 +534,52 @@ const formatCamera = (scene: Model.SceneRecord): string =>
         ...attr('projection', scene.camera.projection),
       ].join(' ');
 
-const formatSceneRecord = (scene: Model.SceneRecord): string => {
-  const head = [
-    'scene',
-    formatId(scene.id),
-    `dim=${scene.dim}`,
-    ...(scene.name === undefined ? [] : [`name=${formatString(scene.name)}`]),
-    ...attr('theme', scene.theme),
-    ...attr('component', scene.component),
-  ].join(' ');
-  const elements =
-    scene.dim === '2d'
-      ? Object.values(scene.elements).map(formatElement2D)
-      : Object.values(scene.elements).map(formatElement3D);
-  return [`${head} {`, `  ${formatCamera(scene)}`, ...elements.map((line) => `  ${line}`), '}', ''].join('\n');
-};
+/** `<word> <id> dim=… <attributes> {`, its lines indented, then `}` and a newline. */
+const formatBlock = (head: string[], lines: string[]): string =>
+  [`${head.join(' ')} {`, ...lines.map((line) => `  ${line}`), '}', ''].join('\n');
+
+const name = (value: string | undefined): string[] => (value === undefined ? [] : [`name=${formatString(value)}`]);
+
+const formatSceneRecord = (scene: Model.SceneRecord): string =>
+  formatBlock(
+    [
+      'scene',
+      formatId(scene.id),
+      `dim=${scene.dim}`,
+      `layout=${formatWord(scene.layout)}`,
+      ...name(scene.name),
+      ...attr('theme', scene.theme),
+    ],
+    [formatCamera(scene)],
+  );
+
+const formatLayoutRecord = (layout: Model.LayoutRecord): string =>
+  formatBlock(
+    [
+      'layout',
+      formatId(layout.id),
+      `dim=${layout.dim}`,
+      ...(layout.model === undefined ? [] : [`model=${formatWord(layout.model)}`]),
+      ...name(layout.name),
+    ],
+    layout.dim === '2d'
+      ? Object.values(layout.elements).map(formatElement2D)
+      : Object.values(layout.elements).map(formatElement3D),
+  );
+
+const formatModelRecord = (model: Model.ModelRecord): string =>
+  formatBlock(
+    ['model', formatId(model.id), `dim=${model.dim}`, ...name(model.name)],
+    Object.values(model.objects).map(formatObject),
+  );
 
 /**
- * Canonical text for a document: one block per scene separated by a blank line, the camera first, then one line per
- * element in record order, with every placed element's position written out so the text is the whole of the records.
+ * Canonical text for a document: its scenes, then its layouts, then its models, one block each separated by a blank
+ * line, with every placed element's position written out so the text is the whole of the records.
  */
-export const printScenes = (doc: Model.SceneDocument): string => doc.scenes.map(formatSceneRecord).join('\n');
+export const printScenes = (doc: Model.SceneDocument): string =>
+  [
+    ...doc.scenes.map(formatSceneRecord),
+    ...doc.layouts.map(formatLayoutRecord),
+    ...doc.models.map(formatModelRecord),
+  ].join('\n');

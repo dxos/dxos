@@ -27,25 +27,33 @@ describe('toCanvasViews', () => {
     expect(root.nodes.a).toMatchObject({ type: 'rect', label: 'A', style: { hue: 'blue', fill: true, border: true } });
   });
 
-  test('maps a scene element to a view node over the child view', () => {
+  test("maps a composite element to a view node over its parts layout's view", () => {
     const { views: all, root } = views(EXEMPLARS.subscene);
-    expect(root).toBe('subscene');
-    expect(all.find((view) => view.id === 'subscene')?.nodes.b).toMatchObject({ type: 'view', scene: 'b-detail' });
+    expect(root).toBe('main');
+    expect(all.find((view) => view.id === 'main')?.nodes.b).toMatchObject({ type: 'view', scene: 'b-detail' });
     expect(all.map((view) => view.id)).toContain('b-detail');
+  });
+
+  test("an element placing an object draws with the object's kind and size", () => {
+    const {
+      views: [root],
+    } = views(EXEMPLARS.links);
+    expect(root.nodes.b).toMatchObject({ type: 'rect', size: { width: 128, height: 128 }, style: { hue: 'green' } });
   });
 
   test('skips a link whose binding is missing', () => {
     const {
       views: [root],
     } = toCanvasViews({
-      scenes: [
+      scenes: [{ id: 's', dim: '2d', layout: 'l', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+      layouts: [
         {
-          id: 's',
+          id: 'l',
           dim: '2d',
-          camera: { center: { x: 0, y: 0 }, zoom: 1 },
           elements: { ab: { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } } },
         },
       ],
+      models: [],
     });
     expect(root.links).toEqual({});
   });
@@ -57,9 +65,8 @@ describe('toCanvasViews', () => {
 
   test('puts every edge of every 2D exemplar node on a major grid line', () => {
     const offGrid = EXEMPLAR_NAMES.flatMap((name) =>
-      Dsl.readScenes(EXEMPLARS[name])
-        .document.scenes.filter((scene) => scene.dim === '2d')
-        .flatMap((scene) => Object.values(toCanvasViews({ scenes: [scene] }).views[0].nodes))
+      toCanvasViews(Dsl.readScenes(EXEMPLARS[name]).document)
+        .views.flatMap((view) => Object.values(view.nodes))
         .filter((node) =>
           [
             node.center.x - node.size.width / 2,

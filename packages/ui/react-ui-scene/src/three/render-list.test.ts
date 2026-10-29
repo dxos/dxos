@@ -19,40 +19,70 @@ const camera: Scene.Camera3D = {
   projection: 'perspective',
 };
 
-const scene = (id: string, elements: Scene.Element3D[]): Scene.SceneRecord3D => ({
+const layout = (id: string, elements: Scene.Element3D[], model?: string): Scene.LayoutRecord3D => ({
   id,
   dim: '3d',
-  camera,
+  ...(model ? { model } : {}),
   elements: Object.fromEntries(elements.map((element) => [element.id, element])),
 });
+
+const scene: Scene.SceneRecord3D = { id: 's', dim: '3d', layout: 'a', camera };
 
 describe('renderList', () => {
   test('skips a link whose target is missing', () => {
     const list = renderList({
-      scenes: [
-        scene('s', [
+      scenes: [scene],
+      layouts: [
+        layout('a', [
           { id: 'a', kind: 'sphere', center: { x: 0, y: 0, z: 0 } },
           { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } },
         ]),
       ],
+      models: [],
     });
     expect(list.items.map((item) => item.id)).toEqual(['a']);
     expect(list.links).toEqual([]);
   });
 
-  test('stops at a scene cycle', () => {
-    const shell = (id: string, child: string): Scene.Element3D => ({
+  test("stops at a cycle through composites' parts", () => {
+    const shell = (id: string, object: string): Scene.Element3D => ({
       id,
-      kind: 'scene',
-      scene: child,
+      object,
       center: { x: 0, y: 0, z: 0 },
       scale: { x: 4, y: 4, z: 4 },
     });
-    const list = renderList({ scenes: [scene('a', [shell('to-b', 'b')]), scene('b', [shell('to-a', 'a')])] });
+    const list = renderList({
+      scenes: [scene],
+      layouts: [layout('a', [shell('to-b', 'of-b')], 'm'), layout('b', [shell('to-a', 'of-a')], 'm')],
+      models: [
+        {
+          id: 'm',
+          dim: '3d',
+          objects: {
+            'of-a': { id: 'of-a', kind: 'sphere', parts: 'a' },
+            'of-b': { id: 'of-b', kind: 'sphere', parts: 'b' },
+          },
+        },
+      ],
+    });
     expect(list.items.map((item) => item.key)).toEqual(['to-b', 'to-b/to-a']);
+    expect(list.items[0]).toMatchObject({ kind: 'sphere', frame: true });
   });
 
-  test('places a child scene inside its frame', () => {
+  test("overrides replace the scene's own elements' values", () => {
+    const list = renderList(
+      {
+        scenes: [scene],
+        layouts: [layout('a', [{ id: 'a', kind: 'sphere', center: { x: 0, y: 0, z: 0 } }])],
+        models: [],
+      },
+      scene,
+      { a: { center: { x: 1, y: 2, z: 3 } } },
+    );
+    expect(list.items[0].center).toEqual({ x: 1, y: 2, z: 3 });
+  });
+
+  test("places a composite's parts inside its frame", () => {
     const list = renderList(Dsl.readScenes(EXEMPLARS.encapsulated).document);
     const hub = list.items.find((item) => item.key === 'shell/hub');
     const s1 = list.items.find((item) => item.key === 'shell/s1');

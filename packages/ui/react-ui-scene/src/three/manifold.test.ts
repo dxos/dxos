@@ -20,11 +20,11 @@ describe('manifoldGeometry', () => {
     wasm.setup();
   });
 
-  test('an equal solid in a new scene record is not rebuilt', () => {
+  test('an equal solid in a new layout record is not rebuilt', () => {
     const geometry = manifoldGeometry(wasm);
     const first = renderList(Dsl.readScenes(EXEMPLARS.solid).document).items[0];
     const second = renderList(Dsl.readScenes(EXEMPLARS.solid).document).items[0];
-    expect(second.scene).not.toBe(first.scene);
+    expect(second.elements).not.toBe(first.elements);
     expect(geometry(second)).toBe(geometry(first));
   });
 

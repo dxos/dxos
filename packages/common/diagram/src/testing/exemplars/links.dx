@@ -1,8 +1,15 @@
-scene links dim=2d name="Links" theme=flat {
+scene links dim=2d layout=links name="Links" theme=flat {
   camera center=256,0 zoom=1
-  element a rect "A" @ 0,0 size=128x128 hue=blue surface=solid border=true rounded=true
-  element b rect "B" @ 256,0 size=128x128 hue=green surface=solid border=true rounded=true
-  element c rect "C" @ 512,0 size=128x128 hue=amber surface=solid border=true rounded=true
+}
+
+layout links dim=2d model=shapes {
+  element a box "A" @ 0,0 hue=blue
+  element b box "B" @ 256,0 hue=green
+  element c box "C" @ 512,0 hue=amber
   element ab link from=a to=b end=arrow
   element bc link from=b to=c end=arrow
+}
+
+model shapes dim=2d {
+  object box rect size=128x128 surface=solid border=true rounded=true
 }

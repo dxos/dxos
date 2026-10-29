@@ -4,7 +4,7 @@
 
 import { type ArrangeInput, type Arranger, type Vec3 } from '@dxos/animation';
 
-import { type Element3D, type SceneRecord2D, type SceneRecord3D } from './Scene.ts';
+import { type Element2D, type Element3D, type LayoutRecord3D } from './Scene.ts';
 
 const ORIGIN: Vec3 = { x: 0, y: 0, z: 0 };
 
@@ -69,16 +69,17 @@ export const grid: Arranger = (input) => {
   );
 };
 
-export const LAYOUTS_3D: Readonly<Record<string, Arranger>> = { ring, grid };
+/** The arrangements a 3D group may name. */
+export const ARRANGERS_3D: Readonly<Record<string, Arranger>> = { ring, grid };
 
 /**
  * Runs each group's stored arrangement over its members that are neither pinned nor already placed, so text written
  * as intent alone gets positions while a placed or hand-moved member stays put.
  */
-export const applyLayout = (scene: SceneRecord3D): SceneRecord3D => {
-  const elements: Record<string, Element3D> = { ...scene.elements };
-  for (const group of Object.values(scene.elements)) {
-    const arranger = group.layout && LAYOUTS_3D[group.layout.kind];
+export const applyArrangement = (layout: LayoutRecord3D): LayoutRecord3D => {
+  const elements: Record<string, Element3D> = { ...layout.elements };
+  for (const group of Object.values(layout.elements)) {
+    const arranger = group.arrange && ARRANGERS_3D[group.arrange.kind];
     if (!arranger || !group.members) {
       continue;
     }
@@ -88,7 +89,7 @@ export const applyLayout = (scene: SceneRecord3D): SceneRecord3D => {
     });
     const placed = arranger({
       targets,
-      params: { centre: group.center ?? ORIGIN, ...group.layout?.params },
+      params: { centre: group.center ?? ORIGIN, ...group.arrange?.params },
       values: (id) => ({ center: elements[id]?.center }),
     });
     for (const [id, center] of Object.entries(placed)) {
@@ -98,7 +99,7 @@ export const applyLayout = (scene: SceneRecord3D): SceneRecord3D => {
       }
     }
   }
-  return { ...scene, elements };
+  return { ...layout, elements };
 };
 
 /** An element's radius: half its largest scale, scale being its size in scene units. */
@@ -107,9 +108,11 @@ export const radiusOf = (element: Element3D): number => {
   return Math.max(scale.x, scale.y, scale.z) / 2;
 };
 
-/** The box round every placed element; zero-sized when none is placed. */
-export const bounds2D = (scene: SceneRecord2D): { x: number; y: number; width: number; height: number } => {
-  const boxes = Object.values(scene.elements).flatMap((element) =>
+/** The box round every placed element (resolved, so an object's size counts); zero-sized when none is placed. */
+export const bounds2D = (
+  elements: Readonly<Record<string, Element2D>>,
+): { x: number; y: number; width: number; height: number } => {
+  const boxes = Object.values(elements).flatMap((element) =>
     element.center && element.size ? [{ center: element.center, size: element.size }] : [],
   );
   if (boxes.length === 0) {
@@ -122,9 +125,9 @@ export const bounds2D = (scene: SceneRecord2D): { x: number; y: number; width: n
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
-/** A sphere round every placed element, centred on their box; zero when none is placed. */
-export const bounds3D = (scene: SceneRecord3D): { center: Vec3; radius: number } => {
-  const placed = Object.values(scene.elements).flatMap((element) =>
+/** A sphere round every placed element (resolved, so an object's scale counts), centred on their box. */
+export const bounds3D = (elements: Readonly<Record<string, Element3D>>): { center: Vec3; radius: number } => {
+  const placed = Object.values(elements).flatMap((element) =>
     element.center ? [{ position: element.center, radius: radiusOf(element) }] : [],
   );
   if (placed.length === 0) {
@@ -145,10 +148,10 @@ export const bounds3D = (scene: SceneRecord3D): { center: Vec3; radius: number }
   return { center, radius };
 };
 
-/** A child scene's share of its frame (design D-23): scaled to 80% of the frame and centred in it. */
+/** A composite's parts' share of its frame (design D-23): scaled to 80% of the frame and centred in it. */
 export const FIT_MARGIN = 0.8;
 
-/** How a child scene is placed inside its frame: `world = offset + local * scale`. */
+/** How a composite's parts layout is placed inside its frame: `world = offset + local * scale`. */
 export const fitChild = (
   frame: { center: Vec3; radius: number },
   child: { center: Vec3; radius: number },

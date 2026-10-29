@@ -1,13 +1,21 @@
-scene cluster dim=3d name="Cluster" theme=presentation {
+scene cluster dim=3d layout=cluster name="Cluster" theme=presentation {
   camera target=0,0,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
-  element hub sphere "Hub" @ 0,0,0 scale=1.2 hue=amber surface=solid
-  element s1 sphere "S1" @ 3,0,0 scale=0.6 hue=blue surface=solid
-  element s2 sphere "S2" @ 0,0,3 scale=0.6 hue=blue surface=solid
-  element s3 sphere "S3" @ -3,0,0 scale=0.6 hue=blue surface=solid
-  element s4 sphere "S4" @ 0,0,-3 scale=0.6 hue=blue surface=solid
-  element team group members="s1 s2 s3 s4" layout=ring layout-radius=3
+}
+
+layout cluster dim=3d model=nodes {
+  element hub hub "Hub" @ 0,0,0
+  element s1 spoke "S1" @ 3,0,0
+  element s2 spoke "S2" @ 0,0,3
+  element s3 spoke "S3" @ -3,0,0
+  element s4 spoke "S4" @ 0,0,-3
+  element team group members="s1 s2 s3 s4" arrange=ring arrange-radius=3
   element l1 link from=hub to=s1
   element l2 link from=hub to=s2
   element l3 link from=hub to=s3
   element l4 link from=hub to=s4
+}
+
+model nodes dim=3d {
+  object hub sphere scale=1.2 hue=amber surface=solid
+  object spoke sphere scale=0.6 hue=blue surface=solid
 }

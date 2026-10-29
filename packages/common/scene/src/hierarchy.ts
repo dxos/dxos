@@ -2,37 +2,43 @@
 // Copyright 2026 DXOS.org
 //
 
+import { findLayout, resolveLayout, sceneLayout } from './document.ts';
 import { type SceneDocument } from './Scene.ts';
 import { type Problem } from './validate.ts';
 
 /**
- * The document's scenes depth-first from the root, following child-scene elements. A scene reached again on the path
- * that led to it is a cycle: it is reported and not descended, so a renderer walking this order terminates.
+ * The layouts a document's root scene draws, depth-first from its layout, following composite objects' parts. A layout
+ * reached again on the path that led to it is a cycle: it is reported and not descended, so a renderer walking this
+ * order terminates.
  */
-export const sceneTree = (doc: SceneDocument): { order: string[]; problems: Problem[] } => {
-  const byId = new Map(doc.scenes.map((scene) => [scene.id, scene]));
+export const layoutTree = (doc: SceneDocument): { order: string[]; problems: Problem[] } => {
   const order: string[] = [];
   const problems: Problem[] = [];
   const visit = (id: string, path: readonly string[]) => {
-    const scene = byId.get(id);
-    if (!scene) {
+    const layout = findLayout(doc, id);
+    if (!layout) {
       return;
     }
     if (!order.includes(id)) {
       order.push(id);
     }
-    for (const element of Object.values(scene.elements)) {
-      if (element.scene === undefined) {
+    for (const element of Object.values(resolveLayout(doc, layout))) {
+      if (element.parts === undefined) {
         continue;
       }
-      if (path.includes(element.scene)) {
-        problems.push({ scene: id, element: element.id, message: `Child scene "${element.scene}" makes a cycle.` });
+      if (path.includes(element.parts)) {
+        problems.push({
+          part: 'layout',
+          id,
+          element: element.id,
+          message: `The parts of "${element.object ?? element.id}" make a cycle.`,
+        });
         continue;
       }
-      visit(element.scene, [...path, element.scene]);
+      visit(element.parts, [...path, element.parts]);
     }
   };
-  const root = doc.scenes[0];
+  const root = sceneLayout(doc);
   if (root) {
     visit(root.id, [root.id]);
   }

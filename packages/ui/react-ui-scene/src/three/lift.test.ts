@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
-import { type Scene } from '@dxos/scene';
+import { type Scene, resolveLayout3D } from '@dxos/scene';
 
 import { project } from './camera.ts';
 import { PIXELS_PER_UNIT, camera2DTo3D, liftScene } from './lift.ts';
@@ -17,17 +17,18 @@ const viewport = { width: 800, height: 600 };
 const lifted = (name: 'links' | 'subscene') => liftScene(Dsl.readScenes(EXEMPLARS[name]).document);
 
 describe('liftScene', () => {
-  test('an element right of the origin in 2D is at +x in 3D', () => {
-    const scene = lifted('links').scenes[0];
-    expect(scene.dim).toBe('3d');
-    const b = scene.dim === '3d' ? scene.elements.b : undefined;
+  test("an element right of the origin in 2D is at +x in 3D, sized by its object's size", () => {
+    const doc = lifted('links');
+    expect(doc.scenes[0].dim).toBe('3d');
+    const layout = doc.layouts[0];
+    const b = layout.dim === '3d' ? resolveLayout3D(doc, layout).b : undefined;
     expect(b).toMatchObject({ kind: 'cube', center: { x: 256 / PIXELS_PER_UNIT, y: 0 } });
     expect(b?.scale?.x).toBeCloseTo(128 / PIXELS_PER_UNIT);
   });
 
-  test('keeps links, labels and child scenes', () => {
+  test("keeps links, labels and composites' parts", () => {
     const doc = lifted('subscene');
-    expect(doc.scenes.map((scene) => scene.dim)).toEqual(['3d', '3d']);
+    expect(doc.layouts.map((layout) => layout.dim)).toEqual(['3d', '3d']);
     const list = renderList(doc);
     expect(list.links.map((link) => link.key)).toEqual(expect.arrayContaining(['ab', 'bc', 'b/xy']));
     expect(list.items.find((item) => item.key === 'a')?.label).toBe('A');

@@ -7,15 +7,14 @@ import { describe, expect, test } from 'vitest';
 
 import { Vec3 } from '@dxos/animation';
 
-import { applyLayout, bounds2D, bounds3D, fitChild, ring } from './layout.ts';
+import { applyArrangement, bounds2D, bounds3D, fitChild, ring } from './arrange.ts';
 import type * as Scene from './Scene.ts';
 
 const ORIGIN: Vec3 = { x: 0, y: 0, z: 0 };
 
-const cluster = (members: Scene.Element3D[]): Scene.SceneRecord3D => ({
+const cluster = (members: Scene.Element3D[]): Scene.LayoutRecord3D => ({
   id: 'cluster',
   dim: '3d',
-  camera: { target: ORIGIN, yaw: 0, pitch: 30, distance: 10, fov: 0.8, projection: 'perspective' },
   elements: Object.fromEntries(
     [
       ...members,
@@ -23,13 +22,13 @@ const cluster = (members: Scene.Element3D[]): Scene.SceneRecord3D => ({
         id: 'g',
         kind: 'group',
         members: members.map((member) => member.id),
-        layout: { kind: 'ring', params: { radius: 3 } },
+        arrange: { kind: 'ring', params: { radius: 3 } },
       },
     ].map((element) => [element.id, element]),
   ),
 });
 
-describe('layout', () => {
+describe('arrange', () => {
   test('ring places n members on a circle of the radius', () => {
     const positions = ring({ targets: ['a', 'b', 'c', 'd'], params: { radius: 2 }, values: () => ({}) });
     for (const value of Object.values(positions)) {
@@ -44,22 +43,22 @@ describe('layout', () => {
     expect(Schema.decodeUnknownSync(Vec3)(positions.b)).toEqual({ x: -3, y: 0, z: 0 });
   });
 
-  test('applyLayout places unpositioned members and keeps a pinned member', () => {
+  test('applyArrangement places unpositioned members and keeps a pinned member', () => {
     const pinned: Vec3 = { x: 9, y: 9, z: 9 };
-    const scene = applyLayout(
+    const layout = applyArrangement(
       cluster([
         { id: 'a', kind: 'sphere' },
         { id: 'b', kind: 'sphere', center: pinned, pinned: true },
       ]),
     );
-    expect(scene.elements.b.center).toEqual(pinned);
-    const { x, y, z } = scene.elements.a.center ?? ORIGIN;
+    expect(layout.elements.b.center).toEqual(pinned);
+    const { x, y, z } = layout.elements.a.center ?? ORIGIN;
     expect(Math.hypot(x, y, z)).toBeCloseTo(3);
   });
 
-  test('bounds of an empty scene are zero', () => {
-    expect(bounds3D(cluster([]))).toEqual({ center: ORIGIN, radius: 0 });
-    expect(bounds2D({ id: 'e', dim: '2d', camera: { center: { x: 0, y: 0 }, zoom: 1 }, elements: {} })).toEqual({
+  test('bounds of no elements are zero', () => {
+    expect(bounds3D({})).toEqual({ center: ORIGIN, radius: 0 });
+    expect(bounds2D({})).toEqual({
       x: 0,
       y: 0,
       width: 0,
