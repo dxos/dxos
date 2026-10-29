@@ -26,12 +26,14 @@ describe('followUpdate', () => {
     const status = Atom.make<AppUpdate.Status>({ kind: 'idle' });
     const apply = vi.fn(async () => {});
     const states: Capabilities.BootGateState[] = [];
+    const onCheckFailed = vi.fn();
     const cleanup = AppUpdate.followUpdate(
       { check, install, apply },
       (listener) => registry.subscribe(status, listener, { immediate: true }),
       (state) => states.push(state),
+      onCheckFailed,
     );
-    return { emit: (next: AppUpdate.Status) => registry.set(status, next), states, apply, cleanup };
+    return { emit: (next: AppUpdate.Status) => registry.set(status, next), states, apply, onCheckFailed, cleanup };
   };
 
   test('holds through a download, then applies the update instead of releasing', () => {
@@ -76,19 +78,29 @@ describe('followUpdate', () => {
     cleanup();
   });
 
-  test('releases on a failed check', async () => {
-    const { states, cleanup } = setup({ check: () => Promise.reject(new Error('offline')) });
+  test('releases on a failed check and reports it, whether the check rejects or reports it', async () => {
+    const rejected = setup({ check: () => Promise.reject(new Error('offline')) });
     // Lets the rejection handler run; no timer is advanced, so the budget cannot be what released it.
     await Promise.resolve();
+    expect(rejected.states.at(-1)).toEqual({ pending: false });
+    expect(rejected.onCheckFailed).toHaveBeenCalledOnce();
+    rejected.cleanup();
 
-    expect(states.at(-1)).toEqual({ pending: false });
-    cleanup();
+    const reported = setup();
+    reported.emit({ kind: 'checking' });
+    reported.emit({ kind: 'failed', error: 'offline' });
+    expect(reported.states.at(-1)).toEqual({ pending: false });
+    expect(reported.onCheckFailed).toHaveBeenCalledOnce();
+    reported.cleanup();
   });
 
-  test('releases a check that never settles, and a download that stops progressing', () => {
+  test('releases a check at its budget however its status moves, and a download that stops progressing', () => {
     const checking = setup();
-    vi.advanceTimersByTime(AppUpdate.BOOT_GATE_CHECK_BUDGET);
+    vi.advanceTimersByTime(AppUpdate.BOOT_GATE_CHECK_BUDGET - 1);
+    checking.emit({ kind: 'checking' });
+    vi.advanceTimersByTime(1);
     expect(checking.states.at(-1)).toEqual({ pending: false });
+    expect(checking.onCheckFailed).not.toHaveBeenCalled();
     checking.cleanup();
 
     const downloading = setup();
@@ -98,5 +110,36 @@ describe('followUpdate', () => {
     vi.advanceTimersByTime(1);
     expect(downloading.states.at(-1)).toEqual({ pending: false });
     downloading.cleanup();
+  });
+});
+
+describe('makeBootGate', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('offline, starts released without checking', () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    const registry = AtomRegistry.make();
+    const check = vi.fn(async () => {});
+    const gate = AppUpdate.makeBootGate(
+      registry,
+      { status: Atom.make<AppUpdate.Status>({ kind: 'idle' }), check, apply: async () => {} },
+      true,
+    );
+    expect(registry.get(gate.state)).toEqual({ pending: false });
+    expect(check).not.toHaveBeenCalled();
+    gate.dispose();
+  });
+
+  test('leaves the status idle when the check fails', async () => {
+    const registry = AtomRegistry.make();
+    const status = Atom.make<AppUpdate.Status>({ kind: 'idle' });
+    const check = async () => registry.set(status, { kind: 'failed', error: 'offline' });
+    const gate = AppUpdate.makeBootGate(registry, { status, check, apply: async () => {} }, true);
+    await Promise.resolve();
+    expect(registry.get(gate.state)).toEqual({ pending: false });
+    expect(registry.get(status)).toEqual({ kind: 'idle' });
+    gate.dispose();
   });
 });

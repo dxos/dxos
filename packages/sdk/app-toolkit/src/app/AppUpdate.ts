@@ -68,8 +68,8 @@ export type Manager = {
   apply: () => Promise<void>;
 };
 
-/** How long the loader waits on a check that has neither found an update nor ruled one out. */
-export const BOOT_GATE_CHECK_BUDGET = 5_000;
+/** How long the loader waits for the check, counted from the gate's start and never extended. */
+export const BOOT_GATE_CHECK_BUDGET = 3_000;
 
 /** How long a download may go without progress before the app shows on the old build. */
 export const BOOT_GATE_STALL_BUDGET = 30_000;
@@ -102,23 +102,27 @@ const gateStateFor = (status: Status): Capabilities.BootGateState => {
   }
 };
 
-const budgetFor = (status: Status): number =>
+/** The budget once an update is found; `undefined` while the check's own deadline still runs. */
+const budgetFor = (status: Status): number | undefined =>
   status.kind === 'available' || status.kind === 'downloading'
     ? BOOT_GATE_STALL_BUDGET
     : status.kind === 'ready'
       ? BOOT_GATE_APPLY_BUDGET
-      : BOOT_GATE_CHECK_BUDGET;
+      : undefined;
 
 /**
  * Drives a boot gate: checks once and, if that finds an update, holds the loader through its download
  * (starting it where `install` is separate) and applies it. Once released the gate stays released.
+ * A check that fails calls `onCheckFailed`, so the caller can treat it as no check at all.
  */
 export const followUpdate = (
   manager: Pick<Manager, 'check' | 'install' | 'apply'>,
   subscribe: (listener: (status: Status) => void) => () => void,
   set: (state: Capabilities.BootGateState) => void,
+  onCheckFailed: () => void = () => {},
 ): (() => void) => {
   let released = false;
+  let found = false;
   let installing = false;
   let applying = false;
   let deadline: ReturnType<typeof setTimeout> | undefined;
@@ -138,14 +142,23 @@ export const followUpdate = (
     if (released) {
       return;
     }
+    if (status.kind === 'failed' && !found) {
+      release();
+      onCheckFailed();
+      return;
+    }
     const next = gateStateFor(status);
     if (!next.pending || (status.kind === 'available' && !manager.install)) {
       release();
       return;
     }
     set(next);
-    clearTimeout(deadline);
-    deadline = setTimeout(release, budgetFor(status));
+    const budget = budgetFor(status);
+    if (budget !== undefined) {
+      found = true;
+      clearTimeout(deadline);
+      deadline = setTimeout(release, budget);
+    }
     if (status.kind === 'available' && manager.install && !installing) {
       installing = true;
       manager.install().catch((error) => {
@@ -162,13 +175,17 @@ export const followUpdate = (
     }
   };
 
+  deadline = setTimeout(release, BOOT_GATE_CHECK_BUDGET);
   unsubscribe = subscribe(update);
   if (released) {
     unsubscribe();
   }
   manager.check().catch((error) => {
     log.warn('update check at boot failed', { error });
-    release();
+    if (!released) {
+      release();
+      onCheckFailed();
+    }
   });
 
   return () => {
@@ -178,18 +195,23 @@ export const followUpdate = (
   };
 };
 
-/** A boot gate's state: when `enabled`, it holds the loader while {@link followUpdate} runs. */
+/**
+ * A boot gate's state: when `enabled`, it holds the loader while {@link followUpdate} runs. Offline it
+ * does not check, and a check that fails leaves the status `idle`: the app boots on the version it has.
+ */
 export const makeBootGate = (
   registry: AtomRegistry.AtomRegistry,
   manager: Manager,
   enabled: boolean,
 ): { state: Atom.Atom<Capabilities.BootGateState>; dispose: () => void } => {
-  const state = Atom.make<Capabilities.BootGateState>({ pending: enabled }).pipe(Atom.keepAlive);
-  const dispose = enabled
+  const active = enabled && globalThis.navigator?.onLine !== false;
+  const state = Atom.make<Capabilities.BootGateState>({ pending: active }).pipe(Atom.keepAlive);
+  const dispose = active
     ? followUpdate(
         manager,
         (listener) => registry.subscribe(manager.status, listener, { immediate: true }),
         (next) => registry.set(state, next),
+        () => registry.set(manager.status, { kind: 'idle' }),
       )
     : () => {};
   return { state, dispose };

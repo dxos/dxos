@@ -163,8 +163,8 @@ feat F-2: Over-the-Air Updates
     then: a boot gate holds the loader while it checks for an update; when one is available it shows "Downloading update" with the download's progress, then "Updating", and relaunches onto the new version
 
   req F-2.7:
-    when: the check finds nothing, fails, takes longer than 5 s, or the download makes no progress for 30 s
-    then: the gate releases and the app opens on the running version; the background fiber still handles a later update
+    when: the app starts offline, the check finds nothing or fails, 3 s pass from the gate's start without the check finding an update, or the download makes no progress for 30 s
+    then: the gate releases and the app opens on the running version; a failed check leaves the status idle, not failed; the background fiber still handles a later update
 
   req F-2.8:
     when: the boot gate and the background fiber check or install at the same time
@@ -315,6 +315,34 @@ decision D-4: The Updater activates at startup, and a check or install already i
   for: user:wittjosiah
   affects: [F-2.1, F-2.8]
   why: The startup pass does not pull a provider forward from the plugin's start event, so the gate would wait until the loader had gone; once both start at boot, they would otherwise download the same update twice.
+```
+
+```mdl
+decision D-5: The boot check has a strict timeout. When the app is offline or the check's request fails, the app boots on the version it has and does not update; a failed check is not an error.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.7]
+```
+
+```mdl
+decision D-6: The gate releases 3 s after it starts unless the check has found an update, or when a download makes no progress for 30 s. Fills in [D-5].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-3
+  affects: [F-2.7]
+  why: The 5 s check budget restarted on every status change, so a check could hold the loader past it.
+  rejected: a deadline counted from when the app is otherwise ready — the gate cannot tell when that is
+```
+
+```mdl
+decision D-7: Offline (`navigator.onLine` false) the gate does not check; when its check fails the gate sets the status back to idle. A check started from settings still reports its failure. Fills in [D-5].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.7]
+  why: Offline the request can only fail, and an "Update failed" row would report a check the user never asked for.
+  rejected: hiding failures of a check started from settings — the user who pressed it needs to know it did not work
 ```
 
 ## Appendix: Extension Definitions
