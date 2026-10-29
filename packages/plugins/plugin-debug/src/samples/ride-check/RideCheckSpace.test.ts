@@ -29,7 +29,6 @@ type Archived = {
   'name'?: string;
   'title'?: string;
   'status'?: string;
-  'specs'?: string[];
   'document'?: { '/': string };
   'spec'?: { '/': string };
   'features'?: Array<{ '/': string }>;
@@ -37,6 +36,10 @@ type Archived = {
   '@relationTarget'?: string;
   '@meta'?: { keys?: Array<{ source: string; id: string }> };
 };
+
+/** The spec blocks an archived feature was read in from, as its foreign keys. */
+const sourcesOf = (entity: Archived): string[] =>
+  (entity['@meta']?.keys ?? []).filter(({ source }) => source === Feature.SPEC_KEY_SOURCE).map(({ id }) => id);
 
 /** The archive's tasks, in the order they were written. */
 const taskArchive = async (definition: ReturnType<typeof RideCheckSpace.make>): Promise<ArchivedTask[]> => {
@@ -105,9 +108,7 @@ describe('Ride Check template', () => {
       expect(subfeatures.map((feature) => feature.name)).toEqual(['Rain rule', 'Wind rule']);
       expect(all).toHaveLength(features.length + subfeatures.length);
       expect(map?.['@type']).toContain('type.projects.spec:');
-      expect(features.map((feature) => feature.specs)).toEqual(
-        ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
-      );
+      expect(features.map(sourcesOf)).toEqual(['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]));
 
       // Every other card reads the verdict's forecast.
       const dependsOn = ofType('relation.dependsOn');
@@ -128,7 +129,7 @@ describe('Ride Check template', () => {
       expect(document).toBeDefined();
       expect(document?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
       for (const feature of features) {
-        expect(Feature.getSpecPath(feature.specs?.[0] ?? '')).toBe(SPEC_PATH);
+        expect(Feature.getSpecPath(sourcesOf(feature)[0] ?? '')).toBe(SPEC_PATH);
       }
     },
   );

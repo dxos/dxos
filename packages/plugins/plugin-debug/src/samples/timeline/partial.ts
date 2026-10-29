@@ -11,6 +11,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
 import * as Spec from '@dxos/plugin-projects/Spec';
+import * as SpecText from '@dxos/plugin-projects/SpecText';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { Text } from '@dxos/schema';
 import { Outline, SpecDocument, Task, TaskSet } from '@dxos/types';
@@ -255,9 +256,9 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
             name: seed.name,
             description: seed.description,
             status: seed.status,
-            specs: [seed.spec],
           }),
         );
+        Feature.setSources(feature, [seed.spec]);
         if (seed.subfeatures) {
           const parts: Ref.Ref<Feature.Feature>[] = [];
           for (const subfeature of seed.subfeatures) {
@@ -273,6 +274,8 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
       Obj.update(map, (map) => {
         map.features.push(...[...byKey.values()].map((feature) => Ref.make(feature)));
       });
+      // Each `feat` block in the document becomes an embed of the feature seeded from it.
+      yield* Effect.promise(() => SpecText.take(map, { path: SPEC_PATH, text: specContent }));
 
       const featureOf = (key: string): Feature.Feature => {
         const feature = byKey.get(key);

@@ -8,8 +8,10 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
 import * as Spec from '@dxos/plugin-projects/Spec';
+import * as SpecText from '@dxos/plugin-projects/SpecText';
 
 import { type ProjectResult } from './project.ts';
+import specContent from './SPEC.mdl?raw';
 import { SPEC_PATH, type SpecResult } from './spec.ts';
 import { type TasksResult } from './tasks.ts';
 
@@ -82,9 +84,9 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
             name: seed.name,
             description: seed.description,
             status: 'planned',
-            specs: [`${SPEC_PATH}#${seed.feat}`],
           }),
         );
+        Feature.setSources(feature, [`${SPEC_PATH}#${seed.feat}`]);
         if (seed.subfeatures) {
           const parts: Ref.Ref<Feature.Feature>[] = [];
           for (const subfeature of seed.subfeatures) {
@@ -100,6 +102,8 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
       Obj.update(map, (map) => {
         map.features.push(...features.map((feature) => Ref.make(feature)));
       });
+      // Each `feat` block in the document becomes an embed of the feature seeded from it.
+      yield* Effect.promise(() => SpecText.take(map, { path: SPEC_PATH, text: specContent }));
 
       for (const [index, feature] of features.entries()) {
         if (index > 0) {
