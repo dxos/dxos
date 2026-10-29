@@ -21,4 +21,4 @@ export const ModelDefaults = SettingsModule.ModelDefaults;
 export type ModelDefaults = SettingsModule.ModelDefaults;
 
 /** The companion variant the Assistant's chat opens as (`LayoutOperation.UpdateCompanion` subject `~assistant-chat`). */
-export { ASSISTANT_COMPANION_VARIANT as COMPANION_VARIANT } from '#meta';
+export { ASSISTANT_COMPANION_VARIANT as COMPANION_VARIANT } from '../constants.ts';

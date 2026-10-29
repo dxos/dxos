@@ -322,10 +322,11 @@ become features and requirements: extract them rather than linking to the spec.
 - **Set the status when you observe it**, with `projects-update-feature { feature, status }`: `prototype` when it
   works in a demo, `operational` when people can rely on it, and `failing` when it worked before and does not now.
 - **When you finish work that shows a feature working**, make a showcase with
-  `projects-create-showcase { name, content, targets, artifacts? }`: markdown saying what you showed and
-  how to reproduce it, the screenshots and videos you uploaded as files and the PRs it landed in as
-  `artifacts`, and every feature and task it demonstrates in `targets`. An `operational` feature without a showcase
-  is flagged on the map.
+  `projects-create-showcase { name, content, targets, artifacts? }`. A showcase is a slide deck you can present:
+  `content` is its first slide, markdown saying what you showed and how to reproduce it, and each of `artifacts`
+  becomes a further slide showing that object — the screenshots and videos you uploaded as files, diagrams, the PRs
+  the work landed in — in the order given. Pass every feature and task it demonstrates in `targets`. An
+  `operational` feature without a showcase is flagged on the map.
 
 ## Verbs
 

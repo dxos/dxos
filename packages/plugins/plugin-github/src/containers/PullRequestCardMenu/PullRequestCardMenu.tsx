@@ -15,10 +15,10 @@ import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { PullRequest } from '@dxos/types';
 
-import { meta } from '#meta';
 import { GitHubOperation, Walkthrough } from '#types';
 
 import { useOpenObject } from '../../hooks/index.ts';
+import { GitHubNamespace } from '../../namespace.ts';
 import { newestWalkthrough } from '../../walkthrough/index.ts';
 
 const WALKTHROUGH_ICON = 'ph--path--regular';
@@ -35,7 +35,7 @@ export type PullRequestCardMenuProps = AppSurface.CardMenuData<PullRequest.PullR
  * otherwise the space the user is working in.
  */
 export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
   const activeSpace = ToolkitHooks.useActiveSpace();
@@ -55,7 +55,7 @@ export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps)
     }
     const pullRequest = stored ?? db.add(PullRequest.make(toStoredFields(subject)));
     const reference = PullRequest.reference(pullRequest);
-    const toastId = `${meta.profile.key}.walkthrough.${pullRequest.id}`;
+    const toastId = `${GitHubNamespace.key}.walkthrough.${pullRequest.id}`;
     const { data, error } = await invokePromise(
       GitHubOperation.GenerateWalkthrough,
       { pullRequest: Ref.make(pullRequest) },
@@ -66,7 +66,7 @@ export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps)
       await invokePromise(LayoutOperation.AddToast, {
         id: toastId,
         icon: 'ph--warning--regular',
-        title: ['walkthrough-failed.title', { ns: meta.profile.key }],
+        title: ['walkthrough-failed.title', { ns: GitHubNamespace.key }],
         description: reference,
       });
       return;
@@ -74,10 +74,10 @@ export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps)
     await invokePromise(LayoutOperation.AddToast, {
       id: toastId,
       icon: WALKTHROUGH_ICON,
-      title: ['walkthrough-ready.title', { ns: meta.profile.key }],
+      title: ['walkthrough-ready.title', { ns: GitHubNamespace.key }],
       description: reference,
-      actionLabel: ['open-walkthrough.label', { ns: meta.profile.key }],
-      actionAlt: ['open-walkthrough.label', { ns: meta.profile.key }],
+      actionLabel: ['open-walkthrough.label', { ns: GitHubNamespace.key }],
+      actionAlt: ['open-walkthrough.label', { ns: GitHubNamespace.key }],
       onAction: () => void openObject(pullRequest),
     });
   }, [db, stored, subject, invokePromise, openObject]);
@@ -99,7 +99,7 @@ export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps)
     ];
   }, [db, stored, walkthrough, openObject, generateWalkthrough, t]);
 
-  useMenuContribution(menu, { id: `${meta.profile.key}.walkthrough`, mode: 'additive', items });
+  useMenuContribution(menu, { id: `${GitHubNamespace.key}.walkthrough`, mode: 'additive', items });
 
   return null;
 };

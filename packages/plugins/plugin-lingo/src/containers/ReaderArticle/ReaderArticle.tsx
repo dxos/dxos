@@ -25,9 +25,9 @@ import {
   mergeSegmentations,
   normalizeToken,
 } from '#extensions';
-import { meta } from '#meta';
 import { Analysis, Language, LingoCapabilities, LingoOperation, Vocabulary, Word } from '#types';
 
+import { LingoNamespace } from '../../namespace.ts';
 import { useSourceText } from './useSourceText.ts';
 
 export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
@@ -39,7 +39,7 @@ export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
  * revealed, so the document keeps whatever editor its own plugin gives it.
  */
 export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(LingoNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Attention sits on the article this companion accompanies, not on the companion itself, so the
   // subject's URI is what `ActionToolbar`'s `useAttention` has to match — otherwise the toolbar is
@@ -159,7 +159,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
       void invokePromise(
         LingoOperation.TranslateTerm,
         { term: token, language: list.language, context },
-        { spaceId: db?.spaceId, notify: { error: ['translate-error.message', { ns: meta.profile.key }] } },
+        { spaceId: db?.spaceId, notify: { error: ['translate-error.message', { ns: LingoNamespace.key }] } },
       ).then((result) => {
         if (!result.data) {
           return;
@@ -170,7 +170,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
         return invokePromise(
           LingoOperation.AddWord,
           { vocabulary: Ref.make(list), ...candidate, examples: example ? [example] : undefined },
-          { spaceId: db?.spaceId, notify: { error: ['add-word-error.message', { ns: meta.profile.key }] } },
+          { spaceId: db?.spaceId, notify: { error: ['add-word-error.message', { ns: LingoNamespace.key }] } },
         );
       });
     },
@@ -294,7 +294,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
       const result = await invokePromise(
         LingoOperation.TranslatePassage,
         { text, language: languageRef },
-        { spaceId: db.spaceId, notify: { error: ['translate-error.message', { ns: meta.profile.key }] } },
+        { spaceId: db.spaceId, notify: { error: ['translate-error.message', { ns: LingoNamespace.key }] } },
       );
 
       // Persist the translation the moment it arrives, rather than letting `AnalyzeText` be the only
@@ -339,7 +339,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
           vocabulary: list && Ref.make(list),
           refresh: true,
         },
-        { spaceId: db.spaceId, notify: { error: ['analyze-error.message', { ns: meta.profile.key }] } },
+        { spaceId: db.spaceId, notify: { error: ['analyze-error.message', { ns: LingoNamespace.key }] } },
       );
     } finally {
       setRunning(false);
@@ -357,7 +357,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
             applyActive: true,
             value: code,
             icon: 'ph--globe--regular',
-            label: ['language.label', { ns: meta.profile.key }],
+            label: ['language.label', { ns: LingoNamespace.key }],
           },
           (group) => {
             options.forEach((option) => {
@@ -383,7 +383,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
             applyActive: true,
             value: deck?.id,
             icon: 'ph--cards--regular',
-            label: ['deck.label', { ns: meta.profile.key }],
+            label: ['deck.label', { ns: LingoNamespace.key }],
             disabled: decks.length === 0,
           },
           (group) => {
@@ -403,7 +403,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
         .action(
           'add-selection',
           {
-            label: ['add-phrase.label', { ns: meta.profile.key }],
+            label: ['add-phrase.label', { ns: LingoNamespace.key }],
             icon: 'ph--plus--regular',
             disposition: 'toolbar',
             disabled: !language || !selectedText,
@@ -414,7 +414,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
         .action(
           'run',
           {
-            label: ['run.label', { ns: meta.profile.key }],
+            label: ['run.label', { ns: LingoNamespace.key }],
             icon: running ? 'ph--spinner--regular' : 'ph--translate--regular',
             spin: running,
             disposition: 'toolbar',
@@ -427,7 +427,7 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
           menu.action(
             'delete',
             {
-              label: ['delete-translation.label', { ns: meta.profile.key }],
+              label: ['delete-translation.label', { ns: LingoNamespace.key }],
               icon: 'ph--trash--regular',
               disabled: !stored,
               testId: 'lingo.reader.delete',

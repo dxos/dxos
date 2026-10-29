@@ -20,15 +20,16 @@ import * as AppCapabilities from '../app-framework/AppCapabilities.ts';
 export type HeadlessPluginSummary = {
   readonly failures: readonly PluginManager.PluginFailure[];
   readonly operationKeys: readonly string[];
+  readonly skillKeys: readonly string[];
   readonly typenames: readonly string[];
 };
 
 /**
  * Activates plugins the way a headless host does — Startup, Idle and AssistantStart, with no React
- * tree — and reports the operation keys and schema typenames they contribute.
+ * tree — and reports the operation keys, skill keys and schema typenames they contribute.
  *
  * Mirrors the EDGE operation-service registry so a workerd smoke test catches a plugin that stops
- * loading, or stops contributing operations or types, outside Composer.
+ * loading, or stops contributing operations, skills or types, outside Composer.
  */
 export const activateHeadlessPlugins = async (plugins: readonly Plugin.Plugin[]): Promise<HeadlessPluginSummary> => {
   const manager = PluginManager.make({
@@ -58,6 +59,7 @@ export const activateHeadlessPlugins = async (plugins: readonly Plugin.Plugin[])
     return {
       failures: manager.getFailed(),
       operationKeys: handlers.map((handler) => String(handler.meta.key)),
+      skillKeys: manager.capabilities.getAll(AppCapabilities.SkillDefinition).map(({ key }) => key),
       typenames: manager.capabilities
         .getAll(AppCapabilities.Schema)
         .flat()

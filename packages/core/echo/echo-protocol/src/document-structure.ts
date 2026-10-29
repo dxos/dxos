@@ -111,7 +111,11 @@ export interface DatabaseDirectory {
     spaceKey?: string;
   };
   /**
-   * Objects inlined in the current document.
+   * Objects inlined in the current document. An object document holds its object here.
+   *
+   * In a space directory (root) this map is deprecated: new objects are always linked, and the host migrates the
+   * ones older clients inlined into documents of their own (see `EchoHost.migrateInlineObjects`). Directories still
+   * carry an empty map so peers that predate the migration can write into it without a merge conflict.
    */
   objects?: {
     [id: string]: EntityStructure;

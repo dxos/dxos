@@ -13,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -37,9 +24,11 @@
       "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
+      "node": "./dist/lib/IllustratorPlugin.node.mjs",
+      "default": "./dist/lib/IllustratorPlugin.mjs"
     },
     "#model": {
       "source": "./src/model/index.ts",
@@ -51,10 +40,16 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
     },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+    "#svg-variant": {
+      "source": {
+        "workerd": "./src/capabilities/svg-variant.node.ts",
+        "node": "./src/capabilities/svg-variant.node.ts",
+        "default": "./src/capabilities/svg-variant.ts"
+      },
+      "types": "./dist/types/src/capabilities/svg-variant.d.ts",
+      "workerd": "./dist/lib/svg-variant/node.mjs",
+      "node": "./dist/lib/svg-variant/node.mjs",
+      "default": "./dist/lib/svg-variant.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -125,8 +120,10 @@
       "import": "./dist/lib/ns/IllustratorOperationHandlerSet.mjs"
     },
     "./IllustratorPlugin": {
-      "source": "./src/IllustratorPlugin.ts",
-      "types": "./dist/types/src/IllustratorPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
+      "node": "./dist/lib/IllustratorPlugin.node.mjs",
       "import": "./dist/lib/IllustratorPlugin.mjs"
     },
     "./SceneSvg": {

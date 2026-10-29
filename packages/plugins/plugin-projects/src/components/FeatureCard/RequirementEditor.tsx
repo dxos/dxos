@@ -9,9 +9,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { type Feature } from '#types';
 
+import { ProjectsNamespace } from '../../namespace.ts';
 import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 
 type CommitFieldProps = {
@@ -80,7 +80,7 @@ export type RequirementEditorProps = {
  * requirement cleared of its text is removed.
  */
 export const RequirementEditor = ({ requirements, onChange }: RequirementEditorProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   // The row just added takes focus, so a new requirement is written before anything else.
   const [focusIndex, setFocusIndex] = useState<number>();
   const copy = () => requirements.map((requirement) => ({ ...requirement }));

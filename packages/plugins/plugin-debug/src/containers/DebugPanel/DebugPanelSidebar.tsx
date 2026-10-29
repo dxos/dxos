@@ -13,9 +13,9 @@ import { useManager } from '@dxos/react-ui-attention';
 import { Path, Tree, type TreeSelectEvent } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { DebugNodes } from '#types';
 
+import { DebugNamespace } from '../../namespace.ts';
 import { useDebugPanelContext } from './DebugPanelContext.ts';
 import { debugPanelAspect } from './view-state.ts';
 
@@ -37,7 +37,7 @@ const LEGACY_PAGE_IDS: Record<string, string> = {
 
 /** The tree over the hidden `root/debug` category: every developer tool, selected here and shown in `Main`. */
 export const DebugPanelSidebar = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DebugNamespace.key);
   const { contextId, nodeId, open, select, setOpen } = useDebugPanelContext();
   const { graph } = ToolkitHooks.useAppGraph();
   const manager = useManager();

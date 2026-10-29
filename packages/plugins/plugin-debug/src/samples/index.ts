@@ -8,6 +8,7 @@ export * as IncidentSpace from './incident/IncidentSpace.ts';
 export * as PresenterSpace from './presenter/PresenterSpace.ts';
 export * as PipelineSpace from './crm/PipelineSpace.ts';
 export * as ReviewSpace from './review/ReviewSpace.ts';
+export * as RideCheckSpace from './ride-check/RideCheckSpace.ts';
 export * as StockfishSpace from './stockfish/StockfishSpace.ts';
 export * as TidepoolSpace from './tidepool/TidepoolSpace.ts';
 export * as TimelineSpace from './timeline/TimelineSpace.ts';

@@ -90,7 +90,7 @@ const withAutomation = (seed: (space: Space) => void) =>
             seed(space);
           }),
       }),
-      RoutinePlugin(),
+      RoutinePlugin.make(),
     ],
   });
 

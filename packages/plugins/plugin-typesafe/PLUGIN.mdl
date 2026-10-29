@@ -22,7 +22,9 @@ feat F-1: Bring your own key
   req F-1.1: A connector for source `typesafe.ai` takes an API key pasted by the user.
   req F-1.2: The key is stored as an AccessToken plus a Connection, resolvable by CredentialsService.
   req F-1.3: A blank or whitespace-only key fails inline, leaving the dialog open with the reason.
+```
 
+```mdl
 feat F-2: Decision model in the space
 
   req F-2.1: An AiModelResolver serves `ai.typesafe.model.jev.latest` via AiService.decisionModel in every space.
@@ -39,12 +41,16 @@ scenario T-1: A pasted key reaches the model
   given: a space with no TypeSafe connection
   when: the user pastes a valid API key into the TypeSafe connector
   then: an operation asking AiService.decisionModel resolves and answers
+```
 
+```mdl
 scenario T-2: No key answers through EDGE on the platform key
   given: a space with no TypeSafe connection and no endpoint override
   when: an operation asking AiService.decisionModel runs
   then: the call reaches EDGE `/ai/generate/typesafe` without `X-BYOK` and answers
+```
 
+```mdl
 scenario T-3: A direct endpoint with no key is a failed decision, not a crash
   given: a space with no TypeSafe connection and the endpoint override set
   when: an operation asking AiService.decisionModel runs

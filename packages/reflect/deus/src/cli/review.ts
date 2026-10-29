@@ -10,6 +10,9 @@ import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 
+import { parseMdlBlocks } from '../extension/blocks.ts';
+import { specDependencies } from '../extension/refs.ts';
+import { frontmatter, reqs } from '../spec-index/parse.ts';
 import { ReviewCheckError } from './errors.ts';
 import { git } from './git.ts';
 
@@ -60,21 +63,9 @@ export const reviewItems = (text: string): ReviewItem[] =>
     if (!header || !REVIEWED_KINDS.has(header[1])) {
       return [];
     }
-    const reqs = lines.flatMap((text, offset) => {
-      const req = text.match(/^\s+req\s+([A-Za-z][\w.-]*)\s*:\s*(.*)$/);
-      return req ? [{ id: req[1], kind: 'req', line: line + offset, title: req[2] }] : [];
-    });
-    return reqs.length > 0 ? reqs : [{ id: header[2], kind: header[1], line, title: header[3] ?? '' }];
+    const nested = reqs(body).map(({ id, title, offset }) => ({ id, kind: 'req', line: line + offset, title }));
+    return nested.length > 0 ? nested : [{ id: header[2], kind: header[1], line, title: header[3] ?? '' }];
   });
-
-/** The flat `key: value` pairs of a document's YAML frontmatter. */
-export const frontmatter = (text: string): Record<string, string> =>
-  Object.fromEntries(
-    (text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').split('\n').flatMap((line) => {
-      const match = line.match(/^([\w-]+):\s*(.*?)\s*(?:#.*)?$/);
-      return match ? [[match[1], match[2]]] : [];
-    }),
-  );
 
 /** A block field at two spaces of indent; a `|` value continues on lines indented four or more. */
 export const blockField = (body: string, name: string): string | undefined => {
@@ -102,6 +93,43 @@ export const reviewVerdicts = (text: string): Map<string, { status?: string; not
       return id ? [[id, { status: blockField(body, 'status'), note: blockField(body, 'note') }] as const] : [];
     }),
   );
+
+/**
+ * The `dependsOn` array of the `plugin` object in a `dx.config.ts`, empty when the object has none; undefined when
+ * there is no `plugin` object or `dependsOn` is not a literal array of strings. Comments are stripped first so a commented-out entry does not count.
+ */
+export const configDependsOn = (configText: string): string[] | undefined => {
+  const code = configText.replace(/(['"`])(?:\\.|(?!\1)[^\\])*\1|\/\/.*|\/\*[\s\S]*?\*\//g, (match) =>
+    match.startsWith('/') ? ' ' : match,
+  );
+  const start = /\bplugin\s*:\s*\{/.exec(code);
+  if (start?.index === undefined) {
+    return undefined;
+  }
+  let depth = 0;
+  let end = code.length;
+  for (let index = start.index + start[0].length - 1; index < code.length; index++) {
+    depth += code[index] === '{' ? 1 : code[index] === '}' ? -1 : 0;
+    if (depth === 0) {
+      end = index;
+      break;
+    }
+  }
+  const plugin = code.slice(start.index, end);
+  if (!/\bdependsOn\s*:/.test(plugin)) {
+    return [];
+  }
+  const literal = plugin.match(/\bdependsOn\s*:\s*\[([^\]]*)\]/)?.[1];
+  if (literal === undefined) {
+    return undefined;
+  }
+  const items = literal
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
+  const strings = items.map((item) => item.match(/^(['"`])([^'"`$\\]*)\1$/)?.[2]);
+  return strings.every((value) => value !== undefined) ? strings.filter((value) => value !== undefined) : undefined;
+};
 
 /** Whether the source declares the name: a top-level declaration, a member, or an export list entry. */
 const declares = (source: string, name: string): boolean => {
@@ -267,6 +295,24 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
         if (!declares(yield* fs.readFileString(file), symbol.split('.').pop() ?? symbol)) {
           errors.push(`${at}: no declaration of ${symbol} in ${key.split('#')[0]} (walkthrough)`);
         }
+      }
+    }
+  }
+  // dx.config.ts is what the app loads, so a spec that lists other dependencies has diverged from the code.
+  const pluginBlock = specText ? parseMdlBlocks(specText).find(({ type }) => type === 'plugin') : undefined;
+  const configFile = specFile ? path.join(path.dirname(specFile), 'dx.config.ts') : undefined;
+  if (specText && pluginBlock && configFile && (yield* exists(configFile))) {
+    const config = configDependsOn(yield* fs.readFileString(configFile));
+    const declared = specDependencies(specText)
+      .filter(({ via }) => via === 'dependsOn')
+      .map(({ id }) => id);
+    const verdict = verdicts.find(({ id }) => id === pluginBlock.id);
+    if (config && verdict && blockField(verdict.body, 'status') !== 'diverged') {
+      const same = new Set(declared).size === new Set(config).size && declared.every((id) => config.includes(id));
+      if (!same) {
+        errors.push(
+          `${reviewPath}:${verdict.line}: ${pluginBlock.id} dependsOn [${declared.join(', ')}] differs from dx.config.ts [${config.join(', ')}]; judge it diverged`,
+        );
       }
     }
   }

@@ -18,13 +18,14 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
-import { meta } from '#meta';
 import { Chess } from '#types';
+
+import { ChessNamespace } from '../../namespace.ts';
 
 export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 
 export const ChessArticle = ({ role, game, variant }: ChessArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ChessNamespace.key);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);
   const controller = useRef<ChessboardController>(null);

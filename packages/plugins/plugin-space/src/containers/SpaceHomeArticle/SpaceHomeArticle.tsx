@@ -21,8 +21,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
-import { meta } from '#meta';
 import { SpaceSurface } from '#types';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
@@ -95,7 +96,7 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action, { caller: meta.profile.key });
+      void runAction(action, { caller: SpaceNamespace.key });
     },
     [runAction],
   );

@@ -265,8 +265,8 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        SpacePlugin({}),
-        InboxPlugin(),
+        SpacePlugin.make({}),
+        InboxPlugin.make(),
         StorybookPlugin.make({}),
         StoryHostPlugin(),
       ],

@@ -8,14 +8,13 @@ import React from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
 import { ContextMenuRoot } from '../containers/ContextMenuRoot/index.ts';
+import { NavTreeNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactRoot, {
-      id: `${meta.profile.key}.context-menu`,
+      id: `${NavTreeNamespace.key}.context-menu`,
       root: () => <ContextMenuRoot />,
     }),
   ),

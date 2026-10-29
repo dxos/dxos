@@ -46,13 +46,13 @@ Gaps that matter:
 ```mdl
 verdict CodePlugin: The listed modules are added, plus an unlisted McpServer; one module does something other than its description says.
   status: partial
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/plugin.tsx#CodePlugin, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#NavigationTargetResolver, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#SpecSync, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#BuildRunState]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/dx.config.ts#config, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/navigation-target-resolver.ts, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/build-run-state.ts]
   tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
   walkthrough:
-    - The plugin adds thirteen modules: the twelve listed and McpServer. github:dxos/dxos/packages/plugins/plugin-code/src/plugin.tsx#CodePlugin
-    - NavigationTargetResolver contributes a resolver that maps a CodeProject to its graph path, not a github: key to a file. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#NavigationTargetResolver
-    - SpecSync loads spec sync in the browser and the desktop app once the client and settings are ready. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#SpecSync
-    - BuildRunState provides the build and run results of each project when the plugin starts. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#BuildRunState
+    - The plugin adds thirteen modules: the twelve listed and McpServer. github:dxos/dxos/packages/plugins/plugin-code/dx.config.ts#config
+    - NavigationTargetResolver contributes a resolver that maps a CodeProject to its graph path, not a github: key to a file. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/navigation-target-resolver.ts
+    - SpecSync loads spec sync in the browser and the desktop app once the client and settings are ready. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts
+    - BuildRunState provides the build and run results of each project when the plugin starts. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/build-run-state.ts
   note: |
     NavigationTargetResolver maps a CodeProject object to its graph path (`NavigationResolver.forType`); it does not
     resolve a github: key to a spec or file. An `McpServer` module (the DXOS Introspect server) is added but not listed. BuildRunState holds the in-browser build and run results, not a "build
@@ -332,9 +332,9 @@ verdict F-1.3: The plugin key is `org.dxos.plugin.code`.
 ```mdl
 verdict F-1.4: CodePlugin exists, but SpecArticle was kept as the Spec surface, not renamed.
   status: diverged
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/plugin.tsx#CodePlugin, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/dx.config.ts#config, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
   walkthrough:
-    - CodePlugin is the renamed plugin and contributes both article surfaces. github:dxos/dxos/packages/plugins/plugin-code/src/plugin.tsx#CodePlugin
+    - CodePlugin is the renamed plugin and contributes both article surfaces. github:dxos/dxos/packages/plugins/plugin-code/dx.config.ts#config
     - SpecArticle is still the surface for Spec objects, so the Spec was not moved into CodeArticle. github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle
   note: |
     `SpecArticle` renders Spec objects and bundled plugin specs. `CodeArticle` is a different component that renders
@@ -384,10 +384,10 @@ verdict F-2.3: Creating a CodeProject also creates and links a Spec, but not an 
 ```mdl
 verdict F-2.4: The schema is registered; no metadata module exists.
   status: partial
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#Schema, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/schema.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/schema.ts, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/schema.ts]
   tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
   walkthrough:
-    - Schema contributes the schema module through `AppCapability.schema`. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#Schema
+    - Schema contributes the schema module through `AppCapability.schema`. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/schema.ts
     - The schema module lists the plugin types; no metadata module exists beside it. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/schema.ts
   note: |
     It is registered through `AppCapability.schema`. There is no `addMetadataModule` contribution; the icon and label
@@ -459,9 +459,9 @@ verdict F-4.1: Settings is a mutable schema with an optional `endpoint`.
 ```mdl
 verdict F-4.2: Settings are contributed through `AppCapability.settings` and a KVS atom.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#Settings, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/settings.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/settings.ts, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/settings.ts]
   walkthrough:
-    - Settings contributes the settings module through `AppCapability.settings`. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#Settings
+    - Settings contributes the settings module through `AppCapability.settings`. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/settings.ts
     - The module keeps the settings in a KVS atom. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/settings.ts
   note: No test activates the settings module.
 ```
@@ -889,9 +889,9 @@ verdict F-12b.5: Bare imports are build errors that point at F-13.
 ```mdl
 verdict F-14.1: Sync reaches files only through plugin-file-system's FileSystem: Tauri fs or the `/__dx/fs` dev route; otherwise off.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#SpecSync, github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.ts#fileSystemPlugin]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts, github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.ts#fileSystemPlugin]
   walkthrough:
-    - SpecSync loads sync only in the browser and the desktop app. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#SpecSync
+    - SpecSync loads sync only in the browser and the desktop app. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts
     - The sync capability marks sync unavailable when the file system does not answer, and runs it otherwise. github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts
     - FileSystem.get() picks the Tauri backend or the dev route. github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get
     - fileSystemPlugin serves the `/__dx/fs` route in the dev server and refuses writes that are not `.mdl`. github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.ts#fileSystemPlugin
@@ -957,7 +957,7 @@ verdict F-14.6: importSpec returns the Spec that has the key, or creates one fro
 verdict F-15.1: External blocks are dashed boxes with an edge, described from the other spec when known.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#externalDefinition, github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard]
-  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.test.ts]
   walkthrough:
     - externalDefinition makes a block for each named external spec, with its description when the text is known. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#externalDefinition
     - DefinitionCard draws an external block as a dashed box. github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard

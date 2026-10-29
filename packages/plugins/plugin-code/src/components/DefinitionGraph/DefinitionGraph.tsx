@@ -4,6 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
+import { type SpecIndex } from '@dxos/deus/spec-index';
 import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas/scene';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -13,8 +14,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { LatticeGraph } from '../LatticeGraph/index.ts';
 import {
   type ChangeKind,
@@ -71,7 +71,7 @@ type DefinitionCardProps = {
 };
 
 const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { icon, hue } = kindStyle(definition.kind);
   const { external } = definition;
   return (
@@ -158,7 +158,7 @@ type KindLegendProps = {
 
 /** One switch per group, each beside the kinds it holds. */
 const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange, changes }: KindLegendProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
       column
@@ -213,6 +213,8 @@ export type DefinitionGraphProps = {
   content: string;
   /** Other specs this one names by `github:` key, so their blocks can be described. */
   specs?: SpecTexts;
+  /** Resolves `<spec id>#<item>` references to other specs' files; without it only `github:` keys name them. */
+  index?: SpecIndex;
   /** The latest compliance review; its verdicts badge the cards and its evidence adds the code boxes. */
   review?: ReviewModel;
   /** The base version of `content`; when given, the graph shows what changed since it (diff mode). */
@@ -227,12 +229,13 @@ export type DefinitionGraphProps = {
 
 /**
  * Every definition of a spec on a lattice, with an arrow from each to the definitions it names, so the
- * spec reads top-down from features to the types they rest on. Blocks of other specs the spec names by `github:` key,
+ * spec reads top-down from features to the types they rest on. Blocks of other specs the spec names by id or `github:` key,
  * and the code symbols the review links its items to, are drawn as dashed boxes.
  */
 export const DefinitionGraph = ({
   content,
   specs,
+  index,
   review,
   base,
   exclude = [],
@@ -246,13 +249,19 @@ export const DefinitionGraph = ({
   );
   const [code, setCode] = useState(true);
   const annotations = useMemo(() => reviewAnnotations(review), [review]);
-  const current = useMemo(() => buildDefinitionGraph(content, specs, annotations), [content, specs, annotations]);
+  const current = useMemo(
+    () => buildDefinitionGraph(content, specs, annotations, index),
+    [content, specs, annotations, index],
+  );
   const diff = useMemo(
     () =>
       base === undefined
         ? undefined
-        : diffDefinitionGraphs(current, buildDefinitionGraph(base, specs, annotations), { current: content, base }),
-    [current, content, base, specs, annotations],
+        : diffDefinitionGraphs(current, buildDefinitionGraph(base, specs, annotations, index), {
+            current: content,
+            base,
+          }),
+    [current, content, base, specs, annotations, index],
   );
   const full = diff ?? current;
   const allKinds = useMemo(() => [...new Set(full.definitions.map(({ kind }) => kind))], [full]);

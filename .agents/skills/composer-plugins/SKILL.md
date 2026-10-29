@@ -30,7 +30,7 @@ Update it _appropriately_:
 ## Discovery
 
 Use the `dxos-introspect` MCP server (`@dxos/introspect-mcp`, served by the `dx-introspect-mcp` binary) as the source of truth for plugin metadata and reference examples — not directory listings.
-A "plugin" is a package whose `src/meta.ts` exports a `Plugin.Meta`, so `ls packages/plugins/` overcounts (e.g. `plugin-generator` is tooling, not a plugin).
+A "plugin" is a package whose `dx.config.ts` default-exports a `Plugin.config(...)`, so `ls packages/plugins/` overcounts (e.g. `plugin-generator` is tooling, not a plugin).
 
 - `mcp__dxos-introspect__list_plugins` — enumerate plugins (filter by `id` substring; pass `compact: true` for identifying fields only).
 - `mcp__dxos-introspect__get_package` — package details for a given plugin.
@@ -171,23 +171,20 @@ Specification above), then start with a minimal skeleton before adding features.
 Phase 1, before the PR. The skeleton should include:
 
 1. `README.md` — brief description of the plugin's purpose, linking to `docs/DESIGN.md`.
-2. `dx.config.ts` — `Config2.make({ plugin: { … } })` with key, name, author, description, icon, and a **quality tier tag** (see below).
-3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
-4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
-5. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
-6. `src/translations.ts` — initial translation resources.
-7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
-8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
-9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
-10. `src/types/` — one schema type with `make()` factory.
-11. `src/capabilities/index.ts` — single `AppCapability.surface()` for ReactSurface (declare its `roles`).
-12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
-13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
-14. `src/components/` — empty barrel, ready for primitives.
+2. `package.json` — with `"private": true`, the `#meta` import alias and `./FooPlugin` export subpath (both point at `dx.config.ts`; see **package.json**), and minimal dependencies.
+3. `moon.yml` — tags and a `check-module-structure` task when the plugin has a node/workerd variant.
+4. `src/namespace.ts` — `export const FooNamespace = Plugin.namespace('org.dxos.plugin.foo')`, a leaf both `dx.config.ts` and the capability tags derive from.
+5. `src/translations.ts` — initial translation resources.
+6. `dx.config.ts` — `Plugin.config({ plugin, modules })` with key, name, author, description, icon, a **quality tier tag** (see below), surface and translations modules, and `export const { meta, make } = config; export default config;` (see **Plugin Definition**).
+7. `src/index.ts` — `export * as FooPlugin from '#meta'` plus types/operations. **Never exports `make` directly.**
+8. `src/types/` — one schema type with `make()` factory.
+9. `src/capabilities/react-surface.tsx` — one surface for the `article` role, wired by `AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), { roles })` in `dx.config.ts`.
+10. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
+11. `src/components/` — empty barrel, ready for primitives.
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
-Register the plugin with `composer-app`: `FooPlugin.make()` in `getPlugins`, and its key in the `isDev` block of `getDefaults` unless the plugin hits a permission-gated API on activation (rule 5 under **Activation waves**).
+Register the plugin with `composer-app`: `import * as FooPlugin from '@dxos/plugin-foo/FooPlugin'`, then `FooPlugin.make()` in `getPlugins`, and its key in the `isDev` block of `getDefaults` unless the plugin hits a permission-gated API on activation (rule 5 under **Activation waves**).
 
 Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
 
@@ -224,22 +221,19 @@ but `bundled`.
 plugin-foo/
   package.json
   moon.yml
-  dx.config.ts             # Plugin manifest; carries the quality tier in `plugin.tags`.
+  dx.config.ts             # The whole plugin: identity, quality tier in `plugin.tags`, and the module list.
   PLUGIN.mdl
   README.md                # The only markdown at the root; links into docs/.
   docs/                    # Everything else the package documents.
     DESIGN.md
   src/
-    index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.
-    plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
-    meta.ts                 # Plugin.Meta (id, name, description, icon, iconHue).
-    translations.ts         # i18n resources keyed by typename and meta.id.
+    index.ts                # Root entrypoint; exports `FooPlugin` (from '#meta'), types and operations.
+    namespace.ts            # `Plugin.namespace(key)`: the key and tag makers; a leaf with no imports.
+    translations.ts         # i18n resources keyed by typename and FooNamespace.key.
     paths.ts                # Canonical qualified graph paths (only if the plugin owns navtree nodes).
-    FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
     skills/             # AI skill definitions.
       index.ts
-    capabilities/           # Lazy capability modules (one file each).
-      index.ts              # Barrel of maker / Capability.lazyModule() exports.
+    capabilities/           # Module bodies (one file each, default export), named in dx.config.ts.
       react-surface.tsx
       operation-handler.ts
       skill-definition.ts
@@ -354,7 +348,7 @@ plugin-comments re-exports `AppCapabilities.CommentConfig` as `CommentCapabiliti
 
 ```ts
 // packages/plugins/plugin-foo/src/types/FooCapabilities.ts
-export const BarProvider = Capability.make<BarProvider>(`${meta.id}.capability.bar-provider`);
+export const BarProvider = FooNamespace.make<BarProvider>()('bar-provider');
 ```
 
 Expose it via a `./types` subpath in `package.json` (see `plugin-game/package.json` as a reference).
@@ -362,7 +356,7 @@ The `--entryPoint=src/types/index.ts` entry in `moon.yml` is typically already p
 
 **Where to implement** — the donor plugin places its contribution in a dedicated file in
 `src/capabilities/`, named after the capability it implements (e.g. `routing-service.ts`,
-`markdown-extension.ts`). Wire it via `Capability.lazy` in `src/capabilities/index.ts`.
+`markdown-extension.ts`). Wire it as a `Capability.lazyModule` entry in `dx.config.ts`.
 
 **How to import the key** — use the `/types` subpath, not the root entrypoint:
 
@@ -504,9 +498,31 @@ See: `plugin-inbox/src/capabilities/app-graph-builder.ts`, `plugin-inbox/src/pat
 
 ## Plugin Definition
 
-The main plugin file wires everything together with `Plugin.define(meta).pipe(Plugin.addModule(...))`.
-Modules come from **makers** in `AppCapability` (loader-based) or `Capability.lazyModule` /
-`Capability.inlineModule` (for anything without a maker). See `plugin-chess/src/ChessPlugin.tsx`.
+A plugin is defined entirely by its `dx.config.ts`: `Plugin.config({ plugin: { key, name, … }, modules: [...] })`.
+`export const { meta, make } = config; export default config;` is the whole public surface. Annotate
+`const config: Plugin.PluginConfig` (or `PluginConfig<Options>` for a plugin with options) because module
+bodies read `meta` from here, so inferring it would be circular. Modules come from **makers** in `AppCapability`
+(and other plugins' makers, e.g. `SpaceCapability.createObject`) or `Capability.lazyModule(name, spec, loader)` for
+anything without a maker. See `plugin-sample/dx.config.ts` (the commented example), `plugin-sheet/dx.config.ts`, and
+`plugin-debug/dx.config.ts` (a plugin with options). The build evaluates `dx.config.ts` into a static manifest
+(`pluginConfigPlugin`), so the file is data plus loaders:
+
+- **Every module body is `() => import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`.** The attribute
+  marks it as a body the build locates but never loads; an unmarked dynamic import, an inline module
+  (`Capability.inlineModule`, `Plugin.addModule({ activate })`) and a `props` mapper all fail the build. Bodies
+  receive the plugin options as-is — read what you need inside the body.
+- **`dx.config.ts` statically imports only leaves**: capability tags, activation events, makers and
+  `src/namespace.ts`. Never import components, containers or a `#types` barrel there; it is evaluated in Node at
+  build time and loaded eagerly at boot.
+- **Capability tags and events derive from the namespace.** Define them with `FooNamespace.make<T>()('name')` /
+  `FooNamespace.makeSingleton<T>()('name')`, or an event id string `${FooNamespace.key}.event.start`; never import
+  `#meta` (a cycle with the config). A source file that needs the key uses `FooNamespace.key`.
+- **Loader-form makers**: `AppCapability.translations(() => import('./src/translations.ts', …))` and the other
+  makers pair a loader with an adapter (`SchemaAdapter`, `SpaceTemplatesAdapter`, `TranslationsAdapter`,
+  `PluginAssetAdapter`, `CommandsAdapter`, `SurfaceAdapter`) that normalizes the body's default export; the body
+  default-exports plain data (`[Sheet.Sheet]`, the resources), not a `Capability.makeModule`.
+- **Tests** use `import * as FooPlugin from '#meta'` and `FooPlugin.make()`; **stories** composing a subset of a plugin
+  use `Plugin.addModule(Plugin.getModule(FooConfig, 'ModuleName'))`.
 
 | Maker                                                                         | Contributes                 | Default wave                                         |
 | ----------------------------------------------------------------------------- | --------------------------- | ---------------------------------------------------- |
@@ -585,26 +601,27 @@ it and use `firesBeforeActivation` to sequence setup ahead of themselves.
 
 ## Non-Browser Variants
 
-A plugin that must load outside a DOM (the `dx` CLI, workerd) ships one variant per environment,
-selected by the `#plugin` conditions: `src/FooPlugin.tsx` (browser default), `src/FooPlugin.node.ts`,
-`src/FooPlugin.workerd.ts`. **Only add a variant the plugin genuinely supports** — a front-end-only
-plugin has none, and its `#plugin` collapses to a single resolution (`plugin-deck`, `plugin-navtree`).
+A plugin that must load outside a DOM (the `dx` CLI, workerd) ships one build per runtime from the same
+`dx.config.ts`: the `./FooPlugin` export has `workerd`, `node` and default (`import`) conditions pointing at
+`dist/lib/FooPlugin.workerd.mjs`, `.node.mjs` and `.mjs`, each built from `dx.config.ts?dx-env=<runtime>` so it
+keeps only the modules whose `environments` name that runtime. There are no `FooPlugin.node.ts` /
+`FooPlugin.workerd.ts` files. **Only add a variant the plugin genuinely supports** — a front-end-only
+plugin declares `environments: ['browser', 'tauri']` on its modules and has no `node`/`workerd` conditions.
 
 **`lazy` defers evaluation, not bundling.** `Capability.lazyModule`, `OperationHandlerSet.lazy` and
-`React.lazy` all postpone the import at runtime while a bundler still walks it, so a barrel that
-merely _lists_ a React surface pulls React — and the `react-ui` graph behind it — into every
-consumer. Runtime laziness never keeps UI out of a node build; a node-conditioned barrel does.
+`React.lazy` all postpone the import at runtime while a bundler still walks it. The per-runtime build keeps
+a browser-only module out of the node/workerd bundle only if its `environments` list omits that runtime;
+a body that merely _imports_ a React surface elsewhere still drags React in.
 
-Each variant therefore needs its own barrels, conditioned in `package.json` `imports`:
+Operation handlers that differ per runtime use a conditioned barrel in `package.json` `imports`:
 
-| Barrel          | Node file                  | Holds                                            |
-| --------------- | -------------------------- | ------------------------------------------------ |
-| `#capabilities` | `src/capabilities/node.ts` | Only the capabilities `FooPlugin.node` activates |
-| `#operations`   | `src/operations/node.ts`   | Only the operations a node host can serve        |
+| Barrel        | Node file                | Holds                                     |
+| ------------- | ------------------------ | ----------------------------------------- |
+| `#operations` | `src/operations/node.ts` | Only the operations a node host can serve |
 
-**Re-export through the alias, not a relative path** — `src/plugin.ts` must use
-`export { FooOperationHandlerSet } from '#operations';`. A relative `'./operations'` bypasses the
-import map, so the node condition never applies and `./plugin` drags the browser set in anyway.
+**Import the handler set through the alias, not a relative path** — a module body or `dx.config.ts` must use
+`'#operations'`. A relative `'./operations'` bypasses the import map, so the node condition never applies and
+the browser set is dragged in anyway.
 
 What makes a contribution browser-only:
 
@@ -613,7 +630,7 @@ What makes a contribution browser-only:
 - An operation driving a live editor view or Surface (`scroll-to-anchor`).
 
 TypeScript resolves the `types` condition for every environment, so it always sees the full barrel —
-derive the node barrel from what `FooPlugin.node.ts` actually imports so the two agree.
+derive the node barrel from the modules whose `environments` include `node` so the two agree.
 
 ### Headless values in UI packages
 
@@ -643,26 +660,24 @@ pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
   --conditions workerd,worker,node --max-chains 2
 ```
 
-See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
-`plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
+See: `plugin-sheet/src/operations/node.ts`,
+`plugin-sheet/package.json` (conditioned `./SheetPlugin` and `#operations`), `plugin-sheet/moon.yml`
 
 ### Runtime conditions
 
 `environments` on a module lists every runtime condition it loads in: `browser`, `tauri`, `node`,
-`workerd`. `dx-plugin gen` slices one barrel per condition by a single rule (a module is carried when
-its list names the condition or it has no list) and writes `#capabilities` with no `default`. Tools
-take the first key they match, so `browser` goes last: workerd and tauri builds also match it.
+`workerd`. The per-runtime build keeps a module when its list names the runtime or it has no list.
 
 - Maker families set the usual list: UI families `['browser', 'tauri']`, headless families all four.
   A call site that restates a list names every runtime it wants, `tauri` included.
 - A module that only works inside the Tauri shell is `['tauri']` (`LocalLauncher`).
-- A plugin loaded under a runtime needs that condition in its map, or `#capabilities` fails to resolve.
-  A UI-only plugin has no `node` key, so its plugin tests run in browser mode (`plugin-mermaid`).
+- A plugin loaded under a runtime needs that condition on its `./FooPlugin` export. A UI-only plugin has no
+  `node` condition, so its plugin tests run in browser mode (`plugin-mermaid`).
 
 Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`, or `tauri dev`
 via `TAURI_ENV_PLATFORM`).
 
-See: `plugin-sandbox/src/capabilities/index.ts` (`LocalLauncher`), `app-framework/src/plugin-cli/generate.ts`
+See: `plugin-sandbox/dx.config.ts` (`LocalLauncher`), `app-framework/src/vite-plugin/plugin-config/index.ts`
 
 ## React Surface
 
@@ -680,18 +695,20 @@ See: `plugin-chess/src/skills/chess-skill.ts`
 
 ## Translations
 
-Resources keyed by both typename (for object labels) and `meta.id` (for plugin-scoped strings). Use `useTranslation(meta.id)` in components.
+Resources keyed by both typename (for object labels) and `FooNamespace.key` (for plugin-scoped strings). Use `useTranslation(FooNamespace.key)` in components.
 
 See: `plugin-chess/src/translations.ts`
 
 ## package.json
 
 - New packages MUST have `"private": true`.
-- Define `#imports` aliases for internal barrels (`#capabilities`, `#components`, `#containers`, `#meta`, `#operations`, `#types`).
-- Define `exports` subpaths for anything other plugins need (`./types`, `./operations`).
-- A plugin with a node or workerd variant gives `#plugin`, `#capabilities` and (when needed)
-  `#operations` a per-condition map — `source` for the TS paths plus the built `node`/`workerd`
-  entries. See **Non-Browser Variants**.
+- Define `#imports` aliases for internal barrels (`#components`, `#containers`, `#meta`, `#operations`, `#types`).
+  `#meta` and the `./FooPlugin` export both point at `dx.config.ts` (`source` and `types`; built `default` →
+  `dist/lib/FooPlugin.mjs`).
+- Define `exports` subpaths for anything other plugins need (`./FooPlugin`, `./types`, `./operations`).
+- A plugin with a node or workerd variant gives `./FooPlugin` `workerd` and `node` conditions
+  (`dist/lib/FooPlugin.workerd.mjs`, `.node.mjs`) and, when needed, `#operations` a per-condition map.
+  See **Non-Browser Variants**.
 - Internal `@dxos` deps use `workspace:*`; external deps use `catalog:`.
 
 See: `plugin-chess/package.json`
@@ -728,8 +745,8 @@ moon run plugin-foo:test-storybook
 ## General Rules
 
 - `src/components/` and `src/containers/` should contain only index files and subdirectories.
-- **Two-entrypoint rule**: `src/index.ts` exports only `meta` and types/operations — never the plugin instance. `src/plugin.ts` holds the `Plugin.lazy()` wrapper and is the `./plugin` subpath. Consumers import from `@dxos/plugin-foo/plugin`; the root entry is for types/operations only.
-- `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
+- **Two-entrypoint rule**: `src/index.ts` exports `FooPlugin` (`export * as FooPlugin from '#meta'`, for `meta`) and types/operations. The `./FooPlugin` subpath is `dx.config.ts`; app hosts import `* as FooPlugin from '@dxos/plugin-foo/FooPlugin'` and call `FooPlugin.make()`. Capability tags and events live in `src/types` and derive from `src/namespace.ts`, never from `#meta`.
+- `dx.config.ts` must `export default config` and `export const { meta, make } = config`, so the build can read the manifest and hosts can call `make()`.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
 - Never rely on `Capability.lazyModule` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency

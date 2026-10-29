@@ -13,7 +13,8 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { Version } from '@dxos/versioning';
 
 import { useVersioning } from '#hooks';
-import { meta } from '#meta';
+
+import { ReviewNamespace } from '../../namespace.ts';
 
 export type MarkdownPropertiesProps = AppSurface.ObjectPropertiesProps<Markdown.Document>;
 
@@ -22,7 +23,7 @@ export type MarkdownPropertiesProps = AppSurface.ObjectPropertiesProps<Markdown.
  * The full manager lives in the History companion tab.
  */
 export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ReviewNamespace.key);
   const versioning = useVersioning(subject);
   const { document, history, selection, activeBranch } = versioning;
 

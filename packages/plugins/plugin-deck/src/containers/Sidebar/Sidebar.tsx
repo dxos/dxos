@@ -10,11 +10,11 @@ import * as Main from '@dxos/react-ui/Main';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { useBreakpoints, useDeckState } from '#hooks';
-import { meta } from '#meta';
 
+import { DeckNamespace } from '../../namespace.ts';
 import { layoutAppliesTopbar } from '../../util/index.ts';
 
-const label = ['sidebar.title', { ns: meta.profile.key }] satisfies Theme.Label;
+const label = ['sidebar.title', { ns: DeckNamespace.key }] satisfies Theme.Label;
 
 export const Sidebar = () => {
   const { state } = useDeckState();

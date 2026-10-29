@@ -14,8 +14,9 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { DebugNodes } from '#types';
+
+import { DebugNamespace } from '../namespace.ts';
 
 /** The hidden category every developer tool hangs off: a root child the main navtree filters out. */
 export const createDebugRootExtension = () =>
@@ -29,7 +30,7 @@ export const createDebugRootExtension = () =>
           type: GraphPath.GroupTypes.debug,
           data: null,
           properties: {
-            label: ['debug-panel.title', { ns: meta.profile.key }],
+            label: ['debug-panel.title', { ns: DebugNamespace.key }],
             icon: 'ph--bug--regular',
             disposition: 'hidden',
             draggable: false,
@@ -51,7 +52,7 @@ export const createDebugExtension = () =>
           data: null,
           type: DebugNodes.id,
           properties: {
-            label: ['debug.label', { ns: meta.profile.key }],
+            label: ['debug.label', { ns: DebugNamespace.key }],
             icon: 'ph--bug--regular',
             // Before DevTools (10), whichever plugin registers first: the panel's own pages lead the tree.
             position: 0,
@@ -62,7 +63,7 @@ export const createDebugExtension = () =>
               type: DebugNodes.Console,
               data: DebugNodes.Console,
               properties: {
-                label: ['console.tab.label', { ns: meta.profile.key }],
+                label: ['console.tab.label', { ns: DebugNamespace.key }],
                 icon: 'ph--terminal-window--regular',
                 // Explicit (not Position.first): -Infinity + 1 collapses back to -Infinity, tying with logs.
                 position: 0,
@@ -73,7 +74,7 @@ export const createDebugExtension = () =>
               type: DebugNodes.Logs,
               data: DebugNodes.Logs,
               properties: {
-                label: ['logs.tab.label', { ns: meta.profile.key }],
+                label: ['logs.tab.label', { ns: DebugNamespace.key }],
                 icon: 'ph--list-bullets--regular',
                 position: 1,
               },
@@ -83,7 +84,7 @@ export const createDebugExtension = () =>
               type: DebugNodes.SpaceType,
               data: DebugNodes.SpaceType,
               properties: {
-                label: ['generate-objects.label', { ns: meta.profile.key }],
+                label: ['generate-objects.label', { ns: DebugNamespace.key }],
                 icon: 'ph--dice-five--regular',
                 position: 2,
               },
@@ -110,7 +111,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'debug',
-              label: ['debug.label', { ns: meta.profile.key }],
+              label: ['debug.label', { ns: DebugNamespace.key }],
               icon: 'ph--bug--regular',
               data: 'debug',
               position: Position.last,
@@ -127,7 +128,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: 'spaceObjects',
-              label: ['space-objects.label', { ns: meta.profile.key }],
+              label: ['space-objects.label', { ns: DebugNamespace.key }],
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
               position: Position.last,

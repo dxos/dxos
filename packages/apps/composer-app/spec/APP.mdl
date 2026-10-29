@@ -956,7 +956,9 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
       expect: neither "QA:" space remains on either profile
   then:
     - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
+```
 
+```mdl
 test QA-15: Showcase clip
   desc: |
     The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
@@ -1056,7 +1058,9 @@ test QA-14: Bramble — Kai locks the Spring Blend
     - name: Close
       do: Return to the Inbox and hold.
       expect: the inbox, as the take began
+```
 
+```mdl
 test QA-16: Hot-reload a plugin capability
   desc: |
     Dev-server demo of plugin hot replacement: edits to plugin-space's app-graph builder (a capability with
@@ -1080,7 +1084,7 @@ test QA-16: Hot-reload a plugin capability
       do: Replace the section's emerald icon hue with rose.
       expect: the row's icon turns rose, and the page does not reload
     - name: Drop the module from the plugin
-      do: Comment out `Plugin.addModule(AppGraphBuilder)` in plugin-space's src/plugin.ts.
+      do: Comment out `AppGraphBuilder,` in plugin-space's module list in dx.config.ts.
       expect: the Settings row disappears, and the page does not reload
     - name: Restore the module
       do: Uncomment the line again.
@@ -1132,14 +1136,23 @@ decision D-5: QA-9 covers a document tour on a plank narrow enough to fold a ste
 ```
 
 ```mdl
-decision D-6: Composer has a three-minute showcase film, recorded with autocue, covering collaboration, the plugin gallery, SaaS-style objects on the ECHO graph, agents in documents, coding projects, Inbox and Studio.
+decision D-6: A plugin's definition is its dx.config.ts, so QA-16 edits the module list there. Fills in [D-3].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-16]
+  why: Plugins are defined by Plugin.config in dx.config.ts; src/plugin.ts no longer exists.
+```
+
+```mdl
+decision D-7: Composer has a three-minute showcase film, recorded with autocue, covering collaboration, the plugin gallery, SaaS-style objects on the ECHO graph, agents in documents, coding projects, Inbox and Studio.
   date: 2026-10-09
   by: user:richburdon
   affects: [QA-17]
 ```
 
 ```mdl
-decision D-7: [QA-17] specifies the film as one test whose steps are its scenes, with collaboration recorded separately by [QA-8]. Fills in [D-6].
+decision D-8: [QA-17] specifies the film as one test whose steps are its scenes, with collaboration recorded separately by [QA-8]. Fills in [D-7].
   date: 2026-10-09
   by: agent:claude-code
   for: user:richburdon
@@ -1150,14 +1163,14 @@ decision D-7: [QA-17] specifies the film as one test whose steps are its scenes,
 ```
 
 ```mdl
-decision D-8: The objects scene adds an Explorer graph after the kanban board.
+decision D-9: The objects scene adds an Explorer graph after the kanban board.
   date: 2026-10-10
   by: user:richburdon
   affects: [QA-17]
 ```
 
 ```mdl
-decision D-9: [QA-17] switches on Explorer and Cloudflare in the plugin gallery, so the graph in [D-8] uses a plugin the film has just enabled. Fills in [D-8].
+decision D-10: [QA-17] switches on Explorer and Cloudflare in the plugin gallery, so the graph in [D-9] uses a plugin the film has just enabled. Fills in [D-9].
   date: 2026-10-10
   by: agent:claude-code
   for: user:richburdon

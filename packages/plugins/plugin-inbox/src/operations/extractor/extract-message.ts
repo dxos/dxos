@@ -2,11 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -53,65 +56,88 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         return mailboxes[0];
       });
 
-      const outcome = yield* dispatch(
-        { db, source: live ?? source, extractorId },
-        {
-          // Provenance relation only when the source is a live space-db object. Feed messages use
-          // the Mailbox-recorded association below instead (ECHO can't relate to queue items).
-          provenance: ({ source: from, object, extractorId: id, extractedAt, confidence }) =>
-            sourceIsLive
-              ? ExtractedFrom.make({
-                  [Relation.Source]: object,
-                  [Relation.Target]: from,
-                  extractorId: id,
-                  extractedAt,
-                  confidence,
-                })
-              : undefined,
-        },
-      ).pipe(
-        Effect.provide(
-          fromExtractors(extractors).pipe(
-            Layer.provideMerge(InboxResolver.Live),
-            Layer.provideMerge(Database.layer(db)),
+      // One step, reported against the owning mailbox so the meter under its message list shows the run.
+      const traceWriter = yield* Trace.TraceService;
+      const reportStatus = (current: number, message?: string) => {
+        if (owningMailbox) {
+          traceWriter.write(Trace.StatusUpdate, {
+            message: message ?? `Extracting from ${source.properties?.subject ?? 'message'}`,
+            progress: { key: InboxOperation.createExtractProgressKey(owningMailbox), current, total: 1 },
+          });
+        }
+      };
+      reportStatus(0);
+
+      const output = yield* Effect.gen(function* () {
+        const outcome = yield* dispatch(
+          { db, source: live ?? source, extractorId },
+          {
+            // Provenance relation only when the source is a live space-db object. Feed messages use
+            // the Mailbox-recorded association below instead (ECHO can't relate to queue items).
+            provenance: ({ source: from, object, extractorId: id, extractedAt, confidence }) =>
+              sourceIsLive
+                ? ExtractedFrom.make({
+                    [Relation.Source]: object,
+                    [Relation.Target]: from,
+                    extractorId: id,
+                    extractedAt,
+                    confidence,
+                  })
+                : undefined,
+          },
+        ).pipe(
+          Effect.provide(
+            fromExtractors(extractors).pipe(
+              Layer.provideMerge(InboxResolver.Live),
+              Layer.provideMerge(Database.layer(db)),
+            ),
           ),
-        ),
-      );
+        );
 
-      const result = outcome.result;
+        const result = outcome.result;
 
-      if (owningMailbox && result) {
-        // Apply tags. Requires a live message (Ref) — skipped for feed messages.
-        if (live && result.tags && result.tags.length > 0) {
-          for (const tag of result.tags) {
-            yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, tag, live, db));
+        if (owningMailbox && result) {
+          // Apply tags. Requires a live message (Ref) — skipped for feed messages.
+          if (live && result.tags && result.tags.length > 0) {
+            for (const tag of result.tags) {
+              yield* Effect.promise(() => Mailbox.applyTag(owningMailbox, tag, live, db));
+            }
+          }
+
+          // Record the message → extracted-object association on the Mailbox for feed messages
+          // (the relation path above only covers live space-db sources). Only top-level objects
+          // (no parent — e.g. the Trip, not its child Segment/Booking) are recorded, matching the
+          // dispatcher's provenance gating.
+          if (!sourceIsLive) {
+            const topLevelIds = [...result.created, ...(result.updated ?? [])]
+              .filter((object) => Obj.getParent(object) === undefined)
+              .map((object) => object.id);
+            Mailbox.recordExtraction(owningMailbox, source.id, topLevelIds);
           }
         }
 
-        // Record the message → extracted-object association on the Mailbox for feed messages
-        // (the relation path above only covers live space-db sources). Only top-level objects
-        // (no parent — e.g. the Trip, not its child Segment/Booking) are recorded, matching the
-        // dispatcher's provenance gating.
-        if (!sourceIsLive) {
-          const topLevelIds = [...result.created, ...(result.updated ?? [])]
-            .filter((object) => Obj.getParent(object) === undefined)
-            .map((object) => object.id);
-          Mailbox.recordExtraction(owningMailbox, source.id, topLevelIds);
-        }
-      }
+        // Flush (with index update) so a subsequent extraction's create-or-update queries — segment
+        // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
+        // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
+        // appending segments to the existing one.
+        yield* Database.flush({ indexes: true });
 
-      // Flush (with index update) so a subsequent extraction's create-or-update queries — segment
-      // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
-      // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
-      // appending segments to the existing one.
-      yield* Database.flush({ indexes: true });
-
-      return {
-        extractorId: outcome.extractorId,
-        created: result?.created.length ?? 0,
-        updated: result?.updated?.length ?? 0,
-        summary: result?.summary,
-      };
+        return {
+          extractorId: outcome.extractorId,
+          created: result?.created.length ?? 0,
+          updated: result?.updated?.length ?? 0,
+          summary: result?.summary,
+        };
+      }).pipe(
+        // Only a terminal status ends the meter, so a run that stops early must still send one.
+        Effect.onError((cause) =>
+          Effect.sync(() =>
+            reportStatus(0, Cause.hasInterruptsOnly(cause) ? Progress.STATUS_CANCELLED : Progress.STATUS_FAILED),
+          ),
+        ),
+      );
+      reportStatus(1, Progress.STATUS_COMPLETE);
+      return output;
     }),
   ),
 );

@@ -17,7 +17,8 @@ import * as Theme from '@dxos/react-ui/Theme';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { getSkillId, useActiveSkills, useContextObjects, useSkillHandlers } from '#hooks';
-import { meta } from '#meta';
+
+import { AssistantNamespace } from '../../namespace.ts';
 
 const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
 
@@ -59,7 +60,7 @@ export type ChatContextSectionProps = {
 };
 
 export const ChatContextSection = ({ db, context }: ChatContextSectionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { objects, onUpdateObject } = useContextObjects({ db, context });
   const activeSkills = useActiveSkills({ context });
   const { onUpdateSkill } = useSkillHandlers({ context });
@@ -143,7 +144,7 @@ type ContextRowProps = {
 };
 
 const ContextRow = ({ id, removeLabel, onRemove }: ContextRowProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   return (
     <Listbox.Item id={id} data-testid='assistant.details.context.item'>
       <Listbox.ItemIcon />

@@ -9,9 +9,6 @@ tasks:
       - vite-plugin-import-source:build
       - vite-plugin-module-url:build
       - ^:build
-      # A plugin's vite config fails to load without its own generated capability barrels.
-      - target: ~:gen-modules
-        optional: true
     inputs:
       - '@group(sources)'
       - /vite.base.config.ts

@@ -17,7 +17,8 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 
 import { type TestConnectionStatus } from '#hooks';
-import { meta } from '#meta';
+
+import { ConnectorNamespace } from '../../namespace.ts';
 
 // The action section uses Form's `settings` variant purely for its labeled-row chrome
 // (action-mode `Form.Field`s); there are no fields to bind, so the schema is empty.
@@ -111,7 +112,7 @@ export const ConnectionView = ({
   onDelete,
   onRemoveBinding,
 }: ConnectionViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ConnectorNamespace.key);
 
   return (
     <Panel.Root role={role}>
@@ -278,7 +279,7 @@ const BindingRow = ({
   optionsSchema?: Schema.Codec<any, any>;
   onRemove: (binding: Cursor.ExternalCursor) => void;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ConnectorNamespace.key);
   const [resolvedTarget] = useObject(binding.spec.target);
   const missing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
   // Label precedence: explicit binding label → remote id → the target's own label → its type's

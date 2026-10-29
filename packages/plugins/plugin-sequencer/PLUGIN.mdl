@@ -344,7 +344,9 @@ test QA-1: Read and write a score as lead-sheet text
       do: Right-click "QA Score" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$given.score], target: $given.collection }
       expect: the row leaves the navtree
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Fill a step grid in a new score. Recorded light at 60 fps with no ident, captions or

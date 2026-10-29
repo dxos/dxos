@@ -6,7 +6,7 @@ import { Collection, Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Event, Message, Organization, Person, Pipeline, Task, TaskSet } from '@dxos/types';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from './namespace.ts';
 
 // TODO(burdon): Disambiguate with sdk/shell.
 export const translations = [
@@ -111,7 +111,7 @@ export const translations = [
         'delete-object.label': 'Delete task',
         'object-deleted.label': 'Task deleted',
       },
-      [meta.profile.key]: {
+      [SpaceNamespace.key]: {
         'plugin.name': 'Spaces',
         'navigation-failed-toast.title': 'Link could not be processed',
         'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',

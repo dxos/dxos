@@ -32,7 +32,6 @@ export const TYPES = [
   Spec.Spec,
   SpecDocument.SpecDocument,
   Project.Project,
-  Showcase.Showcase,
   Showcase.Demonstrates,
   Task.Task,
   Text.Text,
@@ -242,24 +241,28 @@ export const CreateShowcase = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.projects.createShowcase'),
     name: 'Create showcase',
-    icon: 'ph--presentation-chart--regular',
+    icon: 'ph--presentation--regular',
     description: trim`
-      Creates a showcase: the evidence that a feature works or a task is done. Write what you showed and how
-      to reproduce it as markdown in content, and put the screenshots and videos you uploaded as files and the
-      pull requests the work landed in into artifacts. Pass every feature and task it demonstrates in targets.
+      Creates a showcase: a slide deck that is the evidence that a feature works or a task is done. Its first slide
+      is content, markdown saying what you showed and how to reproduce it; each object in artifacts (screenshots
+      and videos you uploaded as files, diagrams, the pull requests the work landed in) becomes a further slide
+      that shows it. Pass every feature and task it demonstrates in targets.
     `,
   },
   services: [Database.Service],
-  types: [Showcase.Showcase, Showcase.Demonstrates, Text.Text],
+  // The deck's own types are plugin-presenter's, which implements this operation; it depends on this plugin.
+  types: [Showcase.Demonstrates, Text.Text],
   input: Schema.Struct({
     name: Schema.String,
-    content: Schema.String.annotate({ description: 'Markdown body.' }),
+    content: Schema.String.annotate({ description: 'Markdown for the first slide.' }),
     targets: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'The features and tasks it demonstrates.' }),
     artifacts: Schema.optional(
-      Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'Files, pull requests and other evidence.' }),
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotate({
+        description: 'Files, diagrams, pull requests and other evidence, one slide each, in order.',
+      }),
     ),
   }),
-  output: Schema.Struct({ showcase: Type.getSchema(Showcase.Showcase) }),
+  output: Schema.Struct({ showcase: Obj.Unknown }),
 }).pipe(Operation.mutation('write'));
 
 /** One feature as an agent reads it: ids to load more, and the joins its card shows. */

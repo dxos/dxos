@@ -82,7 +82,9 @@ test QA-1: Build a plugin with an agent in the desktop app
     - name: Uninstall World Clock
       do: Open Plugins, then Labs, open the World Clock card's detail page and click Uninstall.
       expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
+```
 
+```mdl
 test QA-2: Build a plugin with an agent in the browser and install it from the private registry
   desc: |
     The browser variant of QA-1. The agent works the same parent task and four subtasks in a Sandbox on EDGE, and the
@@ -126,7 +128,9 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
     - name: Open the Clocks page and add two timezones
       do: Click Clocks under the WORLD CLOCK group, then add two timezones with the plus card.
       expect: the page shows the map above three ticking clock cards and the plus card
+```
 
+```mdl
 test QA-3: Read a project's tasks as details
   desc: |
     A project's task list opens each task as the project plank's detail. With the deck flattened (the default)
@@ -162,7 +166,9 @@ test QA-3: Read a project's tasks as details
       expect: |
         the task opens in the main plank with "Roastery Ops" in its breadcrumb, and its attachment is not open
         beside it
+```
 
+```mdl
 test QA-4: Plan a project and hand its tasks to an agent
   desc: |
     The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
@@ -196,7 +202,9 @@ test QA-4: Plan a project and hand its tasks to an agent
       do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
       expect: the two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
+```
 
+```mdl
 test QA-5: Showcase clip
   desc: |
     The 20s showcase clip: Open a task of the Chess MCP on Workers project, then tick it and send it to the agent. Recorded light at 60 fps with no ident, captions or
@@ -258,4 +266,20 @@ decision D-1: Features live on specs, not projects: a spec owns its features and
   date: 2026-10-27
   by: user:dmaretskyi
   affects: [QA-6]
+```
+
+```mdl
+decision D-2: A showcase is a presenter slide deck, not a type of its own. Creating one makes a `Presentation` whose first slide is the write-up and whose further slides each show one artifact, such as an image or video file, a diagram or a pull request. The same `Demonstrates` relation links the deck to the features and tasks it shows.
+  date: 2026-10-28
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-3: `Demonstrates` 0.2.0 takes any object as its source, and plugin-presenter implements `CreateShowcase` and migrates each `Showcase` 0.1.0 into a `Presentation` in place, keeping its id and its `Demonstrates` edges. Fills in [D-2].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: plugin-presenter depends on this plugin through plugin-studio, so this plugin cannot import the `Presentation` type without a dependency cycle.
+  rejected:
+    - Moving `Presentation` into a package both plugins import, which moves the deck's whole type module for one relation.
 ```

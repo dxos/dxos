@@ -171,6 +171,64 @@ describe('makeTraceSink', () => {
     expect(registry.get(progress.snapshotAtom).tasks).toHaveLength(0);
   });
 
+  // EDGE publishes each broadcast without awaiting the previous one, so a run's own update can land
+  // after its terminal.
+  test('an update that arrives after its run completed does not reopen the meter', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: STATUS_COMPLETE, progress: { key, current: 0, total: 0 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0, total: 0 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))).toBeUndefined();
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }, { pid: 'run-2' }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
+  });
+
+  test('a count that arrives after a higher one does not move the meter back', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 6, total: 10 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 3, total: 10 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))).toMatchObject({ current: 6, total: 10 });
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 7 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))?.current).toBe(7);
+  });
+
+  test('a stale count does not bring its stale total with it', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 8, total: 100 } }, { pid: 'run-1' }));
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 5, total: 5 } }, { pid: 'run-1' }));
+    expect(registry.get(progress.monitorAtom(key))).toMatchObject({ current: 8, total: 100 });
+  });
+
+  test('a long-lived process that reports the same key again later is a new run', () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'mailbox-uri#sync';
+
+    sink.write(statusMessage({ message: STATUS_COMPLETE, progress: { key } }, { pid: 'agent' }));
+    vi.advanceTimersByTime(60_000);
+    sink.write(statusMessage({ message: 'Syncing', progress: { key, current: 0 } }, { pid: 'agent' }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('running');
+  });
+
   test('marks failed monitors visible and leaves them registered', () => {
     const registry = Registry.make();
     const progress = makeRegistry(registry);

@@ -11,11 +11,12 @@ import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin'
 import { createTestApp } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { meta } from '#meta';
-import { ThemePlugin } from '#plugin';
+import * as ThemePlugin from '#meta';
 import { ThemeCapabilities } from '#types';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { ThemeNamespace } from './namespace.ts';
+
+const moduleId = (name: string) => `${ThemeNamespace.key}.module.${name}`;
 
 // Stubs the system dark-mode preference ThemePlugin reads.
 const stubMatchMedia = (matches: boolean) => {
@@ -44,7 +45,7 @@ describe('ThemePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // Use createTestApp directly to avoid a circular dep with plugin-testing.
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
     });
 
     // ReactContext activates on Startup; fires SetupTranslations before it activates.
@@ -56,7 +57,7 @@ describe('ThemePlugin', () => {
     await using harness = await createTestApp({
       plugins: [
         ProcessManagerPlugin.make(),
-        ThemePlugin({
+        ThemePlugin.make({
           resourceExtensions: [{ 'en-US': { 'test-translator': { greeting: 'Hello from test' } } }],
         }),
       ],
@@ -70,7 +71,7 @@ describe('ThemePlugin', () => {
     await using harness = await createTestApp({
       plugins: [
         ProcessManagerPlugin.make(),
-        ThemePlugin({
+        ThemePlugin.make({
           resourceExtensions: [{ 'en-US': { 'test-translator-effect': { greeting: 'Salut' } } }],
         }),
       ],
@@ -89,7 +90,7 @@ describe('ThemePlugin', () => {
 
   test('contributes an appearance setting', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
     });
 
     // The plugin-local capability resolves to a writable settings atom, defaulting to 'system'.
@@ -99,13 +100,13 @@ describe('ThemePlugin', () => {
 
     // It is also exposed to the generic settings UI keyed by the plugin.
     const allSettings = harness.getAll(AppCapabilities.Settings);
-    expect(allSettings.some((entry) => entry.prefix === meta.profile.key)).toBe(true);
+    expect(allSettings.some((entry) => entry.prefix === ThemeNamespace.key)).toBe(true);
   });
 
   test('appearance override forces dark independent of system preference', async ({ expect }) => {
     // System preference is light (stubMatchMedia(false)).
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
     });
     const registry = harness.get(Capabilities.AtomRegistry);
     const settingsAtom = harness.get(ThemeCapabilities.Settings);
@@ -125,7 +126,7 @@ describe('ThemePlugin', () => {
 
   test('accent setting rewrites the root accent tokens, and clears them when unset', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
     });
     const registry = harness.get(Capabilities.AtomRegistry);
     const settingsAtom = harness.get(ThemeCapabilities.Settings);
@@ -143,7 +144,7 @@ describe('ThemePlugin', () => {
   test("appearance 'system' follows the OS preference", async ({ expect }) => {
     stubMatchMedia(true); // System preference = dark.
     await using _harness = await createTestApp({
-      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
     });
     // Default appearance is 'system'; with a dark system preference the class is set.
     expect(document.documentElement.classList.contains('dark')).toBe(true);
@@ -152,11 +153,11 @@ describe('ThemePlugin', () => {
   test('cross-tab storage event re-applies the theme', async ({ expect }) => {
     // System preference is light; another tab writes 'dark'.
     await using _harness = await createTestApp({
-      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin.make({})],
     });
     window.dispatchEvent(
       new StorageEvent('storage', {
-        key: meta.profile.key,
+        key: ThemeNamespace.key,
         newValue: JSON.stringify({ appearance: 'dark' }),
       }),
     );
