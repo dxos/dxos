@@ -130,13 +130,16 @@ const mirroredTrunks = (diagram: Semantic.Diagram, trunks: readonly Semantic.Bus
       bus.direction === 'out' ? edge.to.node === bus.hub.node : edge.from.node === bus.hub.node,
     );
   const sets = new Map<string, Semantic.Bus[]>();
-  trunks.forEach((bus) =>
-    sets.set(`${bus.direction}:${spokesOf(bus)}`, [...(sets.get(`${bus.direction}:${spokesOf(bus)}`) ?? []), bus]),
-  );
-  // The far side has room for one trunk.
+  for (const bus of trunks) {
+    const key = `${bus.direction}:${spokesOf(bus)}`;
+    sets.set(key, [...(sets.get(key) ?? []), bus]);
+  }
+  // The far side has room for one trunk: the last root after the first, else the first if it is a root.
   return [...sets.values()].flatMap((family) => {
-    const root =
-      family.length > 1 ? (family.slice(1).findLast(isRoot) ?? (isRoot(family[0]) ? family[0] : undefined)) : undefined;
+    if (family.length < 2) {
+      return [];
+    }
+    const root = family.slice(1).findLast(isRoot) ?? (isRoot(family[0]) ? family[0] : undefined);
     return root ? [root] : [];
   });
 };
