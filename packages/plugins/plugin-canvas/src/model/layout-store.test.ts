@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -10,6 +9,7 @@ import { Diagnostics, Dsl, Objective, Score } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import {
   DEFAULT_LATTICE,
   cellBounds,
@@ -246,7 +246,7 @@ describe('scored mode on Layout2D', () => {
   /** The scores the Scored story shows for a View: the default objective's scorers over its diagram objects. */
   const scoresOf = (view: View) => {
     const { objects } = toDiagramObjects(view, defaultNodeRegistry);
-    return Effect.runPromise(
+    return EffectEx.runPromise(
       Score.evaluate(Score.fromObjective(Objective.DEFAULT), { objects, report: Diagnostics.analyze(objects) }),
     );
   };
