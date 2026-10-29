@@ -128,7 +128,7 @@ const build = (scene: Scene.SceneRecord3D, id: string, wasm: ManifoldToplevel, p
   if (path.includes(id)) {
     throw new SolidError(`Solid "${id}" uses itself.`);
   }
-  const position = element.position ?? ZERO;
+  const position = element.center ?? ZERO;
   if (element.kind !== 'solid') {
     const rotation = element.rotation ?? ZERO;
     return then(

@@ -23,10 +23,14 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
 7. (2026-10-29) Assistant operations are in stage 3, as its last step (§6.4).
 8. (2026-10-29) 3D handles are Babylon's `GizmoManager`.
 9. (2026-10-29) The 3D viewer orbits, zooms and pans; inside an animator stage the animation drives the camera.
-10. (2026-10-29) Every drawing is a `Drawing` (one query finds them all; formats convert into one another).
-    `Drawing.content` is a Ref to one plugin-owned content type: `Excalidraw`, `TLDraw` or `Canvas`. plugin-canvas's
-    `Canvas` holds its metadata, including named style classes, and `Canvas.content` is a Ref to a `Scene2D` or
-    `Scene3D`. This replaces 6's "root Ref" wording; the editor still picks the viewport from the scene's type.
+10. (2026-10-29) Every drawing is a `Drawing` (one query finds them all; formats convert into one another). Its
+    existing `canvas` Ref is widened: it names either the unchanged `Drawing.Canvas` (tldraw and excalidraw drawings,
+    which neither change nor migrate) or plugin-canvas's typed `Canvas`. That `Canvas` holds its metadata, including
+    named style classes, and `Canvas.content` is a Ref to a `Scene2D` or `Scene3D`. Only `dxos.org/scene/2` drawings
+    migrate, to a `Canvas` plus a `Scene2D`. This replaces 6's "root Ref" wording; the editor still picks the viewport
+    from the scene's type.
+13. (2026-10-29) Elements share a `BaseElement` type; a 3D element's location is `center`, as in 2D; both dimensions
+    share one generic `Scene<E, C>` type.
 11. (2026-10-29) plugin-spacetime is deleted within stage 3 once each of its tools has a test in the new editor.
 12. (2026-10-29) plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free, lattice,
     constrained and scored.

@@ -43,7 +43,7 @@ const SCRIPTS: Record<ExemplarName, Animation.Beat[]> = {
     { duration: 3, ease: 'ease-in-out', camera: { yaw: 45, distance: 16 } },
   ],
   encapsulated: [
-    { duration: 2.5, ease: 'ease-in-out', set: { client: { position: { x: -9, y: 2, z: 0 } } }, camera: { yaw: 0 } },
+    { duration: 2.5, ease: 'ease-in-out', set: { client: { center: { x: -9, y: 2, z: 0 } } }, camera: { yaw: 0 } },
     { duration: 2.5, ease: 'ease-in-out', camera: { yaw: -60, pitch: 45 } },
   ],
   hierarchy: [{ duration: 5, ease: 'ease-in-out', camera: { yaw: 45, pitch: 50 } }],

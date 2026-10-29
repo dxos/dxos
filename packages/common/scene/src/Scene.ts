@@ -50,7 +50,8 @@ export const Layout = Schema.Struct({
 });
 export type Layout = Schema.Schema.Type<typeof Layout>;
 
-const baseFields = {
+/** Fields every element has, in either dimension. */
+export const BaseElement = Schema.Struct({
   id: Schema.String,
   kind: Schema.String,
   /** Paint order (a fractional index); `z` is reserved for depth. */
@@ -68,7 +69,8 @@ const baseFields = {
   pinned: Schema.optional(Schema.Boolean),
   /** Kind-specific fields, validated by the kind's registration. */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
-};
+});
+export type BaseElement = Schema.Schema.Type<typeof BaseElement>;
 
 // Geometry is optional because a link's comes from its bindings.
 const geometry2D = {
@@ -78,7 +80,7 @@ const geometry2D = {
 };
 
 const geometry3D = {
-  position: Schema.optional(Vec3.pipe(AnimatableAnnotation.set('vec3'))),
+  center: Schema.optional(Vec3.pipe(AnimatableAnnotation.set('vec3'))),
   scale: Schema.optional(Vec3.pipe(AnimatableAnnotation.set('vec3'))),
   /** Euler degrees. */
   rotation: Schema.optional(Vec3.pipe(AnimatableAnnotation.set('rotation'))),
@@ -91,18 +93,18 @@ const geometry3D = {
 const childById = { scene: Schema.optional(Schema.String) };
 const childByRef = { ...childById, child: Schema.optional(Ref.Ref(Obj.Unknown)) };
 
-export const Element2D = Schema.Struct({ ...baseFields, ...geometry2D, ...childById });
+export const Element2D = Schema.Struct({ ...BaseElement.fields, ...geometry2D, ...childById });
 export type Element2D = Schema.Schema.Type<typeof Element2D>;
 
-export const Element3D = Schema.Struct({ ...baseFields, ...geometry3D, ...childById });
+export const Element3D = Schema.Struct({ ...BaseElement.fields, ...geometry3D, ...childById });
 export type Element3D = Schema.Schema.Type<typeof Element3D>;
 
 export type Element = Element2D | Element3D;
 
-export const StoredElement2D = Schema.Struct({ ...baseFields, ...geometry2D, ...childByRef });
+export const StoredElement2D = Schema.Struct({ ...BaseElement.fields, ...geometry2D, ...childByRef });
 export type StoredElement2D = Schema.Schema.Type<typeof StoredElement2D>;
 
-export const StoredElement3D = Schema.Struct({ ...baseFields, ...geometry3D, ...childByRef });
+export const StoredElement3D = Schema.Struct({ ...BaseElement.fields, ...geometry3D, ...childByRef });
 export type StoredElement3D = Schema.Schema.Type<typeof StoredElement3D>;
 
 export const Camera2D = Schema.Struct({ center: Vec2, zoom: Schema.Number });
@@ -119,28 +121,37 @@ export const Camera3D = Schema.Struct({
 });
 export type Camera3D = Schema.Schema.Type<typeof Camera3D>;
 
-const sceneFields = {
-  name: Schema.optional(Schema.String),
-  theme: Schema.optional(Schema.String),
-  /** A reusable scene that `instance` elements place. */
-  component: Schema.optional(Schema.Boolean),
+/** The fields every scene has, over its element and camera schemas. */
+export const makeSceneSchema = <E extends Schema.Top, C extends Schema.Top>(element: E, camera: C) =>
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    theme: Schema.optional(Schema.String),
+    /** A reusable scene that `instance` elements place. */
+    component: Schema.optional(Schema.Boolean),
+    camera,
+    elements: Schema.Record(Schema.String, element),
+  });
+
+/** A scene of elements `E` seen through a camera `C`; both dimensions' records and ECHO objects have this shape. */
+export type Scene<E, C> = {
+  readonly name?: string;
+  readonly theme?: string;
+  readonly component?: boolean;
+  readonly camera: C;
+  readonly elements: { readonly [id: string]: E };
 };
 
 export const SceneRecord2D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('2d'),
-  ...sceneFields,
-  camera: Camera2D,
-  elements: Schema.Record(Schema.String, Element2D),
+  ...makeSceneSchema(Element2D, Camera2D).fields,
 });
 export type SceneRecord2D = Schema.Schema.Type<typeof SceneRecord2D>;
 
 export const SceneRecord3D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('3d'),
-  ...sceneFields,
-  camera: Camera3D,
-  elements: Schema.Record(Schema.String, Element3D),
+  ...makeSceneSchema(Element3D, Camera3D).fields,
 });
 export type SceneRecord3D = Schema.Schema.Type<typeof SceneRecord3D>;
 
@@ -151,12 +162,7 @@ export type SceneDocument = { scenes: readonly SceneRecord[] };
 
 /** A 2D scene; its elements are records inside this one object (design D-6). ECHO reserves `id`, so its own is `key`. */
 export class Scene2D extends Type.makeObject<Scene2D>(DXN.make('org.dxos.type.scene.scene2d', '0.1.0'))(
-  Schema.Struct({
-    key: Schema.String,
-    ...sceneFields,
-    camera: Camera2D,
-    elements: Schema.Record(Schema.String, StoredElement2D),
-  }).pipe(
+  Schema.Struct({ key: Schema.String, ...makeSceneSchema(StoredElement2D, Camera2D).fields }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--square--regular', hue: 'sky' }),
     Annotation.UserType.set(),
@@ -165,12 +171,7 @@ export class Scene2D extends Type.makeObject<Scene2D>(DXN.make('org.dxos.type.sc
 
 /** A 3D scene; its elements are records inside this one object (design D-6). ECHO reserves `id`, so its own is `key`. */
 export class Scene3D extends Type.makeObject<Scene3D>(DXN.make('org.dxos.type.scene.scene3d', '0.1.0'))(
-  Schema.Struct({
-    key: Schema.String,
-    ...sceneFields,
-    camera: Camera3D,
-    elements: Schema.Record(Schema.String, StoredElement3D),
-  }).pipe(
+  Schema.Struct({ key: Schema.String, ...makeSceneSchema(StoredElement3D, Camera3D).fields }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--cube--regular', hue: 'sky' }),
     Annotation.UserType.set(),

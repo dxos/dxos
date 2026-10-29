@@ -212,7 +212,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     }
     return {
       ...readBase(statement, attrs),
-      ...(at && isVec3(at) ? { position: at } : {}),
+      ...(at && isVec3(at) ? { center: at } : {}),
       ...(scale ? { scale } : {}),
       ...(isVec3(rotation) ? { rotation } : {}),
     };
@@ -419,7 +419,7 @@ const formatElement2D = (element: Model.Element2D): string =>
 const formatElement3D = (element: Model.Element3D): string =>
   [
     ...formatHead(element),
-    ...(element.position ? ['@', formatVec3(element.position)] : []),
+    ...(element.center ? ['@', formatVec3(element.center)] : []),
     ...(element.scale ? [`scale=${formatScale(element.scale)}`] : []),
     ...attr('rotation', element.rotation),
     ...formatBase(element),

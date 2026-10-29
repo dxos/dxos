@@ -291,7 +291,7 @@ export class SceneRenderer3D {
       if (!visible) {
         continue;
       }
-      surface.position.set(item.position.x, item.position.y, item.position.z);
+      surface.position.set(item.center.x, item.center.y, item.center.z);
       surface.scaling.set(item.scale.x, item.scale.y, item.scale.z);
       surface.rotationQuaternion = Quaternion.FromEulerAngles(
         radians(item.rotation.x),

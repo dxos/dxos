@@ -114,8 +114,8 @@ export const sceneBinding = (
     }
   } else {
     for (const element of Object.values(root.elements)) {
-      if (isTarget(element) && element.position) {
-        const { x, y, z } = element.position;
+      if (isTarget(element) && element.center) {
+        const { x, y, z } = element.center;
         objects[element.id] = {
           id: element.id,
           position: { x, y, z },

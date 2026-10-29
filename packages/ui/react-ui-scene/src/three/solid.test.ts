@@ -19,14 +19,14 @@ const scene = (elements: Scene.Element3D[]): Scene.SceneRecord3D => ({
 const box: Scene.Element3D = {
   id: 'box',
   kind: 'cube',
-  position: { x: 0, y: 0, z: 0 },
+  center: { x: 0, y: 0, z: 0 },
   scale: { x: 2, y: 2, z: 2 },
   hidden: true,
 };
 const hole: Scene.Element3D = {
   id: 'hole',
   kind: 'cylinder',
-  position: { x: 0, y: 0, z: 0 },
+  center: { x: 0, y: 0, z: 0 },
   scale: { x: 1, y: 3, z: 1 },
   hidden: true,
 };

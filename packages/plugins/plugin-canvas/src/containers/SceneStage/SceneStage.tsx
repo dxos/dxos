@@ -38,7 +38,7 @@ export const SceneStage = ({ stage, sample, effects, onFrameDrawn, onProjection 
           renderList(sampled).items.flatMap((item) => {
             const anchor =
               item.key === item.id &&
-              project(camera3d, viewport, item.position, Math.max(item.scale.x, item.scale.y, item.scale.z) / 2);
+              project(camera3d, viewport, item.center, Math.max(item.scale.x, item.scale.y, item.scale.z) / 2);
             return anchor ? [[item.id, anchor] as const] : [];
           }),
         );

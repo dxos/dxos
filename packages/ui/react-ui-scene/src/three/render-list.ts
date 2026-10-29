@@ -15,7 +15,7 @@ export type RenderItem = {
   scene: Scene.SceneRecord3D;
   kind: string;
   label?: string;
-  position: Vec3;
+  center: Vec3;
   scale: Vec3;
   rotation: Vec3;
   style?: Scene.Style;
@@ -73,18 +73,18 @@ export const renderList = (
     for (const raw of Object.values(scene.elements)) {
       const element = elementOf(raw);
       // A solid's geometry is its operands', placed where they are, so it needs no position of its own.
-      const local = element.position ?? (element.kind === 'solid' ? ZERO : undefined);
+      const local = element.center ?? (element.kind === 'solid' ? ZERO : undefined);
       if (element.hidden || !local || element.kind === 'link' || element.kind === 'group') {
         continue;
       }
-      const position = apply(transform, local);
-      placed.set(element.id, position);
+      const center = apply(transform, local);
+      placed.set(element.id, center);
       const item: RenderItem = {
         key: keyOf(element.id),
         id: element.id,
         scene,
         kind: element.kind === 'scene' ? (stringProp(element, 'shape') ?? 'cube') : element.kind,
-        position,
+        center,
         scale: scaled(element.scale ?? UNIT, transform.scale),
         rotation: element.rotation ?? ZERO,
         ...(element.label !== undefined ? { label: element.label } : {}),

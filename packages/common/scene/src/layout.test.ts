@@ -49,11 +49,11 @@ describe('layout', () => {
     const scene = applyLayout(
       cluster([
         { id: 'a', kind: 'sphere' },
-        { id: 'b', kind: 'sphere', position: pinned, pinned: true },
+        { id: 'b', kind: 'sphere', center: pinned, pinned: true },
       ]),
     );
-    expect(scene.elements.b.position).toEqual(pinned);
-    const { x, y, z } = scene.elements.a.position ?? ORIGIN;
+    expect(scene.elements.b.center).toEqual(pinned);
+    const { x, y, z } = scene.elements.a.center ?? ORIGIN;
     expect(Math.hypot(x, y, z)).toBeCloseTo(3);
   });
 

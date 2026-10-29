@@ -31,7 +31,7 @@ const numberParam = (params: ArrangeInput['params'], name: string, fallback: num
 const centreOf = (input: ArrangeInput): Vec3 => {
   const centre = input.params.centre;
   if (typeof centre === 'string') {
-    const position = input.values(centre).position;
+    const position = input.values(centre).center;
     return isVec3(position) ? position : ORIGIN;
   }
   return isVec3(centre) ? centre : ORIGIN;
@@ -84,17 +84,17 @@ export const applyLayout = (scene: SceneRecord3D): SceneRecord3D => {
     }
     const targets = group.members.filter((id) => {
       const member = elements[id];
-      return member !== undefined && !member.pinned && member.position === undefined;
+      return member !== undefined && !member.pinned && member.center === undefined;
     });
     const placed = arranger({
       targets,
-      params: { centre: group.position ?? ORIGIN, ...group.layout?.params },
-      values: (id) => ({ position: elements[id]?.position }),
+      params: { centre: group.center ?? ORIGIN, ...group.layout?.params },
+      values: (id) => ({ center: elements[id]?.center }),
     });
-    for (const [id, position] of Object.entries(placed)) {
+    for (const [id, center] of Object.entries(placed)) {
       const member = elements[id];
-      if (member && isVec3(position)) {
-        elements[id] = { ...member, position };
+      if (member && isVec3(center)) {
+        elements[id] = { ...member, center };
       }
     }
   }
@@ -125,7 +125,7 @@ export const bounds2D = (scene: SceneRecord2D): { x: number; y: number; width: n
 /** A sphere round every placed element, centred on their box; zero when none is placed. */
 export const bounds3D = (scene: SceneRecord3D): { center: Vec3; radius: number } => {
   const placed = Object.values(scene.elements).flatMap((element) =>
-    element.position ? [{ position: element.position, radius: radiusOf(element) }] : [],
+    element.center ? [{ position: element.center, radius: radiusOf(element) }] : [],
   );
   if (placed.length === 0) {
     return { center: ORIGIN, radius: 0 };

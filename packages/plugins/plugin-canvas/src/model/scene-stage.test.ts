@@ -24,10 +24,10 @@ describe('scene stage', () => {
     expect(target?.values.center).toEqual({ x: 0, y: 0 });
   });
 
-  test('3D targets expose position and leave groups and hidden elements out', () => {
+  test('3D targets expose center and leave groups and hidden elements out', () => {
     const targets = sceneTargets(read('cluster'));
     expect(targets.find((target) => target.id === 'hub')?.properties).toEqual(
-      expect.arrayContaining([{ path: 'position', kind: 'vec3' }]),
+      expect.arrayContaining([{ path: 'center', kind: 'vec3' }]),
     );
     expect(targets.map((target) => target.id)).not.toContain('team');
     expect(sceneTargets(read('solid')).map((target) => target.id)).toEqual(['bracket']);

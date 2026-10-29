@@ -153,7 +153,7 @@ Element (record; shared base)
   layout? (placement relations, pin)
   + geometry from the scene type:
       2D: center: Point, size: Size, rotation: number
-      3D: position: Vec3, scale: Vec3, rotation: Vec3 (Euler degrees)
+      3D: center: Vec3, scale: Vec3, rotation: Vec3 (Euler degrees)
   + kind-specific fields
 
 Binding (on a link element)
@@ -182,7 +182,7 @@ the editor need Manifold; the model package does not.
 ## Animation contract
 
 Each scene type registers one animator `StageDef`. Targets are element ids. Keyable properties are the element fields
-that carry `AnimatableAnnotation`. Script properties map to `center`/`size` (2D) and `position`/`scale` (3D). An element
+that carry `AnimatableAnnotation`. Script properties map to `center`/`size` (2D) and `center`/`scale` (3D). An element
 must not use the id `camera`. The stage binding emits plain data, as today.
 
 ## DSL

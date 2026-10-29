@@ -9,30 +9,31 @@ canvas becomes its 2D case, plugin-spacetime is retired, and the assistant edits
 **Architecture:** react-ui-canvas keeps its `View`/`ViewStore`/`VersionedSource` engine; a lossless adapter backs its
 `ViewStore` with `Scene2D` ECHO objects, so the 2D mechanism depends only on `Scene` (decision 5). 3D gets a shared
 `SceneIntent` reducer in `@dxos/scene`, a picking contract on `SceneRenderer3D`, Babylon `GizmoManager` handles and a
-`VersionedSource` over `Scene3D` for undo. Every drawing is a plugin-illustrator `Drawing` whose `content` Ref names
-one plugin-owned type (`Tldraw.Content`, `Excalidraw.Content`, plugin-canvas `Canvas`); `Canvas` holds the metadata and
-named style classes, and its `content` Ref names a `Scene2D` or `Scene3D`, whose type picks the viewport (decision 10).
+`VersionedSource` over `Scene3D` for undo. Every drawing is a plugin-illustrator `Drawing`; its existing `canvas` Ref is
+widened to name either the unchanged `Drawing.Canvas` (tldraw, excalidraw) or plugin-canvas's typed `Canvas`, which
+holds the metadata and named style classes and whose `content` Ref names a `Scene2D` or `Scene3D`; that type picks the
+viewport (decision 10, SPEC D-26).
 
 **Tech Stack:** TypeScript, Effect Schema, ECHO (`@dxos/echo`), effect-atom, React, Babylon.js, manifold-3d, vitest.
 
-**Spec:** `agents/superpowers/specs/2026-10-28-scene-editor-design.md` (decisions 1–12; no open questions); model spec
-`packages/common/scene/SPEC.mdl` (D-1…D-22); stage 2 design
+**Spec:** `agents/superpowers/specs/2026-10-28-scene-editor-design.md` (decisions 1–13; no open questions); model spec
+`packages/common/scene/SPEC.mdl` (D-1…D-26); stage 2 design
 `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
 
 ## Global Constraints
 
 - The editor grows inside plugin-canvas; no new editor plugin (decision 1).
 - The plugin owns a canvas object for its metadata; editing, rendering and animation depend only on `Scene` (decision 5).
-- Every drawing is a `Drawing`; `Drawing.content` is a Ref to `Tldraw.Content`, `Excalidraw.Content` or `Canvas`, each
-  owned by its plugin. `Canvas` holds the metadata and named style classes; `Canvas.content` is a Ref to a `Scene2D` or
-  `Scene3D`, and that type picks the viewport (decisions 6, 10).
+- Every drawing is a `Drawing`; `Drawing.canvas` is a Ref to either the existing `Drawing.Canvas` (tldraw and
+  excalidraw, structurally unchanged) or plugin-canvas's `Canvas`. `Canvas` holds the metadata and named style classes;
+  `Canvas.content` is a Ref to a `Scene2D` or `Scene3D`, and that type picks the viewport (decisions 6, 10; D-26).
 - plugin-canvas switches to `Scene2D` only when every react-ui-canvas mode runs on it: free (freehand), lattice,
   constrained and scored — and dynamic, which is also a projection mode (decision 12).
 - plugin-spacetime is deleted within stage 3 once each of its tools has a test in the new editor (decision 11).
 - 3D handles are Babylon's `GizmoManager` (decision 8). The 3D viewer orbits; in an animator stage the animation drives
   the camera (decision 9).
-- Every existing drawing migrates to the content model: tldraw and excalidraw content into their own types unchanged,
-  scene canvases (`dxos.org/scene/2`) into a `Canvas` plus `Scene2D` objects. plugin-spacetime data does not migrate.
+- tldraw and excalidraw drawings do not change or migrate. Only scene canvases (`dxos.org/scene/2`) migrate, into a
+  `Canvas` plus `Scene2D` objects. plugin-spacetime data does not migrate.
 - Records are the source of truth; the DSL is their lossless text form. Positions round to 0.001.
 - New packages: none. Workspace deps use `workspace:*`; never let `pnpm add` bump the catalog — revert
   `pnpm-workspace.yaml` with `git checkout pnpm-workspace.yaml` if it changes.
@@ -44,8 +45,8 @@ named style classes, and its `content` Ref names a `Scene2D` or `Scene3D`, whose
 
 ## Review Focus
 
-1. A drawing opened by an old client after a new client migrated it: the old client finds no `canvas` Ref and must show
-   "update to open" rather than create an empty canvas over the migrated content.
+1. A scene drawing opened by an old client after a new client migrated it: the old client finds a `canvas` Ref to a
+   type it does not know and must show "update to open" rather than create an empty canvas over the migrated content.
 2. Linked drawings (portal frames) whose target is not migrated yet: the scene store must open them read-through, not
    drop them.
 3. Undo across an ECHO-backed `Scene3D` after a remote edit to the same element: `patchSource` must skip, not clobber.
@@ -140,74 +141,35 @@ Use `EchoTestBuilder` with `Scene.Scene2D` registered, as `use-scene-document.te
 - [ ] **Step 4: Run, expect PASS.**
 - [ ] **Step 5: Commit** `plugin-canvas: ViewStore over Scene2D objects`.
 
-### Task 3: Drawing content model
+### Task 3: `Drawing.canvas` accepts either canvas type
 
 **Files:**
 
 - Modify: `packages/plugins/plugin-illustrator/src/types/Drawing.ts`, `IllustratorCapabilities.ts`
-- Modify: `packages/plugins/plugin-tldraw/src/types/Tldraw.ts`, `capabilities/drawing-variant.ts`
-- Modify: `packages/plugins/plugin-excalidraw/src/types/Excalidraw.ts`, `capabilities/drawing-variant.ts`
 - Test: `packages/plugins/plugin-illustrator/src/types/Drawing.test.ts` (create)
 
 **Interfaces:**
 
 - Produces:
-  - `Drawing.Drawing` gains `content: Schema.optional(Ref.Ref(Obj.Unknown))`; `canvas` becomes optional and is read only
-    by the migration (Task 4). `Drawing.make({ name, content }: { name?: string; content: Obj.Any }): Drawing`.
-  - The old inner type is renamed `Drawing.LegacyCanvas` (same DXN `org.dxos.type.canvas@0.1.0`, so stored objects still
-    load); `makeCanvas`/`isCanvas` are removed and every call site moves to the variant's own type.
-  - `DrawingVariant` replaces `id`-matching on `Canvas.schema` with `contentType: Type.AnyObj` (required),
-    `createContent: (input?) => Effect.Effect<Obj.Any, Error, Database.Service>` and
-    `migrate: (legacy: Drawing.LegacyCanvas) => Effect.Effect<Obj.Any, Error, Database.Service>`; `legacySchema` names
-    the `LegacyCanvas.schema` the variant migrates from. `DrawingVariantSurfaceProps.canvas` becomes `content: Obj.Any`.
-  - `resolveContent(drawing: Drawing.Drawing): Effect.Effect<Obj.Any | undefined>` and
-    `variantFor(content: Obj.Any, variants: readonly DrawingVariant[]): DrawingVariant | undefined` (by typename).
-  - `Tldraw.Content` — DXN `org.dxos.type.tldraw.content@0.1.0`, `{ content: Record<string, any>; styles?: Record<string, any> }`.
-  - `Excalidraw.Content` — DXN `org.dxos.type.excalidraw.content@0.1.0`, same fields.
+  - `Drawing.Drawing.canvas` becomes `Ref.Ref(Obj.Unknown)`: a `Drawing.Canvas` (tldraw, excalidraw) or a plugin-canvas
+    `Canvas.Canvas`. `Drawing.make({ name, canvas }: { name?: string; canvas: Obj.Any }): Drawing`. `Drawing.Canvas`,
+    `makeCanvas` and `isCanvas` are unchanged, and so are the tldraw and excalidraw plugins.
+  - `DrawingVariant` gains optional `canvasType?: Type.AnyObj`; a variant without one keeps matching by
+    `Drawing.Canvas.schema`, as today.
+  - `variantFor(canvas: Obj.Any, variants: readonly DrawingVariant[]): DrawingVariant | undefined` — by `canvasType`
+    typename first, then by `schema` for a `Drawing.Canvas`.
 
-- [ ] **Step 1: Failing tests** — `Drawing.make` with a `Tldraw.Content` resolves it through `resolveContent`;
-      `variantFor` picks the tldraw variant by typename; a query for `Drawing.Drawing` returns tldraw, excalidraw and
-      canvas drawings together (decision 10).
+- [ ] **Step 1: Failing tests** — a tldraw drawing made the current way resolves the tldraw variant unchanged; a
+      `Drawing` whose canvas is a `Canvas.Canvas` resolves the canvas variant; a query for `Drawing.Drawing` returns
+      tldraw, excalidraw and canvas drawings together (decision 10).
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-illustrator exec vitest run --project=node src/types/Drawing.test.ts`.
-- [ ] **Step 3: Implement.** Update each tldraw/excalidraw store adapter (`hooks/useStoreAdapter.ts`) and container to
-      take its own content type. SPEC decision (agent, for user): "A drawing variant owns its content type and migrates
-      from the legacy canvas." Fills in D-20.
+- [ ] **Step 3: Implement.** Call sites that read `drawing.canvas` as a `Drawing.Canvas` go through `variantFor` or
+      `Drawing.isCanvas`.
 - [ ] **Step 4: Run, expect PASS**, plus `pnpm --filter @dxos/plugin-tldraw exec vitest run --project=node` and
-      `pnpm --filter @dxos/plugin-excalidraw exec vitest run --project=node`; typecheck all three packages.
-- [ ] **Step 5: Commit** `plugin-illustrator: drawings hold a plugin-owned content type`.
+      `pnpm --filter @dxos/plugin-excalidraw exec vitest run --project=node` (unchanged); typecheck all three packages.
+- [ ] **Step 5: Commit** `plugin-illustrator: a drawing's canvas may be any canvas type`.
 
-### Task 4: Migrate drawings to the content model
-
-**Files:**
-
-- Create: `packages/plugins/plugin-illustrator/src/model/migrate-drawing.ts`
-- Test: `packages/plugins/plugin-illustrator/src/model/migrate-drawing.test.ts`
-- Modify: the tldraw and excalidraw variants (`migrate`)
-
-**Interfaces:**
-
-- Consumes: Task 3 variants.
-- Produces: `migrateDrawing(drawing: Drawing.Drawing, variants: readonly DrawingVariant[]): Effect.Effect<boolean, Error, Database.Service>`
-  — for a drawing with a `canvas` Ref and no `content`, picks the variant by `LegacyCanvas.schema`, creates its content
-  with `variant.migrate`, sets `content` and clears `canvas` in one change; returns whether it changed anything.
-
-- [ ] **Step 1: Failing tests**
-
-```ts
-test('a tldraw drawing keeps every record and style after migration', ...);
-test('an excalidraw drawing keeps every record and style after migration', ...);
-test('running it twice changes nothing the second time', ...);       // second call returns false
-test('a drawing whose schema no variant claims is left as it is', ...);
-```
-
-- [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-illustrator exec vitest run --project=node src/model/migrate-drawing.test.ts`.
-- [ ] **Step 3: Implement.** ECHO's `Migration.define` maps one type to one type and `Migration.defineContent` cannot
-      create objects, so this runs when a drawing is opened for writing (the article surface) and from a space-level
-      `MigrateDrawings` operation; a read-only viewer reads the legacy canvas (Review Focus 1).
-- [ ] **Step 4: Run, expect PASS.**
-- [ ] **Step 5: Commit** `plugin-illustrator: migrate drawings to their content types`.
-
-### Task 5: The plugin-canvas Canvas type and its migration
+### Task 4: The plugin-canvas Canvas type and its migration
 
 **Files:**
 
@@ -218,21 +180,26 @@ test('a drawing whose schema no variant claims is left as it is', ...);
 
 **Interfaces:**
 
-- Consumes: Task 1 `fromCanvasView`; Task 3 variant contract; the v2 reader in `store.ts`.
+- Consumes: Task 1 `fromCanvasView`; Task 3 `variantFor`/`canvasType`; the v2 reader in `store.ts`.
 - Produces:
   - `Canvas.Canvas` — DXN `org.dxos.type.canvas.canvas@0.1.0`, `{ settings: CanvasSettings; styles?: Record<string, StyleClass>; content: Ref.Ref(Obj.Unknown) }`,
     where `CanvasSettings` is today's `CanvasRecord` minus `kind` and `root` (lattice, grid, readonly, theme, styleSet,
     background, backgroundGrid, diagramShapes).
   - `createCanvas(settings?: Partial<CanvasSettings> & { dimension?: Scene.Dimension }): { canvas: Canvas.Canvas; scene: Scene.Scene2D | Scene.Scene3D }`
   - `canvasScene(canvas: Canvas.Canvas): Scene.Scene2D | Scene.Scene3D | undefined`
-  - The variant's `migrate(legacy)` for `dxos.org/scene/2`: one `Scene2D` per scene record (child scenes linked by
-    `child` Ref), the canvas record's settings and the legacy `styles` onto the new `Canvas`.
+  - `migrateSceneDrawing(drawing: Drawing.Drawing): Effect.Effect<boolean, Error, Database.Service>` — for a drawing
+    whose canvas is a `Drawing.Canvas` with schema `dxos.org/scene/2`: one `Scene2D` per scene record (child scenes
+    linked by `child` Ref), the canvas record's settings and the legacy `styles` onto a new `Canvas`, and
+    `drawing.canvas` repointed to it in one change; returns whether it changed anything. Any other drawing is left as
+    it is.
 
 - [ ] **Step 1: Failing tests**
 
 ```ts
 test('createCanvas() makes a Canvas whose content is a Scene2D; dimension 3d makes a Scene3D', ...);
 test('every sample canvas reads the same Views before and after migration', ...); // bindCanvasStore(legacy) vs bindSceneStore
+test('running it twice changes nothing the second time', ...);
+test('a tldraw drawing is left as it is', ...);
 test('a portal frame becomes an element with a child Ref', ...);
 test('named style classes and settings move onto the Canvas', ...);
 test('a lattice canvas keeps lattice: true in its settings', ...);
@@ -241,32 +208,35 @@ test('a lattice canvas keeps lattice: true in its settings', ...);
 Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-canvas exec vitest run --project=node src/model/migrate-scenes.test.ts`.
-- [ ] **Step 3: Implement.** SPEC decision (agent, for user): "plugin-canvas's `Canvas` keeps settings and style classes;
-      elements live in its scene." Fills in D-20. The existing `dxos.org/scene/1 → 2` content migration stays, so a v1
+- [ ] **Step 3: Implement.** ECHO's `Migration.define` maps one type to one type and `Migration.defineContent` cannot
+      create objects, so this runs when a scene drawing is opened for writing (the article surface) and from a
+      space-level `MigrateDrawings` operation; a read-only viewer reads the legacy canvas (Review Focus 1). SPEC decision
+      (agent, for user): "plugin-canvas's `Canvas` keeps settings and style classes; elements live in its scene."
+      Fills in D-26. The existing `dxos.org/scene/1 → 2` content migration stays, so a v1
       canvas reaches v2 before this one runs.
 - [ ] **Step 4: Run, expect PASS.**
 - [ ] **Step 5: Commit** `plugin-canvas: Canvas type over a Scene, migrated from scene canvases`.
 
-### Task 6: Convert drawings through the content model
+### Task 5: Convert to and from a canvas through Scene2D
 
 **Files:**
 
-- Modify: `packages/plugins/plugin-illustrator/src/operations/convert.ts`, `types/IllustratorCapabilities.ts` (`DrawingConverter`)
+- Modify: `packages/plugins/plugin-illustrator/src/operations/convert.ts`, `packages/plugins/plugin-canvas/src/capabilities/drawing-variant.ts`
 - Test: `packages/plugins/plugin-illustrator/src/operations/convert.test.ts`
 
 **Interfaces:**
 
-- Consumes: Tasks 3–5.
-- Produces: `DrawingConverter.convert(source: Obj.Any, variants) => Effect.Effect<{ content: Obj.Any; upserted: readonly string[] }>`;
-  `Convert` creates the target with `variant.createContent` and, when the target is the canvas variant, replays the
-  scene into its `Scene2D` (the pivot) rather than into content records.
+- Consumes: Tasks 3–4.
+- Produces: the existing `Convert` operation and `DrawingConverter` keep their shape for tldraw ⇄ excalidraw; when the
+  canvas variant is the source or target, its converter reads or writes the `Scene2D` under `Canvas.content` (the
+  pivot) instead of `Drawing.Canvas` content records.
 
-- [ ] **Step 1: Failing tests** — the existing convert tests re-run on the content model; tldraw → canvas yields a
-      `Canvas` whose `Scene2D` holds the converted shapes; canvas → excalidraw reads them back out.
+- [ ] **Step 1: Failing tests** — tldraw → canvas yields a `Drawing` whose `Canvas` holds a `Scene2D` with the converted
+      shapes; canvas → excalidraw reads them back out; tldraw → excalidraw is unchanged.
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-illustrator exec vitest run --project=node src/operations/convert.test.ts`.
-- [ ] **Step 3–5:** implement, PASS, commit `plugin-illustrator: convert drawings through their content types`.
+- [ ] **Step 3–5:** implement, PASS, commit `plugin-canvas: convert drawings through Scene2D`.
 
-### Task 7: Lattice mode on Scene2D
+### Task 6: Lattice mode on Scene2D
 
 **Files:**
 
@@ -276,7 +246,7 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 
 **Interfaces:**
 
-- Consumes: Task 2 `bindSceneStore`, Task 5 `Canvas.settings`; react-ui-canvas `createLatticeProjection`.
+- Consumes: Task 2 `bindSceneStore`, Task 4 `Canvas.settings`; react-ui-canvas `createLatticeProjection`.
 - Produces: no new API — the lattice projection runs over the `ViewStore` that `bindSceneStore` returns.
 
 - [ ] **Step 1: Failing tests** — the lattice projection tests re-run with a store from `bindSceneStore` over each lattice
@@ -285,7 +255,7 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-canvas exec vitest run --project=node src/model/scene-store.test.ts`.
 - [ ] **Step 3–5:** implement, PASS, commit `plugin-canvas: lattice canvases on Scene2D`.
 
-### Task 8: Constrained and dynamic modes on Scene2D
+### Task 7: Constrained and dynamic modes on Scene2D
 
 **Files:**
 
@@ -310,7 +280,7 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 - [ ] **Step 4–5:** PASS (plus `pnpm --filter @dxos/react-ui-canvas exec vitest run --project=node src/engine/projections`),
       commit `plugin-canvas: constrained and dynamic canvases on Scene2D`.
 
-### Task 9: Scored mode on Scene2D
+### Task 8: Scored mode on Scene2D
 
 **Files:**
 
@@ -329,7 +299,7 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
       implement (the story builds its store with `bindSceneStore`), PASS, verify the Scored story and link it, commit
       `react-ui-canvas: scored canvases on Scene2D`.
 
-### Task 10: plugin-canvas edits through the scene store
+### Task 9: plugin-canvas edits through the scene store
 
 **Files:**
 
@@ -341,9 +311,9 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 
 **Interfaces:**
 
-- Consumes: Tasks 2–9.
+- Consumes: Tasks 2–8.
 - Produces: `useCanvasScene(canvas: Canvas.Canvas)` returns the same shape as today, backed by `bindSceneStore` in every
-  mode; `bindCanvasStore` is kept only as the legacy reader Task 5's migration uses.
+  mode; `bindCanvasStore` is kept only as the legacy reader Task 4's migration uses.
 
 - [ ] **Step 1: Failing tests** — opening a legacy sample drawing migrates it and edits its `Scene2D`; the `Apply` and
       `Patch` operations write `Scene2D` elements; StyleClassList edits `Canvas.styles`.
@@ -356,7 +326,7 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 
 ## Phase B — 3D viewport and arranging
 
-### Task 11: Shared scene intents
+### Task 10: Shared scene intents
 
 **Files:**
 
@@ -378,7 +348,7 @@ Samples: `packages/plugins/plugin-canvas/src/samples/*`.
 - [ ] **Step 1: Failing tests**
 
 ```ts
-test('move adds a Vec3 delta to each 3D position and rounds to 0.001', ...);
+test('move adds a Vec3 delta to each 3D center and rounds to 0.001', ...);
 test('rotate adds Euler degrees; scale multiplies per axis', ...);
 test('delete removes the elements and every link bound to them', ...);
 test('group adds a group element over its members; ungroup removes it and keeps the members', ...);
@@ -394,7 +364,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 4: Run, expect PASS.**
 - [ ] **Step 5: Commit** `scene: shared scene intents`.
 
-### Task 12: Picking
+### Task 11: Picking
 
 **Files:**
 
@@ -418,7 +388,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 4: Run, expect PASS.**
 - [ ] **Step 5: Commit** `react-ui-scene: pick elements and ground points`.
 
-### Task 13: Scene3DEditor with GizmoManager
+### Task 12: Scene3DEditor with GizmoManager
 
 **Files:**
 
@@ -426,15 +396,15 @@ test('batch applies its intents in order', ...);
 
 **Interfaces:**
 
-- Consumes: Task 11 `SceneIntent`, Task 12 `pick`; `Scene3DView`'s renderer setup (extract a shared `useRenderer` hook
+- Consumes: Task 10 `SceneIntent`, Task 11 `pick`; `Scene3DView`'s renderer setup (extract a shared `useRenderer` hook
   from `Scene3DView.tsx` rather than duplicate it).
 - Produces:
   - `Scene3DEditorProps = { document: Scene.SceneDocument; selection: readonly string[]; tool: Tool3D; onSelect: (ids: string[]) => void; onIntent: (intent: Scene.SceneIntent) => void }`
   - `Tool3D = 'select' | 'move' | 'rotate' | 'scale' | 'link' | { create: string }`
-  - `gizmoIntent(mode: 'move' | 'rotate' | 'scale', id: string, before: Scene.Element3D, after: { position: Vec3; rotation: Vec3; scale: Vec3 }): Scene.SceneIntent | undefined`
+  - `gizmoIntent(mode: 'move' | 'rotate' | 'scale', id: string, before: Scene.Element3D, after: { center: Vec3; rotation: Vec3; scale: Vec3 }): Scene.SceneIntent | undefined`
   - `SceneRenderer3D.attachGizmo(key: string | undefined, mode, onEnd: (after) => void): void`
 
-- [ ] **Step 1: Failing tests** (`gizmo.test.ts`): a move gizmo drag yields a `move` with the position delta; rotate
+- [ ] **Step 1: Failing tests** (`gizmo.test.ts`): a move gizmo drag yields a `move` with the center delta; rotate
       yields degrees; scale yields per-axis factors; an unchanged transform yields undefined; an element in a child
       scene yields an intent whose ids name the child element (Review Focus 4: `onIntent` receives `{ scene, intent }`
       — make the prop `onIntent: (scene: string, intent: SceneIntent) => void`).
@@ -445,7 +415,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 4: Run, expect PASS.** Story with every exemplar; verify in the browser pane and link the story.
 - [ ] **Step 5: Commit** `react-ui-scene: 3D editor viewport with gizmos`.
 
-### Task 14: Undo over Scene3D
+### Task 13: Undo over Scene3D
 
 **Files:**
 
@@ -465,7 +435,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 4: Run, expect PASS.**
 - [ ] **Step 5: Commit** `plugin-canvas: undo for 3D scenes`.
 
-### Task 15: The 3D canvas article
+### Task 14: The 3D canvas article
 
 **Files:**
 
@@ -475,7 +445,7 @@ test('batch applies its intents in order', ...);
 
 **Interfaces:**
 
-- Consumes: Tasks 5, 13, 14.
+- Consumes: Tasks 4, 12, 13.
 - Produces: the article surface picks `CanvasArticle` or `Scene3DArticle` from `canvasScene(canvas)`'s type; a toolbar
   (`useMenuActions` + `Menu.Root`, one `Toolbar.Root`) with select, move/rotate/scale, create cube/sphere/cylinder/cone,
   link, group, ungroup, delete, undo, redo; a Properties panel as a `Form` over `Scene.Element3D`; "New 3D canvas" in
@@ -490,7 +460,7 @@ test('batch applies its intents in order', ...);
 
 ## Phase C — Solid tools and spacetime retirement
 
-### Task 16: Solid intents
+### Task 15: Solid intents
 
 **Files:**
 
@@ -507,7 +477,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/scene exec vitest run --project=node src/intent.test.ts`.
 - [ ] **Step 3–5:** implement, PASS, commit `scene: solid intents`.
 
-### Task 17: Extrude, join and subtract tools
+### Task 16: Extrude, join and subtract tools
 
 **Files:**
 
@@ -524,7 +494,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 2–5:** FAIL with `pnpm --filter @dxos/react-ui-scene exec vitest run --project=node src/components/Scene3DEditor/gizmo.test.ts`,
       implement, PASS, verify the story, commit `react-ui-scene: solid tools`.
 
-### Task 18: Mesh import and STL export
+### Task 17: Mesh import and STL export
 
 **Files:**
 
@@ -543,7 +513,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 2–5:** FAIL with `pnpm --filter @dxos/react-ui-scene exec vitest run --project=node src/three/io`, implement,
       PASS, commit `react-ui-scene: mesh import and STL export`.
 
-### Task 19: Retire plugin-spacetime
+### Task 18: Retire plugin-spacetime
 
 **Files:**
 
@@ -552,7 +522,7 @@ test('batch applies its intents in order', ...);
   dependents (`grep -rn "plugin-spacetime" --include=package.json packages tools`), `pnpm-lock.yaml`
 
 - [ ] **Step 1:** List dependents; confirm parity: select, move, extrude, join, subtract, GLB/OBJ import and STL export
-      each have a Task 13–18 test.
+      each have a Task 12–17 test.
 - [ ] **Step 2:** Remove the plugin and its references; `pnpm install` (background) and revert `pnpm-workspace.yaml`
       if it changes.
 - [ ] **Step 3:** `moon run composer-app:build` (background) and `pnpm knip` → no new findings.
@@ -560,7 +530,7 @@ test('batch applies its intents in order', ...);
 
 ## Phase D — Assistant
 
-### Task 20: ReadScene and EditScene operations
+### Task 19: ReadScene and EditScene operations
 
 **Files:**
 
@@ -570,7 +540,7 @@ test('batch applies its intents in order', ...);
 
 **Interfaces:**
 
-- Consumes: `Dsl.readScenes`/`Dsl.printScenes`, `fromEcho`/`toEcho`, Task 14 `applySceneIntent`.
+- Consumes: `Dsl.readScenes`/`Dsl.printScenes`, `fromEcho`/`toEcho`, Task 13 `applySceneIntent`.
 - Produces:
   - `ReadScene` — key `org.dxos.operation.canvas.readScene`; input `{ drawing: Ref<Drawing.Drawing> }` (resolved through its `Canvas`); output `{ dx: string }`.
   - `EditScene` — key `org.dxos.operation.canvas.editScene`; input `{ drawing: Ref<Drawing.Drawing>; dx: string }`;
@@ -583,7 +553,7 @@ test('batch applies its intents in order', ...);
 - [ ] **Step 2: Run, expect FAIL** — `pnpm --filter @dxos/plugin-canvas exec vitest run --project=node src/operations/scene.test.ts`.
 - [ ] **Step 3–5:** implement, PASS, commit `plugin-canvas: read and edit scenes as DSL`.
 
-### Task 21: Scene skill
+### Task 20: Scene skill
 
 **Files:**
 
@@ -604,10 +574,11 @@ test('batch applies its intents in order', ...);
 
 ## Self-review
 
-- **Spec coverage:** §1 model switch → Tasks 1–2, 7–10; decision 10 (drawing model) → 3–6; §2 intents → 11, 16; §3
-  viewports/picking → 12, 13; §4 panels → 15 (Properties over the schema; Library panel deferred — no stage 3 decision
-  requires it, recorded as a follow-up); §5 migration → 4, 5; §6 order → phases A–D; decision 11 → 19; decision 12 →
-  7–9 before 10; decisions 5–9 → 5, 15, 20–21, 13, existing orbit.
+- **Spec coverage:** §1 model switch → Tasks 1–2, 6–9; decision 10 / D-26 (drawing model) → 3–5; §2 intents → 10, 15;
+  §3 viewports/picking → 11, 12; §4 panels → 14 (Properties over the schema; Library panel deferred — no stage 3
+  decision requires it, recorded as a follow-up); §5 migration → 4; §6 order → phases A–D; decision 11 → 18; decision 12
+  → 6–8 before 9; decisions 5–9 → 4, 14, 19–20, 12, existing orbit.
 - **Type consistency:** `SceneIntent`, `applyIntent`, `applySceneIntent`, `canvasScene`, `createCanvas`,
-  `bindSceneStore`, `resolveContent`, `variantFor`, `migrateDrawing`, `Tool3D` are named the same in every task.
+  `bindSceneStore`, `variantFor`, `migrateSceneDrawing`, `Tool3D` are named the same in every task; 3D elements use
+  `center` (D-24).
 - **Proportion:** signatures and test assertions only; no bodies except the test sketches.

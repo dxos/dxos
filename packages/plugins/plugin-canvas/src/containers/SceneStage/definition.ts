@@ -53,7 +53,7 @@ export const scene3dStage: AnimatorCapabilities.StageDef = {
   },
   renderers: ['3d', 'overlay'],
   layouts: { ...LAYOUTS_3D },
-  scriptProperties: { opacity: 'style.opacity' },
+  scriptProperties: { position: 'center', opacity: 'style.opacity' },
   bind: (object, sample) => {
     const document = sceneDocumentOf(object);
     return document ? sceneBinding(document, sample) : EMPTY_BINDING;

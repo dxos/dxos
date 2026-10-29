@@ -24,7 +24,7 @@ export const SceneLabels = ({ items, camera, viewport, theme }: SceneLabelsProps
         return null;
       }
       const radius = Math.max(item.scale.x, item.scale.y, item.scale.z) / 2;
-      const anchor = project(camera, viewport, item.position, radius);
+      const anchor = project(camera, viewport, item.center, radius);
       if (!anchor) {
         return null;
       }

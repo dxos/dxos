@@ -31,7 +31,7 @@ describe('renderList', () => {
     const list = renderList({
       scenes: [
         scene('s', [
-          { id: 'a', kind: 'sphere', position: { x: 0, y: 0, z: 0 } },
+          { id: 'a', kind: 'sphere', center: { x: 0, y: 0, z: 0 } },
           { id: 'ab', kind: 'link', from: { element: 'a' }, to: { element: 'b' } },
         ]),
       ],
@@ -45,7 +45,7 @@ describe('renderList', () => {
       id,
       kind: 'scene',
       scene: child,
-      position: { x: 0, y: 0, z: 0 },
+      center: { x: 0, y: 0, z: 0 },
       scale: { x: 4, y: 4, z: 4 },
     });
     const list = renderList({ scenes: [scene('a', [shell('to-b', 'b')]), scene('b', [shell('to-a', 'a')])] });
@@ -56,10 +56,10 @@ describe('renderList', () => {
     const list = renderList(Dsl.readScenes(EXEMPLARS.encapsulated).document);
     const hub = list.items.find((item) => item.key === 'shell/hub');
     const s1 = list.items.find((item) => item.key === 'shell/s1');
-    expect(hub?.position).toEqual({ x: 0, y: 0, z: 0 });
+    expect(hub?.center).toEqual({ x: 0, y: 0, z: 0 });
     // The shell is 8 across, so its 80% holds a cluster about 6.6 across: s1 at x=3 lands well inside radius 4.
-    expect(s1 && s1.position.x).toBeGreaterThan(0);
-    expect(s1 && s1.position.x).toBeLessThan(3.2);
+    expect(s1 && s1.center.x).toBeGreaterThan(0);
+    expect(s1 && s1.center.x).toBeLessThan(3.2);
     expect(list.links.map((link) => link.key)).toContain('shell/l1');
   });
 

@@ -50,7 +50,7 @@ describe('readScenes', () => {
 `);
     expect(problems).toEqual([]);
     expect(document.scenes[0].elements.c).toMatchObject({
-      position: { x: 1, y: 2, z: 3 },
+      center: { x: 1, y: 2, z: 3 },
       scale: { x: 2, y: 1, z: 0.5 },
       rotation: { x: 0, y: 45, z: 0 },
     });

@@ -48,7 +48,7 @@ export const camera2DTo3D = (camera: Scene.Camera2D, viewport: Viewport): Scene.
 const liftElement = ({ center, size, rotation, layout: _layout, ...element }: Scene.Element2D): Scene.Element3D => ({
   ...element,
   kind: KINDS[element.kind] ?? element.kind,
-  ...(center ? { position: toGround(center) } : {}),
+  ...(center ? { center: toGround(center) } : {}),
   ...(size ? { scale: { x: size.width / PIXELS_PER_UNIT, y: DEPTH, z: size.height / PIXELS_PER_UNIT } } : {}),
   ...(rotation !== undefined ? { rotation: { x: 0, y: rotation, z: 0 } } : {}),
   ...(element.kind === 'scene' ? { props: { shape: 'cube', ...element.props } } : {}),
