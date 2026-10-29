@@ -8,12 +8,12 @@ below records what an agent needed to diagnose it, and which requirement that im
 
 ## Issue log
 
-| #   | Issue                                                                                                  | Area                               | Status          |
-| --- | ------------------------------------------------------------------------------------------------------ | ---------------------------------- | --------------- |
-| 1   | Navtree "Database" section shows `org.dxos.type.kan…` instead of "Kanbans"                             | plugin-space / plugin-kanban       | Root-caused     |
-| 2   | Create Project dialog lists "Composer Plugin" twice; both rows highlight together                      | plugin-projects / plugin-dev-shell | Root-caused     |
-| 3   | Fallback article for a type gives no way to find or enable the plugin that provides it                 | plugin-deck / app-framework        | Fixed |
-| 4   | Hue picker popover grid is malformed (clipped column, blank highlighted cell, reset overlaps a swatch) | react-ui-pickers / react-ui        | Located         |
+| #   | Issue                                                                                                  | Area                               | Status |
+| --- | ------------------------------------------------------------------------------------------------------ | ---------------------------------- | ------ |
+| 1   | Navtree "Database" section shows `org.dxos.type.kan…` instead of "Kanbans"                             | plugin-space / plugin-kanban       | Fixed  |
+| 2   | Create Project dialog lists "Composer Plugin" twice; both rows highlight together                      | plugin-projects / plugin-dev-shell | Fixed  |
+| 3   | Fallback article for a type gives no way to find or enable the plugin that provides it                 | plugin-deck / app-framework        | Fixed  |
+| 4   | Hue picker popover grid is malformed (clipped column, blank highlighted cell, reset overlaps a swatch) | react-ui-pickers / react-ui        | Fixed  |
 
 ### 1. Kanban type label missing in navtree
 
