@@ -7,11 +7,15 @@ fileGroups:
   scripts:
     - scripts/**/*
 
+  # `dx.config.*` is a plugin's definition (its `#meta`), compiled into the build and the app bundle's
+  # manifest. A glob, not a path: moon warns on every project that lacks a literal input.
   sources:
     - src/**/*
+    - dx.config.*
 
   production:
     - src/**/*
+    - dx.config.*
     - '!src/test/**/*'
     - '!src/**/*.test.ts'
     - '!src/**/*.test.tsx'
