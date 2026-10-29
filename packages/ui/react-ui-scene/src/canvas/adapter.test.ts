@@ -6,7 +6,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
-import { EXEMPLARS, EXEMPLAR_NAMES } from '@dxos/diagram/testing';
+import { EXEMPLAR_NAMES, EXEMPLARS } from '@dxos/diagram/testing';
 import { MAJOR_GRID } from '@dxos/react-ui-canvas';
 
 import { toCanvasViews } from './adapter.ts';

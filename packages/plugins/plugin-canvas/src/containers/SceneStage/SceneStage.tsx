@@ -54,6 +54,6 @@ export const SceneStage = ({ stage, sample, effects, onFrameDrawn, onProjection 
   return root.dim === '2d' ? (
     <Scene2DView document={sampled} camera={camera2DOf(root.camera, sample.camera)} />
   ) : (
-    <Scene3DView document={sampled} camera={camera3d} effects={items3d} onFrameDrawn={handleFrameDrawn} />
+    <Scene3DView document={sampled} camera={camera3d} effects={items3d} orbit={false} onFrameDrawn={handleFrameDrawn} />
   );
 };

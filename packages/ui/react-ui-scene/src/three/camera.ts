@@ -46,6 +46,15 @@ const normalize = (value: Vec3): Vec3 => {
   return { x: value.x / length, y: value.y / length, z: value.z / length };
 };
 
+/** The camera's eye and its view axes, as Babylon's `LookAtLH` builds them with +y up. */
+const basis = (camera: Scene.Camera3D): { eye: Vec3; forward: Vec3; right: Vec3; up: Vec3 } => {
+  const pose = toOrbit(camera);
+  const eye = cameraPosition(pose);
+  const forward = normalize(subtract(pose.target, eye));
+  const right = normalize(cross({ x: 0, y: 1, z: 0 }, forward));
+  return { eye, forward, right, up: cross(forward, right) };
+};
+
 /** Half the view's height in world units at the target, which an orthographic camera shows at every depth. */
 export const orthoHalfHeight = (camera: Scene.Camera3D): number => camera.distance * Math.tan(camera.fov / 2);
 
@@ -59,11 +68,7 @@ export const project = (
   point: Vec3,
   radius = 0,
 ): { x: number; y: number; radius: number } | undefined => {
-  const pose = toOrbit(camera);
-  const eye = cameraPosition(pose);
-  const forward = normalize(subtract(pose.target, eye));
-  const right = normalize(cross({ x: 0, y: 1, z: 0 }, forward));
-  const up = cross(forward, right);
+  const { eye, forward, right, up } = basis(camera);
   const offset = subtract(point, eye);
   const depth = dot(offset, forward);
   const aspect = viewport.width / Math.max(1, viewport.height);
@@ -84,3 +89,41 @@ export const project = (
     radius: (radius / half) * (viewport.height / 2),
   };
 };
+
+/** Degrees the orbit turns per pixel dragged. */
+const DEGREES_PER_PIXEL = 0.4;
+
+/** Keeps the pitch short of the poles, where `toOrbit` clamps and a drag would stop responding. */
+const PITCH_LIMIT = 89;
+
+type Delta = { x: number; y: number };
+
+/** Turns the camera about its target by a drag of `delta` pixels: right turns the scene right, down looks from higher. */
+export const orbitBy = (camera: Scene.Camera3D, delta: Delta): Scene.Camera3D => ({
+  ...camera,
+  yaw: camera.yaw - delta.x * DEGREES_PER_PIXEL,
+  pitch: Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, camera.pitch + delta.y * DEGREES_PER_PIXEL)),
+});
+
+/** Moves the target in the view plane so that the scene follows a drag of `delta` pixels. */
+export const panBy = (camera: Scene.Camera3D, delta: Delta, viewport: Viewport): Scene.Camera3D => {
+  const { right, up } = basis(camera);
+  // The world size of a pixel at the target's depth, where perspective and orthographic views agree.
+  const perPixel = (2 * orthoHalfHeight(camera)) / Math.max(1, viewport.height);
+  const along = (axis: Vec3, pixels: number): Vec3 => ({
+    x: axis.x * pixels * perPixel,
+    y: axis.y * pixels * perPixel,
+    z: axis.z * pixels * perPixel,
+  });
+  const shift = subtract(along(up, delta.y), along(right, delta.x));
+  return {
+    ...camera,
+    target: { x: camera.target.x + shift.x, y: camera.target.y + shift.y, z: camera.target.z + shift.z },
+  };
+};
+
+/** Scales the distance to the target by `factor` (below 1 moves closer); orthographic views scale with it. */
+export const zoomBy = (camera: Scene.Camera3D, factor: number): Scene.Camera3D => ({
+  ...camera,
+  distance: Math.max(1e-3, camera.distance * factor),
+});

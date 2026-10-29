@@ -1,6 +1,6 @@
 # Scene editor (stage 3): common editing for 2D and 3D
 
-Status: draft for review, 2026-10-28. Nothing in it is built. It follows stage 2
+Status: draft, open questions decided 2026-10-29; plan not yet written. Nothing in it is built. It follows stage 2
 (`2026-10-28-scene-model-design.md`), which built the Scene model, its `.dx` form, the renderers and the animator
 stages.
 
@@ -16,6 +16,13 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
    after.
 3. Existing canvases are migrated to Scene/Element within stage 3, before plugin-canvas switches to the new model.
 4. The work stays in dxos/dxos#14282.
+5. (2026-10-29) The plugin still owns a canvas object, for its additional metadata, but the mechanism (editor,
+   renderers, animator stages) depends only on `Scene`.
+6. (2026-10-29) One canvas object type for both dimensions: its root Ref points at a Scene2D or a Scene3D, and the
+   editor picks the viewport from the root. A 3D canvas is a creation option, not a separate type.
+7. (2026-10-29) Assistant operations are in stage 3, as its last step (§6.4).
+8. (2026-10-29) 3D handles are Babylon's `GizmoManager`.
+9. (2026-10-29) The 3D viewer orbits, zooms and pans; inside an animator stage the animation drives the camera.
 
 ## What exists to build on
 
@@ -76,11 +83,7 @@ both forms.
 
 ## Open questions for the user
 
-1. Does `Drawing.Canvas` (plugin-illustrator) stay the stored container, holding a Ref to the root Scene2D, or does
-   Scene2D/Scene3D become the type users create?
-2. Is a 3D scene a separate object type users create, or a dimension switch on one editor article?
-3. Do the assistant operations belong in stage 3 (step 4), or in a later stage?
-4. Is Babylon's `GizmoManager` acceptable for 3D handles, or should they match the 2D handles' look?
+None; all four were decided on 2026-10-29 (5–8 above).
 
 ## Not in scope
 

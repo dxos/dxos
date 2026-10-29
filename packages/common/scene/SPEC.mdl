@@ -263,3 +263,29 @@ decision D-15: A lifted 2D scene maps canvas (x, y) to (x/100, 0, −y/100), so 
   affects: [F-3.1]
   why: Canvas y runs down the screen, which is −z seen from above at yaw 0.
 ```
+
+```mdl
+decision D-16: The plugin still owns a canvas object, which carries its additional metadata, but the editing, rendering and animation mechanism depends only on `Scene`.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+```
+
+```mdl
+decision D-17: One canvas object type serves both dimensions: its root Ref points at a `Scene2D` or a `Scene3D`, and the editor picks the viewport from the root.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+```
+
+```mdl
+decision D-18: 3D move, rotate and scale handles are Babylon's `GizmoManager` gizmos.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-19: The 3D viewer orbits, zooms and pans with the mouse; inside an animator stage the animation drives the camera.
+  date: 2026-10-29
+  by: user:richburdon
+```

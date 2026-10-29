@@ -17,7 +17,10 @@ import {
   isTheme3D,
   loadManifold,
   manifoldGeometry,
+  orbitBy,
+  panBy,
   renderList,
+  zoomBy,
 } from '../../three/index.ts';
 
 export type Scene3DViewProps = Util.ThemedClassName<{
@@ -31,6 +34,8 @@ export type Scene3DViewProps = Util.ThemedClassName<{
   /** Geometry for items Babylon has no builder for; Manifold's, loaded when the scene has solids, by default. */
   geometry?: GeometrySource;
   effects?: readonly Instance3D[];
+  /** Drag orbits, shift- or right-drag pans, the wheel zooms; off where something else drives the camera. */
+  orbit?: boolean;
   /** Called after each frame is drawn, with the size it was drawn at. */
   onFrameDrawn?: (viewport: { width: number; height: number }) => void;
 }>;
@@ -95,12 +100,16 @@ export const Scene3DView = ({
   overrides,
   geometry: givenGeometry,
   effects,
+  orbit = true,
   onFrameDrawn,
 }: Scene3DViewProps) => {
   const geometry = useManifoldGeometry(doc, givenGeometry);
   const root = doc.scenes[0];
   const look: Theme3D = theme ?? (isTheme3D(root?.theme) ? root.theme : 'cad');
-  const view = camera ?? (root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
+  const given = camera ?? (root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
+  // The pointer's camera, until a new one is given.
+  const [moved, setMoved] = useState<{ from: Scene.Camera3D; camera: Scene.Camera3D }>();
+  const view = orbit && moved?.from === given ? moved.camera : given;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [renderer, setRenderer] = useState<SceneRenderer3D>();
@@ -130,6 +139,56 @@ export const Scene3DView = ({
     };
   }, [look]);
 
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const sizeRef = useRef(size);
+  sizeRef.current = size;
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!orbit || !container) {
+      return;
+    }
+    const move = (next: (camera: Scene.Camera3D) => Scene.Camera3D) =>
+      setMoved({ from: given, camera: next(viewRef.current) });
+    let drag: { x: number; y: number; pan: boolean } | undefined;
+    const onPointerDown = (event: PointerEvent) => {
+      drag = { x: event.clientX, y: event.clientY, pan: event.shiftKey || event.button !== 0 };
+      container.setPointerCapture(event.pointerId);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      if (!drag) {
+        return;
+      }
+      const delta = { x: event.clientX - drag.x, y: event.clientY - drag.y };
+      const pan = drag.pan;
+      drag = { ...drag, x: event.clientX, y: event.clientY };
+      move((current) => (pan ? panBy(current, delta, sizeRef.current) : orbitBy(current, delta)));
+    };
+    const onPointerUp = () => {
+      drag = undefined;
+    };
+    const onWheel = (event: WheelEvent) => {
+      // Not passive, so the page does not scroll under a zoom.
+      event.preventDefault();
+      move((current) => zoomBy(current, Math.exp(event.deltaY * 0.002)));
+    };
+    const onContextMenu = (event: Event) => event.preventDefault();
+    container.addEventListener('pointerdown', onPointerDown);
+    container.addEventListener('pointermove', onPointerMove);
+    container.addEventListener('pointerup', onPointerUp);
+    container.addEventListener('pointercancel', onPointerUp);
+    container.addEventListener('wheel', onWheel, { passive: false });
+    container.addEventListener('contextmenu', onContextMenu);
+    return () => {
+      container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('pointercancel', onPointerUp);
+      container.removeEventListener('wheel', onWheel);
+      container.removeEventListener('contextmenu', onContextMenu);
+    };
+  }, [orbit, given]);
+
   const list = useMemo(() => renderList(doc, overrides), [doc, overrides]);
   useLayoutEffect(() => {
     if (!renderer || size.width === 0) {
@@ -142,7 +201,11 @@ export const Scene3DView = ({
   return (
     <div
       ref={containerRef}
-      className={mx('relative dx-fill overflow-hidden bg-(--surface-bg)', classNames)}
+      className={mx(
+        'relative dx-fill overflow-hidden bg-(--surface-bg)',
+        orbit && 'touch-none cursor-grab',
+        classNames,
+      )}
       data-testid='scene.3d'
     >
       <canvas ref={canvasRef} className='dx-cover dx-fill block outline-none' />
