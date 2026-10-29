@@ -100,35 +100,40 @@ Decided by the user (2026-10-28):
    loaded, not as a baked mesh. It stays editable and lossless in text.
 10. **Both `group` and child scenes exist.** A group keeps its members in the parent's coordinate space, so links reach
     them directly. A child scene has its own space and is a separate object.
+11. **A 2D scene can be rendered through a 3D projection.** The 2D renderer is not the only way to draw a 2D scene.
 
 Filled in by the agent (for review):
 
-9. **Binding.** A link element's ends are Bindings to other elements (element id, optional anchor). Moving an element
-   moves what is bound to it. A link's geometry is derived from its bindings.
-10. **Element kinds are open.** A kind is registered with its schema and behaviour; each renderer registers its own
+12. **Binding.** A link element's ends are Bindings to other elements (element id, optional anchor). Moving an element
+    moves what is bound to it. A link's geometry is derived from its bindings.
+13. **Element kinds are open.** A kind is registered with its schema and behaviour; each renderer registers its own
     view of a kind. This splits today's `NodeDef.component` into a renderer-neutral definition plus per-renderer views.
-11. **Paint order is `order`, not `z`,** so that `z` can mean depth.
-12. **Layout intent is stored.** Placement relations (`right-of`, `same-row`) and arrangements (`ring`, `grid`) are
+14. **Paint order is `order`, not `z`,** so that `z` can mean depth.
+15. **Layout intent is stored.** Placement relations (`right-of`, `same-row`) and arrangements (`ring`, `grid`) are
     kept on the element or scene, so layout can be re-run. A hand-placed element is pinned.
-13. **Element ids are author-chosen or derived from content,** never positional.
-14. **One camera shape per dimension.** 2D: centre and zoom. 3D: target, yaw, pitch, distance, FOV, and orthographic or
-    perspective. A 2D-to-3D projection (use case 4) is a conversion between scene types.
-15. **Renderers.** 2D keeps the react-ui-canvas DOM/SVG renderer. 3D uses Babylon, starting from spacetime's on-demand
-    `StageRenderer` and presentation materials.
-16. **Style tokens are shared, resolution is not.** `hue`, `tone`, `surface`, `border`, `rounded` and `opacity` are
+16. **Element ids are author-chosen or derived from content,** never positional.
+17. **One camera shape per dimension.** 2D: centre and zoom. 3D: target, yaw, pitch, distance, FOV, and orthographic or
+    perspective. A 2D scene drawn in 3D uses a 3D camera held by the view or the animator shot, not stored on the scene;
+    its 2D camera is the top-down orthographic case. Turning a 2D scene into an editable 3D scene (use case 4) is a
+    separate conversion.
+18. **Renderers are pluggable per scene type.** 2D scenes have two: the react-ui-canvas DOM/SVG renderer, and a 3D
+    projection that draws 2D elements as flat (or slightly extruded) shapes on the z = 0 plane in Babylon. 3D scenes use
+    Babylon, starting from spacetime's on-demand `StageRenderer` and presentation materials. Each element kind
+    therefore needs a 3D view for 2D kinds too.
+19. **Style tokens are shared, resolution is not.** `hue`, `tone`, `surface`, `border`, `rounded` and `opacity` are
     common. A theme resolves them to CSS in 2D and to materials and lights in 3D.
-17. **Every scene and every Component is its own ECHO object** (follows from decision 6). A child-scene element holds a
+20. **Every scene and every Component is its own ECHO object** (follows from decision 6). A child-scene element holds a
     Ref to it. Migration therefore splits a canvas's views into separate Scene objects. Undo is per scene. An animator
     shot binds to one Scene.
-18. **Resolved positions are stored as well as layout intent.** Every element always has its geometry, so renderers and
+21. **Resolved positions are stored as well as layout intent.** Every element always has its geometry, so renderers and
     the animator never run layout. Layout writes positions; a hand move pins the element. The round trip that must hold
     is records → text → records. Text written with intent only (no positions) is accepted and laid out on parse.
-19. **The `.dx` scene layer gains `scene`, `element` and `camera` statements alongside today's `object`, `move` and
+22. **The `.dx` scene layer gains `scene`, `element` and `camera` statements alongside today's `object`, `move` and
     `remove`.** plugin-illustrator's diagrams keep rendering unchanged in stage 2. Converging the two statement sets is
     later work.
-20. **A child scene keeps its own units and is scaled to fit its frame element,** as canvas portals do today. A link
+23. **A child scene keeps its own units and is scaled to fit its frame element,** as canvas portals do today. A link
     binds only to elements in its own scene; to connect to something inside a child scene, it binds to the frame.
-21. **An element id is fixed when the element is created.** Editing a label never changes it. A derived id that
+24. **An element id is fixed when the element is created.** Editing a label never changes it. A derived id that
     collides gets a numeric suffix at creation.
 
 ## Ontology
@@ -168,10 +173,10 @@ A child scene is an element of kind `scene` that references another Scene object
 a sphere shell in 3D) frames the child. A hierarchy is nested child scenes. This covers "B contains a sub-scene" and "a
 cluster of spheres encapsulated in another sphere".
 
-A `group` is different (decision 23): its members stay in the parent scene's space, and links bind to them directly.
+A `group` is different (decision 10): its members stay in the parent scene's space, and links bind to them directly.
 Exemplar 6 is a group inside a sphere that is a child scene.
 
-A `solid` recomputes its mesh from its operation tree with Manifold when loaded (decision 22). Only the renderer and
+A `solid` recomputes its mesh from its operation tree with Manifold when loaded (decision 9). Only the renderer and
 the editor need Manifold; the model package does not.
 
 ## Animation contract
@@ -208,7 +213,7 @@ camera target=0,0,0 yaw=-45 pitch=30 distance=14 fov=0.8 projection=perspective
 ```
 
 The semantic layer (`node`, `edge`, `group`, relationship words) stays as a shorthand that compiles to elements, now
-keeping its intent on the elements (decision 12).
+keeping its intent on the elements (decision 15).
 
 ## Stage 2: exemplars
 
@@ -228,6 +233,8 @@ one simple animation (a move or colour change and a camera move).
 6. That group encapsulated in another sphere.
 7. A hierarchy of those spheres.
 8. A solid: a cube with a cylinder subtracted, then one face extruded (the agent's addition, covering use case 2).
+
+The 2D exemplars are also rendered through the 3D projection (decision 11), with a tilted perspective camera.
 
 Each exemplar is checked by:
 
