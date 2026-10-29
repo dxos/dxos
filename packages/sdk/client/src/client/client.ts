@@ -28,7 +28,7 @@ import {
   serveClientServicesOverIFrame,
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
@@ -272,7 +272,8 @@ export class Client {
    * services can report.
    *
    * Rejects when services the client opened from the cache fail to open, since `initialize()` has
-   * already returned and cannot report it; `timeout` behaves as in {@link waitUntilInitialized}.
+   * already returned and cannot report it, and with `ContextDisposedError` when the client is destroyed
+   * first; `timeout` behaves as in {@link waitUntilInitialized}.
    */
   waitUntilServicesReady({ timeout }: { timeout?: number } = {}): Promise<void> {
     return this._servicesReadyTrigger.wait({ timeout });
@@ -834,6 +835,8 @@ export class Client {
     // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
     this._initializedTrigger.reset();
     this._servicesReady = false;
+    // A waiter on services that never opened would otherwise hang on a promise nothing settles.
+    this._servicesReadyTrigger.throw(new ContextDisposedError());
     this._servicesReadyTrigger.reset();
   }
 

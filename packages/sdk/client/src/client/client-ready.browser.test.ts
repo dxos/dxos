@@ -5,6 +5,7 @@
 import { afterEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { TimeoutError, Trigger } from '@dxos/async';
+import { ContextDisposedError } from '@dxos/context';
 
 import { BootCacheStore, ServicesUnavailableError } from '../services/boot-cache/index.ts';
 import { TestBuilder } from '../testing/index.ts';
@@ -48,6 +49,21 @@ describe('Client readiness with a boot cache', () => {
     gate.wake();
     await expect(client.waitUntilServicesReady()).resolves.toBeUndefined();
     expect(client.servicesReady).toBe(true);
+  });
+
+  test('rejects a pending services signal when the client is destroyed first', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+    await writeSnapshot(testBuilder);
+
+    const client = new Client({
+      services: testBuilder.createLocalClientServices(),
+      bootCache: { servicesGate: () => new Promise(() => {}) },
+    });
+    await client.initialize();
+    const servicesReady = client.waitUntilServicesReady();
+    await client.destroy();
+    await expect(servicesReady).rejects.toBeInstanceOf(ContextDisposedError);
   });
 
   test('rejects the services signal when the services fail to open', async () => {
