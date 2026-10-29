@@ -23,6 +23,11 @@
       "source": "./src/canvas/index.ts",
       "types": "./dist/types/src/canvas/index.d.ts",
       "import": "./dist/lib/canvas.mjs"
+    },
+    "./io": {
+      "source": "./src/three/io/index.ts",
+      "types": "./dist/types/src/three/io/index.d.ts",
+      "import": "./dist/lib/io.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -83,7 +83,6 @@ import * as SequencerPlugin from '@dxos/plugin-sequencer/SequencerPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
 import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
-import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
 import * as StePlugin from '@dxos/plugin-ste/StePlugin';
 import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
@@ -366,7 +365,6 @@ const experimental: Plugin.Plugin[] = [
   S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
-  SpacetimePlugin.make(),
   StreamDeckPlugin.make(),
   StudioPlugin.make(),
   TerraPlugin.make(),

@@ -68,6 +68,12 @@ const idOf = (file: File): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '') || 'mesh';
 
+/** A `mesh` object of the triangles, unit-sized and centred, keyed by its content. */
+export const meshObject = (id: string, triangles: Triangles): Scene.Object3D => {
+  const unit = normalize(triangles);
+  return { id, kind: 'mesh', props: { mesh: { key: contentKey(unit), ...unit } } };
+};
+
 /**
  * Reads an OBJ or GLB file as a `mesh` object for the model: placing it stores the triangles once however often it is
  * placed. Fails with `MeshImportError` when the file holds no triangles.
@@ -82,9 +88,7 @@ export const importMesh = (file: File): Effect.Effect<Scene.Object3D, MeshImport
     if (!triangles) {
       return yield* Effect.fail(new MeshImportError({ message: `"${file.name}" holds no triangles.` }));
     }
-    const unit = normalize(triangles);
-    const mesh: MeshProps = { key: contentKey(unit), ...unit };
-    return { id: idOf(file), kind: 'mesh', props: { mesh } };
+    return meshObject(idOf(file), triangles);
   });
 
 const drawn = new Map<string, MeshData>();

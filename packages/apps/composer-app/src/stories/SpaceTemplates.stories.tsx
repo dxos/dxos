@@ -50,7 +50,6 @@ import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
@@ -255,7 +254,6 @@ const meta = {
         ReviewPlugin.make(),
         ScriptPlugin.make(),
         SheetPlugin.make(),
-        SpacetimePlugin.make(),
         TablePlugin.make(),
         TasksPlugin.make(),
         ThreadPlugin.make(),

@@ -786,7 +786,7 @@ test QA-13: Plugin showcase
       do: Create a Map, zoom into Europe and drag across it.
       expect: map tiles render and follow the drag
     - name: Spin a planet, a scene and a voxel world
-      do: Create a Terra world, a Spacetime scene and a Voxel world in turn, dragging across each.
+      do: Create a Terra world, a 3D canvas and a Voxel world in turn, dragging across each.
       expect: each renders in 3D and the view orbits with the drag
     - name: Fill a sheet
       do: Create a sheet and type three rows of a label, a number and a formula doubling it.
@@ -1099,4 +1099,10 @@ decision D-6: A plugin's definition is its dx.config.ts, so QA-16 edits the modu
   for: user:dmaretskyi
   affects: [QA-16]
   why: Plugins are defined by Plugin.config in dx.config.ts; src/plugin.ts no longer exists.
+```
+
+```mdl
+decision D-7: plugin-spacetime is deleted, so the 3D step creates a 3D canvas (plugin-canvas) in place of a Spacetime scene.
+  date: 2026-10-29
+  by: user:richburdon
 ```

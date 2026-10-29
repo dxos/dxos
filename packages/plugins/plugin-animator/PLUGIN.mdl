@@ -37,7 +37,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | -------------------- | ------------------------ | ------------------------------------------------------------------ |
 | `Easing`, `Keyframe`, `Track`, `Timeline` | `@dxos/animation` | Moved from react-ui-canvas; tracks keyed by `${target}:${property}`. |
 | `Drawing.Canvas`     | `@dxos/plugin-canvas`    | Stage object of the canvas stage.                                  |
-| `Spacetime.Scene`    | `@dxos/plugin-spacetime` | Stage object of the 3D stage.                                      |
+| `Scene.Scene3D`      | `@dxos/scene`            | Stage object of the 3D stage (plugin-canvas's 3D canvas).          |
 | `MediaArtifact`, `Variant` | `@dxos/plugin-studio` | Where an exported animation lands as a clip.                     |
 | `GenerationService`  | `@dxos/plugin-studio`    | The provider contract the exporter implements.                     |
 
@@ -445,9 +445,9 @@ feat F-4: Stages
 
   req F-4.1: A plugin becomes animatable by contributing an `AnimatorCapabilities.Stage`; the animator holds no knowledge of its object model.
   req F-4.2: The canvas stage renders `Drawing.Canvas` scenes with a 2D pan and zoom camera and draws `2d` and `overlay` effects.
-  req F-4.3: The spacetime stage renders `Spacetime.Scene` with Babylon.js and an orbit camera, and draws `3d` and `overlay` effects.
+  req F-4.3: The 3D scene stage renders a `Scene3D` with Babylon.js and an orbit camera, and draws `3d` and `overlay` effects.
   req F-4.4: Every 3D stage uses Babylon.js.
-  req F-4.5: The spacetime stage offers a presentation material for primitives (lit sphere with a rim glow, dithered so gradients do not band) and a lattice background, alongside its CAD materials.
+  req F-4.5: The 3D scene stage offers a presentation material for primitives (lit sphere with a rim glow, dithered so gradients do not band) and a lattice background, alongside its CAD materials.
 ```
 
 ```mdl
@@ -520,7 +520,7 @@ scenario T-3: Deterministic effects
 
 ```mdl
 scenario T-4: The echo3d story as an Animation
-  given: spacetime scenes holding the echo3d presentation's objects
+  given: 3D canvas scenes holding the echo3d presentation's objects
   then:
     - an Animation scripted from its scenes plays with packet flow, burst, conversations and merge
     - its labels, captions, curtain, panels and sphere look match the echo3d video, apart from sound
@@ -908,3 +908,10 @@ ext scenario
 ```
 
 `decision` is defined in `org.dxos.spec.changelog`.
+
+```mdl
+decision D-33: plugin-spacetime is deleted; the 3D stage is plugin-canvas's scene stage over a `Scene3D`, which already draws the presentation material, labels and effects.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-4.3, F-4.5, T-4]
+```

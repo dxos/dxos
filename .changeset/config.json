@@ -346,7 +346,6 @@
       "@dxos/plugin-sidekick",
       "@dxos/plugin-slack",
       "@dxos/plugin-space",
-      "@dxos/plugin-spacetime",
       "@dxos/plugin-spotlight",
       "@dxos/plugin-stack",
       "@dxos/plugin-status-bar",

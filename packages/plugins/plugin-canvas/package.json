@@ -80,6 +80,11 @@
       "node": "./dist/lib/CanvasPlugin.node.mjs",
       "import": "./dist/lib/CanvasPlugin.mjs"
     },
+    "./MeshPresets": {
+      "source": "./src/samples/presets/MeshPresets.ts",
+      "types": "./dist/types/src/samples/presets/MeshPresets.d.ts",
+      "import": "./dist/lib/MeshPresets.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",

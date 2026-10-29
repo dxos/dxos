@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     canvas: 'src/canvas/index.ts',
+    io: 'src/three/io/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

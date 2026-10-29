@@ -63,7 +63,7 @@ stage 3; the work stays in dxos/dxos#14282.
       decided 2026-10-29 (decisions 1–13).
 - [x] **Write the stage 3 plan** — `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md`, 21 tasks in four
       phases (A 9, B 6, C 4, D 2), rewritten in Model, Layout and Scene terms (2026-10-29).
-- [ ] **Execute the plan** — phases A and B done; waiting for the user's check before phase C.
+- [ ] **Execute the plan** — phases A, B and C done; waiting for the user's check before phase D.
   - [x] Task 1 — lossless View ⇄ Layout2D mapping.
   - [x] Task 2 — ViewStore over Layout2D objects (`bindLayoutStore`), `reachedObjects`.
   - [x] Task 3 — `Drawing.canvas` accepts any canvas type (`variantFor`, `VariantSurface`).
@@ -95,4 +95,13 @@ stage 3; the work stays in dxos/dxos#14282.
   - [ ] Phase B follow-ups: the scenes list in the 3D article (with the 2D Views inspector); object thumbnails in the
         Library; the Library in the 2D article; Escape from a nested composite returns to the scene's layout, not
         its parent.
+  - [x] Task 16 — solid intents `join`, `subtract`, `extrude` in `applyIntent`; operands hidden, shown again on delete (D-52).
+  - [x] Task 17 — the Extrude face tool (`extrudeIntent`) and Join / Subtract actions in the 3D article.
+  - [x] Task 18 — `@dxos/react-ui-scene/io`: OBJ and GLB import as library `mesh` objects, STL export; the article's
+        Import mesh and Export STL actions.
+  - [x] Task 19 — plugin-spacetime deleted; its vehicle presets are `@dxos/plugin-canvas/MeshPresets`, and the Demo
+        template's line-up is a 3D canvas.
+  - [ ] Phase C follow-ups: a live preview while extruding; face-selection mode and move snapping (spacetime had
+        both); GLB node transforms and interleaved buffers; a composite's parts in STL export; the grid and debug view
+        toggles spacetime had.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.
