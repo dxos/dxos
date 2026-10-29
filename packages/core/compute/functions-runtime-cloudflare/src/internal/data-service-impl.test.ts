@@ -56,7 +56,7 @@ describe('DataServiceImpl', () => {
     expect(batches.at(-1)).toEqual({ updates: [{ documentId, unavailable: true }] });
   });
 
-  test('a passive add fetches nothing; the others in the same request still load', async ({ expect }) => {
+  test('a passive add with heads fetches nothing; one without, and the others, still load', async ({ expect }) => {
     const subscriptionId = 'test-subscription';
     const requested: string[][] = [];
     const impl = new DataServiceImpl({} as EdgeFunctionEnv.TraceContext, {
@@ -88,10 +88,11 @@ describe('DataServiceImpl', () => {
         add: [
           { id: 'held', heads: ['head-1'], passive: true },
           { id: 'written', heads: ['head-2'] },
+          { id: 'directory', passive: true },
         ],
       }),
     );
-    expect(requested).toEqual([['written']]);
+    expect(requested).toEqual([['written', 'directory']]);
   });
 
   test('a document created from bytes is created empty, then takes the bytes as its first change', async ({
