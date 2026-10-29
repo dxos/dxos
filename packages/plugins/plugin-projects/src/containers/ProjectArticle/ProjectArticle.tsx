@@ -138,6 +138,20 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
   });
   // A level's tasks are the ones working on its feature or any feature beneath it.
   const scope = useLevelTaskIds(feature, spec);
+  // A task added at a level works on its feature, which is what keeps it in the level's scope.
+  const handleTaskCreated = useMemo(
+    () =>
+      feature
+        ? async (task: Task.Task) => {
+            await invokePromise(
+              FeatureOperation.LinkTask,
+              { task: Ref.make(task), feature: Ref.make(feature) },
+              { spaceId: db?.spaceId },
+            );
+          }
+        : undefined,
+    [feature, invokePromise, db],
+  );
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -416,6 +430,7 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
                     // Unset means shown: settings saved before the preference existed hold no key.
                     showDescription: settings.showTaskDescriptions ?? true,
                     scope,
+                    onTaskCreated: handleTaskCreated,
                   }}
                   limit={1}
                 />

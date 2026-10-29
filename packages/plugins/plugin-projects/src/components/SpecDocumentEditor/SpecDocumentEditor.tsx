@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Doc } from '@dxos/echo-doc';
-import { useObject } from '@dxos/echo-react';
+import { useResolveRef } from '@dxos/echo-react';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
@@ -21,11 +21,10 @@ export type SpecDocumentEditorProps = {
 export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEditorProps>(
   ({ classNames, document, ...props }, forwardedRef) => {
     const themeMode = Hooks.useThemeMode();
-    // The body is a ref, so the editor initializes once it resolves.
-    const [resolved] = useObject(document.content);
+    // The live text rather than a snapshot, so an edit does not rebuild the editor; it initializes once the ref resolves.
+    const text = useResolveRef(document.content);
     const { parentRef } = useTextEditor(() => {
-      const text = document.content.target;
-      if (!resolved || !text) {
+      if (!text) {
         return {};
       }
 
@@ -37,7 +36,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
           data: { id: document.id, text: Doc.createAccessor(text, ['content']) },
         }),
       };
-    }, [themeMode, document, resolved]);
+    }, [themeMode, document, text]);
 
     return (
       <div

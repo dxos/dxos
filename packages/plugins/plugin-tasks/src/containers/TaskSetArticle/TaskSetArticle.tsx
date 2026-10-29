@@ -63,6 +63,8 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
   showDescription?: boolean;
   /** Ids of the tasks to show, with the tasks filed under them; every task in the set when absent. */
   scope?: readonly string[];
+  /** Runs on each task the footer creates, before it is shown; a scoped host uses it to bring the task into scope. */
+  onTaskCreated?: (task: Task.Task) => Promise<void>;
 };
 
 /**
@@ -78,6 +80,7 @@ export const TaskSetArticle = ({
   subject: taskSet,
   showDescription = true,
   scope,
+  onTaskCreated,
 }: TaskSetArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
@@ -154,10 +157,16 @@ export const TaskSetArticle = ({
       if (error || !data) {
         return { error: error ?? new Error('Task was not created.') };
       }
-      if (files.length === 0) {
+      if (files.length === 0 && !onTaskCreated) {
         return;
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (task && onTaskCreated) {
+        await onTaskCreated(task);
+      }
+      if (files.length === 0) {
+        return;
+      }
       if (!task || !attachFile) {
         return { rejectedFiles: files };
       }
@@ -169,7 +178,7 @@ export const TaskSetArticle = ({
       }
       return { rejectedFiles };
     },
-    [invokePromise, taskSet, spaceId, attachFile, db],
+    [invokePromise, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
   const handleUpdate = Hooks.useOperation(
