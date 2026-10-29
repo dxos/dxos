@@ -13,8 +13,9 @@ operations are callable through compute-service like any other EDGE operation.
 Today a plugin reaches EDGE only by being compiled into operation-service: a static list of
 `@dxos/plugin-*` imports, activated by one `PluginManager` per isolate and republished as a KV
 catalog. Adding or changing a plugin needs a dxos catalog bump and a redeploy of a 12 MiB worker,
-plugins from outside the dxos repository cannot run on EDGE at all, and every plugin shares one isolate. This spec
-replaces that worker with per-plugin releases that are stored, versioned and loaded independently.
+plugins from outside the dxos repository cannot run on EDGE at all, and every plugin shares one
+isolate. This spec replaces that worker with per-plugin releases that are stored, versioned and
+loaded independently.
 
 The design reuses three things that already exist:
 
@@ -339,11 +340,11 @@ feat F-2: Versioning
   req F-2.4: Revoking a release removes its operation index rows and stops new invocations; a channel
     that pointed at it moves back to the version it pointed at before.
 
-  req F-2.6: `stable` points only at a version without a prerelease suffix; CI builds are published
-    as `<version>-dev.<sha>`.
-
   req F-2.5: The isolate id is the release hash, so a changed release never reuses an isolate of
     the old one and an unchanged release always can.
+
+  req F-2.6: `stable` points only at a version without a prerelease suffix; CI builds are published
+    as `<version>-dev.<sha>`.
 ```
 
 ```mdl
