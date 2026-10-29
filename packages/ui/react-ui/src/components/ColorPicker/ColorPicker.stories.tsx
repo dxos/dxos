@@ -124,3 +124,26 @@ export const SwatchesOnly: Story = {
     await expect(screen.queryByRole('tab', { name: 'Wheel' })).toBeNull();
   },
 };
+
+const HueGridStory = () => {
+  const [value, setValue] = useState<string | undefined>('purple');
+  return (
+    <div className='flex flex-col gap-2'>
+      <ColorPicker.HueGrid value={value} onValueChange={setValue} />
+      <code data-testid='hue.value'>{value ?? 'unset'}</code>
+    </div>
+  );
+};
+
+/** The hue-only variant: the value is a theme hue's name, and every hue fits its grid. */
+export const HueGrid: Story = {
+  render: HueGridStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('radio', { name: 'purple' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(canvas.getByRole('radio', { name: 'blue' }));
+    await expect(canvas.getByTestId('hue.value')).toHaveTextContent('blue');
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByTestId('hue.value')).not.toHaveTextContent('blue');
+  },
+};
