@@ -63,6 +63,7 @@ export const Timeline = ({ chapters, time, duration, current, onSeek }: Timeline
       ref={barRef}
       role='slider'
       tabIndex={-1}
+      data-player-keys
       aria-label='Seek'
       aria-valuemin={0}
       aria-valuemax={Math.round(duration)}

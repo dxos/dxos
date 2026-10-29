@@ -85,9 +85,11 @@ export const useKeyboard = (actions: KeyboardActions) => {
       ) {
         return;
       }
-      // A focused Listbox, ToggleGroup or Slider owns the arrow keys for its own navigation.
+      // A focused Listbox, ToggleGroup or Slider owns the arrow keys for its own navigation; the timeline handles no
+      // keys of its own, so the player keeps them after a click on it.
       const ownsArrows =
-        target instanceof HTMLElement && !!target.closest('[role=listbox],[role=radiogroup],[role=slider]');
+        target instanceof HTMLElement &&
+        !!target.closest('[role=listbox],[role=radiogroup],[role=slider]:not([data-player-keys])');
       const map: Record<string, () => void> = {
         ' ': playback.toggle,
         'k': playback.toggle,

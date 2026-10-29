@@ -160,7 +160,8 @@ const committedFlow = (recording, sidecarFile) => {
     fail(`${flow} is not committed at ${commit.slice(0, 9)}`);
   }
   // The take ran the file on disk; a flow edited after its commit is not what the commit reproduces.
-  if (git('diff', '--quiet', commit, '--', flow) === undefined) {
+  // `:(top)` anchors the path at the repository root; `git` runs from this script's folder.
+  if (git('diff', '--quiet', commit, '--', `:(top)${flow}`) === undefined) {
     fail(`${flow} has changes since ${commit.slice(0, 9)} that the take may have run`);
   }
   if (!git('branch', '-r', '--contains', commit)?.trim()) {
