@@ -90,4 +90,29 @@ describe('applyModelIntent', () => {
       applyModelIntent(doc(), { kind: 'define', model: 'missing', object: { id: 'x', kind: 'cube' } }).problems,
     ).toHaveLength(1);
   });
+
+  test('extract keeps groups and links whole: members follow their group, outside groups name the new element', () => {
+    const base = doc();
+    const root = base.layouts[0];
+    const elements = {
+      ...root.elements,
+      g: { id: 'g', kind: 'group', members: ['a', 'b'] },
+      outer: { id: 'outer', kind: 'group', members: ['c', 'a'] },
+    };
+    const start: Scene.SceneDocument = { ...base, layouts: [{ ...root, elements } as Scene.LayoutRecord3D] };
+    // Selecting the group g extracts its members too; the selected link bc has an end (c) left outside, so it stays.
+    const { doc: after, problems } = applyModelIntent(start, {
+      kind: 'extract',
+      model: 'm',
+      layout: 'root',
+      ids: ['g', 'bc'],
+      object: { id: 'pair', kind: 'sphere' },
+    });
+    expect(problems).toEqual([]);
+    const parts = after.layouts.find((layout) => layout.id === 'pair-parts');
+    expect(Object.keys(parts?.elements ?? {}).sort()).toEqual(['a', 'ab', 'b', 'g']);
+    const host = after.layouts.find((layout) => layout.id === 'root');
+    expect(host?.elements.bc?.from).toEqual({ element: 'pair' });
+    expect(host?.elements.outer?.members).toEqual(['c', 'pair']);
+  });
 });

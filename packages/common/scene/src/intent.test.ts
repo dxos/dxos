@@ -118,4 +118,13 @@ describe('applyIntent', () => {
     expect(applyIntent(layout, { kind: 'bind', link }).elements.ab).toEqual(link);
     expect(applyIntent(layout, { kind: 'bind', link: { ...link, to: { element: 'missing' } } })).toBe(layout);
   });
+
+  test('a move of a 3D element with no centre places it at the delta, where it was drawn from', () => {
+    const layout = layout3D('l', [{ id: 's', kind: 'solid' }]);
+    expect(applyIntent(layout, { kind: 'move', ids: ['s'], delta: { x: 1, y: 2, z: 3 } }).elements.s.center).toEqual({
+      x: 1,
+      y: 2,
+      z: 3,
+    });
+  });
 });

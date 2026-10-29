@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import {
@@ -25,15 +25,13 @@ import { type Canvas } from '#types';
 import { CanvasNamespace } from '../../namespace.ts';
 import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
+import { useScene3DCamera } from './use-scene3d-camera.ts';
 
 export type Scene3DArticleProps = {
   canvas: Canvas.Canvas;
   role?: string;
   attendableId?: string;
 };
-
-/** How long the orbit camera must rest before it is written back to the open scene. */
-const CAMERA_SETTLE_MS = 500;
 
 const CREATE_KINDS = ['cube', 'sphere', 'cylinder', 'cone'] as const;
 
@@ -63,6 +61,7 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
   const [tool, setTool] = useState<Tool3D>('select');
   const [selection, setSelection] = useState<string[]>([]);
   const [editing, setEditing] = useState<string>();
+  const [notice, setNotice] = useState<string>();
 
   // Every 3D layout the scene reaches, by key, as the objects edits are written to.
   const layouts = useMemo(
@@ -110,21 +109,8 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
     [source],
   );
 
-  // The orbit camera goes back to the scene once it settles, so the canvas reopens where it was left.
-  const settle = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const handleCameraChange = useCallback(
-    (camera: Scene.Camera3D) => {
-      clearTimeout(settle.current);
-      settle.current = setTimeout(() => {
-        stored &&
-          Obj.update(stored, (stored) => {
-            stored.camera = { ...camera, target: { ...camera.target } };
-          });
-      }, CAMERA_SETTLE_MS);
-    },
-    [stored],
-  );
-  useEffect(() => () => clearTimeout(settle.current), []);
+  // The orbit is this viewer's own view; the scene's camera is the authored view and stays as it was written.
+  const { camera, onCameraChange } = useScene3DCamera(canvas);
 
   const editingLayout = editing ?? document?.scenes[0]?.layout;
   const record = document?.layouts.find((layout) => layout.id === editingLayout);
@@ -244,7 +230,16 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
               ids: selection,
               object: { id, kind: 'sphere' },
             });
-            problems.length === 0 && setSelection([]);
+            if (problems.length > 0) {
+              setNotice(problems.map(({ message }) => message).join(' '));
+              return;
+            }
+            setNotice(undefined);
+            setSelection([]);
+            // Make object moves elements between layouts, which the undo history recorded paths in: its entries would
+            // patch elements that are no longer there, so the history starts over rather than skip them silently.
+            history.current = { done: [], undone: [] };
+            setHistoryVersion((version) => version + 1);
           }
         },
       )
@@ -312,6 +307,15 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
       </Panel.Header>
       <Panel.Body>
         <div className='relative dx-fill'>
+          {notice && (
+            <p
+              role='alert'
+              className='absolute bottom-2 left-2 z-10 rounded-sm bg-base-surface p-2 text-sm text-error-text'
+              data-testid='canvas3d.notice'
+            >
+              {notice}
+            </p>
+          )}
           <div
             className='absolute top-2 left-2 z-10 w-60 max-h-[calc(100%-1rem)] overflow-auto rounded-sm bg-base-surface'
             data-testid='canvas3d.library'
@@ -335,7 +339,8 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
             onSelect={setSelection}
             onIntent={handleIntent}
             onEdit={(layout) => setEditing(layout === document.scenes[0]?.layout ? undefined : layout)}
-            onCameraChange={handleCameraChange}
+            camera={camera}
+            onCameraChange={onCameraChange}
           />
           {selected && (
             <div

@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { CanvasArticle, CanvasCard, LegacyCanvasArticle, LegacyCanvasCard } from '#containers';
-import { CanvasBuilder, CanvasLayoutBuilder, addCanvas, removeCanvas } from '#model';
+import { CanvasBuilder, CanvasLayoutBuilder, addCanvas, canvasDimension, removeCanvas } from '#model';
 import { Canvas } from '#types';
 
 // New drawings are a `Canvas` over a model, layouts and scenes; a conversion asks for `diagramShapes`, so a laid-out
@@ -23,6 +23,8 @@ const variant: IllustratorCapabilities.DrawingVariant = {
     Effect.sync(() => {
       Canvas.isCanvas(canvas) && removeCanvas(canvas);
     }),
+  // Copying reads the open 2D layout; a 3D canvas has none, so it offers no copies rather than an empty one.
+  convertible: (canvas) => !Canvas.isCanvas(canvas) || canvasDimension(canvas) !== '3d',
   builder: CanvasLayoutBuilder,
   card: CanvasCard,
   article: CanvasArticle,

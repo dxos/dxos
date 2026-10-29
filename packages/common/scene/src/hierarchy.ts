@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { findLayout, resolveLayout, sceneLayout } from './document.ts';
+import { findLayout, findModel, resolveLayout, sceneLayout } from './document.ts';
 import { type SceneDocument } from './Scene.ts';
 import { type Problem } from './validate.ts';
 
@@ -43,4 +43,27 @@ export const layoutTree = (doc: SceneDocument): { order: string[]; problems: Pro
     visit(root.id, [root.id]);
   }
   return { order, problems };
+};
+
+/** Whether the layout `from`, or any parts layout it reaches, is `target`. */
+const reaches = (doc: SceneDocument, from: string, target: string, seen: Set<string> = new Set()): boolean => {
+  if (from === target) {
+    return true;
+  }
+  const layout = findLayout(doc, from);
+  if (!layout || seen.has(from)) {
+    return false;
+  }
+  seen.add(from);
+  return Object.values(resolveLayout(doc, layout)).some(
+    (element) => element.parts !== undefined && reaches(doc, element.parts, target, seen),
+  );
+};
+
+/** Whether placing the object `objectId` (of the layout's model) in `layoutId` would put a layout inside itself. */
+export const placesCycle = (doc: SceneDocument, layoutId: string, objectId: string): boolean => {
+  const layout = findLayout(doc, layoutId);
+  const model = layout?.model === undefined ? undefined : findModel(doc, layout.model);
+  const parts = model?.objects[objectId]?.parts;
+  return parts !== undefined && reaches(doc, parts, layoutId);
 };

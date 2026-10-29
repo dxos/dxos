@@ -94,17 +94,18 @@ describe('bindLayoutStore', () => {
     bound.dispose();
   });
 
-  test('a camera change is written to the Scene2D, not the layout', () => {
+  test("a camera change stays the viewer's: the Scene2D's authored camera is never written", () => {
     vi.useFakeTimers();
     try {
       const { root } = stored('links');
+      const authored = { ...root.camera, center: { ...root.camera.center } };
       const registry = Registry.make();
       const bound = bindLayoutStore(registry, root);
       expect(registry.get(bound.camera)).toEqual(root.camera);
       registry.set(bound.camera, { center: { x: 10, y: 20 }, zoom: 2 });
-      expect(root.camera.zoom).toBe(1);
-      vi.advanceTimersByTime(500);
-      expect(root.camera).toEqual({ center: { x: 10, y: 20 }, zoom: 2 });
+      vi.advanceTimersByTime(5_000);
+      expect(root.camera).toEqual(authored);
+      expect(registry.get(bound.camera)).toEqual({ center: { x: 10, y: 20 }, zoom: 2 });
       bound.dispose();
     } finally {
       vi.useRealTimers();

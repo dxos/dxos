@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type * as Util from '@dxos/react-ui/Util';
-import { type LayoutIntent, type Resolved3D, type Scene, findLayout, findScene, resolveLayout3D } from '@dxos/scene';
+import { type LayoutIntent, type Scene, findLayout, findScene, placesCycle, resolveLayout3D } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -19,6 +19,7 @@ import {
   renderList,
 } from '../../three/index.ts';
 import { DEFAULT_CAMERA, useManifoldGeometry, useOrbit, useSceneRenderer } from '../Scene3DView/index.ts';
+import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
 
@@ -51,35 +52,6 @@ const CLICK_SLOP = 4;
 
 /** Everything outside the edited composite fades to this, so the parts read as the thing being edited. */
 const DIMMED = 0.2;
-
-type Transform = { offset: Scene.Vec3; scale: number };
-
-const IDENTITY: Transform = { offset: { x: 0, y: 0, z: 0 }, scale: 1 };
-
-/** Maps a layout's local coordinates to the world, read back from one of its drawn items. */
-const transformOf = (item: RenderItem | undefined, element: Resolved3D | undefined): Transform => {
-  if (!item || !element?.center) {
-    return IDENTITY;
-  }
-  const scale = item.scale.x / (element.scale?.x ?? 1) || 1;
-  return {
-    scale,
-    offset: {
-      x: item.center.x - element.center.x * scale,
-      y: item.center.y - element.center.y * scale,
-      z: item.center.z - element.center.z * scale,
-    },
-  };
-};
-
-const toLocal = (transform: Transform, point: Scene.Vec3): Scene.Vec3 => {
-  const round = (value: number) => Math.round(value * 1000) / 1000 + 0;
-  return {
-    x: round((point.x - transform.offset.x) / transform.scale),
-    y: round((point.y - transform.offset.y) / transform.scale),
-    z: round((point.z - transform.offset.z) / transform.scale),
-  };
-};
 
 /** The first id of the form `base-n` the layout does not use. */
 const freeId = (layout: Scene.LayoutRecord | undefined, base: string): string => {
@@ -124,26 +96,37 @@ export const Scene3DEditor = ({
   const { renderer, size } = useSceneRenderer(containerRef, canvasRef, look);
   const view = useOrbit(containerRef, given, size, { enabled: true, buttons: 'secondary', onChange: onCameraChange });
 
-  // Each drawn item of the edited layout, by element id; a composite shown twice is edited through its first frame.
+  // The edited layout's drawn items, by the frame that shows them (`''` at the top level) and then by element id. A
+  // composite placed several times is edited through the frame last clicked, or else the first.
   const list = useMemo(() => renderList(doc, scene), [doc, scene]);
-  const keys = useMemo(() => {
-    const byId = new Map<string, RenderItem>();
+  const frames = useMemo(() => {
+    const byFrame = new Map<string, Map<string, RenderItem>>();
     for (const item of list.items) {
       const target = targetOf(doc, sceneId, item.key);
-      target?.layout === editing && !byId.has(target.element) && byId.set(target.element, item);
+      if (target?.layout !== editing) {
+        continue;
+      }
+      const frame = item.key.split('/').slice(0, -1).join('/');
+      const items = byFrame.get(frame) ?? new Map<string, RenderItem>();
+      items.has(target.element) || items.set(target.element, item);
+      byFrame.set(frame, items);
     }
-    return byId;
+    return byFrame;
   }, [doc, sceneId, list, editing]);
+  const [frameHint, setFrameHint] = useState<string>();
   const drilled = editing !== scene?.layout;
-  const prefix = drilled ? (keys.values().next().value?.key.split('/').slice(0, -1).join('/') ?? '') : '';
+  const prefix = frameHint !== undefined && frames.has(frameHint) ? frameHint : (frames.keys().next().value ?? '');
+  const keys = useMemo(() => frames.get(prefix) ?? new Map<string, RenderItem>(), [frames, prefix]);
+  // Parts no element places are not drawn, so there is nothing to edit them through.
+  const unplaced = drilled && frames.size === 0;
   const resolved = useMemo(() => (layout?.dim === '3d' ? resolveLayout3D(doc, layout) : {}), [doc, layout]);
-  const transform = useMemo(() => {
-    const [id, item] = keys.entries().next().value ?? [];
-    return id === undefined ? IDENTITY : transformOf(item, resolved[id]);
-  }, [keys, resolved]);
+  const transform = useMemo(
+    () => frameTransform([...keys].flatMap(([id, item]) => (resolved[id] ? [[item, resolved[id]] as const] : []))),
+    [keys, resolved],
+  );
 
   const shown = useMemo(() => {
-    if (!drilled) {
+    if (!drilled || unplaced) {
       return list;
     }
     const inside = (key: string) => key.startsWith(`${prefix}/`);
@@ -153,7 +136,7 @@ export const Scene3DEditor = ({
         inside(item.key) ? item : { ...item, style: { ...item.style, opacity: (item.style?.opacity ?? 1) * DIMMED } },
       ),
     };
-  }, [list, drilled, prefix]);
+  }, [list, drilled, unplaced, prefix]);
 
   useLayoutEffect(() => {
     if (renderer && size.width > 0) {
@@ -184,11 +167,7 @@ export const Scene3DEditor = ({
         const local = {
           center: toLocal(transform, after.center),
           rotation: after.rotation,
-          scale: {
-            x: after.scale.x / transform.scale,
-            y: after.scale.y / transform.scale,
-            z: after.scale.z / transform.scale,
-          },
+          scale: scaleToLocal(transform, after.scale),
         };
         const intent = gizmoIntent(tool, single, before, local);
         intent && onIntent(editing, intent);
@@ -203,16 +182,21 @@ export const Scene3DEditor = ({
     (point: { x: number; y: number }) => {
       const hit = renderer?.pick(point, { through: drilled });
       const target = hit?.item === undefined ? undefined : targetOf(doc, sceneId, hit.item);
-      return { hit, element: target?.layout === editing ? target.element : undefined };
+      const element = target?.layout === editing ? target.element : undefined;
+      // The frame a clicked element is drawn in is the one its gizmo and dimming follow.
+      const frame = element === undefined || !hit?.item ? undefined : hit.item.split('/').slice(0, -1).join('/');
+      return { hit, element, frame };
     },
     [renderer, drilled, doc, sceneId, editing],
   );
 
   const onClick = useCallback(
     (point: { x: number; y: number }, shift: boolean) => {
-      const { hit, element } = elementAt(point);
+      const { hit, element, frame } = elementAt(point);
+      frame !== undefined && setFrameHint(frame);
       if (typeof tool === 'object') {
-        if (!hit?.point) {
+        // A layout that is not drawn has nowhere to put an element; an object may not be placed inside its own parts.
+        if (!hit?.point || unplaced || ('place' in tool && placesCycle(doc, editing, tool.place))) {
           return;
         }
         const center = toLocal(transform, hit.point);
@@ -249,15 +233,16 @@ export const Scene3DEditor = ({
         onSelect([element]);
       }
     },
-    [elementAt, tool, transform, layout, editing, linkFrom, selection, onIntent, onSelect],
+    [elementAt, tool, unplaced, doc, transform, layout, editing, linkFrom, selection, onIntent, onSelect],
   );
 
   const onDoubleClick = useCallback(
     (point: { x: number; y: number }) => {
-      const { element } = elementAt(point);
+      const { hit, element } = elementAt(point);
       const parts = element === undefined ? undefined : resolved[element]?.parts;
       if (parts !== undefined) {
         onSelect([]);
+        hit?.item && setFrameHint(hit.item);
         onEdit(parts);
       }
     },
@@ -279,13 +264,16 @@ export const Scene3DEditor = ({
       data-selection={selection.join(' ')}
       data-editing={editing}
       onPointerDown={(event) => {
+        renderer?.takeDrag();
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
       }}
       onPointerUp={(event) => {
         const start = press.current;
         press.current = undefined;
         const moved = start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP;
-        if (start && !moved && !renderer?.dragging) {
+        // A gizmo drag, however short, is not a click.
+        const dragged = renderer?.takeDrag() || renderer?.dragging;
+        if (start && !moved && !dragged) {
           onClick(local(event), event.shiftKey);
         }
       }}

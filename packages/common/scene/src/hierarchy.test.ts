@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { layoutTree } from './hierarchy.ts';
+import { layoutTree, placesCycle } from './hierarchy.ts';
 import type * as Scene from './Scene.ts';
 import { layout2D, model2D, scene2D } from './testing.ts';
 
@@ -42,5 +42,22 @@ describe('layoutTree', () => {
     expect(order).toEqual(['a', 'b']);
     expect(problems).toHaveLength(1);
     expect(problems[0].message).toContain('cycle');
+  });
+
+  test('placesCycle: an object may not be placed in its own parts, directly or through another object', () => {
+    // a places of-b (parts b); b places of-a (parts a), so placing of-a in b closes a loop through a.
+    const doc: Scene.SceneDocument = {
+      scenes: [scene2D('s', 'root')],
+      layouts: [layout('root', ['a']), layout('a', []), layout('b', [])],
+      models: [model(['a', 'b'])],
+    };
+    expect(placesCycle(doc, 'a', 'of-a')).toBe(true);
+    expect(placesCycle(doc, 'root', 'of-a')).toBe(false);
+    const nested: Scene.SceneDocument = {
+      ...doc,
+      layouts: [layout('root', ['a']), layout('a', ['b']), layout('b', [])],
+    };
+    expect(placesCycle(nested, 'b', 'of-a')).toBe(true);
+    expect(placesCycle(nested, 'b', 'missing')).toBe(false);
   });
 });

@@ -5,8 +5,8 @@
 //
 // Binds a Scene2D to the engine's `ViewStore`: each 2D layout the scene reaches is one View (its id is the layout's
 // `key`), the scene's own layout is the root, and every store write goes back as element-level changes to the layout
-// that owns the element, so ECHO merges concurrent edits element by element. The camera is the scene's, written back
-// once it settles. Undo reads the store's past at the layouts' Automerge heads.
+// that owns the element, so ECHO merges concurrent edits element by element. The camera starts at the scene's authored
+// view and stays the viewer's: it is never written back. Undo reads the store's past at the layouts' Automerge heads.
 //
 
 import * as Atom from 'effect/reactivity/Atom';
@@ -33,13 +33,10 @@ import { isLayout2D, isModel2D, makeLayoutWriter, plain, same } from './layout-w
 export type BoundLayoutStore = {
   store: ViewStore;
   root: ViewId;
-  /** The open scene's camera; a change is written to the scene once it has settled for {@link CAMERA_SETTLE}. */
+  /** The viewer's camera, starting at the open scene's authored camera; setting it never writes the scene. */
   camera: Atom.Writable<Scene.Camera2D>;
   dispose: () => void;
 };
-
-/** How long the camera must rest before it is written to the scene, so a pan is one change rather than hundreds. */
-export const CAMERA_SETTLE = 500;
 
 /** Each layout's and model's Automerge heads, by `layout:<key>` and `model:<key>`, since a layout and a model may share a key. */
 export type LayoutHeads = Readonly<Record<string, readonly string[]>>;
@@ -196,31 +193,6 @@ export const bindLayoutStore = (
   });
 
   const camera = Atom.keepAlive(Atom.make<Scene.Camera2D>(plain(scene.camera)));
-  let settle: ReturnType<typeof setTimeout> | undefined;
-  let readingCamera = false;
-  const unsubscribeCamera = registry.subscribe(camera, (next) => {
-    if (readingCamera) {
-      return;
-    }
-    clearTimeout(settle);
-    settle = setTimeout(() => {
-      if (!disposed && !same(scene.camera, next)) {
-        Obj.update(scene, (scene) => {
-          scene.camera = next;
-        });
-      }
-    }, CAMERA_SETTLE);
-  });
-  const unsubscribeScene = Obj.subscribe(scene, () => {
-    if (!same(scene.camera, registry.get(camera))) {
-      readingCamera = true;
-      try {
-        registry.set(camera, plain(scene.camera));
-      } finally {
-        readingCamera = false;
-      }
-    }
-  });
 
   // The canvas's style classes, both ways; classes read from the canvas are not written back to it.
   let readingStyles = false;
@@ -256,10 +228,7 @@ export const bindLayoutStore = (
       canvas && live.get(canvas.id)?.delete(entry);
       unsubscribeStyles?.();
       unsubscribeCanvas?.();
-      clearTimeout(settle);
       unsubscribeStore();
-      unsubscribeCamera();
-      unsubscribeScene();
       for (const unsubscribe of subscriptions.values()) {
         unsubscribe();
       }

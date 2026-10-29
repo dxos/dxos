@@ -40,3 +40,33 @@ export const canvasViewAspect = ViewState.define<CanvasViewState, Schema.Codec.E
   schema: CanvasViewStateSchema,
   defaultValue: () => ({}),
 });
+
+const Vec3Schema = Schema.Struct({ x: Schema.Number, y: Schema.Number, z: Schema.Number });
+
+/** `@dxos/scene`'s `Camera3D`, declared here for the same reason as the 2D camera above. */
+const Camera3DSchema = Schema.Struct({
+  target: Vec3Schema,
+  yaw: Schema.Number,
+  pitch: Schema.Number,
+  distance: Schema.Number,
+  fov: Schema.Number,
+  projection: Schema.Literals(['perspective', 'orthographic']),
+});
+
+const Scene3DViewStateSchema = Schema.Struct({
+  /** Where this viewer last left the orbit; the scene's own camera is the authored view and is never written. */
+  camera: Schema.optional(Camera3DSchema),
+});
+
+export type Scene3DViewState = Schema.Schema.Type<typeof Scene3DViewStateSchema>;
+
+/** This viewer's view of each 3D canvas (localStorage), keyed by the canvas's URI. */
+export const scene3dViewAspect = ViewState.define<
+  Scene3DViewState,
+  Schema.Codec.Encoded<typeof Scene3DViewStateSchema>
+>({
+  key: 'scene3d-view',
+  backend: 'local',
+  schema: Scene3DViewStateSchema,
+  defaultValue: () => ({}),
+});

@@ -110,8 +110,29 @@ export type OrbitOptions = {
   onChange?: (camera: Scene.Camera3D) => void;
 };
 
+const sameCamera = (left: Scene.Camera3D, right: Scene.Camera3D): boolean =>
+  left === right ||
+  (left.yaw === right.yaw &&
+    left.pitch === right.pitch &&
+    left.distance === right.distance &&
+    left.fov === right.fov &&
+    left.projection === right.projection &&
+    left.target.x === right.target.x &&
+    left.target.y === right.target.y &&
+    left.target.z === right.target.z);
+
 /**
- * The camera the pointer moves, starting from `given` and starting over whenever `given` changes: a drag orbits,
+ * The camera shown: the orbit's, while `given` still has the value the orbit started from. A document re-read after
+ * any edit makes a new camera object of the same value, which must not throw the orbit away.
+ */
+export const orbitView = (
+  moved: { from: Scene.Camera3D; camera: Scene.Camera3D } | undefined,
+  given: Scene.Camera3D,
+  enabled: boolean,
+): Scene.Camera3D => (enabled && moved && sameCamera(moved.from, given) ? moved.camera : given);
+
+/**
+ * The camera the pointer moves, starting from `given` and starting over whenever `given` changes value: a drag orbits,
  * a shift-drag or a right-drag pans, the wheel zooms.
  */
 export const useOrbit = (
@@ -121,7 +142,9 @@ export const useOrbit = (
   { enabled, buttons = 'all', onChange }: OrbitOptions,
 ): Scene.Camera3D => {
   const [moved, setMoved] = useState<{ from: Scene.Camera3D; camera: Scene.Camera3D }>();
-  const view = enabled && moved?.from === given ? moved.camera : given;
+  const view = orbitView(moved, given, enabled);
+  const givenRef = useRef(given);
+  givenRef.current = given;
   const viewRef = useRef(view);
   viewRef.current = view;
   const sizeRef = useRef(size);
@@ -135,7 +158,7 @@ export const useOrbit = (
     }
     const move = (next: (camera: Scene.Camera3D) => Scene.Camera3D) => {
       const camera = next(viewRef.current);
-      setMoved({ from: given, camera });
+      setMoved({ from: givenRef.current, camera });
       onChangeRef.current?.(camera);
     };
     let drag: { x: number; y: number; pan: boolean } | undefined;
@@ -178,6 +201,6 @@ export const useOrbit = (
       container.removeEventListener('wheel', onWheel);
       container.removeEventListener('contextmenu', onContextMenu);
     };
-  }, [enabled, buttons, given]);
+  }, [enabled, buttons]);
   return view;
 };

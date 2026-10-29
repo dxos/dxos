@@ -222,8 +222,9 @@ const add3 = (left: Vec3, right: Vec3): Vec3 => ({
 });
 
 const geometry3D = (element: Element3D, intent: LayoutIntent): Element3D | undefined => {
-  if (intent.kind === 'move' && element.center && isVec3(intent.delta)) {
-    return { ...element, center: add3(element.center, intent.delta) };
+  // An element with no centre is drawn at the origin, so a move places it at the delta.
+  if (intent.kind === 'move' && isVec3(intent.delta)) {
+    return { ...element, center: add3(element.center ?? { x: 0, y: 0, z: 0 }, intent.delta) };
   }
   if (intent.kind === 'rotate' && typeof intent.delta !== 'number') {
     return { ...element, rotation: add3(element.rotation ?? { x: 0, y: 0, z: 0 }, intent.delta) };

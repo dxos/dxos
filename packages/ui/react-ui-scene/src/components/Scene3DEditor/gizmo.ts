@@ -44,13 +44,11 @@ export const gizmoIntent = (
       return changed(delta, 0) ? { kind: 'rotate', ids: [id], delta } : undefined;
     }
     case 'scale': {
+      // The scale it ends at, not a factor: the reducer sees only the stored element, whose scale may be its object's.
       const from = before.scale ?? UNIT;
-      const factor = {
-        x: round(after.scale.x / (from.x || 1)),
-        y: round(after.scale.y / (from.y || 1)),
-        z: round(after.scale.z / (from.z || 1)),
-      };
-      return changed(factor, 1) ? { kind: 'scale', ids: [id], factor } : undefined;
+      const value = { x: round(after.scale.x), y: round(after.scale.y), z: round(after.scale.z) };
+      const moved = { x: value.x - from.x, y: value.y - from.y, z: value.z - from.z };
+      return changed(moved, 0) ? { kind: 'update', id, path: ['scale'], value } : undefined;
     }
   }
 };

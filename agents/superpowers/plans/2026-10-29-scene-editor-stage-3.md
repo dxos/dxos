@@ -168,7 +168,8 @@ test('two instance nodes of one composite place the same object', () => {
     `BoundLayoutStore = { store: ViewStore; root: ViewId; camera: Atom.Writable<Scene.Camera2D>; dispose: () => void }`.
     View ids are layout `key`s; the root is the scene's layout; parts layouts open as their own Views; writes go to
     the layout that owns the element, and a new composite object is written to the root layout's model.
-  - `camera` starts at `scene.camera` and writes back to the `Scene2D` 500 ms after the last change.
+  - `camera` starts at `scene.camera` (the authored view) and is never written back: a viewer's camera is their own
+    view state (D-47).
   - `useSceneDocument` subscribes to every object `reachedObjects` returns (closes the TASKS.md follow-up "edits to
     parts layouts do not reach a playing stage").
 
@@ -545,7 +546,8 @@ rotation: Vec3; scale: Vec3 }): Scene.LayoutIntent | undefined`
 - Produces: the article surface picks `CanvasArticle` or `Scene3DArticle` from `openScene(canvas)`'s type; a toolbar
   (`useMenuActions` + `Menu.Root`, one `Toolbar.Root`) with select, move/rotate/scale, create cube/sphere/cylinder/
   cone, link, group, ungroup, delete, undo, redo; a Properties panel as a `Form` over `Scene.Element3D`; the scenes
-  list shared with 2D (Task 9); the orbit camera written back to the open `Scene3D` 500 ms after it settles; "New 3D
+  list shared with 2D (Task 9); the orbit camera kept in the viewer's react-ui-attention view state (`scene3dViewAspect`), never written to the
+  `Scene3D` (D-47); "New 3D
   canvas" in the create flow (`createCanvas({ dimension: '3d' })`, wrapped in a `Drawing`).
 
 - [ ] **Step 1: Failing test** — the plugin's create operation with `dimension: '3d'` yields a `Drawing` whose

@@ -31,6 +31,7 @@ import {
   Scene,
   type ShaderMaterial,
   StandardMaterial,
+  UtilityLayerRenderer,
   Vector3,
   VertexData,
 } from '@babylonjs/core';
@@ -138,6 +139,9 @@ export class SceneRenderer3D {
   #view?: Model.Camera3D;
   #gizmos?: GizmoManager;
   #gizmoEnd?: (after: WorldTransform) => void;
+  // Babylon's default utility layer is one per process, on whichever scene was made last; a renderer keeps its own.
+  #layers?: { normal: UtilityLayerRenderer; depth: UtilityLayerRenderer };
+  #dragged = false;
   readonly #observed = new WeakSet<object>();
   #looping = false;
   #selected = new Set<string>();
@@ -247,7 +251,12 @@ export class SceneRenderer3D {
       this.#looping = false;
       return;
     }
-    const gizmos = this.#gizmos ?? new GizmoManager(this.#scene);
+    this.#layers ??= {
+      normal: new UtilityLayerRenderer(this.#scene),
+      depth: new UtilityLayerRenderer(this.#scene),
+    };
+    this.#layers.depth.utilityLayerScene.autoClearDepthAndStencil = false;
+    const gizmos = this.#gizmos ?? new GizmoManager(this.#scene, undefined, this.#layers.normal, this.#layers.depth);
     this.#gizmos = gizmos;
     gizmos.usePointerToAttachGizmos = false;
     gizmos.positionGizmoEnabled = mode === 'move';
@@ -258,6 +267,9 @@ export class SceneRenderer3D {
     for (const gizmo of [gizmos.gizmos.positionGizmo, gizmos.gizmos.rotationGizmo, gizmos.gizmos.scaleGizmo]) {
       if (gizmo && !this.#observed.has(gizmo)) {
         this.#observed.add(gizmo);
+        gizmo.onDragStartObservable.add(() => {
+          this.#dragged = true;
+        });
         gizmo.onDragEndObservable.add(() => {
           const attached = gizmo.attachedMesh;
           attached && this.#gizmoEnd?.(worldTransform(attached));
@@ -275,8 +287,25 @@ export class SceneRenderer3D {
     return this.#gizmos?.isDragging ?? false;
   }
 
+  /**
+   * Whether a gizmo was dragged since the last call: Babylon ends the drag before the pointer's release reaches the host,
+   * so `dragging` alone would read a short drag as a click.
+   */
+  takeDrag(): boolean {
+    const dragged = this.#dragged;
+    this.#dragged = false;
+    return dragged;
+  }
+
+  /** The layer this renderer's gizmos draw on. */
+  get gizmoLayer(): UtilityLayerRenderer | undefined {
+    return this.#layers?.normal;
+  }
+
   dispose(): void {
     this.#gizmos?.dispose();
+    this.#layers?.normal.dispose();
+    this.#layers?.depth.dispose();
     this.#looping && this.#engine.stopRenderLoop();
     this.#scene.dispose();
     this.#engine.dispose();

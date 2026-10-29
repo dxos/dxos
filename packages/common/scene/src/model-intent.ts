@@ -96,21 +96,38 @@ const split = <E extends Element2D | Element3D>(
   id: string,
   placing: (inside: readonly E[]) => E,
 ): Split<E> => {
-  const within = (element: E) =>
-    element.from !== undefined &&
-    element.to !== undefined &&
-    ids.has(element.from.element) &&
-    ids.has(element.to.element);
+  // A selected group brings its members; a selected link with an end left outside stays out, bound to the new element.
+  const taken = new Set<string>();
+  const take = (key: string) => {
+    const element = elements[key];
+    if (!element || taken.has(key)) {
+      return;
+    }
+    taken.add(key);
+    element.members?.forEach(take);
+  };
+  ids.forEach(take);
+  const isBound = (element: E) => element.from !== undefined || element.to !== undefined;
+  const endsInside = (element: E) =>
+    (element.from === undefined || taken.has(element.from.element)) &&
+    (element.to === undefined || taken.has(element.to.element));
+  const within = (element: E) => isBound(element) && endsInside(element);
+  const moved = (key: string, element: E) =>
+    (taken.has(key) && (!isBound(element) || endsInside(element))) || within(element);
   const inside: Record<string, E> = {};
   const outside: Record<string, E> = {};
   for (const [key, element] of Object.entries(elements)) {
-    if (ids.has(key) || within(element)) {
+    if (moved(key, element)) {
       inside[key] = element;
       continue;
     }
-    const rebind = (end: E['from']) => (end && ids.has(end.element) ? { ...end, element: id } : end);
-    outside[key] =
-      element.from || element.to ? { ...element, from: rebind(element.from), to: rebind(element.to) } : element;
+    const rebind = (end: E['from']) => (end && taken.has(end.element) ? { ...end, element: id } : end);
+    const members = element.members && [...new Set(element.members.map((member) => (taken.has(member) ? id : member)))];
+    outside[key] = {
+      ...element,
+      ...(isBound(element) ? { from: rebind(element.from), to: rebind(element.to) } : {}),
+      ...(members ? { members } : {}),
+    };
   }
   const element = placing(Object.values(inside).filter((element) => element.kind !== 'link'));
   return { inside, outside: { ...outside, [id]: element }, element };

@@ -22,7 +22,9 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
    editor picks the viewport from the root. A 3D canvas is a creation option, not a separate type.
 7. (2026-10-29) Assistant operations are in stage 3, as its last step (§6.4).
 8. (2026-10-29) 3D handles are Babylon's `GizmoManager`.
-9. (2026-10-29) The 3D viewer orbits, zooms and pans; inside an animator stage the animation drives the camera.
+9. (2026-10-29) The 3D viewer orbits, zooms and pans; inside an animator stage the animation drives the camera. An
+   editor's camera is the viewer's own view state (react-ui-attention); orbiting never writes the scene's camera, which
+   is the authored view.
 10. (2026-10-29) Every drawing is a `Drawing` (one query finds them all; formats convert into one another). Its
     existing `canvas` Ref is widened: it names either the unchanged `Drawing.Canvas` (tldraw and excalidraw drawings,
     which neither change nor migrate) or plugin-canvas's typed `Canvas`. That `Canvas` holds its metadata, including
@@ -58,7 +60,8 @@ canvas becomes its 2D case and plugin-spacetime can be retired.
 react-ui-canvas's `View` model is backed by `Layout2D`: a View is a layout (its camera a `Scene2D`), nodes and links are
 elements, a link's endpoints are bindings, a composite is a model object with parts, `z` is `order`. The engine's
 stores, atoms, projections and undo keep their shape; a store over `Layout2D` objects replaces the content-record
-store, and the viewport camera is the open `Scene2D`'s. Several scenes over one layout are saved views of one drawing.
+store, and the viewport camera starts at the open `Scene2D`'s authored camera; the viewer's own camera is their view
+state and is never written to the scene. Several scenes over one layout are saved views of one drawing.
 
 ### 2. One intent vocabulary, geometry per dimension
 

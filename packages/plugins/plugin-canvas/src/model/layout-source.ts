@@ -9,6 +9,7 @@ import { type VersionedSource, readPath, sameValue, writePath } from '@dxos/reac
 import { type LayoutIntent, Scene, applyIntent } from '@dxos/scene';
 
 import { plain } from './layout-writer.ts';
+import { writeFields } from './write-fields.ts';
 
 /** A 3D layout's elements as plain data, at its Automerge `heads` or now. */
 const snapshot = (layout: Scene.Layout3D, heads?: readonly string[]) => {
@@ -40,11 +41,13 @@ export const layoutSource = (layout: Scene.Layout3D): VersionedSource => ({
         if (field !== 'elements' || id === undefined) {
           continue;
         }
-        const next = rest.length === 0 ? value : writePath(plain(layout.elements[id] ?? {}), rest, value);
+        const current = layout.elements[id];
+        const before = current === undefined ? undefined : plain(current);
+        const next = rest.length === 0 ? value : writePath(before ?? {}, rest, value);
         if (next === undefined) {
           delete layout.elements[id];
         } else if (isElement3D(next)) {
-          layout.elements[id] = plain(next);
+          current === undefined ? (layout.elements[id] = plain(next)) : writeFields(current, before, plain(next));
         }
       }
     }),
@@ -65,10 +68,13 @@ export const applyLayoutIntent = (layout: Scene.Layout3D, intent: LayoutIntent):
   Obj.update(layout, (layout) => {
     for (const id of changed) {
       const element = after.elements[id];
+      const current = layout.elements[id];
       if (element === undefined) {
         delete layout.elements[id];
-      } else {
+      } else if (current === undefined) {
         layout.elements[id] = plain(element);
+      } else {
+        writeFields(current, before.elements[id], plain(element));
       }
     }
   });

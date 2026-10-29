@@ -56,6 +56,13 @@ export const writeModelIntent = (canvas: Canvas.Canvas, intent: ModelIntent): Pr
     const stored = layouts.get(record.id);
     if (stored) {
       writeElements(stored, record);
+      // An extract gives a layout with no model the one its new element places from.
+      const model = record.model === undefined ? undefined : models.get(record.model);
+      model &&
+        stored.model?.target !== model &&
+        Obj.update(stored, (stored) => {
+          stored.model = Ref.make(model);
+        });
       continue;
     }
     const model = record.model === undefined ? undefined : models.get(record.model);

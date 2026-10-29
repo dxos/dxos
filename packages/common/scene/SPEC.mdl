@@ -534,3 +534,44 @@ decision D-46: Models are edited by `ModelIntent`s (define, update, remove, extr
   affects: [F-1.1]
   why: The Library, "make object" and the assistant need one checked way to change a model that never leaves an element placing nothing.
 ```
+
+```mdl
+decision D-47: An editor's camera is the viewer's own view state (react-ui-attention); orbiting never writes the scene's camera, which is the authored view: the first view with no view state, and what the animator and presentations use.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+```
+
+```mdl
+decision D-48: A gizmo scale sets the scale it ends at rather than multiplying, since the reducer sees only the stored element and an element may take its scale from its object; a move of an element with no centre places it at the delta, where it was drawn from. Element writes to ECHO are field by field, never a whole element, so a peer's concurrent edit to another field merges. Fills in [D-45].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: Multiplying a stored scale shrank an element whose object scaled it; replacing a whole element made a new Automerge map, which drops a peer's concurrent edit to its other fields.
+```
+
+```mdl
+decision D-49: An object may not be placed inside its own parts, directly or through another composite (`placesCycle`); the editor refuses such a place. Drilled into a composite that several elements place, the editor edits through the frame last clicked; parts that no element places are not drawn, so nothing is created in them. `extract` brings a selected group's members with it, keeps a selected link with an end left outside outside (bound to the new element), and has outside groups name the new element instead of what it took. Fills in [D-46].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: Each case left a layout inside itself, an element edited through a frame the user did not pick, or a group or link naming elements that had moved away.
+```
+
+```mdl
+decision D-50: Reconciling a parallel migration points every Ref it moves or copies (a composite's parts, an adopted scene's layout) at the winner's layout of the same key when that layout was not adopted, and never moves the winner's root layout off a model of its own. Fills in [D-44].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The loser's own layouts are removed with it, so a Ref left pointing at one dangles; repointing the root layout to the loser's model made the winner's own placed objects resolve to nothing.
+```
+
+```mdl
+decision D-51: A 3D canvas offers no "Copy as" targets: a variant may declare which canvases it can copy (`convertible`), and copying reads a 2D layout, which a 3D canvas does not have.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Offering the copy made an empty drawing in the other format.
+```

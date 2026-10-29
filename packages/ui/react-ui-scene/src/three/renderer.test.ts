@@ -80,4 +80,17 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.pick({ x: 400, y: 300 }, { through: true })).toMatchObject({ item: 'a/b' });
     view.dispose();
   });
+
+  test('each renderer draws its gizmos on a layer of its own, which outlives another renderer', () => {
+    const elements: Scene.Element3D[] = [{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }];
+    const first = renderer(doc(elements));
+    const second = renderer(doc(elements));
+    first.attachGizmo('a', 'move', () => {});
+    second.attachGizmo('a', 'move', () => {});
+    expect(first.gizmoLayer).toBeDefined();
+    expect(first.gizmoLayer).not.toBe(second.gizmoLayer);
+    second.dispose();
+    expect(first.gizmoLayer?.utilityLayerScene.isDisposed).toBe(false);
+    first.dispose();
+  });
 });

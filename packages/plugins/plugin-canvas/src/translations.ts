@@ -28,6 +28,10 @@ export const translations = [
         'ungroup.label': 'Ungroup',
         'delete.label': 'Delete',
         'make-object.label': 'Make object',
+        'library.label': 'Library',
+        'library.place.label': 'Place',
+        'library.edit-parts.label': 'Edit parts',
+        'library.empty.message': 'No objects. Select elements and choose Make object.',
         'undo.label': 'Undo',
         'redo.label': 'Redo',
         'newer-format.message':

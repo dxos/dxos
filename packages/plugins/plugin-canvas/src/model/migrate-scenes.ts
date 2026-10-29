@@ -229,8 +229,23 @@ const adoptNew = (
     canvas.model?.target,
     ...canvas.layouts.map((ref) => (Obj.instanceOf(Scene.Layout2D, ref.target) ? ref.target.model?.target : undefined)),
   ].filter((model) => Obj.instanceOf(Scene.Model2D, model));
-  const winnerModel = winner.model?.target;
+  // The winner's root layout reads objects from its own model when the canvas lists none; adoption never moves it off.
+  const winnerRoot = winner.scenes[0]?.target;
+  const winnerRootLayout = Obj.instanceOf(Scene.Scene2D, winnerRoot) ? winnerRoot.layout.target : undefined;
+  const winnerModel =
+    winner.model?.target ??
+    (Obj.instanceOf(Scene.Layout2D, winnerRootLayout) ? winnerRootLayout.model?.target : undefined);
   const target = Obj.instanceOf(Scene.Model2D, winnerModel) ? winnerModel : undefined;
+  // A Ref to a loser's layout that is not moved goes to the winner's layout of that key, since the loser's is removed.
+  const winnerLayouts = new Map(
+    winner.layouts.flatMap((ref) => (Obj.instanceOf(Scene.Layout2D, ref.target) ? [[ref.target.key, ref.target]] : [])),
+  );
+  const remap = (layout: unknown): Scene.Layout2D | undefined =>
+    Obj.instanceOf(Scene.Layout2D, layout)
+      ? layouts.includes(layout)
+        ? layout
+        : (winnerLayouts.get(layout.key) ?? layout)
+      : undefined;
   const missing = models.flatMap((model) =>
     Object.entries(model.objects).filter(([id]) => !target || target.objects[id] === undefined),
   );
@@ -240,7 +255,8 @@ const adoptNew = (
     Obj.update(target, (target) => {
       for (const [id, object] of missing) {
         const { parts, ...fields } = object;
-        target.objects[id] = { ...plain(fields), ...(parts?.target ? { parts: Ref.make(parts.target) } : {}) };
+        const layout = remap(parts?.target);
+        target.objects[id] = { ...plain(fields), ...(layout ? { parts: Ref.make(layout) } : {}) };
       }
     });
   }
@@ -261,18 +277,27 @@ const adoptNew = (
   for (const layout of layouts) {
     model && layout.model?.target !== model && Obj.update(layout, (layout) => (layout.model = Ref.make(model)));
   }
+  adoptedModel &&
+    Obj.update(adoptedModel, (adoptedModel) => {
+      for (const object of Object.values(adoptedModel.objects)) {
+        const layout = remap(object.parts?.target);
+        layout && layout !== object.parts?.target && (object.parts = Ref.make(layout));
+      }
+    });
+  for (const scene of scenes) {
+    const layout = remap(scene.layout.target);
+    layout && layout !== scene.layout.target && Obj.update(scene, (scene) => (scene.layout = Ref.make(layout)));
+  }
   Obj.update(winner, (winner) => {
     winner.layouts.push(...layouts.map((layout) => Ref.make(layout)));
     winner.scenes.push(...scenes.map((scene) => Ref.make(scene)));
     adoptedModel && (winner.model = Ref.make(adoptedModel));
   });
-  // The winner's root layout places the adopted objects, so it reads them from the same model.
-  const root = winner.scenes[0]?.target;
-  const rootLayout = Obj.instanceOf(Scene.Scene2D, root) ? root.layout.target : undefined;
+  // The winner's root layout places the adopted objects; with no model of its own it reads them from the adopted one.
   model &&
-    Obj.instanceOf(Scene.Layout2D, rootLayout) &&
-    rootLayout.model?.target !== model &&
-    Obj.update(rootLayout, (rootLayout) => (rootLayout.model = Ref.make(model)));
+    Obj.instanceOf(Scene.Layout2D, winnerRootLayout) &&
+    winnerRootLayout.model === undefined &&
+    Obj.update(winnerRootLayout, (winnerRootLayout) => (winnerRootLayout.model = Ref.make(model)));
 };
 
 /**

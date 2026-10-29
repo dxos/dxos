@@ -43,6 +43,8 @@ type VariantBase = {
   hidden?: boolean;
   /** Offered when creating a drawing but never as a conversion target: it differs from another variant only in what it creates. */
   createOnly?: boolean;
+  /** Whether this canvas can be copied as another variant; unset, any can. A 3D canvas has nothing 2D to copy. */
+  convertible?: (canvas: Obj.Unknown) => boolean;
 };
 
 /** A variant storing its content in the base `Drawing.Canvas`, matched by `schema` (tldraw, excalidraw, svg). */
@@ -144,6 +146,15 @@ export const variantSlug = (variant: Pick<DrawingVariant, 'label'>): string =>
 /** The variants a drawing on `schema` can be converted to for editing; the SVG variant is a read-only viewer. */
 export const editTargets = (variants: readonly DrawingVariant[], schema: string | undefined): DrawingVariant[] =>
   variants.filter(({ id, hidden, createOnly }) => id !== schema && id !== SVG_SCHEMA && !hidden && !createOnly);
+
+/** The variants a drawing's `canvas` can be copied as: none when its own variant cannot copy it. */
+export const convertTargets = (
+  canvas: Obj.Unknown | undefined,
+  variants: readonly DrawingVariant[],
+): DrawingVariant[] => {
+  const from = variantFor(canvas, variants);
+  return !from || !canvas || from.convertible?.(canvas) === false ? [] : editTargets(variants, from.id);
+};
 
 /** The variant drawings of `id` are created and converted as: the one that is not hidden. */
 export const findVariant = (variants: readonly DrawingVariant[], id: string): DrawingVariant | undefined =>

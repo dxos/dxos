@@ -74,6 +74,23 @@ describe('writeModelIntent', () => {
     ).toEqual(['layout', 'pair-parts']);
   });
 
+  test('extract on a layout with no model gives it the model its new element places from', async () => {
+    const { canvas, model, layout } = await canvas3D();
+    Obj.update(layout, (layout) => {
+      layout.model = undefined;
+    });
+    expect(
+      writeModelIntent(canvas, {
+        kind: 'extract',
+        model: 'model',
+        layout: 'layout',
+        ids: ['a'],
+        object: { id: 'one', kind: 'sphere' },
+      }),
+    ).toEqual([]);
+    expect(layout.model?.target).toBe(model);
+  });
+
   test('a refused intent writes nothing and returns its problems', async () => {
     const { canvas, layout } = await canvas3D();
     const before = Obj.version(layout).automergeHeads;

@@ -31,7 +31,7 @@ import { Canvas } from '#types';
 
 import types from '../capabilities/schema.ts';
 import { CanvasBuilder } from './builder.ts';
-import { openScene } from './canvas-document.ts';
+import { addScene, openScene } from './canvas-document.ts';
 import { updateCanvasRecord, writeStyles, writeViews } from './content.ts';
 import { bindLayoutStore } from './layout-store.ts';
 import { legacyDocument, migrateSceneDrawing, reconcileMigrations } from './migrate-scenes.ts';
@@ -311,6 +311,61 @@ describe('migrateSceneDrawing', () => {
       const model = winner.model?.target;
       expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['view:peer-view']?.parts?.target).toBe(layout);
       expect(await db.query(Filter.type(Canvas.Canvas)).run()).toEqual([winner]);
+    });
+
+    test("what the loser adopts names the winner's layouts, never the loser's, which are removed", async () => {
+      const { drawing, winner, loser } = await migratedTwice();
+      const scene = openScene(loser);
+      if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+        throw new Error('A migrated canvas opens a 2D scene.');
+      }
+      // The loser adds a second scene over its root layout, and a portal to that root View (whose layout both have).
+      const extra = addScene(loser, scene, { center: { x: 0, y: 0 }, zoom: 2 });
+      const registry = Registry.make();
+      const bound = bindLayoutStore(registry, scene, { canvas: loser });
+      const views = registry.get(bound.store.views);
+      const rootView = views[bound.root];
+      const size = { width: 128, height: 128 };
+      registry.set(bound.store.views, {
+        ...views,
+        [bound.root]: {
+          ...rootView,
+          nodes: {
+            ...rootView.nodes,
+            p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: bound.root }),
+          },
+        },
+      });
+      bound.dispose();
+      expect(await reconcile(drawing)).toBe(true);
+      const winnerRoot = rootLayout(winner);
+      const adopted = winner.scenes.map((ref) => ref.target).find((target) => target === extra);
+      expect(Obj.instanceOf(Scene.Scene2D, adopted) && adopted.layout.target).toBe(winnerRoot);
+      const model = winnerRoot.model?.target;
+      const object = Obj.instanceOf(Scene.Model2D, model) ? model.objects[`view:${bound.root}`] : undefined;
+      expect(object?.parts?.target).toBe(winnerRoot);
+    });
+
+    test("reconcile keeps the winner's root layout on its own model when the canvas lists none", async () => {
+      const { drawing, winner, loser } = await migratedTwice();
+      const own = db.add(Obj.make(Scene.Model2D, { key: 'own', objects: {} }));
+      Obj.update(rootLayout(winner), (layout) => {
+        layout.model = Ref.make(own);
+      });
+      Obj.update(winner, (winner) => {
+        winner.model = undefined;
+      });
+      Obj.update(rootLayout(loser), (layout) => {
+        layout.elements['added'] = { id: 'added', kind: 'rect', center: { x: 0, y: 0 } };
+      });
+      const loserModel = db.add(
+        Obj.make(Scene.Model2D, { key: 'peer', objects: { thing: { id: 'thing', kind: 'rect' } } }),
+      );
+      Obj.update(loser, (loser) => {
+        loser.model = Ref.make(loserModel);
+      });
+      expect(await reconcile(drawing)).toBe(true);
+      expect(rootLayout(winner).model?.target).toBe(own);
     });
 
     test("the winner's own edit wins where both changed a field; the loser's other changes are kept", async () => {

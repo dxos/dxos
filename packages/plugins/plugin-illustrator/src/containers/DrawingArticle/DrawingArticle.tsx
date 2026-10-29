@@ -17,6 +17,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { VariantSurface, hasVariantSurface } from '#components';
 import { Drawing, IllustratorCapabilities } from '#types';
+
 import { IllustratorNamespace } from '../../namespace.ts';
 
 export type DrawingArticleProps = AppSurface.ObjectArticleProps<Drawing.Drawing> & {
