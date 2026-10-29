@@ -93,7 +93,7 @@ describe('followUpdate', () => {
     reported.cleanup();
   });
 
-  test('releases a check at its budget however its status moves, and a download that stops progressing however often it reports', () => {
+  test('releases a check at its budget however its status moves, a download that stops progressing however often it reports, and an apply that never reloads', () => {
     const checking = setup();
     vi.advanceTimersByTime(AppUpdate.BOOT_GATE_CHECK_BUDGET - 1);
     checking.emit({ kind: 'checking' });
@@ -116,6 +116,14 @@ describe('followUpdate', () => {
     vi.advanceTimersByTime(1);
     expect(downloading.states.at(-1)).toEqual({ pending: false });
     downloading.cleanup();
+
+    const applying = setup();
+    applying.emit({ kind: 'ready' });
+    vi.advanceTimersByTime(AppUpdate.BOOT_GATE_APPLY_BUDGET - 1);
+    expect(applying.states.at(-1)?.pending).toBe(true);
+    vi.advanceTimersByTime(1);
+    expect(applying.states.at(-1)).toEqual({ pending: false });
+    applying.cleanup();
   });
 });
 
