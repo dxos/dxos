@@ -15,7 +15,7 @@ import type * as Statement from 'effect/sql/Statement';
 import { Event } from '@dxos/async';
 import { Feed } from '@dxos/echo';
 import * as SpanAttributes from '@dxos/effect/SpanAttributes';
-import { assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
@@ -438,6 +438,7 @@ export class FeedStore {
       if (!cypher || row.encryptionKeyId == null || row.iv == null) {
         return {
           ...row,
+          ...branchFieldsOf(row),
           data,
           encryptionKeyId: row.encryptionKeyId ?? undefined,
           iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
@@ -451,7 +452,7 @@ export class FeedStore {
           ),
         catch: (error) => new CypherError({ operation: 'decrypt', blockId, cause: error }),
       });
-      return { ...row, data: plaintext, encryptionKeyId: undefined, iv: undefined };
+      return { ...row, ...branchFieldsOf(row), data: plaintext, encryptionKeyId: undefined, iv: undefined };
     });
 
   /**
@@ -467,6 +468,7 @@ export class FeedStore {
         Effect.succeed(
           rows.map((row) => ({
             ...row,
+            ...branchFieldsOf(row),
             data: new Uint8Array(row.data),
             encryptionKeyId: row.encryptionKeyId ?? undefined,
             iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
@@ -1116,13 +1118,16 @@ export class FeedStore {
           moved += evicted.moved;
         }
 
+        const predecessor = yield* this.#findPredecessor(feedPrivateId, block);
+        const branch = inferBranch(block, predecessor);
         const inserted = yield* sql<{ position: number | null; insertionId: number }>`
           INSERT INTO blocks (
             feedPrivateId, position, sequence, actorId,
-            prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv
+            prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv, fork, branch
           ) VALUES (
             ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
-            ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv}
+            ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv},
+            ${block.fork === true ? 1 : 0}, ${branch}
           )
           ${onConflict}
           RETURNING position, insertionId
@@ -1130,6 +1135,21 @@ export class FeedStore {
         const feedNamespace = this.#feedNamespaces.get(feedPrivateId);
         if (inserted.length > 0 && feedNamespace != null) {
           this.#noteHead(request.spaceId, feedNamespace, inserted[0].insertionId);
+        }
+        if (inserted.length > 0) {
+          yield* this.#noteBranchHead(feedPrivateId, block, branch, inserted[0].insertionId, predecessor);
+          // A synced fork can arrive before its fork point; once the fork point lands, give its branch row the base.
+          yield* sql`
+            UPDATE branches
+            SET baseBranchId = ${branch ?? ROOT_BRANCH_ROW}, forkInsertionId = ${inserted[0].insertionId}
+            WHERE feedPrivateId = ${feedPrivateId}
+              AND baseBranchId IS NULL AND forkInsertionId IS NULL AND branchId != ${ROOT_BRANCH_ROW}
+              AND EXISTS (
+                SELECT 1 FROM blocks
+                WHERE blocks.insertionId = branches.baseInsertionId
+                  AND blocks.prevSequence = ${block.sequence} AND blocks.prevActorId = ${block.actorId}
+              )
+          `;
         }
 
         if (!this.#options.assignPositions) {
@@ -1172,6 +1192,159 @@ export class FeedStore {
     });
 
   /**
+   * Walks one feed along the path from the root branch to a target branch, in local order: each branch
+   * on the path up to the fork point of the next, then the target. A backward walk gives the same blocks
+   * in reverse. With `forks`, the base block of each branch that forks at a walked block follows that
+   * block. Returns the opened blocks after `after`, or none when `after` is not on the walk.
+   *
+   * @performance One recursive query for the path, one read for each branch on it, and one for the
+   * fork bases; it reads the whole path, so a page costs the path rather than the page.
+   */
+  walk = Effect.fn('FeedStore.walk')({ self: this }, function* (this: FeedStore, request: WalkRequest) {
+    const sql = yield* SqlClient.SqlClient;
+    const [feed] = yield* sql<{ feedPrivateId: number }>`
+        SELECT feedPrivateId FROM feeds WHERE spaceId = ${request.spaceId} AND feedId = ${request.feedId}
+      `;
+    if (feed === undefined) {
+      return [];
+    }
+    const { feedPrivateId } = feed;
+
+    let after: StoredPredecessor | undefined;
+    if (request.after !== undefined) {
+      const block = FeedProtocol.parseBlockId(request.after);
+      const [row] =
+        block === undefined
+          ? []
+          : yield* sql<StoredPredecessor>`
+                SELECT insertionId, branch FROM blocks
+                WHERE feedPrivateId = ${feedPrivateId} AND sequence = ${block.sequence} AND actorId = ${block.actorId}
+              `;
+      if (row === undefined) {
+        return [];
+      }
+      after = row;
+    }
+
+    const target =
+      request.branch !== undefined ? request.branch : request.direction === 'desc' ? (after?.branch ?? null) : null;
+    const path = yield* sql<BranchRow>`
+        WITH RECURSIVE path(branchId, baseBranchId, baseInsertionId, forkInsertionId, depth) AS (
+          SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId, 0
+            FROM branches WHERE feedPrivateId = ${feedPrivateId} AND branchId = ${target ?? ROOT_BRANCH_ROW}
+          UNION ALL
+          SELECT branches.branchId, branches.baseBranchId, branches.baseInsertionId, branches.forkInsertionId, path.depth + 1
+            FROM branches JOIN path
+              ON branches.feedPrivateId = ${feedPrivateId} AND branches.branchId = path.baseBranchId
+        )
+        SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM path ORDER BY depth DESC
+      `;
+
+    // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
+    const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
+    const sequence: Block[] = [];
+    const onPath = new Set(path.map((row) => row.branchId));
+    const forksAt = new Map<number, Block[]>();
+    if (request.forks === true) {
+      const others = yield* sql<BranchRow>`
+          SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM branches
+          WHERE feedPrivateId = ${feedPrivateId} AND forkInsertionId IS NOT NULL
+        `;
+      const bases = others.filter((row) => !onPath.has(row.branchId));
+      const baseBlocks =
+        bases.length === 0
+          ? []
+          : yield* sql<Block>`
+                SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+                FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+                WHERE blocks.insertionId IN ${sql.in(bases.map((row) => row.baseInsertionId))}
+                ${notExpired}
+                ORDER BY blocks.insertionId ASC
+              `;
+      const forkOf = new Map(bases.map((row) => [row.baseInsertionId, row.forkInsertionId]));
+      for (const block of baseBlocks) {
+        const forkInsertionId = block.insertionId === undefined ? undefined : forkOf.get(block.insertionId);
+        if (forkInsertionId != null) {
+          forksAt.set(forkInsertionId, [...(forksAt.get(forkInsertionId) ?? []), block]);
+        }
+      }
+    }
+
+    for (const [index, row] of path.entries()) {
+      const next = path[index + 1];
+      // An ancestor is cut at the fork point of the next branch on the path, by local order.
+      const cutoff = next === undefined ? Number.MAX_SAFE_INTEGER : (next.forkInsertionId ?? next.baseInsertionId - 1);
+      const branch = row.branchId === ROOT_BRANCH_ROW ? null : row.branchId;
+      const blocks = yield* sql<Block>`
+          SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+          FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE blocks.feedPrivateId = ${feedPrivateId} AND blocks.branch IS ${branch} AND blocks.insertionId <= ${cutoff}
+          ${notExpired}
+          ORDER BY blocks.insertionId ASC
+        `;
+      for (const block of blocks) {
+        sequence.push(block, ...(block.insertionId === undefined ? [] : (forksAt.get(block.insertionId) ?? [])));
+      }
+    }
+
+    const ordered = request.direction === 'desc' ? sequence.reverse() : sequence;
+    const start = after === undefined ? 0 : ordered.findIndex((block) => block.insertionId === after.insertionId) + 1;
+    if (start === 0 && after !== undefined) {
+      return [];
+    }
+    return yield* this.#openRows(ordered.slice(start), request.spaceId, request.feedNamespace);
+  });
+
+  /** The stored predecessor of a block, or `undefined` when it has none or the store does not hold it. */
+  #findPredecessor = Effect.fnUntraced(function* (
+    feedPrivateId: number,
+    block: Block,
+  ): Effect.fn.Return<StoredPredecessor | undefined, SqlError.SqlError, SqlClient.SqlClient> {
+    if (block.prevSequence == null || block.prevActorId == null) {
+      return undefined;
+    }
+    const sql = yield* SqlClient.SqlClient;
+    const rows = yield* sql<StoredPredecessor>`
+        SELECT insertionId, branch FROM blocks
+        WHERE feedPrivateId = ${feedPrivateId}
+          AND sequence = ${block.prevSequence}
+          AND actorId = ${block.prevActorId}
+      `;
+    return rows[0];
+  });
+
+  /**
+   * Keeps the row of the branch a block was inserted on: a fork block (or the first block of a feed)
+   * creates it, and every block moves its head.
+   */
+  #noteBranchHead = Effect.fnUntraced(function* (
+    feedPrivateId: number,
+    block: Block,
+    branch: string | null,
+    insertionId: number,
+    predecessor: StoredPredecessor | undefined,
+  ): Effect.fn.Return<void, SqlError.SqlError, SqlClient.SqlClient> {
+    const sql = yield* SqlClient.SqlClient;
+    const forks = block.fork === true && predecessor !== undefined;
+    const baseBranchId = forks ? (predecessor.branch ?? ROOT_BRANCH_ROW) : null;
+    const forkInsertionId = forks ? predecessor.insertionId : null;
+    yield* sql`
+        INSERT INTO branches (
+          feedPrivateId, branchId, baseBranchId, baseInsertionId, forkInsertionId,
+          headInsertionId, headSequence, headActorId
+        ) VALUES (
+          ${feedPrivateId}, ${branch ?? ROOT_BRANCH_ROW}, ${baseBranchId}, ${insertionId}, ${forkInsertionId},
+          ${insertionId}, ${block.sequence}, ${block.actorId}
+        )
+        ON CONFLICT(feedPrivateId, branchId) DO UPDATE SET
+          headInsertionId = excluded.headInsertionId,
+          headSequence = excluded.headSequence,
+          headActorId = excluded.headActorId
+        WHERE excluded.headInsertionId > branches.headInsertionId
+      `;
+  });
+
+  /**
    * Records pull progress for a pull that brought no blocks. Writes and notifies only when the
    * stored row would actually change, so a caught-up namespace polls without touching the database.
    */
@@ -1208,9 +1381,7 @@ export class FeedStore {
    * that must drain a large trim loops {@link trim} while `more`.
    */
   appendLocal = Effect.fn('Feed.appendLocal')(
-    (
-      messages: { spaceId: string; feedId: string; feedNamespace: string; data: Uint8Array }[],
-    ): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+    (messages: LocalAppendMessage[]): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
       Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
@@ -1250,39 +1421,63 @@ export class FeedStore {
         }
 
         // 3. Build all blocks with correct sequences.
-        // Track in-flight sequences per feed to handle multiple messages to same feed.
+        // Track in-flight sequences per feed, and in-flight heads per branch, to handle multiple messages to same feed.
         const currentSeqs = new Map<FeedKey, { sequence: number; actorId: string }>();
+        const branchHeads = new Map<string, { sequence: number; actorId: string } | null>();
         const blocks: Block[] = [];
         const blocksBySpaceNamespace = new Map<string, { spaceId: string; feedNamespace: string; blocks: Block[] }>();
 
         for (const msg of messages) {
           const key = `${msg.spaceId}|${msg.feedNamespace}|${msg.feedId}`;
-
-          // Determine predecessor: either from in-flight blocks or from DB.
-          let sequence: number;
-          let prevSequence: number | null;
-          let prevActorId: string | null;
+          const feedPrivateId = feedPrivateIds.get(key);
+          invariant(feedPrivateId !== undefined, 'feed ensured above');
 
           const inFlight = currentSeqs.get(key);
-          if (inFlight) {
-            // We've already added blocks for this feed - continue from last in-flight.
-            sequence = inFlight.sequence + 1;
-            prevSequence = inFlight.sequence;
-            prevActorId = inFlight.actorId;
+          const sequence = (inFlight ?? lastSeqs.get(key))?.sequence;
+          const nextSequence = (sequence ?? -1) + 1;
+
+          // The predecessor is the fork point of a fork, else the head of the branch the block continues.
+          let predecessor: { sequence: number; actorId: string } | null;
+          let branch: string | null;
+          if (msg.forkAt !== undefined) {
+            const forkPoint = FeedProtocol.parseBlockId(msg.forkAt);
+            if (forkPoint === undefined) {
+              return yield* Effect.die(new Error(`Malformed fork point block id: ${msg.forkAt}`));
+            }
+            // A fork at a block the store does not hold would have no base, so no walk could reach its ancestors.
+            const held = yield* sql<{ insertionId: number }>`
+              SELECT insertionId FROM blocks
+              WHERE feedPrivateId = ${feedPrivateId}
+                AND sequence = ${forkPoint.sequence} AND actorId = ${forkPoint.actorId}
+            `;
+            if (held.length === 0) {
+              return yield* Effect.die(new Error(`Unknown fork point block: ${msg.forkAt}`));
+            }
+            predecessor = forkPoint;
+            branch = FeedProtocol.formatBlockId(this.#options.localActorId, nextSequence);
           } else {
-            // First block for this feed - use DB state.
-            const lastBlock = lastSeqs.get(key);
-            sequence = (lastBlock?.sequence ?? -1) + 1;
-            prevSequence = lastBlock?.sequence ?? null;
-            prevActorId = lastBlock?.actorId ?? null;
+            branch = msg.branch ?? null;
+            const headKey = `${key}|${branch ?? ''}`;
+            if (!branchHeads.has(headKey)) {
+              const rows = yield* sql<{ sequence: number; actorId: string }>`
+                SELECT headSequence AS sequence, headActorId AS actorId FROM branches
+                WHERE feedPrivateId = ${feedPrivateId} AND branchId = ${branch ?? ROOT_BRANCH_ROW}
+              `;
+              if (rows.length === 0 && branch !== null) {
+                return yield* Effect.die(new Error(`Unknown feed branch: ${branch}`));
+              }
+              branchHeads.set(headKey, rows[0] ?? null);
+            }
+            predecessor = branchHeads.get(headKey) ?? null;
           }
 
           const block: Block = {
             feedId: msg.feedId,
             actorId: this.#options.localActorId,
-            sequence,
-            prevActorId,
-            prevSequence,
+            sequence: nextSequence,
+            prevActorId: predecessor?.actorId ?? null,
+            prevSequence: predecessor?.sequence ?? null,
+            ...(msg.forkAt !== undefined ? { fork: true } : {}),
             timestamp: Date.now(),
             data: msg.data,
             position: null, // Assigned by append.
@@ -1291,7 +1486,9 @@ export class FeedStore {
           blocks.push(block);
 
           // Update in-flight tracking.
-          currentSeqs.set(key, { sequence, actorId: this.#options.localActorId });
+          const head = { sequence: nextSequence, actorId: this.#options.localActorId };
+          currentSeqs.set(key, head);
+          branchHeads.set(`${key}|${branch ?? ''}`, head);
 
           // Group by (spaceId, feedNamespace).
           const spaceNamespaceKey = `${msg.spaceId}|${msg.feedNamespace}`;
@@ -1759,3 +1956,66 @@ const toFeedRow = (row: FeedRowColumns): FeedRow => ({
 
 /** Immutable natural key of a block, bound as AAD so sealed bytes cannot be relocated. */
 const blockNaturalKey = (feedId: string, actorId: string, sequence: number) => `${feedId}:${actorId}:${sequence}`;
+
+/** One item for {@link FeedStore.appendLocal}. */
+export type LocalAppendMessage = {
+  spaceId: string;
+  feedId: string;
+  feedNamespace: string;
+  data: Uint8Array;
+} & (
+  | {
+      /** Makes the block the base of a new branch that forks at this block id. */
+      forkAt: string;
+      branch?: never;
+    }
+  | {
+      /** The branch the block continues; absent or `null` for the root branch. */
+      branch?: string | null;
+      forkAt?: never;
+    }
+);
+
+/** One walk of a feed, for {@link FeedStore.walk}. */
+export type WalkRequest = {
+  spaceId: string;
+  feedNamespace: string;
+  feedId: string;
+  /**
+   * The branch the walk ends on: its id, or `null` for the root branch. Absent is the root branch, or on
+   * a backward walk the branch of `after`.
+   */
+  branch?: string | null;
+  /** The block id the walk starts after, excluded. */
+  after?: string;
+  direction: 'asc' | 'desc';
+  /** Also gives the base block of each branch that forks at a walked block, right after that block. */
+  forks?: boolean;
+};
+
+/** What a walk reads of a row of `branches`. */
+type BranchRow = {
+  branchId: string;
+  baseBranchId: string | null;
+  baseInsertionId: number;
+  forkInsertionId: number | null;
+};
+
+/** The key `branches.branchId` uses for the root branch, which blocks and scopes name `null`. */
+const ROOT_BRANCH_ROW = '';
+
+/** What the insert of a block reads of its predecessor. */
+type StoredPredecessor = { insertionId: number; branch: string | null };
+
+/**
+ * The branch of a block: its own block id when it forks, else the branch of its predecessor. A block
+ * with no predecessor, or one the store does not hold, is on the root branch.
+ */
+const inferBranch = (block: Block, predecessor: StoredPredecessor | undefined): string | null =>
+  block.fork === true ? FeedProtocol.formatBlockId(block.actorId, block.sequence) : (predecessor?.branch ?? null);
+
+/** Reads the branch columns of a stored row as the `Block` fields; SQLite returns the flag as 0 or 1. */
+const branchFieldsOf = (row: Block): Pick<Block, 'fork' | 'branch'> => ({
+  fork: row.fork ? true : undefined,
+  branch: row.branch ?? null,
+});

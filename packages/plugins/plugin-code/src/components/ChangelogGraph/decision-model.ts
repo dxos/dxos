@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ChangelogEntry, parseChangelog } from '@dxos/deus/extension';
+import { type ChangelogEntry, type ChangelogQuestion, parseChangelog } from '@dxos/deus/extension';
 
 export type DecisionActor = 'user' | 'agent';
 
 /**
  * How one entry relates to another: it builds on a decision it cites, replaces one it supersedes, or approves
- * one a person accepted; `affects` links a decision to a spec block it constrains.
+ * one a person accepted, or answers a question; `affects` links a decision to a spec block it constrains.
  */
-export type ChangelogEdgeKind = 'builds-on' | 'supersedes' | 'approves' | 'affects';
+export type ChangelogEdgeKind = 'builds-on' | 'supersedes' | 'approves' | 'answers' | 'affects';
 
 export type DecisionModel = {
   kind: 'decision';
@@ -27,6 +27,20 @@ export type DecisionModel = {
   approvedBy: string[];
 };
 
+/** A `question` of the changelog: open until a decision `answers:` it. */
+export type QuestionModel = {
+  kind: 'question';
+  id: string;
+  entry: ChangelogQuestion;
+  actor?: DecisionActor;
+  /** The asker without its `user:` / `agent:` prefix. */
+  handle?: string;
+  /** The person an agent asked for, without its prefix. */
+  principal?: string;
+  /** The decision that answers it; only the first answer counts (`lang/changelog.mdl` rule 10). */
+  answer?: DecisionModel;
+};
+
 export type SpecBlockModel = {
   kind: 'block';
   /** Node id; prefixed so a block id never collides with a decision id. */
@@ -35,7 +49,7 @@ export type SpecBlockModel = {
   label: string;
 };
 
-export type ChangelogNodeModel = DecisionModel | SpecBlockModel;
+export type ChangelogNodeModel = DecisionModel | QuestionModel | SpecBlockModel;
 
 /** Points from the earlier entry to the later one, so the layout ranks the log top-down in the order it was written. */
 export type ChangelogEdgeModel = { id: string; kind: ChangelogEdgeKind; from: string; to: string };
@@ -75,7 +89,7 @@ export const buildChangelogGraph = (
   text: string,
   { affects = false }: ChangelogGraphOptions = {},
 ): ChangelogGraphModel => {
-  const { entries } = parseChangelog(text);
+  const { entries, questions: questionEntries } = parseChangelog(text);
   const ids = new Set(entries.map(({ id }) => id));
   const edges: ChangelogEdgeModel[] = [];
   const supersededBy = new Map<string, string>();
@@ -118,6 +132,25 @@ export const buildChangelogGraph = (
     };
   });
 
+  const questionIds = new Set(questionEntries.map(({ id }) => id));
+  for (const { id, answers } of entries) {
+    if (answers && questionIds.has(answers)) {
+      edges.push({ id: `${id}:answers:${answers}`, kind: 'answers', from: answers, to: id });
+    }
+  }
+  const questions = questionEntries.map((entry): QuestionModel => {
+    const { actor, handle } = parseActor(entry.by);
+    return {
+      kind: 'question',
+      id: entry.id,
+      entry,
+      actor,
+      handle,
+      principal: parseActor(entry.for).handle,
+      answer: decisions.find((decision) => decision.entry.answers === entry.id),
+    };
+  });
+
   const blocks: SpecBlockModel[] = [];
   if (affects) {
     const labels = [...new Set(entries.flatMap((entry) => entry.affects))];
@@ -136,7 +169,58 @@ export const buildChangelogGraph = (
     }
   }
 
-  return { nodes: [...decisions, ...blocks], edges };
+  return { nodes: [...decisions, ...questions, ...blocks], edges };
+};
+
+/** The questions of a spec's `## Changelog`, open ones first, each in the order asked. */
+export const buildQuestions = (text: string): QuestionModel[] => {
+  const questions = buildChangelogGraph(text).nodes.filter((node): node is QuestionModel => node.kind === 'question');
+  return [...questions.filter(({ answer }) => !answer), ...questions.filter(({ answer }) => answer)];
+};
+
+export type AnswerProps = {
+  /** The question answered, `Q-n`. */
+  question: string;
+  answer: string;
+  /** The person who answered, `user:<handle>`. */
+  by: string;
+  /** `YYYY-MM-DD`. */
+  date: string;
+};
+
+/** A handle for `user:` from a display name: the dialect allows no whitespace in it. */
+export const toUserHandle = (name: string): string => name.trim().replace(/\s+/g, '-');
+
+/**
+ * The edit that records an answer as the next decision of the spec's `## Changelog`: an insertion at the end of the
+ * section, so the log stays append-only. Undefined when the spec has no changelog to append to.
+ */
+export const answerQuestion = (
+  text: string,
+  { question, answer, by, date }: AnswerProps,
+): { from: number; to: number; insert: string } | undefined => {
+  const heading = /^## Changelog[ \t]*$/m.exec(text);
+  if (!heading) {
+    return undefined;
+  }
+  const after = heading.index + heading[0].length;
+  const next = /^#{1,2} /m.exec(text.slice(after));
+  const end = next ? after + next.index : text.length;
+  const { entries } = parseChangelog(text);
+  const id = Math.max(0, ...entries.map(({ id }) => Number(/^D-(\d+)$/.exec(id)?.[1] ?? 0))) + 1;
+  // The answer is the decision's inline prose, which is one line.
+  const prose = answer.replace(/\s+/g, ' ').trim();
+  const block = [
+    '```mdl',
+    `decision D-${id}: ${prose}`,
+    `  date: ${date}`,
+    `  by: ${by}`,
+    `  answers: ${question}`,
+    '```',
+  ];
+  // Replaces the whitespace that ends the section, so the entry sits one blank line after the last.
+  const from = text.slice(0, end).trimEnd().length;
+  return { from, to: end, insert: `\n\n${block.join('\n')}${next ? '\n\n' : '\n'}` };
 };
 
 /** The decisions one decider made, in log order. */

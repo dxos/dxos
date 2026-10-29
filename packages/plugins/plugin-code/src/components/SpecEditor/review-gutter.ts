@@ -5,16 +5,17 @@
 import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-import { type SourceKey, formatSourceKey } from '#sync';
-
 import {
   type Annotation,
   type ReviewModel,
-  STATUS_STYLE,
+  type SourceKey,
   type Verdict,
+  formatSourceKey,
   reviewAnnotations,
   walkthroughOf,
-} from '../SpecModel/index.ts';
+} from '@dxos/deus/review';
+
+import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { type SnippetCard, type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
 
 /** A block declaration line, `feat F-1: …`, `  req F-1.2: …` or `type Scene`, captured as its kind and id. */

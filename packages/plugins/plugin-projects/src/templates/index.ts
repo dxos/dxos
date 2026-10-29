@@ -12,10 +12,13 @@ export {
   GUIDE,
   IDS,
   PARENT_INSTRUCTIONS,
+  PLUGIN_KEY_SLOT,
   type Variant,
   composerPlugin,
   makeComposerPlugin,
+  mintPluginKey,
   readGuide,
+  worldClockSpec,
   writePlugin,
 } from './composer-plugin.ts';
 export * from './feature-spec.ts';

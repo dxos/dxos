@@ -80,6 +80,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `service`   | `org.dxos.mdl.service@1.0`    |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `decision`  | `org.dxos.mdl.decision@1.0`   |
+| `question`  | `org.dxos.mdl.question@1.0`   |
 | `plugin`    | `org.dxos.mdl.plugin@1.0`     |
 | `uses`      | `dxos.spec.core/uses`         |
 
@@ -179,7 +180,8 @@ component FileTree
 component SpecArticle
   desc: |
     Article surface for a SpecDocument, laid out as an IDE page: the MDL editor beside a
-    panel of views (definitions graph, review, code, decisions, data model, API).
+    panel of views (definitions graph, review, code, decisions by person, decision graph,
+    data model, API).
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
     reviewed item and links it to its code (F-16).
@@ -190,7 +192,7 @@ component SpecArticle
     sourceKey?: string          # github: key of static content
     attendableId?: string
   state:
-    view: definitions | review | code | decisions | data | api
+    view: definitions | review | code | log | decisions | data | api
     codeTarget?: string         # the github: key open in the code view
   layout: |
     ┌──────────────────────────┬──────────────────────────────┐
@@ -825,6 +827,24 @@ feat F-17: Diff mode
               (status, file at a commit), which the dev route answers.
 ```
 
+```mdl
+feat F-18: Spec questions
+  desc: |
+    A `question` in a spec's changelog is a choice nobody has made yet. It is answered in
+    Composer, and the answer is recorded as a decision.
+
+  req F-18.1: SpecArticle has a decisions-by-person view: the changelog's decisions grouped by
+              decider, with the spec's questions above them, open ones first.
+  req F-18.2: Each question is drawn with the question component the chat uses: its context,
+              its options, and a free-form answer field.
+  req F-18.3: In an editable spec, an answer appends to `## Changelog` a decision by the person
+              who answered, with `answers:` naming the question. A read-only spec lists its
+              questions without the answer controls.
+  req F-18.4: The decision graph draws each question as a card, with an edge to the decision
+              that answers it. A question's `affects:` puts a chip on each block it names, and the
+              chip opens the decisions-by-person view.
+```
+
 ## Acceptance
 
 ```mdl
@@ -1350,6 +1370,42 @@ decision D-30: plugin-code declares its dependencies with `uses` (it has no runt
   for: user:richburdon
   affects: [F-15, F-16, SpecArticle]
   why: Each id is a spec the body already referred to by path or key; the review dialect is named without an item, and ECHO's Database is the example F-15 already used.
+```
+
+```mdl
+decision D-31: A spec can ask questions; an answered question is recorded as a decision. Every surface that renders a spec shows its questions, drawn with the question component the chat uses. The decisions-by-person view is back in SpecArticle, with the questions at its top.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [SpecArticle, F-18]
+```
+
+```mdl
+decision D-32: A question is a `question Q-n` block in `## Changelog`, append-only like a decision; it is answered by a later decision with `answers: Q-n`, so "answered" is derived. Fills in [D-31].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-18.3]
+  why: Keeping the question unedited keeps the log append-only, and the answer carries the authority of the person who gave it.
+  rejected:
+    - An `answer:` field written into the question: edits an entry, which the changelog forbids.
+```
+
+```mdl
+decision D-33: Open questions come before answered ones, and the answering decision is `by:` the current identity's display name with whitespace replaced by `-`, dated today. Fills in [D-31].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-18.1, F-18.3]
+  why: Composer knows the person by their identity, not their GitHub username; an open question is the one that needs the reader.
+```
+
+```mdl
+decision D-34: The decision graph draws questions as cards with an `answers` edge, and a question's `affects:` adds a margin chip that opens the decisions-by-person view. Fills in [D-31].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-18.4]
+  why: The graph and the margin are the other places a spec shows its changelog.
 ```
 
 ---

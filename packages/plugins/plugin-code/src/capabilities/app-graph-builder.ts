@@ -14,12 +14,13 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
+import { formatSourceKey } from '@dxos/deus/review';
 import { Filter, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { formatSourceKey, keyFromTreeUrl } from '#sync';
+import { keyFromTreeUrl } from '#sync';
 import { CodeProject } from '#types';
 
 import {

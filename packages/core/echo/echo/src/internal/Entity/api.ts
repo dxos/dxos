@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, type SpaceId, URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
+import { defineHiddenProperty } from '../common/proxy/define-hidden-property.ts';
 import type { AnyEntity } from '../common/types/index.ts';
 import { MetaId } from '../common/types/model-symbols.ts';
-import { type InternalObjectProps, ObjectBranchId, ObjectDatabaseId } from './model.ts';
+import { FeedBlockKeysId, type InternalObjectProps, ObjectBranchId, ObjectDatabaseId } from './model.ts';
 import { getObjectEchoUri } from './util.ts';
 
 /**
@@ -65,6 +67,23 @@ export const getUri = (entity: AnyEntity, options?: GetURIOptions): URI.URI => {
   const uri = getObjectEchoUri(entity);
   invariant(uri != null, 'Invalid entity.');
   return uri;
+};
+
+/**
+ * The hidden feed block keys a client stamped on a live feed object it wrote; `undefined` when the
+ * object's `@meta.keys` describe its latest block.
+ */
+export const getFeedBlockKeys = (entity: AnyEntity): readonly ForeignKey[] | undefined => {
+  assumeType<InternalObjectProps>(entity);
+  return entity[FeedBlockKeysId];
+};
+
+/**
+ * Sets, or with `undefined` clears, the hidden feed block keys of a live feed object. Not reactive:
+ * the keys describe the block the store wrote, not a change of the object.
+ */
+export const setFeedBlockKeys = (entity: AnyEntity, keys: readonly ForeignKey[] | undefined): void => {
+  defineHiddenProperty(entity, FeedBlockKeysId, keys);
 };
 
 /**

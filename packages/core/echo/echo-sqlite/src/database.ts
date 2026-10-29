@@ -523,6 +523,10 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     throw new UnsupportedOperationError('appendToFeed');
   }
 
+  async forkFeed(_feed: Feed.Feed, _base: Entity.Unknown): Promise<Feed.BranchId> {
+    throw new UnsupportedOperationError('forkFeed');
+  }
+
   async deleteFromFeed(_feed: Feed.Feed, _entities: Entity.Unknown[]): Promise<void> {
     throw new UnsupportedOperationError('deleteFromFeed');
   }
