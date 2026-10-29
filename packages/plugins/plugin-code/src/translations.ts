@@ -3,6 +3,7 @@
 //
 
 import { Type } from '@dxos/echo';
+import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { SpecDocument } from '@dxos/types';
 
@@ -81,6 +82,9 @@ export const translations = [
         'changelog-graph.edge.supersedes.label': 'Supersedes',
         'changelog-graph.edge.approves.label': 'Approves',
         'changelog-graph.edge.affects.label': 'Affects',
+        'changelog-graph.edge.answers.label': 'Answers',
+        'changelog-graph.question.open.label': 'Open',
+        'changelog-graph.question.answered-in.label': 'Answered in {{id}}',
         'spec-view.label': 'View',
         'spec-diff.label': 'Diff',
         'spec-diff.base.label': 'Changes since {{base}}',
@@ -117,6 +121,9 @@ export const translations = [
         'decision-log.count.label_one': '{{count}} decision',
         'decision-log.count.label_other': '{{count}} decisions',
         'decision-log.empty.message': 'This spec has no changelog.',
+        'decision-log.questions.label': 'Questions',
+        'decision-log.questions.open.label_one': '{{count}} open',
+        'decision-log.questions.open.label_other': '{{count}} open',
         'definition-graph.group-concepts.label': 'Concepts',
         'definition-graph.group-requirements.label': 'Features & requirements',
         'definition-graph.group-qa.label': 'Scenarios & tests',
@@ -151,4 +158,5 @@ export const translations = [
       },
     },
   },
+  ...taskTranslations,
 ] as const satisfies Theme.Resource[];

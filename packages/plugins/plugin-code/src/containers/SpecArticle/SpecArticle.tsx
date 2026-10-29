@@ -65,17 +65,20 @@ import {
   ChangelogGraph,
   CodeView,
   DataModelGraph,
-  type DecisionModel,
+  DecisionLog,
   DefinitionGraph,
   type DefinitionModel,
+  type GutterItem,
   ReviewPanel,
   SPEC_INDEX,
+  answerQuestion,
   buildChangelogGraph,
   decisionGutter,
   pendingReveal,
   resolveSpecRef,
   reviewGutter,
   sourceLinks,
+  toUserHandle,
 } from '#components';
 import { getSpecKey } from '#sync';
 import { CodeOperation } from '#types';
@@ -91,7 +94,7 @@ import {
 } from './useSpecSources.ts';
 
 /** What the panel beside the spec shows. */
-const VIEWS = ['definitions', 'review', 'code', 'decisions', 'data', 'api'] as const;
+const VIEWS = ['definitions', 'review', 'code', 'log', 'decisions', 'data', 'api'] as const;
 
 type View = (typeof VIEWS)[number];
 
@@ -99,6 +102,7 @@ const VIEW_ICON: Record<View, string> = {
   definitions: 'ph--tree-structure--regular',
   review: 'ph--seal-check--regular',
   code: 'ph--file-code--regular',
+  log: 'ph--users-three--regular',
   decisions: 'ph--graph--regular',
   data: 'ph--database--regular',
   api: 'ph--plugs-connected--regular',
@@ -261,11 +265,18 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const changelogStart = text.search(/^## Changelog/m);
     const changelog = changelogStart < 0 ? '' : text.slice(changelogStart);
     const parsedDecisions = useMemo(
-      () => buildChangelogGraph(changelog).nodes.filter((node): node is DecisionModel => node.kind === 'decision'),
+      () => buildChangelogGraph(changelog).nodes.filter((node): node is GutterItem => node.kind !== 'block'),
       [changelog],
     );
     // Held stable while the decisions are unchanged, so typing does not rebuild the editor's extensions (which resets it).
-    const decisionsKey = JSON.stringify(parsedDecisions.map(({ id, entry }) => [id, entry.by, entry.affects]));
+    const decisionsKey = JSON.stringify(
+      parsedDecisions.map((item) => [
+        item.id,
+        item.entry.by,
+        item.entry.affects,
+        item.kind === 'question' ? item.answer?.id : item.supersededBy,
+      ]),
+    );
     const decisions = useMemo(() => parsedDecisions, [decisionsKey]);
 
     const viewRef = useRef<EditorView | undefined>(undefined);
@@ -371,7 +382,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           decisions.length > 0 &&
             decisionGutter(decisions, (id) => {
               setSelectedDecision(id);
-              setView('decisions');
+              // A question is answered in the log, which lists it; a decision shows in the graph.
+              setView(decisions.some((item) => item.id === id && item.kind === 'question') ? 'log' : 'decisions');
             }),
           review &&
             reviewGutter(review, {
@@ -415,6 +427,32 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         fold,
       ],
     );
+
+    // Appended through the editor, so the answer reaches the bound ECHO text and its collaborators like a typed edit.
+    const handleAnswer = useCallback(
+      (question: string, answer: string) => {
+        const editor = viewRef.current;
+        if (!editor) {
+          return;
+        }
+        const name = identity?.displayName;
+        const edit = answerQuestion(editor.state.doc.toString(), {
+          question,
+          answer,
+          by: `user:${name ? toUserHandle(name) : identity?.did}`,
+          date: new Date().toISOString().slice(0, 10),
+        });
+        if (!edit) {
+          log.warn('answer not recorded: no changelog', { question });
+          return;
+        }
+        editor.dispatch({ changes: edit });
+        setSelectedDecision(question);
+      },
+      [identity],
+    );
+    // Only an editable spec bound to ECHO takes answers; a static or read-only one lists its questions.
+    const canAnswer = !readOnly && spec !== undefined && identity !== undefined;
 
     const syncEntry = spec ? sync.specs[spec.id] : undefined;
     const codeText = codeTarget ? texts.get(fileKey(codeTarget)) : undefined;
@@ -592,6 +630,13 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                         {t('code-view.empty.label')}
                       </Status.Empty>
                     ))}
+                  {view === 'log' && (
+                    <DecisionLog
+                      content={changelog}
+                      selected={selectedDecision}
+                      onAnswer={canAnswer ? handleAnswer : undefined}
+                    />
+                  )}
                   {view === 'decisions' && <ChangelogGraph content={changelog} selected={selectedDecision} />}
                   {view === 'data' && <DataModelGraph content={text} />}
                   {view === 'api' && <ApiSurface content={text} />}
