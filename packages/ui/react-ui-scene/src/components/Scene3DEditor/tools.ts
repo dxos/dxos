@@ -25,3 +25,10 @@ export const restingCenter = (point: { x: number; y: number; z: number }): { x: 
 /** The tool in use: a locked (read-only) scene keeps only select and orbit, which look without changing anything. */
 export const editableTool = (tool: Tool3D, readonly: boolean): Tool3D =>
   readonly && tool !== 'select' && tool !== 'orbit' ? 'select' : tool;
+
+/** A point on the ground moved to the nearest grid point `unit` apart (x and z); a zero unit leaves it where it is. */
+export const groundSnap = (
+  point: { x: number; y: number; z: number },
+  unit: number,
+): { x: number; y: number; z: number } =>
+  unit > 0 ? { x: Math.round(point.x / unit) * unit, y: point.y, z: Math.round(point.z / unit) * unit } : point;

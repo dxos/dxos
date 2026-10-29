@@ -29,6 +29,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { FLOATING_PANEL } from '../../../utils/index.ts';
@@ -316,11 +317,34 @@ const InspectorPanelContent = () => {
 
 InspectorPanelContent.displayName = 'InspectorPanel.Content';
 
+export type InspectorPanelFrameProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    /** Paints no surface of its own, so whatever is behind the view shows through (a slide). */
+    transparent?: boolean;
+  }>
+>;
+
+/**
+ * Where a view and its inspector panel sit: the view first, then the panel, docked beside it (taking its own width) or
+ * floating over it; any view, 2D or 3D, uses it, so the panel sits and docks the same in each.
+ */
+const InspectorPanelFrame = ({ classNames, transparent, children }: InspectorPanelFrameProps) => (
+  // Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in the view (an editor's caret)
+  // would scroll the whole frame to reveal it.
+  <div className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}>
+    {children}
+    <InspectorPanelContent />
+  </div>
+);
+
+InspectorPanelFrame.displayName = 'InspectorPanel.Frame';
+
 /** Whether the enclosing panel is docked; outside a panel, false. */
 const useInspectorPanelDocked = (): boolean => usePanelState(useContext(InspectorPanelContext))?.docked ?? false;
 
 export const InspectorPanel = {
   Root: InspectorPanelRoot,
+  Frame: InspectorPanelFrame,
   Content: InspectorPanelContent,
   useDocked: useInspectorPanelDocked,
 };

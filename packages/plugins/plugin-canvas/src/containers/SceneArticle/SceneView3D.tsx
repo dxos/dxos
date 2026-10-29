@@ -3,17 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Entity, Obj } from '@dxos/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import {
-  type VersionChange,
-  type VersionedSource,
-  combinedSource,
-  patchSource,
-  recordChanges,
-} from '@dxos/react-ui-canvas/headless';
+import { type VersionedSource, combinedSource, patchSource, recordChanges } from '@dxos/react-ui-canvas/headless';
 import {
   CameraToolbar,
   DisplayPanel,
@@ -52,6 +46,8 @@ import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
 import { ElementForm, elementFormIntents, elementFormValues } from './element-form.ts';
 import { grid3D, sceneChrome } from './scene-chrome.ts';
+import { type SessionHistory, sessionHistory } from './session-history.ts';
+import { useInspectorDock } from './use-inspector-dock.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
 import { canvasViewAspect } from './view-state.ts';
 
@@ -148,8 +144,6 @@ const isTheme3D = (value: string | undefined): value is 'cad' | 'presentation' =
 
 const label = (key: string): [string, { ns: string }] => [key, { ns: CanvasNamespace.key }];
 
-type History = { done: VersionChange[]; undone: VersionChange[] };
-
 /**
  * A 3D canvas: its open `Scene3D`, edited with Scene3DEditor under the canvas's floating panels (tools, actions,
  * inspectors, display); every edit is a `LayoutIntent` written to the layout that owns the element, recorded for undo
@@ -176,7 +170,18 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       combinedSource(Object.fromEntries([...layouts.entries()].map(([key, layout]) => [key, layoutSource(layout)]))),
     [layouts],
   );
-  const history = useRef<History>({ done: [], undone: [] });
+  // The canvas's history for the session, so reopening the article keeps its steps.
+  const history = useMemo(
+    () => ({
+      get current() {
+        return sessionHistory(canvas);
+      },
+      set current(next: SessionHistory) {
+        Object.assign(sessionHistory(canvas), next);
+      },
+    }),
+    [canvas],
+  );
   const [, setHistoryVersion] = useState(0);
 
   const handleIntent = useCallback(
@@ -214,6 +219,8 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
 
   // The orbit, grid and look are this viewer's own view; the scene's camera and theme are the authored ones.
   const view = useScene3DView(canvas);
+  // Docked or floating as this viewer last left the canvas, in either dimension.
+  const dock = useInspectorDock(canvas);
   // One lock per canvas, the 2D canvas's: this viewer's view state over the canvas's own setting.
   const contextId = Entity.getURI(canvas);
   const { readonly: viewReadonly } = useViewState(canvasViewAspect, contextId);
@@ -524,67 +531,70 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   return (
     <Panel.Root role={role}>
       <Panel.Body>
-        <InspectorPanel.Root>
-          <Scene3DEditor
-            document={document}
-            scene={stored.key}
-            editing={editing}
-            selection={selection}
-            tool={tool}
-            readonly={readonly}
-            theme={theme}
-            grid={grid3D(role, view.grid)}
-            onSelect={setSelection}
-            onIntent={handleIntent}
-            onEdit={(layout) => setEditing(layout === document.scenes[0]?.layout ? undefined : layout)}
-            camera={view.camera}
-            onCameraChange={view.onCameraChange}
-            onResize={setViewport}
-          >
-            {/* The floating panels, placed as the 2D canvas places its own. */}
-            <div className='absolute top-2 bottom-14 left-2 pointer-events-none'>
-              <ToolRail
-                groups={toolGroups}
-                tool={tool}
-                same={sameTool}
-                testId={toolTestId}
-                groupEnd={{ Tools: <ReadonlyToggle readonly={readonly} onReadonlyChange={handleReadonlyChange} /> }}
-                onToolChange={setTool}
-              />
-            </div>
-            {/* Every action here edits the scene, so a locked canvas shows none, as the 2D canvas does. */}
-            {!readonly && (
-              <div className='absolute w-max bottom-2 left-1/2 -translate-x-1/2'>
-                <ActionToolbar {...menu} classNames={FLOATING_BAR} attendableId={attendableId} />
+        <InspectorPanel.Root docked={!readonly && dock.docked} readonly={readonly} onDockedChange={dock.onDockedChange}>
+          <InspectorPanel.Frame>
+            <Scene3DEditor
+              document={document}
+              scene={stored.key}
+              editing={editing}
+              selection={selection}
+              tool={tool}
+              readonly={readonly}
+              theme={theme}
+              grid={grid3D(role, view.grid)}
+              // Snapping follows the grid, as in 2D: no grid, no snap.
+              snap={grid3D(role, view.grid)}
+              onSelect={setSelection}
+              onIntent={handleIntent}
+              onEdit={(layout) => setEditing(layout === document.scenes[0]?.layout ? undefined : layout)}
+              camera={view.camera}
+              onCameraChange={view.onCameraChange}
+              onResize={setViewport}
+            >
+              {/* The floating panels, placed as the 2D canvas places its own. */}
+              <div className='absolute top-2 bottom-14 left-2 pointer-events-none'>
+                <ToolRail
+                  groups={toolGroups}
+                  tool={tool}
+                  same={sameTool}
+                  testId={toolTestId}
+                  groupEnd={{ Tools: <ReadonlyToggle readonly={readonly} onReadonlyChange={handleReadonlyChange} /> }}
+                  onToolChange={setTool}
+                />
               </div>
-            )}
-            {cameraActions && current && authored && (
-              <div className='absolute w-max bottom-2 left-2'>
-                <CameraToolbar actions={cameraActions}>{zoomPercent(current, authored)}%</CameraToolbar>
+              {/* Every action here edits the scene, so a locked canvas shows none, as the 2D canvas does. */}
+              {!readonly && (
+                <div className='absolute w-max bottom-2 left-1/2 -translate-x-1/2'>
+                  <ActionToolbar {...menu} classNames={FLOATING_BAR} attendableId={attendableId} />
+                </div>
+              )}
+              {cameraActions && current && authored && (
+                <div className='absolute w-max bottom-2 left-2'>
+                  <CameraToolbar actions={cameraActions}>{zoomPercent(current, authored)}%</CameraToolbar>
+                </div>
+              )}
+              <div className='absolute w-max bottom-2 right-2'>
+                <DisplayPanel
+                  theme={themes.find((option) => option.id === theme) ?? themes[0]}
+                  themes={themes}
+                  override={view.theme}
+                  onThemeChange={(id) => view.onThemeChange(isTheme3D(id) ? id : undefined)}
+                  grid={view.grid ? 'lines' : 'none'}
+                  gridOptions={['lines']}
+                  onGridChange={(grid) => view.onGridChange(grid === 'lines')}
+                />
               </div>
-            )}
-            <div className='absolute w-max bottom-2 right-2'>
-              <DisplayPanel
-                theme={themes.find((option) => option.id === theme) ?? themes[0]}
-                themes={themes}
-                override={view.theme}
-                onThemeChange={(id) => view.onThemeChange(isTheme3D(id) ? id : undefined)}
-                grid={view.grid ? 'lines' : 'none'}
-                gridOptions={['lines']}
-                onGridChange={(grid) => view.onGridChange(grid === 'lines')}
-              />
-            </div>
-            {notice && (
-              <p
-                role='alert'
-                className={mx('absolute top-2 left-1/2 -translate-x-1/2 text-sm text-error-text', FLOATING_BAR)}
-                data-testid='canvas3d.notice'
-              >
-                {notice}
-              </p>
-            )}
-            <InspectorPanel.Content />
-          </Scene3DEditor>
+              {notice && (
+                <p
+                  role='alert'
+                  className={mx('absolute top-2 left-1/2 -translate-x-1/2 text-sm text-error-text', FLOATING_BAR)}
+                  data-testid='canvas3d.notice'
+                >
+                  {notice}
+                </p>
+              )}
+            </Scene3DEditor>
+          </InspectorPanel.Frame>
           {selected && (
             <InspectorSection section={{ ...PROPERTIES, title: t('properties.label') }}>
               <Form.Root

@@ -564,12 +564,8 @@ export const CanvasRoot = ({
                     onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))
                   }
                 >
-                  {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
-            Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
-            caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-                  <div
-                    className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}
-                  >
+                  {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space. */}
+                  <InspectorPanel.Frame classNames={classNames} transparent={transparent}>
                     <div
                       ref={rootRef}
                       tabIndex={0}
@@ -596,8 +592,7 @@ export const CanvasRoot = ({
                     >
                       {children}
                     </div>
-                    <InspectorPanel.Content />
-                  </div>
+                  </InspectorPanel.Frame>
                 </InspectorPanel.Root>
               </SceneLookContext.Provider>
             </CanvasGestureProvider>

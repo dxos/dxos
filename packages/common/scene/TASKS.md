@@ -105,3 +105,4 @@ stage 3; the work stays in dxos/dxos#14282.
         both); GLB node transforms and interleaved buffers; a composite's parts in STL export; the grid and debug view
         toggles spacetime had.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.
+- [ ] **3D snapping to other objects** (alignment guides while moving), after grid snapping (D-64).

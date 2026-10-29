@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { clickSelects, editableTool, orbitButtons, restingCenter } from './tools.ts';
+import { clickSelects, editableTool, groundSnap, orbitButtons, restingCenter } from './tools.ts';
 
 describe('tools', () => {
   test('the orbit tool gives the left button to the orbit; every other tool keeps it', () => {
@@ -31,5 +31,10 @@ describe('tools', () => {
     }
     expect(editableTool({ create: 'cube' }, true)).toBe('select');
     expect(editableTool('move', false)).toBe('move');
+  });
+
+  test('a placed point snaps to the nearest grid point on the ground, and stays put with snapping off', () => {
+    expect(groundSnap({ x: 1.4, y: 0, z: -2.6 }, 1)).toEqual({ x: 1, y: 0, z: -3 });
+    expect(groundSnap({ x: 1.4, y: 0, z: -2.6 }, 0)).toEqual({ x: 1.4, y: 0, z: -2.6 });
   });
 });

@@ -13,6 +13,7 @@ import {
   type GizmoMode,
   type RenderItem,
   SceneLabels,
+  SNAP,
   type Theme3D,
   type WorldTransform,
   isTheme3D,
@@ -23,7 +24,7 @@ import { DEFAULT_CAMERA, onScene, useManifoldGeometry, useOrbit, useSceneRendere
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
-import { type Tool3D, clickSelects, editableTool, orbitButtons, restingCenter } from './tools.ts';
+import { type Tool3D, clickSelects, editableTool, groundSnap, orbitButtons, restingCenter } from './tools.ts';
 
 /**
  * What a left click does: select, transform the selection with a gizmo, link two elements, place one, or (extrude)
@@ -44,6 +45,8 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   theme?: Theme3D;
   /** Draws the ground grid. */
   grid?: boolean;
+  /** Gizmos and placing snap to the grid; holding Alt frees one gesture. */
+  snap?: boolean;
   /** Overlays drawn over the scene (floating panels); their pointer events never reach the scene. */
   children?: ReactNode;
   /** Called with the view's size as it is laid out and resized, e.g. to fit the camera to it. */
@@ -92,6 +95,7 @@ export const Scene3DEditor = ({
   readonly = false,
   theme,
   grid = false,
+  snap = false,
   children,
   onResize,
   camera,
@@ -171,6 +175,18 @@ export const Scene3DEditor = ({
     }
   }, [renderer, shown, view, geometry, size]);
   useLayoutEffect(() => renderer?.setGrid(grid), [renderer, grid]);
+  // Holding Alt frees the gesture under way from the grid.
+  const [alt, setAlt] = useState(false);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => setAlt(event.altKey);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
+    };
+  }, []);
+  useLayoutEffect(() => renderer?.setSnap(snap && !alt), [renderer, snap, alt]);
 
   useLayoutEffect(() => {
     renderer?.select(selection.flatMap((id) => keys.get(id)?.key ?? []));
@@ -219,7 +235,7 @@ export const Scene3DEditor = ({
   );
 
   const onClick = useCallback(
-    (point: { x: number; y: number }, shift: boolean) => {
+    (point: { x: number; y: number }, shift: boolean, free = false) => {
       const { hit, element, frame } = elementAt(point);
       frame !== undefined && setFrameHint(frame);
       if (typeof tool === 'object') {
@@ -227,7 +243,7 @@ export const Scene3DEditor = ({
         if (!hit?.point || unplaced || ('place' in tool && placesCycle(doc, editing, tool.place))) {
           return;
         }
-        const center = toLocal(transform, hit.point);
+        const center = toLocal(transform, groundSnap(hit.point, snap && !free ? SNAP.move : 0));
         const intent: LayoutIntent =
           'create' in tool
             ? {
@@ -264,7 +280,7 @@ export const Scene3DEditor = ({
         onSelect([element]);
       }
     },
-    [elementAt, tool, unplaced, doc, transform, layout, editing, linkFrom, selection, onIntent, onSelect],
+    [elementAt, tool, unplaced, doc, transform, layout, editing, linkFrom, selection, onIntent, onSelect, snap],
   );
 
   const onDoubleClick = useCallback(
@@ -374,7 +390,7 @@ export const Scene3DEditor = ({
         // A gizmo drag, however short, is not a click.
         const dragged = renderer?.takeDrag() || renderer?.dragging;
         if (start && !moved && !dragged && clickSelects(tool)) {
-          onClick(local(event), event.shiftKey);
+          onClick(local(event), event.shiftKey, event.altKey);
         }
       }}
       onDoubleClick={(event) => onScene(event.nativeEvent) && onDoubleClick(local(event))}

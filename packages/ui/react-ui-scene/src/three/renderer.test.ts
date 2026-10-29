@@ -87,6 +87,16 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.boxes).toEqual({});
   });
 
+  test('with snapping on, a gizmo moves by the grid unit, turns by 15 degrees and scales by a tenth; off, freely', () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    view.setSnap(true);
+    view.attachGizmo('a', 'move', () => {});
+    expect(view.gizmoSnap).toEqual({ move: 1, rotate: 15, scale: 0.1 });
+    view.setSnap(false);
+    expect(view.gizmoSnap).toEqual({ move: 0, rotate: 0, scale: 0 });
+    view.dispose();
+  });
+
   test('the ground grid is hidden until shown, and hides again', () => {
     const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.grid).toBe(false);

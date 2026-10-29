@@ -638,3 +638,47 @@ decision D-60: A shape created in 3D rests on the ground rather than being centr
   for: user:richburdon
   why: A shape through the ground plane shows the grid across it; the 2D canvas has no rotation or scale steppers to match, so these are new values.
 ```
+
+```mdl
+decision D-61: Copying a selection puts it on the system clipboard as `.dx` text (beside the in-app copy), so it pastes across canvases, into documents and to the assistant, and `.dx` text pastes back in; in both dimensions.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-62: Pasting 2D elements into a 3D scene lifts them onto the ground plane by the lift rule of [D-15]; pasting 3D elements into a 2D scene flattens them to the top-down view.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-63: A canvas's undo history lasts for the session: it survives closing and reopening the article but is not persisted, and a remote edit is skipped rather than undone. Make object is undoable through an inverse model intent. In both dimensions.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-64: In 3D, a gizmo move snaps to the ground grid's minor unit, a rotation to 15 degrees and a scale to 0.1, and a new object is placed on a grid point; snapping follows the viewer's grid toggle (no grid, no snap), and holding Alt turns it off for that gesture.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-65: The 3D Properties form's style fields are the 2D canvas's own field components and layout (colour picker, tone, surface, border and rounded toggles, opacity, line style), shared from react-ui-canvas and generalised where needed rather than copied.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-66: 2D and 3D scenes share one inspector panel, which docks in both.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-67: The panel and the view sit in one shared frame (`InspectorPanel.Frame`), and the dock choice is the canvas's view state, so a viewer's choice holds in either dimension; a 3D canvas's undo history lasts for the session, kept per canvas. Fills in [D-63] and [D-66].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One frame keeps the panel's placement identical; keying the history by the canvas object keeps it across reopening without persisting it.
+```

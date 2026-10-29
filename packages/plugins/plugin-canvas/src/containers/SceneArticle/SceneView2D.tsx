@@ -27,7 +27,6 @@ import {
   type Element,
   type FreehandProjectionOptions,
   type GraphModel,
-  type InspectorMode,
   MAX_ZOOM,
   type Node,
   type Overlay,
@@ -76,6 +75,7 @@ import {
   useReconciledMigrations,
 } from '../CanvasArticle/use-canvas-scene.ts';
 import { display2D, sceneChrome } from './scene-chrome.ts';
+import { useInspectorDock } from './use-inspector-dock.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 /** What a drawing surface passes a scene view, beside the canvas it shows. */
@@ -252,7 +252,6 @@ export const CanvasEngineView = ({
   const {
     camera: savedCamera,
     readonly: viewReadonly,
-    floating = true,
     grid: snap,
     guides,
     fit,
@@ -268,10 +267,8 @@ export const CanvasEngineView = ({
   // Only the main article draws the canvas chrome (top edge, bars, panels, grid, guides); elsewhere it is the bare drawing.
   const { editing: article } = sceneChrome(role);
   const readonly = (viewReadonly ?? record?.readonly ?? false) || embedded || newer;
-  const handleInspectorsChange = useCallback(
-    (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
-    [updateViewState],
-  );
+  // Docked or floating as this viewer last left the canvas, in either dimension.
+  const dock = useInspectorDock(canvas);
   const handleReadonlyChange = useCallback(
     (readonly: boolean) => updateViewState((state) => ({ ...state, readonly })),
     [updateViewState],
@@ -382,8 +379,8 @@ export const CanvasEngineView = ({
               initialDisplay={display2D(role, { snap, guides, fit })}
               // Outside the article the grid and guides are forced off, so this view must not write that back as the setting.
               onDisplayChange={article ? handleDisplayChange : undefined}
-              inspectors={floating ? 'floating' : 'docked'}
-              onInspectorsChange={handleInspectorsChange}
+              inspectors={dock.docked ? 'docked' : 'floating'}
+              onInspectorsChange={(mode) => dock.onDockedChange(mode === 'docked')}
               generators={generators}
               compileGenerator={generatorCompiler}
               createGeneratorWorker={createGeneratorWorker}

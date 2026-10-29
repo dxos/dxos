@@ -146,6 +146,9 @@ const SETTLE_FRAMES = 120;
 /** Frames drawn after a selection changes, so the outline's effect compiles and shows. */
 const OUTLINE_FRAMES = 3;
 
+/** What the gizmos snap to with snapping on: the ground grid's minor unit, 15 degrees and a tenth of the size. */
+export const SNAP = { move: 1, rotate: 15, scale: 0.1 } as const;
+
 /** The ground grid's half-width, in scene units. */
 const GRID_EXTENT = 20;
 
@@ -161,6 +164,7 @@ export class SceneRenderer3D {
   readonly #observed = new WeakSet<object>();
   #looping = false;
   #settling = false;
+  #snap = false;
   #selected = new Set<string>();
   readonly #scene: Scene;
   readonly #camera: ArcRotateCamera;
@@ -224,6 +228,17 @@ export class SceneRenderer3D {
     return Object.fromEntries(
       [...this.#boxes].map(([key, { min, max }]) => [key, { min, max, color: this.#selection }]),
     );
+  }
+
+  /** Turns gizmo snapping on (to the grid unit, 15 degrees and a tenth) or off. */
+  setSnap(snap: boolean): void {
+    this.#snap = snap;
+    this.#applySnap();
+  }
+
+  /** The steps the gizmos snap to: a move in scene units, a turn in degrees, a scale factor; zero when free. */
+  get gizmoSnap(): { move: number; rotate: number; scale: number } {
+    return this.#snap ? { move: SNAP.move, rotate: SNAP.rotate, scale: SNAP.scale } : { move: 0, rotate: 0, scale: 0 };
   }
 
   /** Changes the selection colour, e.g. when the theme does. */
@@ -345,6 +360,7 @@ export class SceneRenderer3D {
     gizmos.rotationGizmoEnabled = mode === 'rotate';
     gizmos.scaleGizmoEnabled = mode === 'scale';
     gizmos.attachToMesh(mesh);
+    this.#applySnap();
     this.#gizmoEnd = onEnd;
     for (const gizmo of [gizmos.gizmos.positionGizmo, gizmos.gizmos.rotationGizmo, gizmos.gizmos.scaleGizmo]) {
       if (gizmo && !this.#observed.has(gizmo)) {
@@ -393,6 +409,14 @@ export class SceneRenderer3D {
     this.#looping && this.#engine.stopRenderLoop();
     this.#scene.dispose();
     this.#engine.dispose();
+  }
+
+  #applySnap(): void {
+    const { move, rotate, scale } = this.gizmoSnap;
+    const gizmos = this.#gizmos?.gizmos;
+    gizmos?.positionGizmo && (gizmos.positionGizmo.snapDistance = move);
+    gizmos?.rotationGizmo && (gizmos.rotationGizmo.snapDistance = (rotate * Math.PI) / 180);
+    gizmos?.scaleGizmo && (gizmos.scaleGizmo.snapDistance = scale);
   }
 
   /** Whether the scene's materials and the selection outline's layer have compiled. */
