@@ -15,6 +15,7 @@ import { trim } from '@dxos/util';
 
 import { BrainNamespace } from './src/namespace.ts';
 import * as BrainCapabilities from './src/types/BrainCapabilities.ts';
+import * as BrainSurface from './src/types/BrainSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -74,7 +75,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/project-templates.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.plugin.brain.surface.facts'],
+      roles: [BrainSurface.Facts],
     }),
     Capability.lazyModule(
       'ReplyGenerator',

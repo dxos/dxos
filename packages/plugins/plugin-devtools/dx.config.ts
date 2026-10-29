@@ -6,6 +6,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as DebugSurface from '@dxos/plugin-debug/DebugSurface';
 import { trim } from '@dxos/util';
 
 import { DevtoolsNamespace } from './src/namespace.ts';
@@ -47,11 +49,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } })),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [
-        'org.dxos.plugin.debug.surface.page',
-        'org.dxos.role.deckCompanion.devtoolsOverview',
-        'org.dxos.role.devtoolsOverview',
-      ],
+      roles: [DebugSurface.Page, AppRole.deckCompanion('devtoolsOverview'), AppRole.DevtoolsOverview],
     }),
     Capability.lazyModule(
       'setup-devtools',

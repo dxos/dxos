@@ -7,8 +7,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as PresenterCapabilities from '@dxos/plugin-presenter/PresenterCapabilities';
 import * as PresenterEvents from '@dxos/plugin-presenter/PresenterEvents';
+import * as PresenterSurface from '@dxos/plugin-presenter/PresenterSurface';
 import { trim } from '@dxos/util';
 
 import { RecorderNamespace } from './src/namespace.ts';
@@ -47,11 +49,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [
-        'org.dxos.plugin.presenter.role.toolbar',
-        'org.dxos.plugin.presenter.role.overlay',
-        'org.dxos.role.article',
-      ],
+      roles: [PresenterSurface.Toolbar, PresenterSurface.Overlay, AppRole.Article],
     }),
     // Rides the presenter's start event: the recorder is only reachable from a presentation.
     Capability.lazyModule(

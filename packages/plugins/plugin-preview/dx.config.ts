@@ -5,6 +5,7 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import { trim } from '@dxos/util';
 
 import { PreviewNamespace } from './src/namespace.ts';
@@ -43,7 +44,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/preview-popover.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.cardContent', 'org.dxos.role.cardIcon', 'org.dxos.role.article'],
+      roles: [AppRole.CardContent, AppRole.CardIcon, AppRole.Article],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),

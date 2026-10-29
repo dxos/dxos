@@ -7,6 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import { trim } from '@dxos/util';
 
 import { SearchNamespace } from './src/namespace.ts';
@@ -63,7 +64,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.deckCompanion.search', 'org.dxos.role.dialog', 'org.dxos.role.searchInput'],
+      roles: [AppRole.deckCompanion('search'), AppRole.Dialog, AppRole.SearchInput],
     }),
     Capability.lazyModule(
       'translations',

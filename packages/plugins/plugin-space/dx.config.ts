@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -18,6 +19,7 @@ import { SpaceOperationConfig } from './src/operations/helpers.ts';
 import * as SpaceCapabilities from './src/types/SpaceCapabilities.ts';
 import * as SpaceCapability from './src/types/SpaceCapability.ts';
 import * as SpaceSchema from './src/types/SpaceSchema.ts';
+import * as SpaceSurface from './src/types/SpaceSurface.ts';
 
 // Its own line in the module list, so composer-app's hot-reload demo (QA-16) can drop it with one edit.
 const AppGraphBuilder = Capability.lazyModule(
@@ -124,17 +126,17 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
-        'org.dxos.plugin.space.role.homeContent',
-        'org.dxos.role.article',
-        'org.dxos.role.cardMasonry',
-        'org.dxos.role.dialog',
-        'org.dxos.role.formInput',
-        'org.dxos.role.navbarEnd',
-        'org.dxos.role.navtreeItemEnd',
-        'org.dxos.role.objectProperties',
-        'org.dxos.role.popover',
-        'org.dxos.role.section',
-        'org.dxos.role.statusIndicator',
+        SpaceSurface.SpaceHomeContent,
+        AppRole.Article,
+        AppRole.CardMasonry,
+        AppRole.Dialog,
+        AppRole.FormInput,
+        AppRole.NavbarEnd,
+        AppRole.NavtreeItemEnd,
+        AppRole.ObjectProperties,
+        AppRole.Popover,
+        AppRole.Section,
+        AppRole.StatusIndicator,
       ],
     }),
     Capability.lazyModule(

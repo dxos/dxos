@@ -4,6 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import { trim } from '@dxos/util';
 
 import { MobileNamespace } from './src/namespace.ts';
@@ -32,7 +33,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article'],
+      roles: [AppRole.Article],
     }),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'module-url' } })),

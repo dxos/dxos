@@ -4,6 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as DeckRole from '@dxos/plugin-deck/DeckRole';
 import { trim } from '@dxos/util';
 
 import { StatusBarNamespace } from './src/namespace.ts';
@@ -23,11 +24,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   },
   modules: [
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [
-        'org.dxos.plugin.statusBar.role.footer',
-        'org.dxos.plugin.statusBar.role.statusBar',
-        'org.dxos.plugin.statusBar.role.versionInfo',
-      ],
+      roles: [DeckRole.StatusBarFooter, DeckRole.StatusBar, DeckRole.VersionInfo],
     }),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],

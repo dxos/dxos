@@ -7,7 +7,7 @@
 import type * as Schema from 'effect/Schema';
 import { type ComponentType, type ReactNode } from 'react';
 
-import * as Role from '@dxos/app-framework/Role';
+import type * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -17,7 +17,35 @@ import type { MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Actor, SpaceInvitationMessage } from '@dxos/types';
 
+import * as AppRole from '../../../app-framework/AppRole.ts';
 import { AppCapabilities } from '../../../app-framework/index.ts';
+
+// Role tokens are defined headlessly in `AppRole` (for `dx.config.ts`) and surfaced here beside their filters.
+export const Article = AppRole.Article;
+export const CardContent = AppRole.CardContent;
+export const CardIcon = AppRole.CardIcon;
+export const CardMasonry = AppRole.CardMasonry;
+export const CardMenu = AppRole.CardMenu;
+export const ContactPicker = AppRole.ContactPicker;
+export const deckCompanion = AppRole.deckCompanion;
+export const DevtoolsOverview = AppRole.DevtoolsOverview;
+export const Dialog = AppRole.Dialog;
+export const DocumentTitle = AppRole.DocumentTitle;
+export const Drawer = AppRole.Drawer;
+export const FormInput = AppRole.FormInput;
+export const MenuFooter = AppRole.MenuFooter;
+export const NavbarEnd = AppRole.NavbarEnd;
+export const Navigation = AppRole.Navigation;
+export const NavtreeItemEnd = AppRole.NavtreeItemEnd;
+export const ObjectProperties = AppRole.ObjectProperties;
+export const Popover = AppRole.Popover;
+export const Related = AppRole.Related;
+export const SearchInput = AppRole.SearchInput;
+export const Section = AppRole.Section;
+export const Slide = AppRole.Slide;
+export const SpaceInvitation = AppRole.SpaceInvitation;
+export const StatusIndicator = AppRole.StatusIndicator;
+export const Tabpanel = AppRole.Tabpanel;
 
 //
 // Internal type helpers
@@ -245,11 +273,6 @@ export const companion: {
 // Article
 //
 
-/** Role token for the `article` role. Subject defaults to `any` until narrowed
- * via {@link object}, {@link literal}, or {@link subject}. Extra passthrough
- * props are permitted. */
-export const Article: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.article');
-
 /** Surface data for article role (from PlankComponent). */
 export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = unknown> = {
   attendableId: string;
@@ -372,24 +395,8 @@ export const settings: {
 // Section
 //
 
-/** Role token for the `section` role. */
-export const Section: Role.Role<SectionData<any>> = Role.make('org.dxos.role.section');
-
-/** Role token for the `slide` role. Shares the section data shape. */
-export const Slide: Role.Role<SectionData<any>> = Role.make('org.dxos.role.slide');
-
-/** Role token for the `tabpanel` role. Shares the article data shape. */
-export const Tabpanel: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.tabpanel');
-
 /** Roles whose data contract requires a string `attendableId`. */
 const ATTENDABLE_ROLES = new Set([Article.role, Section.role, Tabpanel.role]);
-
-/**
- * Role token for the `related` role. Related panels may render in both
- * plank (attendable) and popover (non-attendable) contexts, so `attendableId`
- * is optional here.
- */
-export const Related: Role.Role<{ attendableId?: string; subject: any }> = Role.make('org.dxos.role.related');
 
 /**
  * Surface data for section role (from StackSection). Sections always render
@@ -428,12 +435,6 @@ export type ObjectSectionProps<
 // Object Properties
 //
 
-/**
- * Role token for the `objectProperties` role (per-object configuration panel).
- * Distinct from Section: no `attendableId` requirement.
- */
-export const ObjectProperties: Role.Role<ObjectPropertiesData<any>> = Role.make('org.dxos.role.objectProperties');
-
 /** Surface data for object-properties surfaces (distinct from section; no attendableId). */
 export type ObjectPropertiesData<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
   subject: Subject;
@@ -450,29 +451,6 @@ export type ObjectPropertiesProps<
 //
 // Card
 //
-
-/**
- * Role token for the card header's leading depiction — a person's avatar, an organization's logo,
- * a type's glyph.
- *
- * Scoped to the card deliberately, rather than declared once per type: how an object is depicted
- * depends on the space it gets. A 6-unit card block affords initials or a photograph; a 16px navtree
- * row does not, and those surfaces keep resolving `IconAnnotation` through `Obj.getIcon`. A type
- * contributing here says how it looks IN A CARD, and says nothing about anywhere else.
- *
- * Unlike {@link CardContent}, a miss is not "render nothing" — every object needs some depiction —
- * so hosts check {@link Surface.useIsAvailable} and fall back. `CardIconSlot` packages that pair.
- */
-export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardIcon');
-
-/** Role token for the card slot. */
-export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
-
-/**
- * Card header menu items a type contributes. The surface renders nothing: it registers items with the
- * host's `menu` via `useMenuContribution`, so hosts render it through `CardMenuSlot`.
- */
-export const CardMenu: Role.Role<CardMenuData<any>> = Role.make('org.dxos.role.cardMenu');
 
 /** Surface data for the card menu role. */
 export type CardMenuData<Subject = unknown> = {
@@ -495,15 +473,6 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
 export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subject, Props> & {
   role?: string;
 };
-
-/**
- * Role token for the `cardMasonry` role: several objects laid out as cards.
- *
- * The host supplies the objects — a task's artifacts, a record's attachments — rather than the
- * surface deriving them from a subject, which is what separates this from {@link Related}: the
- * caller already knows what belongs in the grid and only wants it rendered.
- */
-export const CardMasonry: Role.Role<CardMasonryData> = Role.make('org.dxos.role.cardMasonry');
 
 /** Surface data for the card-masonry role. */
 export type CardMasonryData = {
@@ -560,12 +529,6 @@ export type ObjectCardProps<Subject extends Obj.Unknown | undefined = Obj.Unknow
 // Dialog / Popover
 //
 
-/** Role token for the `dialog` role. */
-export const Dialog: Role.Role<DialogData> = Role.make('org.dxos.role.dialog');
-
-/** Role token for the `popover` role. */
-export const Popover: Role.Role<DialogData> = Role.make('org.dxos.role.popover');
-
 /**
  * Surface data for dialog/popover role.
  *
@@ -620,30 +583,6 @@ export const component = <ComponentProps = any, Component extends string = strin
 // Chrome
 //
 
-/** Role token for the `navigation` role. */
-export const Navigation: Role.Role<NavigationData> = Role.make('org.dxos.role.navigation');
-
-/** Role token for the `menuFooter` role (was `menu-footer`). */
-export const MenuFooter: Role.Role<MenuFooterData<unknown>> = Role.make('org.dxos.role.menuFooter');
-
-/** Role token for the `navbarEnd` role (was `navbar-end`). */
-export const NavbarEnd: Role.Role<NavbarEndData<unknown>> = Role.make('org.dxos.role.navbarEnd');
-
-/** Role token for the `documentTitle` role (was `document-title`). */
-export const DocumentTitle: Role.Role<DocumentTitleData<unknown>> = Role.make('org.dxos.role.documentTitle');
-
-/** Role token for the `statusIndicator` role (was `status-indicator`). */
-export const StatusIndicator: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.statusIndicator');
-
-/** The deck's bottom drawer; one contributor renders at a time. */
-export const Drawer: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.drawer');
-
-/**
- * Slot for the devtools-overview sub-surface. Defined here (not in plugin-devtools) so public
- * contributor plugins can target it without depending on the private devtools plugin.
- */
-export const DevtoolsOverview: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.devtoolsOverview');
-
 /**
  * Data passed to FormInput surface components by `useInputSurfaceLookup`.
  * Extra fields from `baseData` are accessible as `unknown` via the index signature.
@@ -654,9 +593,6 @@ export type FormInputData = {
   fieldPropertyAst?: SchemaAST.AST;
   [key: string]: unknown;
 };
-
-/** Role token for the `formInput` role (was `form-input`). */
-export const FormInput: Role.Role<FormInputData> = Role.make('org.dxos.role.formInput');
 
 /** Filter FormInput surfaces by a typed data predicate. */
 export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> =>
@@ -677,9 +613,6 @@ export type NavtreeItemEndData<Subject = unknown> = {
   open?: boolean;
 };
 
-/** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
-export const NavtreeItemEnd: Role.Role<NavtreeItemEndData> = Role.make('org.dxos.role.navtreeItemEnd');
-
 /** Data for the contact-picker slot on a space's members article. */
 export type ContactPickerData = {
   space: Space;
@@ -689,35 +622,8 @@ export type ContactPickerData = {
   ) => Promise<{ joinUrl: string; failed: readonly { key: string; error: string }[] }>;
 };
 
-/** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
-export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
-
 /** Data for the space-invitation slot: the invitation block's data plus who sent the message. */
 export type SpaceInvitationData = SpaceInvitationMessage.Data & { sender?: Actor.Actor };
-
-/** Slot for a space invitation carried by a message (see `SpaceInvitationMessage`); filled by the client plugin. */
-export const SpaceInvitation: Role.Role<SpaceInvitationData> = Role.make(SpaceInvitationMessage.SPACE_INVITATION_ROLE);
-
-/** Role token for the `searchInput` role (was `search-input`). */
-export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');
-
-/**
- * Creates a role token for a deck companion variant. Both the deck consumer
- * (building the `<Surface type={...} />`) and contributing plugins (registering
- * via `Surface.create({ filter: AppSurface.subject(AppSurface.deckCompanion(id), ...) })`)
- * must call this factory with the same variant id so they agree on the dispatch NSID.
- *
- * Variant ids must be camelCase alphanumeric (DXN rule: no hyphens in the final segment).
- * The deck passes the companion's graph node `id`, which is the surface's attendable id.
- */
-export const deckCompanion = (variant: string): Role.Role<{ id?: string; subject?: any }> => {
-  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(variant)) {
-    throw new Error(
-      `Invalid deck companion variant id: "${variant}". Must be camelCase alphanumeric (no hyphens or underscores).`,
-    );
-  }
-  return Role.make(`org.dxos.role.deckCompanion.${variant}` as any);
-};
 
 /** Surface data for navigation role. */
 export type NavigationData<Props extends {} = {}> = {

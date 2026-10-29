@@ -10,6 +10,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as ProjectView from '@dxos/plugin-projects/ProjectView';
 import { trim } from '@dxos/util';
 
 import { ClaudeNamespace } from './src/namespace.ts';
@@ -69,7 +70,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.plugin.projects.role.settings'],
+      roles: [ProjectView.Settings],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.operationHandler(

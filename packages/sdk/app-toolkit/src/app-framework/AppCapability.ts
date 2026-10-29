@@ -10,6 +10,7 @@ import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
+import type * as Role from '@dxos/app-framework/Role';
 import { type Type } from '@dxos/echo';
 
 import { type Translations } from '../app/index.ts';
@@ -201,8 +202,8 @@ const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.module
 );
 
 /**
- * Module maker contributing React surfaces. Declaring `roles` (the role NSIDs the module's
- * surfaces bind) gates the module on those roles' demand events
+ * Module maker contributing React surfaces. Declaring `roles` (the role tokens the module's
+ * surfaces bind, from the headless `AppRole` module or a plugin's own role module) gates the module on those roles' demand events
  * ({@link ActivationEvents.SurfacesRequested}) — it loads when a `Surface` for one of its roles
  * first renders instead of at startup. Modules without declared roles stay eager; an explicit
  * `activatesOn` wins over the derived gate.
@@ -214,9 +215,10 @@ export const surface = <
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
   loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.ReactSurface, ...Extra]>,
-  options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly string[] },
+  options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & { roles?: readonly Role.Role<any>[] },
 ): Capability$.Module<Options> => {
-  const { roles, ...rest } = options ?? {};
+  const { roles: tokens, ...rest } = options ?? {};
+  const roles = tokens?.map((token) => token.role);
   return surfaceMaker(roles?.length ? withDeclaredRolesCheck(loader, roles) : loader, {
     ...rest,
     environments: rest.environments ?? ['browser', 'tauri'],

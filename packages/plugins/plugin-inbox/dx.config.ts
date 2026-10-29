@@ -6,6 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
@@ -92,12 +93,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
-        'org.dxos.role.article',
-        'org.dxos.role.cardContent',
-        'org.dxos.role.objectProperties',
-        'org.dxos.role.popover',
-        'org.dxos.role.related',
-        'org.dxos.role.section',
+        AppRole.Article,
+        AppRole.CardContent,
+        AppRole.ObjectProperties,
+        AppRole.Popover,
+        AppRole.Related,
+        AppRole.Section,
       ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),

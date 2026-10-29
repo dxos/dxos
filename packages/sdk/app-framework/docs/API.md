@@ -89,7 +89,8 @@ contribute a declared `provides` is also a type error.
 
 ```ts
 AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-  roles: ['org.dxos.role.article'],
+  // Role tokens from the headless `@dxos/app-toolkit/AppRole` (or the plugin's own role module).
+  roles: [AppRole.Article],
 });
 AppCapability.appGraphBuilder(
   () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
@@ -117,7 +118,7 @@ const config: Plugin.PluginConfig = Plugin.config({
   plugin: { key: FooNamespace.key, name: 'Foo', author: 'DXOS', icon: { key: 'ph--cube--regular' }, tags: ['labs'] },
   modules: [
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article'],
+      roles: [AppRole.Article],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),

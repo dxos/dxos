@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppRole from '@dxos/app-toolkit/AppRole';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { trim } from '@dxos/util';
@@ -110,7 +111,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       activatesOn: ClientEvents.Initialized,
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.activeCall', 'org.dxos.role.devtoolsOverview'],
+      roles: [AppRole.Article, AppRole.deckCompanion('activeCall'), AppRole.DevtoolsOverview],
     }),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],

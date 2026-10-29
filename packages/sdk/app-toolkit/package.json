@@ -41,6 +41,11 @@
       "types": "./dist/types/src/app-framework/AppCapabilities.d.ts",
       "import": "./dist/lib/app-framework/AppCapabilities.mjs"
     },
+    "./AppRole": {
+      "source": "./src/app-framework/AppRole.ts",
+      "types": "./dist/types/src/app-framework/AppRole.d.ts",
+      "import": "./dist/lib/app-framework/AppRole.mjs"
+    },
     "./AppCapability": {
       "source": "./src/app-framework/AppCapability.ts",
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
