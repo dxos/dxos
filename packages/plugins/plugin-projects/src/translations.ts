@@ -66,6 +66,7 @@ export const translations = [
         'views.label': 'Views',
         'overview.label': 'Overview',
         'spec.label': 'Spec',
+        'add-spec.label': 'Add spec',
         'spec-summary.features.label_one': '{{count}} feature',
         'spec-summary.features.label_other': '{{count}} features',
         'spec-summary.open-tasks.label_one': '{{count}} has open tasks',

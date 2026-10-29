@@ -40,7 +40,7 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { Feature, ProjectCapabilities, ProjectOperation, ProjectView, type Spec } from '#types';
+import { Feature, FeatureOperation, ProjectCapabilities, ProjectOperation, ProjectView, type Spec } from '#types';
 
 import { useFeatureGraph, useProjectSpec, useRefTargets, useSpecTreeIds } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
@@ -102,7 +102,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
   const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
-  // The Spec tab is offered only while a spec names the project; a saved `spec` tab falls back to the overview.
+  // The Spec tab is offered only while the project owns a spec; a saved `spec` tab falls back to the overview.
   const spec = useProjectSpec(subject);
   const shownTab: ProjectView.Tab = tab === 'spec' && !spec ? 'overview' : tab;
   const openSpec = useCallback(() => setTab('spec'), [setTab]);
@@ -170,8 +170,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const menuActions = useToolbarActions({
     project: subject,
     tabs,
+    hasSpec: !!spec,
     checkedTasks: delegatableTasks,
     showPipeline,
+    onSpecAdded: openSpec,
     onAddArtifact: () => void handleAddArtifact(),
     onDelegated: handleDelegated,
     onTogglePipeline: togglePipeline,
@@ -506,6 +508,8 @@ export type ToolbarActionsProps = {
   project: Project.Project;
   /** The view tabs, rendered as the bar's leading item. */
   tabs: ReactNode;
+  /** Whether the project owns a spec; without one the bar offers to add it. */
+  hasSpec: boolean;
   /** The checked rows not already with the agent, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
   /** Whether the pipeline chart is shown under the ledger. */
@@ -514,6 +518,8 @@ export type ToolbarActionsProps = {
   /** Called once the checked tasks are delegated, so the boxes clear with the work. */
   onDelegated: () => void;
   onTogglePipeline: () => void;
+  /** Called once a new spec is the project's, so the reader lands on its tab. */
+  onSpecAdded: () => void;
 };
 
 /**
@@ -524,11 +530,13 @@ export type ToolbarActionsProps = {
 const useToolbarActions = ({
   project,
   tabs,
+  hasSpec,
   checkedTasks,
   showPipeline,
   onAddArtifact,
   onDelegated,
   onTogglePipeline,
+  onSpecAdded,
 }: ToolbarActionsProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   // The handler resolves `Database.Service`, which only the space context supplies — without this
@@ -553,6 +561,22 @@ const useToolbarActions = ({
     await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
     await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
   }, [invokePromise, project, spaceId]);
+
+  // Named after the project, which owns it from the start.
+  const addSpec = useCallback(async () => {
+    if (!spaceId) {
+      return;
+    }
+
+    const { data } = await invokePromise(
+      FeatureOperation.CreateSpec,
+      { name: project.name ?? '', project: Ref.make(project) },
+      { spaceId },
+    );
+    if (data?.spec) {
+      onSpecAdded();
+    }
+  }, [invokePromise, project, spaceId, onSpecAdded]);
 
   // Held in state so the bar redraws disabled for the whole invocation: a ref would guard the
   // handler but leave the button live, and the operation runs long enough (chat, bind, first turn)
@@ -619,6 +643,21 @@ const useToolbarActions = ({
           },
           () => void delegateTasks(),
         )
+        // Only while the project has no spec: once it has one, its tab is the way in.
+        .subgraph(
+          !hasSpec &&
+            ((group) =>
+              group.action(
+                'add-spec',
+                {
+                  label: ['add-spec.label', { ns: ProjectsNamespace.key }],
+                  icon: 'ph--blueprint--regular',
+                  disposition: 'toolbar',
+                  testId: 'projectsPlugin.addSpec',
+                },
+                () => void addSpec(),
+              )),
+        )
         // A toggle rather than a tab: the chart accompanies the ledger rather than replacing it.
         .group(
           'view',
@@ -664,6 +703,8 @@ const useToolbarActions = ({
       onAddArtifact,
       createChat,
       delegateTasks,
+      hasSpec,
+      addSpec,
       checkedTasks.length,
       delegating,
       showPipeline,

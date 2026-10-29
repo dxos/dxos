@@ -386,10 +386,11 @@ export const WithSpec: Story = {
     await userEvent.click(within(summary).getByRole('button', { name: SPEC_NAME }));
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
+    await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
   },
 };
 
-/** A project without a spec: no Spec tab and no summary line. */
+/** A project without a spec: no Spec tab or summary line until Add spec gives it one, which opens its tab. */
 export const WithoutSpec: Story = {
   args: { ...Default.args, projectName: OTHER_PROJECT_NAME },
   play: async ({ canvasElement }) => {
@@ -399,6 +400,11 @@ export const WithoutSpec: Story = {
     await expect(canvas.findByTestId('projectsPlugin.tab.tasks')).resolves.toBeTruthy();
     await expect(canvas.queryByTestId('projectsPlugin.tab.spec')).toBeNull();
     await expect(canvas.queryByTestId('projectsPlugin.specSummary')).toBeNull();
+
+    await userEvent.click(canvas.getByTestId('projectsPlugin.addSpec'));
+    const specTab = await canvas.findByTestId('projectsPlugin.tab.spec', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(specTab.getAttribute('aria-selected')).toBe('true'));
+    await waitFor(() => expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull());
   },
 };
 
