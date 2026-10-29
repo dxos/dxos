@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { defaultLinkRegistry, defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultLinkRegistry, defaultNodeRegistry } from '../components/index.ts';
 import { CREATE_GROUP, TOOLS_GROUP, pressSelects, toolGroups } from './tools.ts';
 
 describe('toolGroups', () => {

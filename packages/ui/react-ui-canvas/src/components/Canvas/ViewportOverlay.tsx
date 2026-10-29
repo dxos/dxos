@@ -6,18 +6,22 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import * as Menu from '@dxos/react-ui/Menu';
-import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
-import { type Camera, type SceneLook, isInstanceNode } from '../../model/index.ts';
-import { isAnonymous } from '../../utils/index.ts';
+import { type Camera, MAJOR_GRID, type SceneLook, isInstanceNode } from '../../model/index.ts';
+import { isAnonymous, sceneMenuItems } from '../../utils/index.ts';
 import { GrainOverlay } from '../Background/index.ts';
+import { SceneContextMenu } from '../SceneContextMenu/index.ts';
 import {
+  useCanvasDocument,
   useCanvasEditing,
   useCanvasGesture,
   useCanvasNavigation,
   useCanvasSelection,
   useCanvasServices,
 } from './CanvasContext.ts';
+
+/** How far a duplicate lands from what it copies, as Cmd+D does: one major grid step. */
+const DUPLICATE_STEP = { x: MAJOR_GRID, y: MAJOR_GRID };
 
 export type ViewportOverlayProps = {
   camera: Camera;
@@ -40,6 +44,7 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
   const clipboard = useAtomValue(editingAspect.atoms.clipboard);
   const history = useAtomValue(document.history);
   const { copy, cut, paste } = editingAspect.commands;
+  const { intents } = useCanvasDocument('Canvas.Viewport');
   const views = useAtomValue(store.views);
   // The one instance selected, which the element menu offers to edit, ungroup or make unique.
   const selectedInstance = useMemo(() => {
@@ -56,111 +61,88 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
       )}
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
       {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
-      <span
-        ref={menuAnchorRef}
-        className='absolute size-0 pointer-events-none'
-        style={{ left: menu?.at.x ?? 0, top: menu?.at.y ?? 0 }}
-      />
-      <Menu.Root
-        open={menu !== undefined}
-        onOpenChange={({ open }) => !open && closeMenu()}
-        positioning={{
-          ...VirtualAnchor.virtualAnchor(menuAnchorRef),
-          placement: 'right',
-          gutter: 4,
-          overflowPadding: 8,
+      {/* The anchor the gesture machine parks the menu at, which positions it. */}
+      <span ref={menuAnchorRef} className='hidden' />
+      <SceneContextMenu
+        at={menu?.at}
+        items={
+          menu?.kind === 'point' || menu === undefined
+            ? []
+            : sceneMenuItems({
+                kind: menu.kind,
+                readonly,
+                canUndo: history.canUndo,
+                canRedo: history.canRedo,
+                canPaste: clipboard !== undefined,
+                canCreate: capabilities.create === true,
+                canDelete: capabilities.delete === true,
+                canGroup: capabilities.create === true && capabilities.delete === true && selection.size > 0,
+                canUngroup:
+                  selectedInstance !== undefined && capabilities.create === true && capabilities.delete === true,
+                // A 2D object is made by grouping, which Group already offers.
+                canMakeObject: false,
+              }).filter((item) => item.id !== 'make-object')
+        }
+        onCommand={(command) => {
+          switch (command) {
+            case 'undo':
+              return document.undo();
+            case 'redo':
+              return document.redo();
+            case 'cut':
+              return cut();
+            case 'copy':
+              return copy();
+            case 'paste':
+              return paste(menu?.scene);
+            case 'duplicate':
+              return void intents.duplicate(selection, DUPLICATE_STEP);
+            case 'delete':
+              return void selectionAspect.commands.delete();
+            case 'group':
+              return void selectionAspect.commands.group();
+            case 'ungroup':
+              return void selectionAspect.commands.ungroup();
+          }
         }}
-      >
-        <Menu.Content>
-          {/* Undo and redo lead every menu but a control point's, as they lead the app's own context menu. */}
-          {(menu?.kind === 'element' || menu?.kind === 'canvas') && (
-            <>
+        onClose={closeMenu}
+        extra={
+          <>
+            {menu?.kind === 'point' && (
               <Menu.Item
-                data-testid='menu-undo'
-                disabled={readonly || !history.canUndo}
-                onSelect={document.undo}
-                item={{ value: 'Undo', label: 'Undo' }}
+                data-testid='remove-point'
+                onSelect={() => {
+                  const point = registry.get(atoms.point);
+                  if (point) {
+                    removePoint(point);
+                  }
+                }}
+                item={{ value: 'Remove control point', label: 'Remove control point' }}
               />
-              <Menu.Item
-                data-testid='menu-redo'
-                disabled={readonly || !history.canRedo}
-                onSelect={document.redo}
-                item={{ value: 'Redo', label: 'Redo' }}
-              />
-              <Menu.Separator />
-            </>
-          )}
-          {menu?.kind === 'point' && (
-            <Menu.Item
-              data-testid='remove-point'
-              onSelect={() => {
-                const point = registry.get(atoms.point);
-                if (point) {
-                  removePoint(point);
-                }
-              }}
-              item={{ value: 'Remove control point', label: 'Remove control point' }}
-            />
-          )}
-          {menu?.kind === 'element' && (
-            <>
-              <Menu.Item
-                data-testid='menu-cut'
-                disabled={!capabilities.delete}
-                onSelect={cut}
-                item={{ value: 'Cut', label: 'Cut' }}
-              />
-              <Menu.Item data-testid='menu-copy' onSelect={copy} item={{ value: 'Copy', label: 'Copy' }} />
-              <Menu.Item
-                data-testid='menu-delete'
-                disabled={!capabilities.delete}
-                onSelect={selectionAspect.commands.delete}
-                item={{ value: 'Delete', label: 'Delete' }}
-              />
-              <Menu.Separator />
-              <Menu.Item
-                data-testid='menu-group'
-                disabled={!capabilities.create || !capabilities.delete}
-                onSelect={selectionAspect.commands.group}
-                item={{ value: 'Group', label: 'Group' }}
-              />
-              {selectedInstance && (
-                <>
-                  <Menu.Item
-                    data-testid='menu-edit-object'
-                    onSelect={() => drillIn(selectedInstance)}
-                    item={{ value: 'Edit object', label: 'Edit object' }}
-                  />
-                  <Menu.Item
-                    data-testid='menu-ungroup'
-                    disabled={!capabilities.create || !capabilities.delete}
-                    onSelect={selectionAspect.commands.ungroup}
-                    item={{ value: 'Ungroup', label: 'Ungroup' }}
-                  />
-                  <Menu.Item
-                    data-testid='menu-make-unique'
-                    // An anonymous Object has the one Instance, so it is already unique.
-                    disabled={!capabilities.update || isAnonymous(views[selectedInstance.composite])}
-                    onSelect={() => objectActions.makeUnique(selectedInstance.id)}
-                    item={{ value: 'Make unique', label: 'Make unique' }}
-                  />
-                </>
-              )}
-            </>
-          )}
-          {menu?.kind === 'canvas' && canGoBack && (
-            <Menu.Item data-testid='menu-back' onSelect={back} item={{ value: 'Back', label: 'Back' }} />
-          )}
-          {menu?.kind === 'canvas' && (
-            <Menu.Item
-              data-testid='menu-paste'
-              disabled={!clipboard || !capabilities.create}
-              onSelect={() => paste(menu.scene)}
-              item={{ value: 'Paste', label: 'Paste' }}
-            />
-          )}
-        </Menu.Content>
-      </Menu.Root>
+            )}
+            {menu?.kind === 'element' && selectedInstance && (
+              <>
+                <Menu.Separator />
+                <Menu.Item
+                  data-testid='menu-edit-object'
+                  onSelect={() => drillIn(selectedInstance)}
+                  item={{ value: 'Edit object', label: 'Edit object' }}
+                />
+                <Menu.Item
+                  data-testid='menu-make-unique'
+                  // An anonymous Object has the one Instance, so it is already unique.
+                  disabled={!capabilities.update || isAnonymous(views[selectedInstance.composite])}
+                  onSelect={() => objectActions.makeUnique(selectedInstance.id)}
+                  item={{ value: 'Make unique', label: 'Make unique' }}
+                />
+              </>
+            )}
+            {menu?.kind === 'canvas' && canGoBack && (
+              <Menu.Item data-testid='menu-back' onSelect={back} item={{ value: 'Back', label: 'Back' }} />
+            )}
+          </>
+        }
+      />
     </>
   );
 };

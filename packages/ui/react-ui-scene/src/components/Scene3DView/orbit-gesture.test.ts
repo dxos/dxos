@@ -21,9 +21,10 @@ describe('orbitGesture', () => {
     expect(orbitGesture(press(0, { ctrlKey: true, shiftKey: true }), 'secondary')).toBe('pan');
   });
 
-  test('the middle button orbits and the right one pans, with any tool', () => {
+  test('the middle button orbits (Shift pans), and the right button is left to the context menu', () => {
     expect(orbitGesture(press(1), 'secondary')).toBe('orbit');
-    expect(orbitGesture(press(2), 'secondary')).toBe('pan');
+    expect(orbitGesture(press(1, { shiftKey: true }), 'secondary')).toBe('pan');
+    expect(orbitGesture(press(2), 'secondary')).toBeUndefined();
     expect(orbitGesture(press(0), 'all')).toBe('orbit');
     expect(orbitGesture(press(0, { shiftKey: true }), 'all')).toBe('pan');
   });

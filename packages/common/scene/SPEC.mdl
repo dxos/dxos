@@ -774,3 +774,17 @@ decision D-80: Rectangle, oval and link (2D) and cube, sphere and link (3D) are 
   date: 2026-10-29
   by: user:richburdon
 ```
+
+```mdl
+decision D-81: One shared context menu serves both dimensions: right-click on the view or a selection offers Cut, Copy, Paste, Duplicate, Delete, Undo and Redo with their shortcuts, and the selection's commands where they apply (Group, Ungroup, Make object), enabled from the same command state the shortcuts and the actions bar use; a right-click on an unselected element selects it first; locked, only Copy is enabled; a card, section or slide has none. Right-click in 3D opens it, so 3D pans with Shift (Shift-drag with Orbit, Cmd+Shift-drag, Shift with the middle button).
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-82: The menu's items come from one builder (`sceneMenuItems`) and render in one component (`SceneContextMenu`) on the menu primitive 2D's context menu already used; a view adds only what is its own (2D: a control point, an instance's Edit object and Make unique, Back). Fills in [D-81].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Generalising 2D's existing menu keeps one menu and one list of commands without moving 2D's commands into the action graph first.
+```
