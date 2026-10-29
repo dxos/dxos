@@ -39,7 +39,7 @@ The design reuses three things that already exist:
 | `PluginStore`    | edge: registry-service       | Stores releases (R2 bundle, D1 row), serves manifests and catalogs, indexes ops. |
 | `PluginRouter`   | edge: compute-service        | Resolves an operation key to the plugin release that implements it.             |
 | `PluginLoader`   | edge: compute-service        | Loads a release into a Dynamic Worker and hands it the host bindings.            |
-| `PluginHost`     | dxos: `@dxos/app-framework`  | The main module inside the Dynamic Worker: activates the plugin, serves RPC.     |
+| `PluginHost`     | dxos: `@dxos/plugin-host-cloudflare` | The main module inside the Dynamic Worker: activates the plugin, serves RPC. |
 | `PluginSupervisor` | edge: compute-service      | A Durable Object that runs a plugin's durable module as a facet (phase 3).       |
 
 An invocation of `org.dxos.operation.markdown.create` in space `S` flows:
@@ -209,12 +209,16 @@ service PluginLoader
 
 ```mdl
 service PluginEntrypoint
-  desc: The RPC surface `PluginHost` exports from inside the Dynamic Worker, as a WorkerEntrypoint.
+  desc: |
+    The RPC surface `PluginHost` exports from inside the Dynamic Worker, as a WorkerEntrypoint. It serves
+    only the release's primary plugin: its `dependsOn` closure is activated for the capabilities the
+    primary uses, and those plugins' own operations, skills and types belong to their own releases. It
+    also answers the functions fetch protocol compute-service uses for Worker Loader functions.
   ops:
     describe() → PluginCatalog
-    invoke(request: { operationKey, input, pid?, runId? }, scope: InvocationScope) → unknown
+    invoke(request: { operationKey, input, spaceId?, pid?, runId? }, scope: InvocationScope) → unknown
   errors:
-    OperationNotFound: the release has no handler for the key
+    OperationNotFound: the primary plugin has no handler for the key
 ```
 
 ```mdl
@@ -459,6 +463,20 @@ feat F-10: Readable manifests and registry query
     shared with.
 ```
 
+```mdl
+feat F-12: Tested end to end
+  Every publishable plugin, the host and the EDGE path are tested in the runtime they run in.
+
+  req F-12.1: CI bundles each plugin tagged `edge-release` as a release, loads it through Worker Loader
+    in workerd, and fails when it is not self-contained, a module fails to activate, or it contributes
+    no operations, skills or types.
+
+  req F-12.2: The host is tested inside workerd: describe, invoke, dependency attribution and errors.
+
+  req F-12.3: EDGE end-to-end tests publish a release, route and invoke its operations in a real space,
+    and cover scenarios T-1 to T-4, channel promotion and rollback, and revocation.
+```
+
 ## Scenarios
 
 ```mdl
@@ -699,4 +717,38 @@ decision D-17: Treat all plugins the same. Sandboxing options may become configu
   date: 2026-10-29
   by: user:dmaretskyi
   supersedes: D-11
+```
+
+```mdl
+decision D-18: Edge-side plugins have quality end-to-end tests on EDGE, and dxos has checks and workerd tests for plugins.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [F-12]
+```
+
+```mdl
+decision D-19: CI runs a `check-edge-release` task for each plugin tagged `edge-release`, starting with the fifteen plugins operation-service hosts; the host's own tests run in workerd, and releases are loaded through Worker Loader from Node with Miniflare. Fills in [D-18].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-12.1, F-12.2]
+  why: Every plugin already ships a workerd build since dxos/dxos#13893, but most contribute nothing on EDGE, so the check is opt-in per plugin; Node drives the loader because a multi-MiB bundle overflows the vitest workerd pool's message limit.
+```
+
+```mdl
+decision D-20: `PluginHost` lives in the private package `@dxos/plugin-host-cloudflare`, not in `@dxos/app-framework`, and builds its function context with `@dxos/functions-runtime-cloudflare`. Fills in [D-3].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginHost, PluginEntrypoint]
+  why: The host needs the compute runtime (ECHO over the data bindings, the function wrapper), which app-framework must not depend on; reusing the functions runtime keeps one way to build an invocation's context.
+```
+
+```mdl
+decision D-21: A release serves only its primary plugin's operations, skills and types, attributed by the module that contributed them; the plugins of its `dependsOn` closure are bundled and activated but not served. Fills in [D-3].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginEntrypoint, PluginCatalog, F-5.4]
+  why: plugin-agent, plugin-discord and plugin-projects fail to activate without their dependencies, and serving a dependency's operations would claim keys its own release owns.
 ```
