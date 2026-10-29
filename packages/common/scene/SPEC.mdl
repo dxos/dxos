@@ -584,3 +584,37 @@ decision D-52: Solids are edited with three more `LayoutIntent`s: `join` (union)
   affects: [F-1.6]
   why: The operands stay in the layout so the solid can be re-evaluated and taken apart, but drawing them as well as the solid would show both.
 ```
+
+```mdl
+decision D-53: One SceneArticle edits both 2D and 3D scenes, adapting its viewport and tools to the scene's dimension.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-54: The 3D editor uses the canvas's floating panels as the 2D canvas does: tools on the left, actions at the bottom, the inspectors on the right, and a display panel with a ground-grid toggle and the look.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-55: A canvas shown as a card, section or slide draws no grid or guides.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-56: The 3D grid and look are the viewer's view state, like the camera ([D-47]); the grid is shown until turned off. A card, section or slide also shows no editing chrome, in both dimensions. Fills in [D-54] and [D-55].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The grid and look are how one person looks at the scene, so they must not move another viewer's view; a picture of a scene has nothing to edit.
+```
+
+```mdl
+decision D-57: react-ui-canvas's tool rail is generic over the host's tool value (`ToolRail`), and its display panel offers named themes and a subset of grids for a view without a theme registry, so the 3D view reuses both rather than forking them. Fills in [D-54].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One component per panel keeps the two views alike as either changes.
+```

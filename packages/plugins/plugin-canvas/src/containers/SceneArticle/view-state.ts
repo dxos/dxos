@@ -56,6 +56,10 @@ const Camera3DSchema = Schema.Struct({
 const Scene3DViewStateSchema = Schema.Struct({
   /** Where this viewer last left the orbit; the scene's own camera is the authored view and is never written. */
   camera: Schema.optional(Camera3DSchema),
+  /** Whether this viewer draws the ground grid; shown until turned off. */
+  grid: Schema.optional(Schema.Boolean),
+  /** The look this viewer picked over the scene's own (`cad` or `presentation`). */
+  theme: Schema.optional(Schema.Literals(['cad', 'presentation'])),
 });
 
 export type Scene3DViewState = Schema.Schema.Type<typeof Scene3DViewStateSchema>;

@@ -25,7 +25,7 @@ import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-te
 import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 
-import { canvasViewAspect } from '../../containers/CanvasArticle/view-state.ts';
+import { canvasViewAspect } from '../../containers/SceneArticle/view-state.ts';
 import * as ArchitectureSpace from './ArchitectureSpace.ts';
 import {
   type DiagramSet,

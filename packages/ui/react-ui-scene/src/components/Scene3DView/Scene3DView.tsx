@@ -18,6 +18,8 @@ export type Scene3DViewProps = Util.ThemedClassName<{
   scene?: string;
   /** `cad` or `presentation`; the scene's own when unset. */
   theme?: Theme3D;
+  /** Draws the ground grid. */
+  grid?: boolean;
   /** Where to look; the root scene's camera when unset. */
   camera?: Scene.Camera3D;
   /** Element values that replace those of the scene's layout, as an animation sample does. */
@@ -37,6 +39,7 @@ export const Scene3DView = ({
   document: doc,
   scene: sceneId,
   theme,
+  grid = false,
   camera,
   overrides,
   geometry: givenGeometry,
@@ -61,6 +64,7 @@ export const Scene3DView = ({
     renderer.render(list, view, { geometry, effects });
     onFrameDrawn?.(size);
   }, [renderer, list, view, geometry, effects, size, onFrameDrawn]);
+  useLayoutEffect(() => renderer?.setGrid(grid), [renderer, grid]);
 
   return (
     <div

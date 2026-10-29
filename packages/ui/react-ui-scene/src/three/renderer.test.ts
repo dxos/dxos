@@ -52,6 +52,39 @@ describe('SceneRenderer3D.pick', () => {
     return view;
   };
 
+  test('selecting outlines the item by its silhouette, and deselecting removes it', () => {
+    const view = renderer(
+      doc([
+        { id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'b', kind: 'sphere', center: { x: 3, y: 0, z: 0 } },
+      ]),
+    );
+    view.select(['a']);
+    expect(view.highlighted).toEqual(['a']);
+    view.select(['b']);
+    expect(view.highlighted).toEqual(['b']);
+    view.select([]);
+    expect(view.highlighted).toEqual([]);
+    view.dispose();
+  });
+
+  test('the ground grid is hidden until shown, and hides again', () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    expect(view.grid).toBe(false);
+    view.setGrid(true);
+    expect(view.grid).toBe(true);
+    view.setGrid(false);
+    expect(view.grid).toBe(false);
+    view.dispose();
+  });
+
+  test('the ground grid is never picked', () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 20, y: 0, z: 0 } }]));
+    view.setGrid(true);
+    expect(view.pick({ x: 400, y: 300 }).item).toBeUndefined();
+    view.dispose();
+  });
+
   test('the screen centre over a cube at the origin picks its key', () => {
     const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.pick({ x: 400, y: 300 })).toMatchObject({ item: 'a' });

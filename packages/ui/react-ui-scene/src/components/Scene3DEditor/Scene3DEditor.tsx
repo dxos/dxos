@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type * as Util from '@dxos/react-ui/Util';
 import { type LayoutIntent, type Scene, findLayout, findScene, placesCycle, resolveLayout3D } from '@dxos/scene';
@@ -19,7 +19,7 @@ import {
   project,
   renderList,
 } from '../../three/index.ts';
-import { DEFAULT_CAMERA, useManifoldGeometry, useOrbit, useSceneRenderer } from '../Scene3DView/index.ts';
+import { DEFAULT_CAMERA, onScene, useManifoldGeometry, useOrbit, useSceneRenderer } from '../Scene3DView/index.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
@@ -40,6 +40,10 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   selection: readonly string[];
   tool: Tool3D;
   theme?: Theme3D;
+  /** Draws the ground grid. */
+  grid?: boolean;
+  /** Overlays drawn over the scene (floating panels); their pointer events never reach the scene. */
+  children?: ReactNode;
   /** Where to look; the scene's camera when unset. */
   camera?: Scene.Camera3D;
   geometry?: GeometrySource;
@@ -82,6 +86,8 @@ export const Scene3DEditor = ({
   selection,
   tool,
   theme,
+  grid = false,
+  children,
   camera,
   geometry: givenGeometry,
   onSelect,
@@ -151,6 +157,7 @@ export const Scene3DEditor = ({
       renderer.render(shown, view, { geometry });
     }
   }, [renderer, shown, view, geometry, size]);
+  useLayoutEffect(() => renderer?.setGrid(grid), [renderer, grid]);
 
   useLayoutEffect(() => {
     renderer?.select(selection.flatMap((id) => keys.get(id)?.key ?? []));
@@ -321,6 +328,9 @@ export const Scene3DEditor = ({
       data-selection={selection.join(' ')}
       data-editing={editing}
       onPointerDown={(event) => {
+        if (!onScene(event.nativeEvent)) {
+          return;
+        }
         renderer?.takeDrag();
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
         if (tool === 'extrude' && event.button === 0) {
@@ -334,6 +344,9 @@ export const Scene3DEditor = ({
         }
       }}
       onPointerUp={(event) => {
+        if (!onScene(event.nativeEvent)) {
+          return;
+        }
         // A face drag that extruded is not a click; one too short to extrude selects, as a click does.
         if (extruding.current && onExtrudeEnd(local(event))) {
           press.current = undefined;
@@ -348,8 +361,12 @@ export const Scene3DEditor = ({
           onClick(local(event), event.shiftKey);
         }
       }}
-      onDoubleClick={(event) => onDoubleClick(local(event))}
+      onDoubleClick={(event) => onScene(event.nativeEvent) && onDoubleClick(local(event))}
       onKeyDown={(event) => {
+        // A key typed in a panel (a form field) is the panel's.
+        if (event.target !== event.currentTarget) {
+          return;
+        }
         if (event.key === 'Escape' && drilled && scene) {
           onSelect([]);
           onEdit(scene.layout);
@@ -361,6 +378,7 @@ export const Scene3DEditor = ({
     >
       <canvas ref={canvasRef} className='dx-cover dx-fill block outline-none' />
       {size.width > 0 && <SceneLabels items={shown.items} camera={view} viewport={size} theme={look} />}
+      {children}
     </div>
   );
 };

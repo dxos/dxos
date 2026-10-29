@@ -28,7 +28,6 @@ export const LibraryPanel = ({ objects, placing, onPlace, onEditParts }: Library
     <OrderedList.Root items={objects} getLabel={(object) => object.id} readonly>
       {({ items }) => (
         <>
-          <OrderedList.Label>{t('library.label')}</OrderedList.Label>
           <OrderedList.Viewport>
             <OrderedList.Content data-testid='library'>
               {items.map((object) => (

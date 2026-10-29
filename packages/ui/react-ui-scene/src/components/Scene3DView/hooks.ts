@@ -69,6 +69,9 @@ export const useManifoldGeometry = (
 };
 
 /** A renderer over the canvas, made again when the look changes, and the container's size as it resizes. */
+/** Whether an event started on the scene's canvas, not on a panel or other overlay drawn over it. */
+export const onScene = (event: Event): boolean => event.target instanceof HTMLCanvasElement;
+
 export const useSceneRenderer = (
   containerRef: RefObject<HTMLDivElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
@@ -163,7 +166,7 @@ export const useOrbit = (
     };
     let drag: { x: number; y: number; pan: boolean } | undefined;
     const onPointerDown = (event: PointerEvent) => {
-      if (buttons === 'secondary' && event.button === 0) {
+      if (!onScene(event) || (buttons === 'secondary' && event.button === 0)) {
         return;
       }
       drag = { x: event.clientX, y: event.clientY, pan: event.shiftKey || event.button === 2 };
@@ -182,11 +185,15 @@ export const useOrbit = (
       drag = undefined;
     };
     const onWheel = (event: WheelEvent) => {
+      // A panel over the scene scrolls itself.
+      if (!onScene(event)) {
+        return;
+      }
       // Not passive, so the page does not scroll under a zoom.
       event.preventDefault();
       move((current) => zoomBy(current, Math.exp(event.deltaY * 0.002)));
     };
-    const onContextMenu = (event: Event) => event.preventDefault();
+    const onContextMenu = (event: Event) => onScene(event) && event.preventDefault();
     container.addEventListener('pointerdown', onPointerDown);
     container.addEventListener('pointermove', onPointerMove);
     container.addEventListener('pointerup', onPointerUp);

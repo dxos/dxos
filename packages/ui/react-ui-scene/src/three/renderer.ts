@@ -18,11 +18,13 @@ import {
   CreateCylinder,
   CreateIcoSphere,
   CreateLines,
+  CreateLineSystem,
   CreateSphere,
   DirectionalLight,
   Engine,
   GizmoManager,
   HemisphericLight,
+  HighlightLayer,
   type LinesMesh,
   type Material,
   Matrix,
@@ -40,6 +42,7 @@ import { type Instance3D } from '@dxos/animation';
 import { type Scene as Model } from '@dxos/scene';
 
 import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
+import { GRID_MAJOR_EVERY, groundGrid } from './grid.ts';
 import { meshData } from './io/mesh.ts';
 import {
   LATTICE_OPACITY,
@@ -134,6 +137,15 @@ export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData |
   return `${kind}:${spec.kind}:${spec.edges}:${geometry}`;
 };
 
+/** The most frames drawn while waiting for shaders, so a shader that never compiles cannot keep the view drawing. */
+const SETTLE_FRAMES = 120;
+
+/** Frames drawn after a selection changes, so the outline's effect compiles and shows. */
+const OUTLINE_FRAMES = 3;
+
+/** The ground grid's half-width, in scene units. */
+const GRID_EXTENT = 20;
+
 /** Draws a render list; never reads a clock and never writes ECHO. */
 export class SceneRenderer3D {
   readonly #engine: AbstractEngine;
@@ -145,6 +157,7 @@ export class SceneRenderer3D {
   #dragged = false;
   readonly #observed = new WeakSet<object>();
   #looping = false;
+  #settling = false;
   #selected = new Set<string>();
   readonly #scene: Scene;
   readonly #camera: ArcRotateCamera;
@@ -152,6 +165,8 @@ export class SceneRenderer3D {
   readonly #items = new Map<string, ItemMeshes>();
   readonly #links = new Map<string, LinesMesh>();
   readonly #instances: Record<Instance3D['primitive'], Mesh>;
+  #grid?: LinesMesh;
+  readonly #highlight: HighlightLayer;
 
   constructor({ canvas, engine, theme, background }: SceneRenderer3DOptions) {
     this.#theme = theme;
@@ -183,11 +198,43 @@ export class SceneRenderer3D {
     }
 
     this.#instances = { sphere: this.#createInstanceMesh('sphere'), cube: this.#createInstanceMesh('cube') };
+    // A screen-space stroke round the silhouette: an outline pushed out along vertex normals splits at a box's corners,
+    // whose faces have normals of their own.
+    this.#highlight = new HighlightLayer('selection', this.#scene, {
+      isStroke: true,
+      blurHorizontalSize: 0.5,
+      blurVerticalSize: 0.5,
+    });
+    this.#highlight.innerGlow = false;
+  }
+
+  /** The keys of the items outlined as selected. */
+  get highlighted(): string[] {
+    return [...this.#items].flatMap(([key, { surface }]) => (this.#highlight.hasMesh(surface) ? [key] : []));
+  }
+
+  /** Whether the ground grid is drawn. */
+  get grid(): boolean {
+    return this.#grid?.isEnabled() ?? false;
+  }
+
+  /** Shows or hides the ground grid: unit lines on the y = 0 plane, made the first time it shows. */
+  setGrid(visible: boolean): void {
+    if (visible === this.grid) {
+      return;
+    }
+    if (visible && !this.#grid) {
+      this.#grid = this.#createGrid();
+    }
+    this.#grid?.setEnabled(visible);
+    this.#view && this.#scene.render();
   }
 
   /** Matches the drawing buffer to the canvas's size. */
   resize(): void {
     this.#engine.resize();
+    // Resizing clears the drawing buffer, so a still view draws its last frame again rather than stay blank.
+    this.#view && this.#scene.render();
   }
 
   /** Draws the items and links, poses the camera, adds the `3d` effect items, then renders one frame. */
@@ -203,10 +250,7 @@ export class SceneRenderer3D {
     this.#pose(camera);
     this.#view = camera;
     this.#scene.render();
-    // Shaders compile asynchronously, so a still view's only frame can draw before its materials are ready.
-    if (!this.#scene.isReady()) {
-      this.#scene.executeWhenReady(() => this.#scene.render());
-    }
+    this.#settle();
   }
 
   /**
@@ -236,7 +280,10 @@ export class SceneRenderer3D {
   select(keys: Iterable<string>): void {
     this.#selected = new Set(keys);
     this.#outline();
-    this.#view && this.#scene.render();
+    if (this.#view) {
+      this.#scene.render();
+      this.#settle(OUTLINE_FRAMES);
+    }
   }
 
   /**
@@ -248,8 +295,10 @@ export class SceneRenderer3D {
     if (!mesh || !mode) {
       this.#gizmos?.attachToMesh(null);
       this.#gizmoEnd = undefined;
+      // Stopping the loop stops every function it runs, a settling one too.
       this.#looping && this.#engine.stopRenderLoop();
       this.#looping = false;
+      this.#settling = false;
       return;
     }
     this.#layers ??= {
@@ -304,6 +353,7 @@ export class SceneRenderer3D {
   }
 
   dispose(): void {
+    this.#highlight.dispose();
     this.#gizmos?.dispose();
     this.#layers?.normal.dispose();
     this.#layers?.depth.dispose();
@@ -312,13 +362,40 @@ export class SceneRenderer3D {
     this.#engine.dispose();
   }
 
+  /** Whether the scene's materials and the selection outline's layer have compiled. */
+  #ready(): boolean {
+    return this.#scene.isReady() && this.#highlight.isLayerReady();
+  }
+
+  /**
+   * Shaders compile asynchronously, so a still view's only frame can draw before its materials or outline are ready:
+   * draws frames until they are (at least `minFrames`, as an outline's per-mesh effect compiles on the frame that first
+   * draws it), then stops; a running gizmo loop draws them anyway.
+   */
+  #settle(minFrames = 0): void {
+    if (this.#settling || this.#looping || (minFrames === 0 && this.#ready())) {
+      return;
+    }
+    this.#settling = true;
+    let frames = 0;
+    const step = () => {
+      this.#scene.render();
+      frames++;
+      if ((frames >= minFrames && this.#ready()) || frames > SETTLE_FRAMES) {
+        this.#engine.stopRenderLoop(step);
+        this.#settling = false;
+      }
+    };
+    this.#engine.runRenderLoop(step);
+  }
+
   #outline(): void {
     for (const [key, { surface }] of this.#items) {
       const selected = this.#selected.has(key);
-      surface.renderOutline = selected;
-      if (selected) {
-        surface.outlineColor = SELECTION_COLOR;
-        surface.outlineWidth = 0.04;
+      if (selected && !this.#highlight.hasMesh(surface)) {
+        this.#highlight.addMesh(surface, SELECTION_COLOR);
+      } else if (!selected && this.#highlight.hasMesh(surface)) {
+        this.#highlight.removeMesh(surface);
       }
     }
   }
@@ -342,6 +419,27 @@ export class SceneRenderer3D {
     } else {
       this.#camera.mode = Camera.PERSPECTIVE_CAMERA;
     }
+  }
+
+  #createGrid(): LinesMesh {
+    const { lines } = groundGrid({ extent: GRID_EXTENT, majorEvery: GRID_MAJOR_EVERY });
+    const tint = Color3.FromHexString(this.#theme === 'presentation' ? '#8da2e0' : '#9aa1ad');
+    const grid = CreateLineSystem(
+      'grid',
+      {
+        lines: lines.map(({ axis, offset }) =>
+          axis === 'x'
+            ? [new Vector3(offset, 0, -GRID_EXTENT), new Vector3(offset, 0, GRID_EXTENT)]
+            : [new Vector3(-GRID_EXTENT, 0, offset), new Vector3(GRID_EXTENT, 0, offset)],
+        ),
+        colors: lines.map(({ alpha }) => [tint.toColor4(alpha), tint.toColor4(alpha)]),
+        useVertexAlpha: true,
+      },
+      this.#scene,
+    );
+    // A guide, not content: clicks land on what is above it, or on the ground point beneath.
+    grid.isPickable = false;
+    return grid;
   }
 
   #createBackdrop(): void {

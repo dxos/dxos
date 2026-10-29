@@ -4,8 +4,8 @@
 
 import { type Capabilities, type LinkRegistry, type NodeRegistry, type Tool } from '../model/index.ts';
 
-/** A tool the rail offers, with its icon, label and key. */
-export type ToolEntry = { tool: Tool; icon: string; label: string; key?: string };
+/** A tool the rail offers, with its icon, label and key; `T` is the host's own tool value (the 2D canvas's `Tool`). */
+export type ToolEntry<T = Tool> = { tool: T; icon: string; label: string; key?: string };
 
 const BASE: ToolEntry[] = [
   { tool: { kind: 'select' }, icon: 'ph--cursor--regular', label: 'Select', key: 'V' },
@@ -19,7 +19,7 @@ export const TOOLS_GROUP = 'Tools';
  * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
  * a `folded` group always does.
  */
-export type ToolGroup = { name: string; entries: ToolEntry[]; collapsible: boolean; folded?: boolean };
+export type ToolGroup<T = Tool> = { name: string; entries: ToolEntry<T>[]; collapsible: boolean; folded?: boolean };
 
 /** Node types by their `group`, in registry order; types without one share the first, unnamed group. */
 const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {

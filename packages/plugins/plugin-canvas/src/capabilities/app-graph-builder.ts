@@ -16,7 +16,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { Canvas } from '#types';
 
-import { canvasViewAspect } from '../containers/CanvasArticle/view-state.ts';
+import { canvasViewAspect } from '../containers/SceneArticle/view-state.ts';
 import { CanvasNamespace } from '../namespace.ts';
 
 // Module-level: the graph dedupes action properties by reference, so a tuple rebuilt per evaluation re-emits the node.

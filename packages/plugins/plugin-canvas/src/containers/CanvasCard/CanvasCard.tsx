@@ -16,13 +16,16 @@ import {
   type ViewStore,
   createLatticeProjection,
 } from '@dxos/react-ui-canvas/scene';
+import { Scene3DView } from '@dxos/react-ui-scene';
 import * as Card from '@dxos/react-ui/Card';
+import { Scene } from '@dxos/scene';
 
-import { canvasRecordOf } from '#model';
+import { canvasDimension, canvasRecordOf, openScene } from '#model';
 import { Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
 import { useBoundCanvasStore, useBoundLayoutStore, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
+import { useSceneDocument } from '../SceneStage/index.ts';
 
 // A card is a preview: only the drawing, fitted, with no grid or guides.
 const CARD_DISPLAY = { snap: false, guides: false, fit: true };
@@ -34,9 +37,37 @@ export type CanvasCardProps = IllustratorCapabilities.DrawingVariantSurfaceProps
 
 /** The card surface of the canvas variant: the drawing's open scene alone, fitted, on the card's own surface. */
 export const CanvasCard = ({ canvas }: CanvasCardProps) =>
-  CanvasFormat.isCanvas(canvas) ? <SceneCanvasCard canvas={canvas} /> : null;
+  CanvasFormat.isCanvas(canvas) ? <DimensionCard canvas={canvas} /> : null;
 
 CanvasCard.displayName = 'CanvasCard';
+
+/** A 3D canvas's card shows its open scene through the 3D renderer; every other one through the 2D engine. */
+const DimensionCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+  useObject(canvas);
+  return canvasDimension(canvas) === '3d' ? <Scene3DCard canvas={canvas} /> : <SceneCanvasCard canvas={canvas} />;
+};
+
+/** The open 3D scene from its authored camera: no grid, and inert, so a press or wheel reaches the card. */
+const Scene3DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+  const scene = openScene(canvas);
+  const stored = Obj.instanceOf(Scene.Scene3D, scene) ? scene : undefined;
+  const document = useSceneDocument(stored);
+  return (
+    <Card.Body>
+      <Card.Section classNames='aspect-square'>
+        {stored && document && (
+          <Scene3DView
+            classNames='col-[full] pointer-events-none'
+            document={document}
+            scene={stored.key}
+            grid={false}
+            orbit={false}
+          />
+        )}
+      </Card.Section>
+    </Card.Body>
+  );
+};
 
 const SceneCanvasCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
   const nodes = useCanvasNodes();
@@ -79,6 +110,7 @@ const CardView = ({ db, bound, nodes, lattice, grid }: CardViewProps) => (
             margin={CARD_MARGIN}
             readonly
             initialDisplay={CARD_DISPLAY}
+            backgroundGrid='none'
           >
             <Canvas.Viewport liveDepth={0} />
           </Canvas.Root>
@@ -116,6 +148,7 @@ export const LegacyCanvasCard = ({ canvas }: LegacyCanvasCardProps) => {
               margin={CARD_MARGIN}
               readonly
               initialDisplay={CARD_DISPLAY}
+              backgroundGrid='none'
             >
               <Canvas.Viewport liveDepth={0} />
             </Canvas.Root>

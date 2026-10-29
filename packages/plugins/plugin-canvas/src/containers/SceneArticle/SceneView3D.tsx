@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -14,11 +13,22 @@ import {
   patchSource,
   recordChanges,
 } from '@dxos/react-ui-canvas/headless';
+import {
+  DisplayPanel,
+  FLOATING_BAR,
+  InspectorPanel,
+  InspectorSection,
+  type InspectorSectionDef,
+  type ToolGroup,
+  ToolRail,
+} from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Scene3DEditor, type Tool3D, exportSTL, importMesh, loadManifold } from '@dxos/react-ui-scene';
+import { Scene3DEditor, Scene3DView, type Tool3D, exportSTL, importMesh, loadManifold } from '@dxos/react-ui-scene';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import { type LayoutIntent, Scene, findLayout, reachedObjects, resolveLayout3D } from '@dxos/scene';
+import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 
 import { applyLayoutIntent, layoutSource, openScene, writeModelIntent } from '#model';
@@ -27,9 +37,11 @@ import { type Canvas } from '#types';
 import { CanvasNamespace } from '../../namespace.ts';
 import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
-import { useScene3DCamera } from './use-scene3d-camera.ts';
+import { ElementForm, elementFormIntents, elementFormValues } from './element-form.ts';
+import { grid3D, sceneChrome } from './scene-chrome.ts';
+import { useScene3DView } from './use-scene3d-view.ts';
 
-export type Scene3DArticleProps = {
+export type SceneView3DProps = {
   canvas: Canvas.Canvas;
   role?: string;
   attendableId?: string;
@@ -60,24 +72,75 @@ const CREATE_KINDS = ['cube', 'sphere', 'cylinder', 'cone'] as const;
 
 const isLayout3D = (value: unknown): value is Scene.Layout3D => Obj.instanceOf(Scene.Layout3D, value);
 
-const label = (key: string): [string, { ns: string }] => [key, { ns: CanvasNamespace.key }];
+const KIND_ICONS: Record<(typeof CREATE_KINDS)[number], string> = {
+  cube: 'ph--cube--regular',
+  sphere: 'ph--circle--regular',
+  cylinder: 'ph--cylinder--regular',
+  cone: 'ph--triangle--regular',
+};
 
-/** The fields a person edits in the Properties form; geometry and bindings are the gizmos' and tools'. */
-const ElementProperties = Schema.Struct({
-  label: Scene.Element3D.fields.label,
-  style: Scene.Element3D.fields.style,
-  center: Scene.Element3D.fields.center,
-  rotation: Scene.Element3D.fields.rotation,
-  scale: Scene.Element3D.fields.scale,
-});
+/** The rail's groups: picking and the view, transforming, then making; ids name each tool's label and test id. */
+const TOOL_GROUPS: readonly { name: string; entries: readonly { id: string; tool: Tool3D; icon: string }[] }[] = [
+  {
+    name: 'Tools',
+    entries: [
+      { id: 'select', tool: 'select', icon: 'ph--cursor--regular' },
+      { id: 'orbit', tool: 'orbit', icon: 'ph--globe-simple--regular' },
+    ],
+  },
+  {
+    name: 'Transform',
+    entries: [
+      { id: 'move', tool: 'move', icon: 'ph--arrows-out-cardinal--regular' },
+      { id: 'rotate', tool: 'rotate', icon: 'ph--arrow-clockwise--regular' },
+      { id: 'scale', tool: 'scale', icon: 'ph--arrows-out--regular' },
+    ],
+  },
+  {
+    name: 'Make',
+    entries: [
+      { id: 'link', tool: 'link', icon: 'ph--line-segment--regular' },
+      { id: 'extrude', tool: 'extrude', icon: 'ph--arrow-fat-line-up--regular' },
+      ...CREATE_KINDS.map((kind) => ({ id: kind, tool: { create: kind }, icon: KIND_ICONS[kind] })),
+    ],
+  },
+];
+
+const sameTool = (left: Tool3D, right: Tool3D): boolean => JSON.stringify(left) === JSON.stringify(right);
+
+const toolTestId = (entry: { tool: Tool3D }): string =>
+  `canvas3d.tool.${typeof entry.tool === 'object' ? ('create' in entry.tool ? entry.tool.create : 'place') : entry.tool}`;
+
+const PROPERTIES: InspectorSectionDef = {
+  id: 'properties',
+  title: 'Properties',
+  icon: 'ph--sliders-horizontal--regular',
+  order: 0,
+  defaultOpen: true,
+};
+
+const LIBRARY: InspectorSectionDef = { id: 'library', title: 'Library', icon: 'ph--package--regular', order: 1 };
+
+const THEMES = [
+  { id: 'cad', key: 'theme.cad.label' },
+  { id: 'presentation', key: 'theme.presentation.label' },
+] as const;
+
+const isTheme3D = (value: string | undefined): value is 'cad' | 'presentation' =>
+  value === 'cad' || value === 'presentation';
+
+const label = (key: string): [string, { ns: string }] => [key, { ns: CanvasNamespace.key }];
 
 type History = { done: VersionChange[]; undone: VersionChange[] };
 
 /**
- * A 3D canvas: its open `Scene3D`, edited with Scene3DEditor; every edit is a `LayoutIntent` written to the layout
- * that owns the element, recorded for undo and redo over every 3D layout the scene reaches.
+ * A 3D canvas: its open `Scene3D`, edited with Scene3DEditor under the canvas's floating panels (tools, actions,
+ * inspectors, display); every edit is a `LayoutIntent` written to the layout that owns the element, recorded for undo
+ * and redo over every 3D layout the scene reaches. Outside an article it is a picture: no chrome and no grid.
  */
-export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticleProps) => {
+export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) => {
+  const { t } = UiHooks.useTranslation(CanvasNamespace.key);
+  const chrome = sceneChrome(role);
   const scene = openScene(canvas);
   const stored = Obj.instanceOf(Scene.Scene3D, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
@@ -132,8 +195,10 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
     [source],
   );
 
-  // The orbit is this viewer's own view; the scene's camera is the authored view and stays as it was written.
-  const { camera, onCameraChange } = useScene3DCamera(canvas);
+  // The orbit, grid and look are this viewer's own view; the scene's camera and theme are the authored ones.
+  const view = useScene3DView(canvas);
+  const authoredTheme = document?.scenes[0]?.theme;
+  const theme = view.theme ?? (isTheme3D(authoredTheme) ? authoredTheme : 'cad');
 
   const editingLayout = editing ?? document?.scenes[0]?.layout;
   const record = document?.layouts.find((layout) => layout.id === editingLayout);
@@ -183,43 +248,8 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
 
   const menu = useMenuBuilder(() => {
     const builder = MenuBuilder.make();
-    const tools: { id: string; tool: Tool3D; icon: string }[] = [
-      { id: 'select', tool: 'select', icon: 'ph--cursor--regular' },
-      { id: 'orbit', tool: 'orbit', icon: 'ph--globe-simple--regular' },
-      { id: 'move', tool: 'move', icon: 'ph--arrows-out-cardinal--regular' },
-      { id: 'rotate', tool: 'rotate', icon: 'ph--arrow-clockwise--regular' },
-      { id: 'scale', tool: 'scale', icon: 'ph--arrows-out--regular' },
-      { id: 'link', tool: 'link', icon: 'ph--line-segment--regular' },
-      { id: 'extrude', tool: 'extrude', icon: 'ph--arrow-fat-line-up--regular' },
-      ...CREATE_KINDS.map((kind) => ({
-        id: kind,
-        tool: { create: kind },
-        icon: {
-          cube: 'ph--cube--regular',
-          sphere: 'ph--circle--regular',
-          cylinder: 'ph--cylinder--regular',
-          cone: 'ph--triangle--regular',
-        }[kind],
-      })),
-    ];
-    for (const entry of tools) {
-      builder.action(
-        `tool-${entry.id}`,
-        {
-          label: label(`tool.${entry.id}.label`),
-          icon: entry.icon,
-          // A toggle draws the active tool pressed, so the toolbar shows which one a click will use.
-          variant: 'toggle',
-          checked: JSON.stringify(entry.tool) === JSON.stringify(tool),
-          disposition: 'toolbar',
-          testId: `canvas3d.tool.${entry.id}`,
-        },
-        () => setTool(entry.tool),
-      );
-    }
     const layout = editingLayout;
     builder
-      .separator()
       .action(
         'group',
         {
@@ -388,7 +418,6 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
       );
     return builder.build();
   }, [
-    tool,
     selection,
     editingLayout,
     resolved,
@@ -404,81 +433,99 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
   ]);
 
   const handleSave = useCallback(
-    (values: Schema.Schema.Type<typeof ElementProperties>) => {
+    (values: ElementForm) => {
       if (!editingLayout || !selected) {
         return;
       }
-      const intents: LayoutIntent[] = (['label', 'style', 'center', 'rotation', 'scale'] as const).flatMap((field) =>
-        JSON.stringify(values[field]) === JSON.stringify(selected[field])
-          ? []
-          : [{ kind: 'update', id: selected.id, path: [field], value: values[field] }],
-      );
+      const intents = elementFormIntents(selected, values);
       intents.length > 0 && handleIntent(editingLayout, { kind: 'batch', intents });
     },
     [editingLayout, selected, handleIntent],
   );
 
+  const toolGroups = useMemo<ToolGroup<Tool3D>[]>(
+    () =>
+      TOOL_GROUPS.map((group) => ({
+        name: group.name,
+        collapsible: group.name === 'Make',
+        entries: group.entries.map((entry) => ({
+          tool: entry.tool,
+          icon: entry.icon,
+          label: t(`tool.${entry.id}.label`),
+        })),
+      })),
+    [t],
+  );
+  const themes = useMemo(() => THEMES.map(({ id, key }) => ({ id, name: t(key) })), [t]);
+
   if (!stored || !document) {
     return null;
   }
 
+  // A card, section or slide shows the scene as a picture: the authored view, no chrome and no grid.
+  if (!chrome.editing) {
+    return (
+      <Panel.Root role={role}>
+        <Panel.Body>
+          <Scene3DView document={document} scene={stored.key} theme={theme} grid={false} orbit={false} />
+        </Panel.Body>
+      </Panel.Root>
+    );
+  }
+
   return (
     <Panel.Root role={role}>
-      <Panel.Header>
-        <ActionToolbar {...menu} attendableId={attendableId} />
-      </Panel.Header>
       <Panel.Body>
-        <div className='relative dx-fill'>
-          {notice && (
-            <p
-              role='alert'
-              className='absolute bottom-2 left-2 z-10 rounded-sm bg-base-surface p-2 text-sm text-error-text'
-              data-testid='canvas3d.notice'
-            >
-              {notice}
-            </p>
-          )}
-          <div
-            className='absolute top-2 left-2 z-10 w-60 max-h-[calc(100%-1rem)] overflow-auto rounded-sm bg-base-surface'
-            data-testid='canvas3d.library'
-          >
-            <LibraryPanel
-              objects={objects}
-              placing={typeof tool === 'object' && 'place' in tool ? tool.place : undefined}
-              onPlace={(id) => setTool({ place: id })}
-              onEditParts={(layout) => {
-                setSelection([]);
-                setEditing(layout);
-              }}
-            />
-          </div>
+        <InspectorPanel.Root>
           <Scene3DEditor
             document={document}
             scene={stored.key}
             editing={editing}
             selection={selection}
             tool={tool}
+            theme={theme}
+            grid={grid3D(role, view.grid)}
             onSelect={setSelection}
             onIntent={handleIntent}
             onEdit={(layout) => setEditing(layout === document.scenes[0]?.layout ? undefined : layout)}
-            camera={camera}
-            onCameraChange={onCameraChange}
-          />
+            camera={view.camera}
+            onCameraChange={view.onCameraChange}
+          >
+            {/* The floating panels, placed as the 2D canvas places its own. */}
+            <div className='absolute top-2 bottom-14 left-2 pointer-events-none'>
+              <ToolRail groups={toolGroups} tool={tool} same={sameTool} testId={toolTestId} onToolChange={setTool} />
+            </div>
+            <div className='absolute w-max bottom-2 left-1/2 -translate-x-1/2'>
+              <ActionToolbar {...menu} classNames={FLOATING_BAR} attendableId={attendableId} />
+            </div>
+            <div className='absolute w-max bottom-2 right-2'>
+              <DisplayPanel
+                theme={themes.find((option) => option.id === theme) ?? themes[0]}
+                themes={themes}
+                override={view.theme}
+                onThemeChange={(id) => view.onThemeChange(isTheme3D(id) ? id : undefined)}
+                grid={view.grid ? 'lines' : 'none'}
+                gridOptions={['lines']}
+                onGridChange={(grid) => view.onGridChange(grid === 'lines')}
+              />
+            </div>
+            {notice && (
+              <p
+                role='alert'
+                className={mx('absolute top-2 left-1/2 -translate-x-1/2 text-sm text-error-text', FLOATING_BAR)}
+                data-testid='canvas3d.notice'
+              >
+                {notice}
+              </p>
+            )}
+            <InspectorPanel.Content />
+          </Scene3DEditor>
           {selected && (
-            <div
-              className='absolute top-2 right-2 w-72 max-h-[calc(100%-1rem)] overflow-auto rounded-sm bg-base-surface'
-              data-testid='canvas3d.properties'
-            >
+            <InspectorSection section={{ ...PROPERTIES, title: t('properties.label') }}>
               <Form.Root
                 key={selected.id}
-                schema={ElementProperties}
-                values={{
-                  label: selected.label,
-                  style: selected.style,
-                  center: selected.center,
-                  rotation: selected.rotation,
-                  scale: selected.scale,
-                }}
+                schema={ElementForm}
+                values={elementFormValues(selected)}
                 autoSave
                 onSave={handleSave}
               >
@@ -488,12 +535,23 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
                   </Form.Content>
                 </Form.Viewport>
               </Form.Root>
-            </div>
+            </InspectorSection>
           )}
-        </div>
+          <InspectorSection section={{ ...LIBRARY, title: t('library.label') }}>
+            <LibraryPanel
+              objects={objects}
+              placing={typeof tool === 'object' && 'place' in tool ? tool.place : undefined}
+              onPlace={(id) => setTool({ place: id })}
+              onEditParts={(layout) => {
+                setSelection([]);
+                setEditing(layout);
+              }}
+            />
+          </InspectorSection>
+        </InspectorPanel.Root>
       </Panel.Body>
     </Panel.Root>
   );
 };
 
-Scene3DArticle.displayName = 'Scene3DArticle';
+SceneView3D.displayName = 'SceneView3D';

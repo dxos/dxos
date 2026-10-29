@@ -89,7 +89,7 @@ stage 3; the work stays in dxos/dxos#14282.
   - [x] Task 12 — `Scene3DEditor`: select, Babylon gizmos, link, create and place tools, drill-in, delete; shared
         `useSceneRenderer`/`useOrbit` hooks.
   - [x] Task 13 — `layoutSource` and `applyLayoutIntent`: undo and redo over Layout3D that skip a peer's edit.
-  - [x] Task 14 — `Scene3DArticle` (toolbar, Properties form, undo/redo, camera write-back) and a create-only
+  - [x] Task 14 — `SceneArticle` (3D view) (toolbar, Properties form, undo/redo, camera write-back) and a create-only
         "3D Canvas" variant.
   - [x] Task 15 — `ModelIntent`/`applyModelIntent`, `writeModelIntent`, the Library panel and "Make object" (D-46).
   - [ ] Phase B follow-ups: the scenes list in the 3D article (with the 2D Views inspector); object thumbnails in the

@@ -535,7 +535,7 @@ rotation: Vec3; scale: Vec3 }): Scene.LayoutIntent | undefined`
 
 **Files:**
 
-- Create: `packages/plugins/plugin-canvas/src/containers/Scene3DArticle/{Scene3DArticle.tsx,Scene3DArticle.stories.tsx,index.ts}`
+- Create: `packages/plugins/plugin-canvas/src/containers/SceneArticle/{SceneView3D.tsx,SceneArticle.stories.tsx,index.ts}`
 - Modify: `packages/plugins/plugin-canvas/src/capabilities/react-surface.tsx`, `capabilities/drawing-variant.ts`
   (create flow), `translations.ts`
 - Test: `packages/plugins/plugin-canvas/src/plugin.test.ts`
@@ -543,7 +543,7 @@ rotation: Vec3; scale: Vec3 }): Scene.LayoutIntent | undefined`
 **Interfaces:**
 
 - Consumes: Tasks 4, 12, 13.
-- Produces: the article surface picks `CanvasArticle` or `Scene3DArticle` from `openScene(canvas)`'s type; a toolbar
+- Produces: the article surface renders `SceneArticle`, which picks its 2D or 3D view from `openScene(canvas)`'s type; a toolbar
   (`useMenuActions` + `Menu.Root`, one `Toolbar.Root`) with select, move/rotate/scale, create cube/sphere/cylinder/
   cone, link, group, ungroup, delete, undo, redo; a Properties panel as a `Form` over `Scene.Element3D`; the scenes
   list shared with 2D (Task 9); the orbit camera kept in the viewer's react-ui-attention view state (`scene3dViewAspect`), never written to the
@@ -562,7 +562,7 @@ rotation: Vec3; scale: Vec3 }): Scene.LayoutIntent | undefined`
 **Files:**
 
 - Create: `packages/common/scene/src/model-intent.ts`, `packages/plugins/plugin-canvas/src/containers/LibraryPanel/{LibraryPanel.tsx,LibraryPanel.stories.tsx,index.ts}`
-- Modify: `CanvasArticle.tsx`, `Scene3DArticle.tsx` (panel slot)
+- Modify: `CanvasArticle.tsx`, `SceneArticle/SceneView3D.tsx` (panel slot)
 - Test: `packages/common/scene/src/model-intent.test.ts`
 
 **Interfaces:**
@@ -613,7 +613,7 @@ rotation: Vec3; scale: Vec3 }): Scene.LayoutIntent | undefined`
 
 **Files:**
 
-- Modify: `packages/ui/react-ui-scene/src/components/Scene3DEditor/*`, `packages/plugins/plugin-canvas/src/containers/Scene3DArticle/*`
+- Modify: `packages/ui/react-ui-scene/src/components/Scene3DEditor/*`, `packages/plugins/plugin-canvas/src/containers/SceneArticle/*`
 - Test: `packages/ui/react-ui-scene/src/components/Scene3DEditor/gizmo.test.ts`
 
 **Interfaces:**

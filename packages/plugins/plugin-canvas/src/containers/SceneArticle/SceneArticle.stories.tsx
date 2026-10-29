@@ -19,7 +19,7 @@ import { Canvas } from '#types';
 
 import types from '../../capabilities/schema.ts';
 
-/** A 3D canvas over an exemplar, opened through the illustrator's article as the app opens it. */
+/** A canvas over scenes written in `.dx`, opened through the illustrator's article as the app opens it. */
 const withScenes = (text: string) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
@@ -47,15 +47,8 @@ const withScenes = (text: string) =>
     },
   });
 
-/**
- * 1. Click selects; Move, Rotate or Scale puts a gizmo on it; Undo and Redo step back and forth.
- * 2. Orbit (or the middle button) orbits; shift or the right button pans; the wheel zooms.
- * 3. Cube or Sphere places one where the pointer meets the ground; in Encapsulated, double-click the Team shell to
- *    edit its parts and Escape goes back out.
- * 4. The orbit is this viewer's own view state; the scene's camera is the authored view and is never written.
- */
 const meta: Meta<typeof ModuleContainer> = {
-  title: 'plugins/plugin-canvas/containers/Scene3DArticle',
+  title: 'plugins/plugin-canvas/containers/SceneArticle',
   render: ModuleContainer,
   parameters: { layout: 'fullscreen', translations },
 };
@@ -64,18 +57,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A single plain cube, to try each tool on. */
-export const Default: Story = {
+/** A 2D drawing (A → B → C) in the scene article: the canvas's palette, actions, inspectors and display panel. */
+export const Scene2D: Story = { decorators: withScenes(EXEMPLARS.links) };
+
+/**
+ * A single plain cube in the scene article, under the same floating panels as 2D.
+ * 1. Click selects; Move, Rotate or Scale puts a gizmo on it; Undo and Redo step back and forth.
+ * 2. Orbit (or the middle button) orbits; shift or the right button pans; the wheel zooms.
+ * 3. Cube or Sphere places one where the pointer meets the ground.
+ * 4. The display panel toggles the ground grid and picks the look; both are this viewer's own, like the orbit.
+ */
+export const Scene3D: Story = {
   decorators: withScenes(trim`
     scene cube dim=3d layout=cube name="Cube" {
       camera target=0,0,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
     }
 
     layout cube dim=3d {
-      element box cube "Cube" @ 0,0,0 scale=2 hue=blue surface=solid
+      element box cube @ 0,0,0 scale=2 hue=blue surface=solid
     }
   `),
 };
-
-/** The encapsulated cluster: a composite shell whose parts open with a double-click. */
-export const Encapsulated: Story = { decorators: withScenes(EXEMPLARS.encapsulated) };

@@ -77,6 +77,9 @@ export const ThemeSwatch = ({ classNames, theme, registry }: ThemeSwatchProps) =
   );
 };
 
+/** A registry theme, which a swatch can draw, rather than a plain option. */
+const isTheme = (theme: Theme | ThemeOption): theme is Theme => 'background' in theme;
+
 /** The value of the option that clears the override, so the drawing takes the user's default. */
 const DEFAULT_VALUE = '';
 
@@ -88,20 +91,28 @@ const GRID_OPTIONS: readonly { grid: Exclude<BackgroundGrid, 'none'>; icon: stri
 
 const barClasses = mx('w-full', FLOATING_BAR);
 
+/** A theme a view without a theme registry offers (e.g. a 3D scene's looks), by id and name. */
+export type ThemeOption = { id: string; name: string };
+
 export type DisplayPanelProps = PanelProps & {
-  registry: ThemeRegistry;
-  /** The theme drawn, override or default. */
-  theme: Theme;
+  /** The 2D canvas's themes, drawn as swatches; without it the panel offers `themes` by name. */
+  registry?: ThemeRegistry;
+  /** The theme drawn, override or default; with a `registry`, one of its themes. */
+  theme: Theme | ThemeOption;
+  /** Themes by name, for a view without a registry. */
+  themes?: readonly ThemeOption[];
   /** The theme chosen here, over the default; unset, the default is in use. */
   override?: string;
   /** The grid drawn, the background's own or the override. */
   grid: BackgroundGrid;
+  /** The grids offered, by default dots and lines; a view with one kind of grid offers a single toggle. */
+  gridOptions?: readonly Exclude<BackgroundGrid, 'none'>[];
   /** Picks a theme; `undefined` clears the override. Absent, the theme is shown but cannot be changed. */
   onThemeChange?: (id: string | undefined) => void;
   /** Picks a grid over the background's own; `undefined` clears the override. */
   onGridChange?: (grid: BackgroundGrid | undefined) => void;
-  /** The grid the theme's background draws, so picking it again clears the override. */
-  themeGrid: BackgroundGrid;
+  /** The grid the theme's background draws, so picking it again clears the override; none by default. */
+  themeGrid?: BackgroundGrid;
   /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle follows the grid options. */
   guides?: boolean;
   onGuidesToggle?: () => void;
@@ -121,9 +132,11 @@ export const DisplayPanel = ({
   readonly,
   registry,
   theme,
+  themes,
   override,
   grid,
-  themeGrid,
+  gridOptions,
+  themeGrid = 'none',
   onThemeChange,
   onGridChange,
   guides,
@@ -165,7 +178,7 @@ export const DisplayPanel = ({
     {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off; hidden on a lattice scene. */}
     {lattice !== true && (
       <Button.Group compact role='group' aria-label='Grid'>
-        {GRID_OPTIONS.map((option) => (
+        {GRID_OPTIONS.filter((option) => !gridOptions || gridOptions.includes(option.grid)).map((option) => (
           <Button.Toggle
             key={option.grid}
             variant='ghost'
@@ -187,7 +200,7 @@ export const DisplayPanel = ({
     <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
       <Menu.Trigger asChild disabled={readonly || !onThemeChange}>
         <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
-          <ThemeSwatch theme={theme} registry={registry} />
+          {registry && isTheme(theme) && <ThemeSwatch theme={theme} registry={registry} />}
           <span className='truncate'>{theme.name}</span>
           <Icon.Icon icon='ph--caret-up-down--regular' size='xs' />
         </Button.Root>
@@ -202,24 +215,36 @@ export const DisplayPanel = ({
             <Menu.ItemText />
             <Menu.ItemIndicator />
           </Menu.RadioItem>
-          {Object.values(registry.themes).map((option) => (
-            <Menu.RadioItem
-              key={option.id}
-              item={{ value: option.id, label: option.name }}
-              data-testid={`theme-option-${option.id}`}
-            >
-              <ThemeSwatch theme={option} registry={registry} />
-              <Menu.ItemText />
-              {option.mode && (
-                <Icon.Icon
-                  icon={option.mode === 'dark' ? 'ph--moon--regular' : 'ph--sun--regular'}
-                  size='sm'
-                  classNames='text-fg-muted'
-                />
-              )}
-              <Menu.ItemIndicator />
-            </Menu.RadioItem>
-          ))}
+          {registry &&
+            Object.values(registry.themes).map((option) => (
+              <Menu.RadioItem
+                key={option.id}
+                item={{ value: option.id, label: option.name }}
+                data-testid={`theme-option-${option.id}`}
+              >
+                <ThemeSwatch theme={option} registry={registry} />
+                <Menu.ItemText />
+                {option.mode && (
+                  <Icon.Icon
+                    icon={option.mode === 'dark' ? 'ph--moon--regular' : 'ph--sun--regular'}
+                    size='sm'
+                    classNames='text-fg-muted'
+                  />
+                )}
+                <Menu.ItemIndicator />
+              </Menu.RadioItem>
+            ))}
+          {!registry &&
+            themes?.map((option) => (
+              <Menu.RadioItem
+                key={option.id}
+                item={{ value: option.id, label: option.name }}
+                data-testid={`theme-option-${option.id}`}
+              >
+                <Menu.ItemText />
+                <Menu.ItemIndicator />
+              </Menu.RadioItem>
+            ))}
         </Menu.RadioItemGroup>
       </Menu.Content>
     </Menu.Root>
