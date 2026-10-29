@@ -27,5 +27,11 @@ tasks:
     options:
       timeout: 120
 
+  build:
+    # A plugin's per-runtime entries are generated from its module list; without it a changed
+    # `environments` replays a stale build.
+    inputs:
+      - dx.config.ts
+
 inheritedBy:
   tags: composer-plugin
