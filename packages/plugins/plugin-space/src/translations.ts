@@ -6,7 +6,7 @@ import { Collection, Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Event, Message, Organization, Person, Pipeline, Task, TaskSet } from '@dxos/types';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from './namespace.ts';
 
 // TODO(burdon): Disambiguate with sdk/shell.
 export const translations = [
@@ -111,7 +111,7 @@ export const translations = [
         'delete-object.label': 'Delete task',
         'object-deleted.label': 'Task deleted',
       },
-      [meta.profile.key]: {
+      [SpaceNamespace.key]: {
         'plugin.name': 'Spaces',
         'navigation-failed-toast.title': 'Link could not be processed',
         'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',
@@ -316,6 +316,13 @@ export const translations = [
         'repair-space.title': 'Repair Space',
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
+        'migrate-space-root.title': 'Credential storage',
+        'migrate-space-root.description':
+          'Move this space’s membership credentials off the legacy hypercore feed onto an Automerge document. EDGE performs the migration; other members adopt it when they next open the space.',
+        'migrate-space-root.label': 'Migrate',
+        'migrate-space-root.pending.label': 'Migrating…',
+        'migrate-space-root.migrated.label': 'Migrated',
+        'migrate-space-root-failed.message': 'Space migration failed.',
         'reset-home.title': 'Reset home layout',
         'reset-home.description': 'Restore all hidden sections on the space home page.',
         'reset-home.label': 'Reset',

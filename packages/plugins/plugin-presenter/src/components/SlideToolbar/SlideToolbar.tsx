@@ -17,9 +17,9 @@ import { type ThemedClassName } from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type LayoutName, type SlideFrontmatter } from '#markdown';
-import { meta } from '#meta';
 import { type SlideEditorViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { LayoutPicker } from './LayoutPicker.tsx';
 
 /** Snippets the toolbars insert at the cursor. */
@@ -28,7 +28,7 @@ export type SlideInsert = 'click' | 'clicks' | 'column' | 'notes';
 /** Frontmatter keys the background popover edits. */
 export type BackgroundSettings = Pick<SlideFrontmatter, 'image' | 'backgroundVideo'>;
 
-const label = (key: string): Theme.Label => [key, { ns: meta.profile.key }];
+const label = (key: string): Theme.Label => [key, { ns: PresenterNamespace.key }];
 
 export type SlideToolbarProps = ThemedClassName<{
   layout: LayoutName;
@@ -205,7 +205,7 @@ export const useSlideInsertActions = ({
   onObjectsOpenChange,
   onInsertObject,
 }: SlideInsertActionsProps): Atom.Atom<ActionGraphProps> => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   // The handlers change every render; read through a ref so the graph is rebuilt only when what it shows changes.
   const handlers = useRef({ onInsert, onObjectsOpenChange, onInsertObject });
   useLayoutEffect(() => {
@@ -283,7 +283,7 @@ type BackgroundPopoverProps = { value: BackgroundSettings; onChange: (value: Bac
 
 /** Image and video URL fields for the slide background; each commits on Enter or blur, and empty removes it. */
 const BackgroundPopover = ({ value, onChange }: BackgroundPopoverProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const [image, setImage] = useState(value.image ?? '');
   const [video, setVideo] = useState(value.backgroundVideo ?? '');
   const commit = () => onChange({ image: image.trim() || undefined, backgroundVideo: video.trim() || undefined });

@@ -39,18 +39,24 @@ feat F-1: Conditional companion
   req F-1.1: The companion appears for an object only when its type carries an AtprotoRecordAnnotation.
   req F-1.2: The companion appears only when the object's space holds an atproto Connection.
   req F-1.3: Adding or removing an atproto connection shows/hides the companion reactively.
+```
 
+```mdl
 feat F-2: Public projection with private markers
   req F-2.1: The companion lists the object's fields with a globe (public) or lock (private) marker.
   req F-2.2: Private (unmarked) fields are de-emphasized and their values are not shown as network data.
+```
 
+```mdl
 feat F-3: Publish / reconcile
   req F-3.1: Status is one of Not published / Published (in sync) / Published (out of date).
   req F-3.2: The first publish of an object requires explicit confirmation; re-publishes are silent.
   req F-3.3: Publish writes a record via the AtprotoRepo service; Unpublish deletes it.
   req F-3.4: Out-of-date is computed by comparing hash(encode(object)) to the last-published hash.
   req F-3.5: Publish stamps an atproto foreign key (source 'atproto', id = record AT-URI) on the object.
+```
 
+```mdl
 feat F-4: PDS browser
   req F-4.1: A virtual "PDS" node appears in the navigation system section (below Database, above
     Devtools) only when the space holds an atproto connection.
@@ -72,7 +78,9 @@ scenario T-1: Companion visibility
   then: no publishing companion is offered
   when: an atproto connection is added to the space
   then: the publishing companion is offered
+```
 
+```mdl
 scenario T-2: Publish then detect drift (against the mock repo)
   given: an atproto-annotated object and a mock AtprotoRepo
   when: the object is published
@@ -81,7 +89,9 @@ scenario T-2: Publish then detect drift (against the mock repo)
   then: status becomes Published (out of date)
   when: the object is unpublished
   then: the record is gone from the repo and no AtprotoPublication remains
+```
 
+```mdl
 scenario T-3: Browse and import (storybook, mock repo)
   given: a space with an atproto connection and a mock repo holding a mapped and an unmapped collection
   then: the PDS browser marks the mapped collection and shows both

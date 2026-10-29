@@ -10,9 +10,7 @@ import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
 import { type FeatureCompanionProps } from './FeatureCompanion/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
-import { type ProjectFeaturesProps } from './ProjectFeatures/index.ts';
-import { type ShowcaseArticleProps } from './ShowcaseArticle/index.ts';
-import { type ShowcaseCardContentProps } from './ShowcaseCardContent/index.ts';
+import { type SpecArticleProps } from './SpecFeatures/index.ts';
 
 export const FeatureArticle: ComponentType<FeatureArticleProps> = lazy(() =>
   import('./FeatureArticle/index.ts').then((module) => ({ default: module.FeatureArticle })),
@@ -26,9 +24,9 @@ export const FeatureCompanion: ComponentType<FeatureCompanionProps> = lazy(() =>
   import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureCompanion })),
 );
 
-// Lazy: the canvas engine is large, and only the Features tab needs it.
-export const ProjectFeatures: ComponentType<ProjectFeaturesProps> = lazy(() =>
-  import('./ProjectFeatures/index.ts').then((module) => ({ default: module.ProjectFeatures })),
+// Lazy: the canvas engine is large, and only a spec's map needs it.
+export const SpecArticle: ComponentType<SpecArticleProps> = lazy(() =>
+  import('./SpecFeatures/index.ts').then((module) => ({ default: module.SpecArticle })),
 );
 
 export const ProjectArticle: ComponentType<any> = lazy(() =>
@@ -41,14 +39,6 @@ export const ProjectChatsArticle: ComponentType<ProjectBranchArticleProps> = laz
 
 export const ProjectArtifactsArticle: ComponentType<ProjectBranchArticleProps> = lazy(() =>
   import('./ProjectBranchArticle/index.ts').then((module) => ({ default: module.ProjectArtifactsArticle })),
-);
-
-export const ShowcaseArticle: ComponentType<ShowcaseArticleProps> = lazy(() =>
-  import('./ShowcaseArticle/index.ts').then((module) => ({ default: module.ShowcaseArticle })),
-);
-
-export const ShowcaseCardContent: ComponentType<ShowcaseCardContentProps> = lazy(() =>
-  import('./ShowcaseCardContent/index.ts').then((module) => ({ default: module.ShowcaseCardContent })),
 );
 
 export const MoveTaskDialog: ComponentType<MoveTaskDialogProps> = lazy(() =>

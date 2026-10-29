@@ -16,8 +16,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { type Channel } from '@dxos/types';
 
 import { DiscordBotStatus, DiscordBotToolbar, DiscordChannelForm } from '#components';
-import { meta } from '#meta';
 import { DiscordChannel } from '#types';
+
+import { DiscordNamespace } from '../../namespace.ts';
 
 /** How often the bot status is re-read; the gateway changes state on EDGE without notifying Composer. */
 const STATUS_POLL_MS = 5_000;
@@ -28,7 +29,7 @@ export type DiscordChannelPropertiesProps = AppSurface.ObjectPropertiesProps<Cha
 
 /** The bot settings of a Discord-backed channel, with its EDGE gateway controls and status. */
 export const DiscordChannelProperties = ({ subject: channel, attendableId }: DiscordChannelPropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DiscordNamespace.key);
   const db = Obj.getDatabase(channel);
   const config = useResolveRef(channel.backend.config);
   const discord = DiscordChannel.instanceOf(config) ? config : undefined;

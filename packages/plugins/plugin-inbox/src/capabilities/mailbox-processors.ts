@@ -52,6 +52,19 @@ export const inboxMailboxProcessors: readonly InboxCapabilities.MailboxProcessor
     ],
   },
   {
+    // After `contacts`: a sender with a Person record is the user's own correspondent, and the
+    // questions read better once that is known.
+    id: 'label',
+    tier: 'classify',
+    after: ['contacts'],
+    createInvocations: (mailbox, { batchLimit }) => [
+      {
+        operation: InboxOperation.TriageMailbox,
+        input: { mailbox: Ref.make(mailbox), batchLimit },
+      },
+    ],
+  },
+  {
     id: 'classify',
     tier: 'classify',
     after: ['contacts'],

@@ -9,7 +9,7 @@ import type * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Database, type Obj } from '@dxos/echo';
 
-import { meta } from '#meta';
+import { SearchNamespace } from '../namespace.ts';
 
 /**
  * A row's translated label: the key, its namespace, and the values it interpolates.
@@ -47,4 +47,4 @@ export type QueryAction = {
  * Multi capability: each contributing plugin provides one batch of actions; the dialog flattens them.
  * Contributors activate on `SearchEvents.Start`, which the dialog fires when it opens.
  */
-export const QueryAction = Capability.make<QueryAction[]>()(`${meta.profile.key}.capability.queryAction`);
+export const QueryAction = Capability.make<QueryAction[]>()(`${SearchNamespace.key}.capability.queryAction`);

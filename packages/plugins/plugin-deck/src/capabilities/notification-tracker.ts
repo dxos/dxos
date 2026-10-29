@@ -19,9 +19,9 @@ import { Annotation } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 import { DeckCapabilities } from '#types';
 
+import { DeckNamespace } from '../namespace.ts';
 import { upsertToast } from '../util/index.ts';
 
 const NOTIFY_TOAST_DURATION = 5_000;
@@ -149,14 +149,14 @@ export default Capability.makeModule(
       // The fixed id keeps at most one failure toast visible — `upsertToast` replaces any stale one.
       const toast: LayoutOperation.Toast = {
         id: 'plugin-failure',
-        title: ['plugin-failure.title', { ns: meta.profile.key }],
-        description: ['plugin-failure.description', { ns: meta.profile.key }],
+        title: ['plugin-failure.title', { ns: DeckNamespace.key }],
+        description: ['plugin-failure.description', { ns: DeckNamespace.key }],
         icon: 'ph--warning--regular',
         duration: ERROR_TOAST_DURATION,
         ...(SettingsOperation.isPluginRegistryAvailable(registry.get(manager.enabled))
           ? {
-              actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
-              actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
+              actionLabel: ['plugin-failure-action.label', { ns: DeckNamespace.key }],
+              actionAlt: ['plugin-failure-action.alt', { ns: DeckNamespace.key }],
               onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry, {}),
             }
           : {}),
@@ -180,11 +180,11 @@ export default Capability.makeModule(
         : state.toasts;
       const toast: LayoutOperation.Toast = {
         id: undoId,
-        title: message ?? ['undo-available.label', { ns: meta.profile.key }],
+        title: message ?? ['undo-available.label', { ns: DeckNamespace.key }],
         duration: UNDO_TOAST_DURATION,
-        actionLabel: ['undo-action.label', { ns: meta.profile.key }],
-        actionAlt: ['undo-action.alt', { ns: meta.profile.key }],
-        closeLabel: ['undo-close.label', { ns: meta.profile.key }],
+        actionLabel: ['undo-action.label', { ns: DeckNamespace.key }],
+        actionAlt: ['undo-action.alt', { ns: DeckNamespace.key }],
+        closeLabel: ['undo-close.label', { ns: DeckNamespace.key }],
         onAction: onUndo,
       };
       registry.set(ephemeralAtom, { ...state, currentUndoId: undoId, toasts: upsertToast(toasts, toast) });

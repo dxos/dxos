@@ -10,6 +10,7 @@ import { Plugin, PluginManifest } from '../../core/index.ts';
 import { findDxConfigFile, loadDxConfig } from '../load.ts';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
+import { moduleBodyAttributePlugin, pluginConfigPlugin } from '../plugin-config/index.ts';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
 export type { BuildMeta };
@@ -144,7 +145,10 @@ export type ComposerPluginOptions = {
  *    cache them for offline use.
  */
 export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] => {
-  const entry = options?.entry ?? 'src/plugin.tsx';
+  // A plugin defined by `Plugin.config` builds from its `dx.config.ts`; older projects from `src/plugin.tsx`.
+  const configFile = findDxConfigFile(process.cwd());
+  const definesPlugin = configFile !== undefined && /Plugin\.config[<(]/.test(readFileSync(configFile, 'utf8'));
+  const entry = options?.entry ?? (definesPlugin ? configFile : 'src/plugin.tsx');
   const port = options?.port ?? PluginManifest.DEV_SERVER_PORT;
   // Plugin metadata source of truth is `dx.config.ts` (`@dxos/protocols` `Config2.Config`). When the caller
   // doesn't pass `meta` explicitly, load + validate the config and derive a `BuildMeta` from it
@@ -385,5 +389,9 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     },
   });
 
+  if (definesPlugin) {
+    // Emits the config as a manifest whose bodies are code-split chunks of the bundle.
+    plugins.push(pluginConfigPlugin(), moduleBodyAttributePlugin());
+  }
   return plugins;
 };

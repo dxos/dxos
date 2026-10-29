@@ -9,13 +9,12 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
+import { SandboxNamespace } from '../namespace.ts';
 import type * as SandboxService from './SandboxService.ts';
 import type * as SettingsModule from './Settings.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${SandboxNamespace.key}.capability.settings`,
 );
 
 /**
@@ -27,4 +26,6 @@ export type LocalLauncher = {
   readonly backend: Effect.Effect<SandboxService.Backend, SandboxService.SandboxError>;
 };
 
-export const LocalLauncher = Capability.makeSingleton<LocalLauncher>()(`${meta.profile.key}.capability.localLauncher`);
+export const LocalLauncher = Capability.makeSingleton<LocalLauncher>()(
+  `${SandboxNamespace.key}.capability.localLauncher`,
+);

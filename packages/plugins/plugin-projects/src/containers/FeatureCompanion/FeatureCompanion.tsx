@@ -4,7 +4,6 @@
 
 import React, { useCallback } from 'react';
 
-import type * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
@@ -14,35 +13,35 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-import { Feature, FeatureMapView } from '#types';
+import { Feature, FeatureMapView, type Spec } from '#types';
 
 import { useOpenObject } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 import { FeatureDetail } from '../FeatureArticle/index.ts';
 
 const nothing = Query.select(Filter.nothing());
 
 export type FeatureCompanionProps = {
   role?: string;
-  /** The project whose map the companion sits beside. */
-  project: Project.Project;
-  /** The project plank's id: the selection context the map writes and what the detail opens beside. */
+  /** The spec whose map the companion sits beside. */
+  spec: Spec.Spec;
+  /** The spec plank's id: the selection context the map writes and what the detail opens beside. */
   attendableId?: string;
 };
 
 /**
- * The project's feature companion: the feature selected on its map, in full. Which feature is the plank's single
+ * The spec's feature companion: the feature selected on its map, in full. Which feature is the plank's single
  * selection, so the companion follows the map without either holding state of its own. Picking a subfeature here
  * zooms the map into this feature and selects it there, so the map and the companion keep showing the same place.
  */
-export const FeatureCompanion = ({ role, project, attendableId }: FeatureCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const db = Obj.getDatabase(project);
+export const FeatureCompanion = ({ role, spec, attendableId }: FeatureCompanionProps) => {
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
+  const db = Obj.getDatabase(spec);
   const selectedId = useSelection(attendableId, 'single');
   const [selected] = useQuery(selectedId ? db : undefined, selectedId ? Query.select(Filter.id(selectedId)) : nothing);
   const feature = Feature.instanceOf(selected) ? selected : undefined;
   const { single: select } = useSelectionActions(attendableId);
-  const { update: updateView } = useViewStateActions(FeatureMapView.aspect, project.id);
+  const { update: updateView } = useViewStateActions(FeatureMapView.aspect, spec.id);
   const openObject = useOpenObject(db, attendableId);
 
   const handleZoom = useCallback(() => {

@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import React, { type ReactNode, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -39,11 +39,10 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { ProjectFeatures } from '#containers';
-import { meta } from '#meta';
 import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import { useRefTargets } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
@@ -69,7 +68,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
   const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
@@ -109,9 +108,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         </Tabs.Trigger>
         <Tabs.Trigger value='tasks' data-testid='projectsPlugin.tab.tasks'>
           {t('tasks.label')}
-        </Tabs.Trigger>
-        <Tabs.Trigger value='features' data-testid='projectsPlugin.tab.features'>
-          {t('features.label')}
         </Tabs.Trigger>
       </Tabs.List>
     ),
@@ -371,12 +367,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
               </Splitter.Panel>
             </Splitter.Root>
           )}
-
-          {tab === 'features' && (
-            <Suspense fallback={null}>
-              <ProjectFeatures project={subject} attendableId={attendableId} />
-            </Suspense>
-          )}
         </Panel.Body>
       </Panel.Root>
     </Tabs.Root>
@@ -545,7 +535,7 @@ const useToolbarActions = ({
           'tabs',
           {
             variant: 'custom',
-            label: ['views.label', { ns: meta.profile.key }],
+            label: ['views.label', { ns: ProjectsNamespace.key }],
             render: () => tabs,
           },
           () => {},
@@ -554,7 +544,7 @@ const useToolbarActions = ({
         .action(
           'create-chat',
           {
-            label: ['create-chat.label', { ns: meta.profile.key }],
+            label: ['create-chat.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--sparkle--regular',
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
@@ -566,7 +556,7 @@ const useToolbarActions = ({
         .action(
           'delegate-tasks',
           {
-            label: ['delegate-tasks.label', { ns: meta.profile.key }],
+            label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--paper-plane-tilt--regular',
             disposition: 'toolbar',
             disabled: checkedTasks.length === 0 || delegating,
@@ -578,7 +568,7 @@ const useToolbarActions = ({
         .group(
           'view',
           {
-            label: ['view.label', { ns: meta.profile.key }],
+            label: ['view.label', { ns: ProjectsNamespace.key }],
             variant: 'toggleGroup',
             selectCardinality: 'multiple',
             value: showPipeline ? ['pipeline'] : [],
@@ -587,7 +577,7 @@ const useToolbarActions = ({
             group.action(
               'pipeline',
               {
-                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: meta.profile.key }],
+                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: ProjectsNamespace.key }],
                 icon: 'ph--chart-bar-horizontal--regular',
                 testId: 'projectsPlugin.pipeline',
               },
@@ -602,7 +592,7 @@ const useToolbarActions = ({
             group.action(
               'add-artifact',
               {
-                label: ['create-artifact.label', { ns: meta.profile.key }],
+                label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
                 icon: 'ph--plus--regular',
                 testId: 'projectsPlugin.addArtifact',
               },

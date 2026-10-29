@@ -10,7 +10,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
+import { DevtoolsNamespace } from '../../namespace.ts';
 
 const DEFAULT_REPO = 'dxos/dxos';
 const DEFAULT_LIMIT = 20;
@@ -94,7 +94,7 @@ const Root = ({ repo = DEFAULT_REPO, limit = DEFAULT_LIMIT, children }: GithubCo
 };
 
 const Header = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DevtoolsNamespace.key);
   const { repo, pulls, unavailable } = useComponentContext();
   return (
     <header className='flex items-center justify-between gap-1 px-4 py-3 dx-modal-surface border-b border-separator-subtle'>
@@ -150,7 +150,7 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DevtoolsNamespace.key);
   const { repo } = useComponentContext();
   return (
     <Button.Root

@@ -16,7 +16,7 @@ import * as GraphAction from '@dxos/plugin-graph/GraphAction';
 import { hotkeyStore, initHotkeys, setHotkeyScope } from '@dxos/react-focus/store';
 import { resolveKeyBinding } from '@dxos/util';
 
-import { KEY_BINDING } from '#meta';
+import { KEY_BINDING } from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

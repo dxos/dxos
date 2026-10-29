@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import { CanvasBoard } from '@dxos/react-ui-canvas-compute/types';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { ConductorNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete circuit',
         'object-deleted.label': 'Circuit deleted',
       },
-      [meta.profile.key]: {
+      [ConductorNamespace.key]: {
         'plugin.name': 'Conductor',
         'content.placeholder': 'Enter text...',
       },

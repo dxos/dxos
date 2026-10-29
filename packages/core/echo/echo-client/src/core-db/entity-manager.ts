@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -43,7 +43,7 @@ import {
   runInCommit,
 } from '@dxos/echo/internal';
 import { assertState, invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, runServiceEffect, subscribeStream } from '@dxos/protocols';
 import type { DataService, QueryService } from '@dxos/protocols/rpc';
@@ -64,8 +64,8 @@ import { type BranchStore, forkDump, referencedObjectIds } from './branching.ts'
 import { ObjectCoreRegistry } from './object-core-registry.ts';
 import { type IDatabaseBinding, ObjectCore, type SnapshotState } from './object-core.ts';
 import { shareStructure } from './share-structure.ts';
+import { getSnapshotState } from './snapshot-state.ts';
 import {
-  type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type DocumentChanges,
   type GetObjectCoreByIdOptions,
@@ -76,6 +76,7 @@ import {
   type SpaceDocumentHeads,
 } from './types.ts';
 import { getInlineAndLinkChanges, getRemovedObjectIds } from './util.ts';
+import { type ExportWorkingSetOptions, type WorkingSetRow } from './working-set-row.ts';
 
 const TRACE_LOADING = false;
 
@@ -251,6 +252,9 @@ export class EntityManager implements IDatabaseBinding {
   /** Ids {@link _linksAddedEvent} has already reported. */
   #linkedObjectIds = new Set<string>();
 
+  /** Objects moved out of the space directory whose cores rebind to their new document once it loads. */
+  readonly #pendingPromotions = new Set<string>();
+
   /** Set from {@link close} until the next {@link open}: the working set is gone, not merely unloaded. */
   #closed = false;
 
@@ -362,6 +366,8 @@ export class EntityManager implements IDatabaseBinding {
       const spaceRootDocHandle = this.getSpaceRootDocHandle();
       const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
+      // Deprecated inline directory objects stay readable until the host migrates them into linked documents.
+      // TODO(dmaretskyi): Drop once every space has run the inline object migration.
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(spaceRootDocHandle, objectIds);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
@@ -606,6 +612,109 @@ export class EntityManager implements IDatabaseBinding {
     } catch (err) {
       log.warn('index row not placed, the object loads from its document', { id, err });
       return undefined;
+    }
+  }
+
+  /**
+   * The working set as rows the host can be bypassed with at the next open: the space root first, then
+   * each object's document by most recent use, leaving out what does not fit `maxBytes` and any
+   * document with a change the host has not taken.
+   */
+  exportWorkingSet({ maxBytes }: ExportWorkingSetOptions): WorkingSetRow[] {
+    const root = this._spaceRootDocHandle;
+    const rootState = root?._heldState();
+    if (!root?.documentId || !rootState || rootState.bytes.length > maxBytes) {
+      return [];
+    }
+    const rows: WorkingSetRow[] = [
+      { documentId: root.documentId, heads: [...rootState.heads], bytes: rootState.bytes },
+    ];
+    let total = rootState.bytes.length;
+    const exported = new Set<string>([root.documentId]);
+    const cores = this.allObjectCores()
+      .filter((core) => this.getCurrentBranch(core.id) === 'main')
+      .sort((a, b) => b.activeAt - a.activeAt);
+    for (const core of cores) {
+      const handle = core.handle;
+      const documentId = handle?.documentId;
+      if (!handle || !documentId || exported.has(documentId)) {
+        continue;
+      }
+      const row = this.#workingSetRow(core, handle, documentId);
+      if (!row || total + row.bytes.length > maxBytes) {
+        continue;
+      }
+      exported.add(documentId);
+      total += row.bytes.length;
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  #workingSetRow(
+    core: ObjectCore,
+    handle: DocHandleProxy<DatabaseDirectory>,
+    documentId: string,
+  ): WorkingSetRow | undefined {
+    const state = handle._heldState();
+    if (!state) {
+      return undefined;
+    }
+    const row: WorkingSetRow = { documentId, heads: [...state.heads], bytes: state.bytes };
+    const structure = core.snapshot ? core.snapshot.root.objects[core.id] : this.#soleObjectStructure(core.id, handle);
+    if (structure) {
+      row.objectId = core.id;
+      row.objectJson = JSON.stringify(objectStructureToJson(core.id as EntityId, structure));
+      row.createdAt = structure.system?.createdAt;
+      row.updatedAt = core.getUpdatedAt();
+    }
+    return row;
+  }
+
+  /** The object's structure when it is the only thing its loaded document holds — the shape a JSON row can stand for. */
+  #soleObjectStructure(id: string, handle: DocHandleProxy<DatabaseDirectory>): EntityStructure | undefined {
+    if (handle === this._spaceRootDocHandle || this._documentObjects.get(handle)?.size !== 1) {
+      return undefined;
+    }
+    const doc = handle.doc();
+    const structure = doc.objects?.[id];
+    return structure &&
+      Object.keys(doc.objects ?? {}).length === 1 &&
+      Object.keys(doc.links ?? {}).length === 0 &&
+      structure.system?.mergedInto === undefined
+      ? structure
+      : undefined;
+  }
+
+  /**
+   * Holds each row's stored changes as a passive handle, so the space root and every object document
+   * load from them, without waiting for the host. Called between {@link open} and {@link openWithSpaceState}.
+   */
+  seedDocuments(rows: readonly WorkingSetRow[]): void {
+    for (const { documentId, bytes, heads } of rows) {
+      this._repoProxy.find<DatabaseDirectory>(documentId as DocumentId, { passive: { bytes, heads } });
+    }
+  }
+
+  /** Shows each object row from its JSON, as an index row is, once the space root routes objects to documents. */
+  placeSeededObjects(rows: readonly WorkingSetRow[]): void {
+    for (const { objectId, objectJson, documentId, heads, bytes, createdAt, updatedAt } of rows) {
+      if (objectId === undefined || objectJson === undefined) {
+        continue;
+      }
+      this.placeIndexRow(EntityId.make(objectId), documentId, () =>
+        getSnapshotState({
+          id: objectId,
+          spaceId: this._spaceId,
+          documentId,
+          rank: 0,
+          documentJson: objectJson,
+          heads,
+          bytes,
+          createdAt,
+          updatedAt,
+        }),
+      );
     }
   }
 
@@ -1025,12 +1134,12 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  addCore(core: ObjectCore, opts?: AddCoreOptions): void {
+  addCore(core: ObjectCore): void {
     // One commit: live queries must see the object bound and available, not the link written before it.
-    runInCommit(() => this.#addCore(core, opts));
+    runInCommit(() => this.#addCore(core));
   }
 
-  #addCore(core: ObjectCore, opts?: AddCoreOptions): void {
+  #addCore(core: ObjectCore): void {
     if (core.entityManager) {
       if (core.entityManager !== this) {
         throw new Error('Object already belongs to another database');
@@ -1046,22 +1155,9 @@ export class EntityManager implements IDatabaseBinding {
     invariant(!this._objects.has(core.id));
     this._objects.set(core.id, core);
 
-    let spaceDocHandle: DocHandleProxy<DatabaseDirectory>;
-    const placement = opts?.placeIn ?? 'linked-doc';
-    switch (placement) {
-      case 'linked-doc': {
-        spaceDocHandle = this._createDocumentForObject(core.id);
-        spaceDocHandle.on('change', this._onDocumentUpdate);
-        break;
-      }
-      case 'root-doc': {
-        spaceDocHandle = this.getSpaceRootDocHandle();
-        this._onObjectBoundToDocument(spaceDocHandle, core.id);
-        break;
-      }
-      default:
-        throw new TypeError(`Unknown object placement: ${placement}`);
-    }
+    // Every object gets a document of its own; the space directory holds only its link.
+    const spaceDocHandle = this._createDocumentForObject(core.id);
+    spaceDocHandle.on('change', this._onDocumentUpdate);
 
     core.bind({
       db: this,
@@ -1400,6 +1496,10 @@ export class EntityManager implements IDatabaseBinding {
     return [...new Set([...Object.keys(rootDoc.objects ?? {}), ...Object.keys(rootDoc.links ?? {})])];
   }
 
+  /**
+   * @deprecated Inline directory objects are migrated into linked documents; this counts the ones not migrated yet.
+   */
+  // TODO(dmaretskyi): Remove once every space has run the inline object migration.
   getNumberOfInlineObjects(): number {
     return Object.keys(this.getSpaceRootDocHandle().doc()?.objects ?? {}).length;
   }
@@ -1936,6 +2036,57 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+
+    // A root write can re-point a loaded object at another document (a migration committed in place),
+    // which no epoch switch will rebind. The handle map covers objects whose core was collected, which
+    // rehydrate from it; an object viewed on another branch keeps its branch document.
+    for (const [objectId, link] of Object.entries(links)) {
+      const url = link.toString();
+      const boundUrl = this._objectDocumentHandles.get(objectId)?.url;
+      if (
+        boundUrl != null &&
+        boundUrl !== url &&
+        isValidAutomergeUrl(url) &&
+        this.getCurrentBranch(objectId) === 'main'
+      ) {
+        this.#rebindWhenReady(this._repoProxy.find<DatabaseDirectory>(url), objectId, this.#generation);
+      }
+    }
+  }
+
+  /** Rebinds an object to the document its root link now names, once that document is ready. */
+  #rebindWhenReady(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle
+      .whenReady()
+      .then(() => {
+        if (
+          this.#isStale(generation) ||
+          this._getLinkedDocumentUrl(objectId) !== handle.url ||
+          this.getCurrentBranch(objectId) !== 'main'
+        ) {
+          return;
+        }
+        const previous = this._objectDocumentHandles.get(objectId);
+        if (previous == null) {
+          return;
+        }
+        // Move the change listener as a branch switch does: `_processDocumentUpdate` rebinds an object
+        // to whichever document fires a change, so the superseded one must stop firing for it.
+        const spaceRoot = this.getSpaceRootDocHandle();
+        if (previous !== spaceRoot && (this._documentObjects.get(previous)?.size ?? 0) <= 1) {
+          previous.off('change', this._onDocumentUpdate);
+        }
+        if (handle !== spaceRoot) {
+          handle.off('change', this._onDocumentUpdate);
+          handle.on('change', this._onDocumentUpdate);
+        }
+        if (this._objects.has(objectId)) {
+          this._rebindObjects(handle, [objectId]);
+        } else {
+          this._bindObjectDocument(objectId, handle);
+        }
+      })
+      .catch((err) => log.catch(err));
   }
 
   private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
@@ -2025,6 +2176,7 @@ export class EntityManager implements IDatabaseBinding {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
     this.#linkedObjectIds.clear();
+    this.#pendingPromotions.clear();
     this._documentObjects.clear();
     this._spaceRootDocHandle = null;
     return objectsWithHandles;
@@ -2086,7 +2238,7 @@ export class EntityManager implements IDatabaseBinding {
   private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
     const docHandle = this._repoProxy.find<DatabaseDirectory>(url as DocumentId);
     await warnAfterTimeout(5_000, 'Automerge root doc load timeout (EntityManager)', async () => {
-      await cancelWithContext(ctx, docHandle.whenReady());
+      await cancelWithContext(ctx, docHandle.whenUsable());
     });
 
     return docHandle;
@@ -2154,7 +2306,8 @@ export class EntityManager implements IDatabaseBinding {
       }
       this._currentlyLoadingObjects.add({ url: handle.url, objectId });
 
-      if (opts.diskOnly) {
+      // A document loaded from stored changes this client held is on hand, wherever the host is.
+      if (opts.diskOnly && !handle.isLoaded()) {
         const onDisk = await handle.whenSettledOnDisk();
         if (this.#isStale(generation)) {
           this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
@@ -2183,7 +2336,7 @@ export class EntityManager implements IDatabaseBinding {
         }
       }
 
-      await handle.whenReady();
+      await handle.whenUsable();
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
       if (this.#isStale(generation)) {
         log('lifetime ended while a document was loading, abandoning load', { objectId });
@@ -2234,6 +2387,7 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
+    // Deprecated inline directory objects, read until the host migrates them; TODO(dmaretskyi): drop once migrated.
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
@@ -2393,11 +2547,20 @@ export class EntityManager implements IDatabaseBinding {
     // Bound documents count, not just live cores: a core collected before its entry was removed
     // leaves the document behind, and `_rehydrateCore` would resurrect an object the directory no
     // longer lists from it.
-    const removed = getRemovedObjectIds(event).filter(
+    const candidates = getRemovedObjectIds(event).filter(
       (objectId) =>
         (this._objects.has(objectId) || this._objectDocumentHandles.has(objectId)) &&
         !this._pendingDocumentCreations.has(objectId),
     );
+    if (candidates.length === 0) {
+      return;
+    }
+
+    // An inline object the host migrated out of the directory is replaced by a link in the same change: it moved.
+    const links = event.handle === this._spaceRootDocHandle ? (event.handle.doc()?.links ?? {}) : {};
+    const promoted = candidates.filter((objectId) => links[objectId] != null);
+    const removed = candidates.filter((objectId) => links[objectId] == null);
+    this.#promoteInlineObjects(promoted);
     if (removed.length === 0) {
       return;
     }
@@ -2408,6 +2571,43 @@ export class EntityManager implements IDatabaseBinding {
     }
     log('evicted objects removed from the space directory', { count: removed.length });
     this._updateScheduler.forceTrigger();
+  }
+
+  /**
+   * Rebinds objects that moved from the space directory into documents of their own (see
+   * `EchoHost.migrateInlineObjects`). Their cores are kept, so callers holding the objects keep them; each is rebound
+   * once its document loads.
+   */
+  #promoteInlineObjects(objectIds: string[]): void {
+    if (this._spaceRootDocHandle == null) {
+      return;
+    }
+    for (const objectId of objectIds) {
+      const url = this._getLinkedDocumentUrl(objectId);
+      const bound = this._objectDocumentHandles.get(objectId);
+      if (url == null || bound == null || bound.url === url) {
+        continue;
+      }
+      if (!this._objects.has(objectId)) {
+        // No core to keep: the next read loads the object through its link.
+        this._unbindObjectDocument(objectId);
+        continue;
+      }
+      let handle: DocHandleProxy<DatabaseDirectory>;
+      try {
+        handle = this._repoProxy.find<DatabaseDirectory>(url);
+      } catch (err) {
+        if (!RepoClosedError.is(err)) {
+          throw err;
+        }
+        log('repo closed while promoting inline objects, abandoning', { objectId });
+        return;
+      }
+      log('inline object moved to its own document, rebinding', { objectId, url });
+      this.#pendingPromotions.add(objectId);
+      this._bindObjectDocument(objectId, handle);
+      void this._loadHandleForObject(handle, objectId);
+    }
   }
 
   /**
@@ -2524,7 +2724,8 @@ export class EntityManager implements IDatabaseBinding {
     countWork('echo.objectDocumentsLoaded');
 
     const existing = this._objects.get(objectId);
-    if (existing?.snapshot) {
+    const promoted = this.#pendingPromotions.delete(objectId);
+    if (existing != null && (existing.snapshot || promoted)) {
       existing.bind({ db: this, docHandle: handle, path: existing.mountPath, assignFromLocalState: false });
       this._onObjectBoundToDocument(handle, objectId);
     }

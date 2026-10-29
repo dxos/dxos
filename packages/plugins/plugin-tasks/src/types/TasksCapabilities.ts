@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as ObjectAction from '@dxos/app-toolkit/ObjectAction';
 import { type Task } from '@dxos/types';
 
-import { meta } from '#meta';
+import { TasksNamespace } from '../namespace.ts';
 
 /**
  * A task-scoped action injected into a task row's menu — plugin-projects contributes "delegate to a
@@ -21,4 +21,4 @@ import { meta } from '#meta';
 export type TaskAction = ObjectAction.ObjectAction<Task.Task>;
 
 // Multi: one menu item per contributed action, and more than one plugin may contribute.
-export const TaskAction = Capability.make<TaskAction>()(`${meta.profile.key}.capability.taskAction`);
+export const TaskAction = Capability.make<TaskAction>()(`${TasksNamespace.key}.capability.taskAction`);

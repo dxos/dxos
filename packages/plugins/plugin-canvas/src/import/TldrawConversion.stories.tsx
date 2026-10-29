@@ -11,8 +11,8 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as TldrawPlugin from '@dxos/plugin-tldraw/TldrawPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
+import * as CanvasPlugin from '#meta';
 import { createCanvas, rootOf, writeViews } from '#model';
-import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 
@@ -23,7 +23,7 @@ import { tldrawToViews } from './tldraw.ts';
 const withConversion = (records: Record<string, unknown>, { snap }: { snap: boolean }) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas],
-    plugins: [IllustratorPlugin.make(), TldrawPlugin.make(), CanvasPlugin()],
+    plugins: [IllustratorPlugin.make(), TldrawPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
       const source = space.db.add(
         Drawing.make({

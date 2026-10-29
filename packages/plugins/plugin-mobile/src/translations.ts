@@ -5,7 +5,7 @@
 import { translations as searchTranslations } from '@dxos/react-ui-search/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { MobileNamespace } from './namespace.ts';
 
 // Search translations ride the mobile plugin: the Home/NavBranch search panels are the only
 // registrar for @dxos/react-ui-search strings.
@@ -13,7 +13,7 @@ export const translations = [
   ...searchTranslations,
   {
     'en-US': {
-      [meta.profile.key]: {
+      [MobileNamespace.key]: {
         'plugin.name': 'Mobile',
         'actions-menu.label': 'Options',
         'main-menu.label': 'Main menu',

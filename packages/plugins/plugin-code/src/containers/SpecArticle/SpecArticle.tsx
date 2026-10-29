@@ -4,6 +4,7 @@
 
 import { EditorSelection } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
+import { useAtomSet, useAtomValue } from '@effect/atom-react';
 import React, {
   type KeyboardEvent,
   type PointerEvent,
@@ -20,7 +21,7 @@ import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { findSpecRefs, mdl, mdlBlockDescription, specReferenceFilter } from '@dxos/deus/extension';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
@@ -36,7 +37,7 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -58,14 +59,16 @@ import {
   DefinitionGraph,
   type DefinitionModel,
   ReviewPanel,
+  SPEC_INDEX,
   buildChangelogGraph,
   citedFiles,
   decisionGutter,
   parseReview,
+  pendingReveal,
+  resolveSpecRef,
   reviewGutter,
   sourceLinks,
 } from '#components';
-import { meta } from '#meta';
 import {
   type SourceKey,
   findSourceKeys,
@@ -77,6 +80,7 @@ import {
 } from '#sync';
 import { CodeOperation } from '#types';
 
+import { CodeNamespace } from '../../namespace.ts';
 import {
   type DiffAgainst,
   fileKey,
@@ -107,6 +111,9 @@ const MIN_SPLIT = 0.2;
 const MAX_SPLIT = 0.8;
 const SPLIT_STEP = 0.05;
 
+/** Whether a `<spec id>#<item>` reference names a spec the bundled index could describe. */
+const isIndexedSpec = specReferenceFilter(SPEC_INDEX);
+
 const isDiffAgainst = (value: string): value is DiffAgainst => value === 'base' || value === 'head';
 
 /** Lines of unchanged context kept around each change when unchanged runs are folded. */
@@ -119,9 +126,9 @@ const shortRef = (ref: string): string => ref.replace(/^origin\//, '');
 const declarationOf = (id: string) =>
   new RegExp(`^\\s*[a-z]+\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(?::|$)`);
 
-export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
+export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<SpecDocument.SpecDocument>, 'subject'> & {
   /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */
-  subject?: Spec.Spec;
+  subject?: SpecDocument.SpecDocument;
   /** Static MDL content, rendered read-only when no `subject` is provided. */
   content?: string;
   /** `github:` key of static content; an ECHO Spec's key comes from its meta keys. */
@@ -157,7 +164,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(CodeNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;
@@ -218,6 +225,10 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             .map(({ key }) => key)
             .filter(isSpecKey)
             .map(fileKey),
+          ...findSpecRefs(ownText)
+            .filter(({ id }) => isIndexedSpec(id))
+            .map(({ id }) => resolveSpecRef(SPEC_INDEX, id))
+            .flatMap((resolved) => ('error' in resolved ? [] : [fileKey(resolved)])),
         ].filter(isTruthy),
       [reviewKey, spec, key, codeTarget, ownText],
     );
@@ -258,10 +269,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const decisions = useMemo(() => parsedDecisions, [decisionsKey]);
 
     const viewRef = useRef<EditorView | undefined>(undefined);
-    const reveal = useCallback((id: string, focus = true) => {
+    /** Scrolls to the declaration of `id`; false when the editor is not up or does not declare it. */
+    const reveal = useCallback((id: string, focus = true): boolean => {
       const editor = viewRef.current;
       if (!editor) {
-        return;
+        return false;
       }
       const pattern = declarationOf(id);
       for (let number = 1; number <= editor.state.doc.lines; number++) {
@@ -274,10 +286,20 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           if (focus) {
             editor.focus();
           }
-          return;
+          return true;
         }
       }
+      return false;
     }, []);
+
+    // Another article that opened this spec at an item left it pending; the text may arrive after mount.
+    const pending = useAtomValue(pendingReveal);
+    const setPendingReveal = useAtomSet(pendingReveal);
+    useEffect(() => {
+      if (pending && key && pending.path === key.path && reveal(pending.item)) {
+        setPendingReveal(undefined);
+      }
+    }, [pending, key, text, reveal, setPendingReveal]);
 
     const showCode = useCallback((target: SourceKey) => {
       setCodeTarget(target);
@@ -291,7 +313,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           return;
         }
         if (key && fileKey(target) === fileKey(key)) {
-          target.fragment && reveal(target.fragment);
+          if (target.fragment) {
+            reveal(target.fragment);
+          }
           return;
         }
         // Another spec opens as its own synced Spec in this space; outside a space it is shown read-only here.
@@ -303,6 +327,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           );
           const other = data && (await data.spec.load());
           if (other) {
+            setPendingReveal(target.fragment ? { path: target.path, item: target.fragment } : undefined);
             await invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(other)] });
             return;
           }
@@ -310,7 +335,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         }
         showCode(target);
       },
-      [key, space, invokePromise, reveal, showCode],
+      [key, space, invokePromise, reveal, showCode, setPendingReveal],
     );
 
     const activate = useCallback(
@@ -328,6 +353,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       [reveal],
     );
 
+    // A review keeps its `github:` evidence keys, which the index would report as errors.
+    const isReviewFile = key?.path.endsWith('.review.mdl') ?? false;
     const extensions = useMemo(
       () =>
         [
@@ -335,8 +362,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
-          mdl(),
-          sourceLinks((target) => void open(target)),
+          mdl(isReviewFile ? {} : { index: SPEC_INDEX }),
+          sourceLinks((target) => void open(target), SPEC_INDEX),
           ViewPlugin.define((editor) => {
             viewRef.current = editor;
             return { destroy: () => viewRef.current === editor && (viewRef.current = undefined) };
@@ -372,7 +399,21 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open, readLatest, baseText, fold],
+      [
+        identity,
+        space,
+        spec?.id,
+        target,
+        themeMode,
+        readOnly,
+        isReviewFile,
+        decisions,
+        review,
+        open,
+        readLatest,
+        baseText,
+        fold,
+      ],
     );
 
     const syncEntry = spec ? sync.specs[spec.id] : undefined;
@@ -515,6 +556,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                       content={text}
                       base={baseText}
                       specs={specs}
+                      index={SPEC_INDEX}
                       review={review}
                       onActivate={activate}
                     />

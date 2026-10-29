@@ -12,15 +12,16 @@ import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as NotFoundArticle from '@dxos/app-toolkit/NotFoundArticle';
 
 import { DeckSettings, DetailCompanion } from '#containers';
-import { meta } from '#meta';
 import { CompanionViewState } from '#types';
+
+import { DeckNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, DeckNamespace.key),
         component: DeckSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

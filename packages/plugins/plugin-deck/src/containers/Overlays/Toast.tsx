@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as UiToast from '@dxos/react-ui/Toast';
 
-import { meta } from '#meta';
+import { DeckNamespace } from '../../namespace.ts';
 
 export const Toast = ({
   id,
@@ -22,7 +22,7 @@ export const Toast = ({
   onAction,
   onOpenChange,
 }: LayoutOperation.Toast & Pick<UiToast.RootProps, 'onOpenChange'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DeckNamespace.key);
 
   // Control the open state so closing flips Radix's `open` (playing the exit animation) rather than
   // unmounting abruptly. Both the close button and Radix's own timeout/swipe route through here.

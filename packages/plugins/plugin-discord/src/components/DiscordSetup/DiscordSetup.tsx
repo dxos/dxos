@@ -12,7 +12,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
+import { DiscordNamespace } from '../../namespace.ts';
 
 //
 // Root
@@ -22,7 +22,7 @@ type DiscordSetupRootProps = PropsWithChildren<{ role?: string; error?: string; 
 
 /** Setting up an agent on Discord: the servers, and the channels routed to the agent. */
 const DiscordSetupRoot = ({ role, error, toolbar, children }: DiscordSetupRootProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DiscordNamespace.key);
   return (
     <Panel.Root role={role} data-testid='discord-setup'>
       {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
@@ -75,13 +75,13 @@ const DiscordSetupToolbar = ({
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['discord-setup-actions.label', { ns: meta.profile.key }] })
+        .root({ label: ['discord-setup-actions.label', { ns: DiscordNamespace.key }] })
         // The panel's name leads and takes the free space, which keeps the actions at the end.
-        .text('title', { label: ['discord-setup.title', { ns: meta.profile.key }] })
+        .text('title', { label: ['discord-setup.title', { ns: DiscordNamespace.key }] })
         .action(
           'refresh',
           {
-            label: ['discord-setup-refresh.label', { ns: meta.profile.key }],
+            label: ['discord-setup-refresh.label', { ns: DiscordNamespace.key }],
             icon: 'ph--arrows-counter-clockwise--regular',
             disabled: busy,
           },
@@ -92,7 +92,7 @@ const DiscordSetupToolbar = ({
           {
             label: [
               signedIn ? 'discord-setup-sign-out.label' : 'discord-setup-connect.label',
-              { ns: meta.profile.key },
+              { ns: DiscordNamespace.key },
             ],
             icon: signedIn ? 'ph--sign-out--regular' : 'ph--discord-logo--regular',
             disabled: busy,
@@ -105,7 +105,7 @@ const DiscordSetupToolbar = ({
               builder.action(
                 'console',
                 {
-                  label: ['discord-setup-console.label', { ns: meta.profile.key }],
+                  label: ['discord-setup-console.label', { ns: DiscordNamespace.key }],
                   icon: 'ph--arrow-square-out--regular',
                 },
                 () => window.open(consoleUrl, '_blank', 'noopener,noreferrer'),

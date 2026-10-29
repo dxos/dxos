@@ -2,12 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { MermaidNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.mermaid',
+    key: MermaidNamespace.key,
     name: 'Mermaid',
     author: 'DXOS',
     description: trim`
@@ -33,4 +41,25 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['alpha'],
   },
+  modules: [
+    Capability.lazyModule(
+      'MarkdownExtension',
+      { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
+      () => import('./src/capabilities/markdown.ts', { with: { type: 'module-url' } }),
+    ),
+    // Gated on demand: nothing reads a spec at boot.
+    Capability.lazyModule(
+      'plugin-asset',
+      {
+        activatesOn: ActivationEvents.PluginAssetsRequested,
+        provides: [AppCapabilities.PluginAsset],
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

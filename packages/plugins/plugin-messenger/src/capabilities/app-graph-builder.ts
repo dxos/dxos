@@ -11,8 +11,10 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { MESSENGER_COMPANION, meta } from '#meta';
 import { MessengerCapabilities, Notifications } from '#types';
+
+import { MESSENGER_COMPANION } from '../constants.ts';
+import { MessengerNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -32,7 +34,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: MESSENGER_COMPANION,
-              label: ['notifications-panel.label', { ns: meta.profile.key }],
+              label: ['notifications-panel.label', { ns: MessengerNamespace.key }],
               icon: 'ph--envelope--regular',
               data: MESSENGER_COMPANION,
               badge: unreadAtom,

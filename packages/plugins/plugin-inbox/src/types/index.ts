@@ -8,6 +8,7 @@ export * as ExtractedFrom from './ExtractedFrom.ts';
 export * as InboxCapabilities from './InboxCapabilities.ts';
 export * as InboxEvents from './InboxEvents.ts';
 export * as InboxOperation from './InboxOperation.ts';
+export * as InboxPermission from './InboxPermission.ts';
 export * as MailSend from './MailSend.ts';
 export * as Mailbox from './Mailbox.ts';
 export * as ReplyGeneration from './ReplyGeneration.ts';

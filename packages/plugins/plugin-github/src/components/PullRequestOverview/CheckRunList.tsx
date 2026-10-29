@@ -9,8 +9,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
+
+import { GitHubNamespace } from '../../namespace.ts';
 
 const outcomeIcon: Record<GitHubOperation.CheckOutcome, { icon: string; classNames: string }> = {
   failure: { icon: 'ph--x-circle--fill', classNames: 'text-error-text' },
@@ -73,7 +74,7 @@ export type CheckRunListProps = {
 
 /** Every check on the head commit: its outcome, how long it took, and a button to its logs. */
 export const CheckRunList = ({ runs }: CheckRunListProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   const sorted = useMemo(() => (runs ? sortCheckRuns(runs) : undefined), [runs]);
   const summary = useCheckSummary(runs);
   const now = useNow(runs?.some((run) => run.outcome === 'pending' && run.startedAt) ?? false);
@@ -144,7 +145,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
 
 /** The label the checks section carries: the counts once there are runs to count. */
 export const useCheckSummary = (runs?: readonly GitHubOperation.CheckRun[]): string => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   return useMemo(() => {
     if (!runs || runs.length === 0) {
       return t('checks.label');

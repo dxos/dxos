@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Language, Vocabulary, Word } from '#types';
+
+import { LingoNamespace } from './namespace.ts';
 
 export const translations = [
   // The reader toolbar overflows into a menu, which labels itself from this bundle; without it the
@@ -41,7 +42,7 @@ export const translations = [
         'typename.label_one': 'Word',
         'typename.label_other': 'Words',
       },
-      [meta.profile.key]: {
+      [LingoNamespace.key]: {
         'plugin.name': 'Lingo',
 
         // Companions.

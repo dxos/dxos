@@ -2,12 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { DiscordNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.discord',
+    key: DiscordNamespace.key,
     name: 'Discord',
     author: 'DXOS',
     description: trim`
@@ -31,4 +41,53 @@ export default Config2.make({
     tags: ['labs', 'connector'],
     dependsOn: ['org.dxos.plugin.thread'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+    ),
+    // Headless: EDGE posts through the same backend that the app starts the bot with.
+    Capability.lazyModule(
+      'DiscordChannelBackend',
+      {
+        provides: [ThreadCapabilities.ChannelBackend],
+        activatesOn: ThreadEvents.Start,
+        environments: ['browser', 'node', 'tauri', 'workerd'],
+      },
+      () => import('./src/capabilities/channel-backend.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'DiscordConnector',
+      { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+      () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
+    ),
+    // EDGE's bot routes over the client's EDGE HTTP client; EDGE provides the service itself, over a worker binding.
+    AppCapability.layerSpec(() => import('./src/capabilities/discord-bot.ts', { with: { type: 'module-url' } }), {
+      name: 'DiscordBot',
+      environments: ['browser', 'node', 'tauri'],
+    }),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: DiscordNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
+      roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

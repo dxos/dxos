@@ -88,7 +88,7 @@ const AUXILIARY_ENTRY = [
   // Alias targets wired up in the storybook config, never imported by name.
   '.storybook/mocks/**',
   // Stand-in package trees the introspection tests read from disk.
-  'src/__fixtures__/**',
+  'src/**/__fixtures__/**',
   'scripts/**/*.{ts,mts,js,mjs}',
 ];
 

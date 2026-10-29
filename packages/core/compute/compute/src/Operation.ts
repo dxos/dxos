@@ -1134,6 +1134,30 @@ export const getRequirements = (op: Definition.Any): readonly unknown[] =>
     : [];
 
 /**
+ * The input field a consent prompt shows before the person allows the call (the body of an email it
+ * would send), so they approve what is sent and not only that something is.
+ */
+export const ConsentPreviewAnnotation = Annotation.make({
+  id: 'org.dxos.operation.consentPreview',
+  schema: Schema$.Struct({ field: Schema$.String, label: Schema$.String }),
+});
+
+/** The text a consent prompt previews for this call, when the operation names a string field to show. */
+export const getConsentPreview = (
+  op: Definition.Any,
+  input: unknown,
+): { readonly label: string; readonly text: string } | undefined => {
+  const preview = op.meta.annotations
+    ? Annotation.getDictionary(op.meta.annotations, ConsentPreviewAnnotation)
+    : Option.none();
+  if (Option.isNone(preview) || input === null || typeof input !== 'object') {
+    return undefined;
+  }
+  const text: unknown = Reflect.get(input, preview.value.field);
+  return typeof text === 'string' && text.trim().length > 0 ? { label: preview.value.label, text } : undefined;
+};
+
+/**
  * Operation service interface - provides unified access to operation invocation and scheduling.
  * This service is automatically provided to operation handlers.
  */

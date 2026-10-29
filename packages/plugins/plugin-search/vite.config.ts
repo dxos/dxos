@@ -8,13 +8,9 @@ export default defineConfig({
   entry: {
     'ns/Hooks': 'src/Hooks.ts',
     'index': 'src/index.ts',
-    'SearchPlugin': 'src/SearchPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'hooks': 'src/hooks/index.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',

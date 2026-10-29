@@ -51,6 +51,32 @@ describe('agentOptions', () => {
     expect(options[0].placements.map(({ location }) => location)).toEqual(['local', 'edge']);
   });
 
+  test('keeps the choices of the registration that is not a variant', ({ expect }) => {
+    const agentModel = [{ id: 'opus', label: 'Opus' }];
+    const options = agentOptions({
+      agents: [cloud, { ...local, choices: { agentModel } }],
+      availability: [{ available: true }, { available: true }],
+      current: local.id,
+    });
+    expect(options[0].choices).toEqual({ agentModel });
+  });
+
+  test('prefers the main registration where both offer a setting, and keeps what only the variant offers', ({
+    expect,
+  }) => {
+    const agentModel = [{ id: 'opus', label: 'Opus' }];
+    const agentMode = [{ id: 'auto', label: 'Auto' }];
+    const options = agentOptions({
+      agents: [
+        { ...cloud, choices: { agentModel: [{ id: 'haiku', label: 'Haiku' }], agentMode } },
+        { ...local, choices: { agentModel } },
+      ],
+      availability: [{ available: true }, { available: true }],
+      current: local.id,
+    });
+    expect(options[0].choices).toEqual({ agentModel, agentMode });
+  });
+
   test('disables an agent only when none of its placements is available', ({ expect }) => {
     const options = agentOptions({
       agents: [composer, local, cloud],

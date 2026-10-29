@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
+import { PreviewNamespace } from '../../namespace.ts';
 
 export type UnsupportedTypeProps = {
   /** The surface's own role, threaded to `Panel.Root`. */
@@ -23,7 +23,7 @@ export type UnsupportedTypeProps = {
  * objects reach it is `capabilities/react-surface.ts`'s call.
  */
 export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PreviewNamespace.key);
 
   return (
     <Panel.Root role={role}>
