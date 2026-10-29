@@ -59,8 +59,10 @@ export default Capability.makeModule(
         }),
     });
 
-    // Specs sit beside projects, since a spec's features are delivered by the project it names; `spec` is
-    // plugin-code's key for a plugin's bundled spec.
+    /**
+     * @deprecated Specs are reached through the project that owns them (its Spec tab), not a section of their own.
+     * Kept until a follow-up removes it with {@link createSpecBreakdownsExtension}.
+     */
     const specSectionExtensions = yield* TypeSection.createTypeSectionExtension(Spec.Spec, {
       urlKey: 'features',
       match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
@@ -139,6 +141,8 @@ const SPEC_URL: AppGraphBuilder.UrlBinding = {
 /**
  * The specs that break down a spec's features, as its children in the navtree, in the order of the features they
  * break down. Each child is itself a spec, so this extension matches it too and the tree nests to any depth.
+ *
+ * @deprecated Serves the top-level Specs section, which is going away; a project's Spec tab zooms into breakdowns.
  */
 export const createSpecBreakdownsExtension = () =>
   AppGraphBuilder.createExtension({
