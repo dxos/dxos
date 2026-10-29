@@ -1,6 +1,6 @@
 # Scene editor (stage 3): common editing for 2D and 3D
 
-Status: draft, open questions decided 2026-10-29; plan not yet written. Nothing in it is built. It follows stage 2
+Status: draft; four questions decided 2026-10-29, three open with provisional defaults; plan in progress. Nothing in it is built. It follows stage 2
 (`2026-10-28-scene-model-design.md`), which built the Scene model, its `.dx` form, the renderers and the animator
 stages.
 
@@ -83,7 +83,18 @@ both forms.
 
 ## Open questions for the user
 
-None; all four were decided on 2026-10-29 (5–8 above).
+The first four were decided on 2026-10-29 (5–8 above). Three remain; the plan proceeds on the **recommended
+default** of each, marked provisional, until the user answers.
+
+1. **Which plugin owns the canvas object?** `Drawing.Canvas` lives in plugin-illustrator today.
+   1. plugin-canvas owns it, and plugin-illustrator keeps only diagram rendering. _(default)_
+   2. plugin-illustrator keeps it, and plugin-canvas contributes the editor surface for it.
+2. **What happens to plugin-spacetime at the end of stage 3?**
+   1. Delete it once solid tools reach parity, in the same PR series. _(default)_
+   2. Mark it deprecated and hide it, and delete it in a later release.
+3. **Which react-ui-canvas modes must reach parity on Scene2D in the model switch?**
+   1. The free canvas only; lattice, constrained and scored modes move later. _(default)_
+   2. Every mode, before plugin-canvas switches over.
 
 ## Not in scope
 
