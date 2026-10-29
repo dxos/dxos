@@ -75,9 +75,9 @@ export type DrawingConverter = {
   from: string;
   /** The target variant id. */
   to: string;
-  /** Builds a new canvas of the target variant from the source canvas, which it leaves unchanged. */
+  /** Builds a new canvas of the target variant from the source canvas (of the source variant), which it leaves unchanged. */
   convert: (
-    source: Drawing.Canvas,
+    source: Obj.Unknown,
     variants: { from: DrawingVariant; to: DrawingVariant },
   ) => Effect.Effect<ConvertedCanvas, Error, Database.Service | Capability.Service>;
 };

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Scene } from '@dxos/diagram';
-import { Database } from '@dxos/echo';
+import { Database, type Obj } from '@dxos/echo';
 
 import { Drawing, type IllustratorCapabilities, IllustratorError } from '#types';
 
@@ -67,7 +67,7 @@ export const bindArrowEnds = (objects: readonly Scene.WorldObject[]): Scene.Worl
  * re-derives its own records (and arrow bindings) from it; fails on shapes the scene DSL does not manage.
  */
 export const convertByScene = Effect.fn(function* (
-  source: Drawing.Canvas,
+  source: Obj.Unknown,
   { from, to }: { from: IllustratorCapabilities.DrawingVariant; to: IllustratorCapabilities.DrawingVariant },
 ) {
   const { scene, unmanaged: dropped } = from.builder.read(source);

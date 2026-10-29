@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Obj, Ref } from '@dxos/echo';
+import * as Effect from 'effect/Effect';
+
+import { Database, Obj, Ref } from '@dxos/echo';
 import { Scene, type StoredLayout, type StoredModel, type StoredScene, readDocument } from '@dxos/scene';
 
 import { Canvas } from '#types';
@@ -59,6 +61,15 @@ export const makeCanvas = ({
   });
   return { canvas, ...content };
 };
+
+/** Makes a canvas as {@link makeCanvas} does and adds it, with its model, layout and scene, to the database. */
+export const addCanvas = Effect.fn(function* (settings: Parameters<typeof makeCanvas>[0] = {}) {
+  const { canvas, model, layout, scene } = makeCanvas(settings);
+  yield* Database.add(model);
+  yield* Database.add(layout);
+  yield* Database.add(scene);
+  return yield* Database.add(canvas);
+});
 
 /** The scene a canvas opens at: its first, when it has loaded. */
 export const openScene = (canvas: Canvas.Canvas): StoredScene | undefined => {

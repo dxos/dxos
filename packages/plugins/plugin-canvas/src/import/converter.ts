@@ -13,7 +13,9 @@ import * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 
 import { Canvas } from '#types';
 
-import { seedContent, writeViews } from '../model/content.ts';
+import { readCanvasContent, writeCanvasContent } from '../model/canvas-content.ts';
+import { clone, rootOf, seedContent, writeViews } from '../model/content.ts';
+import { DrawingDialectError } from '../operations/canvas.ts';
 import { tldrawToViews } from './tldraw.ts';
 
 /**
@@ -29,12 +31,31 @@ export const tldrawConverter: IllustratorCapabilities.DrawingConverter = {
         (error) => IllustratorError.UnmanagedShapes.is(error),
         () =>
           Effect.gen(function* () {
+            if (!Drawing.isCanvas(source)) {
+              return yield* Effect.fail(
+                new DrawingDialectError({ message: 'The tldraw converter reads a tldraw canvas.' }),
+              );
+            }
+            // A canvas variant with its own type writes the shapes into the layout its new canvas opens.
+            if (variants.to.canvasType !== undefined) {
+              const canvas = yield* variants.to.createCanvas();
+              if (!Canvas.isCanvas(canvas)) {
+                return { canvas, upserted: [] };
+              }
+              const before = readCanvasContent(canvas);
+              const content = clone(before);
+              const { views } = tldrawToViews(source.content, { root: rootOf(content) ?? seedContent(content) });
+              writeViews(content, views);
+              writeCanvasContent(canvas, content, before);
+              return { canvas, upserted: Object.values(views).flatMap((view) => Object.keys(view.nodes)) };
+            }
             const content: ContentMap = {};
             const root = seedContent(content);
             const { views } = tldrawToViews(source.content, { root });
             writeViews(content, views);
+            const upserted = Object.values(views).flatMap((view) => Object.keys(view.nodes));
             const canvas = yield* Database.add(Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content }));
-            return { canvas, upserted: Object.values(views).flatMap((view) => Object.keys(view.nodes)) };
+            return { canvas, upserted };
           }),
       ),
     ),

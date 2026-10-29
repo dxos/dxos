@@ -18,12 +18,7 @@ import { UnknownDrawingVariantError, resolveVariant } from '../util/load-drawing
 const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingOperation.Convert.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ drawing: drawingRef, variant: variantId, replace = false }) {
-      const { drawing, canvas, variant: from } = yield* resolveVariant(drawingRef);
-      // Conversions read and write base canvases; a typed canvas converts through its variant's own converter.
-      if (!Drawing.isCanvas(canvas)) {
-        return yield* Effect.fail(new UnknownDrawingVariantError(Obj.getTypename(canvas) ?? 'unknown'));
-      }
-      const source = canvas;
+      const { drawing, canvas: source, variant: from } = yield* resolveVariant(drawingRef);
       if (from.id === variantId) {
         return yield* Effect.fail(new IllustratorError.SameVariant({ context: { variant: variantId } }));
       }

@@ -458,3 +458,11 @@ decision D-37: A scene canvas migrates as one Layout2D and one Scene2D per View,
   why: A View is both an arrangement and a place a portal opens, so it needs a layout and a scene; keeping the legacy canvas loses nothing if a migration has to be redone.
   rejected: Removing the legacy canvas once migrated.
 ```
+
+```mdl
+decision D-38: An element's `props` keys belong to their writers: the canvas keeps its own fields under `props.canvas` and the illustrator's DSL identity under `props.dsl`, and a write by one keeps the others' keys. Fills in [D-34].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The canvas editor and the illustrator's commands both write the same elements; neither may drop what the other keeps.
+```

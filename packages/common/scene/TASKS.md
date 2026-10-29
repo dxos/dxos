@@ -69,4 +69,6 @@ stage 3; the work stays in dxos/dxos#14282.
   - [x] Task 3 — `Drawing.canvas` accepts any canvas type (`variantFor`, `VariantSurface`).
   - [x] Task 4 — plugin-canvas `Canvas` type, `makeCanvas`/`openScene`/`canvasDocument`/`deleteScene`, and
         `migrateSceneDrawing` (wired to the article and a space-wide operation in Task 9).
+  - [x] Task 5 — conversion through the open layout: `CanvasLayoutBuilder` over a content-record facade
+        (`readCanvasContent`/`writeCanvasContent`), typed targets in the tldraw converter, any canvas as a source.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.
