@@ -15,7 +15,8 @@
     "dx.config.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/*.ts"
+    "src/*.ts",
+    "src/components/SpecEditor/gen/*.json"
   ],
   "references": [
     {
@@ -47,6 +48,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-doc"
@@ -113,6 +117,9 @@
     },
     {
       "path": "../plugin-file-system"
+    },
+    {
+      "path": "../plugin-github"
     },
     {
       "path": "../plugin-space"

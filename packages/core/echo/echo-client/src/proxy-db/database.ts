@@ -65,8 +65,10 @@ import {
   type BranchStore,
   type DocumentRetention,
   EntityManager,
+  type ExportWorkingSetOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
+  type WorkingSetRow,
 } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
@@ -373,6 +375,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
+  #seed?: readonly WorkingSetRow[];
 
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
@@ -479,14 +482,27 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   protected override async _open(): Promise<void> {
     await this._entityManager.open(this._ctx);
 
+    const seed = this.#seed;
+    this.#seed = undefined;
+    if (seed) {
+      this._entityManager.seedDocuments(seed);
+    }
+
     if (this._rootUrl !== undefined) {
       await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
+      if (seed) {
+        this._entityManager.placeSeededObjects(seed);
+      }
     }
 
     if (this._preloadSchemaOnOpen) {
-      await this.query(Filter.type(PersistentSchema))
+      const preload = this.query(Filter.type(PersistentSchema))
         .run()
         .catch((err) => log.warn('schema preload failed', { spaceId: this.spaceId, err }));
+      // A seeded open is usable from its seed; the preload's answer comes from the host, which may still be starting.
+      if (!seed) {
+        await preload;
+      }
     }
 
     if (this._reactiveSchemaQuery) {
@@ -507,6 +523,22 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
     await this._entityManager.close(ctx);
+  }
+
+  // ── Working set persistence ─────────────────────────────────────────────
+
+  /**
+   * Rows the next {@link open} shows and edits the working set from, before the host delivers anything;
+   * the host's later updates bring them current.
+   */
+  seedWorkingSet(rows: readonly WorkingSetRow[]): void {
+    assertState(this._lifecycleState !== LifecycleState.OPEN, 'Seed the working set before the database opens.');
+    this.#seed = rows;
+  }
+
+  /** The working set as rows to {@link seedWorkingSet} a later session with; empty until the space root is loaded. */
+  exportWorkingSet(options: ExportWorkingSetOptions): WorkingSetRow[] {
+    return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
   }
 
   // ── Space state ─────────────────────────────────────────────────────────

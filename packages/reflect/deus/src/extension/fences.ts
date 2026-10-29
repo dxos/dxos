@@ -26,6 +26,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   verdict: 'var(--color-green-400)',
   question: 'var(--color-rose-400)',
   plugin: 'var(--color-fuchsia-400)',
+  uses: 'var(--color-rose-400)',
   table: 'var(--color-red-400)',
 };
 

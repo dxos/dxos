@@ -20,7 +20,7 @@ import { type AccessToken, Connection } from '@dxos/link';
 import { isManagedAccessToken } from '@dxos/protocols';
 
 import { GITHUB_API_BASE } from '../constants.ts';
-import { type GitHubConnectionUnavailableError, connectionUnavailable } from '../errors.ts';
+import { type GitHubConnectionUnavailableError, GitHubRefMovedError, connectionUnavailable } from '../errors.ts';
 
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. Empty means anonymous. */
 type GitHubCredentialsValue = {
@@ -30,6 +30,8 @@ type GitHubCredentialsValue = {
 const ACCEPT = 'application/vnd.github+json';
 /** Serves a pull request as the unified diff git would produce, rather than as JSON. */
 const DIFF_ACCEPT = 'application/vnd.github.v3.diff';
+/** Serves a git blob as its raw bytes rather than as base64 JSON. */
+const RAW_ACCEPT = 'application/vnd.github.raw';
 const API_VERSION = '2022-11-28';
 const USER_AGENT = '@dxos/plugin-github';
 
@@ -777,6 +779,224 @@ export const fetchPullRequestDetails = (
     return Object.values(response.data?.repository ?? {}).filter(
       (detail): detail is PullRequestDetail => detail != null,
     );
+  });
+
+//
+// Git reads and writes (file sync)
+//
+
+const repoPath = (owner: string, repo: string) =>
+  `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+
+/** A branch read with `If-None-Match`, or a branch that does not exist. */
+export type BranchHead = Conditional<{ readonly sha: string }> | { readonly status: 'missing' };
+
+const GitRefSchema = Schema.Struct({ object: Schema.Struct({ sha: Schema.String }) });
+
+/** GET /repos/{o}/{r}/git/ref/heads/{branch} with `If-None-Match`; a branch GitHub does not know answers `missing`. */
+export const fetchBranchHead = (owner: string, repo: string, branch: string, etag?: string): GitHubEffect<BranchHead> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    const request = withAuth(HttpClientRequest.get(`${repoPath(owner, repo)}/git/ref/heads/${branch}`), creds);
+    return yield* conditionalGet(
+      etag ? HttpClientRequest.setHeader(request, 'If-None-Match', etag) : request,
+      GitRefSchema,
+    ).pipe(
+      Effect.map((result): BranchHead =>
+        result.notModified
+          ? { status: 'not-modified' }
+          : { status: 'ok', value: { sha: result.value.object.sha }, etag: result.etag, requests: 1 },
+      ),
+      Effect.catchIf(
+        (error) => responseStatus(error) === 404,
+        () => Effect.succeed<BranchHead>({ status: 'missing' }),
+      ),
+    );
+  });
+
+const CompareFileSchema = Schema.Struct({
+  filename: Schema.String,
+  previous_filename: Schema.String.pipe(Schema.optional),
+  status: Schema.String,
+  /** Absent for a removed file. */
+  sha: Schema.NullOr(Schema.String).pipe(Schema.optional),
+});
+export type CompareFile = Schema.Schema.Type<typeof CompareFileSchema>;
+
+const CompareSchema = Schema.Struct({
+  status: Schema.String,
+  files: Schema.Array(CompareFileSchema).pipe(Schema.optional),
+});
+
+/** GitHub lists at most this many files in a comparison and silently drops the rest. */
+const COMPARE_FILE_LIMIT = 300;
+
+export type Comparison = {
+  /** `ahead` or `identical` when `head` contains `base`; `behind` or `diverged` otherwise. */
+  readonly status: string;
+  readonly files: readonly CompareFile[];
+  readonly truncated: boolean;
+};
+
+/** GET /repos/{o}/{r}/compare/{base}...{head}; `truncated` when GitHub may have left files out. */
+export const compareCommits = (owner: string, repo: string, base: string, head: string): GitHubEffect<Comparison> =>
+  githubRequest(() => HttpClientRequest.get(`${repoPath(owner, repo)}/compare/${base}...${head}`), CompareSchema).pipe(
+    Effect.map(({ status, files = [] }) => ({ status, files, truncated: files.length >= COMPARE_FILE_LIMIT })),
+  );
+
+const TreeEntrySchema = Schema.Struct({
+  path: Schema.String,
+  type: Schema.String,
+  sha: Schema.String,
+  size: Schema.Number.pipe(Schema.optional),
+});
+export type TreeEntry = Schema.Schema.Type<typeof TreeEntrySchema>;
+
+const TreeSchema = Schema.Struct({
+  sha: Schema.String,
+  tree: Schema.Array(TreeEntrySchema),
+  truncated: Schema.Boolean.pipe(Schema.optional),
+});
+
+/** GET /repos/{o}/{r}/git/trees/{commit or tree}?recursive=1: the tree's own SHA and every blob in it. */
+export const fetchTree = (
+  owner: string,
+  repo: string,
+  sha: string,
+): GitHubEffect<{ readonly sha: string; readonly blobs: readonly TreeEntry[]; readonly truncated: boolean }> =>
+  githubRequest(
+    () =>
+      HttpClientRequest.get(`${repoPath(owner, repo)}/git/trees/${sha}`).pipe(
+        HttpClientRequest.appendUrlParam('recursive', '1'),
+      ),
+    TreeSchema,
+  ).pipe(
+    Effect.map((tree) => ({
+      sha: tree.sha,
+      blobs: tree.tree.filter((entry) => entry.type === 'blob'),
+      truncated: tree.truncated === true,
+    })),
+  );
+
+const GitCommitSchema = Schema.Struct({ tree: Schema.Struct({ sha: Schema.String }) });
+
+/** GET /repos/{o}/{r}/git/commits/{sha}: the commit's tree, which a new tree is built on. */
+export const fetchCommitTree = (owner: string, repo: string, sha: string): GitHubEffect<string> =>
+  githubRequest(() => HttpClientRequest.get(`${repoPath(owner, repo)}/git/commits/${sha}`), GitCommitSchema).pipe(
+    Effect.map((commit) => commit.tree.sha),
+  );
+
+/** GET /repos/{o}/{r}/git/blobs/{sha} as its raw content, read as UTF-8. */
+export const fetchBlob = (owner: string, repo: string, sha: string): GitHubEffect<string> =>
+  githubText(() => HttpClientRequest.get(`${repoPath(owner, repo)}/git/blobs/${sha}`), RAW_ACCEPT);
+
+/** The SHA git gives `content` as a blob, so local content can be compared with a tree without reading it. */
+export const gitBlobSha = (content: string): Effect.Effect<string> =>
+  Effect.promise(async () => {
+    const body = new TextEncoder().encode(content);
+    const header = new TextEncoder().encode(`blob ${body.byteLength}\0`);
+    const bytes = new Uint8Array(header.byteLength + body.byteLength);
+    bytes.set(header);
+    bytes.set(body, header.byteLength);
+    const digest = new Uint8Array(await crypto.subtle.digest('SHA-1', bytes));
+    return Array.from(digest, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  });
+
+const ShaSchema = Schema.Struct({ sha: Schema.String });
+
+export type CommitFilesInput = {
+  readonly branch: string;
+  /** The write branch's tip (absent when the branch is created by this commit), then the read head when it is merged in. */
+  readonly parents: readonly string[];
+  readonly baseTree: string;
+  readonly message: string;
+  /** `null` content deletes the file. */
+  readonly files: readonly { readonly path: string; readonly content: string | null }[];
+  /** Create the branch at the new commit rather than move it. */
+  readonly create: boolean;
+};
+
+/**
+ * Tree (on `baseTree`, with file content inline) → commit (on `parents`, in order) → ref update. The
+ * ref update is never forced: when the branch moved, or already exists where it was to be created,
+ * GitHub answers 422 and the commit fails with {@link GitHubRefMovedError}.
+ */
+export const commitFiles = (
+  owner: string,
+  repo: string,
+  input: CommitFilesInput,
+): Effect.Effect<
+  { readonly commit: string },
+  HttpClientError.HttpClientError | Schema.SchemaError | Cause.TimeoutError | GitHubRefMovedError,
+  HttpClient.HttpClient | GitHubCredentials
+> =>
+  Effect.gen(function* () {
+    const tree = yield* githubWrite(
+      () => HttpClientRequest.post(`${repoPath(owner, repo)}/git/trees`),
+      {
+        base_tree: input.baseTree,
+        tree: input.files.map(({ path, content }) =>
+          content === null
+            ? { path, mode: '100644', type: 'blob', sha: null }
+            : { path, mode: '100644', type: 'blob', content },
+        ),
+      },
+      ShaSchema,
+    );
+    const commit = yield* githubWrite(
+      () => HttpClientRequest.post(`${repoPath(owner, repo)}/git/commits`),
+      { message: input.message, tree: tree.sha, parents: input.parents },
+      ShaSchema,
+    );
+    const moveRef = input.create
+      ? githubWrite(
+          () => HttpClientRequest.post(`${repoPath(owner, repo)}/git/refs`),
+          { ref: `refs/heads/${input.branch}`, sha: commit.sha },
+          Schema.Unknown,
+        )
+      : githubWrite(
+          () => HttpClientRequest.patch(`${repoPath(owner, repo)}/git/refs/heads/${input.branch}`),
+          { sha: commit.sha, force: false },
+          Schema.Unknown,
+        );
+    yield* moveRef.pipe(
+      Effect.catchIf(
+        (error) => responseStatus(error) === 422,
+        () => Effect.fail(new GitHubRefMovedError({ context: { branch: input.branch } })),
+      ),
+    );
+    return { commit: commit.sha };
+  });
+
+const PullRequestRefSchema = Schema.Struct({
+  number: Schema.Number,
+  html_url: Schema.String,
+});
+
+/** The open pull request from `head` into `base`, opened when there is none. */
+export const ensurePullRequest = (
+  owner: string,
+  repo: string,
+  input: { readonly head: string; readonly base: string; readonly title: string; readonly body: string },
+): GitHubEffect<{ readonly number: number; readonly url: string }> =>
+  Effect.gen(function* () {
+    const [open] = yield* githubRequest(
+      () =>
+        HttpClientRequest.get(`${repoPath(owner, repo)}/pulls`).pipe(
+          HttpClientRequest.appendUrlParam('head', `${owner}:${input.head}`),
+          HttpClientRequest.appendUrlParam('base', input.base),
+          HttpClientRequest.appendUrlParam('state', 'open'),
+        ),
+      Schema.Array(PullRequestRefSchema),
+    );
+    const pull =
+      open ??
+      (yield* githubWrite(
+        () => HttpClientRequest.post(`${repoPath(owner, repo)}/pulls`),
+        { title: input.title, head: input.head, base: input.base, body: input.body },
+        PullRequestRefSchema,
+      ));
+    return { number: pull.number, url: pull.html_url };
   });
 
 //

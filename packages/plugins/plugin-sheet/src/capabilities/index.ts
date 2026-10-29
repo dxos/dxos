@@ -74,9 +74,7 @@ export const SheetState = Capability.lazyModule(
   { provides: [SheetCapabilities.GridInstances], activatesOn: SheetEvents.Start },
   () => import('./state.ts'),
 );
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
-  environments: ['browser', 'node', 'tauri'],
-});
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'), {
   activatesOn: SheetEvents.Start,
   environments: ['browser', 'node', 'tauri'],

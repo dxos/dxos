@@ -334,6 +334,34 @@ const FeatureCardSummary = (_: FeatureCardSummaryProps) => {
 FeatureCardSummary.displayName = 'FeatureCard.Summary';
 
 //
+// External
+//
+
+type FeatureCardExternalProps = {};
+
+/**
+ * The features it needs that sit on other specs' maps, which a canvas of one map cannot draw an arrow to: a count, with
+ * their names in the tooltip.
+ */
+const FeatureCardExternal = (_: FeatureCardExternalProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { feature } = useFeatureCardContext('FeatureCard.External');
+  const external = feature.external ?? [];
+  if (external.length === 0) {
+    return null;
+  }
+  return (
+    <Card.Row leading={<RowIcon icon='ph--arrow-square-out--regular' />} data-testid='feature-card.external'>
+      <span title={external.map(({ name }) => name).join(', ')}>
+        <Card.Text truncate>{t('feature-card.external.label', { count: external.length })}</Card.Text>
+      </span>
+    </Card.Row>
+  );
+};
+
+FeatureCardExternal.displayName = 'FeatureCard.External';
+
+//
 // ListSection
 //
 
@@ -539,7 +567,7 @@ const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
       {feature.showcases.map((showcase) => (
         <Card.Row
           key={showcase.id}
-          leading={<RowIcon icon='ph--presentation-chart--regular' />}
+          leading={<RowIcon icon='ph--presentation--regular' />}
           onClick={open({ type: 'object', id: showcase.id })}
         >
           <Card.Text truncate>{showcase.name}</Card.Text>
@@ -654,6 +682,7 @@ export {
   FeatureCardDependencies as Dependencies,
   FeatureCardDependents as Dependents,
   FeatureCardDescription as Description,
+  FeatureCardExternal as External,
   FeatureCardHeader as Header,
   FeatureCardLink as Link,
   FeatureCardMarks as Marks,
@@ -676,6 +705,7 @@ export type {
   FeatureCardDependenciesProps as DependenciesProps,
   FeatureCardDependentsProps as DependentsProps,
   FeatureCardDescriptionProps as DescriptionProps,
+  FeatureCardExternalProps as ExternalProps,
   FeatureCardHeaderProps as HeaderProps,
   FeatureCardLinkProps as LinkProps,
   FeatureCardMarksProps as MarksProps,

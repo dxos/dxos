@@ -55,8 +55,11 @@ const ASSIGN: TasksCapabilities.TaskAction = {
   // Applies to every task: a conversation about it is always meaningful, so there is nothing
   // to gate on and the list is never empty. The operation takes a list, and the row passes a
   // one-element one, so the row action and the toolbar's checked-set action share one write path.
-  // No agent named: the reader's default agent takes it; the entries after this one pick one.
-  createInvocations: (task) => [{ operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)] } }],
+  // No agent named: the reader's default agent takes it; the entries after this one pick one. The
+  // companion opens on the new session, so handing work over from a row shows the agent taking it.
+  createInvocations: (task) => [
+    { operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)], openCompanion: true } },
+  ],
 };
 
 const OTHERS: TasksCapabilities.TaskAction[] = [
@@ -105,6 +108,9 @@ const assignTo = (agent: AssistantCapabilities.Agent): TasksCapabilities.TaskAct
     return availability.available ? undefined : availability.reason;
   }),
   createInvocations: (task) => [
-    { operation: ProjectOperation.DelegateTaskToChat, input: { tasks: [Ref.make(task)], harness: agent.id } },
+    {
+      operation: ProjectOperation.DelegateTaskToChat,
+      input: { tasks: [Ref.make(task)], harness: agent.id, openCompanion: true },
+    },
   ],
 });

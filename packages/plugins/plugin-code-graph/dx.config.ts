@@ -22,5 +22,7 @@ export default Config2.make({
     icon: { key: 'ph--graph--regular', hue: 'teal' },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
+    // The command bar's judge is a decision model, and TypeSafe is the plugin that serves them.
+    dependsOn: ['org.dxos.plugin.typesafe'],
   },
 });

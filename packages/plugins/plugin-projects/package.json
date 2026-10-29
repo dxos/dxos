@@ -104,6 +104,11 @@
       "types": "./dist/types/src/types/LegacyFeature.d.ts",
       "import": "./dist/lib/LegacyFeature.mjs"
     },
+    "./LegacyShowcase": {
+      "source": "./src/types/LegacyShowcase.ts",
+      "types": "./dist/types/src/types/LegacyShowcase.d.ts",
+      "import": "./dist/lib/LegacyShowcase.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
@@ -153,6 +158,11 @@
       "source": "./src/types/Showcase.ts",
       "types": "./dist/types/src/types/Showcase.d.ts",
       "import": "./dist/lib/Showcase.mjs"
+    },
+    "./Spec": {
+      "source": "./src/types/Spec.ts",
+      "types": "./dist/types/src/types/Spec.d.ts",
+      "import": "./dist/lib/Spec.mjs"
     },
     "./Templates": {
       "source": "./src/Templates.ts",
@@ -210,6 +220,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",

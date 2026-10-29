@@ -148,6 +148,11 @@
       "types": "./dist/types/src/samples/timeline/TimelineSpace.d.ts",
       "import": "./dist/lib/TimelineSpace.mjs"
     },
+    "./TriageSpace": {
+      "source": "./src/samples/triage/TriageSpace.ts",
+      "types": "./dist/types/src/samples/triage/TriageSpace.d.ts",
+      "import": "./dist/lib/TriageSpace.mjs"
+    },
     "./WeatherSpace": {
       "source": "./src/samples/weather/WeatherSpace.ts",
       "types": "./dist/types/src/samples/weather/WeatherSpace.d.ts",

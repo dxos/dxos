@@ -312,11 +312,23 @@ feat F-9: Claude Code (cloud)
 
   req F-9.3:
     when: the chat belongs to a project with repositories
-    then: the sandbox checks them out before the agent's first turn
+    then: |
+      the sandbox checks them out before the agent's first turn, and the agent
+      works in the first one, with the others as additional directories, so it
+      reads the CLAUDE.md, skills and settings of every one of them
 
   req F-9.4:
     when: a chat is switched to Claude Code (cloud) before its first message
     then: that first message runs on Claude Code (cloud), not on the default assistant
+
+  req F-9.5:
+    when: a chat runs on Claude Code, on this computer or on EDGE, before its first message
+    then: |
+      the agent picker offers the chat's model (Opus, Sonnet, Haiku), effort
+      (Low to Max) and permissions (Ask before acting, Accept edits, Auto,
+      Bypass permissions), each defaulting to Claude Code's default and the
+      plugin's permission setting; the choices are fixed once the chat has
+      started, and EDGE reports the mode and model the agent actually runs with
 ```
 
 ## Acceptance
@@ -574,6 +586,35 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
       expect: the pull request is closed and its branch deleted
 ```
 
+```mdl
+test QA-6: A chat chooses the model, effort and permissions of Claude Code
+  desc: |
+    The agent picker of a chat on Claude Code offers the model, effort and
+    permissions the chat's session runs with. Walked by the autocue flow
+    `packages/plugins/plugin-claude/autocue/claude-code-choices.mjs`.
+  actors: human
+  covers: [F-9.5]
+  status: passing           # 2026-10-26, its autocue flow against a composer-app bundle on EDGE dev
+  given:
+    - Composer with the Claude plugin enabled
+  steps:
+    - name: Create a chat
+      do: Click + on the space and choose Chat.
+      expect: an empty chat opens
+    - name: Run the chat on Claude Code
+      do: Open the prompt's agent picker and choose Claude Code.
+      expect: the picker reads Claude Code and offers Model, Effort and Permissions, each on Default
+    - name: Choose Opus
+      do: Open the agent picker and choose Opus under Model.
+      expect: the picker reads Claude Code · Opus
+    - name: Choose High effort
+      do: Open the agent picker and choose High under Effort.
+      expect: High is checked under Effort
+    - name: Choose Bypass permissions
+      do: Open the agent picker and choose Bypass permissions under Permissions.
+      expect: Bypass permissions is checked under Permissions
+```
+
 ---
 
 ## Changelog
@@ -639,6 +680,25 @@ decision D-7: A connection with no credential is offered to Claude Code by its U
   rejected:
     - Put the credential in the server's headers: it would be readable on the command line.
     - Give each credential its own environment variable: the helper passes the agent one token, and a credential refreshed mid-session would still be stale.
+```
+
+```mdl
+decision D-8: A chat on Claude Code chooses its model, effort and permission mode in the agent picker, beside the agent and where it runs; a chat that chooses none runs Claude Code's default model and effort and the plugin's permission setting.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-9.5, QA-6]
+  why: The auto mode's classifier refuses too much for some work, and a chat should not need the global setting changed to run differently.
+```
+
+```mdl
+decision D-9: The EDGE sandbox runs the agent in the first repository it checked out, with the others as additional directories whose CLAUDE.md it reads, and reports the mode, model and effort the agent says it runs with. Fills in [D-8].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.3, F-9.5]
+  why: Claude Code reads CLAUDE.md, skills and settings from its working directory and the directories above it, never below, so an agent started in the checkout root saw none of the repositories' instructions; and Claude Code falls back from a mode it cannot run without failing the request.
+  rejected:
+    - A CLAUDE.md in the checkout root that imports each repository's: it brings in neither skills nor settings.
 ```
 
 ---

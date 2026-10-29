@@ -8,6 +8,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Progress from '@dxos/app-toolkit/Progress';
@@ -19,10 +20,11 @@ import * as Binding from '@dxos/plugin-connector/Binding';
 import { Milestone, Organization, Person, PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { GitHubOperation } from '#types';
+import { GitHubCapabilities, GitHubOperation } from '#types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
 import { GitHubRepoInaccessibleError, GitHubRepoUnresolvedError, formatGitHubSyncFailure } from '../errors.ts';
+import { type FileSyncResult, isFileBinding, syncFileBinding } from '../file-sync/sync-files.ts';
 import { GitHubApi } from '../services/index.ts';
 import { ensureRepo, toRepoDescriptor } from './repo.ts';
 
@@ -814,6 +816,12 @@ export const pushRepoUpdates: <E, R>(
 // Main handler
 //
 
+/** Epoch milliseconds of the newest `updated_at` among `items`; `-Infinity` when none carries one. */
+const newestUpdate = (items: readonly GitHubApi.DeltaItem[]): number =>
+  Math.max(
+    ...items.map((item) => (item.updated_at ? Date.parse(item.updated_at) : Number.NaN)).filter(Number.isFinite),
+  );
+
 /** One binding's poll, as reported in {@link GitHubOperation.SyncResult}. */
 type BindingSyncResult = {
   /** The delta answered 304. */
@@ -823,8 +831,6 @@ type BindingSyncResult = {
   pulled: { issues: number; pullRequests: number };
   pushed: GitHubPushResult;
 };
-
-const NO_PUSH: GitHubPushResult = { repos: 0, issues: 0 };
 
 /**
  * The `Repo` a binding targets. A binding made before bindings targeted a `Repo` targets its issue
@@ -872,7 +878,9 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
   const snapshot = Cursor.readSnapshot<RepoSnapshot>(binding, externalId);
 
   const hourly = snapshot?.readAt === undefined || now - snapshot.readAt >= REPO_READ_INTERVAL_MS;
-  if (hourly) {
+  // A pending local description edit is merged against a fresh read, or the push could overwrite a newer GitHub edit.
+  const localEdit = snapshot?.description !== undefined && snapshot.description !== (repo.description ?? '');
+  if (hourly || localEdit) {
     const result = yield* GitHubApi.fetchRepoConditional(repo.owner, repo.name, snapshot?.etag).pipe(
       Effect.catchIf(
         (error) => {
@@ -892,8 +900,10 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
     } else if (snapshot) {
       Cursor.writeSnapshot(binding, externalId, { ...snapshot, readAt: now });
     }
-    // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
-    // carries only the milestones its issues name.
+  }
+  // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
+  // carries only the milestones its issues name.
+  if (hourly) {
     const milestones = yield* GitHubApi.fetchRepoMilestones(repo.owner, repo.name);
     requests++;
     for (const milestone of milestones) {
@@ -991,12 +1001,22 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
             ? new Date(Cursor.parseKey(binding.max)).toISOString()
             : sinceFromOptions(options, now);
           const etag = binding.max ? Cursor.readToken(binding) : undefined;
-          const delta = yield* GitHubApi.listIssuesSince(
+          let delta = yield* GitHubApi.listIssuesSince(
             repo.owner,
             repo.name,
             etag ? { since, etag } : { since, direction: 'asc', maxPages: BACKFILL_PAGES },
           );
           requests += delta.status === 'ok' ? delta.requests : 1;
+          // A capped chunk whose items all fall within the overlap of the watermark (more than ten pages
+          // updated in the same few seconds) cannot advance it, so that backlog is read to its end at once.
+          if (
+            delta.status === 'ok' &&
+            delta.truncated &&
+            newestUpdate(delta.value) - WATERMARK_OVERLAP_MS <= Cursor.parseKey(binding.max)
+          ) {
+            delta = yield* GitHubApi.listIssuesSince(repo.owner, repo.name, { since, direction: 'asc' });
+            requests += delta.status === 'ok' ? delta.requests : 1;
+          }
           const items = delta.status === 'ok' ? delta.value : [];
           const issueItems = items.filter((item) => item.pull_request == null);
           const pullItems = items.filter((item) => item.pull_request != null);
@@ -1006,9 +1026,20 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
           const pending = (yield* queryOpenPullRequests(repo, { settled: metadata.hourly })).filter(
             (pullRequest) => !deltaNumbers.has(pullRequest.number),
           );
+          const pushCallbacks = {
+            updateIssue: (owner: string, repoName: string, issueNumber: number, input: GitHubApi.IssueUpdateInput) =>
+              GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.asVoid),
+            updateRepo: (owner: string, repoName: string, input: GitHubApi.RepoUpdateInput) =>
+              GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.asVoid),
+          };
+          const coordinates = { id: externalId, owner: repo.owner, name: repo.name };
+
           if (delta.status === 'not-modified' && pending.length === 0) {
+            // A local repository edit is pushed even when GitHub reports nothing new; it costs no request unless diverged.
+            const pushed = yield* pushRepoUpdates(binding, coordinates, new Map(), pushCallbacks);
+            requests += pushed.repos;
             return {
-              result: { notModified: true, requests, pulled: { issues: 0, pullRequests: 0 }, pushed: NO_PUSH },
+              result: { notModified: true, requests, pulled: { issues: 0, pullRequests: 0 }, pushed },
               watermark: undefined,
             };
           }
@@ -1069,24 +1100,11 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
           // Push: snapshot-diff the bound Repo and the pulled issues, PATCHing only diverged fields.
           // TODO(wittjosiah): the candidate set is this poll's delta, so a local edit to an issue
           //   GitHub has not touched since is pushed only once GitHub next reports it.
-          const pushed = yield* pushRepoUpdates(
-            binding,
-            { id: externalId, owner: repo.owner, name: repo.name },
-            remoteIssuesById,
-            {
-              updateIssue: (owner, repoName, issueNumber, input) =>
-                GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.asVoid),
-              updateRepo: (owner, repoName, input) => GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.asVoid),
-            },
-          );
+          const pushed = yield* pushRepoUpdates(binding, coordinates, remoteIssuesById, pushCallbacks);
           requests += pushed.issues + pushed.repos;
 
           // The watermark moves only once every page is applied, and never backwards.
-          const newest = Math.max(
-            ...items
-              .map((item) => (item.updated_at ? Date.parse(item.updated_at) : Number.NaN))
-              .filter(Number.isFinite),
-          );
+          const newest = newestUpdate(items);
           // A truncated backfill stores no ETag, so the next run continues oldest first from the watermark.
           const truncated = delta.status === 'ok' && delta.truncated === true;
           const watermark =
@@ -1150,29 +1168,59 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
   }
 }, Effect.provide(FetchHttpClient.layer));
 
+type BindingOutcome =
+  | { readonly kind: 'items'; readonly items: BindingSyncResult }
+  | { readonly kind: 'files'; readonly files: FileSyncResult };
+
 /** Folds per-binding results into the operation's {@link GitHubOperation.SyncResult}. */
-const foldResults = (results: readonly BindingSyncResult[]): GitHubOperation.SyncResult => ({
-  bindings: results.length,
-  notModified: results.filter((result) => result.notModified).length,
-  requests: results.reduce((total, result) => total + result.requests, 0),
-  pulled: {
-    issues: results.reduce((total, result) => total + result.pulled.issues, 0),
-    pullRequests: results.reduce((total, result) => total + result.pulled.pullRequests, 0),
-  },
-  pushed: {
-    issues: results.reduce((total, result) => total + result.pushed.issues, 0),
-    repos: results.reduce((total, result) => total + result.pushed.repos, 0),
-  },
-});
+const foldResults = (outcomes: readonly BindingOutcome[]): GitHubOperation.SyncResult => {
+  const results = outcomes.flatMap((outcome) => (outcome.kind === 'items' ? [outcome.items] : []));
+  const files = outcomes.flatMap((outcome) => (outcome.kind === 'files' ? [outcome.files] : []));
+  return {
+    bindings: outcomes.length,
+    notModified: results.filter((result) => result.notModified).length,
+    requests:
+      results.reduce((total, result) => total + result.requests, 0) +
+      files.reduce((total, result) => total + result.requests, 0),
+    pulled: {
+      issues: results.reduce((total, result) => total + result.pulled.issues, 0),
+      pullRequests: results.reduce((total, result) => total + result.pulled.pullRequests, 0),
+    },
+    pushed: {
+      issues: results.reduce((total, result) => total + result.pushed.issues, 0),
+      repos: results.reduce((total, result) => total + result.pushed.repos, 0),
+    },
+    ...(files.length > 0
+      ? {
+          files: {
+            pulled: files.reduce((total, result) => total + result.pulled, 0),
+            pushed: files.reduce((total, result) => total + result.pushed, 0),
+            skipped: files.reduce((total, result) => total + result.skipped.length, 0),
+          },
+        }
+      : {}),
+  };
+};
 
 const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositories> =
   GitHubOperation.SyncGitHubRepositories.pipe(
     Operation.withHandler(({ connection, priority }) =>
-      Binding.syncAll({
-        connection,
-        priority,
-        sync: (binding) => syncRepoBinding(binding),
-      }).pipe(Effect.map(({ outputs }) => foldResults(outputs))),
+      Effect.gen(function* () {
+        const mappings = yield* Capability.getAll(GitHubCapabilities.FileMapping);
+        const { outputs } = yield* Binding.syncAll({
+          connection,
+          priority,
+          // A repository's file binding shares its target with the item binding; `options.stream` tells them apart.
+          sync: (binding) =>
+            Effect.gen(function* () {
+              const outcome: BindingOutcome = isFileBinding(binding)
+                ? { kind: 'files', files: yield* syncFileBinding(binding, mappings) }
+                : { kind: 'items', items: yield* syncRepoBinding(binding) };
+              return outcome;
+            }),
+        });
+        return foldResults(outputs);
+      }),
     ),
   );
 

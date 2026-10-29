@@ -189,6 +189,17 @@ export type MailSendOperation = {
   /** The contributing provider's `Connector.id` (matched against `Connection.connectorId`). */
   connectorId: string;
   /**
+   * The connection to send a mailbox's mail through when the mailbox has no sync binding — for a
+   * provider whose mailboxes are not synced (a sample space's local mail). Undefined declines it.
+   */
+  resolveConnection?: (
+    mailbox: import('./Mailbox.ts').Mailbox,
+  ) => import('effect/Effect').Effect<
+    import('@dxos/echo').Ref.Ref<import('@dxos/link').Connection.Connection> | undefined,
+    never,
+    import('@dxos/echo').Database.Service
+  >;
+  /**
    * Returns the send operation, typed against the shared `MailSend` contract so a provider cannot
    * contribute an operation the composer can't call. A closure rather than a value property for the
    * same reason as {@link MailboxAction}: holding an `Operation.Definition` on the capability value

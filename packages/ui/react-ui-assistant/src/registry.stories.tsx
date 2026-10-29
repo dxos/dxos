@@ -584,6 +584,16 @@ export const Request: Story = {
   },
 };
 
+export const RequestWithPreview: Story = {
+  args: {
+    content: `<request message="message-1">${JSON.stringify({
+      ...permission,
+      title: 'Allow the assistant to send an email reply?',
+      preview: { label: 'Reply', text: 'Hi Dana,\n\nConfirming we are renewing at 40 seats.\n\nThanks,\nSam' },
+    })}</request>`,
+  },
+};
+
 export const RequestAnswered: Story = {
   args: {
     content: `<request message="message-1">${JSON.stringify({ ...permission, resolution: { outcome: 'selected', optionId: 'allow' } })}</request>`,

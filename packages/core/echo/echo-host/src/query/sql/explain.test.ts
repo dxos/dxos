@@ -68,6 +68,30 @@ describe('compiled plans seek the index', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  // A probe keyed on `hop` alone matches every edge of a one-hop traversal, so deriving each row's
+  // edges scanned them all: quadratic in the result (minutes for 20k rows).
+  it.effect('edge derivation seeks each hop by record, never by hop alone', () =>
+    Effect.gen(function* () {
+      for (const query of [
+        Query.select(Filter.type(TestSchema.Task)).reference('assignee').from(scope),
+        Query.select(Filter.type(TestSchema.Person)).sourceOf(TestSchema.HasManager).from(scope),
+      ]) {
+        const details = yield* explain(query);
+        expect(details.filter((detail) => /AUTOMATIC .*INDEX \(hop=\?\)/.test(detail))).toEqual([]);
+        expect(details.some((detail) => /AUTOMATIC .*INDEX \(hop=\? AND recordId=\?\)/.test(detail))).toBe(true);
+      }
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the dependency walks never scan the document index', () =>
+    Effect.gen(function* () {
+      const details = yield* explain(Query.select(Filter.everything()).from(scope));
+      expect(details.filter((detail) => /^SCAN \w+ USING (COVERING )?INDEX/.test(detail))).toEqual([]);
+      // Rows probe the dead and broken seeds by key; a probe on `spaceId` alone reads every seed per row.
+      expect(details.filter((detail) => /AUTOMATIC .*INDEX \(spaceId=\?\)/.test(detail))).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('a type select seeks the type index', () =>
     Effect.gen(function* () {
       const details = yield* explain(Query.select(Filter.type(TestSchema.Task)).from(scope));

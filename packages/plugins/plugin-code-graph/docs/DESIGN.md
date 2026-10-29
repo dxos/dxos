@@ -81,8 +81,11 @@ command, and may only `add` the rows of a SPARQL SELECT or `remove` boxes by a f
 1. no actions → stop;
 2. an action failed or a query returned no rows → another turn, with the error, without asking;
 3. the turn only removed boxes → stop;
-4. otherwise the decision model (`Model.defaultDecisionModel`, System One by default) answers "is the command
-   done?" and the loop stops at ≥ 0.5. Without a decision model the loop stops here.
+4. otherwise the decision model (`Model.defaultDecisionModel`: Cloudflare's Clef on Workers AI unless the TypeSafe
+   plugin's settings pick another) answers "is the command done?" from the command, the last turn and the first 30
+   boxes, and the loop stops at ≥ 0.5. Clef answers in about 0.3 s. Without a decision model the loop stops here.
+
+The plugin depends on the TypeSafe plugin, which serves every decision model, so enabling Code Graph enables it.
 
 At most three turns. A query may return up to 1000 rows; the first boxes that fit the 40-box budget (and the
 300-box graph cap) are drawn, and the rest become the trailer ("+57 not shown: 57 files in packages/sdk/client-services

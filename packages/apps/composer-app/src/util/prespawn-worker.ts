@@ -35,7 +35,13 @@ export const prespawnWorker = ({
 
   const spawn = async () => {
     const { held = [] } = await navigator.locks.query();
-    if (state !== 'checking' || held.some((lock) => lock.name === leaderLockKey)) {
+    if (state !== 'checking') {
+      log('dedicated worker prespawn skipped: already taken or disposed', { state });
+      state = 'done';
+      return;
+    }
+    if (held.some((lock) => lock.name === leaderLockKey)) {
+      log('dedicated worker prespawn skipped: another tab leads', { leaderLockKey });
       state = 'done';
       return;
     }
@@ -43,6 +49,7 @@ export const prespawnWorker = ({
     worker.addEventListener('message', buffer);
     worker.addEventListener('error', buffer);
     state = 'spawned';
+    log('dedicated worker prespawned');
     performance.mark('worker-connection:prespawned');
   };
   if (typeof navigator !== 'undefined' && navigator.locks) {
@@ -57,18 +64,31 @@ export const prespawnWorker = ({
   return {
     take: () => {
       const taken = state === 'spawned' ? worker : undefined;
-      state = 'done';
       if (!taken) {
+        log('no prespawned dedicated worker to hand over', { state });
+        state = 'done';
         return undefined;
       }
+      state = 'done';
       taken.removeEventListener('message', buffer);
       taken.removeEventListener('error', buffer);
+      log('handing over prespawned dedicated worker', { bufferedEvents: buffered.map((event) => event.type) });
       // Replayed after the caller's synchronous handler setup, and before any later message task.
-      queueMicrotask(() => buffered.splice(0).forEach((event) => taken.dispatchEvent(event)));
+      queueMicrotask(() =>
+        buffered.splice(0).forEach((event) => {
+          try {
+            taken.dispatchEvent(event);
+          } catch (err) {
+            // A lost replay leaves the handshake waiting on a message that already arrived.
+            log.warn('prespawned worker event replay failed', { type: event.type, err });
+          }
+        }),
+      );
       return taken;
     },
     dispose: () => {
       if (state === 'spawned') {
+        log('terminating unclaimed prespawned dedicated worker');
         worker?.terminate();
       }
       state = 'done';

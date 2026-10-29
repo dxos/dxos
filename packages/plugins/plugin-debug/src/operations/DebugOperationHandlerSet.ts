@@ -13,4 +13,5 @@ export const handlers = OperationHandlerSet.lazy([
   DebugOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
   DebugOperation.CreateSpaceFromTemplate.pipe(Operation.lazyHandler(() => import('./create-space-from-template.ts'))),
   DebugOperation.Undo.pipe(Operation.lazyHandler(() => import('./undo.ts'))),
+  DebugOperation.SendSampleMail.pipe(Operation.lazyHandler(() => import('./send-sample-mail.ts'))),
 ]);

@@ -142,6 +142,22 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     });
   }
 
+  ['SpacesService.migrateSpaceRoot']({
+    spaceKey,
+  }: SpacesService.MigrateSpaceRootRequest): Effect.Effect<SpacesService.MigrateSpaceRootResponse, BaseError> {
+    return Effect.tryPromise({
+      try: async () => {
+        const dataSpaceManager = await this._getDataSpaceManager();
+        if (!dataSpaceManager.spaces.has(spaceKey)) {
+          throw new SpaceNotFoundError(spaceKey);
+        }
+        const spaceRootUrl = await dataSpaceManager.migrateSpaceRootOnEdge(Context.default(), spaceKey);
+        return { spaceRootUrl };
+      },
+      catch: toServiceError,
+    });
+  }
+
   ['SpacesService.updateMemberRole'](request: SpacesService.UpdateMemberRoleRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
@@ -648,6 +664,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       membershipPolicy: space.membershipPolicy,
       metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting(),
+      spaceRootUrl: this._echoHost.getSpaceRootRefs(space.id)?.spaceRootDocUrl,
     });
   }
 

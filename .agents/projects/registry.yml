@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: hypercore-removal
+    status: active
+    user: dmaretskyi
+    host: cloud
+    created: 2026-08-24
+    summary: 'Move space credentials off the hypercore control feed onto Automerge space root + credentials documents, then delete hypercore. EDGE executes the per-space migration; clients adopt the root EDGE records.'
+    tasks: .agents/projects/hypercore-removal/TASKS.md
+    design: .agents/projects/hypercore-removal/DESIGN.md
+    prs: [12726, 12774]
+    resume: 'Client wired to the EDGE-run migration (Composer space-settings button, members adopt on open, two-client e2e in edge). NEXT: push signal so open clients adopt without reopening, then the edge-initiated bulk pass.'
   - name: multi-actor
     status: active
     user: burdon

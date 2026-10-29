@@ -316,6 +316,13 @@ export const translations = [
         'repair-space.title': 'Repair Space',
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
+        'migrate-space-root.title': 'Credential storage',
+        'migrate-space-root.description':
+          'Move this space’s membership credentials off the legacy hypercore feed onto an Automerge document. EDGE performs the migration; other members adopt it when they next open the space.',
+        'migrate-space-root.label': 'Migrate',
+        'migrate-space-root.pending.label': 'Migrating…',
+        'migrate-space-root.migrated.label': 'Migrated',
+        'migrate-space-root-failed.message': 'Space migration failed.',
         'reset-home.title': 'Reset home layout',
         'reset-home.description': 'Restore all hidden sections on the space home page.',
         'reset-home.label': 'Reset',

@@ -135,3 +135,26 @@ describe('tryToolNameFromKey', () => {
     expect(() => Operation.toolNameFromKey('org.dxos.operation.9bad.go')).toThrow();
   });
 });
+
+describe('Operation consent preview', () => {
+  const op = Operation.make({
+    input: Schema.Struct({ to: Schema.String, body: Schema.String }),
+    output: Schema.Void,
+    meta: { key: KEY, name: 'Send' },
+  });
+
+  test('previews the named string field of the input', ({ expect }) => {
+    const annotated = op.pipe(
+      Operation.annotate(Operation.ConsentPreviewAnnotation, { field: 'body', label: 'Reply' }),
+    );
+    expect(Operation.getConsentPreview(annotated, { to: 'dana', body: 'Hi Dana' })).toEqual({
+      label: 'Reply',
+      text: 'Hi Dana',
+    });
+    expect(Operation.getConsentPreview(annotated, { to: 'dana', body: '  ' })).toBeUndefined();
+  });
+
+  test('previews nothing for an operation that names no field', ({ expect }) => {
+    expect(Operation.getConsentPreview(op, { to: 'dana', body: 'Hi Dana' })).toBeUndefined();
+  });
+});

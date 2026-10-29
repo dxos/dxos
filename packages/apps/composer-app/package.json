@@ -113,7 +113,6 @@
     "@dxos/plugin-iroh-beacon": "workspace:*",
     "@dxos/plugin-jmap": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
-    "@dxos/plugin-labeler": "workspace:*",
     "@dxos/plugin-lametric": "workspace:*",
     "@dxos/plugin-library": "workspace:*",
     "@dxos/plugin-linear": "workspace:*",
