@@ -41,6 +41,11 @@
   .dx-number-input > .dx-input-adornment[data-part='start'] > .dx-button[data-square][data-compact]:last-child {
     margin-inline-end: 0;
   }
+  /* The adornment's icon buttons sit in the input's well, so hover brightens the icon instead of filling a cell. */
+  .dx-number-input > .dx-input-adornment > .dx-button:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-fg);
+  }
   /* A hover stepper keeps its place, so the row never reflows, and shows at once while the row is hovered or focused. */
   .dx-number-input:not(:hover, :focus-within) .dx-button[data-reveal] {
     visibility: hidden;

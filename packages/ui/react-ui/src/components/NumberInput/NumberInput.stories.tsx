@@ -171,10 +171,6 @@ const VariantsStory = ({ size }: SizeArgs) => {
           <output data-testid={`slider-${size}-value`}>{value}</output>
         </Field.HelperText>
       </Field.Root>
-      <Field.Root>
-        <Field.Label>Opacity</Field.Label>
-        <NumberInput min={0} max={1} step={0.05} defaultValue='0.5' stepperOnHover slider data-testid={`all-${size}`} />
-      </Field.Root>
     </>
   );
 };
