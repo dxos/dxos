@@ -142,7 +142,7 @@ export const getCorePlugins = ({
       downloadLogs: () => downloadLogs(logStore),
     }),
     OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
-    isTauri && !isMobile && !isPopover && NativePlugin.make(),
+    isTauri && !isMobile && !isPopover && NativePlugin.make({ defaultAutoUpdate: isPreview }),
     PreviewPlugin.make(),
     ProcessManagerPlugin.make(),
     ProgressPlugin.make(),

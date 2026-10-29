@@ -4,7 +4,11 @@
 
 // @import-as-namespace
 
-import type * as Atom from 'effect/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
+
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import { log } from '@dxos/log';
 
 /**
  * How far along an update's download is.
@@ -62,4 +66,131 @@ export type Manager = {
   install?: () => Promise<void>;
   /** Put a `ready` update live — relaunch on native, reload on the web. */
   apply: () => Promise<void>;
+};
+
+/** How long the loader waits on a check that has neither found an update nor ruled one out. */
+export const BOOT_GATE_CHECK_BUDGET = 5_000;
+
+/** How long a download may go without progress before the app shows on the old build. */
+export const BOOT_GATE_STALL_BUDGET = 30_000;
+
+/** How long to wait for the reload or relaunch that puts a downloaded update live. */
+export const BOOT_GATE_APPLY_BUDGET = 10_000;
+
+const RELEASED: Capabilities.BootGateState = { pending: false };
+
+const gateStateFor = (status: Status): Capabilities.BootGateState => {
+  switch (status.kind) {
+    case 'idle':
+    case 'checking':
+      return { pending: true, status: 'Checking for updates' };
+    case 'downloading': {
+      const { progress } = status;
+      return {
+        pending: true,
+        status: 'Downloading update',
+        progress: progress && progress.total > 0 ? progress.completed / progress.total : undefined,
+      };
+    }
+    case 'ready':
+      return { pending: true, status: 'Updating', progress: 1 };
+    // Native only: the gate starts the download itself, see `followUpdate`.
+    case 'available':
+      return { pending: true, status: 'Downloading update', progress: 0 };
+    default:
+      return RELEASED;
+  }
+};
+
+const budgetFor = (status: Status): number =>
+  status.kind === 'available' || status.kind === 'downloading'
+    ? BOOT_GATE_STALL_BUDGET
+    : status.kind === 'ready'
+      ? BOOT_GATE_APPLY_BUDGET
+      : BOOT_GATE_CHECK_BUDGET;
+
+/**
+ * Drives a boot gate: checks once and, if that finds an update, holds the loader through its download
+ * (starting it where `install` is separate) and applies it. Once released the gate stays released.
+ */
+export const followUpdate = (
+  manager: Pick<Manager, 'check' | 'install' | 'apply'>,
+  subscribe: (listener: (status: Status) => void) => () => void,
+  set: (state: Capabilities.BootGateState) => void,
+): (() => void) => {
+  let released = false;
+  let installing = false;
+  let applying = false;
+  let deadline: ReturnType<typeof setTimeout> | undefined;
+  let unsubscribe: (() => void) | undefined;
+
+  const release = () => {
+    if (released) {
+      return;
+    }
+    released = true;
+    clearTimeout(deadline);
+    unsubscribe?.();
+    set(RELEASED);
+  };
+
+  const update = (status: Status) => {
+    if (released) {
+      return;
+    }
+    const next = gateStateFor(status);
+    if (!next.pending || (status.kind === 'available' && !manager.install)) {
+      release();
+      return;
+    }
+    set(next);
+    clearTimeout(deadline);
+    deadline = setTimeout(release, budgetFor(status));
+    if (status.kind === 'available' && manager.install && !installing) {
+      installing = true;
+      manager.install().catch((error) => {
+        log.warn('installing update at boot failed', { error });
+        release();
+      });
+    }
+    if (status.kind === 'ready' && !applying) {
+      applying = true;
+      manager.apply().catch((error) => {
+        log.warn('applying update at boot failed', { error });
+        release();
+      });
+    }
+  };
+
+  unsubscribe = subscribe(update);
+  if (released) {
+    unsubscribe();
+  }
+  manager.check().catch((error) => {
+    log.warn('update check at boot failed', { error });
+    release();
+  });
+
+  return () => {
+    released = true;
+    clearTimeout(deadline);
+    unsubscribe?.();
+  };
+};
+
+/** A boot gate's state: when `enabled`, it holds the loader while {@link followUpdate} runs. */
+export const makeBootGate = (
+  registry: AtomRegistry.AtomRegistry,
+  manager: Manager,
+  enabled: boolean,
+): { state: Atom.Atom<Capabilities.BootGateState>; dispose: () => void } => {
+  const state = Atom.make<Capabilities.BootGateState>({ pending: enabled }).pipe(Atom.keepAlive);
+  const dispose = enabled
+    ? followUpdate(
+        manager,
+        (listener) => registry.subscribe(manager.status, listener, { immediate: true }),
+        (next) => registry.set(state, next),
+      )
+    : () => {};
+  return { state, dispose };
 };

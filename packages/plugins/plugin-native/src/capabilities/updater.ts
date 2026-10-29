@@ -94,7 +94,7 @@ export default Capability.makeModule(
     let pendingUpdate: Updater.Update | null = null;
 
     // Core: check for an update and update the status atom. Returns the update if available.
-    const doCheck = async (): Promise<Updater.Update | null> => {
+    const runCheck = async (): Promise<Updater.Update | null> => {
       registry.set(statusAtom, { kind: 'checking' });
       log.info('checking for updates');
       const result = await safeCheck();
@@ -116,7 +116,7 @@ export default Capability.makeModule(
     };
 
     // Core: download + install the cached pending update, streaming progress to the status atom.
-    const doInstall = async (): Promise<boolean> => {
+    const runInstall = async (): Promise<boolean> => {
       const update = pendingUpdate;
       if (!update) {
         return false;
@@ -152,6 +152,18 @@ export default Capability.makeModule(
       registry.set(statusAtom, { kind: 'failed', error: result.error });
       return false;
     };
+
+    // The boot gate and the background fiber both start at boot; a caller that arrives mid-flight joins it.
+    let checking: Promise<Updater.Update | null> | undefined;
+    let installing: Promise<boolean> | undefined;
+    const doCheck = () =>
+      (checking ??= runCheck().finally(() => {
+        checking = undefined;
+      }));
+    const doInstall = () =>
+      (installing ??= runInstall().finally(() => {
+        installing = undefined;
+      }));
 
     const manager: Update.Manager = {
       status: statusAtom,

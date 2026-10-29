@@ -7,9 +7,8 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import type * as AppUpdate from '@dxos/app-toolkit/AppUpdate';
 
-import { BOOT_GATE_CHECK_BUDGET, BOOT_GATE_STALL_BUDGET, followUpdate } from './boot-gate.ts';
+import * as AppUpdate from './AppUpdate.ts';
 
 describe('followUpdate', () => {
   beforeEach(() => {
@@ -19,13 +18,16 @@ describe('followUpdate', () => {
     vi.useRealTimers();
   });
 
-  const setup = ({ check = async () => {} }: { check?: () => Promise<void> } = {}) => {
+  const setup = ({
+    check = async () => {},
+    install,
+  }: { check?: () => Promise<void>; install?: () => Promise<void> } = {}) => {
     const registry = AtomRegistry.make();
     const status = Atom.make<AppUpdate.Status>({ kind: 'idle' });
     const apply = vi.fn(async () => {});
     const states: Capabilities.BootGateState[] = [];
-    const cleanup = followUpdate(
-      { check, apply },
+    const cleanup = AppUpdate.followUpdate(
+      { check, install, apply },
       (listener) => registry.subscribe(status, listener, { immediate: true }),
       (state) => states.push(state),
     );
@@ -42,6 +44,24 @@ describe('followUpdate', () => {
     expect(states[2]).toMatchObject({ status: 'Downloading update', progress: 0.25 });
     expect(apply).toHaveBeenCalledOnce();
     cleanup();
+  });
+
+  test('starts a separate download once, and releases where there is none to start', () => {
+    const install = vi.fn(async () => {});
+    const native = setup({ install });
+    native.emit({ kind: 'available', version: '1.2.3' });
+    native.emit({ kind: 'downloading', progress: { completed: 10, total: 100, unit: 'bytes' } });
+    native.emit({ kind: 'available', version: '1.2.3' });
+    native.emit({ kind: 'ready' });
+    expect(install).toHaveBeenCalledOnce();
+    expect(native.states.every((state) => state.pending)).toBe(true);
+    expect(native.apply).toHaveBeenCalledOnce();
+    native.cleanup();
+
+    const web = setup();
+    web.emit({ kind: 'available', version: '1.2.3' });
+    expect(web.states.at(-1)).toEqual({ pending: false });
+    web.cleanup();
   });
 
   test('releases when the check finds nothing, and stays released after', () => {
@@ -67,13 +87,13 @@ describe('followUpdate', () => {
 
   test('releases a check that never settles, and a download that stops progressing', () => {
     const checking = setup();
-    vi.advanceTimersByTime(BOOT_GATE_CHECK_BUDGET);
+    vi.advanceTimersByTime(AppUpdate.BOOT_GATE_CHECK_BUDGET);
     expect(checking.states.at(-1)).toEqual({ pending: false });
     checking.cleanup();
 
     const downloading = setup();
     downloading.emit({ kind: 'downloading' });
-    vi.advanceTimersByTime(BOOT_GATE_STALL_BUDGET - 1);
+    vi.advanceTimersByTime(AppUpdate.BOOT_GATE_STALL_BUDGET - 1);
     expect(downloading.states.at(-1)?.pending).toBe(true);
     vi.advanceTimersByTime(1);
     expect(downloading.states.at(-1)).toEqual({ pending: false });
