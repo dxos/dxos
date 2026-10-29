@@ -6,10 +6,10 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment, useCallback, useMemo } from 'react';
 
-import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import {
@@ -33,7 +33,7 @@ import { Feature, FeatureMapView, Spec } from '#types';
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { FEATURE_COMPANION, SPEC_DOCUMENT_COMPANION } from '../../constants.ts';
+import { FEATURE_COMPANION } from '../../constants.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 
@@ -46,11 +46,15 @@ export type SpecFeaturesProps = {
 type Point = Spec.Position;
 
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
+  { mode: 'document', icon: 'ph--file-text--regular' },
   { mode: 'canvas', icon: 'ph--graph--regular' },
   { mode: 'kanban', icon: 'ph--kanban--regular' },
 ];
 
 const nothing = Query.select(Filter.nothing());
+
+/** plugin-code, which renders a spec document; named by id since neither plugin depends on the other. */
+const SPEC_EDITOR_PLUGIN = 'org.dxos.plugin.code';
 
 /**
  * The features from the map's spec down to `feature`, each the owner of the next one's spec, read through atoms so a
@@ -175,54 +179,42 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
   );
   const handleAdd = useCallback((id: string) => editing.moveFeature(id, zoomed?.id), [editing, zoomed]);
 
-  // The document lives only within its spec, so the spec's toolbar is the way to it.
-  const { invokePromise } = Hooks.useOperationInvoker();
-  const hasDocument = useObject(spec)[0]?.document !== undefined;
-  const handleOpenDocument = useCallback(
-    () =>
-      void invokePromise(LayoutOperation.UpdateCompanion, {
-        subject: Attention.linkedSegment(SPEC_DOCUMENT_COMPANION),
-        // Anchored to this plank, which need not be the attended one when its toolbar is clicked.
-        anchor: attendableId,
-      }),
-    [invokePromise, attendableId],
-  );
+  // The spec's `.mdl` document is a third view of the spec, offered only when the spec holds one and plugin-code is
+  // enabled: it renders the document, and some builds (production, mobile) leave it out. A generic object article
+  // would otherwise match, so availability is read from the enabled plugins rather than from the surfaces.
+  const resolvedDocument = useResolveRef(useObject(spec)[0]?.document);
+  const enabledPlugins = useAtomValue(PluginManagerProvider.usePluginManager().enabled);
+  const specDocument =
+    resolvedDocument && attendableId && enabledPlugins.includes(SPEC_EDITOR_PLUGIN) ? resolvedDocument : undefined;
+  const shown: FeatureMapView.Mode = mode === 'document' && !specDocument ? 'canvas' : mode;
+  const modes = useMemo(() => MODES.filter(({ mode }) => mode !== 'document' || specDocument), [specDocument]);
 
   const menu = useMenuBuilder((): ActionGraphProps => {
-    const builder = MenuBuilder.make();
-    if (hasDocument) {
-      builder.action(
-        'open-document',
-        {
-          label: ['feature-map.open-document.label', { ns: ProjectsNamespace.key }],
-          icon: 'ph--file-text--regular',
-          testId: 'feature-map.open-document',
-        },
-        handleOpenDocument,
-      );
+    const builder = MenuBuilder.make().group(
+      'mode',
+      {
+        label: ['feature-map.mode.label', { ns: ProjectsNamespace.key }],
+        variant: 'toggleGroup',
+        selectCardinality: 'single',
+        value: shown,
+      },
+      (group) =>
+        modes.forEach(({ mode, icon }) =>
+          group.action(
+            mode,
+            {
+              label: [`feature-map.mode.${mode}.label`, { ns: ProjectsNamespace.key }],
+              icon,
+              testId: `projectsPlugin.featureMap.${mode}`,
+            },
+            () => updateView((prev) => ({ ...prev, mode })),
+          ),
+        ),
+    );
+    if (shown === 'document') {
+      return builder.build();
     }
     return builder
-      .group(
-        'mode',
-        {
-          label: ['feature-map.mode.label', { ns: ProjectsNamespace.key }],
-          variant: 'toggleGroup',
-          selectCardinality: 'single',
-          value: mode,
-        },
-        (group) =>
-          MODES.forEach(({ mode, icon }) =>
-            group.action(
-              mode,
-              {
-                label: [`feature-map.mode.${mode}.label`, { ns: ProjectsNamespace.key }],
-                icon,
-                testId: `projectsPlugin.featureMap.${mode}`,
-              },
-              () => updateView((prev) => ({ ...prev, mode })),
-            ),
-          ),
-      )
       .separator('gap')
       .action(
         'new-feature',
@@ -259,7 +251,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
         () => {},
       )
       .build();
-  }, [mode, updateView, db, ids, trail, zoomed, editing, handleNew, handleAdd, hasDocument, handleOpenDocument, t]);
+  }, [shown, modes, updateView, db, ids, trail, zoomed, editing, handleNew, handleAdd, t]);
 
   // Only the boxes that moved are written, so a drag touches one entry of the layout rather than all of it.
   const handlePositionsChange = useCallback(
@@ -289,7 +281,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
       <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
         {/* The trail is a second row: the map's level, with every step above it a way back out. */}
-        {zoomed && (
+        {zoomed && shown !== 'document' && (
           <Toolbar.Root>
             <Button.Root
               variant='ghost'
@@ -330,9 +322,13 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
         )}
       </Panel.Header>
       <Panel.Body asChild>
-        {zoomed && features.length === 0 ? (
+        {shown === 'document' && specDocument ? (
+          <div className='grid min-h-0' data-testid='feature-map.document'>
+            <Surface.Surface type={AppSurface.Article} data={{ subject: specDocument, attendableId }} limit={1} />
+          </div>
+        ) : zoomed && features.length === 0 ? (
           <Status.Empty classNames='h-full'>{t('feature-map.empty.message')}</Status.Empty>
-        ) : mode === 'kanban' ? (
+        ) : shown === 'kanban' ? (
           <FeatureKanban
             features={features}
             selectedId={selectedId}

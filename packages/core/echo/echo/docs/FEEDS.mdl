@@ -176,14 +176,6 @@ merge and close are a follow-up [D-2]. These points are agreed for that follow-u
   merge. A reader sees the merge message when it iterates the parent [D-3].
 - A merge folds in one branch at a time, and the merge sits on the main line [D-4].
 
-```mdl
-question Q-5: Does a reader of the main line see branch messages and merge messages, but not always close messages?
-  to: user:richburdon
-  status: moot
-  decisions: [D-50]
-  note: Out of scope with merges [D-50]. Rich thinks so, and he will write this part out.
-```
-
 ## What exists
 
 ### Feed and blocks
@@ -544,19 +536,6 @@ const program = Effect.gen(function* () {
 });
 ```
 
-```mdl
-question Q-6: An update of an item appends a new block. Does a walk give the item at the place of its first block or of its latest block?
-  to: user:dmaretskyi
-  status: answered
-  answer: |
-    The first block. The walk keeps the order in which the items started, and each item has its latest content.
-  decisions: [D-69, D-70]
-  affects: [F-5.1, F-5.2]
-  options:
-    - The latest block. The walk gives each item one time, with its latest content, and the cursor of the item is a block on the walk. An item that changes after a cursor comes again on a later page.
-    - The first block. The walk keeps the order in which the items started, but the content of the item is from a later block than the cursor.
-```
-
 ### Storage
 
 The branch adds one local column to the feed store and one column to the index. The tables show the
@@ -680,50 +659,58 @@ table objectMeta: The latest version of one object of a space, or of one item of
 
 ## Questions
 
-The trajectory is a separate design, thus this spec does not ask about it [D-52].
+The trajectory is a separate design, thus this spec does not ask about it [D-52]. The questions this spec asked, and the
+decisions that answer them, are in the changelog.
+
+## Changelog
 
 ```mdl
 question Q-1: Chat feeds have indexing off because no code read them through the index. With a branch column and push-down, do you want an index for chat feeds again? Or do you want no index for chat feeds, and an index only for comment branches and channel branches?
-  to: user:dmaretskyi
-  status: answered
-  answer: |
-    The index of a feed holds all branches or only the main branch, and the default is the main
-    branch [F-2.1]. Dima thinks about no index for trajectory feeds, because a reducer builds the state
-    of the conversation.
-  decisions: [D-10, D-11]
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
 ```
 
 ```mdl
 question Q-2: Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an acceptable wire change? The reasons are different: a lineage edge on blocks mixed races with forks, but a branch id does not.
-  to: user:dmaretskyi
-  status: answered
-  answer: |
-    The fork flag is part of the sync protocol and is not encrypted, and the branch is inferred
-    [D-51]. How the protocol carries the flag is open.
-  decisions: [D-51]
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
 ```
 
 ```mdl
 question Q-3: Is merge a concept of the feed layer, or does merge stay a trajectory event?
-  to: user:dmaretskyi
-  status: answered
-  answer: |
-    The core does nothing with a merge [D-3]. Merges and branch cancel are out of scope of this
-    design [D-50].
-  decisions: [D-3, D-50]
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
 ```
 
 ```mdl
 question Q-4: How does the sync protocol carry the fork flag?
-  to: user:dmaretskyi
-  status: answered
-  answer: |
-    As an optional `fork` field of `FeedProtocol.Block`. EDGE keeps it once it updates `@dxos/feed`.
-  decisions: [D-65, D-68]
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
   affects: [F-1.2, F-2.3]
 ```
 
-## Changelog
+```mdl
+question Q-5: Does a reader of the main line see branch messages and merge messages, but not always close messages?
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: Asked for user:richburdon, who owns the reader of the main line.
+```
+
+```mdl
+question Q-6: An update of an item appends a new block. Does a walk give the item at the place of its first block or of its latest block?
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  options:
+    - Latest block: the walk gives each item one time, with its latest content, and the cursor of the item is a block on the walk. An item that changes after a cursor comes again on a later page.
+    - First block: the walk keeps the order in which the items started, but the content of the item is from a later block than the cursor.
+```
 
 ```mdl
 decision D-1: The requirements [F-1] to [F-4] are agreed.
@@ -744,6 +731,7 @@ decision D-2: Forks come first. Merge and close are a follow-up.
 decision D-3: Close and merge are two different operations. A branch can close without a merge, and then its parent does not know that it closed. A merge tells the parent branch that the branch was finalized into it. The core does nothing with a merge; a reader sees the merge message when it iterates the parent.
   date: 2026-10-26
   by: user:richburdon
+  answers: Q-3
   affects: [F-1]
 ```
 
@@ -793,6 +781,7 @@ decision D-9: An agent creates a new branch when the base branch is owned by a d
 decision D-10: The index of a feed holds either all branches or only the main branch, never a selected subset; the default is the main branch only, and a feed of messages from people indexes all branches.
   date: 2026-10-26
   by: user:richburdon
+  answers: Q-1
   affects: [F-2.1]
 ```
 
@@ -1119,6 +1108,7 @@ decision D-49: Each row of the branches table stores the id of its base branch, 
 decision D-50: Merges and branch cancel are out of scope of this design.
   date: 2026-10-27
   by: user:dmaretskyi
+  answers: Q-5
   affects: [F-1.4]
 ```
 
@@ -1126,6 +1116,7 @@ decision D-50: Merges and branch cancel are out of scope of this design.
 decision D-51: The fork flag is part of the sync protocol and is not encrypted; the branch of a block is not stored, because it can be inferred from the fork flag and the predecessor.
   date: 2026-10-27
   by: user:dmaretskyi
+  answers: Q-2
   affects: [F-1.2, F-2.3]
   supersedes: D-29
 ```
@@ -1267,12 +1258,14 @@ decision D-67: Approve [D-61].
 decision D-68: Approve [D-65].
   date: 2026-10-27
   by: user:dmaretskyi
+  answers: Q-4
 ```
 
 ```mdl
 decision D-69: A walk gives each item one time, at the place of its first block on the path, with the content of its latest block. Answers [Q-6].
   date: 2026-10-27
   by: user:dmaretskyi
+  answers: Q-6
   affects: [F-5.1, F-5.2]
   supersedes: D-60
 ```
@@ -1284,6 +1277,16 @@ decision D-70: The cursor of an item still names its latest block. A walk resume
   for: user:dmaretskyi
   affects: [F-5.5]
   why: The cursor stays a block of the walk, as [D-57] has it, and a page reads the whole path already, so the place of each item is known.
+```
+
+```mdl
+decision D-71: The questions of this spec use the changelog dialect: each is a `question` in this changelog, and the decision that names it in `answers:` answers it.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The question dialect of #14321 landed first; one question format keeps the decision log and the lint consistent across specs.
+  rejected:
+    - Keep `to:`, `status:` and `answer:` on the question beside `by:` — two ways to record one answer.
 ```
 
 ## Appendix: Extension Definitions

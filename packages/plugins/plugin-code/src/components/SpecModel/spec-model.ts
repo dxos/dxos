@@ -137,26 +137,10 @@ const firstSentence = (prose: string): string => prose.split(/(?<=\.)\s/)[0];
 /** Dotted identifiers, so `CallsCapabilities.Manager` and `F-1.2` each read as one token. */
 const IDENTIFIER = /[A-Za-z][\w-]*(?:\.[\w-]+)*/g;
 
-/** One top-level field of a block body: its inline value and its indented lines. */
-export type BlockField = { inline?: string; lines: string[] };
-
-/** A field's inline value and lines as one paragraph. */
-export const proseOf = (field?: BlockField): string | undefined => {
+const proseOf = (field?: { inline?: string; lines: string[] }): string | undefined => {
   const text = [field?.inline, ...(field?.lines ?? [])].filter(Boolean).join(' ').trim();
   return text || undefined;
 };
-
-/** An inline value without its trailing `# comment`. */
-export const inlineValueOf = (inline?: string): string | undefined =>
-  inline?.replace(/\s+#.*$/, '').trim() || undefined;
-
-/** A list field, which may be inline (`[a, b]`), wrapped over several lines, or written as `- a` items. */
-export const listOf = (field?: BlockField): string[] =>
-  [inlineValueOf(field?.inline), ...(field?.lines ?? [])]
-    .join(',')
-    .split(',')
-    .map((value) => value.replace(/^[\s[-]+|[\s\]]+$/g, ''))
-    .filter(Boolean);
 
 /** `name[?]: Type  # comment`; a line without a type (a method signature) yields nothing. */
 export const parseField = (line: string): FieldModel | undefined => {

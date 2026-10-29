@@ -23,8 +23,17 @@ import { TASK_GRID, TASK_GRID_CONTENT, TASK_GRID_ICON } from '../task-grid.ts';
  */
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
+/**
+ * The parts of a question and its answer the component reads, so a question kept outside a task's log (a spec's
+ * `question` block) renders the same way.
+ */
+export type TaskQuestionThread = {
+  question: Pick<Task.QuestionEntry, 'text' | 'context' | 'options'>;
+  answer?: Pick<Task.AnswerEntry, 'answer'>;
+};
+
 export type TaskQuestionProps = Util.ThemedClassName<{
-  thread: Task.QuestionThread;
+  thread: TaskQuestionThread;
   /** An answer is in flight; the controls are disabled until it settles. */
   busy?: boolean;
   /** A line under the controls — a failed write, or an answer that landed but woke nobody. */
