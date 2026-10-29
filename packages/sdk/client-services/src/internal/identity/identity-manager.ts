@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import platform from 'platform';
 
-import { Event, sleepWithContext } from '@dxos/async';
+import { Event, scheduleTask, sleepWithContext } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   CredentialGenerator,
@@ -74,6 +74,10 @@ const EDGE_ROOT_FETCH_TIMEOUT = 5_000;
 /** Backoff bounds for asking edge to migrate a HALO it has not processed far enough to anchor yet. */
 const EDGE_MIGRATION_RETRY_INITIAL = 500;
 const EDGE_MIGRATION_RETRY_MAX = 8_000;
+
+/** Backoff bounds for re-anchoring a HALO whose root lookup failed or did not replicate in time. */
+const HALO_ANCHOR_RETRY_INITIAL = 500;
+const HALO_ANCHOR_RETRY_MAX = 30_000;
 
 interface ConstructSpaceProps {
   spaceRecord: SpaceMetadata;
@@ -160,6 +164,9 @@ export class IdentityManager {
   private _haloMirroredSpaceId: SpaceId | undefined;
   /** Serializes anchoring, which open, the late setters and migration can each trigger. */
   private _anchorQueue: Promise<void> = Promise.resolve();
+  /** Delay before the next re-anchor of an unsettled HALO; past the max it stops until the next open. */
+  private _haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
+  private _haloAnchorRetryPending = false;
   /** Root the inviting device named, adopted once the identity is accepted. */
   private _pendingHaloSpaceRootUrl: string | undefined;
   private readonly _devicePresenceAnnounceInterval: number;
@@ -310,6 +317,8 @@ export class IdentityManager {
       await this._ctx.dispose();
       this._ctx = new Context();
       this._haloMirroredSpaceId = undefined;
+      this._haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
+      this._haloAnchorRetryPending = false;
       if (this._haloReplicationSpaceId) {
         const replicatedSpaceId = this._haloReplicationSpaceId;
         this._haloReplicationSpaceId = undefined;
@@ -630,12 +639,17 @@ export class IdentityManager {
             : await lookupEdgeSpaceRoot(this._ctx, this._edgeHttpClient, spaceId);
         if (edgeRoot.kind === 'found') {
           if (!(await this._adoptHaloRoot(ctx, identity, edgeRoot.url))) {
+            this._scheduleHaloAnchorRetry(identity);
             return;
           }
         } else {
-          // Minting a root locally is the opt-in behaviour, and never follows a failed lookup: EDGE may
-          // already hold a root this device could not see.
-          if (!this._automergeCredentials || edgeRoot.kind === 'unavailable') {
+          // Asked again whatever the flag says: a root EDGE holds is adopted with the flag off too.
+          if (edgeRoot.kind === 'unavailable') {
+            this._scheduleHaloAnchorRetry(identity);
+            return;
+          }
+          // Minting a root locally is the opt-in behaviour.
+          if (!this._automergeCredentials) {
             return;
           }
 
@@ -659,6 +673,7 @@ export class IdentityManager {
         return;
       }
       identity.setHaloSpaceRootUrl(refs.spaceRootDocUrl);
+      this._haloAnchorRetryDelay = HALO_ANCHOR_RETRY_INITIAL;
       await this._connectHaloReplication(ctx, identity);
 
       // An anchored HALO mirrors whatever the flag says, or its document falls behind after a reload.
@@ -678,6 +693,26 @@ export class IdentityManager {
     } catch (err) {
       log.warn('failed to anchor the halo space on a root document', { spaceId, err });
     }
+  }
+
+  /**
+   * Re-anchors a HALO left unsettled, since nothing else attempts it again before the next open: a
+   * root that replicates late, or an EDGE that answers later, arrives without any event to react to.
+   */
+  private _scheduleHaloAnchorRetry(identity: Identity): void {
+    if (this._haloAnchorRetryPending || this._haloAnchorRetryDelay > HALO_ANCHOR_RETRY_MAX) {
+      return;
+    }
+    this._haloAnchorRetryPending = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this._haloAnchorRetryPending = false;
+        void this._anchorHaloOnRootDocument(this._ctx, identity).catch((err) => log.catch(err));
+      },
+      this._haloAnchorRetryDelay,
+    );
+    this._haloAnchorRetryDelay *= 2;
   }
 
   /**

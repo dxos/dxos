@@ -174,6 +174,32 @@ describe('identity/identity-manager', () => {
       await waitForCondition({ condition: () => store.read().length >= identity.space.spaceState.credentials.length });
     });
 
+    test('a HALO adopts the root edge holds once a failed lookup is retried', async () => {
+      const { peer, identity, edge, edgeHttpClient, rootUrl } = await setupHaloWithEdgeRoot();
+      edge.root = rootUrl;
+      let lookups = 0;
+      const flakyEdge = {
+        ...edgeHttpClient,
+        getSpaceRoot: async () => {
+          if (lookups++ === 0) {
+            throw new Error('edge unreachable');
+          }
+          return edgeHttpClient.getSpaceRoot();
+        },
+      };
+
+      await peer.identityManager.setEdgeServices({ edgeHttpClient: flakyEdge });
+      expect(peer.echoHost.getSpaceRootRefs(identity.haloSpaceId)).to.be.undefined;
+
+      // Nothing else triggers anchoring again this session, so only the scheduled retry can adopt the root.
+      await waitForCondition({
+        condition: () => peer.echoHost.getSpaceRootRefs(identity.haloSpaceId)?.spaceRootDocUrl === rootUrl,
+        timeout: 5_000,
+      });
+      expect(identity.haloSpaceRootUrl).to.equal(rootUrl);
+      expect(edge.migrations).to.equal(0);
+    });
+
     test('with the flag on, a HALO mints no root of its own while edge cannot be asked', async () => {
       const peer = await createServiceContext({ runtimeProps: { automergeCredentials: true } });
       await peer.open(new Context());
