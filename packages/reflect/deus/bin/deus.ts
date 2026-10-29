@@ -11,7 +11,14 @@ import * as Command from 'effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { ChangelogCheckError, LintError, QaLintError, ReviewCheckError, deus } from '../src/cli/index.ts';
+import {
+  ChangelogCheckError,
+  FeatureCheckError,
+  LintError,
+  QaLintError,
+  ReviewCheckError,
+  deus,
+} from '../src/cli/index.ts';
 
 const VERSION = '0.0.0';
 
@@ -19,6 +26,7 @@ const VERSION = '0.0.0';
 const isReported = (error: unknown): boolean =>
   CliError.isCliError(error) ||
   ChangelogCheckError.is(error) ||
+  FeatureCheckError.is(error) ||
   LintError.is(error) ||
   QaLintError.is(error) ||
   ReviewCheckError.is(error);

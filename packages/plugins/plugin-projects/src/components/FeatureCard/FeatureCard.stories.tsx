@@ -3,18 +3,17 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ReactNode, useMemo, useState } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { Masonry } from '@dxos/react-ui-masonry';
 import * as Card from '@dxos/react-ui/Card';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
 
 import {
-  type FeatureChanges,
   type FeatureLookup,
   type FeatureModel,
   type FeatureTarget,
@@ -31,27 +30,18 @@ type StoryArgs = {
   /** The map the cards are drawn from; the sample map by default. */
   features?: FeatureModel[];
   variant?: Variant;
-  /** Read-only without it: no status picker or edit button. */
-  editable?: boolean;
-  /** Opens every card in edit mode. */
-  editing?: boolean;
   onOpen?: (target: FeatureTarget) => void;
 };
 
-type TileData = Pick<StoryArgs, 'variant' | 'editing' | 'onOpen'> & {
+type TileProps = Pick<StoryArgs, 'variant' | 'onOpen'> & {
   feature: FeatureModel;
   lookup: FeatureLookup;
   dependents: FeatureModel[];
-  onChange?: (feature: FeatureModel, changes: FeatureChanges) => void;
 };
 
-/** One card per host composition. */
-const FeatureTile = ({
-  data: { feature, lookup, dependents, variant = 'compact', editing, onOpen, onChange },
-}: {
-  data: TileData;
-}) => {
-  const root = { feature, lookup, onOpen, onChange, editing: editing || undefined };
+/** One card per host composition: `compact` is what the map draws, `detail` what the companion lists. */
+const FeatureTile = ({ feature, lookup, dependents, variant = 'compact', onOpen }: TileProps) => {
+  const root = { feature, lookup, onOpen };
   switch (variant) {
     case 'detail':
       return (
@@ -59,16 +49,14 @@ const FeatureTile = ({
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            <FeatureCard.Save />
-            <FeatureCard.Menu />
           </FeatureCard.Header>
           <FeatureCard.Body>
-            <FeatureCard.Description />
+            <FeatureCard.Description lines={0} />
+            <FeatureCard.Requirements />
+            <FeatureCard.Subfeatures />
             <FeatureCard.Tags all />
-            <FeatureCard.TaskCount />
             <FeatureCard.Dependencies />
             <FeatureCard.Dependents dependents={dependents} />
-            <FeatureCard.Subfeatures />
             <FeatureCard.Tasks />
             <FeatureCard.Showcases />
             <FeatureCard.Specs />
@@ -85,16 +73,11 @@ const FeatureTile = ({
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            <FeatureCard.Save />
-            <FeatureCard.Menu />
+            <FeatureCard.Marks />
           </FeatureCard.Header>
           <FeatureCard.Body>
             <FeatureCard.Description />
-            <FeatureCard.Tags />
-            <FeatureCard.SubfeatureCount />
-            <FeatureCard.TaskCount />
-            <FeatureCard.ShowcaseLead />
-            <FeatureCard.DependencyCount />
+            <FeatureCard.Summary />
           </FeatureCard.Body>
         </FeatureCard.Root>
       );
@@ -105,12 +88,10 @@ const FeatureTile = ({
 const SectionCards = ({ dependents, ...root }: FeatureCard.RootProps & { dependents: FeatureModel[] }) => {
   const sections: [string, ReactNode][] = [
     ['Description', <FeatureCard.Description key='description' />],
+    ['Summary', <FeatureCard.Summary key='summary' />],
+    ['Requirements', <FeatureCard.Requirements key='requirements' />],
     ['Tags', <FeatureCard.Tags key='tags' />],
     ['Tags all', <FeatureCard.Tags key='tags-all' all />],
-    ['SubfeatureCount', <FeatureCard.SubfeatureCount key='subfeature-count' />],
-    ['TaskCount', <FeatureCard.TaskCount key='task-count' />],
-    ['ShowcaseLead', <FeatureCard.ShowcaseLead key='showcase-lead' />],
-    ['DependencyCount', <FeatureCard.DependencyCount key='dependency-count' />],
     ['Dependencies', <FeatureCard.Dependencies key='dependencies' />],
     ['Dependents', <FeatureCard.Dependents key='dependents' dependents={dependents} />],
     ['Subfeatures', <FeatureCard.Subfeatures key='subfeatures' />],
@@ -133,36 +114,27 @@ const SectionCards = ({ dependents, ...root }: FeatureCard.RootProps & { depende
   );
 };
 
-const DefaultStory = ({
-  ids,
-  features: initial = SAMPLE_FEATURES,
-  variant,
-  editable = true,
-  editing,
-  onOpen,
-}: StoryArgs) => {
-  const [features, setFeatures] = useState(initial);
+const DefaultStory = ({ ids, features = SAMPLE_FEATURES, variant, onOpen }: StoryArgs) => {
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  const items = useMemo(() => {
-    const onChange = editable
-      ? (changed: FeatureModel, changes: FeatureChanges) =>
-          setFeatures((current) =>
-            current.map((feature) => (feature.id === changed.id ? { ...feature, ...changes } : feature)),
-          )
-      : undefined;
-    return ids.flatMap((id): TileData[] => {
-      const feature = lookup(id);
-      const dependents = getDependents(id, features).flatMap((dependent) => lookup(dependent) ?? []);
-      return feature ? [{ feature, lookup, dependents, variant, editing, onOpen, onChange }] : [];
-    });
-  }, [ids, features, lookup, variant, editable, editing, onOpen]);
-
   return (
-    <Masonry.Root Tile={FeatureTile} minColumnWidth={18}>
-      <Masonry.Content>
-        <Masonry.Viewport items={items} getId={({ feature }) => feature.id} />
-      </Masonry.Content>
-    </Masonry.Root>
+    <Layout.Grid gap='sm' classNames='grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] items-start p-trim-md'>
+      {ids.map((id) => {
+        const feature = lookup(id);
+        const dependents = getDependents(id, features).flatMap((dependent) => lookup(dependent) ?? []);
+        return (
+          feature && (
+            <FeatureTile
+              key={id}
+              feature={feature}
+              lookup={lookup}
+              dependents={dependents}
+              variant={variant}
+              onOpen={onOpen}
+            />
+          )
+        );
+      })}
+    </Layout.Grid>
   );
 };
 
@@ -185,14 +157,20 @@ const card = (canvasElement: HTMLElement, id: string) => {
   return element;
 };
 
-/** One card per status: the icon, hue and word change together. */
+/** One card per status: the icon and hue change together; the hammer marks a feature someone is working on. */
 export const Statuses: Story = {
   args: {
     ids: ['triage', 'feature-map', 'sync', 'tasks', 'delegate'],
   },
+  play: async ({ canvasElement }) => {
+    // Work is its own axis: a failing feature and a prototype can both be in work.
+    await expect(within(card(canvasElement, 'delegate')).getByTestId('feature-card.active')).toBeInTheDocument();
+    await expect(within(card(canvasElement, 'feature-map')).getByTestId('feature-card.active')).toBeInTheDocument();
+    await expect(within(card(canvasElement, 'tasks')).queryByTestId('feature-card.active')).toBeNull();
+  },
 };
 
-/** Compact cards show the most serious signal, a "+N" count for the rest, and counts instead of lists. */
+/** Compact cards say what the feature is and how much lies beneath it, with the most serious warning as an icon. */
 export const Compact: Story = {
   args: {
     ids: ['compose', 'triage', 'sync'],
@@ -201,54 +179,28 @@ export const Compact: Story = {
     const compose = within(card(canvasElement, 'compose'));
     await expect(await compose.findByTestId('feature-signal.ahead')).toBeInTheDocument();
     await expect(compose.queryByTestId('feature-signal.no-evidence')).toBeNull();
-    await expect(compose.getByTestId('feature-signal.more')).toHaveTextContent('+1');
-    await expect(compose.getByText('Depends on 2')).toBeInTheDocument();
-    await expect(within(card(canvasElement, 'sync')).getByText('2 subfeatures')).toBeInTheDocument();
-  },
-};
-
-/** Without `onChange` a card is read-only: a plain status glyph and no edit or status items in its menu. */
-export const ReadOnly: Story = {
-  args: {
-    ids: ['compose', 'sync'],
-    editable: false,
-  },
-  play: async ({ canvasElement }) => {
     const sync = within(card(canvasElement, 'sync'));
-    await expect(sync.queryByTestId('feature-card.menu')).toBeNull();
-    await expect(sync.queryByTestId('feature-card.status-icon')).toBeNull();
+    await expect(sync.getByText('2 subfeatures')).toBeInTheDocument();
+    await expect(sync.getByTestId('feature-card.subfeatures-operational')).toHaveTextContent('0/2');
+    await expect(sync.getByText('3 requirements')).toBeInTheDocument();
   },
 };
 
-/** Edit mode: the name and description are fields, the description shown even while empty. */
-export const Editing: Story = {
-  args: {
-    ids: ['compose', 'sync'],
-    editing: true,
-  },
-  play: async ({ canvasElement }) => {
-    const sync = within(card(canvasElement, 'sync'));
-    await expect(await sync.findByTestId('feature-card.name.input')).toBeInTheDocument();
-    await expect(sync.getByTestId('feature-card.description.input')).toBeInTheDocument();
-    await expect(sync.getByTestId('feature-card.done')).toBeInTheDocument();
-  },
-};
-
-/** Every derived signal at least once; problems sort before status. Detailed, so no signal is folded into a count. */
+/** Every derived signal at least once, spelled out as the companion lists them. */
 export const Signals: Story = {
   args: {
     variant: 'detail',
-    ids: ['compose', 'triage', 'feature-map'],
+    ids: ['compose', 'triage'],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    for (const signal of ['blocked', 'ahead', 'no-evidence', 'in-flight', 'unplanned']) {
+    for (const signal of ['blocked', 'ahead', 'no-evidence', 'unplanned']) {
       await expect((await canvas.findAllByTestId(`feature-signal.${signal}`)).length).toBeGreaterThan(0);
     }
   },
 };
 
-/** The detail composition: description, dependencies, subfeatures, the implementing tasks, showcases and specs. */
+/** The detail composition: the ideal, the requirements, subfeatures, then how the feature relates to the rest. */
 export const Detail: Story = {
   args: {
     ids: ['sync'],
@@ -257,11 +209,13 @@ export const Detail: Story = {
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('2 open tasks')).toBeInTheDocument();
+    await expect(await canvas.findAllByTestId('feature-card.requirement')).toHaveLength(3);
     await expect(canvas.getByText('IMAP')).toBeInTheDocument();
     await expect(canvas.getByText('First sync of a Gmail inbox')).toBeInTheDocument();
     await userEvent.click(canvas.getByText('OAuth tokens'));
     await expect(args.onOpen).toHaveBeenCalledWith({ type: 'object', id: 'tokens' });
+    await userEvent.click(canvas.getByText('IMAP'));
+    await expect(args.onOpen).toHaveBeenCalledWith({ type: 'object', id: 'sync-imap' });
   },
 };
 
@@ -286,6 +240,7 @@ export const LongLists: Story = {
               id: `task-${index}`,
               title: `Task ${index + 1}`,
               done: index % 3 === 0,
+              active: index === 1,
             })),
           }
         : feature,

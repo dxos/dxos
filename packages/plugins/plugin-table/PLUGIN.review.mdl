@@ -1,0 +1,288 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-table/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TablePlugin
+
+The editing surface is solid: `TableArticle` wires inline editing, row insertion, multi-select
+delete, column delete, save, export, sort and tag filters from the view's query AST, and global
+search filtering; `TableCard` renders a read-only, selection-free grid. `create`, `addRow` and
+`handleTypeAdded` are implemented. The `onCreateSpace` hook does not exist at all, so no default
+Task table is made. The Table skill has a one-line instruction and no tools, so an agent cannot
+create tables through it. The plugin's own test only checks module activation; the behaviour tests
+that exist live in `react-ui-table` (selection, sort persistence) and `@dxos/schema` (view from
+typename).
+
+Of 35 items: 7 done, 16 untested, 5 partial, 3 diverged, 4 missing. Findings:
+
+- **onCreateSpace / F-1.3 / T-5 are missing.** plugin-table contributes no OnCreateSpace capability;
+  only the TableCard story seeds a table in its own `onCreateSpace` callback.
+- **F-6.2 diverged.** `TableSkill` declares `tools: []`, so the agent has no table tool;
+  the source says table ops are handled by generic schema ops.
+- **Header sort is persisted to local view state, not the View query AST** (T-3), per
+  `table-model.test.ts`; the query-AST sort is only read, never written by a header click.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Table: The Table type has name and a view Ref, but stores column sizes instead of the JSON Schema.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-table/src/types/Table.ts#Table, github:dxos/dxos/packages/ui/react-ui-table/src/types/Table.ts#make]
+  note: `jsonSchema` is not a field; `make` uses it only to preset `sizes`, a field the spec does not list.
+```
+
+```mdl
+verdict CreateTableInput: CreateTableSchema has optional name and typename with a database/runtime type picker.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#CreateTableSchema]
+  note: An empty typename makes a new type named after the table (create-object.ts). No test.
+```
+
+```mdl
+verdict TableArticle: The article renders toolbar and grid with add, save, export, delete rows, delete column and open-row actions.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle]
+  note: No story or test renders TableArticle; react-ui-table's own stories exercise the underlying Table component.
+```
+
+```mdl
+verdict TableCard: The card renders a read-only, non-selectable grid over the live query.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableCard/TableCard.tsx#TableCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableCard/TableCard.stories.tsx]
+```
+
+```mdl
+verdict create: The handler builds a view from the database for the typename and returns a new Table.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-table/src/operations/create.ts]
+  walkthrough:
+    - The operation takes db plus CreateTableSchema fields and returns the Table. github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#Create
+    - The handler calls ViewModel.makeFromDatabase and Table.make. github:dxos/dxos/packages/plugins/plugin-table/src/operations/create.ts
+  note: QA-1 records that invoking it directly fails without a schema registry. No test invokes it.
+```
+
+```mdl
+verdict addRow: The handler resolves the view's type and adds an object with the given data.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#AddRow, github:dxos/dxos/packages/plugins/plugin-table/src/operations/add-row.ts]
+  walkthrough:
+    - The operation takes a view Ref and data; the source marks it as apparently unused. github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#AddRow
+    - The handler finds the type from the query AST and adds the object via SpaceOperation.AddObject. github:dxos/dxos/packages/plugins/plugin-table/src/operations/add-row.ts
+  note: The toolbar Add path uses useAddRow instead. No test invokes the operation.
+```
+
+```mdl
+verdict onCreateSpace: No onCreateSpace operation or OnCreateSpace capability exists in plugin-table.
+  status: missing
+  note: Searched plugin-table src and capabilities; only the TableCard story defines an onCreateSpace callback.
+```
+
+```mdl
+verdict onSchemaAdded: handleTypeAdded creates a Table for the new type, adds it to the space and opens it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#OnTypeAdded, github:dxos/dxos/packages/plugins/plugin-table/src/operations/on-schema-added.ts, github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/index.ts#OnTypeAdded]
+  walkthrough:
+    - The OnTypeAdded module listens for SpaceEvents.TypeAdded and invokes the operation. github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/index.ts#OnTypeAdded
+    - The handler invokes Create, AddObject, then opens the navigation target. github:dxos/dxos/packages/plugins/plugin-table/src/operations/on-schema-added.ts
+  note: Input field is `type`, not `schema`, and `show` is ignored. plugin.test.ts notes the event is not fired in tests.
+```
+
+```mdl
+verdict F-1.1: The create-object entry offers a type picker over database and runtime types.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#CreateTableSchema]
+  note: Covered by the QA-2 autocue flow only, which picks no type.
+```
+
+```mdl
+verdict F-1.2: ViewModel.makeFromDatabase builds view columns from the schema fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/operations/create.ts, github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/create-object.ts]
+  tests: [github:dxos/dxos/packages/sdk/schema/src/types/View.test.ts]
+```
+
+```mdl
+verdict F-1.3: Nothing creates a default Task table on space creation.
+  status: missing
+  note: No OnCreateSpace contribution in plugin-table.
+```
+
+```mdl
+verdict F-1.4: A new type in a space creates and opens a Table bound to it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/operations/on-schema-added.ts]
+  note: No test fires SpaceEvents.TypeAdded.
+```
+
+```mdl
+verdict F-2.1: Cells are data-editable in the article.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle]
+  note: `dataEditable` is always true rather than gated on schema mutability. No plugin test.
+```
+
+```mdl
+verdict F-2.2: Rows insert from the toolbar Add button and from a click on the frozen last row.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle, github:dxos/dxos/packages/ui/react-ui-table/src/hooks/useAddRow.ts#useAddRow]
+  tests: [github:dxos/dxos/packages/plugins/plugin-table/autocue/reading-list.mjs]
+  walkthrough:
+    - The article's handleInsertRow and handleRowClick insert a row from the toolbar or the frozen end row. github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle
+    - useAddRow adds the object or returns a draft when required fields are missing. github:dxos/dxos/packages/ui/react-ui-table/src/hooks/useAddRow.ts#useAddRow
+```
+
+```mdl
+verdict F-2.3: Multi-selection is enabled and selected rows are removed with SpaceOperation.RemoveObjects.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle]
+  tests: [github:dxos/dxos/packages/ui/react-ui-table/src/model/table-model.test.ts]
+  note: The selection model is unit-tested; the delete handler is not.
+```
+
+```mdl
+verdict F-2.4: Column delete invokes SpaceOperation.DeleteField when the type lives in the database.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle]
+  note: `schemaEditable` is true when the type has a database. No test.
+```
+
+```mdl
+verdict F-2.5: The toolbar receives viewDirty and Save calls model.saveView.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-3.1: Columns can be sorted from the header menu through the table model.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-table/src/model/table-model.ts#TableModel.setSort]
+  tests: [github:dxos/dxos/packages/ui/react-ui-table/src/model/table-model.test.ts, github:dxos/dxos/packages/plugins/plugin-table/autocue/reading-list.mjs]
+```
+
+```mdl
+verdict F-3.2: Order is extracted from the query AST and applied to the live query.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#useQueryWorkaround]
+  note: No test covers the AST-to-query ordering.
+```
+
+```mdl
+verdict F-3.3: A tag in the query AST is applied as Filter.tag.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#useQueryWorkaround]
+  note: Only a single tag is read (getTagFromQuery). No test.
+```
+
+```mdl
+verdict F-3.4: Rows pass through useGlobalFilteredObjects without changing the view.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-4.1: The table surface matches article, section and slide roles.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/react-surface.ts]
+  note: No test resolves the surface.
+```
+
+```mdl
+verdict F-4.2: The cardContent role renders the read-only TableCard.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableCard/TableCard.tsx#TableCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableCard/TableCard.stories.tsx]
+```
+
+```mdl
+verdict F-4.3: The open row action opens the object's graph path.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableArticle/TableArticle.tsx#TableArticle]
+  note: No test.
+```
+
+```mdl
+verdict F-5.1: CommentConfig declares unanchored comments for the Table type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/comment-config.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-6.1: A Table skill is contributed, but its instructions are one sentence.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/skills/TableSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/skill-definition.ts]
+  note: The instructions do not explain how to create or update tables; the source questions whether the skill should exist.
+```
+
+```mdl
+verdict F-6.2: The skill has no tools, so an agent cannot call create through it.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/skills/TableSkill.ts#make]
+  note: `Skill.toolDefinitions({ tools: [] })`; the operation exists but is not exposed to the agent.
+```
+
+```mdl
+verdict T-1: View-from-typename is tested in @dxos/schema, but no test creates a Table from a typename.
+  status: partial
+  tests: [github:dxos/dxos/packages/sdk/schema/src/types/View.test.ts]
+  note: The Table object write is not asserted.
+```
+
+```mdl
+verdict T-2: The QA-2 autocue flow adds rows and types into cells end to end.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-table/autocue/reading-list.mjs]
+  note: A recording driver, not a CI test; it waits on the grid but does not assert the new ECHO object.
+```
+
+```mdl
+verdict T-3: Sorting is tested, but it persists to local view state, not the View query AST.
+  status: diverged
+  tests: [github:dxos/dxos/packages/ui/react-ui-table/src/model/table-model.test.ts]
+  note: `table-model.test.ts` asserts the sort is stored under `dxos:view-state:table-sort:*`; the scenario expects the query AST.
+```
+
+```mdl
+verdict T-4: Row selection is unit-tested; deletion of selected rows is not.
+  status: partial
+  tests: [github:dxos/dxos/packages/ui/react-ui-table/src/model/table-model.test.ts]
+  note: No test removes the selected objects from the space.
+```
+
+```mdl
+verdict T-5: No default table on space creation exists to test.
+  status: missing
+  note: onCreateSpace is not implemented.
+```
+
+```mdl
+verdict T-6: The TableCard story renders the card under the storybook smoke run without asserting read-only behaviour.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-table/src/containers/TableCard/TableCard.stories.tsx]
+  note: No play function checks that cells are not editable or that no toolbar shows.
+```
+
+```mdl
+verdict QA-1: No automation runs QA-1; the spec marks it blocked.
+  status: missing
+  note: The create operation fails under the plain invoker (no schema registry), per the QA note.
+```
+
+```mdl
+verdict QA-2: The reading-list autocue flow drives every QA-2 step.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-table/autocue/reading-list.mjs]
+  note: A recorded browser flow, not part of CI.
+```

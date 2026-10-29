@@ -9,7 +9,11 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
-import { Spec } from '@dxos/types';
+import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
+// `Repo` is referenced in the emitted .d.ts of the spec-file operations (via the FileMapping schemas);
+// importing it lets TypeScript name it (TS2883).
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { Repo, SpecDocument } from '@dxos/types';
 
 import * as CodeProject from './CodeProject.ts';
 
@@ -21,7 +25,7 @@ export const VerifySpec = Operation.make({
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec).annotate({ description: 'The Spec to verify.' }),
+    spec: Ref.Ref(SpecDocument.SpecDocument).annotate({ description: 'The Spec to verify.' }),
   }),
   output: Schema.Struct({
     ok: Schema.Boolean,
@@ -277,7 +281,7 @@ export const ImportSpec = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec),
+    spec: Ref.Ref(SpecDocument.SpecDocument),
     created: Schema.Boolean,
   }),
   services: [Database.Service, Capability.Service],
@@ -296,4 +300,33 @@ export const ListLocalSpecs = Operation.make({
     keys: Schema.Array(Schema.String),
   }),
   services: [Capability.Service],
+});
+
+/**
+ * `GitHubCapabilities.FileMapping.import` for `.mdl` files (plugin-github spec/FILE-SYNC.mdl F-6):
+ * creates a Spec for a new file, or applies the remote change to its content as of the last sync.
+ */
+export const ImportSpecFile = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.importSpecFile'),
+    name: 'Import Spec File',
+    description: 'Creates a Spec from a synced repository file, or merges a remote change into it.',
+    icon: 'ph--download-simple--regular',
+  },
+  input: GitHubCapabilities.FileImportInput,
+  output: GitHubCapabilities.FileImportOutput,
+  services: [Database.Service],
+});
+
+/** `GitHubCapabilities.FileMapping.export` for `.mdl` files: the Spec's content as it stands. */
+export const ExportSpecFile = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.exportSpecFile'),
+    name: 'Export Spec File',
+    description: 'Renders a Spec as the content of its synced repository file.',
+    icon: 'ph--upload-simple--regular',
+  },
+  input: GitHubCapabilities.FileExportInput,
+  output: GitHubCapabilities.FileExportOutput,
+  services: [Database.Service],
 });

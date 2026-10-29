@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import type * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
@@ -13,7 +14,9 @@ import { DXN, type URI } from '@dxos/keys';
 
 import type * as Database from './Database.ts';
 import type * as Entity from './Entity.ts';
+import type * as EchoError from './Error.ts';
 import { ContentVersionAnnotation, type EntityMeta, MetaId, getSchemaURI } from './internal/index.ts';
+import type * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
 
 export const TypeId = '~@dxos/echo/Migration' as const;
@@ -24,7 +27,7 @@ export type TypeId = typeof TypeId;
  */
 export interface Migration {
   readonly [TypeId]: TypeId;
-  readonly kind: 'object' | 'rename' | 'content';
+  readonly kind: 'object' | 'rename' | 'content' | 'transaction';
 }
 
 /**
@@ -41,7 +44,10 @@ export const isMigration = (value: unknown): value is Migration => {
   // consumer can dispatch on.
   return (
     candidate[TypeId] === TypeId &&
-    (candidate.kind === 'object' || candidate.kind === 'rename' || candidate.kind === 'content')
+    (candidate.kind === 'object' ||
+      candidate.kind === 'rename' ||
+      candidate.kind === 'content' ||
+      candidate.kind === 'transaction')
   );
 };
 
@@ -421,3 +427,147 @@ export const applyContentSteps = (
   }
   return { version: current, content: result };
 };
+
+//
+// Transaction
+//
+
+/**
+ * Result of {@link Transaction.compact}.
+ */
+export type CompactResult = {
+  /** Objects whose documents will be rewritten without history. */
+  readonly compacted: readonly Obj.ID[];
+  /** Requested objects not stored in a document of their own. */
+  readonly skipped: readonly Obj.ID[];
+};
+
+/**
+ * Options for {@link Transaction}.
+ */
+export type TransactionOptions = {
+  /**
+   * How {@link Transaction.commit} publishes the staged changes.
+   * - `replace` (default): builds a new space root and starts a new epoch with it. Peers adopt the new
+   *   root, so writes made to the old root after the transaction began are lost.
+   * - `update`: writes the changed links and inline objects into the current root in one atomic change.
+   *   No epoch is started, and concurrent writes to the root merge.
+   */
+  root?: 'replace' | 'update';
+};
+
+/**
+ * Structural changes to a database, staged and then committed atomically.
+ *
+ * Staged changes are not visible to queries until {@link Transaction.commit}. Use it for changes that
+ * an ordinary write cannot express: changing an object's type in place, removing objects without a
+ * tombstone, or dropping document history. For schema changes that a write can express, prefer
+ * {@link define}. Run it with `db.runMigrations` through {@link defineTransaction}, or directly:
+ *
+ * @example
+ * ```ts
+ * const migration = await space.db.beginMigration();
+ * yield* migration.migrate(contact.id, (json) => Obj.make(ContactV2, { id: json.id, name: String(json.name) }));
+ * migration.add(Obj.make(Note, { title: 'Imported' }));
+ * migration.delete(legacy.id);
+ * yield* migration.commit();
+ * ```
+ */
+export interface Transaction {
+  /**
+   * The staged state of an object: what earlier calls in this transaction left, else what is stored.
+   * None for an object that is not stored or that this transaction deletes.
+   */
+  get(id: Obj.ID): Effect.Effect<Option.Option<Obj.JSON>, EchoError.MigrationError>;
+
+  /**
+   * Stages a new object, with every object it references that is not stored yet.
+   * The object is not bound to the database: query it after {@link commit}.
+   */
+  add(object: Obj.Unknown): void;
+
+  /**
+   * Stages `object` in place of the stored object with the same id, replacing its type, data and meta.
+   * The object's document keeps its history, so concurrent edits from peers still merge.
+   *
+   * @throws When no object with that id is stored.
+   */
+  replace(object: Obj.Unknown): void;
+
+  /**
+   * Reads the staged state of an object and stages the object `transform` returns in its place.
+   * The returned object must keep the id. Does nothing for an object that is not stored.
+   *
+   * @returns Whether the object was found.
+   */
+  migrate<E = never, R = never>(
+    id: Obj.ID,
+    transform: (current: Obj.JSON) => Obj.Unknown | Effect.Effect<Obj.Unknown, E, R>,
+  ): Effect.Effect<boolean, E | EchoError.MigrationError, R>;
+
+  /**
+   * Stages removing an object from the space. The object leaves no tombstone.
+   */
+  delete(id: Obj.ID): void;
+
+  /**
+   * Stages rewriting the documents of the given objects (default: every object stored in a document
+   * of its own) without their history.
+   */
+  compact(ids?: readonly Obj.ID[]): CompactResult;
+
+  /**
+   * Writes the staged changes as {@link TransactionOptions.root} selects.
+   * The transaction cannot be used afterwards.
+   */
+  commit(): Effect.Effect<void, EchoError.MigrationError>;
+}
+
+/**
+ * Context passed to a {@link TransactionMigration}.
+ */
+export type TransactionMigrationContext = {
+  /** The database being migrated, for queries; writes go through the transaction. */
+  db: Database.Database;
+};
+
+/**
+ * A migration that stages its changes in a {@link Transaction}, which the runner commits once `run` succeeds.
+ */
+export interface TransactionMigration extends Migration {
+  readonly kind: 'transaction';
+  readonly options: TransactionOptions;
+  readonly run: (transaction: Transaction, context: TransactionMigrationContext) => Effect.Effect<void, unknown>;
+}
+
+/**
+ * Narrows a migration to a {@link TransactionMigration}.
+ *
+ * @performance O(1).
+ */
+export const isTransactionMigration = (migration: Migration): migration is TransactionMigration =>
+  migration.kind === 'transaction';
+
+/**
+ * Define a migration that stages structural changes in a {@link Transaction}.
+ * A failure of `run` rejects `db.runMigrations` and commits nothing.
+ *
+ * @example
+ * ```ts
+ * const migration = Migration.defineTransaction((transaction) =>
+ *   Effect.sync(() => transaction.delete(legacyId)),
+ * );
+ * await db.runMigrations([migration]);
+ * ```
+ *
+ * @performance O(1) at definition time.
+ */
+export const defineTransaction = <E>(
+  run: (transaction: Transaction, context: TransactionMigrationContext) => Effect.Effect<void, E>,
+  options: TransactionOptions = {},
+): TransactionMigration => ({
+  [TypeId]: TypeId,
+  kind: 'transaction',
+  options,
+  run,
+});

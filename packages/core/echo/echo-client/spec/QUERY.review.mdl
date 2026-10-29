@@ -1,0 +1,454 @@
+---
+spec: github:dxos/dxos/packages/core/echo/echo-client/spec/QUERY.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ECHO queries
+
+The pipeline the spec describes is built. `QueryResultImpl` reads one `LocalQueryEngine`, which owns
+the `WorkingSetView` per database and the `RegistryView` and reads `IndexQuerySource` as its only
+`RemoteQuerySource`. `judgeRemoteEntry` in `merge-plan.ts` gives the drop, verified or trusted
+verdict per entry, and `Query.characteristics` classifies each branch. On the host, `QueryExecutor`
+ships versions, paths and manifests under the 16-path, 512-edge and 256 KiB bounds, and `QueryService`
+carries `unchanged` and `truncated`. The acceptance scenarios map one to one onto
+`sync-query.test.ts`, `local-query-engine.test.ts` and the executor-evidence suite in
+`echo-host.test.ts`, as the spec says.
+
+The gaps are mostly untested edges: the path, edge and byte bounds (F-7.3, F-7.4, F-8.4), the
+min/max widening rule (F-8.3), verification at equal heads (F-4.3), `resolution.verified` and
+`resolution.version` (F-5.2, F-5.3), late-opened feeds (F-10.2), and the O(n) feed re-evaluation
+(F-10.4). One partial divergence: the host's union step passes through the paths a traversal branch
+recorded, so a hit inside a union can ship paths. The client still trusts it, because
+`pathPlanOf` reads only a linear chain (F-7.5).
+
+Of 61 items: 49 done, 11 untested, 1 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Completeness: The six literals are declared in @dxos/echo's QueryResult and computed by the engine.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/QueryResult.ts#Completeness]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict Version: The automerge and feed variants exist on the client and on the wire (RowVersion).
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/QueryResult.ts#Version, github:dxos/dxos/packages/core/protocols/src/QueryService.ts#RowVersion]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict PathEdge: PathEdge has from, to, the six kinds, property, holder and holderHeads.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/protocols/src/QueryService.ts#PathEdge]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict ManifestEntry: ManifestEntry has id, an optional version and a JSON contribution.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/protocols/src/QueryService.ts#ManifestEntry]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict Verdict: RemoteVerdict is drop, verified or trusted.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#RemoteVerdict]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict BranchCharacteristics: The record has class, revalidation, selection, predicates, traversal, window, aggregate and scope.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-protocol/src/query/characteristics.ts#BranchCharacteristics]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict LocalQueryEngine: The engine has every listed op; run also takes a Context.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict RemoteQuerySource: The interface has every listed op and IndexQuerySource implements it.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/remote-query-source.ts#RemoteQuerySource, github:dxos/dxos/packages/core/echo/echo-client/src/client/index-query-source-provider.ts#IndexQuerySource]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/client/index-query-source-provider.test.ts]
+```
+
+```mdl
+verdict QueryService: execQuery streams QueryResponse with optional version, paths, manifest, unchanged and truncated.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/protocols/src/QueryService.ts#QueryResult, github:dxos/dxos/packages/core/protocols/src/QueryService.ts#QueryResponse, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/query-service.ts#QueryServiceImpl]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict F-1.1: QueryResultImpl reads one LocalQueryEngine, which owns the working-set views and the RegistryView.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-result.ts#QueryResultImpl, github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.addDatabase]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-result.test.ts]
+```
+
+```mdl
+verdict F-1.2: The engine reads only RemoteQuerySources; IndexQuerySource is the one implementation.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.addRemoteSource, github:dxos/dxos/packages/core/echo/echo-client/src/client/index-query-source-provider.ts#IndexQuerySource]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts]
+  note: EDGE has no client-side source of its own; it is reached through the same QueryService.
+```
+
+```mdl
+verdict F-1.3: stop closes the views and streams; start re-applies the query.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.stop, github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.start]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts]
+```
+
+```mdl
+verdict F-2.1: Adds, edits and removes reach results and subscribers before the write returns.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/working-set-view.ts#WorkingSetView, github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-2.2: A write from a notification is its own commit with its own notification.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-result.ts#QueryResultImpl]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-2.3: A recompute with unchanged ids and order notifies nobody.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-result.ts#QueryResultImpl]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-2.4: Unordered entries merge in id order wherever each object is held.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#compareEntries]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts]
+```
+
+```mdl
+verdict F-3.1: Query.characteristics returns one record per branch from the AST.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-protocol/src/query/characteristics.ts#characteristics]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-3.2: A nested text or timestamp node disables revalidation for the branch.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-protocol/src/query/characteristics.ts#characteristics]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-3.3: getCompleteness derives the state from the plan and the sources.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.getCompleteness]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-4.1: Host rows carry an automerge version, or a feed insertion id.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+  note: EDGE sends no versions, as the spec's current limits say.
+```
+
+```mdl
+verdict F-4.2: objectSnapshot stores version beside heads and reads COALESCE(version, heads).
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/indexes/object-snapshot-index.ts#ObjectSnapshotIndex]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+  note: The fallback for rows stored before the version column has no test of its own.
+```
+
+```mdl
+verdict F-4.3: An entry held at equal heads is verified without re-evaluating the filter.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#judgeRemoteEntry]
+  note: The `heldAtVersion` branch of `judgeRemoteEntry`; no test asserts that it skips the filter.
+```
+
+```mdl
+verdict F-5.1: A flat entry for a loaded object is re-evaluated, and is verified or dropped.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#judgeRemoteEntry, github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#evaluateCore]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-5.2: Unloaded objects and revalidation none give trusted entries with verified false.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#judgeRemoteEntry, github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine]
+  note: No test reads `resolution.verified`; searched the echo-client and echo-client-e2e tests.
+```
+
+```mdl
+verdict F-5.3: A verified entry gets verified true and the remote's version.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine]
+  note: `withVerdict` in `local-query-engine.ts` sets both fields; no test asserts them.
+```
+
+```mdl
+verdict F-6.1: A by-id query over loaded ids opens no remote stream.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.update]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts]
+```
+
+```mdl
+verdict F-6.2: An id that is not loaded opens the remote streams.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.update]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/query/query-result.test.ts]
+```
+
+```mdl
+verdict F-6.3: A by-id run answers loaded ids, then the remote, then loads the rest.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.run]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts]
+```
+
+```mdl
+verdict F-7.1: Both executors attach one path per derivation to a traversal hit.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict F-7.2: checkPaths re-walks edges against their holders, and the hit is verified, dropped or trusted.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/path-revalidation.ts#checkPaths, github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#judgeRemoteEntry]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-7.3: Over 16 paths, or a row over 512 edges, ships no paths.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#MAX_PATHS_PER_ITEM, github:dxos/dxos/packages/core/echo/echo-host/src/query/sql/compile.ts#MAX_EDGES_PER_ROW]
+  note: No test reaches either bound.
+```
+
+```mdl
+verdict F-7.4: Over 256 KiB of paths sets truncated paths, and completeness reads merged.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor, github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine.getCompleteness]
+  note: `withinBudget` and `isTruncated` implement it; no test covers truncation.
+```
+
+```mdl
+verdict F-7.5: The client trusts union and subquery hits, but the host's union step still passes paths through.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/path-revalidation.ts#pathPlanOf, github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  note: |
+    `pathPlanOf` returns undefined for any non-linear shape, so those hits are trusted. `_execUnionStep` keeps
+    each item as its branch produced it, paths included, so "ships no paths" does not hold for a traversal inside a
+    union branch. Not tested either way.
+```
+
+```mdl
+verdict F-8.1: A collapsed scalar group ships a manifest of each member's share.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict F-8.2: adjustGroups swaps held members' shares for local values, listing members with an items aggregate.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/manifest-merge.ts#adjustGroups, github:dxos/dxos/packages/core/echo/echo-client/src/query/manifest-merge.ts#withMembers]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-8.3: min and max only widen, and removing a held extreme marks the group unverified.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/manifest-merge.ts#adjustGroups]
+  note: The tests cover a count; no test exercises min or max.
+```
+
+```mdl
+verdict F-8.4: Over 256 KiB of manifests sets truncated manifest.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  note: When paths and manifests both exceed the budget, the response reports only `paths`. No test covers truncation.
+```
+
+```mdl
+verdict F-9.1: Property and natural orders without a window apply over the merged entries.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#ordersLocally, github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-9.2: A limit window admits local matches up to the last remote entry, or all of them under a short window.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine, github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#compareWindowData]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-9.3: Other windows are only filtered by local evidence, never re-paged.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.ts#LocalQueryEngine]
+  note: No test merges a window with a skip or an index order.
+```
+
+```mdl
+verdict F-10.1: Feed appends and edits appear before the write returns and stay until the index catches up.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/working-set-view.ts#WorkingSetView.feedLocalWrite]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-10.2: A feed opened after an all-feeds query starts joins it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/working-set-view.ts#WorkingSetView]
+  note: The view re-watches the feed tail on `_feedHandleCreated`; no test opens a feed after the query.
+```
+
+```mdl
+verdict F-10.3: A remote feed entry whose local write no longer matches is dropped.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/merge-plan.ts#judgeRemoteEntry]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-10.4: A feed write re-evaluates only the objects it names.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/query/working-set-view.ts#WorkingSetView]
+  note: `FeedTailMatches` keeps the matches one write at a time; no test or bench asserts the O(n) cost.
+```
+
+```mdl
+verdict F-10.5: A feed window is remote-only.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-protocol/src/query/characteristics.ts#characteristics]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict F-11.1: The memory executor answers from current copies and counts snapshot hits and document loads.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict F-11.2: The SQL step reads only the index and loads no document.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  note: `_execSqlStep` calls no `loadDoc`; no test asserts zero document loads under the SQL executor.
+```
+
+```mdl
+verdict F-11.3: A row whose document a client subscription holds ships without JSON or changes.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/query-service.ts#QueryServiceImpl]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict T-1: "each add notifies once, before it returns, and the index re-run adds nothing" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-2: The disqualifying-edit test checks removal at return and that the index does not restore it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-3: "an edit to a property the filter does not read notifies nobody" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-4: "a write made from a notification is a separate commit" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-5: "a traversal hit whose edge the holder dropped leaves before the edit returns" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-6: "a count over index-backed objects follows a local write" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-7: "a property order applies over local and index entries alike" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-8: "an edit or delete of an unacknowledged write moves it in or out" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-9: The two completeness tests cover the type query and the text query.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/sync-query.test.ts]
+```
+
+```mdl
+verdict T-10: "a by-id query whose every id is loaded opens no remote stream" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts]
+```
+
+```mdl
+verdict T-11: "a by-id run takes what the index answers and loads only what it lacks" runs it.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/local-query-engine.test.ts]
+```
+
+```mdl
+verdict T-12: "a row ships the heads it was read at as its version" runs under both executors.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict T-13: The evidence suite covers the traversal edge, the resend by another edge and the group manifest.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```

@@ -21,6 +21,7 @@ export const translations = [
         'search.label': 'Search',
         'search-result-list.label': 'Search results',
         'search-result-list.empty.label': 'No results',
+        'query-action-failed.title': 'Could not complete that action',
       },
     },
   },

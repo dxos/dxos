@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
@@ -28,8 +28,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'specArticle',
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Spec.Spec),
-          AppSurface.object(AppSurface.Section, Spec.Spec),
+          AppSurface.object(AppSurface.Article, SpecDocument.SpecDocument),
+          AppSurface.object(AppSurface.Section, SpecDocument.SpecDocument),
         ),
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),

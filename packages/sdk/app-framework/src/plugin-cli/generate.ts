@@ -15,6 +15,19 @@ import {
   topLevelLocalDeclarations,
 } from './ts-util.ts';
 
+/**
+ * Writes `text` to `file` only when it differs, through a rename, so a `gen-modules` task reading this
+ * file for another plugin never sees it truncated mid-write.
+ */
+const writeFileAtomic = (file: string, text: string): void => {
+  if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === text) {
+    return;
+  }
+  const temp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, text);
+  fs.renameSync(temp, file);
+};
+
 export type GenerateResult = {
   pluginDir: string;
   environments: string[];
@@ -61,7 +74,7 @@ export const generate = (pluginDir: string): GenerateResult => {
 
     const text = renderBarrel({ env, genDir, included, stubbed });
     const outPath = path.join(genDir, `${env}.ts`);
-    fs.writeFileSync(outPath, text);
+    writeFileAtomic(outPath, text);
     result.files.push({
       path: outPath,
       included: modules.length,
@@ -246,7 +259,7 @@ const syncPackageImports = (pluginDir: string, environments: string[], canonical
       ...pkg.imports,
       '#capabilities': { source: canonicalSource, types, default: './dist/lib/capabilities.mjs' },
     };
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    writeFileAtomic(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
     return;
   }
 
@@ -268,5 +281,5 @@ const syncPackageImports = (pluginDir: string, environments: string[], canonical
   }
 
   pkg.imports = { ...pkg.imports, '#capabilities': entry };
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+  writeFileAtomic(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 };

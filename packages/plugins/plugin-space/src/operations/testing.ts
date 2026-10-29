@@ -18,6 +18,8 @@ import { Annotation, Collection, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/ec
 import { ArchivableAnnotation } from '@dxos/schema';
 
 import { rootCollectionRule } from '../capabilities/default-parent.ts';
+import { makeCreateInvitationUrl, makeCreateJoinUrl, makeCreateObjectUrl } from '../capabilities/helpers.ts';
+import { SpaceOperationConfig } from './helpers.ts';
 
 export class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({
@@ -57,9 +59,22 @@ export const decodeTypeRow = Schema.decodeUnknownSync(
 export const taggedIds = (object: Obj.Any): (string | undefined)[] => Obj.getMeta(object).tags.map((tag) => tag.id);
 
 /** The host's capability manager, carrying the default-parent rule plugin-space contributes. */
+/** The origin the test config builds links with. */
+export const TEST_ORIGIN = 'https://composer.space';
+
 const makeCapabilities = () => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
   manager.contribute({ module: 'test', interface: AppCapabilities.DefaultParent, implementation: rootCollectionRule });
+  const options = { shareableLinkOrigin: TEST_ORIGIN };
+  manager.contribute({
+    module: 'test',
+    interface: SpaceOperationConfig,
+    implementation: {
+      createInvitationUrl: makeCreateInvitationUrl(options),
+      createJoinUrl: makeCreateJoinUrl(options),
+      createObjectUrl: makeCreateObjectUrl(options),
+    },
+  });
   return manager;
 };
 

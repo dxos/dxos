@@ -48,8 +48,8 @@ group github "plugin-github" {
   node Diff "diff since heads"
 }
 group code "plugin-code" {
-  node Import "ImportSpec op" ref="packages/plugins/plugin-code/src/operations/index.ts"
-  node Export "ExportSpec op" ref="packages/plugins/plugin-code/src/operations/index.ts"
+  node Import "ImportSpecFile op" ref="packages/plugins/plugin-code/src/operations/index.ts"
+  node Export "ExportSpecFile op" ref="packages/plugins/plugin-code/src/operations/index.ts"
   node Spec "Spec (Text)" ref="packages/plugins/plugin-code/src/types/Spec.ts"
 }
 edge Head -> Compare "≠ marker commit"
@@ -85,15 +85,15 @@ import { meta } from '#meta';
 export type FileMapping = {
   /** Stable id, recorded on every marker the mapping writes, e.g. `org.dxos.plugin.code.spec`. */
   readonly id: string;
-  /** Repository-relative globs (picomatch syntax) the mapping claims, e.g. `['**\/*.mdl']`. */
+  /** Repository-relative globs the mapping claims, e.g. `['**\/*.mdl']`: `**` spans directories, `*` and `?` stay within one. */
   readonly match: readonly string[];
   /** The ECHO type a matched file becomes. */
-  readonly type: Type.Obj.Any;
+  readonly type: Type.AnyObj;
   /** Pull: create the object, or apply a remote change to it. */
   readonly import: Operation.Definition<FileImportInput, FileImportOutput>;
   /** Push: render the object as file content. Absent → the mapping is pull-only. */
   readonly export?: Operation.Definition<FileExportInput, FileExportOutput>;
-  /** Largest file the engine fetches for this mapping; larger files are skipped and reported. Default 1 MiB. */
+  /** Largest file the engine imports for this mapping; larger files are skipped and reported. Default 1 MiB. */
   readonly maxBytes?: number;
 };
 
@@ -113,7 +113,7 @@ export interface FileImportInput extends Schema.Schema.Type<typeof FileImportInp
 
 export const FileImportOutput = Schema.Struct({
   object: Ref.Ref(Obj.Unknown),
-  /** The object's heads after the import, recorded on the marker. */
+  /** The heads at which the object holds exactly `content`, recorded on the marker. */
   heads: Schema.Array(Schema.String),
 });
 export interface FileImportOutput extends Schema.Schema.Type<typeof FileImportOutput> {}
@@ -131,7 +131,8 @@ export const FileExportOutput = Schema.Struct({
 });
 export interface FileExportOutput extends Schema.Schema.Type<typeof FileExportOutput> {}
 
-export const FileMapping = Capability.make<FileMapping[]>()(`${meta.profile.key}.capability.fileMapping`);
+// One contribution per mapping; plugin-github reads them with `Capability.getAll`.
+export const FileMapping = Capability.make<FileMapping>()(`${meta.profile.key}.capability.fileMapping`);
 ```
 
 ```mdl
@@ -150,10 +151,10 @@ Most mappings hold the file body as `Text`. plugin-github exports the merge they
 `import` is a few lines.
 
 ```ts
-// packages/plugins/plugin-github/src/file-sync/text-merge.ts
+// packages/plugins/plugin-github/src/file-sync/TextMerge.ts (exported as @dxos/plugin-github/TextMerge)
 /**
  * Apply the `base` → `next` change to `text` as of `heads`, so Automerge merges it with every local
- * edit made since. Returns the heads after the change.
+ * edit made since. Returns the heads at which `text` holds exactly `next` (the change's own heads).
  */
 export const applyAt: (
   text: Text.Text,
@@ -217,9 +218,14 @@ type FileMarker
     path: string
     blob: string                  # git blob SHA last synced
     commit: string                # commit the blob was read from or written to
-    heads: string[]               # the object's Automerge heads at that moment
+    heads: string[]               # the object's heads at which it holds exactly the blob
     object: Ref<Obj>
+    pushed?: { blob: string, heads: string[], commit: string }   # what this space last committed for the file, until the read branch carries it
 ```
+
+The binding's write state sits beside the markers at `snapshots.state`: the read branch's ETag, the
+newest commit this space wrote (`lastWritten`), the read head that commit merged in, and the pull
+request.
 
 ```mdl
 type VersionLink
@@ -310,20 +316,25 @@ service GitHubApi
 ## Operations
 
 ```mdl
-op SyncGitHubFiles
-  key: org.dxos.operation.github.syncFiles
+op EnableGitHubFileSync
+  key: org.dxos.operation.github.enableFileSync
   desc: |
-    One pass over a file binding: detect, pull every changed matched file, push every object with
-    local edits, and advance the binding. Invoked by SyncGitHubRepositories for cursors whose
-    options.stream is files.
+    Adds a file binding next to a repository's item binding, with the same credential and repository
+    id. Returns the existing file binding when there is one.
   input:
-    binding: Ref<Cursor>
-  output: FileSyncResult
-  effects: [echo:read, echo:write, http]
-  errors:
-    RepositoryNotAccessible: the token cannot read the repository
-    RefMovedError: the write branch moved three times in a row; the pass ends and the next one retries
+    repository: Ref<Repo>
+    branch?: string               # default: the repository's default branch
+    writeBranch?: string
+    mappings?: string[]
+    paths?: string[]
+  output: { binding: string, created: boolean }
+  effects: [echo:read, echo:write]
 ```
+
+One pass over a file binding runs inside `SyncGitHubRepositories`, which hands every cursor whose
+`options.stream` is `files` to the file-sync engine (`syncFileBinding`) and every other cursor to part
+1's poll. Its output gains `files: { pulled, pushed, skipped }`. A pass fails with
+`GitHubRefMovedError` when the write branch moved three times in a row; the next pass retries.
 
 ```mdl
 type FileSyncResult
@@ -338,8 +349,8 @@ type FileSyncResult
 plugin-code contributes the Deus mapping:
 
 ```mdl
-op ImportSpec
-  key: org.dxos.operation.code.importSpec
+op ImportSpecFile
+  key: org.dxos.operation.code.importSpecFile
   desc: FileMapping.import for `**/*.mdl`. Creates a Spec, or applies the change to Spec.content with TextMerge.applyAt.
   input: FileImportInput
   output: FileImportOutput
@@ -347,8 +358,8 @@ op ImportSpec
 ```
 
 ```mdl
-op ExportSpec
-  key: org.dxos.operation.code.exportSpec
+op ExportSpecFile
+  key: org.dxos.operation.code.exportSpecFile
   desc: FileMapping.export for `**/*.mdl`. Returns Spec.content as it stands, with the heads it read.
   input: FileExportInput
   output: FileExportOutput
@@ -440,7 +451,7 @@ feat F-5: Markers and version tracking
 ```mdl
 feat F-6: Deus specs
 
-  req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpec and ExportSpec.
+  req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpecFile and ExportSpecFile.
 
   req F-6.2: Spec.content is Text, so specs merge character by character; no `.mdl` parser runs during sync.
 ```
@@ -494,8 +505,7 @@ scenario T-5: File removed upstream
 
 ## Open questions
 
-1. Whether ECHO exposes Automerge's `changeAt` for a `Text` object; `TextMerge.applyAt` depends on it.
-2. Whether `Binding.find` tolerates two cursors with one target (part 1's items, this file binding).
+Both questions this section held are settled; see D-14.
 
 ## Changelog
 
@@ -601,4 +611,40 @@ decision D-11: A person's rename on the write branch removes the old name from t
   for: user:dmaretskyi
   affects: [F-4.6]
   why: F-4.2 starts the push tree from the read head, which still holds the old name until the pull request merges, so the next push would otherwise bring the file back beside its new name.
+```
+
+```mdl
+decision D-12: plugin-code's operations are ImportSpecFile and ExportSpecFile, and FileMapping is one capability contribution per mapping, read with `Capability.getAll`. Narrows [D-2].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileMapping, ImportSpecFile, ExportSpecFile, F-1, F-6.1]
+  why: `org.dxos.operation.code.importSpec` already names plugin-code's import from a local checkout, and every other multi-plugin capability contributes one entry per plugin. `Type.Obj.Any` does not exist; `Type.AnyObj` is the same type. Globs use a small matcher in plugin-github (`**`, `*`, `?`), because no shipped package depends on picomatch.
+```
+
+```mdl
+decision D-13: There is no SyncGitHubFiles operation; SyncGitHubRepositories runs a file binding's pass in process, and EnableGitHubFileSync creates the binding. Narrows [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [EnableGitHubFileSync, FileSyncResult, F-2]
+  why: The sync Routine already invokes SyncGitHubRepositories with the connection, and `Binding.syncAll` fans out over every cursor of it; a second operation would need its own invocation per binding for no gain. Without an operation that adds the cursor, nothing could turn file sync on.
+```
+
+```mdl
+decision D-14: A marker keeps what this space pushed (`pushed`) until the read branch carries it. A pull whose blob equals it adopts it without an import; once the write branch's commit is in the read head, a pull's base is the pushed content at the pushed heads. Local changes are found by exporting each object and comparing its git blob SHA with `pushed ?? blob`. This settles both open questions: `changeAt` is reachable through `Doc.createAccessor(...).handle`, and `Binding.syncAll` runs both cursors of one Repo. Fills in [D-8].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileMarker, TextMerge, F-2.2, F-3.2, F-4.1]
+  why: After a merge, the read branch holds this space's own edits; applying old-base → new at the old heads would insert them a second time. Comparing SHAs works for any mapping and costs no request. Telling whether the write branch was merged costs one compare per pass, only while a write is outstanding and the read head moved.
+```
+
+```mdl
+decision D-15: F-4.5's per-user attribution and F-4.6's pull from the write branch are not built yet. A pass whose write-branch tip is not the commit it last wrote holds its push back and reports each file as skipped; a commit names the space only. F-4.3's retry re-parents on the re-read tip. F-5.3's lookups are left to the first caller; the VersionLinks they read are recorded. Defers part of [D-9].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3, F-4.5, F-4.6, F-5.3, T-4]
+  why: Holding the push back cannot overwrite a reviewer's commit, which is what F-4.6 protects, and keeps the first version small; the skipped entries show the user why nothing was pushed. compareCommits does not report sizes, so F-2.4's limit is checked after the fetch when the change came from a compare.
 ```

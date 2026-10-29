@@ -2,16 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, type PropsWithChildren, createContext, forwardRef, useContext, useState } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
 
 import { log } from '@dxos/log';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -19,22 +17,19 @@ import { meta } from '#meta';
 import { Feature } from '#types';
 
 import {
-  type FeatureChanges,
   type FeatureLookup,
   type FeatureModel,
   type FeatureRelation,
   type FeatureSignal,
-  type FeatureStatus,
   type FeatureTarget,
   getFeatureSignals,
 } from './feature.ts';
-import { EditField, FEATURE_STATUS_STYLE, RowIcon, StatusIcon, StatusItems, stopPropagation } from './fields.tsx';
+import { ACTIVE_STYLE, FEATURE_STATUS_STYLE, RequirementIcon, RequirementId, RowIcon, StatusIcon } from './fields.tsx';
 
 const SIGNAL_STYLE: Record<FeatureSignal, { icon: string; hue: Tag.TagHue }> = {
   'blocked': { icon: 'ph--lock--regular', hue: 'error' },
   'ahead': { icon: 'ph--arrow-fat-up--regular', hue: 'warning' },
   'no-evidence': { icon: 'ph--presentation-chart--regular', hue: 'warning' },
-  'in-flight': { icon: 'ph--git-pull-request--regular', hue: 'info' },
   'unplanned': { icon: 'ph--calendar-x--regular', hue: 'neutral' },
 };
 
@@ -48,11 +43,7 @@ type FeatureCardContextValue = {
   feature: FeatureModel;
   lookup: FeatureLookup;
   relation?: FeatureRelation;
-  editing: boolean;
-  setEditing: (editing: boolean) => void;
-  scroll: boolean;
   onOpen?: (target: FeatureTarget) => void;
-  onChange?: (feature: FeatureModel, changes: FeatureChanges) => void;
 };
 
 const FeatureCardContext = createContext<FeatureCardContextValue | undefined>(undefined);
@@ -86,34 +77,15 @@ type FeatureCardProviderProps = PropsWithChildren<{
   relation?: FeatureRelation;
   /** Opens the feature or anything it lists; without it rows are plain text and specs link to GitHub. */
   onOpen?: (target: FeatureTarget) => void;
-  /** Writes edited fields; without it the card is read-only (no status picker or edit button). */
-  onChange?: (feature: FeatureModel, changes: FeatureChanges) => void;
-  /** Controlled edit mode, as for a feature just created; uncontrolled when omitted. */
-  editing?: boolean;
-  onEditingChange?: (editing: boolean) => void;
-  /** For a host of fixed height (a canvas box): the card fills it and the body scrolls under the header. */
-  scroll?: boolean;
 }>;
 
-/** The card's state without its frame, for a host that draws the frame itself (an article, the app's card surface). */
-const FeatureCardProvider = ({
-  children,
-  editing: editingProp,
-  onEditingChange,
-  scroll = false,
-  ...props
-}: FeatureCardProviderProps) => {
-  const [editingState, setEditingState] = useState(false);
-  const setEditing = (next: boolean) => {
-    setEditingState(next);
-    onEditingChange?.(next);
-  };
-  return (
-    <FeatureCardContext.Provider value={{ ...props, editing: editingProp ?? editingState, setEditing, scroll }}>
-      {children}
-    </FeatureCardContext.Provider>
-  );
-};
+/**
+ * The card's state without its frame, for a host that draws the frame itself (an article, the app's card surface).
+ * Read-only: a feature is edited in its article, where every field has room.
+ */
+const FeatureCardProvider = ({ children, ...props }: FeatureCardProviderProps) => (
+  <FeatureCardContext.Provider value={props}>{children}</FeatureCardContext.Provider>
+);
 
 FeatureCardProvider.displayName = 'FeatureCard.Provider';
 
@@ -125,30 +97,18 @@ type FeatureCardRootProps = Omit<FeatureCardProviderProps, 'children'> & Omit<Ca
 
 /**
  * One feature as a card: its parts are composed by the host. Focus, selection and opening the card belong to the host's
- * item (a `Focus.Item`, a masonry tile); the card is `asChild`-friendly so it can be that item's child.
+ * item (a `Focus.Item`, a canvas box); the card is `asChild`-friendly so it can be that item's child.
  */
 const FeatureCardRoot = Util.composable<HTMLDivElement, FeatureCardRootProps>(
-  (
-    { feature, lookup, relation, onOpen, onChange, editing, onEditingChange, scroll, children, classNames, ...props },
-    forwardedRef,
-  ) => (
-    <FeatureCardProvider
-      feature={feature}
-      lookup={lookup}
-      relation={relation}
-      onOpen={onOpen}
-      onChange={onChange}
-      editing={editing}
-      onEditingChange={onEditingChange}
-      scroll={scroll}
-    >
+  ({ feature, lookup, relation, onOpen, children, ...props }, forwardedRef) => (
+    <FeatureCardProvider feature={feature} lookup={lookup} relation={relation} onOpen={onOpen}>
       <Card.Root
         grid
         {...props}
-        classNames={[scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]', classNames]}
         data-testid='feature-card'
         data-feature={feature.id}
         data-status={feature.status}
+        data-active={feature.active || undefined}
         data-relation={relation}
         ref={forwardedRef}
       >
@@ -178,16 +138,12 @@ FeatureCardHeader.displayName = 'FeatureCard.Header';
 
 type FeatureCardStatusProps = {};
 
-/** The status icon; with `onChange` it opens the status picker. */
+/** The status icon. */
 const FeatureCardStatus = (_: FeatureCardStatusProps) => {
-  const { feature, onChange } = useFeatureCardContext('FeatureCard.Status');
+  const { feature } = useFeatureCardContext('FeatureCard.Status');
   return (
-    <Layout.Block rail='start'>
-      <StatusIcon
-        status={feature.status}
-        onChange={onChange && ((status: FeatureStatus) => onChange(feature, { status }))}
-        testId='feature-card.status-icon'
-      />
+    <Layout.Block rail='start' data-testid='feature-card.status-icon'>
+      <StatusIcon status={feature.status} />
     </Layout.Block>
   );
 };
@@ -200,115 +156,50 @@ FeatureCardStatus.displayName = 'FeatureCard.Status';
 
 type FeatureCardTitleProps = {};
 
-/** The name; a field in edit mode. */
+/** The name, clamped to two lines. */
 const FeatureCardTitle = (_: FeatureCardTitleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, editing, onChange } = useFeatureCardContext('FeatureCard.Title');
-  const editable = editing && onChange;
-  return (
-    // Unclamped while editing: the clamp clips overflow, which would cut off the field's box beyond the text.
-    <Card.Title lines={editable ? undefined : 2}>
-      {editable ? (
-        <EditField
-          value={feature.name}
-          placeholder={t('feature-card.name.placeholder')}
-          label={t('feature-card.name.label')}
-          testId='feature-card.name.input'
-          autoFocus
-          // A feature always has a name, so clearing the field keeps the old one.
-          onCommit={(name) => name && onChange(feature, { name })}
-        />
-      ) : (
-        feature.name
-      )}
-    </Card.Title>
-  );
+  const { feature } = useFeatureCardContext('FeatureCard.Title');
+  return <Card.Title lines={2}>{feature.name}</Card.Title>;
 };
 
 FeatureCardTitle.displayName = 'FeatureCard.Title';
 
 //
-// Save
+// Marks
 //
 
-type FeatureCardSaveProps = {};
+type FeatureCardMarksProps = {};
 
-/** Leaves edit mode; shown only while editing, since the menu's Edit enters it. */
-const FeatureCardSave = (_: FeatureCardSaveProps) => {
-  const { editing, setEditing } = useFeatureCardContext('FeatureCard.Save');
-  if (!editing) {
+/**
+ * At the header's end: a marker while someone works on the feature, and the most serious warning. Icons only, labelled
+ * for the tooltip, so the header stays one line; the article spells them out.
+ */
+const FeatureCardMarks = (_: FeatureCardMarksProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { feature, lookup } = useFeatureCardContext('FeatureCard.Marks');
+  const [signal] = getFeatureSignals(feature, lookup);
+  if (!feature.active && !signal) {
     return null;
   }
   return (
     <Layout.Block rail='end'>
-      <SystemButton.Save
-        variant='ghost'
-        data-testid='feature-card.done'
-        // Takes the press itself, so it neither selects the card nor drags a canvas box.
-        onPointerDown={stopPropagation}
-        onClick={(event) => {
-          event.stopPropagation();
-          setEditing(false);
-        }}
-      />
+      <Layout.Flex gap='xs' classNames='items-center'>
+        {feature.active && (
+          <span title={t('feature-active.label')} data-testid='feature-card.active'>
+            <Icon.Icon icon={ACTIVE_STYLE.icon} hue={ACTIVE_STYLE.hue} label={t('feature-active.label')} />
+          </span>
+        )}
+        {signal && (
+          <span title={t(`feature-signal.${signal}.label`)} data-testid={`feature-signal.${signal}`}>
+            <Icon.Icon icon={SIGNAL_STYLE[signal].icon} tone='muted' label={t(`feature-signal.${signal}.label`)} />
+          </span>
+        )}
+      </Layout.Flex>
     </Layout.Block>
   );
 };
 
-FeatureCardSave.displayName = 'FeatureCard.Save';
-
-//
-// Menu
-//
-
-type FeatureCardMenuProps = {
-  /** Takes the feature off the map it is shown on; the feature itself is kept. */
-  onRemove?: (feature: FeatureModel) => void;
-};
-
-/** Open, edit, the status picker and remove, each when its handler is given. */
-const FeatureCardMenu = ({ onRemove }: FeatureCardMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, editing, setEditing, onOpen, onChange } = useFeatureCardContext('FeatureCard.Menu');
-  const setStatus = onChange && ((status: FeatureStatus) => onChange(feature, { status }));
-  // Entered a frame later: the menu refocuses its trigger as it closes, which would take focus from the name field.
-  const edit = onChange && !editing ? () => requestAnimationFrame(() => setEditing(true)) : undefined;
-  if (!onOpen && !setStatus && !onRemove) {
-    return null;
-  }
-  return (
-    <Layout.Block rail='end' data-testid='feature-card.menu'>
-      <Card.Menu label={t('feature-card.menu.label')}>
-        {onOpen && (
-          <Menu.Item
-            item={{ value: 'open', label: t('feature-card.open.label'), icon: 'ph--arrow-square-out--regular' }}
-            data-testid='feature-card.open'
-            onClick={() => onOpen({ type: 'object', id: feature.id })}
-          />
-        )}
-        {edit && (
-          <Menu.Item
-            item={{ value: 'edit', label: t('feature-card.edit.label'), icon: 'ph--pencil-simple--regular' }}
-            data-testid='feature-card.edit'
-            onClick={edit}
-          />
-        )}
-        {(onOpen || edit) && setStatus && <Menu.Separator />}
-        {setStatus && <StatusItems value={feature.status} onChange={setStatus} testId='feature-card.status' />}
-        {(onOpen || edit || setStatus) && onRemove && <Menu.Separator />}
-        {onRemove && (
-          <Menu.Item
-            item={{ value: 'remove', label: t('feature-card.remove.label'), icon: 'ph--minus-circle--regular' }}
-            data-testid='feature-card.remove'
-            onClick={() => onRemove(feature)}
-          />
-        )}
-      </Card.Menu>
-    </Layout.Block>
-  );
-};
-
-FeatureCardMenu.displayName = 'FeatureCard.Menu';
+FeatureCardMarks.displayName = 'FeatureCard.Marks';
 
 //
 // Body
@@ -316,21 +207,10 @@ FeatureCardMenu.displayName = 'FeatureCard.Menu';
 
 type FeatureCardBodyProps = Card.BodyProps;
 
-/** The sections under the header; under a `scroll` root it scrolls beneath the header. */
-const FeatureCardBody = forwardRef<HTMLDivElement, FeatureCardBodyProps>((props, forwardedRef) => {
-  const scroll = useContext(FeatureCardContext)?.scroll;
-  const body = <Card.Body {...props} ref={forwardedRef} />;
-  return scroll ? (
-    // A subgrid of the card, so rows keep its rails; containment would make it a standalone grid instead.
-    <ScrollArea.Root classNames='col-span-full grid-cols-subgrid [container-type:normal]'>
-      <ScrollArea.Viewport classNames='col-span-full grid grid-cols-subgrid content-start [&>.dx-card-body]:col-span-full'>
-        {body}
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  ) : (
-    body
-  );
-});
+/** The sections under the header. */
+const FeatureCardBody = forwardRef<HTMLDivElement, FeatureCardBodyProps>((props, forwardedRef) => (
+  <Card.Body {...props} ref={forwardedRef} />
+));
 
 FeatureCardBody.displayName = 'FeatureCard.Body';
 
@@ -338,30 +218,17 @@ FeatureCardBody.displayName = 'FeatureCard.Body';
 // Description
 //
 
-type FeatureCardDescriptionProps = {};
+type FeatureCardDescriptionProps = {
+  /** Lines shown before the text is cut; unclamped when zero. */
+  lines?: number;
+};
 
-/** The description, clamped; a multiline field in edit mode, shown even while empty. Directly under the title. */
-const FeatureCardDescription = (_: FeatureCardDescriptionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, editing, onChange } = useFeatureCardContext('FeatureCard.Description');
-  if (editing && onChange) {
-    return (
-      // The row's content clips overflow (for truncation), which would cut off the field's box beyond the text.
-      <Card.Row span='end' classNames='[&_.dx-card-row-content]:overflow-visible'>
-        <EditField
-          value={feature.description ?? ''}
-          placeholder={t('feature-card.description.placeholder')}
-          label={t('feature-card.description.label')}
-          testId='feature-card.description.input'
-          multiline
-          onCommit={(description) => onChange(feature, { description })}
-        />
-      </Card.Row>
-    );
-  }
+/** The description: what the feature does when complete. Directly under the title. */
+const FeatureCardDescription = ({ lines = 2 }: FeatureCardDescriptionProps) => {
+  const { feature } = useFeatureCardContext('FeatureCard.Description');
   return feature.description ? (
     <Card.Row span='end' data-testid='feature-card.description'>
-      <Card.Text variant='muted' lines={3}>
+      <Card.Text variant='muted' lines={lines || undefined}>
         {feature.description}
       </Card.Text>
     </Card.Row>
@@ -379,7 +246,7 @@ type FeatureCardTagsProps = {
   all?: boolean;
 };
 
-/** The status, the relation to the host's selected feature, and the derived signals. */
+/** The status, whether anyone is working on it, the relation to the host's selected feature, and the derived signals. */
 const FeatureCardTags = ({ all }: FeatureCardTagsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { feature, lookup, relation } = useFeatureCardContext('FeatureCard.Tags');
@@ -391,6 +258,12 @@ const FeatureCardTags = ({ all }: FeatureCardTagsProps) => {
       {/* Padded by a tag's inset on a block, so wrapped tags keep the space above and below that one line has. */}
       <Layout.Flex wrap gap='xs' classNames='py-[calc((var(--dx-block-size)_-_var(--dx-label-line-height))/2)]'>
         <Tag.Tag hue={FEATURE_STATUS_STYLE[feature.status].hue}>{t(`feature-status.${feature.status}.label`)}</Tag.Tag>
+        {feature.active && (
+          <Tag.Tag hue={ACTIVE_STYLE.hue} data-testid='feature-tag.active'>
+            <Icon.Icon icon={ACTIVE_STYLE.icon} size='xs' />
+            {t('feature-active.label')}
+          </Tag.Tag>
+        )}
         {relation && <Tag.Tag hue={RELATION_HUE[relation]}>{t(`feature-relation.${relation}.label`)}</Tag.Tag>}
         {shown.map((signal) => (
           <Tag.Tag key={signal} hue={SIGNAL_STYLE[signal].hue} data-testid={`feature-signal.${signal}`}>
@@ -414,82 +287,79 @@ const FeatureCardTags = ({ all }: FeatureCardTagsProps) => {
 FeatureCardTags.displayName = 'FeatureCard.Tags';
 
 //
-// Counts
+// Summary
 //
 
-type FeatureCardCountProps = {};
+type FeatureCardSummaryProps = {};
 
-/** How many subfeatures; the compact stand-in for `Subfeatures`. */
-const FeatureCardSubfeatureCount = (_: FeatureCardCountProps) => {
+/**
+ * What the feature holds, a row each: its subfeatures with how many are operational, and how many requirements define
+ * it, so a card says how far down the map goes without listing it.
+ */
+const FeatureCardSummary = (_: FeatureCardSummaryProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature } = useFeatureCardContext('FeatureCard.SubfeatureCount');
-  return feature.subfeatures.length > 0 ? (
-    <Card.Row leading={<RowIcon icon='ph--tree-view--regular' />}>
-      <Card.Text truncate>{t('feature-card.subfeatures.label', { count: feature.subfeatures.length })}</Card.Text>
-    </Card.Row>
-  ) : null;
+  const { feature } = useFeatureCardContext('FeatureCard.Summary');
+  const { subfeatures, requirements } = feature;
+  const operational = subfeatures.filter((subfeature) => subfeature.status === 'operational').length;
+  return (
+    <>
+      {subfeatures.length > 0 && (
+        <Card.Row
+          leading={<RowIcon icon='ph--tree-view--regular' />}
+          trailing={
+            // How many are operational, marked with that status's icon so the ratio needs no words.
+            <span
+              className='inline-flex items-center gap-1 text-description tabular-nums'
+              title={t('feature-card.operational-ratio.label', { operational, count: subfeatures.length })}
+              data-testid='feature-card.subfeatures-operational'
+            >
+              <Icon.Icon icon={FEATURE_STATUS_STYLE.operational.icon} size='xs' tone='muted' />
+              {operational}/{subfeatures.length}
+            </span>
+          }
+          data-testid='feature-card.summary'
+        >
+          <Card.Text truncate>{t('feature-card.subfeatures.label', { count: subfeatures.length })}</Card.Text>
+        </Card.Row>
+      )}
+      {requirements.length > 0 && (
+        <Card.Row leading={<RequirementIcon />}>
+          <Card.Text truncate>{t('feature-card.requirements.label', { count: requirements.length })}</Card.Text>
+        </Card.Row>
+      )}
+    </>
+  );
 };
 
-FeatureCardSubfeatureCount.displayName = 'FeatureCard.SubfeatureCount';
+FeatureCardSummary.displayName = 'FeatureCard.Summary';
 
-/** How many tasks are open, and the milestones they are planned for. */
-const FeatureCardTaskCount = (_: FeatureCardCountProps) => {
+//
+// External
+//
+
+type FeatureCardExternalProps = {};
+
+/**
+ * The features it needs that sit on other specs' maps, which a canvas of one map cannot draw an arrow to: a count, with
+ * their names in the tooltip.
+ */
+const FeatureCardExternal = (_: FeatureCardExternalProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature } = useFeatureCardContext('FeatureCard.TaskCount');
-  const openTasks = feature.tasks.filter((task) => !task.done);
-  const milestones = [...new Set(openTasks.flatMap((task) => (task.milestone ? [task.milestone] : [])))];
-  return openTasks.length > 0 ? (
-    <Card.Row
-      leading={<RowIcon icon='ph--list-checks--regular' />}
-      trailing={milestones.length > 0 && <Tag.Tag>{milestones.join(', ')}</Tag.Tag>}
-    >
-      <Card.Text truncate>{t('feature-card.open-tasks.label', { count: openTasks.length })}</Card.Text>
+  const { feature } = useFeatureCardContext('FeatureCard.External');
+  const external = feature.external ?? [];
+  if (external.length === 0) {
+    return null;
+  }
+  return (
+    <Card.Row leading={<RowIcon icon='ph--arrow-square-out--regular' />} data-testid='feature-card.external'>
+      <span title={external.map(({ name }) => name).join(', ')}>
+        <Card.Text truncate>{t('feature-card.external.label', { count: external.length })}</Card.Text>
+      </span>
     </Card.Row>
-  ) : null;
+  );
 };
 
-FeatureCardTaskCount.displayName = 'FeatureCard.TaskCount';
-
-/** The first showcase, the card's lead evidence; the compact stand-in for `Showcases`. */
-const FeatureCardShowcaseLead = (_: FeatureCardCountProps) => {
-  const { feature } = useFeatureCardContext('FeatureCard.ShowcaseLead');
-  const [showcase] = feature.showcases;
-  return showcase ? (
-    <Card.Row leading={<RowIcon icon='ph--presentation-chart--regular' />}>
-      <Card.Text truncate>{showcase.name}</Card.Text>
-    </Card.Row>
-  ) : null;
-};
-
-FeatureCardShowcaseLead.displayName = 'FeatureCard.ShowcaseLead';
-
-/** How many features this one needs; the compact stand-in for `Dependencies`. */
-const FeatureCardDependencyCount = (_: FeatureCardCountProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, lookup } = useFeatureCardContext('FeatureCard.DependencyCount');
-  const count = feature.dependsOn.filter((id) => lookup(id)).length;
-  return count > 0 ? (
-    <Card.Row leading={<RowIcon icon='ph--tree-structure--regular' />}>
-      <Card.Text truncate>{t('feature-card.depends-on.label', { count })}</Card.Text>
-    </Card.Row>
-  ) : null;
-};
-
-FeatureCardDependencyCount.displayName = 'FeatureCard.DependencyCount';
-
-/** How many tests and suites cite the feature with a `@feature` tag; the compact stand-in for `Code`. */
-const FeatureCardTestCount = (_: FeatureCardCountProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature } = useFeatureCardContext('FeatureCard.TestCount');
-  const count = feature.code.filter((link) => link.kind !== 'code').length;
-  return count > 0 ? (
-    <Card.Row leading={<RowIcon icon='ph--test-tube--regular' />} data-testid='feature-card.test-count'>
-      <Card.Text truncate>{t('feature-card.tests.label', { count })}</Card.Text>
-    </Card.Row>
-  ) : null;
-};
-
-FeatureCardTestCount.displayName = 'FeatureCard.TestCount';
+FeatureCardExternal.displayName = 'FeatureCard.External';
 
 //
 // ListSection
@@ -594,17 +464,20 @@ FeatureCardDependents.displayName = 'FeatureCard.Dependents';
 
 type FeatureCardSubfeaturesProps = {};
 
-/** Each subfeature with its status. */
+/** The features this one breaks down into, each with its status; a row opens it. */
 const FeatureCardSubfeatures = (_: FeatureCardSubfeaturesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { feature } = useFeatureCardContext('FeatureCard.Subfeatures');
+  const open = useOpenRow('FeatureCard.Subfeatures');
   return feature.subfeatures.length > 0 ? (
     <ListSection title={t('feature-card.subfeatures.title')} count={feature.subfeatures.length}>
-      {feature.subfeatures.map((subfeature, index) => (
+      {feature.subfeatures.map((subfeature) => (
         <Card.Row
-          key={index}
+          key={subfeature.id}
           leading={<RowIcon icon={FEATURE_STATUS_STYLE[subfeature.status].icon} />}
           trailing={<Card.Text variant='muted'>{t(`feature-status.${subfeature.status}.label`)}</Card.Text>}
+          onClick={open({ type: 'object', id: subfeature.id })}
+          data-testid='feature-card.subfeature'
         >
           <Card.Text truncate>{subfeature.name}</Card.Text>
         </Card.Row>
@@ -612,6 +485,36 @@ const FeatureCardSubfeatures = (_: FeatureCardSubfeaturesProps) => {
     </ListSection>
   ) : null;
 };
+
+//
+// Requirements
+//
+
+type FeatureCardRequirementsProps = {};
+
+/** What the feature must do, each with the spec id it came from. Unclamped: these are what the reader came for. */
+const FeatureCardRequirements = (_: FeatureCardRequirementsProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { feature } = useFeatureCardContext('FeatureCard.Requirements');
+  return feature.requirements.length > 0 ? (
+    <Card.Section title={t('feature-card.requirements.title')}>
+      {feature.requirements.map((requirement, index) => (
+        <Card.Row key={requirement.id ?? index} leading={<RequirementIcon />} data-testid='feature-card.requirement'>
+          <Card.Text>
+            {requirement.id && (
+              <>
+                <RequirementId id={requirement.id} />{' '}
+              </>
+            )}
+            {requirement.text}
+          </Card.Text>
+        </Card.Row>
+      ))}
+    </Card.Section>
+  ) : null;
+};
+
+FeatureCardRequirements.displayName = 'FeatureCard.Requirements';
 
 FeatureCardSubfeatures.displayName = 'FeatureCard.Subfeatures';
 
@@ -631,7 +534,11 @@ const FeatureCardTasks = (_: FeatureCardTasksProps) => {
       {feature.tasks.map((task) => (
         <Card.Row
           key={task.id}
-          leading={<RowIcon icon={task.done ? 'ph--check-square--regular' : 'ph--square--regular'} />}
+          leading={
+            <RowIcon
+              icon={task.done ? 'ph--check-square--regular' : task.active ? ACTIVE_STYLE.icon : 'ph--square--regular'}
+            />
+          }
           trailing={task.milestone && <Tag.Tag>{task.milestone}</Tag.Tag>}
           onClick={open({ type: 'object', id: task.id })}
         >
@@ -660,7 +567,7 @@ const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
       {feature.showcases.map((showcase) => (
         <Card.Row
           key={showcase.id}
-          leading={<RowIcon icon='ph--presentation-chart--regular' />}
+          leading={<RowIcon icon='ph--presentation--regular' />}
           onClick={open({ type: 'object', id: showcase.id })}
         >
           <Card.Text truncate>{showcase.name}</Card.Text>
@@ -678,7 +585,7 @@ FeatureCardShowcases.displayName = 'FeatureCard.Showcases';
 
 type FeatureCardSpecsProps = {};
 
-/** The specs that describe the feature: rows that open them, or links to GitHub on a card that opens nothing. */
+/** The spec blocks the requirements came from: rows that open them, or links to GitHub on a card that opens nothing. */
 const FeatureCardSpecs = (_: FeatureCardSpecsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { feature, onOpen } = useFeatureCardContext('FeatureCard.Specs');
@@ -773,45 +680,43 @@ export {
   FeatureCardBody as Body,
   FeatureCardCode as Code,
   FeatureCardDependencies as Dependencies,
-  FeatureCardDependencyCount as DependencyCount,
   FeatureCardDependents as Dependents,
   FeatureCardDescription as Description,
+  FeatureCardExternal as External,
   FeatureCardHeader as Header,
   FeatureCardLink as Link,
-  FeatureCardMenu as Menu,
+  FeatureCardMarks as Marks,
   FeatureCardProvider as Provider,
+  FeatureCardRequirements as Requirements,
   FeatureCardRoot as Root,
-  FeatureCardSave as Save,
-  FeatureCardShowcaseLead as ShowcaseLead,
   FeatureCardShowcases as Showcases,
   FeatureCardSpecs as Specs,
   FeatureCardStatus as Status,
-  FeatureCardSubfeatureCount as SubfeatureCount,
   FeatureCardSubfeatures as Subfeatures,
+  FeatureCardSummary as Summary,
   FeatureCardTags as Tags,
-  FeatureCardTaskCount as TaskCount,
   FeatureCardTasks as Tasks,
-  FeatureCardTestCount as TestCount,
   FeatureCardTitle as Title,
 };
 
 export type {
   FeatureCardBodyProps as BodyProps,
   FeatureCardCodeProps as CodeProps,
-  FeatureCardCountProps as CountProps,
   FeatureCardDependenciesProps as DependenciesProps,
   FeatureCardDependentsProps as DependentsProps,
   FeatureCardDescriptionProps as DescriptionProps,
+  FeatureCardExternalProps as ExternalProps,
   FeatureCardHeaderProps as HeaderProps,
   FeatureCardLinkProps as LinkProps,
-  FeatureCardMenuProps as MenuProps,
+  FeatureCardMarksProps as MarksProps,
   FeatureCardProviderProps as ProviderProps,
+  FeatureCardRequirementsProps as RequirementsProps,
   FeatureCardRootProps as RootProps,
-  FeatureCardSaveProps as SaveProps,
   FeatureCardShowcasesProps as ShowcasesProps,
   FeatureCardSpecsProps as SpecsProps,
   FeatureCardStatusProps as StatusProps,
   FeatureCardSubfeaturesProps as SubfeaturesProps,
+  FeatureCardSummaryProps as SummaryProps,
   FeatureCardTagsProps as TagsProps,
   FeatureCardTasksProps as TasksProps,
   FeatureCardTitleProps as TitleProps,

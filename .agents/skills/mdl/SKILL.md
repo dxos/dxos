@@ -39,6 +39,12 @@ invent fields.
 4. **Cross-reference by id** — `[F-2.1]`, `type:Scene`, `op:Name` — never by prose paraphrase.
 5. **Name code, never its path.** Refer to code by component or symbol (`FeedStore`, `IndexEngine`) and
    to another spec by its frontmatter `id` (`org.dxos.feed`), not by file path: files move, names stay.
+   Point into another spec with `<spec id>#<item>` (`org.dxos.ui.react-ui-canvas#F-9.2`), never a
+   `github:` key into a `.mdl` file. Every spec you refer to must be a dependency: a `uses <id>: why`
+   block under `## Dependencies` (after the opening prose, before `## Extensions`; `lang/core.mdl`), or,
+   for a plugin's runtime dependency, an entry in the `plugin` block's `dependsOn` (`lang/plugin.mdl`),
+   which must equal `dx.config.ts`'s. Never list one id in both. Check with
+   `pnpm deus lint --only mdl/ref <file.mdl>` and `--only mdl/uses`.
 
 ## The changelog
 

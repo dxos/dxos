@@ -1,0 +1,33 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-markdown/autocue/AUTOCUE.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MarkdownPlugin autocue flows
+
+QA-4 is driven end to end by the autocue flow `write-and-link.mjs`: it creates the document, types the
+heading and list, comments on "Links between pages" and links a new page with `@`. Each step waits for
+its target and throws when text is missing, so a broken flow fails the run. It is a demo recorder run
+by hand against a bundled build, not a CI test, and it does not assert the navtree name or the new
+document's arrival in the navtree. QA-5 shares QA-4's fenced block, so `deus review items` does not
+list it and it is not judged here.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-4: An autocue flow drives every step, but it is a hand-run recorder with weak checks.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-markdown/autocue/write-and-link.mjs]
+  note: |
+    `write-and-link.mjs` performs all four steps and waits for the editor, comment reply box and
+    planks, but it does not check that the navtree takes the heading as the name or that the linked
+    document joins the navtree, and nothing runs it in CI.
+```

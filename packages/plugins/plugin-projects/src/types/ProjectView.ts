@@ -11,7 +11,7 @@ import type * as Project from '@dxos/compute/Project';
 import { ViewState } from '@dxos/react-ui-attention/types';
 
 /** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
-export const Tab = Schema.Literals(['overview', 'tasks', 'features']);
+export const Tab = Schema.Literals(['overview', 'tasks']);
 export type Tab = Schema.Schema.Type<typeof Tab>;
 
 /** The pipeline chart's axis: `time` fits the run to the pane, `unit` steps per event and scrolls. */

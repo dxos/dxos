@@ -3,7 +3,8 @@
 //
 
 /**
- * Single commands on a code graph: show a package's exports, draw what depends on a service, clear the graph.
+ * Single commands on a code graph, with the verbose view on so each step shows its time: a package's exports, what
+ * depends on a service, which plugins use a package, a symbol's dependencies, a package's files, then clear.
  *
  * @mdl packages/plugins/plugin-code-graph/PLUGIN.mdl test QA-2
  * @app composer-app via `moon run composer-app:serve -- --port 4173` with
@@ -15,11 +16,12 @@ import { create, prep, visible } from '../../../../tools/autocue/showcase/steps.
 
 const SPEC = 'from plugin-code-graph/PLUGIN.mdl QA-2';
 
-/** A beat for the viewer after the graph changes. */
-const BEAT = 2_500;
+/** A beat for the viewer to read the graph and the step timings. */
+const BEAT = 3_500;
 
 const BAR = '[data-testid="code-graph-command"]';
 const INPUT = '[data-testid="code-graph-command-input"]';
+const VERBOSE = '[data-testid="code-graph-command-verbose"]';
 
 /** Types a command into the bar and waits for its outcome line to show more than the command itself. */
 const command = async ({ demo, page }, text) => {
@@ -57,6 +59,10 @@ export const steps = [
       });
       await demo.click({ selector: '[data-testid="code-graph-command-open"]', label: 'Command' });
       await page.locator(INPUT).waitFor();
+      // Verbose mode lists every step with its time: lookup, model call, query, judge.
+      if ((await page.locator(VERBOSE).getAttribute('aria-pressed')) !== 'true') {
+        await demo.click({ selector: VERBOSE, label: 'Steps' });
+      }
       await command(context, 'show me the ECHO package exports');
     },
   },
@@ -65,6 +71,31 @@ export const steps = [
     run: async (context) => {
       await context.demo.caption({ value: 'A question draws its answer', subtitle: SPEC, position: 'top' });
       await command(context, 'What depends on identity service in halo');
+    },
+  },
+  {
+    name: 'Which plugins use a package',
+    run: async (context) => {
+      await context.demo.caption({ value: 'Which plugins use @dxos/plugin-space', subtitle: SPEC, position: 'top' });
+      await command(context, 'which plugins use @dxos/plugin-space');
+    },
+  },
+  {
+    name: 'What a symbol depends on',
+    run: async (context) => {
+      await context.demo.caption({ value: 'What Obj.update depends on', subtitle: SPEC, position: 'top' });
+      await command(context, 'show what Obj.update depends on');
+    },
+  },
+  {
+    name: "A package's files and their imports",
+    run: async (context) => {
+      await context.demo.caption({
+        value: "A package's files and how they import each other",
+        subtitle: SPEC,
+        position: 'top',
+      });
+      await command(context, 'show the files in @dxos/log and how they import each other');
     },
   },
   {

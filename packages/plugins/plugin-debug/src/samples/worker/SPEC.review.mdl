@@ -1,0 +1,50 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-debug/src/samples/worker/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Hello Worker
+
+This spec is seed content for the Hello Worker sample space, not a description of code in the repo. The
+template (`WorkerSpace.ts`) stores it as a `Spec` object, and the agent working the space is meant to
+write and deploy the Worker it describes at run time (D-1). No Worker source exists in the repository:
+no fetch handler, no `Greeting` type and no `wrangler` config under `src/samples/worker/` or elsewhere.
+`WorkerSpace.test.ts` checks the seeded objects, and the `hello-worker-diagram` eval grades only the
+architecture drawing. Every item is therefore `missing`, which is the intended state of this spec.
+Of 4 items: 0 done, 0 untested, 0 partial, 0 diverged, 4 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Greeting: No Greeting type exists; the agent is meant to write it with the Worker.
+  status: missing
+  note: Searched `src/samples/worker/` and the repo for a Worker answering with `message` and `time`; the sample holds only seed objects (`tasks.ts`, `project.ts`, `spec.ts`, `features.ts`).
+```
+
+```mdl
+verdict F-1.1: No fetch handler exists in the repo; it is the run's output, not checked-in code.
+  status: missing
+  note: The template seeds the "Greeting endpoint" feature as `planned`; no Worker module or `wrangler` config is checked in.
+```
+
+```mdl
+verdict F-1.2: No Worker exists to stamp `time` in UTC.
+  status: missing
+  note: As for F-1.1.
+```
+
+```mdl
+verdict T-1: Nothing fetches a deployed Worker and checks the body.
+  status: missing
+  note: |
+    `WorkerSpace.test.ts` checks only the seeded space, and `hello-worker-diagram.eval.ts` grades the
+    architecture drawing. The autocue flow `autocue/hello-worker.mjs` walks a recorded demo (QA-9), not a test.
+```

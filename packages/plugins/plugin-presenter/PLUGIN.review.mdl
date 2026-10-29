@@ -1,0 +1,870 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-presenter/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: PresenterPlugin
+
+The plugin is mostly built and well tested. Slidev parsing, layouts, click steps, embedded surfaces, theming,
+printing, the Deck composite and the slide editor are covered by unit tests and storybook play functions.
+The document present round-trip has an e2e test (`presenter.spec.ts`, QA-1). The model is the 0.2.0 one:
+each slide is an owned `Slide` that wraps an owned Text or a linked object. Several feature reqs still
+describe the 0.1.0 `sections` model, so F-3.1, F-3.3 and F-5.5 diverge in their wording. The speaker-notes
+overlay (`PresentedOverlay`: subtitles, notes window, key replay, refused popup) and the extension events
+have no test.
+
+Of 107 verdicts (the spec declares `type Slide` and `component Slide` under one id, judged once): 81 done, 12 untested, 8 partial, 5 diverged, 1 missing. Three findings matter most:
+
+- **Double-click does not present (F-4.13).** In a Presentation's grid, a double-click opens the slide's
+  editor. `Deck.Grid` presents only when no `onOpen` is passed, and the OpenFromTile story asserts the
+  opening behaviour.
+- **Linked slides have no "Remove from presentation" (F-5.5).** Every slide is an owned `Slide`, so no
+  child is removable. The label is set on the container but is never offered. Delete removes the Slide
+  and keeps the linked object.
+- **The shortcut is document-only (F-1.3).** Shift+Cmd+P is bound on the Markdown.Document action and in
+  the markdown editor keymap, not on a Presentation. `SlideTheme` also diverges from its type block: the
+  field is `base`, not `name`, and the fonts are named enums.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Presentation: Typename 0.2.0, ordered owned `slides`, collection tag, description and theme are all declared and tested.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Presentation, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#make, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#remove]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict SlideViewState: A local `presenter-slide` aspect keyed by URI holds the index, clamped on read.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.ts#aspect, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.ts#clamp]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.test.ts]
+  note: |
+    Also carries an optional `gridSize` the spec does not list.
+```
+
+```mdl
+verdict PresenterSettings: `notes: off | subtitles | window`, default off, persisted through the settings module.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterSettings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterSettings.ts#defaults]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/plugin.test.ts]
+```
+
+```mdl
+verdict SlideTheme: Theme settings exist, but the theme is `base`, not `name`, and `font` is a named-font enum plus a separate `monoFont`.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideTheme.ts#Settings, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideTheme/SlideTheme.tsx#slideThemeStyle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideTheme/SlideTheme.test.ts]
+  note: |
+    The spec gives `name?` and `font?: string` (a font-family list). The code names the field `base`, restricts
+    `font` to the FONTS literals and adds `monoFont` (MONO_FONTS), which F-6.9 describes; the type block is stale.
+```
+
+```mdl
+verdict SlideSource: The four kinds text, object, markdown and pending, with deleted targets omitted.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/SlideSource.ts#toSlideSources]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/SlideSource.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/slideSourcesAtom.test.ts]
+```
+
+```mdl
+verdict Deck: The composite Root/Content/Viewport/Grid/Pager/PageNumber/PlayButton holds keys, click steps, fullscreen overlay and print.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckContent, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckViewport, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckGrid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/print.test.ts]
+  walkthrough:
+    - Deck.Root holds the clamped index, click steps and the key handler. github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot
+    - Deck.Content is the focus scope that handles keys and mounts the print container. github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckContent
+    - Deck.Viewport shows the current slide and the auto-hiding fullscreen pager. github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckViewport
+    - Deck.Grid shows every slide as a thumbnail with drag and double-click. github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckGrid
+```
+
+```mdl
+verdict PresentationArticle: Grid inline, viewport when presenting, toolbar with add-slide, SectionPicker and play.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.tsx#PresentationArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+```
+
+```mdl
+verdict SlideEditorArticle: Toolbar over the markdown editor with a split or companion preview, kept in sync both ways.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.tsx#SlideEditorArticle, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideToolbar/SlideToolbar.tsx#SlideToolbar]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.stories.tsx]
+  note: |
+    Its subject is reached through `SlideObjectArticle`, which receives the `Slide` and hands its owned Text on.
+```
+
+```mdl
+verdict SectionPicker: Queries the space only while open and links the chosen object; unnamed objects read "Untitled <type>".
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SectionPicker/SectionPicker.tsx#SectionPicker, github:dxos/dxos/packages/plugins/plugin-presenter/src/hooks/useObjectOptions.ts#useObjectOptions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+```
+
+```mdl
+verdict Slide: Both items named `Slide` are built: the Slide object type and the Slide.Root/Frame/Content component.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Slide, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#makeSlide, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.tsx#SlideRoot, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.tsx#SlideFrame, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.tsx#SlideContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresentationMigration.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx]
+  note: |
+    The spec declares `type Slide` and `component Slide` under one id, so one verdict covers both. The type holds
+    content, title, hidden, notes, image, duration, takes and mainTake. The component frames a fixed 16:9 canvas
+    and renders text, markdown, pending and object sources, with a title-slide fallback.
+```
+
+```mdl
+verdict MarkdownSlide: Renders the Slidev subset: frontmatter, slots, click steps, highlighted code, notes; other HTML escaped.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.tsx#MarkdownSlide, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/remark-slidev.ts#remarkSlidev]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts]
+```
+
+```mdl
+verdict SlideLayouts: All 18 layouts exist; unknown names fall back to default with an issue; bleed applies to two-cols and three-cols.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/layouts.tsx#layouts, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.ts#LAYOUTS]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx]
+```
+
+```mdl
+verdict SlideBackground: Colour, image or looping muted autoplay video, with a scrim only in the image layout.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/SlideBackground.tsx#SlideBackground, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/layouts.tsx#ImageLayout]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.stories.tsx]
+```
+
+```mdl
+verdict EmbeddedSurface: Resolves `<Surface ref>` with fallbacks, a Missing placeholder, Text slides, and a cycle/depth-3 guard.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/EmbeddedSurface.tsx#EmbeddedSurface, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/EmbeddedSurface.tsx#EmbedAncestor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx]
+```
+
+```mdl
+verdict DocumentArticle: The document companion splits on `---`, reads fullscreen per object and pages through the shared Deck.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/DocumentArticle/DocumentArticle.tsx#DocumentArticle, github:dxos/dxos/packages/plugins/plugin-presenter/src/hooks/useDocumentDeck.ts#useDocumentDeck]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/DocumentArticle/DocumentArticle.stories.tsx, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+  note: |
+    There is no separate `exit()` prop; exit goes through `onFullscreenChange(false)` and `useSetPresenting`.
+```
+
+```mdl
+verdict SlideArticle: The AppSurface.Slide surface for Markdown.Document renders the document as a frameless slide.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideArticle/SlideArticle.tsx#SlideArticle, github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx]
+```
+
+```mdl
+verdict SpeakerNotes: Subtitles and Prompter, with lines, position, time against duration (flagged when over) and next notes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SpeakerNotes/SpeakerNotes.tsx#SpeakerNotes, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SpeakerNotes/SpeakerNotes.tsx#Prompter]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SpeakerNotes/SpeakerNotes.stories.tsx]
+```
+
+```mdl
+verdict PresentedOverlay: Draws subtitles or the notes window, the Overlay slot, and fires start/slide/stop events.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentedOverlay/PresentedOverlay.tsx#PresentedOverlay, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentedOverlay/PresentedOverlay.tsx#usePresentationEvents]
+  note: |
+    No story or test mounts PresentedOverlay; the notes window, the refused-popup button and the event callbacks
+    are unexercised.
+```
+
+```mdl
+verdict TogglePresentation: `setPresenting` toggles the deck fullscreen onto the companion (document) or the plank itself (Presentation), without navigating.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterOperation.ts#SetPresenting, github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/set-presenting.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/paths.ts#getPresentingPath]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/paths.test.ts]
+  walkthrough:
+    - The operation declares the object and the required `state`. github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterOperation.ts#SetPresenting
+    - The handler opens a plank if none shows the object and adjusts fullscreen. github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/set-presenting.ts
+    - The path is the presenter companion for a document and the plank for a Presentation. github:dxos/dxos/packages/plugins/plugin-presenter/src/paths.ts#getPresentingPath
+  note: |
+    The handler opens the object with LayoutOperation.Open when no plank shows it, so in that case it does
+    navigate.
+```
+
+```mdl
+verdict GenerateSlideImage: Generates through StudioOperation.Generate, stores a MediaArtifact as the slide image and switches the layout.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterOperation.ts#GenerateSlideImage, github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/generate-slide-image.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/stories/SlideAssistant.stories.tsx]
+  walkthrough:
+    - The operation declares slide and prompt, plus an optional provider. github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterOperation.ts#GenerateSlideImage
+    - The handler makes the artifact, sets `slide.image`, switches to `layout: image` and stores the file. github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/generate-slide-image.ts
+  note: |
+    The output also carries an optional `error` for a refused generation, and the image is re-stored through
+    plugin-file.
+```
+
+```mdl
+verdict F-1.1: Every Markdown document gets a "Presenter" companion node.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+```
+
+```mdl
+verdict F-1.2: Presenting a document fullscreens its companion with no tab strip and an unchanged URL.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/set-presenting.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/paths.ts#getPresentationPath]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+```
+
+```mdl
+verdict F-1.3: Shift+Cmd+P is bound for documents (action and editor keymap) but not for a Presentation.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/markdown-extension.ts]
+  note: |
+    The keyBinding sits only on the Markdown.Document action and the markdown editor keymap; no Presentation node
+    or article binds the shortcut. No test presses the key (the e2e uses the action menu).
+```
+
+```mdl
+verdict F-1.4: Presenting a Presentation fullscreens its own plank.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/set-presenting.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/paths.ts#getPresentingPath]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/paths.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+```
+
+```mdl
+verdict F-2.1: DocumentArticle renders the document as slides on the Deck.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/DocumentArticle/DocumentArticle.tsx#DocumentArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/DocumentArticle/DocumentArticle.stories.tsx, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+```
+
+```mdl
+verdict F-2.2: Slides split on horizontal `---` only.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/split.ts#splitSlides]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/split.test.ts]
+```
+
+```mdl
+verdict F-2.3: Escape exits fullscreen and leaves the document and companion as they were.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/PresentationShell/PresentationShell.tsx#PresentationShell]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+```
+
+```mdl
+verdict F-3.1: Created from the create menu and filed into Collections, but holds `slides` of Slide objects, not `sections`.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Presentation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/plugin.test.ts]
+  note: |
+    Behaviour matches, but the req still names the 0.1.0 `sections` array; the type block and code use `slides:
+    Ref<Slide>[]`.
+```
+
+```mdl
+verdict F-3.2: A slide is one Text rendered whole; `---` inside it is not split.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.tsx#TextContent]
+  note: |
+    Owned Text renders through MarkdownSlide without splitSlides; no test checks that `---` inside a section
+    renders a rule.
+```
+
+```mdl
+verdict F-3.3: Content is an owned Text or a linked object, but the Text is parented to the Slide, not the presentation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#makeSlide, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#isOwnedContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+  note: |
+    Since 0.2.0 owned Text is parented to its `Slide` (which the presentation owns); the req text still describes
+    the 0.1.0 model.
+```
+
+```mdl
+verdict F-3.4: The toolbar add button appends a new owned markdown slide.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#addSlide, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.tsx#PresentationArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict F-3.5: SectionPicker links an object as a slide without reparenting it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#link, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SectionPicker/SectionPicker.tsx#SectionPicker]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict F-3.6: Slides are deleted through the space Delete (deleteOwned); undo is the space plugin's.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Presentation]
+  note: |
+    ContainerAnnotation sets `deleteOwned: true`; nothing here tests that the delete is undoable or that the slide
+    leaves the deck afterwards beyond the deleted-content case.
+```
+
+```mdl
+verdict F-3.7: Removing a linked slide deletes the Slide and keeps the object.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#remove]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict F-3.8: Deleting a presentation spares linked objects.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Presentation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict F-4.1: The stored index is shown, clamped to the deck.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/hooks/useSlideIndex.ts#useSlideIndex, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.ts#clamp]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.test.ts]
+```
+
+```mdl
+verdict F-4.2: The pager shows `N / M`, `0 / 0` with all buttons disabled for an empty deck.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Pager/Pager.tsx]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-4.3: Keys are handled on Deck.Content's onKeyDown, not window.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-4.4: `f` toggles fullscreen.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-4.5: The fullscreen pager hides when idle and wakes on pointer movement.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#Overlay]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-4.6: Escape exits fullscreen.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/PresentationShell/PresentationShell.tsx#PresentationShell]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+```
+
+```mdl
+verdict F-4.7: The index is local per-user view state keyed by URI.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.ts#aspect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.test.ts]
+```
+
+```mdl
+verdict F-4.8: Only an attended deck focuses on mount.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.tsx#PresentationArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+```
+
+```mdl
+verdict F-4.9: An object without a slide surface renders as a title slide.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.tsx#SlideContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx]
+```
+
+```mdl
+verdict F-4.10: Deleted targets are omitted; unloaded ones are pending.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/SlideSource.ts#toSlideSources]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/SlideSource.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/slideSourcesAtom.test.ts]
+```
+
+```mdl
+verdict F-4.11: Inline the Presentation is a scrolling grid of revealed thumbnails, the current one selected and moved by arrows or click.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.tsx#SlideGrid, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckGrid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+```
+
+```mdl
+verdict F-4.12: Dragging a thumbnail moves the slide and keeps it current.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.tsx#SlideGrid, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#move]
+  note: |
+    SlideGrid calls `onMove` then `onIndexChange(to)`; the story only asserts `draggable`, and no test performs a
+    drag.
+```
+
+```mdl
+verdict F-4.13: In a Presentation, double-clicking a thumbnail opens the slide's editor instead of presenting.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.tsx#PresentationArticle, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckGrid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.stories.tsx]
+  note: |
+    Deck.Grid presents only when no `onOpen` is given; PresentationArticle passes `onOpen` (handleOpenSlide), so a
+    double-click opens the slide, as the OpenFromTile story asserts.
+```
+
+```mdl
+verdict F-6.1: The parser handles the frontmatter keys, the six slots and trailing-comment notes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.ts#parseSlide, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.ts#SlideFrontmatter]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.test.ts]
+```
+
+```mdl
+verdict F-6.2: The 18 layouts are listed and rendered.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.ts#LAYOUTS, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/layouts.tsx#layouts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.stories.tsx]
+```
+
+```mdl
+verdict F-6.3: An unknown layout renders default and reports an issue.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.ts#parseSlide]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx]
+```
+
+```mdl
+verdict F-6.4: Malformed frontmatter is ignored with an issue and the body renders.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.ts#parseFrontmatter]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/frontmatter.test.ts]
+```
+
+```mdl
+verdict F-6.5: Raw HTML outside the allowed tags is escaped and unsafe URLs are dropped.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/remark-slidev.ts#remarkSlidev, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/remark-slidev.ts#isSafeUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/remark-slidev.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx]
+```
+
+```mdl
+verdict F-6.6: Code highlights, line ranges and `{lines:true}` numbering work.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.tsx#CodeBlock, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.tsx#parseLineHighlights, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.tsx#parseLineNumbers]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx]
+```
+
+```mdl
+verdict F-6.7: The preview splits on `---` outside fences and keeps leading frontmatter as metadata.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/split.ts#splitSlides]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/split.test.ts]
+```
+
+```mdl
+verdict F-6.8: The first slide's `theme:` headmatter themes the deck; default follows the app, light/dark force.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.ts#parseHeadmatterTheme, github:dxos/dxos/packages/plugins/plugin-presenter/src/hooks/useDeckTheme.ts#useDeckTheme]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideTheme/SlideTheme.test.ts]
+```
+
+```mdl
+verdict F-6.9: The Presentation theme overrides colours and both fonts and wins over headmatter.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideTheme.ts#Settings, github:dxos/dxos/packages/plugins/plugin-presenter/src/hooks/useDeckTheme.ts#useDeckTheme]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideTheme/SlideTheme.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationProperties/PresentationProperties.stories.tsx]
+```
+
+```mdl
+verdict F-6.10: Unknown themes and unsafe overrides fall back, with an issue for an unknown name.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.ts#parseHeadmatterTheme, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideTheme/SlideTheme.tsx#slideThemeStyle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideTheme/SlideTheme.test.ts]
+```
+
+```mdl
+verdict F-7.1: v-click, v-clicks (depth, every) and v-after reveal one step at a time, keeping layout.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/remark-slidev.ts#remarkSlidev]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx]
+```
+
+```mdl
+verdict F-7.2: Space or right reveals the next step before advancing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-7.3: Left hides a step, or lands on the previous slide fully revealed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-7.4: Steps reset on any index change and are not persisted.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-7.5: Space on a focused button or link does not advance.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-8.1: `backgroundVideo` loops muted with opacity and position.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/SlideBackground.tsx#SlideBackground]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx]
+```
+
+```mdl
+verdict F-8.2: `<Surface ref>` renders the object through slide, section, card, then a title slide.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/EmbeddedSurface.tsx#EmbeddedSurface]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts]
+```
+
+```mdl
+verdict F-8.3: Malformed, unknown or deleted refs settle on "Missing object".
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/EmbeddedSurface.tsx#EmbeddedSurface]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx]
+```
+
+```mdl
+verdict F-8.4: An object-URI image becomes a slide surface, block-level when alone.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/remark-slidev.ts#remarkSlidev]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts]
+```
+
+```mdl
+verdict F-8.5: `bleed` takes the outer column to the slide edges.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/layouts.tsx#TwoColsLayout, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/layouts.tsx#ThreeColsLayout]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/MarkdownSlide/MarkdownSlide.test.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Slide/Slide.stories.tsx]
+```
+
+```mdl
+verdict F-9.1: The focused or fullscreen deck prints every slide, fully revealed, one 16:9 page each.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/print.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx]
+```
+
+```mdl
+verdict F-9.2: Print rules are scoped to the printing attribute.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/print.test.ts]
+```
+
+```mdl
+verdict F-10.1: The editor toolbar has formatting, slide tools and view controls.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideToolbar/SlideToolbar.tsx#SlideToolbar, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideToolbar/SlideToolbar.tsx#useSlideInsertActions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.stories.tsx]
+```
+
+```mdl
+verdict F-10.2: Picking a layout writes `layout:` and keeps other keys in one edit.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/edit.ts#setFrontmatter]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/edit.test.ts]
+```
+
+```mdl
+verdict F-10.3: The preview is a resizable split or the companion; mode and size are local view state.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.tsx#SlideEditorArticle, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideEditorViewState.ts#aspect]
+  note: |
+    No story switches the preview mode or resizes the split.
+```
+
+```mdl
+verdict F-10.4: The preview reveals up to the cursor's click group and outlines its slot.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlidePreviewArticle/SlidePreview.tsx#SlidePreview, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.ts#stepAtOffset, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.ts#slotAtOffset]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/parse.test.ts]
+```
+
+```mdl
+verdict F-10.5: Clicking a preview element moves the caret to its source start.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlidePreviewArticle/SlidePreview.tsx#SlidePreview, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.tsx#SlideEditorContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.stories.tsx]
+```
+
+```mdl
+verdict F-10.6: "Present from here" sets the index and presents the presentation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.tsx]
+  note: |
+    `onPresent` sets the slide index and invokes SetPresenting; no story clicks it.
+```
+
+```mdl
+verdict F-5.1: The Presentation node lists its slides as children.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.ts#createSectionsExtension]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.test.ts]
+```
+
+```mdl
+verdict F-5.2: Labels fall back from title to name, first heading, then "Slide N".
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.ts#createSectionsExtension, github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/heading.ts#firstHeading]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/heading.test.ts]
+```
+
+```mdl
+verdict F-5.3: Rearranging children reorders `slides` (the req still says `sections`).
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Presentation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.test.ts]
+  note: |
+    Done for `slides`; the req text still names the old `sections` field.
+```
+
+```mdl
+verdict F-5.4: Clicking a slide child opens its Slide, shown in the slide editor for owned content.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideObjectArticle/SlideObjectArticle.tsx#SlideObjectArticle, github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/SlideEditorArticle/SlideEditorArticle.stories.tsx]
+  note: |
+    The node is the `Slide`, so SlideObjectArticle routes owned Text to SlideEditorArticle and a linked object to
+    its own article.
+```
+
+```mdl
+verdict F-5.5: No slide offers a remove action, linked ones included; the "Remove from presentation" label is set but never shown.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Presentation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.test.ts]
+  note: |
+    Every slide is now an owned `Slide`, so `isRemovable` is false for all of them and a linked slide goes through
+    Delete, which keeps the linked object.
+```
+
+```mdl
+verdict F-5.6: Children come from the same slide sources as the deck.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.ts#createSectionsExtension, github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/slideSourcesAtom.ts#slideSourcesAtom]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.test.ts]
+```
+
+```mdl
+verdict F-11.1: Slides are Slide objects holding content and metadata.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Slide]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict F-11.2: Presentation has an optional description.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Presentation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict F-11.3: The Slide opens and carries the presenter skill; adding its content and presentation to context was not found.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Slide, github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/stories/SlideAssistant.stories.tsx]
+  note: |
+    Slide sets `SkillsAnnotation([SKILL_KEY])` and is the companion subject, so the skill is on and the Slide is
+    in context. Nothing in the plugin adds the content and the presentation to the assistant context.
+```
+
+```mdl
+verdict F-11.4: Asked for an image, the assistant calls GenerateSlideImage and the preview paints it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/generate-slide-image.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/skills/PresenterSkill.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/stories/SlideAssistant.stories.tsx]
+```
+
+```mdl
+verdict F-11.5: The image is a MediaArtifact ref resolved by the slide background.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Slide, github:dxos/dxos/packages/plugins/plugin-presenter/src/hooks/useSlideImage.ts#useSlideImage]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/stories/SlideAssistant.stories.tsx]
+```
+
+```mdl
+verdict F-11.6: The 0.1.0 migration wraps sections in Slides and lifts `hide: true`.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresentationMigration.ts#presentationMigration]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresentationMigration.test.ts]
+```
+
+```mdl
+verdict F-12.1: Notes are the Slide's notes text, else the trailing comment, split per bullet and sentence.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/hooks/useSpeakerNotes.ts#useSpeakerLines, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/notes.ts#getSpeakerLines]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/notes.test.ts]
+```
+
+```mdl
+verdict F-12.2: `subtitles` shows the notes over the slide.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentedOverlay/PresentedOverlay.tsx#PresentedOverlay]
+  note: |
+    The Subtitles story has no play function and PresentedOverlay is not mounted in any test.
+```
+
+```mdl
+verdict F-12.3: `window` opens a popup Prompter that closes on unmount.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentedOverlay/PresentedOverlay.tsx#PresentedOverlay, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/PopupWindow/PopupWindow.tsx#PopupWindow]
+  note: |
+    Only the Prompter body is tested (SpeakerNotes Test story); the window and its closing are not.
+```
+
+```mdl
+verdict F-12.4: Deck keys pressed in the notes window are replayed on the deck.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentedOverlay/PresentedOverlay.tsx#PresentedOverlay]
+  note: |
+    The keydown replay via DECK_KEYS has no test.
+```
+
+```mdl
+verdict F-12.5: A refused popup shows an open-notes button.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentedOverlay/PresentedOverlay.tsx#PresentedOverlay]
+  note: |
+    `onBlocked` sets the `presenter.open-notes` button; no test covers it.
+```
+
+```mdl
+verdict F-12.6: `duration` is an optional positive number on Slide, shown in its properties form.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#Slide]
+  note: |
+    The field is form-visible; no test edits it.
+```
+
+```mdl
+verdict F-12.7: The Toolbar and Overlay surfaces and the PresentationEventHandler capability exist and are wired.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterSurface.ts#Toolbar, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterSurface.ts#Overlay, github:dxos/dxos/packages/plugins/plugin-presenter/src/types/PresenterCapabilities.ts#PresentationEventHandler]
+  note: |
+    No test in this package contributes to either surface or the handler.
+```
+
+```mdl
+verdict T-1: The e2e test presents a document from the action menu and checks fullscreen, the slide and the URL.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/set-presenting.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+```
+
+```mdl
+verdict T-2: The DocumentArticle story pages a three-slide document; split.test covers the split.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/split.ts#splitSlides]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/DocumentArticle/DocumentArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/markdown/split.test.ts]
+  note: |
+    The story advances with the right arrow but never retreats on a document deck.
+```
+
+```mdl
+verdict T-3: The e2e test presses Escape and checks the plank and companion return.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/set-presenting.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+```
+
+```mdl
+verdict T-4: Source mapping of an owned and a linked slide is tested; the grid with one of each is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/SlideSource.ts#toSlideSources]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/deck/SlideSource.test.ts, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+  note: |
+    SlideSource.test checks the order of an owned and a linked document; no grid test uses that mix or checks the
+    first thumbnail is selected for it.
+```
+
+```mdl
+verdict T-5: Arrow keys move the selected thumbnail in the grid.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.tsx#SlideGrid]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/components/SlideGrid/SlideGrid.stories.tsx]
+```
+
+```mdl
+verdict T-6: Only the view-state round trip is tested, not a reload.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.ts#aspect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/SlideViewState.test.ts]
+  note: |
+    SlideViewState.test round-trips an index per context; no test reloads the app and reopens the Presentation.
+```
+
+```mdl
+verdict T-7: The e2e test uses the `presenter.present` action but no test checks its keyBinding.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+  note: |
+    The action exists on the document node (e2e clicks it); Shift+Cmd+P on the binding is not asserted anywhere.
+```
+
+```mdl
+verdict T-8: `f` and Escape are tested on the Deck and the PresentationArticle separately.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.tsx#DeckRoot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/components/Deck/Deck.stories.tsx, github:dxos/dxos/packages/plugins/plugin-presenter/src/containers/PresentationArticle/PresentationArticle.stories.tsx]
+  note: |
+    Deck FullscreenKey presses `f`; the PresentationArticle Fullscreen story uses the play button, then Escape. No
+    test presses `f` on a Presentation plank.
+```
+
+```mdl
+verdict T-9: Rearranging navtree children reorders the slides and the children.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.ts#createSectionsExtension]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/capabilities/app-graph-builder.test.ts]
+  note: |
+    The test calls `onRearrange` directly and checks node order, not the deck order or the pager.
+```
+
+```mdl
+verdict T-10: Removing a linked slide keeps the document.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.ts#remove]
+  tests: [github:dxos/dxos/packages/plugins/plugin-presenter/src/types/Presentation.test.ts]
+```
+
+```mdl
+verdict QA-4: No automation runs the Slidev-subset walkthrough end to end.
+  status: missing
+  note: |
+    Parts are covered by unit tests and stories (parse.test, Deck ClickSteps, Slide EmbeddedSurfaceMissing,
+    print.test) but nothing runs this sequence in a composed app.
+```
+
+```mdl
+verdict QA-1: The e2e test tagged `@presenter:QA-1` runs the companion preview, present and exit round-trip.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-presenter/src/operations/set-presenting.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/presenter.spec.ts]
+```
+

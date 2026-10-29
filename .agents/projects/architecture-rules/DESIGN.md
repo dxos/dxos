@@ -11,7 +11,7 @@ what the team considers good architecture, so the same review comments recur.
 
 ## Approach
 
-Two sources feed one rule file, `.agents/skills/agentic-review/rules/architecture.mdl`:
+Two sources feed one rule file, `.agents/rules/architecture.mdl`:
 
 1. **A seed list**, chosen by hand (2026-09-24):
    - `one-mechanism-per-concern` — never add a second event bus, config path,

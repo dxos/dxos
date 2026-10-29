@@ -128,6 +128,11 @@
       "types": "./dist/types/src/samples/review/ReviewSpace.d.ts",
       "import": "./dist/lib/ReviewSpace.mjs"
     },
+    "./RideCheckSpace": {
+      "source": "./src/samples/ride-check/RideCheckSpace.ts",
+      "types": "./dist/types/src/samples/ride-check/RideCheckSpace.d.ts",
+      "import": "./dist/lib/RideCheckSpace.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
@@ -147,6 +152,11 @@
       "source": "./src/samples/timeline/TimelineSpace.ts",
       "types": "./dist/types/src/samples/timeline/TimelineSpace.d.ts",
       "import": "./dist/lib/TimelineSpace.mjs"
+    },
+    "./TriageSpace": {
+      "source": "./src/samples/triage/TriageSpace.ts",
+      "types": "./dist/types/src/samples/triage/TriageSpace.d.ts",
+      "import": "./dist/lib/TriageSpace.mjs"
     },
     "./WeatherSpace": {
       "source": "./src/samples/weather/WeatherSpace.ts",

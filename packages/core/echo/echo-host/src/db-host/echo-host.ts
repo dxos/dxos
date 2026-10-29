@@ -17,6 +17,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
+import isEqual from 'fast-deep-equal';
 
 import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -64,6 +65,7 @@ import { DeletionResolver } from './deletion.ts';
 import { BACKFILL_FINISHED, FeedDataSource, backfillResourceId } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
+import { buildInlineObjectDocument, inlineObjectDocumentId, isUntouchedSinceCreation } from './inline-objects.ts';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
@@ -258,6 +260,8 @@ export class EchoHost extends Resource {
 
   /** Whether the first index pass, and the first pass that left nothing behind, are marked on the timeline. */
   #indexingMarked = false;
+  /** The last document leg read every saved document, so until one is saved again a pass need not rescan them. */
+  #documentsDrained = false;
   #caughtUpMarked = false;
 
   readonly #secondaryIndexLock = new Mutex();
@@ -545,12 +549,12 @@ export class EchoHost extends Resource {
 
       // A directory change can carry another peer's retirement, and a newly opened space can link a document
       // quarantined on an earlier start.
-      this.#scheduleRetirement(e.spaceId);
+      this.#scheduleDirectoryMaintenance(e.spaceId);
     });
     this._automergeHost.documentQuarantined.on(this._ctx, ({ reason }) => {
       if (reason === 'load-failed') {
         for (const spaceId of this._spaceStateManager.spaceIds) {
-          this.#scheduleRetirement(spaceId);
+          this.#scheduleDirectoryMaintenance(spaceId);
         }
       }
     });
@@ -559,7 +563,7 @@ export class EchoHost extends Resource {
         this.#historyCandidates.set(documentId, ops);
         // The index may already be current, in which case no index pass will bring the document up again.
         for (const spaceId of this._spaceStateManager.spaceIds) {
-          this.#scheduleRetirement(spaceId);
+          this.#scheduleDirectoryMaintenance(spaceId);
         }
       }
     });
@@ -1017,10 +1021,61 @@ export class EchoHost extends Resource {
     };
   }
 
-  /** Queues a retirement pass for a space behind the one already running. Failures are logged, not propagated. */
-  #scheduleRetirement(spaceId: SpaceId): void {
+  /**
+   * Writes each object into a new document of its own and links it from the space directory in one change, which is
+   * the shape every object takes: the directory itself holds no objects.
+   */
+  async addObjects(ctx: Context, spaceId: SpaceId, objects: Readonly<Record<string, EntityStructure>>): Promise<void> {
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+    invariant(root, `Space root not found: ${spaceId}`);
+    const spaceKey = root.getSpaceKey();
+    const links: { objectId: string; url: AutomergeUrl; documentId: DocumentId }[] = [];
+    for (const [objectId, structure] of Object.entries(objects)) {
+      using lease = await this._automergeHost.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        // spaceKey is deprecated but still written so older clients can resolve the owning space.
+        access: spaceKey ? { spaceId, spaceKey } : { spaceId },
+        objects: { [objectId]: structure },
+      });
+      links.push({ objectId, url: lease.url, documentId: lease.documentId });
+    }
+    if (links.length === 0) {
+      return;
+    }
+    root.change((draft: DatabaseDirectory) => {
+      draft.links ??= {};
+      for (const { objectId, url } of links) {
+        draft.links[objectId] = new A.RawString(url);
+      }
+    });
+    await this._automergeHost.flush(ctx, {
+      documentIds: [root.documentId, ...links.map(({ documentId }) => documentId)],
+    });
+  }
+
+  /**
+   * Moves every object inlined in a space directory into a document of its own, linked from the directory, and
+   * waits for the pass. Runs on its own whenever a space opens or its document list changes; exposed so callers
+   * that must observe the result (tests, tooling) need not wait for that.
+   */
+  async migrateInlineObjects(spaceId: SpaceId): Promise<void> {
+    this.#scheduleDirectoryMaintenance(spaceId);
+    await this.#retirements.get(spaceId);
+  }
+
+  /**
+   * Queues a directory maintenance pass for a space behind the one already running: inline objects are migrated
+   * out first, then documents are retired. Failures are logged, not propagated.
+   */
+  #scheduleDirectoryMaintenance(spaceId: SpaceId): void {
     const previous = this.#retirements.get(spaceId) ?? Promise.resolve();
     const next = previous
+      .then(() => this.#migrateInlineObjectsPass(spaceId))
+      .catch((err) => {
+        if (!this._ctx.disposed) {
+          log.warn('inline object migration failed', { spaceId, err });
+        }
+      })
       .then(() => this.#retireDocuments(spaceId))
       .catch((err) => {
         if (!this._ctx.disposed) {
@@ -1028,6 +1083,101 @@ export class EchoHost extends Resource {
         }
       });
     this.#retirements.set(spaceId, next);
+  }
+
+  /**
+   * Moves each object inlined in the space directory (`DatabaseDirectory.objects`) into a document of its own and
+   * replaces it with a link, keeping its id and its current state. The documents are derived from the directory and
+   * the object (see {@link inlineObjectDocumentId}), so peers that migrate the same directory concurrently converge
+   * on one document per object instead of duplicating it. Idempotent: a directory with no inline objects is left as
+   * it is.
+   */
+  async #migrateInlineObjectsPass(spaceId: SpaceId): Promise<void> {
+    if (this._ctx.disposed || !this.isOpen) {
+      return;
+    }
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
+    const directory = root?.doc();
+    if (!root || !directory || Object.keys(directory.objects ?? {}).length === 0) {
+      return;
+    }
+
+    const spaceKey = root.getSpaceKey();
+    const leases = new Map<string, DocumentLease<DatabaseDirectory>>();
+    try {
+      for (const [objectId, structure] of Object.entries(A.toJS(directory).objects ?? {})) {
+        const documentId = await inlineObjectDocumentId(root.documentId, objectId);
+        // Another peer's migration may have delivered the document already; importing over it would start a
+        // second history for the same object.
+        const [existingHeads] = await this._automergeHost.getHeads([documentId]);
+        const lease =
+          existingHeads && existingHeads.length > 0
+            ? await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId)
+            : await this._automergeHost.createDoc<DatabaseDirectory>(
+                await buildInlineObjectDocument({
+                  directoryId: root.documentId,
+                  spaceId,
+                  spaceKey,
+                  objectId,
+                  structure,
+                }),
+                { preserveHistory: true, documentId },
+              );
+        if (lease) {
+          leases.set(objectId, lease);
+        }
+      }
+      if (this._ctx.disposed) {
+        return;
+      }
+
+      // No await from here to the directory change, so an edit made to an inline object while its document was
+      // being created is carried over rather than lost.
+      const currentDirectory = root.doc();
+      const current = currentDirectory ? (A.toJS(currentDirectory).objects ?? {}) : {};
+      const migrated: { objectId: string; lease: DocumentLease<DatabaseDirectory> }[] = [];
+      for (const [objectId, lease] of leases) {
+        const state = current[objectId];
+        if (state === undefined) {
+          continue;
+        }
+        if (isUntouchedSinceCreation(lease.doc()) && !isEqual(A.toJS(lease.doc()).objects?.[objectId], state)) {
+          lease.change((draft: DatabaseDirectory) => {
+            draft.objects ??= {};
+            draft.objects[objectId] = state;
+          });
+        }
+        migrated.push({ objectId, lease });
+      }
+      if (migrated.length === 0) {
+        return;
+      }
+      root.change((draft: DatabaseDirectory) => {
+        draft.links ??= {};
+        for (const { objectId, lease } of migrated) {
+          draft.links[objectId] = new A.RawString(lease.url);
+          if (draft.objects) {
+            delete draft.objects[objectId];
+          }
+        }
+      });
+      await this._automergeHost.flush(this._ctx, {
+        documentIds: [root.documentId, ...migrated.map(({ lease }) => lease.documentId)],
+      });
+      // The directory's rows would otherwise outlive the move: the indexer adds rows for the objects it finds.
+      await RuntimeProvider.runPromise(this._runtime)(
+        this.indexEngine.deleteObjects({
+          spaceId,
+          documentIds: [],
+          objects: migrated.map(({ objectId }) => ({ documentId: root.documentId, objectId })),
+        }),
+      );
+      log.info('migrated inline objects out of the space directory', { spaceId, objects: migrated.length });
+    } finally {
+      for (const lease of leases.values()) {
+        lease[Symbol.dispose]();
+      }
+    }
   }
 
   /**
@@ -1835,10 +1985,18 @@ export class EchoHost extends Resource {
 
       {
         performance.mark('indexEngine.update.automerge:start');
-        const result = await this.indexEngine
-          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
-          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
-        _mergeInto(combinedResult, result);
+        // A feed append changes no document, yet the document leg reads the heads of every document and
+        // every cursor to find that out; an agent turn appends many times a second.
+        const scanDocuments = !this.#documentsDrained || !_onlyFeedReasons(reasons);
+        const result = scanDocuments
+          ? await this.indexEngine
+              .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
+              .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime))
+          : undefined;
+        if (result) {
+          _mergeInto(combinedResult, result);
+          this.#documentsDrained = result.done && result.drained;
+        }
 
         // Convergence-key duplicates are born from replication, and a replicated write is exactly what
         // was just indexed — so this is the earliest a duplicate can be detected on this device.
@@ -1879,7 +2037,7 @@ export class EchoHost extends Resource {
               track: 'Indexing',
               trackGroup: 'ECHO', // Group related tracks together
               color: 'tertiary-dark',
-              properties: [['count', result.updated]],
+              properties: [['count', result?.updated ?? 0]],
             },
           },
         });
@@ -1932,7 +2090,7 @@ export class EchoHost extends Resource {
       // A document is only rebuilt for its history from index state that has caught up with it.
       if (this.#historyCandidates.size > 0) {
         for (const spaceId of combinedResult.spaces) {
-          this.#scheduleRetirement(spaceId);
+          this.#scheduleDirectoryMaintenance(spaceId);
         }
       }
       if (combinedResult.updated > 0) {
@@ -2018,6 +2176,14 @@ type MutableIndexingAccumulator = {
   documents: Set<string>;
   types: Set<string>;
   objects: Set<EntityId>;
+};
+
+/** Index runs a feed append starts; every other reason may follow a document save. */
+const FEED_ONLY_REASONS: ReadonlySet<string> = new Set(['feed-blocks', 'trace-blocks']);
+
+const _onlyFeedReasons = (reasons: Record<string, number>): boolean => {
+  const triggers = Object.keys(reasons);
+  return triggers.length > 0 && triggers.every((reason) => FEED_ONLY_REASONS.has(reason));
 };
 
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({

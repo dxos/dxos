@@ -1,0 +1,442 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-commerce/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: CommercePlugin
+
+49 items: 13 done, 9 untested, 8 partial, 11 diverged, 8 missing. The template pipeline is solid and unit-tested:
+the mapping schemas, `bindRequest`, `extractResults`, the JSON Schema union and `applyProviderTemplate` all have
+tests, and a `manual` agent test drives the provider skill through AnalyzeProvider and SetProviderTemplate against a
+real page. Apart from that manual test, no test invokes an operation handler, and no story has a play function.
+
+The code moved away from the spec in its data model and UI. `Search` keeps criteria in `params`, appends Results to a
+backing feed (deduplicated by URL, accumulating across runs) instead of `results: Ref<Result>[]`, has no `status`, and
+adds a star tag index. `Provider` has no `enabled` field, so nothing skips disabled providers. The criteria form and
+the Run button live in the `SearchProperties` companion, not in SearchArticle; the result detail replaces the grid in
+the same panel; ProviderArticle is a read-only preview with a Regenerate action that runs the skill agent through a
+new `GenerateProviderTemplate` operation. RangeField exists but is not used.
+
+Gaps that matter:
+
+- **F-1.6 / RunSearch:** there is no `Provider.enabled`, so disabled providers cannot be skipped; RunSearch runs
+  every provider in sequence and never clears or sets status.
+- **Search model diverged:** F-3.2, F-3.4, F-3.5 and the `Search` type describe `status` and `results` refs that
+  the code replaced with ephemeral UI state and a feed; the spec needs updating to the feed design.
+- **No handler or UI tests:** RunSearch, RunProviderSearch and the Run button (T-3, T-4, T-5, T-7) are not
+  exercised.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Provider: The fields match except `enabled`, which does not exist.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#Provider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.test.ts]
+  note: |
+    `name`, `url`, `description?`, `kind`, `searchSchema?`, `request?` and `result?` match. There is no `enabled`
+    field. The icon is `ph--package--regular`, not the globe, and the skill annotation names
+    `org.dxos.plugin.commerce.skill.provider` (dotted, since slashes are not valid in the key).
+```
+
+```mdl
+verdict RequestMapping: Method, urlTemplate, query, body and headers match.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#RequestMapping]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.test.ts]
+```
+
+```mdl
+verdict FieldBinding: `field` and optional `transform` match.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#FieldBinding]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.test.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/util/bindRequest.test.ts]
+```
+
+```mdl
+verdict ResultMapping: responseType, itemLocator and fields match.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#ResultMapping]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.test.ts]
+```
+
+```mdl
+verdict FieldExtractor: selector, attr and path match.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#FieldExtractor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.test.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/util/extractResults.test.ts]
+```
+
+```mdl
+verdict Search: Search keeps criteria in `params` and Results in a feed, with no `status` or `results` refs.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Search.ts#Search, github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Search.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Search.test.ts]
+  note: |
+    Fields are `name?`, `providers`, `params` (not `criteria`), `feed: Ref<Feed>` of immutable Results (not
+    `results: Ref<Result>[]`), `tags: Ref<TagIndex>` for starring, and `lastRunAt?`. There is no `status`; run
+    progress is ephemeral UI state. Search.test.ts checks `make` defaults and starring.
+```
+
+```mdl
+verdict Result: All fields match.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Result.ts#Result]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Result.test.ts]
+  note: The typename is `org.dxos.type.productSearchResult`; user state such as starred lives on the Search's tag index.
+```
+
+```mdl
+verdict SearchArticle: SearchArticle shows only the result grid and detail; providers, criteria and Run live in SearchProperties.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx#SearchArticle, github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties]
+  walkthrough:
+    - SearchArticle renders the feed's Results as a masonry grid with an all/starred filter, and the selected result's detail in place of the grid. github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx#SearchArticle
+    - SearchProperties, the object-properties companion, holds the criteria form and the Run button; providers are picked by the generic form. github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties
+  note: |
+    There is no left pane with provider checkboxes and criteria, and the detail does not open in a companion pane.
+    The stories render the article without a play function.
+```
+
+```mdl
+verdict ResultCard: The card shows the image, title, price and a star toggle, but no key properties.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx#ResultCard, github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultTile.tsx#ResultTile]
+  walkthrough:
+    - ResultTile wraps the card for the masonry, whose item selects the result on activate. github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultTile.tsx#ResultTile
+    - ResultCard shows the first image, a 2-line title, the price and a star toggle. github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx#ResultCard
+  note: |
+    `properties` are not shown, there is no `provider` prop, and opening is the masonry item's `onActivate`, not an
+    `onOpen` event. The stories have no play function.
+```
+
+```mdl
+verdict ProviderArticle: ProviderArticle is a read-only preview of the search fields with a Regenerate toolbar action.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/ProviderArticle/ProviderArticle.tsx#ProviderArticle, github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts]
+  walkthrough:
+    - ProviderArticle lists the derived search fields read-only and shows the node's toolbar actions. github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/ProviderArticle/ProviderArticle.tsx#ProviderArticle
+    - The app graph adds a Regenerate toolbar action that invokes GenerateProviderTemplate. github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts
+  note: |
+    There are no name/url/kind fields or a code-editor region for the mappings; those are edited in the generic
+    properties form. The action is "Regenerate", which runs the skill agent, not an "Analyze" button. No test.
+```
+
+```mdl
+verdict AnalyzeProviderSkill: The skill exposes AnalyzeProvider and SetProviderTemplate, under a dotted key.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/skills/provider-skill.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#SKILL_KEY, github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/skill-definition.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/generate-template.skill.test.ts]
+  walkthrough:
+    - SKILL_KEY is `org.dxos.plugin.commerce.skill.provider`. github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#SKILL_KEY
+    - The skill lists the two tools and instructs the agent to analyze, then persist the template. github:dxos/dxos/packages/plugins/plugin-commerce/src/skills/provider-skill.ts
+    - The skill-definition module contributes it. github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/skill-definition.ts
+  note: |
+    The tools and flow match; the key is `org.dxos.plugin.commerce.skill.provider`, not
+    `org.dxos.plugin.commerce/skill/provider`, because the key must be a valid NSID. The agent test is tagged `manual`.
+```
+
+```mdl
+verdict AnalyzeProvider: It fetches the site, but returns a cleaned, truncated page with a structure summary, and renders scrape targets in the browser extension.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#AnalyzeProvider, github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/analyze-provider.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/generate-template.skill.test.ts]
+  walkthrough:
+    - The operation takes a provider ref and returns a string. github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#AnalyzeProvider
+    - The handler renders scrape targets through RenderPage, fetches api targets through the edge proxy, then cleans and summarizes the page. github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/analyze-provider.ts
+  note: |
+    The output is not the raw source: `cleanHtml` strips noise and truncates to 200 KB, and `summarizeStructure`
+    prepends repeating-structure hints. Scrape targets go through the composer-crx render path, not the edge proxy.
+    Only the manual agent test drives the handler.
+```
+
+```mdl
+verdict SetProviderTemplate: It parses the JSON-string schema and writes schema, request and result in one update.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#SetProviderTemplate, github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/set-provider-template.ts#applyProviderTemplate]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/set-provider-template.test.ts]
+  walkthrough:
+    - The operation takes `searchSchema` as a JSON string with the two mappings. github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#SetProviderTemplate
+    - applyProviderTemplate writes all three fields in one `Obj.update`. github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/set-provider-template.ts#applyProviderTemplate
+  note: The unit test calls `applyProviderTemplate`; the JSON-string parse in the handler is exercised only by the manual agent test.
+```
+
+```mdl
+verdict RunProviderSearch: It runs one template and appends new Results to the Search's feed, returning a count, not refs.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#RunProviderSearch, github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-provider-search.ts#buildResults]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-provider-search.test.ts]
+  walkthrough:
+    - The operation returns the number of newly appended Results. github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#RunProviderSearch
+    - The handler binds params, fetches or renders the page, extracts rows (self-healing an empty html mapping) and appends unseen URLs to the feed. github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-provider-search.ts#buildResults
+  note: |
+    Output is `number`, not `Ref<Result>[]`. It skips providers without request/result, but there is no `enabled` to
+    check. The test covers `buildResults` only, not the handler.
+```
+
+```mdl
+verdict RunSearch: It runs each provider in sequence and sets lastRunAt; it neither clears results nor sets status.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#RunSearch, github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-search.ts]
+  walkthrough:
+    - The operation takes a search ref and returns nothing. github:dxos/dxos/packages/plugins/plugin-commerce/src/types/SearchOperation.ts#RunSearch
+    - The handler invokes RunProviderSearch per provider, swallowing failures, then stamps `lastRunAt`. github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-search.ts
+  note: |
+    Results accumulate in the feed instead of being replaced; providers run one after another, not in parallel; no
+    `enabled` filter and no `status` writes. No test.
+```
+
+```mdl
+verdict F-1.1: The create menu has a Provider entry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/create-object.ts]
+  note: A new Provider defaults to kind `scrape`. No test invokes the create entry.
+```
+
+```mdl
+verdict F-1.2: Provider.kind is `'api' | 'scrape'`.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#Provider]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.test.ts]
+```
+
+```mdl
+verdict F-1.3: searchSchema is a JSONSchema that the union form schema is built from.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#Provider, github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.ts#buildUnionFormSchema]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.test.ts]
+  walkthrough:
+    - Provider stores `searchSchema` as a JSONSchema hidden from forms. github:dxos/dxos/packages/plugins/plugin-commerce/src/types/Provider.ts#Provider
+    - buildUnionFormSchema converts it to the Effect schema that drives the criteria form. github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.ts#buildUnionFormSchema
+```
+
+```mdl
+verdict F-1.4: bindRequest maps criteria to the URL template and query parameters.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/bindRequest.ts#bindRequest]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/bindRequest.test.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/autotrader-search.test.ts]
+```
+
+```mdl
+verdict F-1.5: extractResults turns html or json responses into result rows.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/extractResults.ts#extractResults]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/extractResults.test.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/autotrader-fixture.test.ts]
+```
+
+```mdl
+verdict F-1.6: Provider has no `enabled` field, so nothing skips disabled providers.
+  status: missing
+  note: Searched plugin-commerce/src for `enabled`; only the RunSearch description mentions it. Provider's schema has no such field and RunSearch runs every provider.
+```
+
+```mdl
+verdict F-2.1: AnalyzeProvider fetches the vendor site and returns its (cleaned) source.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/analyze-provider.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/util/fetch.ts#fetchPage]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/generate-template.skill.test.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/util/renderViaCrx.test.ts]
+  walkthrough:
+    - The handler routes scrape targets to RenderPage and api targets to fetchPage, then cleans the body. github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/analyze-provider.ts
+    - fetchPage goes through the edge proxy, or the extension render when asked and available. github:dxos/dxos/packages/plugins/plugin-commerce/src/util/fetch.ts#fetchPage
+  note: The agent test that runs the handler is tagged `manual`; renderViaCrx.test.ts covers the fetch routing.
+```
+
+```mdl
+verdict F-2.2: SetProviderTemplate writes the three fields in one update.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/set-provider-template.ts#applyProviderTemplate]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/set-provider-template.test.ts]
+```
+
+```mdl
+verdict F-2.3: A Regenerate toolbar action runs the skill agent through GenerateProviderTemplate.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts, github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/generate-provider-template.ts]
+  walkthrough:
+    - The Provider node's Regenerate toolbar action invokes GenerateProviderTemplate. github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts
+    - The handler materializes the skill in the space and runs instructions that call analyze then set. github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/generate-provider-template.ts
+  note: The button is labelled Regenerate, not Analyze. No test clicks it or invokes GenerateProviderTemplate.
+```
+
+```mdl
+verdict F-2.4: RunProviderSearch runs once request and result are set.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-provider-search.ts]
+  note: The handler's only gate is `request && result`. No test runs the handler on a provider after SetProviderTemplate.
+```
+
+```mdl
+verdict F-3.1: Run Search is a button in SearchProperties and a node action, not in the SearchArticle toolbar.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties, github:dxos/dxos/packages/plugins/plugin-commerce/src/capabilities/app-graph-builder.ts]
+  note: The SearchArticle toolbar holds only the all/starred filter.
+```
+
+```mdl
+verdict F-3.2: Clicking Run disables the button through local state; Search.status does not exist.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties]
+  note: '`running` is component state that disables the button and changes its label; nothing is written to the Search. No test.'
+```
+
+```mdl
+verdict F-3.3: RunSearch invokes RunProviderSearch for every provider, with no enabled filter.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-search.ts]
+  note: Every provider ref is run in sequence; there is no `enabled` field to filter on (F-1.6). No test.
+```
+
+```mdl
+verdict F-3.4: Results go into the Search's feed, not Search.results refs.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-provider-search.ts]
+  note: Each provider run appends unseen URLs to `search.feed`; results accumulate across runs rather than being merged into a refs array. No test.
+```
+
+```mdl
+verdict F-3.5: lastRunAt is set after the run; there is no status to reset.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-search.ts]
+  note: RunSearch stamps `lastRunAt` with an ISO string; `Search.status` does not exist. No test.
+```
+
+```mdl
+verdict F-3.6: A failing provider run is caught and the loop continues.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/run-search.ts]
+  note: Each RunProviderSearch invocation is wrapped in `Effect.catch(() => Effect.succeed(0))`. No test.
+```
+
+```mdl
+verdict F-3.7: The Run button is disabled when no provider is selected.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties]
+  note: The button is in SearchProperties, disabled when `selectedProviders` is empty. The node's Run action has no such guard. No test.
+```
+
+```mdl
+verdict F-4.1: SearchProperties computes the union of the selected providers' schemas.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.ts#mergeJsonSchemas, github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties]
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.test.ts]
+  walkthrough:
+    - SearchProperties resolves the selected providers and builds the union form schema. github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties
+    - mergeJsonSchemas unions properties by name, first definition winning. github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.ts#mergeJsonSchemas
+  note: The union is computed in the properties companion, not in SearchArticle.
+```
+
+```mdl
+verdict F-4.2: The form renders one field per union property from its JSON Schema type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.ts#buildUnionFormSchema, github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties]
+  note: unionSchema.test.ts checks the converted schema exposes each property; no test renders the form.
+```
+
+```mdl
+verdict F-4.3: RangeField exists but no form uses it.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/components/RangeField/RangeField.tsx#RangeField]
+  note: RangeField is referenced only by its own story; the criteria form uses the generic `Form.Fields`, so min/max fields render as two plain inputs.
+```
+
+```mdl
+verdict F-4.4: Criteria values are stored in Search.params, keyed by field name.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties]
+  note: The behaviour matches but the field is `params`, not `criteria`. No test.
+```
+
+```mdl
+verdict F-4.5: The form re-keys on the provider set and keeps orphaned params.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchProperties/SearchProperties.tsx#SearchProperties]
+  note: |
+    The Form is keyed by the selected provider ids and seeded from all of `search.params`; its values carry the
+    seed's keys, so the auto-save keeps values for fields no longer in the union. No test.
+```
+
+```mdl
+verdict F-5.1: SearchArticle renders the feed's Results as a Masonry grid of ResultCard tiles.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx#SearchArticle]
+  note: The source is the Search's feed, not `Search.results`. The stories have no play function.
+```
+
+```mdl
+verdict F-5.2: Tiles show image, title and price, but no key properties.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/ResultCard/ResultCard.tsx#ResultCard]
+  note: '`result.properties` is never rendered on the card. No test.'
+```
+
+```mdl
+verdict F-5.3: Clicking a tile shows ResultDetail in place of the grid, not in a companion pane.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx#SearchArticle, github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/ResultDetail.tsx#ResultDetail]
+  note: Selection goes through `LayoutOperation.Select`; the article body swaps to ResultDetail with a close control. No test.
+```
+
+```mdl
+verdict F-5.4: An empty state shows when there are no results (or no starred ones).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-commerce/src/containers/SearchArticle/SearchArticle.tsx#SearchArticle]
+  note: No play function checks the empty message.
+```
+
+```mdl
+verdict T-1: No automation creates a Provider through the create menu.
+  status: missing
+  note: No test invokes the create entry; the scenario's `enabled = true` also has no field to check (F-1.6).
+```
+
+```mdl
+verdict T-2: A unit test checks the three fields are written, but not through the operation's JSON-string input.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/operations/set-provider-template.test.ts]
+  note: set-provider-template.test.ts calls `applyProviderTemplate` with a parsed schema; the handler's `JSON.parse` of the string input is not exercised.
+```
+
+```mdl
+verdict T-3: No test runs RunProviderSearch on an untemplated provider.
+  status: missing
+  note: run-provider-search.test.ts tests `buildResults` on a templated provider only.
+```
+
+```mdl
+verdict T-4: No test runs RunSearch.
+  status: missing
+  note: Nothing invokes the RunSearch handler; the scenario's `results` and `status` assertions also no longer match the model.
+```
+
+```mdl
+verdict T-5: No test runs RunSearch with a failing provider.
+  status: missing
+  note: Nothing invokes the RunSearch handler.
+```
+
+```mdl
+verdict T-6: The union test covers a shared field, but not the rendered form.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-commerce/src/util/unionSchema.test.ts]
+  note: '`mergeJsonSchemas` is tested with one shared and one unique field (two total, not three); no test renders the criteria form.'
+```
+
+```mdl
+verdict T-7: No test renders the Run button with no providers.
+  status: missing
+  note: The SearchArticle stories have no play function, and the button lives in SearchProperties, which has no story.
+```
+
+```mdl
+verdict QA-1: No automated test runs the QA round trip.
+  status: missing
+  note: It is a manual or composer-qa run (status `unverified`); no Playwright spec covers plugin-commerce.
+```

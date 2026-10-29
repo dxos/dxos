@@ -1,0 +1,243 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-board/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: BoardPlugin
+
+The board works as the spec describes at the component level: `BoardArticle` resolves `board.items`
+refs reactively (dropping unresolved ones), adds a new Markdown document at a backdrop position, adds
+an existing object through a sorted `ObjectPicker` that excludes the board, removes the ref and the
+layout cell without deleting the object, and writes moves back with `Obj.update`. But almost none of it
+is tested: the only plugin test checks module activation, and the single story renders a default
+board with no interactions. The four `op` blocks have no runtime counterparts — `createBoard` is a
+`CreateObjectEntry` that does not pass `hidden: true`, and add / remove / move are inline component
+callbacks. Attention gates only the toolbar buttons; backdrop add and drag stay live without
+attention, against F-6.1. No acceptance scenario or QA test has automation.
+
+Of 31 items: 3 done, 16 untested, 1 partial, 4 diverged, 7 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Position: CellLayout carries x, y and optional w, h.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-board/src/components/Board/types.ts#CellLayout]
+  tests: [github:dxos/dxos/packages/ui/react-ui-board/src/components/Board/engine.test.ts]
+  note: The spec's `Position` is `CellLayout` in code; `Position` there has only x and y.
+```
+
+```mdl
+verdict BoardLayout: BoardLayout has the cells record plus a size field the spec omits.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-board/src/components/Board/types.ts#BoardLayout]
+  note: "`size: { width, height }` (default 7×5) bounds the grid; the spec lists only `cells`. No test exercises the schema."
+```
+
+```mdl
+verdict Board: Board has optional name, items as Ref array and layout, with typename org.dxos.type.board.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/types/Board.ts#Board, github:dxos/dxos/packages/plugins/plugin-board/src/types/Board.ts#makeBoard]
+  note: No test creates a Board.
+```
+
+```mdl
+verdict BoardArticle: The article renders toolbar, viewport, backdrop, cells and picker as sketched.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.stories.tsx]
+  note: |
+    Picker state lives in an inner `BoardObjectPicker`, and the article adds center and zoom buttons and an overview
+    map. The story is a smoke render with no interactions.
+```
+
+```mdl
+verdict createBoard: There is no createBoard operation; a CreateObjectEntry invokes SpaceOperation.AddObject without hidden.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-board/src/types/Board.ts#makeBoard]
+  note: The spec's note says it delegates with `hidden=true`; the entry passes only `object` and `target`.
+```
+
+```mdl
+verdict addItem: Not an operation; two component callbacks add an item (new Markdown at a position, or a picked object at 0,0).
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: "`handleAdd` and `handleSelect` call `Obj.update` directly; there is no `Operation.make` to invoke, so it cannot be driven or undone."
+```
+
+```mdl
+verdict removeItem: Not an operation; handleDelete in the component removes the ref and the cell.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: Behaviour matches the spec (the object is kept), but it is a component callback, not an op.
+```
+
+```mdl
+verdict moveItem: Not an operation; handleChange in the component writes the engine's new cells map.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: It replaces `board.layout.cells` wholesale with the engine output rather than updating one id.
+```
+
+```mdl
+verdict F-1.1: makeBoard sets items to [] and layout to the default (empty cells).
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/types/Board.ts#makeBoard]
+  note: No test checks a new board's items or cells.
+```
+
+```mdl
+verdict F-1.2: The create-object entry invokes SpaceOperation.AddObject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/capabilities/create-object.ts]
+  note: "`plugin.test.ts` only checks that the schema module activates."
+```
+
+```mdl
+verdict F-1.3: Visibility in the object list follows from AddObject; nothing board-specific to test.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/capabilities/create-object.ts]
+  note: Relies on plugin-space's AddObject; no test in this package.
+```
+
+```mdl
+verdict F-2.1: The backdrop "+" adds a new Markdown document at the given position.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: "`handleAdd` does `db.add(Markdown.make())` and sets the cell; no test clicks the backdrop."
+```
+
+```mdl
+verdict F-2.2: The toolbar "+" opens an ObjectPicker over all space objects except the board.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: "`BoardObjectPicker` queries `Filter.everything()` and filters out `board.id`; objects with no label are also dropped."
+```
+
+```mdl
+verdict F-2.3: Selecting an object pushes its Ref and sets its cell to { x: 0, y: 0 }.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: "`handleSelect` uses `DEFAULT_POSITION`; no test."
+```
+
+```mdl
+verdict F-2.4: Picker options are sorted case-insensitively by label.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: Sort is `localeCompare` on lower-cased labels; no test.
+```
+
+```mdl
+verdict F-3.1: Deleting a cell removes the Ref and the layout entry; the object is not deleted.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: "`handleDelete` matches the ref by parsed EID; no test."
+```
+
+```mdl
+verdict F-3.2: Removal runs in one Obj.update.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: The index lookup runs before `Obj.update`, but both mutations sit in one update; no test.
+```
+
+```mdl
+verdict F-4.1: A drag writes the engine's new layout to board.layout.cells.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: "`handleChange` is wired to the board's `onChange`; no plugin test drags a cell."
+```
+
+```mdl
+verdict F-4.2: The resizeToFit resolver shrinks the moved tile instead of displacing others.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-board/src/components/Board/engine.ts#resizeToFit]
+  tests: [github:dxos/dxos/packages/ui/react-ui-board/src/components/Board/engine.test.ts]
+  note: A legacy board with negative coordinates has every cell shifted by `normalizeCells` on its first write.
+```
+
+```mdl
+verdict F-5.1: Each resolved item renders as a Surface with the CardContent role inside a board cell.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: The role is `AppSurface.CardContent`. The story renders an empty board.
+```
+
+```mdl
+verdict F-5.2: Refs that do not resolve are skipped when building the items atom.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: Items with no layout cell are also skipped. No test.
+```
+
+```mdl
+verdict F-5.3: Cells render in board.items order.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: DOM order follows `items`; there is no explicit z-index by index. No test.
+```
+
+```mdl
+verdict F-6.1: Toolbar buttons are disabled without attention, but backdrop add and drag are not suppressed.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: "`hasAttention` reaches only the three `Button.Root`s; `BoardComponent.Root` gets no disabled or attention prop."
+```
+
+```mdl
+verdict F-6.2: The toolbar buttons enable when the surface gains attention.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-board/src/containers/BoardArticle/BoardArticle.tsx#BoardArticle]
+  note: Driven by `useAttention(attendableId)`; no test.
+```
+
+```mdl
+verdict T-1: No test checks a new board is empty.
+  status: missing
+  note: "`plugin.test.ts` only checks module activation."
+```
+
+```mdl
+verdict T-2: No test clicks the backdrop "+".
+  status: missing
+  note: No play function in `BoardArticle.stories.tsx` and no e2e spec for boards.
+```
+
+```mdl
+verdict T-3: No test drives the ObjectPicker.
+  status: missing
+  note: Searched the package tests and stories.
+```
+
+```mdl
+verdict T-4: No test removes a cell.
+  status: missing
+  note: Searched the package tests and stories.
+```
+
+```mdl
+verdict T-5: No test drags a cell in the plugin.
+  status: missing
+  note: "`engine.test.ts` in react-ui-board tests the resolvers, not the board object update."
+```
+
+```mdl
+verdict T-6: No test checks the attention-gated toolbar.
+  status: missing
+  note: Searched the package tests and stories.
+```
+
+```mdl
+verdict QA-1: Manual QA only; no automation.
+  status: missing
+  note: The autocue `showcase.mjs` records a clip but asserts nothing about items or layout.
+```

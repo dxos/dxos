@@ -101,6 +101,15 @@ export type AgentResponse = {
   optionId: string;
 };
 
+/** A setting an `ownModel` agent lets each chat choose, by the `chat.session` field that keeps the choice. */
+export type AgentSetting = 'agentModel' | 'agentEffort' | 'agentMode';
+
+/** One value an agent offers for an {@link AgentSetting}. */
+export type AgentChoice = { readonly id: string; readonly label: string };
+
+/** The values an agent offers for each setting it lets a chat choose; a chat that chooses none gets the agent's default. */
+export type AgentChoices = Partial<Record<AgentSetting, readonly AgentChoice[]>>;
+
 /**
  * An agent a chat can run on, keyed by `chat.session.harness`. Each plugin registers the agents it
  * provides; this plugin registers Composer's own loop as `composer`.
@@ -121,6 +130,8 @@ export type Agent = {
   readonly variantOf?: string;
   /** The agent chooses its own model, so the chat's model does not apply and pickers offer none. */
   readonly ownModel?: boolean;
+  /** What an `ownModel` agent lets a chat choose (its model, effort, permissions), offered by pickers. */
+  readonly choices?: AgentChoices;
   readonly availability: Atom.Atom<AgentAvailability>;
   readonly makeTurnProducer: MakeTurnProducer;
   /** Hands a person's answer to the agent; false when nothing is waiting on that request. */

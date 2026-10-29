@@ -1,0 +1,189 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-map-solid/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: MapSolidPlugin
+
+The plugin is small and matches its spec closely. `MapSurface.tsx` registers `dx-map-surface` with
+`solid-element`, calls `noShadowDOM()`, derives markers reactively from the Map's linked View, and
+toggles between `MapControl` and `GlobeControl` with a local signal. `capabilities/surface.tsx` routes
+article and section roles for `Map.Map` objects to the element at `Position.first`. The gap is tests:
+the only test (`plugin.test.ts`) checks that the plugin enables, so nothing exercises the surface, the
+marker derivation or the toggle, and no story exists. Minor divergences: `MapViewType` is an inline
+literal union rather than a named type, `resolveSurfaceMarkers` is a memo inside the component rather
+than an op, and the element registers when the lazy surface module loads, not on plugin activation.
+
+Of 23 items: 0 done, 15 untested, 1 partial, 1 diverged, 6 missing (the five acceptance scenarios
+and QA-1, which no automation runs).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict MapViewType: The map/globe mode exists only as an inline literal union on the toggle signal.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: `createSignal<'map' | 'globe'>('map')` in `MapSurface` carries the two literals, but no named `MapViewType` type is declared or exported.
+```
+
+```mdl
+verdict GeoMarker: GeoMarker comes from solid-ui-geo with id and a lat/lng location.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/solid-ui-geo/src/types.ts#GeoMarker]
+  note: Declared in `@dxos/solid-ui-geo` (adds an optional `title`), not in this plugin; no test of the plugin uses it.
+```
+
+```mdl
+verdict MapSurfaceData: The element's data prop carries a Map subject.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: Declared inline as `MapSurfaceProps.data: { subject: Map.Map }`, not as a named type; no test renders the element.
+```
+
+```mdl
+verdict MapSurface: dx-map-surface reads the View, derives markers and toggles between map and globe.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: Signal, derived markers, `<Show>` layout and toggle callbacks match the spec; there is no story or test of the component.
+```
+
+```mdl
+verdict MapControl: Leaflet tile map with markers and a toggle action.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/Map/MapControl.tsx#MapControl]
+  note: Renders `Map.Root`/`Map.Tiles`/`Map.Markers` from solid-ui-geo and calls `onToggle` on the toggle action; no test.
+```
+
+```mdl
+verdict GlobeControl: Orthographic globe with marker points and a toggle action.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/Globe/GlobeControl.tsx#GlobeControl]
+  note: Renders `Globe.Canvas` with marker points, drag and tour, and calls `onToggle` on the toggle action; no test.
+```
+
+```mdl
+verdict resolveSurfaceMarkers: Marker derivation exists as a component memo, not an op.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: |
+    The `markers` memo in `MapSurface` queries objects of the View's type via `useQuery` and reads the pivot field's
+    GeoPoint, dropping malformed rows. There is no operation or exported function named `resolveSurfaceMarkers`;
+    QA-1 itself notes it is a reactive derivation, not an invocable op.
+```
+
+```mdl
+verdict F-1.1: The element registers when the lazy surface module loads.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/surface.tsx, github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  walkthrough:
+    - The surface module imports the MapSurface module for its side effect. github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/surface.tsx
+    - That module calls customElement('dx-map-surface', ...). github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx
+  note: Registration is a side effect of loading the surface capability module, which activates with the plugin; `plugin.test.ts` enables the plugin but uses the node variant with no surface modules, so registration is not checked.
+```
+
+```mdl
+verdict F-1.2: Article and section roles route Map objects to dx-map-surface at position first.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/surface.tsx, github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/index.ts#Surface]
+  note: `Surface.createWeb` with `tagName: 'dx-map-surface'` and `Position.first` for `AppSurface.Article` and `AppSurface.Section`; no test.
+```
+
+```mdl
+verdict F-1.3: The filter matches only Map.Map instances.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/surface.tsx, github:dxos/dxos/packages/sdk/app-toolkit/src/ui/components/AppSurface/AppSurface.ts#object]
+  note: `AppSurface.object(..., Map.Map)` guards with `Entity.instanceOf` (the generalisation of `Obj.instanceOf`); no test in this plugin.
+```
+
+```mdl
+verdict F-2.1: The typename and schema memos follow the View and the query re-runs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: `typeUri` is a memo over `view()`, `useType` resolves the schema, and `filter` feeds `useQuery`; no test.
+```
+
+```mdl
+verdict F-2.2: New rows add markers through the reactive memo without remounting.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: `useQuery` updates `objects()` and the `markers` memo recomputes; no test.
+```
+
+```mdl
+verdict F-2.3: Rows with absent or non-numeric GeoPoints are dropped.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: The mapper returns `undefined` for a missing pivot, non-array or short array, or non-number lat/lng, then filters nullish; no test.
+```
+
+```mdl
+verdict F-3.1: MapControl's toggle switches the signal to globe.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx, github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/Map/MapControl.tsx#MapControl]
+  note: `onToggle={() => setType('globe')}`; no test.
+```
+
+```mdl
+verdict F-3.2: GlobeControl's toggle switches the signal to map.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx, github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/Globe/GlobeControl.tsx#GlobeControl]
+  note: `onToggle={() => setType('map')}`; no test.
+```
+
+```mdl
+verdict F-3.3: Toggle state is a per-instance signal.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: `createSignal` is called inside the component body, so each element has its own; no test.
+```
+
+```mdl
+verdict F-4.1: The element calls noShadowDOM().
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/components/MapSurface/MapSurface.tsx]
+  note: First statement of `MapSurface`; no test asserts light-DOM rendering.
+```
+
+```mdl
+verdict T-1: No automated test opens a Map and checks for dx-map-surface.
+  status: missing
+  note: Only `plugin.test.ts` exists, and it checks the plugin enables; no story, browser or e2e test. QA-1 covers this manually.
+```
+
+```mdl
+verdict T-2: No test renders markers from a linked View.
+  status: missing
+  note: No test or story in `src/`.
+```
+
+```mdl
+verdict T-3: No test covers the null-GeoPoint filter.
+  status: missing
+  note: No test or story in `src/`.
+```
+
+```mdl
+verdict T-4: No test drives the toggle to globe.
+  status: missing
+  note: No test or story in `src/`; QA-1 step 3 is manual.
+```
+
+```mdl
+verdict T-5: No test evaluates the filter against a non-Map object.
+  status: missing
+  note: No test in `src/` evaluates the surface filter.
+```
+
+```mdl
+verdict QA-1: Manual round-trip only; no automation runs it.
+  status: missing
+  note: The test is `actors: human` with a human-only create step; no Playwright spec or automated run exists.
+```

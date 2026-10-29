@@ -1,0 +1,247 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-typefully/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TypefullyPlugin
+
+The spec describes the Typefully **v1** API with three unsupported verbs; the code has moved to the
+**v2** API with full CRUD. Every draft call first resolves a social set (`GET /social-sets`, team set
+preferred), then hits `/v2/social-sets/{id}/drafts[/{draftId}]` with `Authorization: Bearer`
+through the DXOS CORS proxy. The connector entry and its blank-key rejection match the spec and are
+tested; create, list, update and delete are tested against a stubbed fetch.
+
+Of 29 items: 6 done, 4 untested, 0 partial, 15 diverged, 4 missing. Findings:
+
+- **F-5 and the F-6 limitations no longer hold.** getDraft, updateDraft and deleteDraft issue real
+  v2 requests (GET, PATCH, DELETE), so re-publish, import of unlinked drafts and unpublish should
+  now work; T-6 to T-9 test behaviour that the code no longer has.
+- **Auth and endpoints changed.** `X-API-KEY: Bearer` is now `Authorization: Bearer`; `POST
+  /v1/drafts/` with `content` is now a platform/posts body; `schedule-date` is now `publish_at`;
+  list is the social set's drafts, not `recently-published`.
+- **The F-6 operations do not exist.** plugin-blogger has one `syncPosts`, not PublishDraft,
+  ImportDrafts and UnpublishDraft; the spec should be rewritten against v2 and syncPosts.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict TypefullyDraftResponse: The v2 response has id, draft_title, scheduled_date and per-platform posts.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: No content, text or share_url; body text is joined from platforms[x].posts[].text, and no url is mapped.
+```
+
+```mdl
+verdict SubmitTypefullyCredentials: credentialForm.onSubmit trims the key and returns an AccessToken and Connection as complete.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.ts#createTypefullyConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.test.ts]
+  note: The form field is `token`, not `apiKey`.
+```
+
+```mdl
+verdict TypefullyPublisherService: Implements all five verbs against the v2 API with Bearer auth.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService, github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#fromConnection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: |
+    Every verb calls the network; nothing rejects unconditionally. Auth is `Authorization: Bearer`,
+    not `X-API-KEY: Bearer`. MissingCredentialError is raised for an unresolved or detached connection, as specified.
+```
+
+```mdl
+verdict F-1.1: The connector entry (typefully, typefully.com, Typefully) is contributed on ConnectorEvents.Start.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/index.ts#Connector, github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.ts#createTypefullyConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.test.ts]
+  note: Activates on ConnectorEvents.Start, not AppActivationEvents.SetupConnectors.
+```
+
+```mdl
+verdict F-1.2: A non-blank key yields an AccessToken (typefully.com) and a linked Connection, kind complete.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.ts#createTypefullyConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict F-1.3: A whitespace-only key throws before anything is built.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.ts#createTypefullyConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict F-2.1: The service is contributed under BloggerCapabilities.PublisherService.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/index.ts#PublisherService, github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/publisher-service.ts]
+  note: No test checks the contribution.
+```
+
+```mdl
+verdict F-2.2: Credentials load the Connection then its AccessToken, and send Authorization Bearer.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#fromConnection]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: The header is `Authorization: Bearer <token>` (v2), not `X-API-KEY: Bearer <token>`.
+```
+
+```mdl
+verdict F-3.1: createDraft resolves a social set and POSTs a platform body, with publish_at when scheduled.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: POST /v2/social-sets/{id}/drafts with platforms.x.posts, not POST /v1/drafts/ with content and schedule-date.
+```
+
+```mdl
+verdict F-4.1: listDrafts GETs the social set's drafts, not recently-published.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: GET /v2/social-sets/{id}/drafts, a general list.
+```
+
+```mdl
+verdict F-5.1: getDraft issues GET on the v2 draft instead of rejecting.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  note: Supported now; no unit test covers getDraft.
+```
+
+```mdl
+verdict F-5.2: updateDraft issues PATCH instead of rejecting.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: Supported and tested.
+```
+
+```mdl
+verdict F-5.3: deleteDraft issues DELETE instead of rejecting.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: Supported and tested.
+```
+
+```mdl
+verdict F-6.1: First publish through blogger's syncPosts calls createDraft, which works.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  note: PublishDraft does not exist; blogger's syncPosts is the caller. No combined test.
+```
+
+```mdl
+verdict F-6.2: A re-publish calls updateDraft, which now succeeds.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  note: The spec says it fails; with v2 PATCH it no longer does.
+```
+
+```mdl
+verdict F-6.3: Importing unlinked drafts calls getDraft, which now succeeds.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  note: The spec says it fails; with v2 GET it no longer does.
+```
+
+```mdl
+verdict F-6.4: Unpublishing a linked draft calls deleteDraft, which now succeeds.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  note: The spec says it fails; with v2 DELETE it no longer does.
+```
+
+```mdl
+verdict F-7.1: 429, 5xx, transport and timeout (15 s) failures retry with jittered exponential back-off.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts]
+  note: Implemented by shouldRetry and TYPEFULLY_RETRY (three retries after the first try); no test.
+```
+
+```mdl
+verdict F-7.2: Decode failures and publisher errors are not retried.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts]
+  note: No test.
+```
+
+```mdl
+verdict T-1: The connector test checks kind, token, source, connectorId and the token ref.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.ts#createTypefullyConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict T-2: The connector test checks the blank-key rejection message.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.ts#createTypefullyConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict T-3: The create test checks the POST, Bearer auth and stringified id, against v2.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: It asserts Authorization Bearer and a platform body at /social-sets/ss1/drafts, not X-API-KEY and { content }.
+```
+
+```mdl
+verdict T-4: The schedule test checks publish_at, not schedule-date.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: Same intent, v2 field name.
+```
+
+```mdl
+verdict T-5: The list test GETs the social set's drafts and maps post text.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: Not recently-published.
+```
+
+```mdl
+verdict T-6: Tests now assert that update and delete do make requests.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.ts#makeTypefullyPublisherService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-typefully/src/services/typefully-api.test.ts]
+  note: The opposite of the scenario; no test covers getDraft.
+```
+
+```mdl
+verdict T-7: No test runs blogger's publish against Typefully.
+  status: missing
+  note: No test file in plugin-typefully or plugin-blogger combines the two; the scenario's expected failure is also stale.
+```
+
+```mdl
+verdict T-8: No test runs blogger's import against Typefully.
+  status: missing
+  note: No combined test; the expected failure is stale.
+```
+
+```mdl
+verdict T-9: No test runs blogger's unpublish against Typefully.
+  status: missing
+  note: No combined test; the expected failure is stale.
+```
+
+```mdl
+verdict QA-1: Not automated; its second step expects a failure the code no longer produces.
+  status: missing
+  note: Manual and blocked on a live API key. typefully-api.integration.test.ts runs a live create/delete when a key is present, which is not this flow.
+```

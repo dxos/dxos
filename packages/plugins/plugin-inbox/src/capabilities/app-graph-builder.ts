@@ -26,10 +26,10 @@ import { AI_ACTION_ICON } from '@dxos/ui-types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { createSyncProgressKey } from '#sync';
+import { createSyncProgressKey, withPendingSyncMonitor } from '#sync';
 import { Calendar, DraftEvent, InboxOperation, Mailbox, SystemTags } from '#types';
 
-import { MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants.ts';
+import { MAILBOX_MENU_DISPOSITION, MAILBOX_SUBSCRIPTIONS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants.ts';
 import {
   getAllMailId,
   getCalendarsPath,
@@ -523,7 +523,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
           // A bound mailbox whose provider plugin is not registered cannot sync — `Binding.sync` resolves
-          // no connector and returns — so the button stays as the toolbar's affordance but disabled,
+          // no connector and returns — so the item stays as the affordance but disabled,
           // rather than looking functional and doing nothing.
           const hasConnector = get(connectorAtom)
             .flat()
@@ -540,15 +540,15 @@ export default Capability.makeModule(
             return [
               {
                 id: 'sync',
-                data: () => Binding.sync(mailbox),
+                data: () =>
+                  withPendingSyncMonitor(mailbox, Option.getOrUndefined(progressRegistry), Binding.sync(mailbox)),
                 properties: {
                   label: ['sync-mailbox.label', { ns: meta.profile.key }],
                   icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
                   spin: isSyncing,
                   disabled: isSyncing || !hasConnector,
-                  // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
-                  disposition: ['toolbar', 'list-item'],
-                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  // Appears in the mailbox toolbar's ⋮ menu and as a nav-tree context-menu row.
+                  disposition: [MAILBOX_MENU_DISPOSITION, 'list-item'],
                   // The toolbar emits `data-testid` only for actions that set one; browser-e2e waits on it.
                   testId: 'inbox.mailbox.sync',
                 },
@@ -565,8 +565,7 @@ export default Capability.makeModule(
         actions: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
           const binding = liveBindingFor(mailbox, get);
-          // Gated on a connection, not rendered disabled: a disabled primary button still reads as the
-          // view's main call to action on a mailbox that has nothing to analyze yet.
+          // Gated on a connection, not rendered disabled: without one there is nothing to analyze.
           if (!db || !binding) {
             return Effect.succeed([]);
           }
@@ -606,8 +605,7 @@ export default Capability.makeModule(
                   icon: isScanning ? 'ph--stop--regular' : AI_ACTION_ICON,
                   // Never disabled mid-run: the control is Stop then, and cancelling has to stay open.
                   disabled: !isScanning && !synced,
-                  disposition: ['toolbar', 'list-item'],
-                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                  disposition: [MAILBOX_MENU_DISPOSITION, 'list-item'],
                   testId: 'inbox.mailbox.analyze',
                 },
               },

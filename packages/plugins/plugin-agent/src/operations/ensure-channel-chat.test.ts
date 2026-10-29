@@ -19,6 +19,7 @@ import { Text } from '@dxos/schema';
 import { Channel } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
+import { ConversationSkill, RelaySkill } from '#skills';
 import { AgentChannels, AgentEmail, AgentOperation, Mode } from '#types';
 
 import { makeTestChannel } from './testing.ts';
@@ -130,6 +131,41 @@ describe('EnsureChannelChat', () => {
         const bindings = yield* Feed.query(yield* Database.load(feed), Filter.type(AiContext.Binding)).run;
         const skills = bindings.flatMap(({ skills }) => skills.added.map(({ uri }) => uri));
         expect(skills.filter((uri) => uri === Skill.registryURI(AgentEmail.SKILL_KEY))).toHaveLength(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'starts a conversation with the skills the instructions name when it is made',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const instructions = yield* Database.load(agent.instructions);
+        const markdown = Ref.fromURI(Skill.registryURI('org.dxos.skill.markdown'));
+        Obj.update(instructions, (instructions) => {
+          instructions.skills = [
+            ...instructions.skills.filter(({ uri }) => uri !== Skill.registryURI(RelaySkill.key)),
+            markdown,
+          ];
+        });
+        const channel = yield* Database.add(makeTestChannel());
+        yield* Database.flush();
+
+        const { feed } = yield* Operation.invoke(AgentOperation.EnsureChannelChat, {
+          agent: agentRef,
+          channel: Ref.make(channel),
+          thread: 'thread-1',
+        });
+        yield* Database.flush();
+
+        const bindings = yield* Feed.query(yield* Database.load(feed), Filter.type(AiContext.Binding)).run;
+        const skills = bindings.flatMap(({ skills }) => skills.added.map(({ uri }) => uri));
+        expect(skills).toContain(Skill.registryURI(ConversationSkill.key));
+        expect(skills).toContain(markdown.uri);
+        expect(skills).not.toContain(Skill.registryURI(RelaySkill.key));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

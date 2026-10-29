@@ -14,32 +14,25 @@ import { type Channel } from '@dxos/types';
 
 import { AgentChannels, AgentOperation } from '#types';
 
+import { sessionSkills } from './modes.ts';
+
 /** Loaded on demand: the context runtime is heavy and only needed when a conversation's chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
 
-type ContextBindings = { skills: Ref.Ref<Skill.Skill>[]; objects: Ref.Ref<Obj.Unknown>[] };
-
-/**
- * The skills and objects bound to the agent's current chat, so a conversation runs with the same
- * context as the agent's own chat; an agent without a chat contributes itself only.
- */
-export const loadAgentBindings = Effect.fnUntraced(function* (agent: Agent.Agent) {
+export const loadAgentObjects = Effect.fnUntraced(function* (agent: Agent.Agent) {
   const chat = yield* Agent.loadChat(agent);
   if (!chat) {
-    return { skills: [], objects: [Ref.make<Obj.Unknown>(agent)] } satisfies ContextBindings;
+    return [Ref.make<Obj.Unknown>(agent)];
   }
 
   const feed = yield* Database.load(chat.feed);
   const runtime = yield* Effect.context<Database.Service>();
   const AiContext = yield* Effect.promise(aiContextRuntime);
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-  return {
-    skills: binder.getSkills().map(Skill.makeRef),
-    objects: binder
-      .getObjects()
-      .filter((object) => !Obj.instanceOf(Chat.Chat, object))
-      .map((object) => Ref.make(object)),
-  } satisfies ContextBindings;
+  return binder
+    .getObjects()
+    .filter((object) => !Obj.instanceOf(Chat.Chat, object))
+    .map((object): Ref.Ref<Obj.Unknown> => Ref.make(object));
 });
 
 export type EnsureChannelChatProps = {
@@ -78,7 +71,8 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   }
 
   // Read before the new chat exists: `Agent.loadChat` resolves the agent's latest chat.
-  const bindings = yield* loadAgentBindings(agent);
+  const objects = yield* loadAgentObjects(agent);
+  const skills = yield* sessionSkills(agent);
 
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(
@@ -97,8 +91,8 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   const declared = yield* channelSkills(channel);
   yield* Effect.promise(() =>
     binder.bind({
-      skills: [...bindings.skills, ...declared],
-      objects: [...bindings.objects, Ref.make(chat)],
+      skills: [...skills, ...declared],
+      objects: [...objects, Ref.make(chat)],
     }),
   );
   return chat;
