@@ -613,6 +613,8 @@ if (decodeStatus !== 0 || encoderStatus !== 0) {
  */
 /** One spoken line per chapter, for `--voiceover steps`. */
 let stepCues = [];
+/** The chapters on the output's clock, for the autocue sidecar. */
+let chapterMarks = [];
 
 const annotate = async () => {
   const at = (sourceFrame) => {
@@ -638,6 +640,13 @@ const annotate = async () => {
   stepCues = marks
     .map((mark) => ({ at: +(mark.start + LINE_LEAD).toFixed(2), text: spokenText(mark) }))
     .filter((cue) => cue.text);
+  chapterMarks = marks.map((mark, index) => ({
+    at: +mark.start.toFixed(3),
+    end: +(index + 1 < marks.length ? marks[index + 1].start : (openFrames + kept) / options.fps).toFixed(3),
+    title: mark.text,
+    ...(mark.subtitle ? { subtitle: mark.subtitle } : {}),
+    ...(mark.narration && mark.narration !== mark.text ? { narration: mark.narration } : {}),
+  }));
   if (!marks.length) {
     return undefined;
   }
@@ -937,6 +946,39 @@ const addScreenshot = (url) => {
 
 const screenshot = options.screenshot && uploaded ? addScreenshot(uploaded) : undefined;
 
+/**
+ * `<name>.autocue.json` beside the video: one demo of an autocue bundle (FORMAT.md) — the finished videos, the
+ * chapters on their clock, and where the take was recorded. `pack.mjs` turns one or more of these into a player.
+ */
+const writeSidecar = () => {
+  const file = `${output.replace(/\.webm$/, '')}.autocue.json`;
+  const videos = [
+    voiced?.outputs?.find((video) => video.endsWith('.mp4')) ?? mp4,
+    voiced?.outputs?.find((video) => video.endsWith('.webm')) ?? annotated?.video ?? output,
+  ].filter((video) => video && existsSync(video));
+  writeFileSync(
+    file,
+    JSON.stringify(
+      {
+        format: 'autocue/demo@1',
+        name: uploadName,
+        duration: +((openFrames + kept + closeFrames) / options.fps).toFixed(3),
+        narrated: !!voiced,
+        videos: videos.map((video) => path.resolve(video)),
+        uploaded,
+        chapters: chapterMarks,
+        flow: timeline.flow,
+        recording: timeline.recording,
+      },
+      null,
+      2,
+    ),
+  );
+  return file;
+};
+
+const sidecar = writeSidecar();
+
 const before = seconds ?? read / options.fps;
 const after = kept / options.fps;
 console.log(
@@ -948,6 +990,7 @@ console.log(
       voiced,
       uploaded,
       screenshot,
+      sidecar,
       frames: { read, kept, dropped: read - (kept - held), held, open: openFrames, close: closeFrames },
       seconds: { before: +before.toFixed(1), after: +after.toFixed(1) },
       reduction: `${Math.round((1 - after / before) * 100)}%`,

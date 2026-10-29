@@ -171,7 +171,7 @@ const startDevServer = async () => {
  * The id of the project this take created, so a replay can tell it from a project an earlier take left
  * open in the deck. Outside the repo, and cleared when a take starts.
  */
-const TAKE_PROJECT = join(tmpdir(), 'autocue-composer-plugin.project');
+export const TAKE_PROJECT = join(tmpdir(), 'autocue-composer-plugin.project');
 
 /** A plugin card in the registry list, by its display name. */
 export const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
@@ -454,18 +454,14 @@ export const steps = [
 
       // The project opens as a folder in the navtree, so the viewer sees what it holds as the run fills it.
       // Matched on the row's own heading: a parent item's text includes its children's.
-      const row = `[data-testid="deck.sidebar"] [data-part="branch-control"]:has(> [data-testid="treeItem.heading"]:text-is("${PROJECT_TITLE}"))`;
+      const row = `[data-testid="deck.sidebar"] [data-part="branch-control"]:has(> * > [data-testid="treeItem.heading"]:text-is("${PROJECT_TITLE}"))`;
       await page.locator(row).first().waitFor({ state: 'attached', timeout: 10_000 });
       if ((await page.locator(row).first().getAttribute('data-state')) !== 'open') {
         if (!(await page.locator(row).first().isVisible())) {
           await demo.click({ selector: 'button:visible:has-text("Open sidebar")', label: 'Open sidebar' });
         }
-        // The toggle stays disabled until the project's children have loaded.
         const toggle = `${row} >> [data-part="branch-trigger"] >> nth=0`;
-        await page
-          .locator(`${row} >> [data-part="branch-trigger"]:not([data-disabled])`)
-          .first()
-          .waitFor({ timeout: 15_000 });
+        await page.locator(`${row} >> [data-part="branch-trigger"]`).first().waitFor({ timeout: 15_000 });
         await demo.click({ selector: toggle, label: 'Open project' });
         await page.locator(`${row}[data-state="open"]`).first().waitFor({ timeout: 5_000 });
       }

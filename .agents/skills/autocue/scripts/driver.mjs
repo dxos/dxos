@@ -55,6 +55,7 @@ import { FRAME_MODULE, injectModule } from './inject.mjs';
 import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { recordingInfo } from './recording.mjs';
 import { launchTauri } from './tauri/launch.mjs';
 
 const parseArgs = () => {
@@ -1124,10 +1125,12 @@ const handlers = {
       return { browser: 'left open; closing the window ends the driver' };
     }
     const timelineFile = path.join(options.out, 'timeline.json');
+    // Read while the page is still open: the app's own config is the only record of the EDGE it talked to.
+    const recording = await recordingInfo({ page, flowFile: flow.file, appUrl: options.url, target: options.target });
     // The flow file names the package it exercises, which the trimmer uses to name and place the upload.
     writeFileSync(
       timelineFile,
-      JSON.stringify({ started, flow: flow.file, steps: timeline, speed: speedChanges }, null, 2),
+      JSON.stringify({ started, flow: flow.file, recording, steps: timeline, speed: speedChanges }, null, 2),
     );
     let recorded;
     try {

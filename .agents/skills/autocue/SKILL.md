@@ -2,7 +2,8 @@
 name: autocue
 description: >-
   Record a demo of the running app that the agent drives itself — a `.mdl` QA test or an ad-hoc
-  walkthrough — as a captioned `.webm` (or a screenshot), trimmed of dead air and ready to attach.
+  walkthrough — trimmed of dead air and shipped as an autocue bundle on dx.pub (`pack.mjs --upload`):
+  a player page with chapters, the spec, where it was recorded and a prompt to record it again.
   Use when asked to demo a feature, show a flow working in the real app, produce a video or
   screenshots of the UI, or execute a flow whose steps have no operation behind them. Also covers
   manual mode, where the user records their own screen while the agent drives a visible browser
@@ -50,6 +51,13 @@ with the same `screenshot` op, so this is a choice about what to send, not a dif
 
 When in doubt, record the session anyway (it costs nothing extra while you are driving) and send only
 the stills if the video adds nothing.
+
+**A video always ships as an autocue bundle on dx.pub, never as a loose file.** Record from a committed flow,
+trim, then `pack.mjs --upload` (§5) and share the `https://dx.pub/demo/<date>-<slug>/` link it prints, in chat, in
+a PR body or anywhere else. The bundle carries what a bare `.webm` cannot: the chapters, the `.mdl` steps, the
+branch, commit and environments it was recorded on, and the prompt that records it again. Do not send the `.webm`
+with `SendUserFile`, attach it to a PR, or upload it on its own; a take that cannot be packed (a flow that is not
+committed) is a rehearsal, not a deliverable.
 
 ## Manual mode: the user records
 
@@ -231,8 +239,10 @@ reader can tell whether it is still in step with its spec:
 /**
  * Start a chess game and play the opening.
  *
+ * @title Play the opening
  * @mdl packages/plugins/plugin-chess/PLUGIN.mdl test QA-1
  * @app composer-app via `moon run composer-app:serve` on :5173
+ * @template Chess Club
  */
 ```
 
@@ -241,6 +251,10 @@ reader can tell whether it is still in step with its spec:
 - **`@app`** says how to serve the app the flow runs against, including any build flags and
   environment it depends on.
 - Name each step after its `do:` text, so the flow and the spec can be read side by side.
+- **`@title`**, **`@template`** and **`@prompt`** are optional and feed the autocue bundle (§5): the demo's
+  name (default: the file name), the space template the take starts from, and the prompt a viewer copies to their
+  agent (default: generated from the other tags and the recording). The prose before the tags is the demo's
+  description, so write it for a viewer.
 
 ## 1. Get the app running
 
@@ -646,9 +660,10 @@ node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm 
 - **Script in Markdown first.** A natural-language version of a flow (scenes as `##` sections, stage directions
   as paragraphs, narration as bullets) is the reviewable source: see `packages/apps/composer-app/flows/showcase.md`.
 
-### Upload: on by default
+### Upload to the media bucket: for the plugin registry and the blog only
 
-The finished video (the narrated MP4 when there is one) is uploaded to the Composer media bucket as
+This upload is not how a demo is shared; that is the bundle (§5). It exists so a plugin's registry entry or a blog
+post can embed one video file. The finished video (the narrated MP4 when there is one) is uploaded to the Composer media bucket as
 `demos/<yyyy-mm-dd>-<name>.<ext>` and served from `https://assets.composer.space` (the bucket's dev URL is
 `https://pub-343732155ecd4a85bba38961213b0515.r2.dev`). `<name>` is the package the flow lives in, e.g.
 `plugin-markdown`, taken from the flow path the driver writes to `timeline.json`; `--name` overrides it,
@@ -709,29 +724,50 @@ same output frame, which becomes a zero-length chapter that players discard sile
 collapses those (keeping the later one, per `--min-chapter`), but the step title is then lost from the
 list. Caption the step, perform it, verify it, then caption the next.
 
-## 5. Send it
+## 5. Ship it: pack an autocue bundle and share the dx.pub link
 
-`SendUserFile` with the `.webm` and any stills worth calling out. Say what was driven, which steps
-passed, and what the trim did — a video with no claim attached is not evidence of anything.
+Every recorded demo ships as an autocue bundle. `scripts/pack.mjs` turns one or more trimmed takes into a player
+page (built from Composer's own components) with each demo's chapters on the timeline and a side panel whose tabs are
+the chapter list, the `.mdl` test with the current step highlighted (click a step to jump to it), where it was
+recorded (branch, commit, Composer and EDGE environments, template), the agent prompt that records it again, and
+the flow's source. It has keyboard navigation (`←`/`→`, `[`/`]` for demos, `V` for the next tab, `?` for the rest),
+sound and speed controls, and Video and Bundle downloads. The spec is [FORMAT.md](FORMAT.md).
 
-`SendUserFile` reaches the human in this conversation and nobody else. When a reviewer on GitHub has to
-see it too, publish it as well — see [[hosting-artifacts]] and §5b.
+```bash
+node .agents/skills/autocue/scripts/pack.mjs --out /tmp/bundle --title "Sheets" \
+  --demo /tmp/demo --demo /tmp/demo-2 --upload sheets
+```
 
-The trimmer also writes a self-contained `<name>.html` viewer: the video plus a clickable step list
-that seeks. That is for local review — browsers implement neither half of what is muxed into the file
-(no browser has a chapter UI for Matroska, and `<video>` populates `textTracks` only from `<track>`
-elements in the page, never from an in-container WebVTT track), so a page is the only way to click
-through steps in a browser. It is **not** a route into a PR.
+- **Share the dx.pub link it prints**, `https://dx.pub/demo/<date>-<slug>/`. `pack.mjs` checks that the page
+  answers before printing it, and prints the bucket's r2.dev URL instead only when dx.pub does not.
+- **Only committed flows are packed.** Record the take with `run` on the flow's own path
+  (`packages/<package>/autocue/<name>.mjs`), committed and unchanged; a take of `/tmp/demo/flow.mjs` is a rehearsal
+  and `pack.mjs` refuses it, since no one else can check it out. Push the branch before you share the link: the
+  prompt the page offers opens with `git checkout` of the recorded commit.
+- **The driver records the metadata on `stop`** (`recording` in `timeline.json`), reading the EDGE URL from the
+  live app, so `stop` must run before the browser closes. The trimmer carries it into `<name>.autocue.json`, which
+  is what `--demo` takes.
+- **Trim with `--mp4`.** The page offers the H.264 copy first, the one format every browser plays (Safari and iOS
+  play no WebM); a take without it still packs, but only Chrome and Firefox play it.
+- **Say what the link shows.** Name what was driven, which steps passed, and what the trim did. A demo with no
+  claim attached is not evidence of anything.
+- **A Claude Artifact or an archive are the same bundle.** For an Artifact, publish the `artifact.file_path` it
+  prints with `artifact.files` as `files` (each video under 15 MB, since an Artifact cannot load media from another
+  host). `--zip` makes an archive that plays from disk. Both are in addition to the dx.pub link, not instead of it.
+- **The player is code in `tools/autocue`** (`player/` and `src/player/`, storybook `tools/autocue/Player`).
+  `pack.mjs` rebuilds it only when its sources are newer than the build, in a few seconds; change it there, never in
+  a bundle.
+
+The trimmer's `<name>.html` viewer is for reviewing a take locally before you pack it, not for sharing.
 
 ## 5b. Attaching a demo to a PR
 
-**Attach the artifact; do not commit it.** With `gh` ≥ 2.99, `gh pr create`/`gh pr edit --attach` uploads
-the `.webm` and stills to GitHub itself, so the stills render inline and the video renders as an inline
-player when it stands alone in its paragraph — see [[hosting-artifacts]] for the flags and limits. Where
-`--attach` is unavailable (older `gh`, no usable token, MCP-only session, a file over the limits),
-[[hosting-artifacts]] puts it in the shared `agent-artifacts` R2 bucket instead and prints a verified
-link. Prefer either over the git-based tricks below, which remain documented because the pinned-URL one
-is still the only way to get an image that lives in the repo's own history.
+**Link the bundle; inline only stills.** The video goes in the PR as the dx.pub link `pack.mjs` printed (§5), with
+the demo's duration in the link text. Stills that show the result at a glance (a contact sheet, a before/after
+pair) go inline: `gh pr create`/`gh pr edit --attach` (gh ≥ 2.99) uploads them so they render, and where that is
+unavailable [[hosting-artifacts]] puts them in the `agent-artifacts` R2 bucket. Do not attach or upload the video
+file itself. The git-based tricks below remain documented because the pinned-URL one is still the only way to get
+an image that lives in the repo's own history.
 
 **Without `--attach`, a still can be embedded but a video cannot.** Use the SHA-pinned hosting technique from
 [[composer-ui]] ("Hosting"): commit the PNG, take
@@ -768,9 +804,8 @@ What survives this session's API proxy, measured rather than assumed:
 comes from a GitHub attachment, which `gh --attach` mints; do not hand-roll the web-UI upload endpoint
 (`POST /upload/policies/assets` wants a browser CSRF token and answers `422`/`403` to a PAT).
 
-So the convention is: attach the video and stills with `gh --attach`, the video's reference alone in its
-paragraph. Only where that is unavailable, fall back to a labelled R2 link for the video (with its
-**duration and size** in the link text) and an R2 image embed for the stills, per [[hosting-artifacts]].
+So the convention is: the dx.pub bundle link for the video, with its duration in the link text, and the stills
+inline via `gh --attach` (or an R2 image embed where that is unavailable), per [[hosting-artifacts]].
 
 ### Before/after, when the demo is a fix
 
@@ -782,7 +817,7 @@ fix mostly proves the app still runs.
 
 ## 6. Watch the demo before shipping it
 
-Play it back, or step the frames, before attaching. Two different classes of problem only show up here:
+Play it back, or step the frames, before packing it. Two different classes of problem only show up here:
 
 - **The recording is wrong.** Gestures clipped by an over-aggressive motion threshold, a caption that
   covers the thing it describes, a step whose outcome never appears. Fix the recording.
