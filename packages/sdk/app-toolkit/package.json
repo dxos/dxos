@@ -61,6 +61,11 @@
       "types": "./dist/types/src/app-framework/PluginAssetAdapter.d.ts",
       "import": "./dist/lib/app-framework/PluginAssetAdapter.mjs"
     },
+    "./OperationHandlerAdapter": {
+      "source": "./src/app-framework/OperationHandlerAdapter.ts",
+      "types": "./dist/types/src/app-framework/OperationHandlerAdapter.d.ts",
+      "import": "./dist/lib/app-framework/OperationHandlerAdapter.mjs"
+    },
     "./SurfaceAdapter": {
       "source": "./src/app-framework/SurfaceAdapter.ts",
       "types": "./dist/types/src/app-framework/SurfaceAdapter.d.ts",

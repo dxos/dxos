@@ -10,12 +10,14 @@ import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Type } from '@dxos/echo';
 
 import { type Translations } from '../app/index.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
 import * as CommandsAdapter from './CommandsAdapter.ts';
+import * as OperationHandlerAdapter from './OperationHandlerAdapter.ts';
 import * as PluginAssetAdapter from './PluginAssetAdapter.ts';
 import * as SchemaAdapter from './SchemaAdapter.ts';
 import * as SpaceTemplatesAdapter from './SpaceTemplatesAdapter.ts';
@@ -97,11 +99,50 @@ export const mcpServer: Maker<typeof AppCapabilities.McpServer> = Capability$.mo
  * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
  * would leave the registry incomplete for exactly those boot-path invocations.
  */
-export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
+const operationHandlerMaker: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
   { activatesOn: ActivationEvents.Startup, environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
+
+/**
+ * Module maker contributing operation handlers. Declaring `operations` (the definitions the module's
+ * handler sets implement) records their keys in the build manifest, so the operations a plugin
+ * provides are known without loading its handler module; the body reports any drift when it loads.
+ */
+export const operationHandler = <
+  Props = void,
+  Options = Props,
+  const Requires extends readonly Capability$.AnyTag[] = readonly [],
+  const Extra extends readonly Capability$.AnyTag[] = readonly [],
+>(
+  loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.OperationHandler, ...Extra]>,
+  options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & {
+    operations?: readonly Operation.Definition.Any[];
+  },
+): Capability$.Module<Options> => {
+  const { operations, ...rest } = options ?? {};
+  return operationHandlerMaker(
+    operations?.length
+      ? Capability$.wrapLoader(
+          () =>
+            loader().then((module) =>
+              OperationHandlerAdapter.default(module, { operations: operationKeys(operations) }),
+            ),
+          loader,
+          {
+            module: '@dxos/app-toolkit/OperationHandlerAdapter',
+            args: { operations: operationKeys(operations) },
+          },
+        )
+      : loader,
+    rest,
+  );
+};
+
+// Keys rather than definitions: adapter args travel through the JSON manifest.
+const operationKeys = (operations: readonly Operation.Definition.Any[]): string[] =>
+  operations.map((operation) => OperationHandlerAdapter.normalizeKey(operation.meta.key));
 
 /**
  * Module maker contributing a {@link Capabilities.LayerSpec}.

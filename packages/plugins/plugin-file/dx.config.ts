@@ -17,6 +17,7 @@ import { trim } from '@dxos/util';
 import { FileNamespace } from './src/namespace.ts';
 import * as FileCapabilities from './src/types/FileCapabilities.ts';
 import * as FileEvents from './src/types/FileEvents.ts';
+import * as FileOperation from './src/types/FileOperation.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -103,6 +104,13 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
+        operations: [
+          FileOperation.Create,
+          FileOperation.CreateFromSource,
+          FileOperation.CreateFromUpload,
+          FileOperation.Read,
+          FileOperation.ResolveDownload,
+        ],
       },
     ),
     AppCapability.pluginAsset({
