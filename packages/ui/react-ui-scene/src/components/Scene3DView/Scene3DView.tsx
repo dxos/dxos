@@ -2,26 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef } from 'react';
 
 import { type Instance3D } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
-import { type Scene, findScene, resolveLayout3D, rootScene } from '@dxos/scene';
+import { type Scene, findScene, rootScene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  type GeometrySource,
-  SceneLabels,
-  SceneRenderer3D,
-  type Theme3D,
-  isTheme3D,
-  loadManifold,
-  manifoldGeometry,
-  orbitBy,
-  panBy,
-  renderList,
-  zoomBy,
-} from '../../three/index.ts';
+import { type GeometrySource, SceneLabels, type Theme3D, isTheme3D, renderList } from '../../three/index.ts';
+import { DEFAULT_CAMERA, useManifoldGeometry, useOrbit, useSceneRenderer } from './hooks.ts';
 
 export type Scene3DViewProps = Util.ThemedClassName<{
   document: Scene.SceneDocument;
@@ -42,57 +31,6 @@ export type Scene3DViewProps = Util.ThemedClassName<{
   onFrameDrawn?: (viewport: { width: number; height: number }) => void;
 }>;
 
-/** A CSS colour as `#rrggbb`, resolved through a 2D canvas so any CSS colour form reads. */
-const cssColorToHex = (color: string, fallback: string): string => {
-  const context = document.createElement('canvas').getContext('2d');
-  if (!context || !color || color === 'transparent' || color === 'rgba(0, 0, 0, 0)') {
-    return fallback;
-  }
-  context.fillStyle = color;
-  context.fillRect(0, 0, 1, 1);
-  const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
-  return `#${[red, green, blue].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
-};
-
-/** Whether drawing the document needs Manifold: a layout has a solid or a rounded cube. */
-const needsManifold = (doc: Scene.SceneDocument): boolean =>
-  doc.layouts.some(
-    (layout) =>
-      layout.dim === '3d' &&
-      Object.values(resolveLayout3D(doc, layout)).some(
-        (element) => element.kind === 'solid' || (element.kind === 'cube' && element.style?.rounded === true),
-      ),
-  );
-
-/** Manifold's geometry once loaded, for a document that needs it. */
-const useManifoldGeometry = (
-  doc: Scene.SceneDocument,
-  given: GeometrySource | undefined,
-): GeometrySource | undefined => {
-  const [geometry, setGeometry] = useState<GeometrySource>();
-  const needed = !given && needsManifold(doc);
-  useEffect(() => {
-    if (!needed || geometry) {
-      return;
-    }
-    let cancelled = false;
-    void loadManifold().then((wasm) => !cancelled && setGeometry(() => manifoldGeometry(wasm)));
-    return () => {
-      cancelled = true;
-    };
-  }, [needed, geometry]);
-  return given ?? geometry;
-};
-
-const DEFAULT_CAMERA: Scene.Camera3D = {
-  target: { x: 0, y: 0, z: 0 },
-  yaw: -45,
-  pitch: 30,
-  distance: 10,
-  fov: 0.8,
-  projection: 'perspective',
-};
-
 /** Draws a document's 3D scene with Babylon, once per change of its inputs, with HTML labels on top. */
 export const Scene3DView = ({
   classNames,
@@ -110,87 +48,10 @@ export const Scene3DView = ({
   const root = sceneId === undefined ? rootScene(doc) : findScene(doc, sceneId);
   const look: Theme3D = theme ?? (isTheme3D(root?.theme) ? root.theme : 'cad');
   const given = camera ?? (root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
-  // The pointer's camera, until a new one is given.
-  const [moved, setMoved] = useState<{ from: Scene.Camera3D; camera: Scene.Camera3D }>();
-  const view = orbit && moved?.from === given ? moved.camera : given;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [renderer, setRenderer] = useState<SceneRenderer3D>();
-  const [size, setSize] = useState({ width: 0, height: 0 });
-
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) {
-      return;
-    }
-    const next = new SceneRenderer3D({
-      canvas,
-      theme: look,
-      background: cssColorToHex(getComputedStyle(container).backgroundColor, '#f4f5f7'),
-    });
-    setRenderer(next);
-    const observer = new ResizeObserver(([entry]) => {
-      next.resize();
-      setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
-    });
-    observer.observe(container);
-    return () => {
-      observer.disconnect();
-      next.dispose();
-      setRenderer(undefined);
-    };
-  }, [look]);
-
-  const viewRef = useRef(view);
-  viewRef.current = view;
-  const sizeRef = useRef(size);
-  sizeRef.current = size;
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!orbit || !container) {
-      return;
-    }
-    const move = (next: (camera: Scene.Camera3D) => Scene.Camera3D) =>
-      setMoved({ from: given, camera: next(viewRef.current) });
-    let drag: { x: number; y: number; pan: boolean } | undefined;
-    const onPointerDown = (event: PointerEvent) => {
-      drag = { x: event.clientX, y: event.clientY, pan: event.shiftKey || event.button !== 0 };
-      container.setPointerCapture(event.pointerId);
-    };
-    const onPointerMove = (event: PointerEvent) => {
-      if (!drag) {
-        return;
-      }
-      const delta = { x: event.clientX - drag.x, y: event.clientY - drag.y };
-      const pan = drag.pan;
-      drag = { ...drag, x: event.clientX, y: event.clientY };
-      move((current) => (pan ? panBy(current, delta, sizeRef.current) : orbitBy(current, delta)));
-    };
-    const onPointerUp = () => {
-      drag = undefined;
-    };
-    const onWheel = (event: WheelEvent) => {
-      // Not passive, so the page does not scroll under a zoom.
-      event.preventDefault();
-      move((current) => zoomBy(current, Math.exp(event.deltaY * 0.002)));
-    };
-    const onContextMenu = (event: Event) => event.preventDefault();
-    container.addEventListener('pointerdown', onPointerDown);
-    container.addEventListener('pointermove', onPointerMove);
-    container.addEventListener('pointerup', onPointerUp);
-    container.addEventListener('pointercancel', onPointerUp);
-    container.addEventListener('wheel', onWheel, { passive: false });
-    container.addEventListener('contextmenu', onContextMenu);
-    return () => {
-      container.removeEventListener('pointerdown', onPointerDown);
-      container.removeEventListener('pointermove', onPointerMove);
-      container.removeEventListener('pointerup', onPointerUp);
-      container.removeEventListener('pointercancel', onPointerUp);
-      container.removeEventListener('wheel', onWheel);
-      container.removeEventListener('contextmenu', onContextMenu);
-    };
-  }, [orbit, given]);
+  const { renderer, size } = useSceneRenderer(containerRef, canvasRef, look);
+  const view = useOrbit(containerRef, given, size, { enabled: orbit });
 
   const list = useMemo(() => renderList(doc, root, overrides), [doc, root, overrides]);
   useLayoutEffect(() => {

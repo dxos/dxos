@@ -21,6 +21,7 @@ import {
   CreateSphere,
   DirectionalLight,
   Engine,
+  GizmoManager,
   HemisphericLight,
   type LinesMesh,
   type Material,
@@ -51,6 +52,9 @@ import {
 } from './materials.ts';
 import { type RenderItem, type RenderList } from './render-list.ts';
 import { type MaterialSpec, type Theme3D, materialSpec } from './style.ts';
+
+/** The outline of a selected item: the theme's focus blue. */
+const SELECTION_COLOR = Color3.FromHexString('#3b82f6');
 
 /** The radius of the faint lattice sphere the presentation theme draws behind everything. */
 const BACKDROP_RADIUS = 4000;
@@ -97,6 +101,22 @@ const pickTag = (mesh: AbstractMesh): { key: string; frame: boolean } | undefine
 
 const vec3 = ({ x, y, z }: Vector3): Model.Vec3 => ({ x, y, z });
 
+export type GizmoMode = 'move' | 'rotate' | 'scale';
+
+/** An item's transform in world space (rotation in Euler degrees), as a gizmo drag leaves it. */
+export type WorldTransform = { center: Model.Vec3; rotation: Model.Vec3; scale: Model.Vec3 };
+
+const degrees = (radians: number) => Math.round(((radians * 180) / Math.PI) * 1000) / 1000 + 0;
+
+const worldTransform = (mesh: AbstractMesh): WorldTransform => {
+  const rotation = mesh.rotationQuaternion?.toEulerAngles() ?? mesh.rotation;
+  return {
+    center: vec3(mesh.position),
+    rotation: { x: degrees(rotation.x), y: degrees(rotation.y), z: degrees(rotation.z) },
+    scale: vec3(mesh.scaling),
+  };
+};
+
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
 
 const geometryIds = new WeakMap<MeshData, number>();
@@ -116,6 +136,11 @@ export const itemSignature = (kind: string, spec: MaterialSpec, data: MeshData |
 export class SceneRenderer3D {
   readonly #engine: AbstractEngine;
   #view?: Model.Camera3D;
+  #gizmos?: GizmoManager;
+  #gizmoEnd?: (after: WorldTransform) => void;
+  readonly #observed = new WeakSet<object>();
+  #looping = false;
+  #selected = new Set<string>();
   readonly #scene: Scene;
   readonly #camera: ArcRotateCamera;
   readonly #theme: Theme3D;
@@ -167,6 +192,7 @@ export class SceneRenderer3D {
     { geometry, effects = [] }: { geometry?: GeometrySource; effects?: readonly Instance3D[] } = {},
   ): void {
     this.#updateItems(list.items, geometry);
+    this.#outline();
     this.#updateLinks(list);
     this.#updateInstances(effects);
     this.#pose(camera);
@@ -201,9 +227,70 @@ export class SceneRenderer3D {
     return point ? { point } : {};
   }
 
+  /** Outlines the items whose keys are given. */
+  select(keys: Iterable<string>): void {
+    this.#selected = new Set(keys);
+    this.#outline();
+    this.#view && this.#scene.render();
+  }
+
+  /**
+   * Puts Babylon's gizmo of `mode` on the item `key` (none when either is undefined), drawing every frame while it is
+   * on so a drag shows; `onEnd` gets the item's world transform when a drag ends.
+   */
+  attachGizmo(key: string | undefined, mode: GizmoMode | undefined, onEnd: (after: WorldTransform) => void): void {
+    const mesh = key === undefined ? undefined : this.#items.get(key)?.surface;
+    if (!mesh || !mode) {
+      this.#gizmos?.attachToMesh(null);
+      this.#gizmoEnd = undefined;
+      this.#looping && this.#engine.stopRenderLoop();
+      this.#looping = false;
+      return;
+    }
+    const gizmos = this.#gizmos ?? new GizmoManager(this.#scene);
+    this.#gizmos = gizmos;
+    gizmos.usePointerToAttachGizmos = false;
+    gizmos.positionGizmoEnabled = mode === 'move';
+    gizmos.rotationGizmoEnabled = mode === 'rotate';
+    gizmos.scaleGizmoEnabled = mode === 'scale';
+    gizmos.attachToMesh(mesh);
+    this.#gizmoEnd = onEnd;
+    for (const gizmo of [gizmos.gizmos.positionGizmo, gizmos.gizmos.rotationGizmo, gizmos.gizmos.scaleGizmo]) {
+      if (gizmo && !this.#observed.has(gizmo)) {
+        this.#observed.add(gizmo);
+        gizmo.onDragEndObservable.add(() => {
+          const attached = gizmo.attachedMesh;
+          attached && this.#gizmoEnd?.(worldTransform(attached));
+        });
+      }
+    }
+    if (!this.#looping) {
+      this.#looping = true;
+      this.#engine.runRenderLoop(() => this.#scene.render());
+    }
+  }
+
+  /** Whether a gizmo is being dragged, so the pointer's release is the drag's rather than a click. */
+  get dragging(): boolean {
+    return this.#gizmos?.isDragging ?? false;
+  }
+
   dispose(): void {
+    this.#gizmos?.dispose();
+    this.#looping && this.#engine.stopRenderLoop();
     this.#scene.dispose();
     this.#engine.dispose();
+  }
+
+  #outline(): void {
+    for (const [key, { surface }] of this.#items) {
+      const selected = this.#selected.has(key);
+      surface.renderOutline = selected;
+      if (selected) {
+        surface.outlineColor = SELECTION_COLOR;
+        surface.outlineWidth = 0.04;
+      }
+    }
   }
 
   #pose(camera: Model.Camera3D): void {
