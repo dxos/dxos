@@ -95,7 +95,7 @@ export const PLUGIN_KEY_SLOT = '{{pluginKey}}';
  * refused to everyone after.
  */
 export const mintPluginKey = (): string => {
-  const suffix = Array.from(crypto.getRandomValues(new Uint8Array(3)), (byte) => byte.toString(16).padStart(2, '0'));
+  const suffix = Array.from(crypto.getRandomValues(new Uint8Array(4)), (byte) => byte.toString(16).padStart(2, '0'));
   return `org.example.plugin.worldClock${suffix.join('')}`;
 };
 

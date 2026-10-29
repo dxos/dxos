@@ -50,7 +50,7 @@ describe('Composer Plugin project template', () => {
     await builder.close();
   });
 
-  const KEY = 'org.example.plugin.worldClock0a1b2c';
+  const KEY = 'org.example.plugin.worldClock0a1b2c3d';
 
   const scaffold = async (variant: Variant = desktopVariant(TOOLCHAIN)) => {
     const { db } = await builder.createDatabase({
@@ -165,7 +165,7 @@ describe('Composer Plugin project template', () => {
     const keys = new Set(Array.from({ length: 20 }, () => mintPluginKey()));
     expect(keys.size).toBe(20);
     for (const key of keys) {
-      expect(key).toMatch(/^org\.example\.plugin\.worldClock[0-9a-f]{6}$/);
+      expect(key).toMatch(/^org\.example\.plugin\.worldClock[0-9a-f]{8}$/);
     }
   });
 

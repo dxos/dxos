@@ -136,7 +136,7 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
       expect: |
         the spec opens beside the plugin with its definitions sidebar listing the `Zone` and `Clock` types, the
         `ClocksArticle` component and feature F-1, and its text is the `PLUGIN.mdl` the template seeded
-        (`worldClockSpec` in `src/templates/composer-plugin.ts`, with the key the project was given)
+        (`worldClockSpec`, with the key the project was given)
       note: |
         The spec reaches the registry only through the published bundle: `dx.config.ts` names it with `spec`, and the
         plugin contributes its text as a `pluginAsset`. Open Specification is absent when either is missing.
@@ -333,4 +333,14 @@ decision D-7: Each project from the template gets its own plugin key, `org.examp
   why: Registry keys are global, so the fixed key was claimed by its first publisher and refused to every later one as "owned by another identity".
   rejected:
     - Let the agent pick a key: the spec's `id` would then differ from the text the template seeded.
+```
+
+```mdl
+decision D-8: The minted key's suffix is eight random hex digits rather than six. Fills in [D-4].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-7
+  why: Six digits give 16.8 million keys, so a thousand projects collide with about a 3% chance, and a collision refuses the later publisher.
 ```

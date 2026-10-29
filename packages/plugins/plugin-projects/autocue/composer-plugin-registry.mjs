@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { readFile } from 'node:fs/promises';
+
 // Re-imported with the driver's cache-busting query, which reaches only the file it loads, so an edit to the
 // browser flow is picked up by the next `run` too.
-const { prepare, steps: browserSteps } = await import(
-  `../../plugin-dev-shell/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`
-);
+const {
+  prepare,
+  steps: browserSteps,
+  TAKE_PROJECT,
+} = await import(`../../plugin-dev-shell/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`);
 
 /**
  * The Composer Plugin demo in a browser, ending in the private plugin registry: the assistant builds World Clock
@@ -105,19 +109,33 @@ const parentDone = ({ page }) =>
   );
 
 /** The key the template minted for this take's project, read from its "Write the plugin" task. */
-const projectKey = ({ page }) =>
-  page.evaluate(async (tab) => {
-    const spaceId = document.querySelector(tab)?.dataset.value?.split('/').pop();
-    const tasks = await dxos
-      .spaces(spaceId)
-      .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task')))
-      .run();
-    const suffix = tasks.map((task) => task.description?.match(/worldClock[0-9a-f]{6}/)?.[0]).find(Boolean);
-    if (!suffix) {
-      throw new Error('no task names the plugin key');
-    }
-    return `org.example.plugin.${suffix}`;
-  }, SPACE_TAB);
+const projectKey = async ({ page }) => {
+  // Read from this take's own project: another Composer Plugin project in the space has a key of its own.
+  const projectId = (await readFile(TAKE_PROJECT, 'utf8')).trim();
+  return page.evaluate(
+    async ({ tab, projectId }) => {
+      const spaceId = document.querySelector(tab)?.dataset.value?.split('/').pop();
+      const projects = await dxos
+        .spaces(spaceId)
+        .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
+        .run();
+      const project = projects.find((candidate) => candidate.id === projectId);
+      if (!project) {
+        throw new Error(`project ${projectId} is not in the space`);
+      }
+      const taskSet = await project.taskSet?.load();
+      const parents = await Promise.all((taskSet?.tasks ?? []).map((ref) => ref.load()));
+      const subtasks = await Promise.all(parents.flatMap((parent) => parent.subtasks ?? []).map((ref) => ref.load()));
+      const write = subtasks.find((task) => task.title === 'Write the plugin in TypeScript');
+      const key = write?.description?.match(/org\.example\.plugin\.worldClock[0-9a-f]{8}/)?.[0];
+      if (!key) {
+        throw new Error('the project\'s "Write the plugin" task names no plugin key');
+      }
+      return key;
+    },
+    { tab: SPACE_TAB, projectId },
+  );
+};
 
 const REGISTRY_TAB = '[data-testid="pluginRegistry.registry"]';
 
@@ -172,17 +190,29 @@ export const steps = [
         return { identityDid: current.did, identityKey: hex };
       });
       const { execFileSync } = await import('node:child_process');
-      // curl, not fetch: it honours the sandbox's HTTPS proxy. Not `-f`: the hub refuses an identity already bound.
-      execFileSync('curl', [
-        '-sS',
-        '-X',
-        'POST',
-        '-H',
-        'content-type: application/json',
-        '-d',
-        JSON.stringify({ ...identity, email: `test+qa-plugin-registry-${Date.now()}@dxos.org` }),
-        `${HUB_URL}account/invitation-code/redeem`,
-      ]);
+      // curl, not fetch: it honours the sandbox's HTTPS proxy.
+      const status = execFileSync(
+        'curl',
+        [
+          '-sS',
+          '-o',
+          '/dev/null',
+          '-w',
+          '%{http_code}',
+          '-X',
+          'POST',
+          '-H',
+          'content-type: application/json',
+          '-d',
+          JSON.stringify({ ...identity, email: `test+qa-plugin-registry-${Date.now()}@dxos.org` }),
+          `${HUB_URL}account/invitation-code/redeem`,
+        ],
+        { encoding: 'utf8' },
+      );
+      // Marked bound only on success, so a failed bind is retried rather than skipped by the next take.
+      if (!status.startsWith('2')) {
+        throw new Error(`binding the identity to an account failed with HTTP ${status}`);
+      }
       await page.evaluate(([key, did]) => localStorage.setItem(key, did), [BOUND_KEY, identity.identityDid]);
       // The client caches its EDGE credential from before the binding.
       await page.reload({ timeout: 120_000 });

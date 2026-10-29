@@ -171,7 +171,7 @@ const startDevServer = async () => {
  * The id of the project this take created, so a replay can tell it from a project an earlier take left
  * open in the deck. Outside the repo, and cleared when a take starts.
  */
-const TAKE_PROJECT = join(tmpdir(), 'autocue-composer-plugin.project');
+export const TAKE_PROJECT = join(tmpdir(), 'autocue-composer-plugin.project');
 
 /** A plugin card in the registry list, by its display name. */
 export const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
