@@ -342,3 +342,32 @@ decision D-26: `Drawing.canvas` is widened rather than replaced: its Ref accepts
   affects: [Scene2D, Scene3D]
   supersedes: D-20
 ```
+
+```mdl
+decision D-27: A drawing separates three aspects: the Model (reusable objects), the Layout (positioned elements, each placing a model object or defining its shape inline) and the Scene (a layout plus a camera). A 3D animation has one model and several scenes with differently placed elements; a 2D drawing's zoom levels are scenes over one layout. plugin-canvas's `Canvas` holds the model, its layouts and its scenes.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Scene2D, Scene3D]
+  supersedes: D-25
+```
+
+```mdl
+decision D-28: An animator shot stages a Scene; playback samples the timeline and renders the layout with those values applied, and never writes them back, so scenes that share a layout are unaffected.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-29: A child scene becomes a composite object: an object's `parts` is its own nested layout, which an element placing the object shows fitted to its frame, and which drill-in opens.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-30: The group arranger type (ring, grid) is renamed from `Layout` to `Arrangement`, and an element's `layout` field to `arrange`, so `Layout` names the positioned-elements aspect of [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: [D-27] gives `Layout` a new meaning, and two types of one name in one package would be read for each other.
+  rejected: Naming the new aspect `Arrangement` instead, which the user called layout.
+```
