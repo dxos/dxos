@@ -254,9 +254,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
         )}
         <Pane.Content>
           {node.data === undefined || !articleReady ? (
-            // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
-            // no Article to ask for. The same shell stands in until the Article's own module lands,
-            // so the plank does not change under the reader on the way there.
+            // No subject resolved yet, or a new subject whose shell paints before its article.
             PLANK_LOADING
           ) : (
             <Surface.Surface
