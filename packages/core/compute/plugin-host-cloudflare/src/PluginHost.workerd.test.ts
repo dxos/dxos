@@ -55,6 +55,8 @@ describe('PluginHost', () => {
     expect(await host.invoke({ operationKey: String(Reply.meta.key), input: { hello: 'world' } }, {})).toEqual({
       hello: 'world',
     });
+    // EDGE names an operation by its bare key.
+    expect(await host.invoke({ operationKey: 'com.example.operation.reply', input: 'bare' }, {})).toEqual('bare');
     await expect(host.invoke({ operationKey: String(Fibonacci.meta.key), input: {} }, {})).rejects.toBeInstanceOf(
       PluginHost.OperationNotFoundError,
     );

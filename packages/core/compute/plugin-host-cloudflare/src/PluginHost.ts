@@ -21,7 +21,7 @@ import {
   ServiceContainer,
   createFunctionContext,
 } from '@dxos/functions-runtime-cloudflare';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { EdgeResponse } from '@dxos/protocols';
 import type { EdgeFunctionEnv, FunctionProtocol } from '@dxos/protocols';
@@ -85,6 +85,9 @@ const decodeBody = Schema.decodeUnknownSync(Schema.Struct({ data: Schema.optiona
  * `makePlugins` is called inside the first request, so plugin options may read request-scoped state. The release
  * serves its primary plugin; the dependencies given are the pool its `dependsOn` closure is drawn from.
  */
+/** EDGE invokes operations by their bare key (`org.example.op`); an operation's own key is a DXN (`dxn:org.example.op`). */
+const operationKeyName = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
+
 export const make = (makePlugins: () => PluginActivation.Plugins, options: Options = {}): Host => {
   const getActivation = memoizeActivation(makePlugins, options.activationTimeout ?? DEFAULT_ACTIVATION_TIMEOUT);
 
@@ -92,7 +95,10 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
 
   const invoke = async (request: InvokeRequest, env: Env, scope: InvocationScope = {}) => {
     const activation = await getActivation();
-    const handler = activation.operationHandlers.find((entry) => String(entry.meta.key) === request.operationKey);
+    const operationKey = operationKeyName(request.operationKey);
+    const handler = activation.operationHandlers.find(
+      (entry) => operationKeyName(String(entry.meta.key)) === operationKey,
+    );
     if (!handler) {
       throw new OperationNotFoundError({ context: { key: request.operationKey } });
     }
