@@ -26,6 +26,7 @@ export {
   buildQueueWindow,
   buildSourceCondition,
   buildTypeDxnCondition,
+  queueBranchesOf,
 } from './indexes/entity-meta-index.ts';
 export { localEntityId } from './entity-ids.ts';
 export { type Referrer, type ReverseRef, ReverseRefIndex, type ReverseRefQuery } from './indexes/reverse-ref-index.ts';
