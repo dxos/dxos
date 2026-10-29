@@ -162,7 +162,7 @@ verdict F-2.5: The module finalizer interrupts the update fiber.
 ```mdl
 verdict F-3.1: Ollama spawns as a shell command on port 21434, lazily on first use, not on SetupAiServiceProviders.
   status: diverged
-  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/ollama.ts#OllamaSidecarLive, github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/index.ts#Ollama]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-native/src/capabilities/ollama.ts#OllamaSidecarLive, github:dxos/dxos/packages/plugins/plugin-native/dx.config.ts]
   note: |
     The module activates on `ActivationEvents.Startup` (the index comment explains why), and the process
     spawns when the managed runtime first forces `OllamaSidecar`. It is `Command.create('ollama')`, not a

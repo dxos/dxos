@@ -6,7 +6,6 @@ import { Type } from '@dxos/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Finding, Research } from '#types';
 
 import { filtersTranslations } from './components/FiltersPanel/translations.ts';
@@ -17,6 +16,7 @@ import { modelTranslations } from './components/ModelPanel/translations.ts';
 import { mapTranslations } from './components/ResultsMap/translations.ts';
 import { graphTranslations } from './components/SubjectGraph/translations.ts';
 import { traceTranslations } from './components/TracePanel/translations.ts';
+import { LighthouseNamespace } from './namespace.ts';
 
 export const translations = [
   ...formTranslations,
@@ -34,7 +34,7 @@ export const translations = [
         'typename.label': 'Finding',
         'typename.label_other': 'Findings',
       },
-      [meta.profile.key]: {
+      [LighthouseNamespace.key]: {
         ...graphTranslations,
         ...imageTranslations,
         ...traceTranslations,

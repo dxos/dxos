@@ -14,8 +14,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
-import { meta } from '#meta';
 
+import { ScriptNamespace } from '../../namespace.ts';
 import { type Template } from '../../templates/index.ts';
 
 // TODO(ZaymonFC):
@@ -29,7 +29,7 @@ export type DeploymentDialogProps = {
 };
 
 export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ScriptNamespace.key);
   const db = useMemo(() => Obj.getDatabase(accessToken), [accessToken]);
 
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
@@ -41,29 +41,32 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     if (status === 'success') {
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.deployment-success`,
+        id: `${ScriptNamespace.key}.deployment-success`,
         icon: 'ph--check--regular',
         duration: Infinity,
-        title: ['script-deployment-toast.label', { ns: meta.profile.key, count: scriptTemplates.length }],
-        description: ['script-deployment-toast.description', { ns: meta.profile.key, count: scriptTemplates.length }],
-        closeLabel: ['script-deployment-toast-close.label', { ns: meta.profile.key, count: scriptTemplates.length }],
+        title: ['script-deployment-toast.label', { ns: ScriptNamespace.key, count: scriptTemplates.length }],
+        description: [
+          'script-deployment-toast.description',
+          { ns: ScriptNamespace.key, count: scriptTemplates.length },
+        ],
+        closeLabel: ['script-deployment-toast-close.label', { ns: ScriptNamespace.key, count: scriptTemplates.length }],
       });
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
     }
     if (status === 'error') {
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.deployment-error`,
+        id: `${ScriptNamespace.key}.deployment-error`,
         icon: 'ph--warning--regular',
         duration: Infinity,
-        title: ['script-deployment-error-toast.label', { ns: meta.profile.key, count: scriptTemplates.length }],
+        title: ['script-deployment-error-toast.label', { ns: ScriptNamespace.key, count: scriptTemplates.length }],
         description: [
           'script-deployment-error-toast.description',
-          { ns: meta.profile.key, count: scriptTemplates.length },
+          { ns: ScriptNamespace.key, count: scriptTemplates.length },
         ],
         closeLabel: [
           'script-deployment-error-toast-close.label',
-          { ns: meta.profile.key, count: scriptTemplates.length },
+          { ns: ScriptNamespace.key, count: scriptTemplates.length },
         ],
       });
     }

@@ -24,10 +24,10 @@ import {
   SupportHomeCompanion,
   SupportSettings,
 } from '#containers';
-import { meta } from '#meta';
 import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants.ts';
+import { SupportNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -95,7 +95,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'settings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, SupportNamespace.key),
         component: SupportSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

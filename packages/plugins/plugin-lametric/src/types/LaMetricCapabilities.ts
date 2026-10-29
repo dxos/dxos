@@ -8,12 +8,11 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
+import { LaMetricNamespace } from '../namespace.ts';
 import type * as Settings from './Settings.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${LaMetricNamespace.key}.capability.settings`,
 );
 
 /**
@@ -26,5 +25,5 @@ export type PushStatus =
   | { readonly state: 'failed'; readonly status?: number };
 
 export const PushStatus = Capability.makeSingleton<Atom.Writable<PushStatus>>()(
-  `${meta.profile.key}.capability.pushStatus`,
+  `${LaMetricNamespace.key}.capability.pushStatus`,
 );

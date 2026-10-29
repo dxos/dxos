@@ -24,9 +24,8 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 import { PullRequest, Task } from '@dxos/types';
 
-import { meta } from '#meta';
-
 import { useOpenObject, usePullRequestChecks } from '../../hooks/index.ts';
+import { GitHubNamespace } from '../../namespace.ts';
 import * as PullRequestsView from '../../types/PullRequestsView.ts';
 import {
   CI_HUE,
@@ -76,7 +75,7 @@ export const PullRequestsArticle = ({ db, ...props }: PullRequestsArticleProps) 
 PullRequestsArticle.displayName = 'PullRequestsArticle';
 
 const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & { db: Database.Database }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const { hasAttention } = useAttention(attendableId);
   const editorRef = useRef<EditorController>(null);
   const contextId = db.spaceId;
@@ -207,7 +206,7 @@ const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & 
 type OpenHandler = (object: Obj.Any) => Promise<void>;
 
 const GroupSection = ({ group, onOpen }: { group: PullRequestRowGroup; onOpen: OpenHandler }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   return (
     <Listbox.ItemGroup>
       <Listbox.ItemGroupLabel>
@@ -232,7 +231,7 @@ const PullRequestListRow = ({
   row: PullRequestRow;
   onOpen: OpenHandler;
 }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const time = pullRequest.updatedAt ?? pullRequest.createdAt;
   return (
     <Listbox.Item
@@ -272,7 +271,7 @@ const PullRequestListRow = ({
 };
 
 const ChecksTag = ({ pullRequest, checks }: { pullRequest: PullRequest.PullRequest; checks?: PullRequestChecks }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   // A finished pull request's checks are not read (see `usePullRequestChecks`), so it shows none.
   if (!checks) {
     return pullRequest.state === 'open' || pullRequest.state === 'draft' ? (

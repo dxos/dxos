@@ -19,9 +19,9 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Selection } from '@dxos/react-ui-attention/types';
 
-import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
+import { MagazineNamespace } from '../namespace.ts';
 import { getMagazinesPath } from '../paths.ts';
 
 export default Capability.makeModule(
@@ -93,7 +93,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               variant: 'post',
-              label: ['post-companion.label', { ns: meta.profile.key }],
+              label: ['post-companion.label', { ns: MagazineNamespace.key }],
               icon: 'ph--article--regular',
               data: post,
             }),
@@ -117,7 +117,7 @@ export default Capability.makeModule(
                   { spaceId: Obj.getDatabase(feed)?.spaceId },
                 ),
               properties: {
-                label: ['sync-feed.label', { ns: meta.profile.key }],
+                label: ['sync-feed.label', { ns: MagazineNamespace.key }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

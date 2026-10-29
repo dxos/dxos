@@ -6,9 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Type } from '@dxos/echo';
 
+import * as InboxPlugin from '#meta';
 import { InboxOperation, Mailbox } from '#types';
-
-import * as InboxPlugin from './InboxPlugin.ts';
 
 // Activation is not covered: the handlers import `@dxos/pipeline-rdf`, whose comunica dependency
 // requires `process/`, a specifier the vitest workerd pool cannot resolve (wrangler bundles it).

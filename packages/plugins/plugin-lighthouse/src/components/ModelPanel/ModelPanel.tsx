@@ -12,8 +12,6 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
 import {
   DIST_NOTE,
   adjustedCount,
@@ -38,6 +36,7 @@ import {
   weightRange,
 } from '../../model/model-panel.ts';
 import { type Rateable, type RatingModel, type RatingOverrides, areaRequirements } from '../../model/rating.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 
 /** A formula with each CURIE's prefix dimmed: the namespace tells `lh:category` from `schema:category`. */
 const Expression = ({ text, title, note }: { text: string; title?: string; note?: string }) => (
@@ -57,7 +56,7 @@ const Expression = ({ text, title, note }: { text: string; title?: string; note?
 
 /** Marks a term or requirement the person made (a drawn area), not the agent. */
 const Own = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   return <span className='text-[0.625rem] uppercase tracking-wide text-accent-text'>{t('model-own.label')}</span>;
 };
 
@@ -93,7 +92,7 @@ const AreaList = ({
   overrides: RatingOverrides;
   onChange: (overrides: RatingOverrides) => void;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const list = (overrides.areas ?? []).filter((area) => (area.mode ?? 'prefer') === mode);
   if (!list.length) {
     return null;
@@ -149,7 +148,7 @@ const AreaList = ({
 };
 
 export const ModelPanel = ({ model, overrides = {}, items, onChange, onMap, onClose }: ModelPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [showRationale, setShowRationale] = useState(false);
   const rows = useMemo(() => termRows(model, overrides, items), [model, overrides, items]);
   const changed = adjustedCount(model, overrides);

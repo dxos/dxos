@@ -21278,9 +21278,6 @@ importers:
 
   packages/sdk/migrations:
     dependencies:
-      '@automerge/automerge':
-        specifier: 3.5.0
-        version: 3.5.0
       '@automerge/automerge-repo':
         specifier: 'catalog:'
         version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
@@ -21296,15 +21293,12 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       effect:
         specifier: 4.0.4
         version: 4.0.4

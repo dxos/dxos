@@ -5,13 +5,13 @@
 import { translations as searchTranslations } from '@dxos/react-ui-search/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { SearchNamespace } from './namespace.ts';
 
 export const translations = [
   ...searchTranslations,
   {
     'en-US': {
-      [meta.profile.key]: {
+      [SearchNamespace.key]: {
         'plugin.name': 'Search',
         'search-action.label': 'Search spaces',
         'search.placeholder': 'Search…',

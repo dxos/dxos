@@ -20,11 +20,11 @@ import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { TrelloOperation } from '#types';
 
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants.ts';
 import { formatTrelloSyncFailure } from '../errors.ts';
+import { TrelloNamespace } from '../namespace.ts';
 import { TrelloApi } from '../services/index.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
@@ -609,9 +609,9 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
   if (outcome._tag === 'Success') {
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-success`,
+        id: `${TrelloNamespace.key}.sync-success`,
         icon: 'ph--check--regular',
-        title: ['sync-toast.success.label', { ns: meta.profile.key }],
+        title: ['sync-toast.success.label', { ns: TrelloNamespace.key }],
       }),
     );
     return outcome.success;
@@ -619,9 +619,9 @@ const syncBoardBinding = Effect.fn(function* (bound: Cursor.ExternalCursor) {
     const message = formatTrelloSyncFailure(outcome.failure);
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-error`,
+        id: `${TrelloNamespace.key}.sync-error`,
         icon: 'ph--warning--regular',
-        title: ['sync-toast.error.label', { ns: meta.profile.key }],
+        title: ['sync-toast.error.label', { ns: TrelloNamespace.key }],
         description: message,
       }),
     );

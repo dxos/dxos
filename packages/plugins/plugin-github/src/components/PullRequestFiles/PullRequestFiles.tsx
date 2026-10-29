@@ -11,8 +11,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
-
+import { GitHubNamespace } from '../../namespace.ts';
 import { type PatchFile } from '../../walkthrough/patch.ts';
 import { WalkthroughView } from '../WalkthroughView/index.ts';
 import { type FileNode, diffFence } from './files.ts';
@@ -46,7 +45,7 @@ export const PullRequestFiles = ({
   onReviewedChange,
   onLineComment,
 }: PullRequestFilesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   const fence = useMemo(() => (file && file.hunks.length > 0 ? diffFence(file) : undefined), [file]);
 
   if (error) {

@@ -28,13 +28,14 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { FeatureKanban } from '#components';
-import { FEATURE_COMPANION, SPEC_DOCUMENT_COMPANION, meta } from '#meta';
 import { Feature, FeatureMapView, Spec } from '#types';
 
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
+import { FEATURE_COMPANION, SPEC_DOCUMENT_COMPANION } from '../../constants.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type SpecFeaturesProps = {
   role?: string;
@@ -79,7 +80,7 @@ const useTrail = (root: Spec.Spec, feature: Feature.Feature | undefined): { id: 
  * back out.
  */
 export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const { mode, focus } = useViewState(FeatureMapView.aspect, spec.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, spec.id);
   const db = Obj.getDatabase(spec);
@@ -193,7 +194,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
       builder.action(
         'open-document',
         {
-          label: ['feature-map.open-document.label', { ns: meta.profile.key }],
+          label: ['feature-map.open-document.label', { ns: ProjectsNamespace.key }],
           icon: 'ph--file-text--regular',
           testId: 'feature-map.open-document',
         },
@@ -204,7 +205,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
       .group(
         'mode',
         {
-          label: ['feature-map.mode.label', { ns: meta.profile.key }],
+          label: ['feature-map.mode.label', { ns: ProjectsNamespace.key }],
           variant: 'toggleGroup',
           selectCardinality: 'single',
           value: mode,
@@ -214,7 +215,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
             group.action(
               mode,
               {
-                label: [`feature-map.mode.${mode}.label`, { ns: meta.profile.key }],
+                label: [`feature-map.mode.${mode}.label`, { ns: ProjectsNamespace.key }],
                 icon,
                 testId: `projectsPlugin.featureMap.${mode}`,
               },
@@ -226,7 +227,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
       .action(
         'new-feature',
         {
-          label: ['feature-map.new-feature.label', { ns: meta.profile.key }],
+          label: ['feature-map.new-feature.label', { ns: ProjectsNamespace.key }],
           icon: 'ph--plus--regular',
           testId: 'feature-map.new-feature',
         },
@@ -236,7 +237,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
         'add-feature',
         {
           variant: 'custom',
-          label: ['feature-map.add-feature.label', { ns: meta.profile.key }],
+          label: ['feature-map.add-feature.label', { ns: ProjectsNamespace.key }],
           render: () => (
             <ObjectAddPicker
               db={db}

@@ -14,8 +14,9 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
 import { Meeting, MeetingOperation } from '#types';
+
+import { MeetingNamespace } from '../../namespace.ts';
 
 type MeetingTab = 'notes' | 'transcript' | 'summary' | 'call';
 
@@ -35,7 +36,7 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
  * area that renders the selected component as an article surface.
  */
 export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MeetingNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
   // The Call tab is offered only when the calls plugin contributes a transport provider.
@@ -59,12 +60,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['meeting-toolbar.menu', { ns: meta.profile.key }] })
+        .root({ label: ['meeting-toolbar.menu', { ns: MeetingNamespace.key }] })
         .subgraph((builder) =>
           builder.group(
             'tab',
             {
-              label: ['meeting-tabs.menu', { ns: meta.profile.key }],
+              label: ['meeting-tabs.menu', { ns: MeetingNamespace.key }],
               iconOnly: true,
               variant: 'toggleGroup',
               selectCardinality: 'single',
@@ -75,7 +76,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
                 group.action(
                   key,
                   {
-                    label: [`${key}.label`, { ns: meta.profile.key }],
+                    label: [`${key}.label`, { ns: MeetingNamespace.key }],
                     icon: TAB_ICONS[key],
                     checked: tab === key,
                   },
@@ -90,7 +91,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
           group.action(
             'generate-summary',
             {
-              label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: meta.profile.key }],
+              label: [hasSummary ? 'regenerate-summary.label' : 'generate-summary.label', { ns: MeetingNamespace.key }],
               icon: 'ph--book-open-text--regular',
             },
             handleGenerateSummary,

@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { StorybookNamespace } from '../namespace.ts';
 
 export type LayoutStateProps = {
   sidebarState?: 'expanded' | 'collapsed' | 'closed';
@@ -38,4 +38,6 @@ export type LayoutStateProps = {
   workspace: string;
 };
 
-export const LayoutState = Capability.makeSingleton<Atom.Writable<LayoutStateProps>>()(`${meta.profile.key}.state`);
+export const LayoutState = Capability.makeSingleton<Atom.Writable<LayoutStateProps>>()(
+  `${StorybookNamespace.key}.state`,
+);

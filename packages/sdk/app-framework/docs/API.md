@@ -32,6 +32,10 @@ export const Template = Capability.make<Template>()('org.dxos.plugin.projects.ca
 export const Client = Capability.makeSingleton<ClientApi>()('org.dxos.plugin.client.capability.client');
 ```
 
+A plugin owns its tags through a namespace (`Plugin.namespace(key)`, in a leaf `src/namespace.ts`):
+`FooNamespace.make<T>()('template')` and `FooNamespace.makeSingleton<T>()('client')` produce the same tags
+with the identifier `<key>.capability.<name>`, so `dx.config.ts` can list them without importing `#meta`.
+
 Both are curried — `make<T>()(nsid)` — so the NSID string literal is captured and brands the
 identifier. NSIDs must be camelCase (`DXN.Name`). The single-call form `make<T>(nsid)` still compiles
 but widens the NSID to `string`, making the compile-time check vacuous; prefer the curried form.
@@ -56,7 +60,8 @@ export const Coordinator = Capability.lazyModule(
   () => import('./connector-coordinator'),
 );
 
-// Eager — body defined inline, no separate chunk.
+// Eager — body defined inline, no separate chunk. Not allowed in a `dx.config.ts`, whose modules
+// must be lazy (see "Composing a plugin").
 export const Extractor = Capability.inlineModule(
   'SummarizeExtractor',
   { provides: [InboxCapabilities.ObjectExtractor] },
@@ -83,10 +88,15 @@ contribute a declared `provides` is also a type error.
 `@dxos/app-toolkit` ships them for the common capabilities:
 
 ```ts
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  requires: [SomeCapabilities.Thing],
+AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+  roles: ['org.dxos.role.article'],
 });
+AppCapability.appGraphBuilder(
+  () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+  {
+    requires: [SomeCapabilities.Thing],
+  },
+);
 ```
 
 Build your own with `Capability.moduleMaker(name, tag)`.
@@ -95,20 +105,54 @@ Build your own with `Capability.moduleMaker(name, tag)`.
 
 ## Composing a plugin
 
+A plugin is one `dx.config.ts`: its identity plus its module list. `src/namespace.ts` holds the key.
+
 ```ts
-export const FooPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(ReactSurface),
-  Plugin.addModule(Coordinator),
-  Plugin.addModule(AppCapability.translations(translations)),
-  Plugin.addModule(AppCapability.schema([Foo.Foo])),
-  Plugin.make,
-);
+// src/namespace.ts — a leaf with no imports besides Plugin.
+export const FooNamespace = Plugin.namespace('org.dxos.plugin.foo');
+
+// dx.config.ts
+// Annotated: module bodies read `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
+  plugin: { key: FooNamespace.key, name: 'Foo', author: 'DXOS', icon: { key: 'ph--cube--regular' }, tags: ['labs'] },
+  modules: [
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: ['org.dxos.role.article'],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+    Capability.lazyModule(
+      'Coordinator',
+      { requires: [ClientCapabilities.Client], provides: [FooCapabilities.Coordinator] },
+      () => import('./src/capabilities/coordinator.ts', { with: { type: 'module-url' } }),
+    ),
+  ],
+});
+
+export const { meta, make } = config;
+
+export default config;
 ```
 
-`Plugin.define(meta)` starts a builder; each `addModule` adds one module; `Plugin.make` seals it.
-When the plugin takes options, `addModule` also accepts `(options) => module` and makers accept a
-`props` mapping from plugin options to body props. If every option is optional, calling
-`FooPlugin()` with no argument is allowed.
+`Plugin.config` returns `{ ...data, meta, make, modules }`; `make` is the plugin factory
+(`Plugin.fromModules`), which keeps only the modules whose `environments` include the current runtime.
+Hosts and tests call `make()`; a plugin with options is `Plugin.PluginConfig<Options>` and `make(options)`.
+
+Rules the build enforces (`pluginConfigPlugin`, which evaluates `dx.config.ts` in Node and replaces it with a
+static `Plugin.Manifest`):
+
+- Every module body is `() => import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`. The attribute
+  marks the body as something to locate, never load; an unmarked dynamic import fails the build.
+- No inline modules (`Capability.inlineModule`) and no `props` mappers: bodies receive the plugin options as-is.
+- `dx.config.ts` statically imports only tags, events, makers and `src/namespace.ts` — never components or a
+  `#types` barrel, since it loads eagerly at boot. Tags and events derive from the namespace
+  (`FooNamespace.make<T>()('name')`, `${FooNamespace.key}.event.start`) and must not import `#meta`.
+- Per-runtime library entries (`dx.config.ts?dx-env=node|workerd`) keep one runtime's modules, so headless
+  bundles never reach a browser-only body.
+
+Tests use `import * as FooPlugin from '#meta'` and `FooPlugin.make()`. A story that needs a subset of a plugin's
+modules uses `Plugin.addModule(Plugin.getModule(FooConfig, 'Coordinator'))`. A manifest alone (a published or
+pre-built plugin) becomes a plugin with `Plugin.fromManifest(manifest, loaders)`; each body then loads on activation.
 
 ---
 
@@ -244,7 +288,7 @@ provider, or unsatisfiable requirement puts the owning plugin in an error state
 
 ```ts
 withPluginManager({
-  plugins: [ClientPlugin(), FooPlugin()],
+  plugins: [ClientPlugin.make(), FooPlugin.make()],
   capabilities: [Capability.contribute(SomeCapability, stub)], // takes Contribution[]
 });
 ```
@@ -256,18 +300,20 @@ withPluginManager({
 
 ## Type reference
 
-| Type                          | Meaning                                                        |
-| ----------------------------- | -------------------------------------------------------------- |
-| `Capability.Tag<T, S>`        | Singleton tag; `yield*` → `T`                                  |
-| `Capability.MultiTag<T, S>`   | Multi tag; `yield*` → `Contributions<T>`                       |
-| `Capability.AnyTag`           | `Tag \| MultiTag`                                              |
-| `Capability.Contribution`     | One branded contribution (capability + n values)               |
-| `Capability.Contributions<T>` | Live view: `{ atom, get(), subscribe() }`                      |
-| `Capability.Any`              | A registry entry: `{ interface, implementation, deactivate? }` |
-| `Capability.Module<Options>`  | An authored module, opaque except for its options type         |
-| `Plugin.Plugin`               | `{ meta, modules }`                                            |
-| `Plugin.PluginModule`         | `{ id, activation, activate() }`                               |
-| `Plugin.ActivationSpec`       | `dependency \| event` discriminated union                      |
+| Type                          | Meaning                                                             |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `Capability.Tag<T, S>`        | Singleton tag; `yield*` → `T`                                       |
+| `Capability.MultiTag<T, S>`   | Multi tag; `yield*` → `Contributions<T>`                            |
+| `Capability.AnyTag`           | `Tag \| MultiTag`                                                   |
+| `Capability.Contribution`     | One branded contribution (capability + n values)                    |
+| `Capability.Contributions<T>` | Live view: `{ atom, get(), subscribe() }`                           |
+| `Capability.Any`              | A registry entry: `{ interface, implementation, deactivate? }`      |
+| `Capability.Module<Options>`  | An authored module, opaque except for its options type              |
+| `Plugin.PluginConfig<T>`      | `dx.config.ts` default export: `{ ...config, meta, make, modules }` |
+| `Plugin.Manifest`             | Build-time static form of a config: data + body URLs                |
+| `Plugin.Plugin`               | `{ meta, modules }`                                                 |
+| `Plugin.PluginModule`         | `{ id, activation, activate() }`                                    |
+| `Plugin.ActivationSpec`       | `dependency \| event` discriminated union                           |
 
 `Contribution` → `Capability.Any` is a 1-to-n expansion performed by the manager
 (`CapabilityManager.expandContributions`); see

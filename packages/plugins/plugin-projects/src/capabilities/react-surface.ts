@@ -21,10 +21,10 @@ import {
   ProjectChatsArticle,
   SpecArticle,
 } from '#containers';
-import { FEATURE_COMPANION, MOVE_TASK_DIALOG } from '#meta';
 import { Feature, Spec } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
+import { FEATURE_COMPANION, MOVE_TASK_DIALOG } from '../constants.ts';
 
 /** React surfaces contributed by plugin-projects — articles and cards for projects, specs, features and showcases. */
 export default Capability.makeModule(() =>

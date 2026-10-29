@@ -8,7 +8,7 @@ import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 
-import { meta } from '#meta';
+import { StreamDeckNamespace } from '../../namespace.ts';
 
 export type StreamDeckStatusProps = {
   model?: string;
@@ -22,7 +22,7 @@ export type StreamDeckStatusProps = {
  * sits off-centre next to its neighbours.
  */
 export const StreamDeckStatus = ({ model }: StreamDeckStatusProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StreamDeckNamespace.key);
   // Always says what it is; the model only qualifies it, since "Stream Deck +" alone reads as a
   // label rather than a status.
   const label = model ? `${t('device-connected.label')} (${model})` : t('device-connected.label');

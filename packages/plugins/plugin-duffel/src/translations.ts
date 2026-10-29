@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { DuffelNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [DuffelNamespace.key]: {
         'plugin.name': 'Duffel',
         'api-key.label': 'API key',
       },

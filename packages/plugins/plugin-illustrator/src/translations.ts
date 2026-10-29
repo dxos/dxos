@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Drawing } from '#types';
+
+import { IllustratorNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete drawing',
         'object-deleted.label': 'Drawing deleted',
       },
-      [meta.profile.key]: {
+      [IllustratorNamespace.key]: {
         'plugin.name': 'Illustrator',
         'scores.label': 'Scores',
         'scores.empty.label': 'Nothing to score yet.',

@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { SpecDocument } from '@dxos/types';
 
-import { meta } from '#meta';
 import { CodeProject, SourceFile } from '#types';
+
+import { CodeNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -41,7 +42,7 @@ export const translations = [
         'typename.label_other': 'Source Files',
         'object-name.placeholder': 'New source file',
       },
-      [meta.profile.key]: {
+      [CodeNamespace.key]: {
         'plugin.name': 'Code',
         'code-projects-section.label': 'Code Projects',
         'spec.label': 'Spec',

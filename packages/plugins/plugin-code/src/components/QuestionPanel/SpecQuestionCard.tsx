@@ -13,8 +13,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { type SpecQuestion, toQuestionThread } from '../SpecModel/index.ts';
 
 export const QUESTION_STATUS_STYLE: Record<QuestionStatus, { icon: string; hue: Tag.TagHue }> = {
@@ -36,7 +35,7 @@ export type SpecQuestionCardProps = {
  * answer back to the spec file), then who must answer, the status, and the decisions that record the answer.
  */
 export const SpecQuestionCard = ({ question, onReveal, onSelectDecision }: SpecQuestionCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { id, status, to, decisions, options } = question;
   const thread = useMemo(() => toQuestionThread(question), [question]);
   const style = QUESTION_STATUS_STYLE[status];

@@ -8,13 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { Assistant, AssistantCapabilities } from '#types';
+
+import { AssistantNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: AssistantNamespace.key,
       schema: Assistant.Settings,
       defaultValue: () => ({}),
     });
@@ -22,7 +23,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contribute(AssistantCapabilities.Settings, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+        prefix: AssistantNamespace.key,
         schema: Assistant.Settings,
         atom: settingsAtom,
       }),

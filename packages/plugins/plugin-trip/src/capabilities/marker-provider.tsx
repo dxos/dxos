@@ -12,9 +12,9 @@ import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import { type GeoMarker, LatLngLiteral } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Place, Routing, Segment, Trip } from '#types';
 
+import { TripNamespace } from '../namespace.ts';
 import { AIRPORTS } from '../operations/extractor/const.ts';
 
 // TODO(burdon): Factor out to @dxos/schema.
@@ -167,7 +167,7 @@ const useTripMarkers = (subject: Trip.Trip, { attendableId }: { attendableId?: s
 
 /** Provider plotting a {@link Trip.Trip}'s segments. */
 export const tripMarkerProvider: MapCapabilities.MarkerProvider = {
-  id: `${meta.profile.key}/segments`,
+  id: `${TripNamespace.key}/segments`,
   match: (subject) => Trip.instanceOf(subject),
   useMarkers: useTripMarkers,
 };

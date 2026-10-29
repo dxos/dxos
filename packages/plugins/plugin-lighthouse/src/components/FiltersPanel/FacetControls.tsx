@@ -12,9 +12,9 @@ import * as Select from '@dxos/react-ui/Select';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { type Facet, type FacetCounts, type ViewFilter, filterFor, isActive } from '#model';
 
+import { LighthouseNamespace } from '../../namespace.ts';
 import { formatBound, stepOf } from './sort-options.ts';
 
 type RangeFilter = Extract<ViewFilter, { kind: 'range' }>;
@@ -89,7 +89,7 @@ const RangeControl = ({
   counts: FacetCounts;
   set: SetFilter;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const min = facet.min ?? 0;
   const max = facet.max ?? 0;
   const step = stepOf(facet);
@@ -163,7 +163,7 @@ const ValuesControl = ({
   counts: FacetCounts;
   set: SetFilter;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [query, setQuery] = useState('');
   const [all, setAll] = useState(false);
   const chosen = new Set(filter?.values ?? []);
@@ -260,7 +260,7 @@ const FlagControl = ({
   counts: FacetCounts;
   set: SetFilter;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   return (
     <Layout.Flex gap='sm' align='center' classNames='text-sm'>
       <Input.Switch
@@ -278,7 +278,7 @@ const FlagControl = ({
 const ANY_TIME = 'any';
 
 const DateControl = ({ facet, filter, set }: { facet: Facet; filter?: DateFilter; set: SetFilter }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const items: Select.Option[] = [
     { value: ANY_TIME, label: t('filters-any-time.label') },
     ...DAYS.map((days) => ({
@@ -327,7 +327,7 @@ export const FacetBox = ({
   counts: FacetCounts;
   set: SetFilter;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const active = !!filter && isActive(filter);
   const keepUnknown = filter?.includeMissing !== false;
   return (

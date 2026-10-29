@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { DeckNamespace } from '../namespace.ts';
 
 export type Breadcrumb = { id: string; label: string };
 
@@ -23,7 +23,7 @@ export type Breadcrumb = { id: string; label: string };
 export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
   const { graph } = ToolkitHooks.useAppGraph();
   const registry = useContext(RegistryContext);
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DeckNamespace.key);
   const [crumbs, setCrumbs] = useState<Breadcrumb[]>([]);
   // A stable dependency for the id list; NUL cannot appear in a node id.
   const key = ids.join('\0');

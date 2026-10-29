@@ -15,8 +15,9 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import { isTauri } from '@dxos/util';
 
-import { meta } from '#meta';
 import { ClaudeCapabilities } from '#types';
+
+import { ClaudeNamespace } from '../../namespace.ts';
 
 export type ProjectFolderProps = { project: Project.Project };
 
@@ -26,7 +27,7 @@ export type ProjectFolderProps = { project: Project.Project };
  * another device. Shown only where an agent host exists; a page without the desktop app's picker takes a typed path.
  */
 export const ProjectFolder = ({ project }: ProjectFolderProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ClaudeNamespace.key);
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const stateAtom = Hooks.useCapability(ClaudeCapabilities.State);
   const folder = Hooks.useAtomCapability(ClaudeCapabilities.State).repositories?.[project.id];

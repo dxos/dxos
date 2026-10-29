@@ -12,8 +12,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { parseQuestions } from '../SpecModel/index.ts';
 import { QUESTION_STATUS_STYLE, SpecQuestionCard, type SpecQuestionCardProps } from './SpecQuestionCard.tsx';
 
@@ -24,7 +23,7 @@ export type QuestionPanelProps = Pick<SpecQuestionCardProps, 'onReveal' | 'onSel
 
 /** Every `question` block of a spec as a card, open questions first, under a count per status. */
 export const QuestionPanel = ({ content, onReveal, onSelectDecision }: QuestionPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const questions = useMemo(() => parseQuestions(content), [content]);
 
   if (questions.length === 0) {
