@@ -85,11 +85,9 @@ export const useKeyboard = (actions: KeyboardActions) => {
       ) {
         return;
       }
-      // A focused Listbox, ToggleGroup or Slider owns the arrow keys for its own navigation; the timeline handles no
-      // keys of its own, so the player keeps them after a click on it.
+      // A focused Listbox, ToggleGroup or Slider owns the arrow keys for its own navigation.
       const ownsArrows =
-        target instanceof HTMLElement &&
-        !!target.closest('[role=listbox],[role=radiogroup],[role=slider]:not([data-player-keys])');
+        target instanceof HTMLElement && !!target.closest('[role=listbox],[role=radiogroup],[role=slider]');
       const map: Record<string, () => void> = {
         ' ': playback.toggle,
         'k': playback.toggle,
@@ -117,6 +115,10 @@ export const useKeyboard = (actions: KeyboardActions) => {
       }
       // A focused button already answers Space and Enter itself.
       if (key === ' ' && target instanceof HTMLButtonElement) {
+        return;
+      }
+      // A held key repeats; only stepping and volume should, or holding Space would toggle play over and over.
+      if (event.repeat && !key.startsWith('Arrow')) {
         return;
       }
       const action = /^[1-9]$/.test(key) ? () => playback.seekChapter(Number(key) - 1) : map[key];
