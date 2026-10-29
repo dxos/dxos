@@ -29,6 +29,12 @@ describe('keys', () => {
     expect(keyAction(press('ArrowLeft', { altKey: true }))).toBe('back');
   });
 
+  test('the command key and D duplicate, while a plain D stays the debug toggle', ({ expect }) => {
+    expect(keyAction(press('d', { metaKey: true }))).toBe('duplicate');
+    expect(keyAction(press('d', { ctrlKey: true }))).toBe('duplicate');
+    expect(keyAction(press('d'))).toBe('debug');
+  });
+
   test('letters without a command or option modifier fall through to the tool palette', ({ expect }) => {
     expect(keyAction(press('r'))).toBeUndefined();
     expect(isToolKey(press('r'))).toBe(true);

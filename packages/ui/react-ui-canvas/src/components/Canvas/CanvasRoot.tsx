@@ -414,6 +414,7 @@ export const CanvasRoot = ({
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,
+    duplicate: () => controller.document.duplicate(registry.get(atoms.selection), { x: major, y: major }),
     commit: history.commit,
     major,
     copy,

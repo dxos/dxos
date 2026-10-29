@@ -712,3 +712,11 @@ decision D-71: Without the app's history, a 2D canvas keeps its engine's undo st
   for: user:richburdon
   why: A change bound to the first mount's store could not be undone through a later mount's.
 ```
+
+```mdl
+decision D-72: Cmd/Ctrl+D duplicates the selection one step aside in both dimensions; plain D stays the 2D debug toggle. 2D keeps its engine's duplicate, which carries portals and composites in its View records, rather than the scene copy helper. Fills in [D-70].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: The 2D engine's duplicate already handles promoted composites and portal Views, which the record-level helper does not see.
+```

@@ -59,6 +59,8 @@ export type UseSceneKeysOptions = {
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  /** Copies the selection one step aside, as one undo step, and selects the copy. */
+  duplicate: () => void;
   /** Runs an edit as an undo step; a run of nudges of one selection is one step. */
   commit: CanvasHistory['commit'];
   timeline?: TimelineKeys;
@@ -90,6 +92,7 @@ export const useSceneKeys = ({
   toggleDebug,
   onUndo,
   onRedo,
+  duplicate,
   commit,
   major,
   copy,
@@ -256,6 +259,10 @@ export const useSceneKeys = ({
           paste();
           event.preventDefault();
           break;
+        case 'duplicate':
+          duplicate();
+          event.preventDefault();
+          break;
         case 'undo':
           onUndo();
           event.preventDefault();
@@ -330,6 +337,7 @@ export const useSceneKeys = ({
       toggleDebug,
       onUndo,
       onRedo,
+      duplicate,
       commit,
       copy,
       cut,

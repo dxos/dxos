@@ -31,6 +31,7 @@ export type KeyAction =
   | 'copy'
   | 'cut'
   | 'paste'
+  | 'duplicate'
   | 'undo'
   | 'redo'
   | 'selectAll'
@@ -60,6 +61,7 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   copy: [{ key: 'c', meta: true }],
   cut: [{ key: 'x', meta: true }],
   paste: [{ key: 'v', meta: true }],
+  duplicate: [{ key: 'd', meta: true }],
   undo: [{ key: 'z', meta: true, shift: false }],
   redo: [{ key: 'z', meta: true, shift: true }],
   selectAll: [{ key: 'a', meta: true }],
