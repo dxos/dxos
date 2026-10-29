@@ -1201,7 +1201,7 @@ catalogs:
       specifier: ^14.1.1
       version: 14.2.0
     manifold-3d:
-      specifier: ^3.0.0
+      specifier: ^3.4.1
       version: 3.4.1
     mathjs:
       specifier: ^14.2.1
@@ -25516,6 +25516,9 @@ importers:
       '@dxos/animation':
         specifier: workspace:*
         version: link:../../common/animation
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../react-ui-canvas
@@ -25525,6 +25528,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.2.7)(scheduler@0.27.0)
+      manifold-3d:
+        specifier: 'catalog:'
+        version: 3.4.1(esbuild-wasm@0.28.0)
     devDependencies:
       '@dxos/diagram':
         specifier: workspace:*

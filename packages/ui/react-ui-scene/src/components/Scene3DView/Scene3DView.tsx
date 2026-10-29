@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { type Instance3D } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
@@ -15,6 +15,8 @@ import {
   SceneRenderer3D,
   type Theme3D,
   isTheme3D,
+  loadManifold,
+  manifoldGeometry,
   renderList,
 } from '../../three/index.ts';
 
@@ -26,7 +28,7 @@ export type Scene3DViewProps = Util.ThemedClassName<{
   camera?: Scene.Camera3D;
   /** Element values that replace the root scene's, as an animation sample does. */
   overrides?: Readonly<Record<string, Partial<Scene.Element3D>>>;
-  /** Geometry for items Babylon has no builder for, such as solids. */
+  /** Geometry for items Babylon has no builder for; Manifold's, loaded when the scene has solids, by default. */
   geometry?: GeometrySource;
   effects?: readonly Instance3D[];
   /** Called after each frame is drawn, with the size it was drawn at. */
@@ -45,6 +47,36 @@ const cssColorToHex = (color: string, fallback: string): string => {
   return `#${[red, green, blue].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
 };
 
+/** Whether drawing the document needs Manifold: it has a solid or a rounded cube. */
+const needsManifold = (doc: Scene.SceneDocument): boolean =>
+  doc.scenes.some(
+    (scene) =>
+      scene.dim === '3d' &&
+      Object.values(scene.elements).some(
+        (element) => element.kind === 'solid' || (element.kind === 'cube' && element.style?.rounded === true),
+      ),
+  );
+
+/** Manifold's geometry once loaded, for a document that needs it. */
+const useManifoldGeometry = (
+  doc: Scene.SceneDocument,
+  given: GeometrySource | undefined,
+): GeometrySource | undefined => {
+  const [geometry, setGeometry] = useState<GeometrySource>();
+  const needed = !given && needsManifold(doc);
+  useEffect(() => {
+    if (!needed || geometry) {
+      return;
+    }
+    let cancelled = false;
+    void loadManifold().then((wasm) => !cancelled && setGeometry(() => manifoldGeometry(wasm)));
+    return () => {
+      cancelled = true;
+    };
+  }, [needed, geometry]);
+  return given ?? geometry;
+};
+
 const DEFAULT_CAMERA: Scene.Camera3D = {
   target: { x: 0, y: 0, z: 0 },
   yaw: -45,
@@ -61,10 +93,11 @@ export const Scene3DView = ({
   theme,
   camera,
   overrides,
-  geometry,
+  geometry: givenGeometry,
   effects,
   onFrameDrawn,
 }: Scene3DViewProps) => {
+  const geometry = useManifoldGeometry(doc, givenGeometry);
   const root = doc.scenes[0];
   const look: Theme3D = theme ?? (isTheme3D(root?.theme) ? root.theme : 'cad');
   const view = camera ?? (root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);

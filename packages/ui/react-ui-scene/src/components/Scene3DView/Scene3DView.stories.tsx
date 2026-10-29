@@ -12,7 +12,7 @@ import { type Scene } from '@dxos/scene';
 
 import { Scene3DView } from './Scene3DView.tsx';
 
-const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy'] as const;
+const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] as const;
 const THEMES = ['cad', 'presentation'] as const;
 const CAMERAS = ['iso', 'front', 'close', 'wide'] as const;
 

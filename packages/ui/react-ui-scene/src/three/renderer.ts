@@ -56,7 +56,10 @@ const BACKDROP_RADIUS = 4000;
 /** Triangle geometry for an item Babylon has no builder for (a solid), in the item's local units. */
 export type MeshData = { positions: Float32Array; indices: Uint32Array };
 
-/** Supplies the geometry of items drawn from data rather than a builder; unknown items fall back to a box. */
+/**
+ * Supplies the geometry of items drawn from data rather than a builder, in units the item's scale multiplies: a solid's
+ * in its scene's coordinates (its scale is the frame's), a rounded cube at unit size.
+ */
 export type GeometrySource = (item: RenderItem) => MeshData | undefined;
 
 type ItemMeshes = {
@@ -227,7 +230,9 @@ export class SceneRenderer3D {
     if (spec.edges) {
       surface.enableEdgesRendering();
       surface.edgesWidth = 2;
-      surface.edgesColor = Color4.FromHexString(`${spec.color}ff`);
+      // Darker than the surface, so the edges read against it.
+      const edge = Color3.FromHexString(spec.color).scale(0.45);
+      surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
     }
     const meshes: ItemMeshes = { signature, surface, material };
     // A see-through shell in the presentation theme carries a rim and a lattice, parented so they move with it.
@@ -274,9 +279,7 @@ export class SceneRenderer3D {
         continue;
       }
       surface.position.set(item.position.x, item.position.y, item.position.z);
-      // Supplied geometry is already in the item's units; a builder's unit shape is sized by the scale.
-      const scale = data ? { x: item.scale.x / 2, y: item.scale.y / 2, z: item.scale.z / 2 } : item.scale;
-      surface.scaling.set(scale.x, scale.y, scale.z);
+      surface.scaling.set(item.scale.x, item.scale.y, item.scale.z);
       surface.rotationQuaternion = Quaternion.FromEulerAngles(
         radians(item.rotation.x),
         radians(item.rotation.y),

@@ -28,9 +28,11 @@
   "dependencies": {
     "@babylonjs/core": "catalog:",
     "@dxos/animation": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/scene": "workspace:*",
-    "@effect/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:",
+    "manifold-3d": "catalog:"
   },
   "devDependencies": {
     "@dxos/diagram": "workspace:*",
