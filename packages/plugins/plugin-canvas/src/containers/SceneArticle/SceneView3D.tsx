@@ -14,7 +14,6 @@ import {
   FLOATING_BAR,
   InspectorPanel,
   InspectorSection,
-  type InspectorSectionDef,
   ReadonlyToggle,
   type ToolGroup,
   ToolRail,
@@ -45,7 +44,7 @@ import { CanvasNamespace } from '../../namespace.ts';
 import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
 import { ElementForm, elementFormIntents, elementFormValues } from './element-form.ts';
-import { grid3D, sceneChrome } from './scene-chrome.ts';
+import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { type SessionHistory, sessionHistory } from './session-history.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
@@ -120,16 +119,6 @@ const sameTool = (left: Tool3D, right: Tool3D): boolean => JSON.stringify(left) 
 
 const toolTestId = (entry: { tool: Tool3D }): string =>
   `canvas3d.tool.${typeof entry.tool === 'object' ? ('create' in entry.tool ? entry.tool.create : 'place') : entry.tool}`;
-
-const PROPERTIES: InspectorSectionDef = {
-  id: 'properties',
-  title: 'Properties',
-  icon: 'ph--sliders-horizontal--regular',
-  order: 0,
-  defaultOpen: true,
-};
-
-const LIBRARY: InspectorSectionDef = { id: 'library', title: 'Library', icon: 'ph--package--regular', order: 1 };
 
 const THEMES = [
   { id: 'cad', key: 'theme.cad.label' },
@@ -596,7 +585,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
             </Scene3DEditor>
           </InspectorPanel.Frame>
           {selected && (
-            <InspectorSection section={{ ...PROPERTIES, title: t('properties.label') }}>
+            <InspectorSection section={{ ...SECTIONS_3D.properties, title: t('properties.label') }}>
               <Form.Root
                 key={selected.id}
                 schema={ElementForm}
@@ -613,7 +602,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               </Form.Root>
             </InspectorSection>
           )}
-          <InspectorSection section={{ ...LIBRARY, title: t('library.label') }}>
+          <InspectorSection section={{ ...SECTIONS_3D.library, title: t('library.label') }}>
             <LibraryPanel
               objects={objects}
               readonly={readonly}

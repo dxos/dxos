@@ -183,7 +183,8 @@ export const useSelectionActions = ({
 // Inspectors
 //
 
-const PROPERTIES_INSPECTOR: InspectorSectionDef = {
+/** The Properties section, shared by every scene view so it stacks first, in the panel's upper half when docked. */
+export const PROPERTIES_INSPECTOR: InspectorSectionDef = {
   id: 'properties',
   title: 'Properties',
   icon: 'ph--sliders-horizontal--regular',

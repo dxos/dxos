@@ -682,3 +682,11 @@ decision D-67: The panel and the view sit in one shared frame (`InspectorPanel.F
   for: user:richburdon
   why: One frame keeps the panel's placement identical; keying the history by the canvas object keeps it across reopening without persisting it.
 ```
+
+```mdl
+decision D-68: The 3D inspector's Properties section is the 2D canvas's own section definition, so it stacks first and, docked, fills the panel's upper half above the Library, exactly as in 2D. Fills in [D-66].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A 3D Properties section with no pane fell into the docked panel's lower half, leaving the upper half empty.
+```

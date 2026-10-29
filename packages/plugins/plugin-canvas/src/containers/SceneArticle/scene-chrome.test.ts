@@ -5,8 +5,9 @@
 import { describe, expect, test } from 'vitest';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { PROPERTIES_INSPECTOR } from '@dxos/react-ui-canvas';
 
-import { display2D, grid3D, sceneChrome } from './scene-chrome.ts';
+import { SECTIONS_3D, display2D, grid3D, sceneChrome } from './scene-chrome.ts';
 
 describe('sceneChrome', () => {
   test('only an article edits and draws the grid and guides', () => {
@@ -37,5 +38,12 @@ describe('sceneChrome', () => {
     for (const role of [AppSurface.CardContent.role, AppSurface.Section.role, AppSurface.Slide.role]) {
       expect(grid3D(role, true)).toBe(false);
     }
+  });
+
+  test("3D stacks its inspectors as 2D does: Properties is 2D's own section, at the top; the Library below it", () => {
+    expect(SECTIONS_3D.properties).toBe(PROPERTIES_INSPECTOR);
+    expect(SECTIONS_3D.properties).toMatchObject({ order: 0, pane: 'upper', defaultOpen: true });
+    expect(SECTIONS_3D.library.pane ?? 'lower').toBe('lower');
+    expect(SECTIONS_3D.library.order).toBeGreaterThan(SECTIONS_3D.properties.order);
   });
 });
