@@ -9,10 +9,14 @@ import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { DEFAULT_LATTICE, cellBounds, createLatticeProjection, nodeBounds } from '@dxos/react-ui-canvas';
 import { type View, readPath, reduceIntent, storeVersions } from '@dxos/react-ui-canvas/headless';
+import { createLatticeTree } from '@dxos/react-ui-canvas/testing';
 import { Scene, toEcho } from '@dxos/scene';
 
+import { writeViews } from './content.ts';
 import { bindLayoutStore } from './layout-store.ts';
+import { legacyDocument } from './migrate-scenes.ts';
 
 /** A 2D exemplar in ECHO form, its root narrowed to the Scene2D it is. */
 const stored = (name: keyof typeof EXEMPLARS) => {
@@ -167,6 +171,60 @@ describe('bindLayoutStore versions', () => {
     const path = [bound.root, 'nodes', 'a', 'center'];
     expect(versions.read(path)).toEqual({ x: 64, y: 64 });
     expect(versions.read(path, before)).toEqual(readPath(views, path));
+    bound.dispose();
+  });
+});
+
+describe('lattice mode on Layout2D', () => {
+  /** The lattice sample migrated into layouts, bound as the article binds a lattice canvas. */
+  const latticeStore = () => {
+    const tree = createLatticeTree();
+    const content: Record<string, unknown> = {};
+    const views = Object.fromEntries(tree.views.map((view) => [view.id, view]));
+    content.canvas = { kind: 'canvas', root: tree.root, lattice: true };
+    writeViews(content, views);
+    const stored = toEcho(legacyDocument(content));
+    const scene = stored.root;
+    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+      throw new Error('The lattice sample opens a 2D scene.');
+    }
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, scene);
+    const projection = createLatticeProjection({ registry, store: bound.store, sceneId: bound.root });
+    const layout = stored.layouts.get(bound.root);
+    if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+      throw new Error('The lattice sample has a 2D root layout.');
+    }
+    return { registry, bound, projection, layout };
+  };
+
+  test('a move lands on whole cells and is written to the Layout2D element', () => {
+    const { registry, bound, projection, layout } = latticeStore();
+    // Most of a pitch down and a little right: the shape lands one row down, on the cell grid.
+    projection.apply({ kind: 'move', ids: ['e'], delta: { x: 20, y: 170 } });
+    const node = registry.get(bound.store.view(bound.root))?.nodes.e;
+    expect(node && nodeBounds(node)).toEqual(cellBounds({ col: 0, row: 2, spanX: 1, spanY: 1 }, DEFAULT_LATTICE));
+    expect(layout.elements.e.center).toEqual(node?.center);
+    bound.dispose();
+  });
+
+  test('a resize spans whole cells and is written to the Layout2D element', () => {
+    const { registry, bound, projection, layout } = latticeStore();
+    // E is one cell at (0, 1); the cell to its right is free, so it widens across both.
+    const wide = cellBounds({ col: 0, row: 1, spanX: 2, spanY: 1 }, DEFAULT_LATTICE);
+    projection.apply({ kind: 'resize', id: 'e', bounds: { ...wide, width: wide.width - 40 } });
+    const node = registry.get(bound.store.view(bound.root))?.nodes.e;
+    expect(node && nodeBounds(node)).toEqual(wide);
+    expect(layout.elements.e.size).toEqual({ width: wide.width, height: wide.height });
+    bound.dispose();
+  });
+
+  test('a move onto an occupied cell is refused and leaves the layout as it was', () => {
+    const { bound, projection, layout } = latticeStore();
+    const before = JSON.stringify(layout.elements);
+    // D sits one row above E: moving E up onto it is refused.
+    projection.apply({ kind: 'move', ids: ['e'], delta: { x: 0, y: -192 } });
+    expect(JSON.stringify(layout.elements)).toBe(before);
     bound.dispose();
   });
 });

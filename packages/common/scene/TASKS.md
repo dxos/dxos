@@ -71,4 +71,6 @@ stage 3; the work stays in dxos/dxos#14282.
         `migrateSceneDrawing` (wired to the article and a space-wide operation in Task 9).
   - [x] Task 5 — conversion through the open layout: `CanvasLayoutBuilder` over a content-record facade
         (`readCanvasContent`/`writeCanvasContent`), typed targets in the tldraw converter, any canvas as a source.
+  - [x] Task 6 — lattice mode runs over the layout store (moves and resizes land on cells, written to Layout2D); the
+        article's projection choice from `Canvas.settings.lattice` lands with Task 9.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.
