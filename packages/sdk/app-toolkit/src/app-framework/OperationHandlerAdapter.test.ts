@@ -10,11 +10,20 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { DXN } from '@dxos/keys';
 
 import * as OperationHandlerAdapter from './OperationHandlerAdapter.ts';
 
-const A = Operation.make({ meta: { key: 'org.example.operation.a' }, input: Schema.Void, output: Schema.Void });
-const B = Operation.make({ meta: { key: 'org.example.operation.b' }, input: Schema.Void, output: Schema.Void });
+const A = Operation.make({
+  meta: { key: DXN.make('org.example.operation.a') },
+  input: Schema.Void,
+  output: Schema.Void,
+});
+const B = Operation.make({
+  meta: { key: DXN.make('org.example.operation.b') },
+  input: Schema.Void,
+  output: Schema.Void,
+});
 
 const handlers = Capability.contribute(
   Capabilities.OperationHandler,
@@ -31,8 +40,8 @@ describe('OperationHandlerAdapter.diffOperations', () => {
 
   test('names operations missing from either side', ({ expect }) => {
     expect(OperationHandlerAdapter.diffOperations([handlers], [B.meta.key])).toEqual({
-      undeclared: [A.meta.key],
-      unimplemented: [B.meta.key],
+      undeclared: ['org.example.operation.a'],
+      unimplemented: ['org.example.operation.b'],
     });
   });
 });

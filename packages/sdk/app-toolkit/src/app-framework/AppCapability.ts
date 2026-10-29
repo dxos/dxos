@@ -123,22 +123,28 @@ export const operationHandler = <
 ): Capability$.Module<Options> => {
   const { operations, ...rest } = options ?? {};
   return operationHandlerMaker(
-    operations?.length
-      ? Capability$.wrapLoader(
-          () =>
-            loader().then((module) =>
-              OperationHandlerAdapter.default(module, { operations: operationKeys(operations) }),
-            ),
-          loader,
-          {
-            module: '@dxos/app-toolkit/OperationHandlerAdapter',
-            args: { operations: operationKeys(operations) },
-          },
-        )
-      : loader,
+    operations?.length ? withDeclaredOperationsCheck(loader, operationKeys(operations)) : loader,
     rest,
   );
 };
+
+/**
+ * Reports, when an operation-handler module loads, drift between the operations it declares and the
+ * ones its handler sets implement: the declared list is what the build manifest records.
+ */
+const withDeclaredOperationsCheck = <
+  Props,
+  Requires extends readonly Capability$.AnyTag[],
+  Provides extends readonly Capability$.AnyTag[],
+>(
+  loader: Capability$.LoadModule<Props, Requires, Provides>,
+  operations: readonly string[],
+): Capability$.LoadModule<Props, Requires, Provides> =>
+  Capability$.wrapLoader(
+    () => loader().then((module) => OperationHandlerAdapter.default(module, { operations })),
+    loader,
+    { module: '@dxos/app-toolkit/OperationHandlerAdapter', args: { operations } },
+  );
 
 // Keys rather than definitions: adapter args travel through the JSON manifest.
 const operationKeys = (operations: readonly Operation.Definition.Any[]): string[] =>
