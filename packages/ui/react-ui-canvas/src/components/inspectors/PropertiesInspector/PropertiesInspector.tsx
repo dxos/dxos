@@ -24,9 +24,7 @@ import {
   type FormUpdateMeta,
   type RefFieldDataProps,
 } from '@dxos/react-ui-form';
-import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { type CanvasAtoms, type Projection } from '../../../engine/index.ts';
@@ -59,7 +57,6 @@ import {
   classedNode,
   commonSchema,
   elementLayer,
-  flipLink,
   mergeValues,
   patchValues,
   portsPerSideOf,
@@ -325,17 +322,6 @@ export const PropertiesInspector = ({
     [projection, elements, nodes, styles, styleMap, layers, registry],
   );
 
-  // Reverses every selected link (source and target swap; an arrow comes to point the other way), as one batch.
-  const links = useMemo(() => elements.filter(isLink), [elements]);
-  const onFlip = useCallback(() => {
-    projection.apply({
-      kind: 'batch',
-      intents: links.map((link) => ({ kind: 'update' as const, id: link.id, values: flipLink(link) })),
-    });
-    // A spline's control points run the other way after a flip, so a selected point's index names another one.
-    registry.set(atoms.point, undefined);
-  }, [projection, links, registry, atoms.point]);
-
   // The selected node types' own renderers over the panel's; a host's `fields` win over both. One style picker for
   // every kind: its fill rows only when every element is a node, since a link has a colour but no fill.
   const fieldMap = useMemo(
@@ -360,20 +346,6 @@ export const PropertiesInspector = ({
   const summary = elements.length > 1 && `${describeSelection(elements)}${schema ? '' : ' — no shared properties'}`;
   return (
     <div className={mx(classNames)} data-testid='properties' {...{ [SCENE_OVERLAY_ATTRIBUTE]: true }}>
-      {/* Its only command is on links, so it shows for a selection of links alone. */}
-      {links.length > 0 && links.length === elements.length && (
-        <Toolbar.Root data-testid='properties-toolbar'>
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--arrows-left-right--regular'
-            label='Flip direction'
-            disabled={readonly}
-            data-testid='properties-flip'
-            onClick={onFlip}
-          />
-        </Toolbar.Root>
-      )}
       {schema && (
         <LayersContext.Provider value={layers}>
           <StyleClassesContext.Provider value={styles ? styleMap : undefined}>

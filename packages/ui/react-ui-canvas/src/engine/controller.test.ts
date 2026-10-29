@@ -451,6 +451,15 @@ describe('CanvasController', () => {
       expect(id && store.styles && registry.get(store.styles)[id]?.name).toBe('Class 1');
       expect(scene().nodes.a).toMatchObject({ class: id });
     });
+    test('flip reverses every selected link, and only a selection of links', ({ expect }) => {
+      const { controller, scene, linkId } = setup();
+      const { source, target } = scene().links[linkId];
+      controller.selection.select(['a', linkId]);
+      expect(controller.selection.flip()).toBe(false);
+      controller.selection.select([linkId]);
+      expect(controller.selection.flip()).toBe(true);
+      expect(scene().links[linkId]).toMatchObject({ source: target, target: source });
+    });
   });
 
   describe('editing', () => {

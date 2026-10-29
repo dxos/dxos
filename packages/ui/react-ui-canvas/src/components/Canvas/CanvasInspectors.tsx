@@ -143,8 +143,22 @@ export const useSelectionActions = ({
   const canGroup = editable && selectedNodes.length > 0 && selectedNodes.every((node) => !node.locked);
   const canUngroup = editable && selectedNodes.some(isInstanceNode);
   const canClass = store.styles !== undefined && capabilities.update && selectedElements.length === 1;
-  return readonly || (!canGroup && !canUngroup && !canClass) ? undefined : (
+  const canFlip =
+    capabilities.update &&
+    selectedElements.length > 0 &&
+    selectedElements.length === selectedElements.filter(isLink).length;
+  return readonly || (!canGroup && !canUngroup && !canClass && !canFlip) ? undefined : (
     <>
+      {canFlip && (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--arrows-left-right--regular'
+          label='Flip direction'
+          data-testid='inspector-flip'
+          onClick={controller.selection.flip}
+        />
+      )}
       {canGroup && (
         <Button.Root
           variant='ghost'
