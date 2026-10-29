@@ -19,10 +19,11 @@ import { Scene3DEditor, type Tool3D } from '@dxos/react-ui-scene';
 import * as Panel from '@dxos/react-ui/Panel';
 import { type LayoutIntent, Scene, reachedObjects, resolveLayout3D } from '@dxos/scene';
 
-import { applyLayoutIntent, layoutSource, openScene } from '#model';
+import { applyLayoutIntent, layoutSource, openScene, writeModelIntent } from '#model';
 import { type Canvas } from '#types';
 
 import { CanvasNamespace } from '../../namespace.ts';
+import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
 
 export type Scene3DArticleProps = {
@@ -131,6 +132,10 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
   const resolved =
     selected && document && record?.dim === '3d' ? resolveLayout3D(document, record)[selected.id] : undefined;
 
+  // The canvas model is the Library; extracting a selection makes a composite object of it.
+  const modelId = document?.models[0]?.id;
+  const objects = useMemo(() => Object.values(document?.models[0]?.objects ?? {}), [document]);
+
   const menu = useMenuBuilder(() => {
     const builder = MenuBuilder.make();
     const tools: { id: string; tool: Tool3D; icon: string }[] = [
@@ -215,6 +220,34 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
           }
         },
       )
+      .action(
+        'make-object',
+        {
+          label: label('make-object.label'),
+          icon: 'ph--package--regular',
+          disabled: selection.length === 0 || modelId === undefined,
+          disposition: 'toolbar',
+          testId: 'canvas3d.make-object',
+        },
+        () => {
+          if (layout && modelId !== undefined) {
+            const taken = new Set(Object.keys(document?.models.find((model) => model.id === modelId)?.objects ?? {}));
+            let index = 1;
+            while (taken.has(`object-${index}`)) {
+              index++;
+            }
+            const id = `object-${index}`;
+            const problems = writeModelIntent(canvas, {
+              kind: 'extract',
+              model: modelId,
+              layout,
+              ids: selection,
+              object: { id, kind: 'sphere' },
+            });
+            problems.length === 0 && setSelection([]);
+          }
+        },
+      )
       .separator()
       .action(
         'undo',
@@ -239,7 +272,19 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
         () => step('redo'),
       );
     return builder.build();
-  }, [tool, selection, editingLayout, resolved, selected, handleIntent, step, history.current]);
+  }, [
+    tool,
+    selection,
+    editingLayout,
+    resolved,
+    selected,
+    handleIntent,
+    step,
+    history.current,
+    modelId,
+    document,
+    canvas,
+  ]);
 
   const handleSave = useCallback(
     (values: Schema.Schema.Type<typeof ElementProperties>) => {
@@ -267,6 +312,20 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
       </Panel.Header>
       <Panel.Body>
         <div className='relative dx-fill'>
+          <div
+            className='absolute top-2 left-2 z-10 w-60 max-h-[calc(100%-1rem)] overflow-auto rounded-sm bg-base-surface'
+            data-testid='canvas3d.library'
+          >
+            <LibraryPanel
+              objects={objects}
+              placing={typeof tool === 'object' && 'place' in tool ? tool.place : undefined}
+              onPlace={(id) => setTool({ place: id })}
+              onEditParts={(layout) => {
+                setSelection([]);
+                setEditing(layout);
+              }}
+            />
+          </div>
           <Scene3DEditor
             document={document}
             scene={stored.key}

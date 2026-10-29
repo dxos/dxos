@@ -27,6 +27,7 @@ export const translations = [
         'group.label': 'Group',
         'ungroup.label': 'Ungroup',
         'delete.label': 'Delete',
+        'make-object.label': 'Make object',
         'undo.label': 'Undo',
         'redo.label': 'Redo',
         'newer-format.message':

@@ -6,6 +6,7 @@ export * from './builder.ts';
 export * from './canvas-content.ts';
 export * from './canvas-document.ts';
 export * from './layout-source.ts';
+export * from './model-writer.ts';
 export * from './compiler.ts';
 export * from './content.ts';
 export * from './handler.ts';

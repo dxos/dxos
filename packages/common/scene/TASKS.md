@@ -63,7 +63,7 @@ stage 3; the work stays in dxos/dxos#14282.
       decided 2026-10-29 (decisions 1–13).
 - [x] **Write the stage 3 plan** — `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md`, 21 tasks in four
       phases (A 9, B 6, C 4, D 2), rewritten in Model, Layout and Scene terms (2026-10-29).
-- [ ] **Execute the plan** — phase A done (approved 2026-10-29); waiting for the user's check before phase B.
+- [ ] **Execute the plan** — phases A and B done; waiting for the user's check before phase C.
   - [x] Task 1 — lossless View ⇄ Layout2D mapping.
   - [x] Task 2 — ViewStore over Layout2D objects (`bindLayoutStore`), `reachedObjects`.
   - [x] Task 3 — `Drawing.canvas` accepts any canvas type (`variantFor`, `VariantSurface`).
@@ -83,4 +83,16 @@ stage 3; the work stays in dxos/dxos#14282.
         article's camera writes back to the open `Scene2D` (it still keeps the view-state camera); a space-wide
         `MigrateDrawings` operation; frames linking another drawing open it read-through in `bindLayoutStore`;
         `layoutModelAtom` subscriptions a projection factory makes are not disposed.
+  - [x] Reconcile adopts the views, scenes and model objects a losing peer made during a migration race (D-44).
+  - [x] Task 10 — `LayoutIntent` and `applyIntent` in `@dxos/scene` (D-45).
+  - [x] Task 11 — `groundPoint` and `SceneRenderer3D.pick` (through composite frames on request).
+  - [x] Task 12 — `Scene3DEditor`: select, Babylon gizmos, link, create and place tools, drill-in, delete; shared
+        `useSceneRenderer`/`useOrbit` hooks.
+  - [x] Task 13 — `layoutSource` and `applyLayoutIntent`: undo and redo over Layout3D that skip a peer's edit.
+  - [x] Task 14 — `Scene3DArticle` (toolbar, Properties form, undo/redo, camera write-back) and a create-only
+        "3D Canvas" variant.
+  - [x] Task 15 — `ModelIntent`/`applyModelIntent`, `writeModelIntent`, the Library panel and "Make object" (D-46).
+  - [ ] Phase B follow-ups: the scenes list in the 3D article (with the 2D Views inspector); object thumbnails in the
+        Library; the Library in the 2D article; Escape from a nested composite returns to the scene's layout, not
+        its parent.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.

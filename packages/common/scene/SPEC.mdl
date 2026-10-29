@@ -525,3 +525,12 @@ decision D-45: Layouts are edited by `LayoutIntent`s (create, delete, update, re
   affects: [F-1.1]
   why: The 3D editor, undo and the assistant need one vocabulary of edits that is pure and testable without a renderer.
 ```
+
+```mdl
+decision D-46: Models are edited by `ModelIntent`s (define, update, remove, extract) through `applyModelIntent`, which returns the problems that refused an intent and leaves the document unchanged then; removing an object an element still places is refused, and `extract` turns elements into one element placing a new composite object whose parts layout holds them, rebinding links that crossed out of them to that element. The Library panel is the canvas model's objects: each places with a click, and a composite's parts open for editing. Fills in [D-27].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1]
+  why: The Library, "make object" and the assistant need one checked way to change a model that never leaves an element placing nothing.
+```
