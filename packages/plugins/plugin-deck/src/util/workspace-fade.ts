@@ -22,6 +22,7 @@ const FADE_IN_EASING = 'cubic-bezier(0, 0, 0.2, 1)';
 
 let target: HTMLElement | undefined;
 let running: Animation | undefined;
+let runningOn: HTMLElement | undefined;
 
 /** Makes `element`, the deck's viewport, the one a workspace switch fades. Returns the undo. */
 export const setWorkspaceFadeTarget = (element: HTMLElement): (() => void) => {
@@ -29,6 +30,11 @@ export const setWorkspaceFadeTarget = (element: HTMLElement): (() => void) => {
   return () => {
     if (target === element) {
       target = undefined;
+    }
+    // A finished animation still holds its element, and with it the unmounted deck.
+    if (runningOn === element) {
+      running = undefined;
+      runningOn = undefined;
     }
   };
 };
@@ -46,12 +52,20 @@ const canFade = (): boolean =>
  */
 const dip = (element: HTMLElement): Promise<void> =>
   new Promise((resolve) => {
-    // A page that stops rendering never runs the frame; the switch must not wait on it.
-    const fallback = setTimeout(resolve, FADE_OUT_MS + 100);
+    // A page that stops rendering never runs the frame; the switch must not wait on it, nor dip after it has written.
+    let skipped = false;
+    const fallback = setTimeout(() => {
+      skipped = true;
+      resolve();
+    }, FADE_OUT_MS + 100);
     requestAnimationFrame(() => {
+      if (skipped) {
+        return;
+      }
       const from = getComputedStyle(element).opacity;
       const duration = FADE_OUT_MS + HOLD_MS + FADE_IN_MS;
       running?.cancel();
+      runningOn = element;
       running = element.animate(
         [
           { opacity: from, offset: 0, easing: FADE_OUT_EASING },
@@ -69,8 +83,8 @@ const dip = (element: HTMLElement): Promise<void> =>
 /**
  * Fades the deck out ahead of a workspace switch, and back in once the entered workspace has had `HOLD_MS` to render,
  * so neither the empty deck between two workspaces nor its planks arriving a commit later shows. Resolves once the
- * deck is out, for the switch to write behind it. A view transition cannot do this: it freezes rendering for its
- * update, which content that waits on a frame or a resize never finishes under.
+ * deck is out, for the switch to write behind it. Rendering continues throughout, which content that waits on a frame
+ * or a resize needs.
  */
 export const fadeOutDeck = (): Effect.Effect<void> =>
   Effect.suspend(() => {

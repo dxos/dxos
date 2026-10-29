@@ -24,6 +24,7 @@ import { log } from '@dxos/log';
 import { DeckCapabilities, DeckSchema } from '#types';
 
 import { shouldDeferNavigationHandlers } from '../capabilities/check-app-scheme.ts';
+import { fadeOutDeck } from '../util/workspace-fade.ts';
 import { type CompanionTarget, type NavigationIntent, applyActive, applyCompanion, applyWorkspace } from './apply.ts';
 import * as Navigation from './navigation.ts';
 import { getCandidateEntityIds, getUnresolvedPlankId, initialPlanks } from './navigation.ts';
@@ -141,8 +142,16 @@ const project = Effect.fnUntraced(function* (url?: URL, options?: ProjectOptions
       }),
     );
 
-  const switchWorkspace = (workspacePath: string) =>
-    workspacePath === registry.get(stateAtom).activeDeck ? Effect.void : applyWorkspace(workspacePath);
+  // Back, forward and links switch workspaces here; boot leaves the placeholder deck, which has nothing to fade.
+  const switchWorkspace = (workspacePath: string) => {
+    const { activeDeck } = registry.get(stateAtom);
+    if (workspacePath === activeDeck) {
+      return Effect.void;
+    }
+    return activeDeck === DeckSchema.DEFAULT_DECK_ID
+      ? applyWorkspace(workspacePath)
+      : fadeOutDeck().pipe(Effect.andThen(applyWorkspace(workspacePath)));
+  };
 
   const pathname = (url ?? new URL(window.location.href)).pathname;
   if (pathname === '/reset') {
