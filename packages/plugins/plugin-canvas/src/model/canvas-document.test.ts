@@ -9,7 +9,15 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Scene } from '@dxos/scene';
 
 import types from '../capabilities/schema.ts';
-import { addScene, canvasDocument, deleteScene, makeCanvas, openScene, removeCanvas } from './canvas-document.ts';
+import {
+  addScene,
+  canvasDimension,
+  canvasDocument,
+  deleteScene,
+  makeCanvas,
+  openScene,
+  removeCanvas,
+} from './canvas-document.ts';
 
 describe('canvas document', () => {
   let builder: EchoTestBuilder;
@@ -35,6 +43,15 @@ describe('canvas document', () => {
     expect(Obj.instanceOf(Scene.Scene3D, solid.scene)).toBe(true);
     expect(Obj.instanceOf(Scene.Layout3D, solid.layout)).toBe(true);
     expect(Obj.instanceOf(Scene.Model3D, solid.model)).toBe(true);
+  });
+
+  test('a 3D canvas opens a Scene3D over a Layout3D, and its dimension picks the 3D article', () => {
+    const { canvas, scene, layout } = makeCanvas({ dimension: '3d' });
+    expect(Obj.instanceOf(Scene.Scene3D, openScene(canvas))).toBe(true);
+    expect(Obj.instanceOf(Scene.Scene3D, scene) && scene.layout.target === layout).toBe(true);
+    expect(Obj.instanceOf(Scene.Layout3D, layout)).toBe(true);
+    expect(canvasDimension(canvas)).toBe('3d');
+    expect(canvasDimension(makeCanvas().canvas)).toBe('2d');
   });
 
   test('canvasDocument reads every scene, layout and model of the canvas', () => {

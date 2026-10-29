@@ -50,6 +50,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Scene } from '@dxos/scene';
 
 import {
+  canvasDimension,
   canvasRecordOf,
   generatorCompiler,
   isCanvasDrawing,
@@ -68,6 +69,7 @@ import {
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
 import { CanvasNamespace } from '../../namespace.ts';
+import { Scene3DArticle } from '../Scene3DArticle/index.ts';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
@@ -101,9 +103,22 @@ const NewerFormatBanner = () => {
 
 /** The article surface of the canvas variant: the scene engine over the drawing's `Canvas`. */
 export const CanvasArticle = (props: CanvasArticleProps) =>
-  CanvasFormat.isCanvas(props.canvas) ? <SceneCanvasArticle {...props} canvas={props.canvas} /> : null;
+  CanvasFormat.isCanvas(props.canvas) ? <DimensionArticle {...props} canvas={props.canvas} /> : null;
 
 CanvasArticle.displayName = 'CanvasArticle';
+
+/** A canvas whose open scene is 3D edits in the 3D article; every other one in the 2D engine. */
+const DimensionArticle = ({
+  canvas,
+  ...props
+}: Omit<CanvasArticleProps, 'canvas'> & { canvas: CanvasFormat.Canvas }) => {
+  useObject(canvas);
+  return canvasDimension(canvas) === '3d' ? (
+    <Scene3DArticle canvas={canvas} role={props.role} attendableId={props.attendableId} />
+  ) : (
+    <SceneCanvasArticle {...props} canvas={canvas} />
+  );
+};
 
 /** A `Canvas`: its open scene's layouts, its settings, and the mode its settings name. */
 const SceneCanvasArticle = ({

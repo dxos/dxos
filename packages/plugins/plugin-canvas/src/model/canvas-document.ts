@@ -77,6 +77,12 @@ export const openScene = (canvas: Canvas.Canvas): StoredScene | undefined => {
   return isStoredScene(scene) ? scene : undefined;
 };
 
+/** Which editor the canvas opens in: its open scene's dimension, once that has loaded. */
+export const canvasDimension = (canvas: Canvas.Canvas): Scene.Dimension | undefined => {
+  const scene = openScene(canvas);
+  return Obj.instanceOf(Scene.Scene3D, scene) ? '3d' : Obj.instanceOf(Scene.Scene2D, scene) ? '2d' : undefined;
+};
+
 /** Every loaded scene, layout and model the canvas lists, in record form; the first scene is the root. */
 export const canvasDocument = (canvas: Canvas.Canvas): Scene.SceneDocument => {
   const model = canvas.model?.target;

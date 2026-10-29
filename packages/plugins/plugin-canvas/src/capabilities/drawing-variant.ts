@@ -28,6 +28,17 @@ const variant: IllustratorCapabilities.DrawingVariant = {
   article: CanvasArticle,
 };
 
+// A 3D canvas is the same `Canvas` type over a Scene3D: picking it only changes what is created, so it shares the
+// 2D variant's surfaces, which open the editor its scene's dimension asks for.
+const variant3d: IllustratorCapabilities.DrawingVariant = {
+  ...variant,
+  id: `${Canvas.SCENE_SCHEMA}#3d`,
+  label: '3D Canvas',
+  icon: 'ph--cube--regular',
+  createOnly: true,
+  createCanvas: () => addCanvas({ dimension: '3d' }),
+};
+
 // Scene drawings saved before `Canvas` keep their base `Drawing.Canvas` until their article migrates them.
 const legacy: IllustratorCapabilities.DrawingVariant = {
   id: Canvas.SCENE_SCHEMA,
@@ -42,6 +53,7 @@ const legacy: IllustratorCapabilities.DrawingVariant = {
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contribute(IllustratorCapabilities.VariantProvider, variant),
+    Capability.contribute(IllustratorCapabilities.VariantProvider, variant3d),
     Capability.contribute(IllustratorCapabilities.VariantProvider, legacy),
   ]),
 );

@@ -137,6 +137,7 @@
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-scene": "workspace:*",
     "@dxos/scene": "workspace:*",
     "@dxos/types": "workspace:*",
