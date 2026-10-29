@@ -110,6 +110,18 @@ describe('MenuBuilder', () => {
     expect(separatorEdge).toEqual({ source: 'root', target: separatorNode!.id, relation: 'child' });
   });
 
+  test('separators added through a subgraph or group keep ids of their own', ({ expect }) => {
+    const graph = MenuBuilder.make()
+      .root({ label: 'toolbar' })
+      .separator()
+      .subgraph((sub) => sub.action('bold', { label: 'Bold' }, () => {}).separator())
+      .group('more', { label: 'More' }, (group) => group.separator())
+      .build();
+
+    const ids = graph.nodes.filter((node) => node.type === MenuSeparatorType).map((node) => node.id);
+    expect(new Set(ids).size).toBe(3);
+  });
+
   test('subgraph callback adds children to current group', ({ expect }) => {
     const graph = MenuBuilder.make()
       .root({ label: 'toolbar' })

@@ -81,8 +81,6 @@ export interface MenuBuilder extends ActionGroupBuilder {
 }
 
 class MenuBuilderImpl implements MenuBuilder {
-  private _separatorCount = 0;
-
   constructor(
     private readonly _data: ActionGraphProps,
     private readonly _rootId: string,
@@ -142,7 +140,9 @@ class MenuBuilderImpl implements MenuBuilder {
   }
 
   separator(variant: 'gap' | 'line' = 'gap'): this {
-    const id = `separator-${++this._separatorCount}`;
+    // Numbered across the whole graph: a nested group or subgraph builds into the same nodes, so a count of its own
+    // would reuse an id and the later separator would replace the earlier one.
+    const id = `separator-${this._data.nodes.filter((node) => node.type === MenuSeparatorType).length + 1}`;
     this._data.nodes.push({
       id,
       type: MenuSeparatorType,
