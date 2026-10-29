@@ -12,8 +12,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { InboxNamespace } from '../../namespace.ts';
 import { EventEditor } from './EventEditor.tsx';
 
 // The hub `Meeting` type is owned by plugin-meeting; reference its typename by string so plugin-inbox
@@ -58,7 +57,7 @@ export const EventDetails = ({
   starred,
   onToggleStar,
 }: EventDetailsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   // Synced events are immutable feed snapshots (not LiveObjects), so read fields directly — `useObject`
   // requires a live object and throws on a snapshot. Inline draft editing is handled by EventEditor below.
   const data = event;

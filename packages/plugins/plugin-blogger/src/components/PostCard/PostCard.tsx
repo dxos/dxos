@@ -11,8 +11,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { Blog } from '#types';
+
+import { BloggerNamespace } from '../../namespace.ts';
 
 export type PostCardProps = {
   post: Blog.Post;
@@ -25,7 +26,7 @@ export type PostCardProps = {
  * update the tile without navigating away and back.
  */
 export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(BloggerNamespace.key);
   const [post] = useObject(postProp);
   const title = post.name?.trim() || t('post-card.untitled.label');
   const status = post.status ?? 'draft';

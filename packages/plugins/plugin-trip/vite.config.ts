@@ -7,12 +7,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'TripPlugin': 'src/TripPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'testing': 'src/testing.ts',
     'testing/index': 'src/testing/index.ts',

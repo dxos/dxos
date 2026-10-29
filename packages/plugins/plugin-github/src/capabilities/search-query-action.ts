@@ -8,10 +8,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SearchCapabilities from '@dxos/plugin-search/SearchCapabilities';
 
-import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
 import { parsePullRequestReference } from '../github-link.ts';
+import { GitHubNamespace } from '../namespace.ts';
 
 /**
  * The row for text naming a pull request, labelled with the parts the text itself spells out — the
@@ -23,7 +23,7 @@ export const matchPullRequestQuery: SearchCapabilities.QueryAction['match'] = (t
     reference && {
       label: [
         'import-pull-request-query.label',
-        { ns: meta.profile.key, reference: `${reference.owner}/${reference.repo}#${reference.number}` },
+        { ns: GitHubNamespace.key, reference: `${reference.owner}/${reference.repo}#${reference.number}` },
       ],
       icon: 'ph--git-pull-request--regular',
     }
@@ -39,7 +39,7 @@ export default Capability.makeModule(
     const invoker = yield* Capabilities.OperationInvoker;
     const actions: SearchCapabilities.QueryAction[] = [
       {
-        id: `${meta.profile.key}/query-action/import-pull-request`,
+        id: `${GitHubNamespace.key}/query-action/import-pull-request`,
         match: matchPullRequestQuery,
         run: (text, { db }) =>
           invoker

@@ -9,14 +9,15 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { HelpCapabilities } from '#types';
+
+import { SupportNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const stateAtom = KvsStore.make({
-      key: `${meta.profile.key}.state`,
+      key: `${SupportNamespace.key}.state`,
       schema: HelpCapabilities.StateSchema,
       defaultValue: (): HelpCapabilities.State => ({
         running: false,
@@ -26,7 +27,7 @@ export default Capability.makeModule(
     });
 
     // Synced as its own namespace; the settings UI lists only prefixes equal to a plugin id.
-    const toursPrefix = `${meta.profile.key}.tours`;
+    const toursPrefix = `${SupportNamespace.key}.tours`;
     const seenToursAtom = KvsStore.make({
       key: toursPrefix,
       schema: HelpCapabilities.SeenToursSchema,

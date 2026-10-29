@@ -12,8 +12,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { Result } from '#types';
+
+import { CommerceNamespace } from '../../namespace.ts';
 
 export type ResultDetailProps = {
   result?: Result.Result;
@@ -25,7 +26,7 @@ export type ResultDetailProps = {
 
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result: subject, starred = false, onToggleStar, onClose }: ResultDetailProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CommerceNamespace.key);
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
   if (!result) {

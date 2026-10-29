@@ -6,7 +6,7 @@
 // consumer of one predicate does not pull the whole plugin in behind it.
 export * as Binding from './Binding.ts';
 export * as ConnectorAuth from './ConnectorAuth.ts';
-export * as ConnectorPlugin from './ConnectorPlugin.ts';
+export * as ConnectorPlugin from '#meta';
 export * as SyncTemplate from './SyncTemplate.ts';
 export * from '#skills';
 export * from '#types';

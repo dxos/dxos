@@ -6,7 +6,7 @@
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
-import { meta } from '#meta';
+import { LingoNamespace } from '../namespace.ts';
 
 /** Start-gated modules activate here, fired on demand and by the host's idle trickle. */
-export const Start = ActivationEvent.pluginStart(meta.profile.key);
+export const Start = ActivationEvent.pluginStart(LingoNamespace.key);

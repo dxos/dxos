@@ -3,7 +3,7 @@
 //
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
-import { type AutomergeUrl, type DocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -2036,6 +2036,57 @@ export class EntityManager implements IDatabaseBinding {
       }
     }
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
+
+    // A root write can re-point a loaded object at another document (a migration committed in place),
+    // which no epoch switch will rebind. The handle map covers objects whose core was collected, which
+    // rehydrate from it; an object viewed on another branch keeps its branch document.
+    for (const [objectId, link] of Object.entries(links)) {
+      const url = link.toString();
+      const boundUrl = this._objectDocumentHandles.get(objectId)?.url;
+      if (
+        boundUrl != null &&
+        boundUrl !== url &&
+        isValidAutomergeUrl(url) &&
+        this.getCurrentBranch(objectId) === 'main'
+      ) {
+        this.#rebindWhenReady(this._repoProxy.find<DatabaseDirectory>(url), objectId, this.#generation);
+      }
+    }
+  }
+
+  /** Rebinds an object to the document its root link now names, once that document is ready. */
+  #rebindWhenReady(handle: DocHandleProxy<DatabaseDirectory>, objectId: string, generation: number): void {
+    handle
+      .whenReady()
+      .then(() => {
+        if (
+          this.#isStale(generation) ||
+          this._getLinkedDocumentUrl(objectId) !== handle.url ||
+          this.getCurrentBranch(objectId) !== 'main'
+        ) {
+          return;
+        }
+        const previous = this._objectDocumentHandles.get(objectId);
+        if (previous == null) {
+          return;
+        }
+        // Move the change listener as a branch switch does: `_processDocumentUpdate` rebinds an object
+        // to whichever document fires a change, so the superseded one must stop firing for it.
+        const spaceRoot = this.getSpaceRootDocHandle();
+        if (previous !== spaceRoot && (this._documentObjects.get(previous)?.size ?? 0) <= 1) {
+          previous.off('change', this._onDocumentUpdate);
+        }
+        if (handle !== spaceRoot) {
+          handle.off('change', this._onDocumentUpdate);
+          handle.on('change', this._onDocumentUpdate);
+        }
+        if (this._objects.has(objectId)) {
+          this._rebindObjects(handle, [objectId]);
+        } else {
+          this._bindObjectDocument(objectId, handle);
+        }
+      })
+      .catch((err) => log.catch(err));
   }
 
   private _onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {

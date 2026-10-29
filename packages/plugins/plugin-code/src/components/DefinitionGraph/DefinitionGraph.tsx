@@ -14,8 +14,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { LatticeGraph } from '../LatticeGraph/index.ts';
 import {
   type ChangeKind,
@@ -72,7 +71,7 @@ type DefinitionCardProps = {
 };
 
 const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { icon, hue } = kindStyle(definition.kind);
   const { external } = definition;
   return (
@@ -159,7 +158,7 @@ type KindLegendProps = {
 
 /** One switch per group, each beside the kinds it holds. */
 const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange, changes }: KindLegendProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
       column

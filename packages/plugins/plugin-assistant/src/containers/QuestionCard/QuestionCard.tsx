@@ -13,8 +13,9 @@ import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
 import { AssistantOperation } from '#types';
+
+import { AssistantNamespace } from '../../namespace.ts';
 
 const QUESTION_CARD_NAME = 'QuestionCard';
 
@@ -31,7 +32,7 @@ export type QuestionCardProps = {
  * The body ONLY — the host draws `Card.Root` and the header.
  */
 export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Snapshot rather than the object: the card must repaint when the answer lands, including when
   // it lands from another surface showing the same question — the task's own row, say.

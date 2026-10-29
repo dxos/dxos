@@ -15,8 +15,9 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
 import { Sheet } from '#types';
+
+import { SheetNamespace } from '../../namespace.ts';
 
 const SPINE_ICONS: Record<Sheet.TimelineSpine, string> = {
   left: 'ph--align-left-simple--regular',
@@ -41,7 +42,7 @@ export type TimelineChartProps = {
 
 /** A timeline chart: its own toolbar for how it is drawn, the timeline, and a status bar that filters events by text. */
 export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: TimelineChartProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SheetNamespace.key);
   const {
     spine = 'center',
     scale = 'compact',
@@ -73,11 +74,11 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['timeline-actions.label', { ns: meta.profile.key }] })
+        .root({ label: ['timeline-actions.label', { ns: SheetNamespace.key }] })
         .group(
           'spine',
           {
-            label: ['timeline-spine.label', { ns: meta.profile.key }],
+            label: ['timeline-spine.label', { ns: SheetNamespace.key }],
             iconOnly: true,
             variant: 'toggleGroup',
             selectCardinality: 'single',
@@ -88,7 +89,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
               group.action(
                 value,
                 {
-                  label: [`timeline-spine.${value}.label`, { ns: meta.profile.key }],
+                  label: [`timeline-spine.${value}.label`, { ns: SheetNamespace.key }],
                   icon: SPINE_ICONS[value],
                   checked: spine === value,
                 },
@@ -99,7 +100,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
         .group(
           'font-size',
           {
-            label: ['timeline-font-size.label', { ns: meta.profile.key }],
+            label: ['timeline-font-size.label', { ns: SheetNamespace.key }],
             icon: 'ph--text-aa--regular',
             iconOnly: true,
             variant: 'dropdownMenu',
@@ -111,7 +112,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
               group.action(
                 value,
                 {
-                  label: [`timeline-font-size.${value}.label`, { ns: meta.profile.key }],
+                  label: [`timeline-font-size.${value}.label`, { ns: SheetNamespace.key }],
                   checked: fontSize === value,
                 },
                 () => onChange({ fontSize: value }),
@@ -121,7 +122,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
         .action(
           'dates',
           {
-            label: ['timeline-dates.label', { ns: meta.profile.key }],
+            label: ['timeline-dates.label', { ns: SheetNamespace.key }],
             icon: 'ph--calendar-dots--regular',
             iconOnly: true,
             variant: 'toggle',
@@ -132,7 +133,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
         .action(
           'future',
           {
-            label: ['timeline-future.label', { ns: meta.profile.key }],
+            label: ['timeline-future.label', { ns: SheetNamespace.key }],
             icon: 'ph--hourglass-high--regular',
             iconOnly: true,
             variant: 'toggle',
@@ -145,7 +146,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
         .group(
           'scale',
           {
-            label: ['timeline-scale.label', { ns: meta.profile.key }],
+            label: ['timeline-scale.label', { ns: SheetNamespace.key }],
             iconOnly: true,
             variant: 'toggleGroup',
             selectCardinality: 'single',
@@ -156,7 +157,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
               group.action(
                 value,
                 {
-                  label: [`timeline-scale.${value}.label`, { ns: meta.profile.key }],
+                  label: [`timeline-scale.${value}.label`, { ns: SheetNamespace.key }],
                   icon: SCALE_ICONS[value],
                   checked: scale === value,
                 },

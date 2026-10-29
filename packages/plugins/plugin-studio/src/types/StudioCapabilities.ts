@@ -6,7 +6,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { StudioNamespace } from '../namespace.ts';
 
 /**
  * Plugins contribute generation providers via this capability (e.g. plugin-ideogram), one per
@@ -18,5 +18,5 @@ import { meta } from '#meta';
  * `GenerationService` export.
  */
 export const GenerationService = Capability.make<import('./GenerationService.ts').GenerationService>()(
-  `${meta.profile.key}.capability.generationService`,
+  `${StudioNamespace.key}.capability.generationService`,
 );

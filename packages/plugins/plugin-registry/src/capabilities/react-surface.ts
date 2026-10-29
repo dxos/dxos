@@ -13,10 +13,10 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { DisableDependentsAlert } from '#components';
 import { LoadPluginDialog, PluginArticle, PublicRegistryArticle, RegistrySettingsContainer } from '#containers';
-import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
 import { DISABLE_DEPENDENTS_DIALOG } from '../constants.ts';
+import { RegistryNamespace } from '../namespace.ts';
 import { RegistryCategoryArticle } from './RegistryCategoryArticle.tsx';
 
 export default Capability.makeModule(({ externalPlugins = true }: RegistryPluginOptions = {}) => {
@@ -35,7 +35,7 @@ export default Capability.makeModule(({ externalPlugins = true }: RegistryPlugin
         }),
         Surface.create({
           id: 'pluginSettings',
-          filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+          filter: AppSurface.settings(AppSurface.Article, RegistryNamespace.key),
           component: RegistrySettingsContainer,
           props: ({ data: { subject } }) => ({ subject }),
         }),

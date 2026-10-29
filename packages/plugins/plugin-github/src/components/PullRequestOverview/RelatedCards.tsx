@@ -11,8 +11,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
+import { GitHubNamespace } from '../../namespace.ts';
 import { type ArtifactLink, type PullRequestBody } from '../../pull-request-body.ts';
 import { ArtifactMedia, artifactIcon } from './ArtifactPill.tsx';
 
@@ -25,7 +24,7 @@ export type RelatedCardsProps = Pick<PullRequestBody, 'artifacts' | 'claudeCode'
 
 /** What {@link RelatedCards} would show; empty when the pull request links to nothing beyond its diff. */
 export const useRelatedItems = ({ artifacts, claudeCode, previewUrl }: RelatedCardsProps): RelatedItem[] => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   return useMemo(() => {
     const items: RelatedItem[] = artifacts.map((artifact) => ({ kind: 'artifact', id: artifact.url, artifact }));
     if (previewUrl) {
@@ -66,7 +65,7 @@ export const RelatedCards = ({ items }: { items: readonly RelatedItem[] }) => (
 );
 
 const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   if (item.kind === 'link') {
     return (
       <Card.Root data-testid={`pull-request.related.${item.id}`}>
@@ -116,7 +115,7 @@ const CardHeading = ({
   title: string;
   href?: string;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   return (
     <Card.Header>
       <Layout.Block>

@@ -11,8 +11,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import * as MeetingOperation from '@dxos/plugin-meeting/MeetingOperation';
 
-import { meta } from '#meta';
 import { MeetingRecorderCapabilities, MeetingRecorderOperation } from '#types';
+
+import { MeetingRecorderNamespace } from '../namespace.ts';
 
 const handler: Operation.WithHandler<typeof MeetingRecorderOperation.Stop> = MeetingRecorderOperation.Stop.pipe(
   Operation.withHandler(
@@ -34,13 +35,13 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.Stop> = Mee
       const settings = registry.get(yield* Capability.get(MeetingRecorderCapabilities.Settings));
       const summarize = settings.autoSummarize ?? true;
       yield* Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.stopped`,
+        id: `${MeetingRecorderNamespace.key}.stopped`,
         icon: 'ph--check-circle--regular',
-        title: ['recording-stopped.title', { ns: meta.profile.key }],
+        title: ['recording-stopped.title', { ns: MeetingRecorderNamespace.key }],
         description: [
           summarize ? 'recording-stopped-summarizing.description' : 'recording-stopped.description',
           {
-            ns: meta.profile.key,
+            ns: MeetingRecorderNamespace.key,
           },
         ],
         duration: 5_000,

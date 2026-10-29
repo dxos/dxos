@@ -22,8 +22,9 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
-import { meta } from '#meta';
 import { InboxOperation, Mailbox } from '#types';
+
+import { InboxNamespace } from '../../namespace.ts';
 
 type SubscriptionTileData = {
   readonly subscription: Mailbox.Subscription;
@@ -35,7 +36,7 @@ type SubscriptionTileData = {
 const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<SubscriptionTileData>, 'data' | 'location'>>(
   ({ data, location }, forwardedRef) => {
     const { subscription, selected, onToggle } = data;
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(InboxNamespace.key);
     return (
       <Mosaic.Tile
         asChild
@@ -80,7 +81,7 @@ export type SubscriptionsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Ma
  * unsubscribe (`UnsubscribeSender`). Already-filtered senders drop out of the list.
  */
 export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(InboxNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const feed = useResolveRef(mailbox.feed);
   const db = Obj.getDatabase(mailbox);

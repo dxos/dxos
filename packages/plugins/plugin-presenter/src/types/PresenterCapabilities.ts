@@ -8,14 +8,13 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
+import { PresenterNamespace } from '../namespace.ts';
 import type * as Presentation from './Presentation.ts';
 import type * as PresenterSettings from './PresenterSettings.ts';
 
 /** The presenter's settings (where speaker notes show). */
 export const Settings = Capability.makeSingleton<Atom.Writable<PresenterSettings.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${PresenterNamespace.key}.capability.settings`,
 );
 
 /** The slide on screen while a presentation is presented. */
@@ -47,5 +46,5 @@ export type PresentationEventHandler = {
 };
 
 export const PresentationEventHandler = Capability.make<PresentationEventHandler>()(
-  `${meta.profile.key}.capability.presentationEventHandler`,
+  `${PresenterNamespace.key}.capability.presentationEventHandler`,
 );
