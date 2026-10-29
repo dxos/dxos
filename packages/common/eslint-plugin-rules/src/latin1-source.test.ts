@@ -176,7 +176,7 @@ const CASES: Case[] = [
   },
 ];
 
-/** Applies every suggestion the rule offers, the way `oxlint --fix-suggestions` does. */
+/** Applies every fix and suggestion the rule offers, the way `oxlint --fix-suggestions` does. */
 const applySuggestions = ({ code, options }: Case) => {
   const linter = new Linter({ configType: 'flat' });
   const messages = linter.verify(
@@ -191,7 +191,9 @@ const applySuggestions = ({ code, options }: Case) => {
     ],
     'source.tsx',
   );
-  const fixes = messages.flatMap((message) => message.suggestions?.map((suggestion) => suggestion.fix) ?? []);
+  const fixes = messages.flatMap((message) =>
+    message.fix ? [message.fix] : (message.suggestions?.map((suggestion) => suggestion.fix) ?? []),
+  );
   const output = fixes
     .toSorted((left, right) => right.range[0] - left.range[0])
     .reduce((text, fix) => text.slice(0, fix.range[0]) + fix.text + text.slice(fix.range[1]), code);
@@ -199,7 +201,7 @@ const applySuggestions = ({ code, options }: Case) => {
 };
 
 describe('latin1-source', () => {
-  it('reports without an autofix and names the replacement', () => {
+  it('fixes comments, and only suggests a rewrite for code', () => {
     ruleTester.run('latin1-source', rule, {
       valid: [
         // Latin-1 itself is fine: one byte per character.
@@ -217,6 +219,11 @@ describe('latin1-source', () => {
             },
           ],
         },
+        {
+          code: `// retry ${EM_DASH} later\nconst value = 1;`,
+          output: '// retry - later\nconst value = 1;',
+          errors: [{ messageId: 'wide' }],
+        },
       ],
     });
   });
@@ -228,7 +235,9 @@ describe('latin1-source', () => {
         messages.map((message) => message.messageId),
         testCase.code,
       ).toEqual(testCase.errors.map((error) => error.messageId));
-      expect(messages.every((message) => message.fix === undefined)).toBe(true);
+      for (const message of messages) {
+        expect(message.fix !== undefined, message.message).toBe(message.message.includes(' in a comment '));
+      }
       expect(output, testCase.code).toBe(testCase.output);
     }
   });

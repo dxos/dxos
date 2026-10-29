@@ -375,6 +375,7 @@ export default {
     docs: {
       description: 'keep source at or below U+00FF so V8 holds each module at one byte per character',
     },
+    fixable: 'code',
     hasSuggestions: true,
     schema: [
       {
@@ -431,12 +432,14 @@ export default {
       const options = { exact, measured, loose, quote: quoteOf(slice, mode) };
       const rewrite = (value) => (mode === 'key' ? quoteKey(value) : toLatin1(value, mode, options));
       const char = String.fromCodePoint(slice.codePointAt(offset));
-      // No autofix: a rewrite can change a value code depends on, so the author picks the Latin-1 spelling.
+      const fix = (fixer) => fixer.replaceTextRange([start, end], rewrite(slice));
+      // Only a comment is fixed automatically: a rewritten literal can change a value code depends on, so there the
+      // author picks the Latin-1 spelling, with the rewrite offered as a suggestion.
       context.report({
         loc: sourceCode.getLocFromIndex(start + offset),
         messageId: 'wide',
         data: { code: hex(char.codePointAt(0)), kind: KIND[mode], replacement: rewrite(char) },
-        suggest: [{ messageId: 'rewrite', fix: (fixer) => fixer.replaceTextRange([start, end], rewrite(slice)) }],
+        ...(mode === 'comment' ? { fix } : { suggest: [{ messageId: 'rewrite', fix }] }),
       });
     };
 

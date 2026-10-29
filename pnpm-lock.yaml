@@ -1750,7 +1750,7 @@ overrides:
   wrangler: '>=4.112.0'
   ws: '>=8.17.1'
 
-pnpmfileChecksum: sha256-HfdXnQ57lkGOnGDIqwvpKXC8RFCIbD00oMkDJI7W7aQ=
+pnpmfileChecksum: sha256-er6BAWIghmwOc9KK27KjxYmsoA8ZFrBReMW+2PJ4ZVc=
 
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.49':
