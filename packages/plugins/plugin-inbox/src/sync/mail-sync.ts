@@ -86,6 +86,13 @@ export type MailSyncSourceOptions = {
 export type MailSyncItem = {
   readonly foreignId: string;
   readonly key: number;
+  /**
+   * Listed by the provider's change feed (an incremental delta's created ids) rather than by a date
+   * window, so its key is a provider date that says nothing about what was synced (an imported message
+   * keeps its original date). Set by the harness on {@link MailSyncStreams.deltaAdditions}: the same id
+   * can also arrive from the backward window.
+   */
+  readonly fromDelta?: boolean;
   readonly process: Effect.Effect<EmailStage.Change | undefined, MailSyncError, never>;
 };
 
@@ -98,11 +105,18 @@ export type ReconcileItem = Omit<EmailStage.Retag, 'entityId'> | Omit<EmailStage
 /** The run's two raw source streams, produced by {@link MailSyncProviderService.prepare} once ready. */
 export type MailSyncStreams = {
   /**
-   * Raw new-message candidates (the provider's windows → `skipCommitted` → fetch). Not yet deduped,
-   * capped, or decoded — the harness applies `dedupStage` → `boundStage` → decode, so those generic
-   * stages stay visible in its pipeline rather than hidden in the provider.
+   * Raw new-message candidates the provider's change feed listed (an incremental delta's created ids →
+   * `skipCommitted` → fetch), or absent when this run lists additions by date window only. The harness
+   * reads all of them before {@link windowAdditions} and marks them {@link MailSyncItem.fromDelta}, since
+   * a window item taken is its proof that no delta item was cut.
    */
-  readonly additions: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
+  readonly deltaAdditions?: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
+  /**
+   * Raw new-message candidates the provider's date windows listed (→ `skipCommitted` → fetch). Like the
+   * delta's, not yet deduped, capped, or decoded — the harness applies `dedupStage` → `boundStage` →
+   * decode, so those generic stages stay visible in its pipeline rather than hidden in the provider.
+   */
+  readonly windowAdditions: Stream.Stream<MailSyncItem, MailSyncError, Cursor.Service>;
   /**
    * Fully-resolved reconcile changes (retag/delete). Provider-coupled: the resolution is either the
    * shared {@link reconcileToChanges} (Gmail) or a provider-specific re-fetch+diff (JMAP), so unlike
@@ -122,8 +136,9 @@ export type MailSyncSource = {
   readonly buildSource: (options: MailSyncSourceOptions) => MailSyncStreams;
   /**
    * The opaque delta-resume token at this run's chunk boundary (first-tick / staleness paths return the
-   * freshly-captured provider token). The harness reads it at run end and writes it to the cursor only
-   * after the stream fully drains. Advancing to a *chunk* boundary (not the whole delta) bounds each run:
+   * freshly-captured provider token). The harness reads it at run end and writes it to the cursor once
+   * every delta item of the run has been taken or dropped, capped or not (a run that scanned the forward
+   * window instead, only uncapped). Advancing to a *chunk* boundary (not the whole delta) bounds each run:
    * a large delta drains across runs. Absent for providers with no delta path.
    */
   readonly nextToken?: () => string | undefined;
@@ -674,8 +689,18 @@ export const runMailSync = (
     // dedup on foreignId/key, then cap at `maxMessages` (counting survivors into `taken`, which tells a
     // truncated run → re-run from an exhausted one → complete backfill), then the provider decode into an
     // `insert` Change — is flat here rather than hidden in the provider.
-    const { additions, reconciles } = source.buildSource({
-      windows,
+    // While the delta has more chunks the backward window waits, so a message imported with an old date
+    // reaches the delta before the backfill can list it by date (only the delta's copy is deduped by id).
+    const deltaBehind = source.hasMoreDelta?.() ?? false;
+    const backfillHeld = deltaBehind && windows.backward !== undefined;
+    // Delta ids handled under this run's starting token; persisted while the token cannot advance, so a
+    // replayed delta is dropped by id rather than by a feed lookup.
+    const deltaHandled = new Set(Cursor.readDeltaIds(binding));
+    const deltaHandledAtStart = deltaHandled.size;
+    // Delta items lead the additions, so a window item taken means none of the delta was cut.
+    let windowItemTaken = false;
+    const { deltaAdditions, windowAdditions, reconciles } = source.buildSource({
+      windows: backfillHeld ? { ...windows, backward: undefined } : windows,
       filter: targetOptions.filter,
       tagIndex,
       onEnumerated: addToTotal,
@@ -684,11 +709,18 @@ export const runMailSync = (
         retrieved += 1;
       },
     });
+    const additions = deltaAdditions
+      ? Stream.concat(
+          deltaAdditions.pipe(Stream.map((item): MailSyncItem => ({ ...item, fromDelta: true }))),
+          windowAdditions,
+        )
+      : windowAdditions;
     const inserts = additions.pipe(
       Cursor.dedupStage<MailSyncItem>(
         'dedup',
         (item) => item.foreignId,
         (item) => item.key,
+        (item) => item.fromDelta === true,
       ),
       withinBudget,
       // The meter advances here, on the messages the run keeps, not at retrieval: fetches run ahead of
@@ -703,6 +735,16 @@ export const runMailSync = (
             : { current: progressCurrent },
         );
       }),
+      Stage.map('record-taken', (item: MailSyncItem) =>
+        Effect.sync(() => {
+          if (item.fromDelta) {
+            deltaHandled.add(item.foreignId);
+          } else {
+            windowItemTaken = true;
+          }
+          return item;
+        }),
+      ),
       Stage.map('decode', (item: MailSyncItem) => item.process),
     );
 
@@ -732,6 +774,7 @@ export const runMailSync = (
           trackRange: true,
           stats,
           extent,
+          deltaHandled,
           // Resolve EntityIds for only the delta's reconcile messages (not the whole feed). Absent when
           // there's nothing to reconcile this run.
           reconcileFilter:
@@ -832,7 +875,8 @@ export const runMailSync = (
     // Running out of time is a cap like any other: state stays put and the next run resumes the window.
     const capped = taken >= maxMessages || outOfTime;
     // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
-    // and more remain. Both signals mean "re-run", but only `!capped` advances state.
+    // and more remain. Both signals mean "re-run"; the token advances once the run's delta chunk is
+    // fully handled, and the backfill mark only uncapped.
     const hasMoreDelta = source.hasMoreDelta?.() ?? false;
     log('mail sync run finished', {
       provider: provider.name,
@@ -842,24 +886,37 @@ export const runMailSync = (
       capped,
       outOfTime,
       hasMoreDelta,
+      backfillHeld,
       newMessages: stats.newMessages,
       action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
     });
+    const deltaChanged = deltaHandled.size !== deltaHandledAtStart;
     if (tagPush.pending.length === 0) {
       // Heads advance on capped runs too: a backfill caps every run, and without a base each run's
       // additive reconcile re-pushes — and loads in full — every message synced so far until the
       // isolate OOMs. Heads ahead of the token only re-read a delta the base already holds (see
       // TAG-SYNC.md for the one concurrent-edit case this does not cover).
       //
-      // The token and backfill mark advance LAST and only uncapped, after the merged stream committed
-      // and the push returned; a crash/cap leaves them, so the next run re-fetches the same chunk.
-      if (!capped) {
+      // The token and backfill mark advance LAST, after the merged stream committed and the push
+      // returned; a crash leaves them, so the next run re-fetches the same chunk. A cap or the time budget
+      // that cut the delta leaves the token too, and the delta ids recorded below skip what was taken.
+      if (!capped && !backfillHeld) {
         Cursor.completeBackfill(binding, horizon.getTime());
       }
-      const nextToken = capped ? undefined : source.nextToken?.();
-      if (nextToken !== undefined || tagPush.nextHeads !== undefined) {
-        Cursor.writeSyncState(binding, { token: nextToken, tagHeads: tagPush.nextHeads });
+      // A window item proves the delta drained; a forward window it follows may still have been cut.
+      const forwardScanned = deltaAdditions === undefined && windows.forward !== undefined;
+      const deltaDrained = !capped || (windowItemTaken && !forwardScanned);
+      const nextToken = deltaDrained ? source.nextToken?.() : undefined;
+      if (nextToken !== undefined || tagPush.nextHeads !== undefined || deltaChanged) {
+        Cursor.writeSyncState(binding, {
+          token: nextToken,
+          tagHeads: tagPush.nextHeads,
+          deltaIds: nextToken === undefined ? [...deltaHandled] : undefined,
+        });
       }
+    } else if (deltaChanged) {
+      // The token stays for the push to retry against, so the next run reads this delta again.
+      Cursor.writeSyncState(binding, { deltaIds: [...deltaHandled] });
     }
     if (capped || hasMoreDelta || tagPush.pending.length > 0) {
       // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
