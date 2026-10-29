@@ -15,6 +15,8 @@ const rank = <T extends string>(values: readonly T[]) => {
 };
 
 const statusRank = rank(Task.StatusOptions.map(({ id }) => id));
+// The board's own order, distinct from the picker order `statusRank` follows.
+const statusGroupRank = rank(Task.StatusGroupOrder);
 // Most urgent first, so ascending priority reads top-down the way a reader triages.
 const priorityRank = rank([...Task.Priority.literals].reverse());
 const estimateRank = rank(Task.Estimate.literals);
@@ -63,9 +65,9 @@ export type GroupTasksOptions = {
 
 /**
  * The tasks partitioned by `field`, each group's tasks in the input order (so a sort applies within
- * every group). Groups come in the field's own order — the status table, most urgent priority first,
- * the set's milestone sequence, assignees by name — with the group of tasks that have no value last.
- * Absent for `none`: an ungrouped list has no headers at all.
+ * every group). Groups come in the field's own order — the board's status order, most urgent
+ * priority first, the set's milestone sequence, assignees by name — with the group of tasks that
+ * have no value last. Absent for `none`: an ungrouped list has no headers at all.
  */
 export const groupTasks = (
   tasks: readonly Task.Task[],
@@ -77,14 +79,16 @@ export const groupTasks = (
       return undefined;
 
     case 'status':
-      return Task.StatusOptions.map(({ id, title, icon, color }) => ({
-        id: `status-${id}`,
-        label: title,
-        icon,
-        iconClassNames: hue(color),
-        // `todo` is the status of a task that carries none, as every row that renders one assumes.
-        tasks: tasks.filter((task) => (task.status ?? 'todo') === id),
-      }));
+      return [...Task.StatusOptions]
+        .sort((left, right) => statusGroupRank(left.id) - statusGroupRank(right.id))
+        .map(({ id, title, icon, color }) => ({
+          id: `status-${id}`,
+          label: title,
+          icon,
+          iconClassNames: hue(color),
+          // `todo` is the status of a task that carries none, as every row that renders one assumes.
+          tasks: tasks.filter((task) => (task.status ?? 'todo') === id),
+        }));
 
     case 'priority':
       return [
