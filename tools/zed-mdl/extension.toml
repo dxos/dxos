@@ -1,0 +1,18 @@
+id = "deus-mdl"
+name = "DEUS MDL"
+description = "DEUS `.mdl` specs: highlighting, lint, completion, go-to-definition, hovers and review verdicts."
+version = "0.1.0"
+schema_version = 1
+authors = ["DXOS <info@dxos.org>"]
+repository = "https://github.com/dxos/dxos"
+
+# The grammar for ```mdl fence bodies lives in this repository; `rev` pins the commit Zed builds it from. For a dev
+# install of an unmerged change, point `repository` at your checkout (`file:///path/to/dxos`) and `rev` at its HEAD.
+[grammars.mdl]
+repository = "https://github.com/dxos/dxos"
+rev = "GRAMMAR_REV"
+path = "tools/tree-sitter-mdl"
+
+[language_servers.mdl-language-server]
+name = "MDL Language Server"
+languages = ["DEUS MDL"]

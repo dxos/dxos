@@ -1,0 +1,23 @@
+layer: tool
+language: unknown
+
+tasks:
+  # Regenerates `src/parser.c` from `grammar.js` (ABI 14, which every current Zed loads); commit the result.
+  generate:
+    command: npx --yes tree-sitter-cli@0.26.13 generate --abi 14
+    inputs:
+      - grammar.js
+    outputs:
+      - src/parser.c
+      - src/grammar.json
+      - src/node-types.json
+    options:
+      cache: false
+      runInCI: false
+
+  # The Zed extension ships its own copy of the highlight queries, since a Zed language reads them from its own folder.
+  test:
+    command: cmp queries/highlights.scm ../zed-mdl/languages/mdl-block/highlights.scm
+    inputs:
+      - queries/highlights.scm
+      - /tools/zed-mdl/languages/mdl-block/highlights.scm
