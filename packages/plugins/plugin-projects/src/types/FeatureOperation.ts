@@ -244,9 +244,10 @@ export const CreateShowcase = Operation.make({
     icon: 'ph--presentation--regular',
     description: trim`
       Creates a showcase: a slide deck that is the evidence that a feature works or a task is done. Its first slide
-      is content, markdown saying what you showed and how to reproduce it; each object in artifacts (screenshots
-      and videos you uploaded as files, diagrams, the pull requests the work landed in) becomes a further slide
-      that shows it. Pass every feature and task it demonstrates in targets.
+      is content, markdown saying what you showed and how to reproduce it, or, when content is a whole deck, the
+      deck's slides; each object in artifacts (screenshots and videos you uploaded as files, diagrams, the pull
+      requests the work landed in) becomes a further slide that shows it. Pass every feature and task it
+      demonstrates in targets.
     `,
   },
   services: [Database.Service],
@@ -254,7 +255,10 @@ export const CreateShowcase = Operation.make({
   types: [Showcase.Demonstrates, Text.Text],
   input: Schema.Struct({
     name: Schema.String,
-    content: Schema.String.annotate({ description: 'Markdown for the first slide.' }),
+    content: Schema.String.annotate({
+      description:
+        'Markdown for the first slide, or a whole Slidev deck with `---` between slides, each keeping its frontmatter and notes.',
+    }),
     targets: Schema.Array(Ref.Ref(Obj.Unknown)).annotate({ description: 'The features and tasks it demonstrates.' }),
     artifacts: Schema.optional(
       Schema.Array(Ref.Ref(Obj.Unknown)).annotate({

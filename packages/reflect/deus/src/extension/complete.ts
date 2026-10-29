@@ -20,6 +20,7 @@ const BLOCK_FIELDS: Record<string, string[]> = {
   db: ['desc', 'backend', 'entities', 'queries', 'note'],
   module: ['desc', 'api', 'styleguide'],
   decision: ['date', 'by', 'for', 'affects', 'supersedes', 'why', 'rejected', 'source'],
+  showcase: ['for', 'pr', 'video', 'image', 'note'],
 };
 
 /**

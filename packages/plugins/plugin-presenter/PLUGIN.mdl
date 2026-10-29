@@ -336,11 +336,13 @@ op CreateShowcase
     Declared by plugin-projects, whose project skill offers it, and implemented here. Makes a Presentation whose
     first slide is an owned markdown `Text` holding `content` (`# <name>` when it is blank) and whose further
     slides each link one of `artifacts` in order, such as an image or video `File`, a diagram or a `PullRequest`;
-    each renders through the slide surface fallback. A `Demonstrates` relation goes from the deck to each target.
-    Every target and artifact is loaded before anything is written.
+    each renders through the slide surface fallback. When `content` is a whole deck that F-6.7's rule splits into
+    more than one slide, each part becomes an owned slide in order, keeping its frontmatter and notes, before the
+    artifact slides. A `Demonstrates` relation goes from the deck to each target. Every target and artifact is
+    loaded before anything is written.
   input:
     name: string
-    content: string             # markdown for the first slide
+    content: string             # markdown for the first slide, or a whole deck
     targets: Ref<Obj>[]         # the features and tasks it demonstrates
     artifacts?: Ref<Obj>[]      # one linked slide each
   output:
@@ -561,6 +563,18 @@ feat F-12: Speaker Notes
   req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
   req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
   req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
+```
+
+```mdl
+feat F-13: Showcase Decks
+
+  req F-13.1: A showcase's content can be one Slidev markdown deck: a summary slide first, then one slide per demo artifact, a video as a `backgroundVideo` slide and a screenshot as an image slide, with the demo's narration as that slide's notes.
+  req F-13.2:
+    when: CreateShowcase is invoked with content that F-6.7's rule splits into more than one slide
+    then: the Presentation's first slides are the deck's parts in order, each an owned slide keeping its frontmatter and notes, followed by one linked slide per artifact, and each target gets a `Demonstrates` relation
+  req F-13.3:
+    when: CreateShowcase is invoked with content that is a single slide
+    then: that content, unchanged, is the one owned slide before the artifact slides
 ```
 
 ## Acceptance
@@ -1476,6 +1490,17 @@ decision D-77: Presenter implements plugin-projects' `CreateShowcase` operation 
   for: user:dmaretskyi
   affects: [Presentation, CreateShowcase]
   why: Presenter already depends on plugin-projects through plugin-studio, so only this side can name both the deck and the relation.
+```
+
+```mdl
+decision D-78: `CreateShowcase` accepts a whole deck as its content: a summary slide, then a slide per demo video (a `backgroundVideo` slide) or screenshot (an image slide), with the demo's narration as each slide's notes, split as the document preview splits it. Fills in [D-76].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CreateShowcase, F-13.1, F-13.2, F-13.3]
+  why: A pull request's showcase is written outside the app as one deck, and one operation keeps one path from that deck to a Presentation linked by `Demonstrates`; splitting it as the preview does keeps every slide's frontmatter and notes, which feed the teleprompter (F-12).
+  rejected:
+    - "A separate deck-import operation in presenter: a second way to make the same Presentation, without the `Demonstrates` edges."
 ```
 
 ---

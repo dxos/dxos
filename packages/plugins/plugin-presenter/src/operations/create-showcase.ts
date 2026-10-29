@@ -9,11 +9,12 @@ import { Database, Relation } from '@dxos/echo';
 import * as FeatureOperation from '@dxos/plugin-projects/FeatureOperation';
 import * as Showcase from '@dxos/plugin-projects/Showcase';
 
+import { splitSlides } from '#markdown';
 import { Presentation } from '#types';
 
 /**
  * Implements plugin-projects' showcase operation here, since only this plugin can make a deck: the write-up is the
- * first slide and each artifact a linked slide after it.
+ * first slide (or, for a whole deck, its slides in order) and each artifact a linked slide after it.
  */
 const handler: Operation.WithHandler<typeof FeatureOperation.CreateShowcase> = FeatureOperation.CreateShowcase.pipe(
   Operation.withHandler(
@@ -28,9 +29,10 @@ const handler: Operation.WithHandler<typeof FeatureOperation.CreateShowcase> = F
         resolvedArtifacts.push(yield* Database.load(artifactRef));
       }
 
-      const presentation = yield* Database.add(
-        Presentation.make({ name, slides: [content.trim() === '' ? `# ${name}` : content] }),
-      );
+      // Split as the document preview splits it, so each slide keeps its own frontmatter and speaker notes.
+      const deck = splitSlides(content).filter((slide) => slide !== '');
+      const slides = deck.length > 1 ? deck : [content.trim() === '' ? `# ${name}` : content];
+      const presentation = yield* Database.add(Presentation.make({ name, slides }));
       for (const artifact of resolvedArtifacts) {
         Presentation.link(presentation, artifact);
       }

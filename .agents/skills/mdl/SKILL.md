@@ -22,6 +22,7 @@ A `.mdl` file is the authoritative description of a component: Markdown prose pl
 | `lang/qa.mdl`                      | `test`, `step`, `suite` — executable QA                              |
 | `lang/changelog.mdl`               | `decision` — the attributed changelog                                |
 | `lang/sql.mdl`                     | `table` — a SQL table a component owns                               |
+| `lang/showcase.mdl`                | `showcase` — a non-normative example of a feature (a PR's deck)      |
 | `lang/PLUGIN-.template.mdl`        | Starting point for a new `PLUGIN.mdl`                                |
 
 Read the dialect file before you use one of its blocks. Copy `ext` definitions from `lang/`; do not
@@ -45,6 +46,19 @@ invent fields.
    for a plugin's runtime dependency, an entry in the `plugin` block's `dependsOn` (`lang/plugin.mdl`),
    which must equal `dx.config.ts`'s. Never list one id in both. Check with
    `pnpm deus lint --only mdl/ref <file.mdl>` and `--only mdl/uses`.
+
+## Showcases: non-normative examples
+
+When a PR that implemented a feature merges, its showcase (the `showcase` skill's deck) stays with the
+feature as a `showcase` block in a `## Showcase` section, after the features and before `## Changelog`,
+opened with "The following are non-normative examples." A showcase states nothing the system must do:
+it is not a spec item, reviews do not judge it, and when it disagrees with the code it is stale. Its
+`for:` cites the `feat`/`req` ids it shows, and `deus lint` (`--only mdl/showcase`) rejects one that
+cites none or an id the document does not declare. Name the PR and media by URL; the deck lives beside
+the spec as `showcase/<SC-n>.md`, located by its id. The block is the spec-file counterpart of
+plugin-projects' `Demonstrates` relation: in a space the same deck is a Presentation, made by
+`CreateShowcase`, that demonstrates the same features. Adding a showcase is a spec change, so it needs a
+decision like any other.
 
 ## The changelog
 
