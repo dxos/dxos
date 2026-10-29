@@ -69,9 +69,9 @@ describe('Worker template', () => {
       expect(countOf('type.task:')).toBe(3);
       // Four features, and the endpoint's two subfeatures.
       expect(countOf('type.feature:')).toBe(6);
-      // The map, and the spec that breaks the endpoint down; the map holds the one document.
+      // The map, and the spec that breaks the endpoint down; every spec holds its document.
       expect(countOf('type.projects.spec:')).toBe(2);
-      expect(countOf('type.specDocument:')).toBe(1);
+      expect(countOf('type.specDocument:')).toBe(2);
       // The URL and the response body are what the run produces, so the space ships no documents.
       expect(countOf('type.document')).toBe(0);
     },
@@ -125,9 +125,9 @@ describe('Worker template', () => {
       expect(implementsLinks).toEqual([[`echo:///${diagram?.id}`, `echo:///${features[0].id}`]]);
 
       // The map's document is the space's copy of the path the features cite, so their cards open it instead of GitHub.
-      const [document] = ofType('type.specDocument:');
-      expect(map?.document?.['/']).toBe(`echo:///${document.id}`);
-      expect(document['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      const document = ofType('type.specDocument:').find(({ id }) => map?.document?.['/'] === `echo:///${id}`);
+      expect(document).toBeDefined();
+      expect(document?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
       for (const feature of features) {
         expect(Feature.getSpecPath(feature.specs?.[0] ?? '')).toBe(SPEC_PATH);
       }
