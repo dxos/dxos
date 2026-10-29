@@ -350,6 +350,21 @@ describe('DataSpaceManager', () => {
         .to.equal(minted.spaceRootDocUrl);
       expect(peer2.dataSpaceManager.getSpaceRootUrl(space2.key)).to.equal(minted.spaceRootDocUrl);
       expect(edge.migrations).to.equal(0);
+
+      // After another reload the space is already anchored, and still copies a credential issued later
+      // into its document even though the flag is off.
+      await space2.deactivate(new Context());
+      await space2.activate(new Context());
+      await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+      const store = await openCredentialsDocument(new Context(), peer2.echoHost, space2.id);
+      await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(0);
+      const before = store.read().length;
+      await peer2.dataSpaceManager.admitMember({
+        spaceKey: space2.key,
+        identityKey: PublicKey.random(),
+        role: SpaceMember_Role.EDITOR,
+      });
+      await expect.poll(() => store.read().length, { timeout: 10_000 }).to.be.greaterThan(before);
     });
 
     test('migrating on edge retries until edge can anchor, then adopts its root', async ({ expect }) => {
