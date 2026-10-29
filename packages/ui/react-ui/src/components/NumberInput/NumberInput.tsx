@@ -160,9 +160,9 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           />
           {(sliderButton || placement) && (
             <span data-scope='number-input' data-part='end' className={recipes.inputAdornment()}>
-              {sliderButton}
               {endPair && decrement}
               {(endPair || placement === 'split') && increment}
+              {sliderButton}
             </span>
           )}
         </NumberInputPrimitive.Control>
@@ -196,7 +196,7 @@ const NumberInputSlider = ({ label, min, max, step, disabled }: NumberInputSlide
             disabled={disabled}
           />
         </Popover.Trigger>
-        <Popover.Content classNames='w-[16rem]'>
+        <Popover.Content classNames='w-[16rem] p-2'>
           <Slider
             aria-label={label}
             min={min}
