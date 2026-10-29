@@ -6,14 +6,14 @@ version: 0.1.0
 
 The Composer plugins that run in the browser also run on EDGE. A plugin is defined once, in its
 `dx.config.ts` with `Plugin.config`; the build emits a release for the `workerd` environment; the
-CLI deploys that release to EDGE; and EDGE loads it on demand into a Dynamic Worker through the
+CLI publishes that release to EDGE; and EDGE loads it on demand into a Dynamic Worker through the
 Worker Loader API. Its ECHO types, skills and operations become visible in the registry, and its
 operations are callable through compute-service like any other EDGE operation.
 
 Today a plugin reaches EDGE only by being compiled into operation-service: a static list of
 `@dxos/plugin-*` imports, activated by one `PluginManager` per isolate and republished as a KV
 catalog. Adding or changing a plugin needs a dxos catalog bump and a redeploy of a 12 MiB worker,
-third-party plugins cannot run on EDGE at all, and every plugin shares one isolate. This spec
+plugins from outside the dxos repository cannot run on EDGE at all, and every plugin shares one isolate. This spec
 replaces that worker with per-plugin releases that are stored, versioned and loaded independently.
 
 The design reuses three things that already exist:
@@ -77,14 +77,13 @@ uses org.dxos.echo: Plugin types are ECHO schemas, and handlers read and write a
 ```mdl
 type EdgeRelease
   desc: |
-    One deployed version of one plugin for the `workerd` environment. Immutable once uploaded: a
+    One published version of one plugin for the `workerd` environment. Immutable once uploaded: a
     second upload of the same key and version is refused unless its hash matches. Stored as a D1 row
     in registry-service beside the plugin's browser `PluginRelease`, with its files in R2 under
     `modules/<slug>/<version>/workerd/`.
   fields:
     pluginKey: NSID              # Config2.Plugin.key, e.g. org.dxos.plugin.markdown
     version: SemVer
-    channel: stable | next | dev
     hash: string                 # sha-256 over the WorkerCode the release loads as; the isolate id
     owner: DID | realm:dxos      # who may publish further versions of pluginKey
     manifest: EdgeManifest
@@ -106,7 +105,6 @@ type EdgeManifest
     compatibilityDate: Date
     compatibilityFlags: string[]
     bundled: PluginRef[]         # dependsOn plugins compiled into this release, each key@version
-    egress?: string[]            # hostnames the plugin fetches; see [F-11]
 ```
 
 ```mdl
@@ -129,9 +127,18 @@ type OperationRoute
   fields:
     operationKey: NSID
     pluginKey: NSID
-    channel: stable | next | dev
+    channel: Channel
     version: SemVer
     hash: string
+```
+
+```mdl
+type Channel
+  desc: |
+    A movable tag on one version of a plugin key, like an npm dist-tag. Publishing with a channel
+    moves the tag; `promote` moves it to an already published version without rebuilding, so the
+    release that reaches `stable` is byte for byte the one that ran on `next`. See the Channels section.
+  literals: stable | next | dev
 ```
 
 ```mdl
@@ -161,7 +168,7 @@ service PluginBuilder
     bare `@dxos/*` specifier is left for the runtime to resolve), then activates the result headless
     to write `catalog.json`. `composerPlugin` runs it for external plugins as well.
   ops:
-    build(configPath: string, options: { channel, version }) → { manifest: EdgeManifest, catalog: PluginCatalog, files }
+    build(configPath: string, options: { version }) → { manifest: EdgeManifest, catalog: PluginCatalog, files }
   errors:
     BrowserOnlyModule: a workerd module reaches react, react-dom or @dxos/react-ui
     CatalogMismatch: an operation key in the catalog has no handler, or a handler has no key in the catalog
@@ -176,6 +183,7 @@ service PluginStore
     getCatalog(pluginKey: NSID, version?: SemVer, channel?: Channel) → PluginCatalog
     query(filter: { text?, pluginKey?, operationKey?, typename?, skillKey?, channel? }) → EdgeRelease[]
     resolveOperation(operationKey: NSID, channel: Channel) → OperationRoute
+    promote(pluginKey: NSID, version: SemVer, channel: Channel) → void
     revoke(pluginKey: NSID, version: SemVer) → void
   errors:
     VersionExists: the version is uploaded with a different hash
@@ -213,7 +221,7 @@ service PluginRouter
   desc: |
     compute-service's resolution of a `dxn:<operation key>[@<version>]` target. It reads the
     operation index (KV snapshot of PluginStore.resolveOperation, refreshed on every upload) and
-    falls back to operation-service while operation-service still runs ([F-7]).
+    falls back to operation-service while operation-service still runs ([F-6.6]).
   ops:
     route(target: string, channel: Channel) → OperationRoute
   errors:
@@ -238,16 +246,17 @@ service PluginSupervisor
 ## Operations
 
 ```mdl
-op deployPlugin
+op publishPlugin
   desc: |
-    CLI `dx plugin deploy [--channel] [--private]`: runs PluginBuilder, then uploads the release to
-    `PUT /registry/edge/plugins/:pluginKey/:version` with a verifiable presentation, API token or
-    admin key. A dry-run loads the release in a fresh isolate and compares `describe()` with the
-    built catalog before the row is marked uploaded.
+    CLI `dx registry publish [--channel] [--private]`, the command that already publishes a plugin's
+    browser bundle: it now runs PluginBuilder too and uploads the browser bundle and the `workerd`
+    release of one version together, to `PUT /registry/edge/plugins/:pluginKey/:version`, with a
+    verifiable presentation, API token or admin key. A dry-run loads the release in a fresh isolate
+    and compares `describe()` with the built catalog before the row is marked uploaded.
   status: unimplemented
   input:
     configPath: string
-    channel: stable | next | dev
+    channel?: Channel
   output: EdgeRelease
   errors:
     VersionExists: the version is already uploaded with another hash
@@ -266,7 +275,7 @@ op queryPlugins
     operationKey?: NSID
     typename?: string
     skillKey?: NSID
-    channel?: stable | next | dev
+    channel?: Channel
   output: EdgeRelease[]
 ```
 
@@ -290,11 +299,11 @@ op invokeOperation
 ## Features
 
 ```mdl
-feat F-1: Deploy a plugin from the CLI
-  `dx plugin deploy` builds a plugin's `workerd` release and stores it on EDGE.
+feat F-1: Publish a plugin from the CLI
+  `dx registry publish` builds a plugin's `workerd` release and stores it on EDGE.
 
   req F-1.1:
-    when: a developer runs `dx plugin deploy` in a plugin package
+    when: a developer runs `dx registry publish` in a plugin package
     then: PluginBuilder builds `dx.config.ts` for `workerd`, and the release is uploaded to
           PluginStore as one R2 prefix and one D1 row
 
@@ -321,14 +330,17 @@ feat F-2: Versioning
   req F-2.1: A (plugin key, version) pair holds one release; uploading it again with another hash
     fails with VersionExists, with the same hash it is a no-op.
 
-  req F-2.2: Every release is on one channel (stable, next or dev); a channel resolves to its newest
-    uploaded, unrevoked version.
+  req F-2.2: A channel (stable, next or dev) points at one version of a plugin key; publishing with
+    `--channel` or `promote` moves it, and nothing else does.
 
   req F-2.3: An invocation may name a version (`dxn:<key>@<version>`); without one it runs the
     channel's current version.
 
-  req F-2.4: Revoking a release removes its operation index rows and stops new invocations; the
-    previous version on the channel becomes current.
+  req F-2.4: Revoking a release removes its operation index rows and stops new invocations; a channel
+    that pointed at it moves back to the version it pointed at before.
+
+  req F-2.6: `stable` points only at a version without a prerelease suffix; CI builds are published
+    as `<version>-dev.<sha>`.
 
   req F-2.5: The isolate id is the release hash, so a changed release never reuses an isolate of
     the old one and an unchanged release always can.
@@ -360,7 +372,7 @@ feat F-4: Skills are exposed
 
 ```mdl
 feat F-5: Operations are exposed and callable
-  Every operation a deployed plugin handles can be found and invoked on EDGE.
+  Every operation a published plugin handles can be found and invoked on EDGE.
 
   req F-5.1: The MCP server's `queryOperations` lists the operations of every current release on
     its channel.
@@ -378,7 +390,7 @@ feat F-5: Operations are exposed and callable
 ```
 
 ```mdl
-feat F-6: compute-service routes invocations to deployed plugins
+feat F-6: compute-service routes invocations to published plugins
   compute-service is the single entry for running plugin code on EDGE.
 
   req F-6.1: PluginRouter resolves a `dxn:` target from the operation index without starting an
@@ -395,20 +407,15 @@ feat F-6: compute-service routes invocations to deployed plugins
 
   req F-6.5: Logs and traces of a Dynamic Worker reach the same sinks as other compute-service
     functions, tagged with the plugin key and version.
-```
 
-```mdl
-feat F-7: operation-service is deprecated and removed
-  Plugins stop being compiled into an EDGE worker.
-
-  req F-7.1: While both run, PluginRouter prefers a deployed release and falls back to
+  req F-6.6: While both run, PluginRouter prefers a published release and falls back to
     operation-service for keys no release implements.
 
-  req F-7.2: operation-service is removed once every plugin in its static list has a stable release,
+  req F-6.7: operation-service is removed once every plugin in its static list has a stable release,
     and no caller binds `OPERATION_SERVICE`.
 
-  req F-7.3: The KV operation catalog is rebuilt from release catalogs on every upload or revoke,
-    not by a cron that activates plugins.
+  req F-6.8: The KV operation catalog is rebuilt from release catalogs on every publish, promote or
+    revoke, not by a cron that activates plugins.
 ```
 
 ```mdl
@@ -429,10 +436,11 @@ feat F-8: Durable plugin state through facets
 feat F-9: Continuous delivery from DXOS
   First-party plugins reach EDGE from the dxos repository without a catalog bump.
 
-  req F-9.1: A merge to `main` deploys every first-party plugin whose release hash changed to the
-    `dev` channel, owned by realm:dxos.
+  req F-9.1: A merge to `main` publishes every first-party plugin whose release hash changed as
+    `<version>-dev.<sha>` and moves `dev` to it, owned by realm:dxos.
 
-  req F-9.2: A dxos release deploys the same releases to `stable`.
+  req F-9.2: A dxos release promotes the releases it ships to `next`, then to `stable`, without
+    rebuilding them.
 
   req F-9.3: The workflow runs in dxos CI with an admin credential; edge needs no redeploy.
 ```
@@ -450,24 +458,12 @@ feat F-10: Readable manifests and registry query
     shared with.
 ```
 
-```mdl
-feat F-11: Third-party plugins are sandboxed
-  A plugin not owned by realm:dxos runs with only the access it declares.
-
-  req F-11.1: A third-party release loads with `globalOutbound` set to an egress entrypoint that
-    allows only the hostnames in its manifest's `egress`.
-
-  req F-11.2: Custom CPU and subrequest limits apply to every third-party invocation.
-
-  req F-11.3: InvocationScope grants a third-party plugin only the space of the current call.
-```
-
 ## Scenarios
 
 ```mdl
-scenario T-1: Deploy and call a plugin
+scenario T-1: Publish and call a plugin
   given: plugin-markdown at version 0.9.2, an empty dev channel
-  when: a developer runs `dx plugin deploy --channel dev`, then MCP invokeOperation calls
+  when: a developer runs `dx registry publish --channel dev`, then MCP invokeOperation calls
         org.dxos.operation.markdown.create in space S
   then:
     - registry-service holds one EdgeRelease for org.dxos.plugin.markdown@0.9.2
@@ -477,7 +473,7 @@ scenario T-1: Deploy and call a plugin
 
 ```mdl
 scenario T-2: One isolate serves two spaces
-  given: a deployed release with hash h
+  given: a published release with hash h
   when: the same operation is invoked in space S1, then in space S2
   then:
     - both calls use the Worker Loader id `plugin:h`
@@ -487,7 +483,7 @@ scenario T-2: One isolate serves two spaces
 ```mdl
 scenario T-3: Upgrade a plugin
   given: release 0.9.2 is current on stable
-  when: 0.9.3 is deployed to stable
+  when: 0.9.3 is published with `--channel stable`
   then:
     - new invocations run 0.9.3 in a new isolate
     - an invocation naming @0.9.2 still runs 0.9.2
@@ -502,14 +498,31 @@ scenario T-4: Operation key conflict
     - the operation index is unchanged
 ```
 
+## Channels
+
+A channel answers "which version runs when the caller does not name one". The model is npm's
+dist-tags: versions are immutable, and a channel is a tag that points at one of them.
+
+- **Three channels.** `dev` follows `main` (every CI build, `<version>-dev.<sha>`), `next` is a
+  release candidate, and `stable` is what production runs. A private release has the same three,
+  seen only by its owner.
+- **Promotion moves a tag, never rebuilds.** `promote` points `next` or `stable` at a version that
+  is already published, so the hash users run is the hash that was tested. Rollback is the same
+  operation pointed at an older version.
+- **Which channel a call uses.** An explicit version wins (`dxn:<key>@<version>`). Otherwise the
+  EDGE environment picks: dev.dxos.network resolves `dev`, preview `next`, production `stable`.
+- **Client and EDGE agree.** Composer passes the version of the browser plugin it is running with
+  every invocation, so an operation runs the same release as the UI that called it, whatever the
+  channel has moved to since the page loaded.
+
 ## Rollout
 
 1. **Build and store.** `PluginBuilder` emits `workerd` releases; registry-service stores them and
    serves manifests and catalogs ([F-1], [F-2], [F-10]).
 2. **Load and route.** compute-service routes `dxn:` targets to releases, with operation-service as
-   the fallback; CD deploys first-party plugins to dev ([F-5], [F-6], [F-9]).
-3. **Retire operation-service** once every plugin in its list is deployed ([F-7]).
-4. **Durable state and third parties** ([F-8], [F-11]).
+   the fallback; CI publishes first-party plugins to dev ([F-5], [F-6], [F-9]).
+3. **Retire operation-service** once every plugin in its list is published ([F-6.7]).
+4. **Durable state** ([F-8]).
 
 ## Open questions
 
@@ -622,4 +635,58 @@ decision D-10: Plugins not owned by realm:dxos load with a filtered `globalOutbo
   for: user:dmaretskyi
   affects: [EdgeManifest, F-11]
   why: Deploying from the CLI opens EDGE to code DXOS did not write; egress and limits are the controls Worker Loader offers.
+```
+
+```mdl
+decision D-11: DXOS plugins get no permissions that other plugins lack; drop the sandboxing that applied only to plugins not owned by realm:dxos ([F-11]).
+  date: 2026-10-29
+  by: user:dmaretskyi
+  supersedes: D-10
+  affects: [EdgeManifest]
+```
+
+```mdl
+decision D-12: Putting a plugin on EDGE is publishing, not deploying: it pushes static assets up to a service.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [publishPlugin, F-1]
+```
+
+```mdl
+decision D-13: `dx registry publish`, which already publishes the browser bundle, publishes the `workerd` release of the same version with it; there is no separate deploy command. Fills in [D-12].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [publishPlugin, F-1.1]
+  why: The two artifacts belong to one PluginRelease, and a browser bundle published without its workerd release would call operations EDGE cannot run.
+  rejected:
+    - A `dx plugin deploy` command next to `dx registry publish` — two commands for one version, and they can drift.
+```
+
+```mdl
+decision D-14: Retiring operation-service is a task, not a feature; at most it is a requirement of another feature.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-6]
+```
+
+```mdl
+decision D-15: The operation-service requirements move into F-6 as F-6.6 to F-6.8, and feature F-7 is removed. Fills in [D-14].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.6, F-6.7, F-6.8]
+  why: Removing operation-service is the last step of compute-service routing to published plugins, so its fallback and removal conditions belong with that routing.
+```
+
+```mdl
+decision D-16: A channel (stable, next, dev) is a movable tag on one published version, like an npm dist-tag. Publishing with `--channel` or `promote` moves it without rebuilding; CI builds are `<version>-dev.<sha>` on `dev`; the EDGE environment picks the channel a call uses unless the call names a version; Composer passes the version of the browser plugin it runs with each invocation. This replaces the per-release channel of [D-5].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Channel, EdgeRelease, OperationRoute, PluginStore, F-2.2, F-2.4, F-2.6, F-9]
+  why: A tag lets the release that reaches stable be the exact bytes tested on next, makes rollback a pointer move, and lets the UI and EDGE run the same version of a plugin.
+  rejected:
+    - A channel fixed on each release at upload — promotion would mean a rebuild, so stable would never run the bytes that were tested.
+    - Each space picks its channel — Composer already chooses the plugin version per client, and a second choice per space could disagree with it.
 ```
