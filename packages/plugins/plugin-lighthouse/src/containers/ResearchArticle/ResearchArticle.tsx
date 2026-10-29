@@ -188,6 +188,19 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   // A double-click refocuses the graph on a node; Back to subjects returns to the session's roots.
   const [focus, setFocus] = useState<string>();
   const [editing, setEditing] = useState(false);
+  // A new Research (the section's +) opens with the keyboard in its goal; so does Edit.
+  const goalRef = useRef<HTMLDivElement>(null);
+  const fresh = !snapshot.run && !snapshot.goal.trim();
+  useEffect(() => {
+    if (!fresh && !editing) {
+      return;
+    }
+    // The form renders its fields after mount; wait a frame for the goal's textarea.
+    const frame = requestAnimationFrame(() => {
+      goalRef.current?.querySelector<HTMLElement>('textarea, [contenteditable="true"], input')?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [fresh, editing, research.id]);
   const [error, setError] = useState<string>();
   const spaceId = db?.spaceId;
 
@@ -462,6 +475,15 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     [research],
   );
 
+  // The form's values are seeded once per Research (and per Edit), not re-fed from each autosave: feeding the saved goal
+  // back while the person types resets the field and drops the keystrokes typed since the save.
+  const seededGoal = snapshot.goal || session?.goal || '';
+  const formValues = useMemo(
+    () => ({ goal: seededGoal, budget: snapshot.budget ?? 'quick' }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [research.id, editing, !!session?.goal],
+  );
+
   const handleToggleEngine = useCallback(
     (engine: string, checked: boolean) => {
       Obj.update(research, (research) => {
@@ -729,13 +751,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                   />
                 </Layout.Grid>
               ) : (
-                <Form.Root
-                  schema={ResearchFormSchema}
-                  values={{ goal: snapshot.goal || session?.goal || '', budget }}
-                  autoSave
-                  onSave={handleSave}
-                >
-                  <div {...goalImages.dropTarget} data-dragging={goalImages.dragging || undefined}>
+                <Form.Root schema={ResearchFormSchema} values={formValues} autoSave onSave={handleSave}>
+                  <div ref={goalRef} {...goalImages.dropTarget} data-dragging={goalImages.dragging || undefined}>
                     <Form.Fields />
                   </div>
                 </Form.Root>
