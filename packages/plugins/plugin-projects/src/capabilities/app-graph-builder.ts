@@ -29,6 +29,7 @@ import { ProjectOperation, Spec } from '#types';
 
 import { FEATURE_COMPANION } from '../constants.ts';
 import { ProjectsNamespace } from '../namespace.ts';
+import { refId } from '../operations/feature/util.ts';
 import { inboxResearch } from '../templates/index.ts';
 
 /**
@@ -75,6 +76,7 @@ export default Capability.makeModule(
           ),
         }),
     });
+    const specBreakdownExtensions = yield* createSpecBreakdownsExtension();
     const actionExtensions = yield* createProjectActionExtension();
     const chatExtensions = yield* createProjectChatsExtension();
     const chatChildrenExtensions = yield* createProjectChatsChildrenExtension();
@@ -100,6 +102,7 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
       ...specSectionExtensions,
+      ...specBreakdownExtensions,
       ...actionExtensions,
       ...chatExtensions,
       ...chatChildrenExtensions,
@@ -111,6 +114,48 @@ export default Capability.makeModule(
     ]);
   }),
 );
+
+/**
+ * One URL binding for a spec and the specs nested beneath it, shared with the Specs type section, so
+ * `features/<id>+<nested>+<nested>` reconstructs the chain the way {@link PROJECT_URL} does for a project.
+ */
+const SPEC_URL: AppGraphBuilder.UrlBinding = {
+  key: 'features',
+  kind: 'item',
+  path: [GraphPath.GroupSegments.ai, Type.getTypename(Spec.Spec)],
+};
+
+/**
+ * The specs that break down a spec's features, as its children in the navtree, in the order of the features they
+ * break down. Each child is itself a spec, so this extension matches it too and the tree nests to any depth.
+ */
+export const createSpecBreakdownsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'specBreakdowns',
+    url: SPEC_URL,
+    match: (node) => (Spec.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
+    connector: (spec, get) => {
+      const db = Obj.getDatabase(spec);
+      if (!db) {
+        return Effect.succeed([]);
+      }
+
+      const order = get(Obj.atom(spec)).features.map(refId);
+      const nested = get(db.query(Filter.type(Spec.Spec)).atom)
+        .map((child) => ({ child, owner: Spec.getOwner(child) }))
+        .flatMap(({ child, owner }) =>
+          owner && Spec.getContainer(owner)?.id === spec.id
+            ? [{ child, index: order.findIndex((id) => id === owner.id) }]
+            : [],
+        )
+        .sort((left, right) => left.index - right.index);
+      return Effect.succeed(
+        nested
+          .map(({ child }) => AppNode.makeObject({ get, db, object: child, navigable: true }))
+          .filter((node): node is NonNullable<typeof node> => node !== null),
+      );
+    },
+  });
 
 /**
  * "Set up project" on the primary mailbox node (`systemTag: 'inbox'`, so it appears once, not on

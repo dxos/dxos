@@ -64,7 +64,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = Feat
           tasks: tasks
             .filter((task): task is Task.Task => Obj.instanceOf(Task.Task, task))
             .map(({ id, title, status }) => ({ id, title, status })),
-          showcases: showcases.map(({ id, name }) => ({ id, name })),
+          showcases: showcases.map((showcase) => ({ id: showcase.id, name: Obj.getLabel(showcase) ?? '' })),
         });
       }
       return { features };

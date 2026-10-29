@@ -57,7 +57,7 @@ describe('index pass', { tags: ['manual'], timeout: 300_000 }, () => {
   bench(
     `index request, nothing changed (${OBJECT_COUNT} objects, ${LIVE_QUERY_COUNT} live queries)`,
     async () => {
-      await db.flush({ disk: false, indexes: true });
+      await db.flush({ indexes: true });
     },
     BENCH_OPTIONS,
   );

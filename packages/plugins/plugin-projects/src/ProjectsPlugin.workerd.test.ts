@@ -25,7 +25,7 @@ describe('ProjectsPlugin in workerd', () => {
     expect(operationKeys).toContain(String(ProjectOperation.Create.meta.key));
     expect(typenames).toContain(Type.getTypename(Project.Project));
     // Feature maps are driven over MCP, whose hosts activate the plugin headless like this.
-    for (const type of [Feature.Feature, Showcase.Showcase]) {
+    for (const type of [Feature.Feature, Showcase.Demonstrates]) {
       expect(typenames).toContain(Type.getTypename(type));
     }
     expect(operationKeys).toContain(String(FeatureOperation.GetFeatures.meta.key));

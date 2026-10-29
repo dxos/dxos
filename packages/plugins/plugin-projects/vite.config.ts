@@ -22,6 +22,7 @@ export default defineConfig({
     'FeatureMapView': 'src/types/FeatureMapView.ts',
     'FeatureSpec': 'src/types/FeatureSpec.ts',
     'LegacyFeature': 'src/types/LegacyFeature.ts',
+    'LegacyShowcase': 'src/types/LegacyShowcase.ts',
     'FeatureOperation': 'src/types/FeatureOperation.ts',
     'ProjectCapabilities': 'src/types/ProjectCapabilities.ts',
     'ProjectMailboxOperation': 'src/types/ProjectMailboxOperation.ts',

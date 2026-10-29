@@ -26,8 +26,11 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
           ? yield* ensureBreakdown(yield* Database.load(featureRef))
           : (imported ?? (yield* Database.add(Spec.make({ name: name ?? key.id, project }))));
 
-      // A target without a document takes over this path's existing one, so the path keeps a single document.
-      if (!spec.document && imported?.document && imported.id !== spec.id) {
+      // A target without a document takes over this path's existing one, so the path keeps a single document. A target
+      // nested beneath that spec writes through to it instead: the features stay put there, and deleting one would take
+      // a moved document with it.
+      const nested = imported !== undefined && Spec.getAncestry(spec).some((ancestor) => ancestor.id === imported.id);
+      if (!spec.document && imported?.document && !nested) {
         const moved = imported.document;
         Obj.update(imported, (imported) => {
           imported.document = undefined;
@@ -37,8 +40,9 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
         });
       }
 
-      // The text is the spec's document: written over the one it holds, else held as a new one.
-      const document = spec.document && (yield* Database.load(spec.document));
+      // The text is the spec's document: written over the one it holds (or its ancestor's), else held as a new one.
+      const held = spec.document ?? (nested ? imported?.document : undefined);
+      const document = held && (yield* Database.load(held));
       if (document) {
         // Re-keyed to this path, so the next import of it without a target finds this spec again.
         Obj.update(document, (document) => {
