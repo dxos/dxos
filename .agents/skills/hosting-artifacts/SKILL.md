@@ -1,10 +1,11 @@
 ---
 name: hosting-artifacts
 description: >-
-  Put a demo video, screenshot, contact sheet, or log bundle where a reviewer can see it — a PR body,
-  issue, or Linear ticket. For images and videos in a PR or issue, prefer `gh --attach` (gh ≥ 2.99),
-  which renders them inline (videos as a player); otherwise publish to the shared `agent-artifacts` R2
-  bucket and link it. Use INSTEAD of committing a binary to make it visible in a PR. The R2 route works
+  Put a screenshot, contact sheet, or log bundle where a reviewer can see it — a PR body, issue, or
+  Linear ticket. A recorded demo video is not shipped here: it goes out as an autocue bundle on
+  dx.pub (the `autocue` skill's `pack.mjs --upload`). For images in a PR or issue, prefer `gh --attach`
+  (gh ≥ 2.99), which renders them inline; otherwise publish to the shared `agent-artifacts` R2 bucket
+  and link it. Use INSTEAD of committing a binary to make it visible in a PR. The R2 route works
   in the cloud sandbox: it needs only `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`, no wrangler and no
   dependencies. For producing the recording in the first place, see `autocue`.
 ---
@@ -19,7 +20,8 @@ in a bucket that serves it over plain HTTPS, and link that URL.
 
 Reach for it when:
 
-- a demo video needs to be watchable from the PR ([[autocue]] produces the file; this ships it);
+- a recorded demo needs to be watchable from the PR: link the autocue bundle `pack.mjs --upload` put on dx.pub
+  ([[autocue]] §5), not the video file — the bundle carries the chapters, the spec and where it was recorded;
 - a still or contact sheet would otherwise be committed and deleted to get a `raw.githubusercontent.com`
   URL — that trick still works and is fine, but this is simpler and leaves no commit;
 - a log bundle or profile needs to go to a teammate or a Linear ticket.
@@ -40,7 +42,8 @@ file store — see "What must never go in" before your first upload.
 `pack.mjs`) is shared as `https://dx.pub/demo/<date>-<slug>/`: short, stable, and it serves the folder's
 `index.html` with range requests for the videos. `pack.mjs` prints it, and checks it answers; while the route is not
 deployed it prints the r2.dev URL of the same `index.html` instead. Other artifacts (stills, logs, one-off videos)
-keep their r2.dev URLs: dx.pub serves only `autocue/`.
+keep their r2.dev URLs: dx.pub serves only `autocue/`. A demo recorded with [[autocue]] is always shared this way,
+never as a loose video file.
 
 The public base is R2's **development** URL: world-readable to anyone with the link, rate-limited, no
 Cloudflare caching or Access in front of it. Fine for review artifacts, wrong for anything load-bearing
