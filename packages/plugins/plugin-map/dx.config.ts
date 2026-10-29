@@ -53,7 +53,6 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
     ),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
       activatesOn: ActivationEvents.Idle,
       provides: [MapCapabilities.Settings],
     }),
@@ -71,7 +70,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
     ),
     AppCapability.pluginAsset({
       pluginId: MapNamespace.key,
@@ -89,18 +90,14 @@ const config: Plugin.PluginConfig = Plugin.config({
         'org.dxos.role.section',
       ],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
       {
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

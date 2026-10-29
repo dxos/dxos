@@ -32,15 +32,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     dependsOn: ['org.dxos.plugin.assistant', 'org.dxos.plugin.thread'],
   },
   modules: [
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.layerSpec(() => import('./src/capabilities/brain.ts', { with: { type: 'module-url' } }), {
       name: 'Brain',
       environments: ['browser', 'node', 'tauri'],
     }),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
       activatesOn: ActivationEvents.Idle,
       provides: [AgentCapabilities.Settings],
     }),
@@ -83,11 +80,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
     ),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
@@ -95,9 +93,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties'],
     }),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

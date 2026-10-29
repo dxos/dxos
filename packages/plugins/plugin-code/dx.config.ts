@@ -65,17 +65,13 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'CodeMigrations',
-      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [ClientCapabilities.Migration] },
+      { provides: [ClientCapabilities.Migration] },
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     // Registered at startup so a GitHub file sync on EDGE, where no UI event fires, finds the mapping.
     Capability.lazyModule(
       'SpecFileMapping',
-      {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
-        provides: [GitHubCapabilities.FileMapping],
-        activatesOn: ActivationEvents.Startup,
-      },
+      { provides: [GitHubCapabilities.FileMapping], activatesOn: ActivationEvents.Startup },
       () => import('./src/capabilities/spec-file-mapping.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.appGraphBuilder(
@@ -86,19 +82,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [CodeCapabilities.BuildRun], activatesOn: CodeEvents.Start },
       () => import('./src/capabilities/build-run-state.ts', { with: { type: 'module-url' } }),
     ),
-    SpaceCapability.createObject(
-      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
-    ),
-    AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),
+    AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } })),
     AppCapability.navigationResolver(
       () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
     ),
     AppCapability.pluginAsset({
       pluginId: CodeNamespace.key,
@@ -109,17 +102,13 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.section'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
       activatesOn: ActivationEvents.Idle,
       provides: [CodeCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     // Local files are reachable only from the desktop app or a dev server; settings supply the configured checkouts.
     Capability.lazyModule(
@@ -131,9 +120,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
       () => import('./src/capabilities/spec-sync.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

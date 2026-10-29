@@ -43,7 +43,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'ProjectsMigrations',
-      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [ClientCapabilities.Migration] },
+      { provides: [ClientCapabilities.Migration] },
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     // Narrower than the `appGraphBuilder` family default: the nodes it contributes carry
@@ -67,7 +67,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
     ),
     // Bundled so a feature that cites this plugin's spec opens it rendered in the app.
     AppCapability.pluginAsset({
@@ -79,36 +81,24 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog'],
     }),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
       activatesOn: ActivationEvents.Idle,
       provides: [ProjectCapabilities.Settings],
     }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     Capability.lazyModule(
       'SubjectContext',
-      {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
-        provides: [AssistantCapabilities.SubjectContext],
-        activatesOn: AssistantEvents.Start,
-      },
+      { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
       () => import('./src/capabilities/subject-context.ts', { with: { type: 'module-url' } }),
     ),
     // Injects `Assign to agent`, an `Assign to <agent>` per agent, `Copy prompt` and `Move to…` into plugin-tasks' task rows.
     Capability.lazyModule(
       'TaskAction',
       // Rides the tasks feature it contributes to: the entry is unreachable until a task list renders.
-      {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
-        provides: [TasksCapabilities.TaskAction],
-        activatesOn: TasksEvents.Start,
-      },
+      { provides: [TasksCapabilities.TaskAction], activatesOn: TasksEvents.Start },
       () => import('./src/capabilities/task-action.ts', { with: { type: 'module-url' } }),
     ),
     // Its own module, after the client: which EDGE the browser variant builds on and publishes to comes from the client's config.
@@ -125,7 +115,6 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'Templates',
       {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
         provides: [ProjectCapabilities.Template],
         activatesOn: ProjectsEvents.Start,
       },
@@ -136,9 +125,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
       () => import('./src/capabilities/tour.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 

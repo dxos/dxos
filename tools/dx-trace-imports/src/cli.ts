@@ -6,6 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { parse as parseYaml } from 'yaml';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
@@ -15,15 +16,20 @@ const DEFAULT_CONDITIONS = ['workerd', 'worker', 'node'] as const;
 
 type FailMode = 'present' | 'missing';
 
+/** A `--to` target or, when `exception`, an `--allow` entry; `scope` limits it to sets naming that condition. */
+type TargetEntry = { pattern: string; exception: boolean; scope: string | null };
+
+/** The folded `--to` and `--allow` patterns one condition set is traced with. */
+type SetTargets = { to: string; allow: string | undefined };
+
 interface ParsedArgs {
   from: string | null;
   /** One trace per subpath; a guard usually covers every entry a headless host imports. */
   exportSubpaths: string[];
-  /** Restricts each condition set to the subpaths whose export entry names one of its conditions. */
+  /** Adds, per condition set, every subpath whose export entry names one of its conditions. */
   conditionalExports: boolean;
-  to: string;
-  /** Exceptions to `to`, folded like it; `null` when none were given. */
-  allow: string | null;
+  /** `--to` and `--allow` entries; each condition set traces the ones in scope for it. */
+  targets: TargetEntry[];
   maxChains: number;
   /**
    * Independent condition sets, one per `--conditions` occurrence. A plugin resolves
@@ -73,9 +79,9 @@ const allExportSubpaths = (cwd: string): string[] => {
  * build has nothing to check there.
  */
 const conditionalExportSubpaths = (cwd: string, conditions: readonly string[]): string[] => {
-  // Boundary: package.json contents are untyped JSON.
-  const manifest = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')) as { exports?: unknown };
-  const exports = manifest.exports;
+  const manifest: unknown = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+  const exports: unknown =
+    typeof manifest === 'object' && manifest !== null ? Reflect.get(manifest, 'exports') : undefined;
   if (typeof exports !== 'object' || exports === null || Array.isArray(exports)) {
     return [];
   }
@@ -87,17 +93,49 @@ const conditionalExportSubpaths = (cwd: string, conditions: readonly string[]): 
 };
 
 /**
- * Reads `--to-file` lines: one package, path or glob per line, or a `!`-prefixed exception; `#`
- * starts a comment, so each entry can carry its reason beside it.
+ * Reads a `--bans` file: a map from condition to `ban` and `allow` lists of packages, subpaths or
+ * globs. A condition's lists apply to the `--conditions` sets that name it, so one file holds a list
+ * per runtime.
  */
-const readTargetFile = (file: string): string[] =>
-  fs
-    .readFileSync(path.resolve(file), 'utf8')
-    .split('\n')
-    .map((line) => line.replace(/#.*$/, '').trim())
-    .filter((line) => line.length > 0);
+const readBansFile = (file: string): TargetEntry[] => {
+  // Boundary: YAML contents are untyped.
+  const document: unknown = parseYaml(fs.readFileSync(path.resolve(file), 'utf8'));
+  if (typeof document !== 'object' || document === null || Array.isArray(document)) {
+    throw new Error(`${file}: expected a map from condition to { ban, allow }.`);
+  }
+  const patterns = (value: unknown, key: string): string[] => {
+    if (value === undefined || value === null) {
+      return [];
+    }
+    if (!Array.isArray(value) || !value.every((entry) => typeof entry === 'string')) {
+      throw new Error(`${file}: ${key} must be a list of strings.`);
+    }
+    return value;
+  };
+  return Object.entries(document).flatMap(([scope, lists]: [string, unknown]) => {
+    if (typeof lists !== 'object' || lists === null) {
+      throw new Error(`${file}: ${scope} must be a map with \`ban\` and \`allow\`.`);
+    }
+    return [
+      ...patterns(Reflect.get(lists, 'ban'), `${scope}.ban`).map((pattern) => ({ pattern, exception: false, scope })),
+      ...patterns(Reflect.get(lists, 'allow'), `${scope}.allow`).map((pattern) => ({
+        pattern,
+        exception: true,
+        scope,
+      })),
+    ];
+  });
+};
 
-const isException = (line: string): boolean => line.startsWith('!');
+/** Folds the entries in scope for `conditions`; `undefined` when no target applies to that set. */
+const targetsFor = (entries: TargetEntry[], conditions: readonly string[]): SetTargets | undefined => {
+  const inScope = entries.filter((entry) => entry.scope === null || conditions.includes(entry.scope));
+  const to = inScope.filter((entry) => !entry.exception).map((entry) => entry.pattern);
+  const allow = inScope.filter((entry) => entry.exception).map((entry) => entry.pattern);
+  return to.length === 0
+    ? undefined
+    : { to: foldTargets(to), allow: allow.length > 0 ? foldTargets(allow) : undefined };
+};
 
 const parseFailOn = (value: unknown): FailMode | null => {
   if (value === undefined || value === null || value === '') {
@@ -134,8 +172,8 @@ const parseArgs = async (): Promise<ParsedArgs> => {
       type: 'boolean',
       default: false,
       describe:
-        'Trace each export subpath only under the --conditions sets its package.json entry names, ' +
-        'so a guard on a runtime build covers every subpath built for it.',
+        'Trace each export subpath under the --conditions sets its package.json entry names, so a guard ' +
+        'on a runtime build covers every subpath built for it. Combines with --export.',
     })
     .option('to', {
       type: 'string',
@@ -143,10 +181,12 @@ const parseArgs = async (): Promise<ParsedArgs> => {
       describe:
         'Terminal: npm package name, file path, or glob pattern (e.g. "*.pcss", "@dxos/react-ui*"). Repeatable.',
     })
-    .option('to-file', {
+    .option('bans', {
       type: 'string',
       array: true,
-      describe: 'File of --to targets, one per line; `!` marks an --allow entry, `#` starts a comment. Repeatable.',
+      describe:
+        "YAML map from condition to `ban` (--to targets) and `allow` (--allow entries) lists; a condition's " +
+        'lists apply to the --conditions sets that name it. Repeatable.',
     })
     .option('allow', {
       type: 'string',
@@ -177,9 +217,8 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     .check((args) => {
       const sources = [
         Boolean(args.from),
-        stringList(args.export).length > 0,
+        stringList(args.export).length > 0 || Boolean(args.conditionalExports),
         Boolean(args.allExports),
-        Boolean(args.conditionalExports),
       ];
       const count = sources.filter(Boolean).length;
       if (count === 0) {
@@ -188,7 +227,7 @@ const parseArgs = async (): Promise<ParsedArgs> => {
         );
       }
       if (count > 1) {
-        throw new Error('Use only one of --from, --export, --all-exports or --conditional-exports.');
+        throw new Error('Use only one of --from, --export/--conditional-exports or --all-exports.');
       }
       return true;
     })
@@ -200,11 +239,13 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     throw new Error(`Invalid --max-chains value: ${String(argv.maxChains)}. Must be a positive integer.`);
   }
 
-  const fileLines = stringList(argv.toFile).flatMap(readTargetFile);
-  const targets = [...stringList(argv.to), ...fileLines.filter((line) => !isException(line))];
-  const exceptions = [...stringList(argv.allow), ...fileLines.filter(isException).map((line) => line.slice(1).trim())];
-  if (targets.length === 0) {
-    throw new Error('Provide at least one --to <package-or-pattern-or-path> or a non-empty --to-file.');
+  const targets: TargetEntry[] = [
+    ...stringList(argv.to).map((pattern) => ({ pattern, exception: false, scope: null })),
+    ...stringList(argv.allow).map((pattern) => ({ pattern, exception: true, scope: null })),
+    ...stringList(argv.bans).flatMap(readBansFile),
+  ];
+  if (!targets.some((entry) => !entry.exception)) {
+    throw new Error('Provide at least one --to <package-or-pattern-or-path> or a --bans file with a `ban` list.');
   }
 
   const conditionSets = stringList(argv.conditions)
@@ -218,8 +259,7 @@ const parseArgs = async (): Promise<ParsedArgs> => {
     from: argv.from ? String(argv.from) : null,
     exportSubpaths: argv.allExports ? allExportSubpaths(process.cwd()) : stringList(argv.export),
     conditionalExports: Boolean(argv.conditionalExports),
-    to: foldTargets(targets),
-    allow: exceptions.length > 0 ? foldTargets(exceptions) : null,
+    targets,
     maxChains,
     conditionSets,
     packagesOnly: Boolean(argv.packagesOnly),
@@ -228,12 +268,17 @@ const parseArgs = async (): Promise<ParsedArgs> => {
 };
 
 /** Traces one entry under one condition set; returns whether it violated `--fail-on`. */
-const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditions: string[]): boolean => {
+const traceEntry = (
+  args: ParsedArgs,
+  exportSubpath: string | undefined,
+  conditions: string[],
+  { to, allow }: SetTargets,
+): boolean => {
   const result = traceImports({
     from: args.from ?? undefined,
     exportSubpath,
-    to: args.to,
-    allow: args.allow ?? undefined,
+    to,
+    allow,
     maxChains: args.maxChains,
     conditions,
     packagesOnly: args.packagesOnly,
@@ -246,10 +291,10 @@ const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditi
   console.error(`graph: ${result.metafilePath}`);
 
   if (result.labelChains.length === 0) {
-    console.log(`No import paths from "${label}" to "${args.to}".`);
+    console.log(`No import paths from "${label}" to "${to}".`);
     if (args.failOn === 'missing') {
       console.error('');
-      console.error(`Failed because "${label}" does not transitively import "${args.to}".`);
+      console.error(`Failed because "${label}" does not transitively import "${to}".`);
       return true;
     }
     return false;
@@ -261,7 +306,7 @@ const traceEntry = (args: ParsedArgs, exportSubpath: string | undefined, conditi
 
   if (args.failOn === 'present') {
     console.error('');
-    console.error(`Failed because "${label}" transitively imports "${args.to}".`);
+    console.error(`Failed because "${label}" transitively imports "${to}".`);
     return true;
   }
   return false;
@@ -275,16 +320,23 @@ const main = async () => {
   // property of all of them.
   let failed = false;
   for (const conditions of args.conditionSets) {
-    const entries: (string | undefined)[] = args.conditionalExports
-      ? conditionalExportSubpaths(process.cwd(), conditions)
-      : args.exportSubpaths.length > 0
-        ? args.exportSubpaths
-        : [undefined];
-    if (args.conditionalExports && entries.length === 0) {
+    const targets = targetsFor(args.targets, conditions);
+    if (!targets) {
+      console.log(`No targets apply to [${conditions.join(',')}].`);
+      continue;
+    }
+    const subpaths = [
+      ...new Set([
+        ...(args.conditionalExports ? conditionalExportSubpaths(process.cwd(), conditions) : []),
+        ...args.exportSubpaths,
+      ]),
+    ];
+    if (args.conditionalExports && subpaths.length === 0) {
       console.log(`No export subpaths declare any of [${conditions.join(',')}].`);
     }
+    const entries: (string | undefined)[] = subpaths.length > 0 || args.conditionalExports ? subpaths : [undefined];
     for (const entry of entries) {
-      failed = traceEntry(args, entry, conditions) || failed;
+      failed = traceEntry(args, entry, conditions, targets) || failed;
     }
   }
   process.exit(failed ? 1 : 0);

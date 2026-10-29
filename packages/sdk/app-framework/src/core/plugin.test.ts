@@ -384,13 +384,5 @@ describe('Plugin module authoring', () => {
       );
       expect(Inline.environments).toEqual(['node']);
     });
-
-    it('keeps a module with no environments out of workerd only', () => {
-      expect(Capability.runsIn(undefined, 'browser')).toBe(true);
-      expect(Capability.runsIn(undefined, 'node')).toBe(true);
-      expect(Capability.runsIn(undefined, 'workerd')).toBe(false);
-      expect(Capability.runsIn(['browser', 'node', 'tauri'], 'workerd')).toBe(false);
-      expect(Capability.runsIn(['node', 'workerd'], 'workerd')).toBe(true);
-    });
   });
 });

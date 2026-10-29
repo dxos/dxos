@@ -172,7 +172,7 @@ Phase 1, before the PR. The skeleton should include:
 
 1. `README.md` — brief description of the plugin's purpose, linking to `docs/DESIGN.md`.
 2. `package.json` — with `"private": true`, the `#meta` import alias and `./FooPlugin` export subpath (both point at `dx.config.ts`; see **package.json**), and minimal dependencies.
-3. `moon.yml` — tags and a `check-module-structure` task when the plugin has a node/workerd variant.
+3. `moon.yml` — tags, including `headless-node` when the plugin's node build must stay UI-free (`check-module-structure` itself is inherited).
 4. `src/namespace.ts` — `export const FooNamespace = Plugin.namespace('org.dxos.plugin.foo')`, a leaf both `dx.config.ts` and the capability tags derive from.
 5. `src/translations.ts` — initial translation resources.
 6. `dx.config.ts` — `Plugin.config({ plugin, modules })` with key, name, author, description, icon, a **quality tier tag** (see below), surface and translations modules, and `export const { meta, make } = config; export default config;` (see **Plugin Definition**).
@@ -651,13 +651,14 @@ A package that reads its own files at runtime needs a bundler-friendly entry too
 
 ### Guarding it
 
-`check-module-structure` traces the export and fails if React is reachable. Every plugin with a node
-variant has this task, and CI runs `moon run :check-module-structure`. Diagnose a failure by printing
-the chain:
+Every composer plugin inherits `check-module-structure` (`.moon/tasks/tag-composer-plugin.yml`), and CI
+runs `moon run :check-module-structure`. It traces every export that declares `workerd` against the `workerd`
+lists of `.config/import-bans.yml`; a plugin tagged `headless-node` also traces its `node` exports against the
+`node` lists (React and `@dxos/react-ui`). Diagnose a failure by printing the chain:
 
 ```bash
-pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
-  --conditions workerd,worker,node --max-chains 2
+pnpm exec dx-trace-imports --conditional-exports --bans ../../../.config/import-bans.yml \
+  --conditions workerd,worker --max-chains 5
 ```
 
 See: `plugin-sheet/src/operations/node.ts`,
@@ -666,23 +667,18 @@ See: `plugin-sheet/src/operations/node.ts`,
 ### Runtime conditions
 
 `environments` on a module lists every runtime condition it loads in: `browser`, `tauri`, `node`,
-`workerd`. The per-runtime build keeps a module when its list names the runtime, or when it has no list
-and the runtime is not `workerd` (`Capability.runsIn`).
+`workerd`. The per-runtime build keeps a module when its list names the runtime or it has no list.
 
-- Maker families set the usual list: UI families `['browser', 'tauri']`, headless families
-  `['browser', 'node', 'tauri']`. A call site that restates a list names every runtime it wants, `tauri`
-  included.
-- `workerd` is opt-in: no family defaults to it and a module with no list stays out. Name it only on a module an
-  EDGE operation needs (operation handlers, schema, skills, connectors, layer specs); an EDGE worker keeps every
-  module it bundles resident.
+- Maker families set the usual list: UI families `['browser', 'tauri']`, headless families all four.
+  A call site that restates a list names every runtime it wants, `tauri` included.
 - A module that only works inside the Tauri shell is `['tauri']` (`LocalLauncher`).
 - A plugin loaded under a runtime needs that condition on its `./FooPlugin` export. A UI-only plugin has no
   `node` condition, so its plugin tests run in browser mode (`plugin-mermaid`).
 
-Every composer plugin inherits `check-server-imports` (`.moon/tasks/tag-composer-plugin.yml`), which fails when a
-`workerd` export reaches a package in `.config/server-import-bans.txt` (CodeMirror, React and the design system, Lit,
-the local client stack and CLI, …). Fix a violation at its source; a UI-free subpath of a banned package (`/types`,
-`/translations`) goes in that file as a `!` exception, which the tracer still walks into.
+The `workerd` ban list covers CodeMirror, React and the design system, Lit, defuddle's DOM build and the local
+client stack and CLI. Fix a violation at its source: a module EDGE has no use for (editor extensions, CLI commands,
+local-client layer specs) lists `['browser', 'node', 'tauri']`; a UI-free subpath of a banned package (`/types`,
+`/translations`) goes in that file's `allow` list, and the tracer still walks into it.
 
 Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`, or `tauri dev`
 via `TAURI_ENV_PLATFORM`).
@@ -727,8 +723,9 @@ See: `plugin-chess/package.json`
 
 Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args
 (vite-built plugins: a matching `entry` in `vite.config.ts`, including `capabilities/node`).
-A plugin with a node variant also carries a `check-module-structure` task — see
-**Non-Browser Variants**.
+A plugin whose node variant must stay UI-free carries the `headless-node` tag, which adds the node set to the
+inherited `check-module-structure` — see **Non-Browser Variants**. A subpath that declares no condition but is
+imported by a headless host is named with a local `args: [--export, <subpath>]` (`plugin-tasks/moon.yml`).
 
 See: `plugin-chess/moon.yml`
 

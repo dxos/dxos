@@ -224,10 +224,10 @@ jobs:
         id: compile
         run: moon run :lint :build :test-types
 
-      # `check-module-structure` and `check-server-imports` trace the built artifacts (`deps: [build]`),
-      # so they cannot move ahead of the gate however cheap they look — their seconds are post-build.
+      # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
+      # of the gate however cheap it looks — its 5 s is a post-build number.
       - name: Check module structure
-        run: moon run :check-module-structure :check-server-imports
+        run: moon run :check-module-structure
 
       # ─── Stage 3: the slow checks ───────────────────────────────────────────────────────────────
       # Each runs once the compile gate passed, whatever the other did, so one run reports both.

@@ -103,6 +103,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
       ),
       AppCapability.operationHandler(
         () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+        { environments: ['browser', 'node', 'tauri'] },
       ),
       AppCapability.pluginAsset({
         pluginId: DeckNamespace.key,

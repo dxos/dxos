@@ -72,7 +72,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'MarkdownExtension',
-      { activatesOn: MarkdownEvents.Start, provides: [MarkdownCapabilities.ExtensionProvider] },
+      {
+        environments: ['browser', 'node', 'tauri'],
+        activatesOn: MarkdownEvents.Start,
+        provides: [MarkdownCapabilities.ExtensionProvider],
+      },
       () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
@@ -124,6 +128,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'Transcriber',
       {
+        environments: ['browser', 'node', 'tauri'],
         activatesOn: TranscriptionEvents.Start,
         requires: [Capabilities.AtomRegistry],
         provides: [TranscriptionCapabilities.TranscriptionManagerProvider],

@@ -4,6 +4,7 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+  - headless-node
 
 tasks:
   # The manual e2e suites read these, so a cached run with other values must not replay. Credentials
@@ -16,25 +17,6 @@ tasks:
       - $DX_E2E_CLAUDE_ACP_VERSION
       - $DX_E2E_CLAUDE
       - $DX_E2E_CLAUDE_MODEL
-  check-module-structure:
-    # The plugin generates node and workerd capability barrels, so its headless entry must stay
-    # UI-free: fail if React ever becomes reachable from it under either condition.
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --export ./ClaudePlugin
-      --to "{react,react-dom}"
-      --conditions workerd,worker
-      --conditions node
-      --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
   # The Claude Code agent the desktop app's agent helper runs (the ACP adapter, bundled). Not part of
   # `build`: only composer-app's Tauri build consumes it, and it installs the pinned adapter from npm.
   compile-agent:

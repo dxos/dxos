@@ -57,7 +57,9 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {
@@ -75,12 +77,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     // Migration providers stay eager: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'IllustratorMigrations',
-      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [ClientCapabilities.Migration] },
+      { provides: [ClientCapabilities.Migration] },
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
+      { activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: IllustratorNamespace.key,
@@ -96,17 +98,13 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [IllustratorCapabilities.Refit], activatesOn: ActivationEvents.Startup },
       () => import('./src/capabilities/refit-state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     Capability.lazyModule(
       'IllustratorSvgVariant',
       {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
         provides: [IllustratorCapabilities.VariantProvider],
         activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
       },

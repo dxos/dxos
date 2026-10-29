@@ -39,7 +39,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'ReactSurface',
-      { provides: [Capabilities.ReactSurface] },
+      { environments: ['browser', 'node', 'tauri'], provides: [Capabilities.ReactSurface] },
       () => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(

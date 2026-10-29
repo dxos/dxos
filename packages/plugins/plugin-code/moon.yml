@@ -7,6 +7,7 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+  - headless-node
 
 tasks:
   build:
@@ -31,20 +32,3 @@ tasks:
       - src/components/SpecEditor/gen/spec-index.json
     tags:
       - prebuild
-  check-module-structure:
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --export ./CodePlugin
-      --to "{react,react-dom}"
-      --conditions workerd,worker
-      --conditions node
-      --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60

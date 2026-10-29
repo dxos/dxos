@@ -1,16 +1,19 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
-  # Fail when a plugin's EDGE build reaches a package listed in `/.config/server-import-bans.txt`.
-  # `--conditional-exports` picks every export subpath that declares `workerd`, so no subpath needs
-  # naming here. `node` is not checked: a node build keeps every module without an `environments`
-  # list, UI included, so React stays legitimate there.
-  check-server-imports:
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --conditional-exports
-      --to-file $workspaceRoot/.config/server-import-bans.txt
-      --conditions workerd,worker
-      --fail-on present
+  # Fail when a plugin's runtime build reaches a package banned for that runtime in
+  # `/.config/import-bans.yml`. `--conditional-exports` picks every export subpath that declares the
+  # condition, so no subpath needs naming here. The `headless-node` tag appends the node set; a project
+  # appends `--export <subpath>` for a subpath that declares no condition.
+  check-module-structure:
+    command: bun $workspaceRoot/tools/dx-trace-imports/cli.js
+    args:
+      - --conditional-exports
+      - --bans
+      - $workspaceRoot/.config/import-bans.yml
+      - --fail-on
+      - present
+      - --conditions
+      - workerd,worker
     deps:
       - dx-trace-imports:build
       - build
@@ -19,7 +22,7 @@ tasks:
       - package.json
       - dx.config.ts
       - '@group(production)'
-      - /.config/server-import-bans.txt
+      - /.config/import-bans.yml
       - /pnpm-lock.yaml
     options:
       timeout: 120

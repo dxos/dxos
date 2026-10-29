@@ -65,7 +65,9 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
   modules: [
     AppGraphBuilder,
     // TODO(wittjosiah): Could some of these commands make use of operations?
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
     SpaceCapability.createObject(
       () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
       {
@@ -82,10 +84,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       },
       () => import('./src/capabilities/dashboard.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.defaultParent(
-      () => import('./src/capabilities/default-parent.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
-    ),
+    AppCapability.defaultParent(() => import('./src/capabilities/default-parent.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'IdentityCreated',
       {
@@ -114,11 +113,10 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     ),
     AppCapability.observabilityMappings(
       () => import('./src/capabilities/observability-mappings.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
+      {},
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     AppCapability.pluginAsset({
       pluginId: SpaceNamespace.key,
@@ -144,20 +142,16 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     Capability.lazyModule(
       'Repair',
       {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
         provides: [SpaceCapabilities.Repair],
         // Runtime event: repairs run once spaces are observed, not at startup.
         activatesOn: ClientEvents.SpacesAvailable,
       },
       () => import('./src/capabilities/repair.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
       'SettingsSync',
       {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
         requires: [ClientCapabilities.Client, Capabilities.PluginManager, Capabilities.AtomRegistry],
         provides: [AppCapabilities.SettingsSync],
         // The settings space arrives with the space list; on a first run that precedes the identity, so the module runs
@@ -168,7 +162,6 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     ),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'] },
     ),
     // Browser-only: it requires the app graph, layout and attention — app-shell capabilities no
     // headless host registers.
@@ -194,7 +187,6 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       () => import('./src/capabilities/spaces-available.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
       provides: [SpaceCapabilities.SettingsAtom],
     }),
     // Holds view state (space names, viewers, merge preview); every consumer — the React surfaces,
@@ -208,15 +200,13 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       },
       () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
-    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.translations(() => import('./src/capabilities/translations.ts', { with: { type: 'module-url' } })),
     AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],
     }),
     Capability.lazyModule(
       'SpaceOperationConfig',
-      { environments: ['browser', 'node', 'tauri', 'workerd'], provides: [SpaceOperationConfig] },
+      { provides: [SpaceOperationConfig] },
       () => import('./src/capabilities/operation-config.ts', { with: { type: 'module-url' } }),
     ),
   ],

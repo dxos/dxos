@@ -3,4 +3,4 @@
 '@dxos/plugin-markdown': patch
 ---
 
-`@dxos/ui-editor/hunks` exports the word-level diff helpers (`cherryPickHunk`, `revertHunk`, `computeWordHunks`) without a CodeMirror dependency; `@dxos/ui-editor/headless` no longer exports `cherryPickHunk` and `revertHunk`. The EDGE (`workerd`) builds of plugin-markdown and plugin-magazine no longer bundle CodeMirror's view layer or defuddle's DOM build, and markdown's Scroll To Anchor operation is now registered only in the browser.
+Plugin `workerd` (EDGE) builds no longer bundle editor extensions, CLI commands, local-client layer specs, UI state or defuddle's DOM build: those modules now list `['browser', 'node', 'tauri']`, and markdown's Scroll To Anchor operation registers only in the browser. `@dxos/ui-editor/hunks` exports the word-level diff helpers (`cherryPickHunk`, `revertHunk`, `computeWordHunks`) without a CodeMirror dependency; `@dxos/ui-editor/headless` no longer exports `cherryPickHunk` and `revertHunk`.

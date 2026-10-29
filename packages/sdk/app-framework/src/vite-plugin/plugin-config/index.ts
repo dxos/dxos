@@ -250,7 +250,7 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
       // one runtime's modules, so a headless bundle never reaches a browser-only body.
       const libraryEnv = library ? query.get(LIBRARY_ENV_PARAM) : null;
       const keep = (environments?: readonly string[]) =>
-        library ? !libraryEnv || Capability.runsIn(environments, libraryEnv) : Capability.runsIn(environments, target);
+        !environments || (library ? !libraryEnv || environments.includes(libraryEnv) : environments.includes(target));
       const loaders: string[] = [];
       const chunkRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.

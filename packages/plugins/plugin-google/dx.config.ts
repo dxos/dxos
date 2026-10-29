@@ -44,18 +44,13 @@ const config: Plugin.PluginConfig = Plugin.config({
   modules: [
     Capability.lazyModule(
       'GoogleConnector',
-      {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
-        provides: [ConnectorSpec.Connector],
-        activatesOn: ConnectorEvents.Start,
-      },
+      { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
       () => import('./src/capabilities/connector.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'GoogleMailSend',
       // Read by the inbox compose/reply views and by the assistant's send skill.
       {
-        environments: ['browser', 'node', 'tauri', 'workerd'],
         provides: [InboxCapabilities.MailSendOperation],
         activatesOn: ActivationEvent.oneOf(InboxEvents.Start, AppActivationEvents.AssistantStart),
       },
@@ -63,11 +58,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      { environments: ['browser', 'node', 'tauri', 'workerd'], activatesOn: ActivationEvents.Idle },
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
     ),
-    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
-      environments: ['browser', 'node', 'tauri', 'workerd'],
-    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });
 
