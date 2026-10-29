@@ -114,6 +114,11 @@
       "types": "./dist/types/src/samples/review/ReviewSpace.d.ts",
       "import": "./dist/lib/ReviewSpace.mjs"
     },
+    "./RideCheckSpace": {
+      "source": "./src/samples/ride-check/RideCheckSpace.ts",
+      "types": "./dist/types/src/samples/ride-check/RideCheckSpace.d.ts",
+      "import": "./dist/lib/RideCheckSpace.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",

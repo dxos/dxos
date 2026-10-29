@@ -16,6 +16,7 @@ export default defineConfig({
     PresenterSpace: 'src/samples/presenter/PresenterSpace.ts',
     PipelineSpace: 'src/samples/crm/PipelineSpace.ts',
     ReviewSpace: 'src/samples/review/ReviewSpace.ts',
+    RideCheckSpace: 'src/samples/ride-check/RideCheckSpace.ts',
     StockfishSpace: 'src/samples/stockfish/StockfishSpace.ts',
     TidepoolSpace: 'src/samples/tidepool/TidepoolSpace.ts',
     TimelineSpace: 'src/samples/timeline/TimelineSpace.ts',
