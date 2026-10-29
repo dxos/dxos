@@ -21,6 +21,9 @@ const BASE: ToolEntry[] = [
 /** The group of the fixed tools, which the rail ends with the read-only toggle. */
 export const TOOLS_GROUP = 'Tools';
 
+/** The group of the tools that make elements — the shapes, then the link — in both dimensions' rails. */
+export const CREATE_GROUP = 'Create';
+
 /**
  * A run of palette entries; a group of node types may fold into one flyout button when the rail runs out of room, and
  * a `folded` group always does.
@@ -41,28 +44,29 @@ const nodeGroups = (nodes: NodeRegistry): ToolGroup[] => {
 };
 
 /**
- * Tool groups: the fixed tools, then the node types by group, then a link per link type; a group the projection
- * cannot apply (`create`, `link`) is left out rather than offered and silently dropped. Node groups fold when the rail
- * runs out of room; the link types always share one flyout, since a drawing mostly uses one of them.
+ * Tool groups: the fixed tools, then the create group (the shapes and the link types), then the other node types by
+ * group; a tool the projection cannot apply (`create`, `link`) is left out rather than offered and silently dropped.
+ * Groups fold into a flyout when the rail runs out of room.
  */
-export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolGroup[] =>
-  [
+export const toolGroups = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolGroup[] => {
+  const linkEntries: ToolEntry[] = capabilities.link
+    ? Object.values(links).map((def) => ({
+        tool: { kind: 'link' as const, type: def.type },
+        icon: def.icon,
+        label: def.name,
+        key: def.key,
+      }))
+    : [];
+  // The first (unnamed) node group is the shapes: it becomes the create group, which the link tools end.
+  const [shapes, ...others] = capabilities.create ? nodeGroups(nodes) : [];
+  const create = [...(shapes?.name === '' ? shapes.entries : []), ...linkEntries];
+  return [
     { name: TOOLS_GROUP, entries: BASE, collapsible: false },
-    ...(capabilities.create ? nodeGroups(nodes) : []),
-    {
-      name: 'Links',
-      entries: capabilities.link
-        ? Object.values(links).map((def) => ({
-            tool: { kind: 'link' as const, type: def.type },
-            icon: def.icon,
-            label: def.name,
-            key: def.key,
-          }))
-        : [],
-      collapsible: true,
-      folded: true,
-    },
+    { name: CREATE_GROUP, entries: create, collapsible: create.length > 1 },
+    ...(shapes && shapes.name !== '' ? [shapes] : []),
+    ...others,
   ].filter((group) => group.entries.length > 0);
+};
 
 /** Tool entries by group, flat within each. */
 export const toolEntries = (nodes: NodeRegistry, links: LinkRegistry, capabilities: Capabilities): ToolEntry[][] =>

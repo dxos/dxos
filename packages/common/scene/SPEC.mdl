@@ -762,3 +762,9 @@ decision D-78: One rule decides it for both (`isHandDrag`, the command key with 
   for: user:richburdon
   why: Taking Cmd-drag from elements would remove 2D's copy-drag with no other gesture for it; on empty space nothing else used it.
 ```
+
+```mdl
+decision D-79: Both rails group their tools alike: the fixed tools (Select, the hand), the transform tools (3D: Move, Rotate, Scale, then Extrude), and one create group of the shapes followed by Link (2D: rectangle, oval and the other shapes; 3D: cube, sphere, cylinder, cone).
+  date: 2026-10-29
+  by: user:richburdon
+```
