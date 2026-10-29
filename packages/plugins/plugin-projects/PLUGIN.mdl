@@ -90,12 +90,15 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
     The browser variant of QA-1. The agent works the same parent task and four subtasks in a Sandbox on EDGE, and the
     last one publishes the build with `dx registry publish --private`, authenticated by the account token the sandbox
     was given when the agent created it. Nothing is loaded by URL: World Clock appears in Plugins → Registry, listed
-    only to this identity, and the reader installs it there. Walked by the autocue flow
+    only to this identity, and the reader installs it there. The template seeds the plugin's `PLUGIN.mdl`, the
+    bundle ships it, and the registry opens it as the plugin's specification, so the spec round-trips from the
+    project to the registry. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/composer-plugin-registry.mjs`.
   actors: both
   status: verified
   given:
-    - an identity exists and is associated with an account on the EDGE it talks to
+    - an identity exists and is associated with an account on the EDGE it talks to; on dev or preview a `test+…@dxos.org` email
+      binds one with no invitation (the flow does this off camera)
     - space: a space is open (the default "My Space" is fine)
     - Composer is a production bundle (remote plugins install only from a bundle), built from a commit of `main` that
       pkg.pr.new has published or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one, and with a `dx` that has
@@ -128,6 +131,15 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
     - name: Open the Clocks page and add two timezones
       do: Click Clocks under the WORLD CLOCK group, then add two timezones with the plus card.
       expect: the page shows the map above three ticking clock cards and the plus card
+    - name: Open World Clock's specification from the registry
+      do: Open Plugins → Registry, click the World Clock card, then click Open Specification.
+      expect: |
+        the spec opens beside the plugin with its definitions sidebar listing the `Zone` and `Clock` types, the
+        `ClocksArticle` component and feature F-1, and its text is the `PLUGIN.mdl` the template seeded
+        (`worldClockSpec`, with the key the project was given)
+      note: |
+        The spec reaches the registry only through the published bundle: `dx.config.ts` names it with `spec`, and the
+        plugin contributes its text as a `pluginAsset`. Open Specification is absent when either is missing.
 ```
 
 ```mdl
@@ -282,4 +294,53 @@ decision D-3: `Demonstrates` 0.2.0 takes any object as its source, and plugin-pr
   why: plugin-presenter depends on this plugin through plugin-studio, so this plugin cannot import the `Presentation` type without a dependency cycle.
   rejected:
     - Moving `Presentation` into a package both plugins import, which moves the deck's whole type module for one relation.
+```
+
+```mdl
+decision D-4: The Composer Plugin template's World Clock carries a spec that round-trips: the project that builds the plugin starts from it, and after the plugin is published to the private registry and installed, the registry's Open Specification shows it. QA-2 walks the round trip.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [QA-2]
+```
+
+```mdl
+decision D-5: The template seeds the spec's text and the agent writes it unchanged, rather than writing its own. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  why: A fixed text makes the round trip checkable, since the registry must show exactly what the project started from.
+  rejected:
+    - The agent writes the spec from the task text, which differs on every run, so nothing can be compared.
+```
+
+```mdl
+decision D-6: World Clock is published under the key `org.example.plugin.worldClock`, which the spec's `id` names. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  why: The registry attaches a spec to the plugin whose key matches the asset's `pluginId`, and the spec names that key.
+```
+
+```mdl
+decision D-7: Each project from the template gets its own plugin key, `org.example.plugin.worldClock` and six random hex digits, which the task text and the spec's `id` both carry. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-6
+  why: Registry keys are global, so the fixed key was claimed by its first publisher and refused to every later one as "owned by another identity".
+  rejected:
+    - Let the agent pick a key: the spec's `id` would then differ from the text the template seeded.
+```
+
+```mdl
+decision D-8: The minted key's suffix is eight random hex digits rather than six. Fills in [D-4].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-7
+  why: Six digits give 16.8 million keys, so a thousand projects collide with about a 3% chance, and a collision refuses the later publisher.
 ```
