@@ -4,13 +4,15 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '../meta.ts';
-import { type OnboardingManager } from '../onboarding-manager.ts';
+import { OnboardingNamespace } from '../namespace.ts';
+import type { OnboardingManager } from '../onboarding-manager.ts';
 
 export type OnboardingOptions = {
   generateDemoSpace: boolean;
 };
 
 export namespace OnboardingCapabilities {
-  export const Onboarding = Capability.makeSingleton<OnboardingManager>()(`${meta.profile.key}.capability.onboarding`);
+  export const Onboarding = Capability.makeSingleton<OnboardingManager>()(
+    `${OnboardingNamespace.key}.capability.onboarding`,
+  );
 }

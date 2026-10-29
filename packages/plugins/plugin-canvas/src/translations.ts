@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { CanvasNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [CanvasNamespace.key]: {
         'plugin.name': 'Canvas',
         'variant.label': 'Canvas',
         'lock-drawing.label': 'Read only',

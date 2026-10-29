@@ -4,22 +4,20 @@
 
 // @import-as-namespace
 
-import { type Extension } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+import type { Extension } from '@codemirror/state';
+import type { EditorView } from '@codemirror/view';
 import type * as Atom from 'effect/reactivity/Atom';
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import type * as Operation from '@dxos/compute/Operation';
-import { type Obj } from '@dxos/echo';
-import { type ViewModeItem } from '@dxos/react-ui-editor';
+import type { Obj } from '@dxos/echo';
+import type { ViewModeItem } from '@dxos/react-ui-editor';
 import type * as Theme from '@dxos/react-ui/Theme';
-import { type Text } from '@dxos/schema';
-import { type EditorStateStore } from '@dxos/ui-editor';
-import { type EditorViewMode } from '@dxos/ui-editor/types';
+import type { Text } from '@dxos/schema';
+import type { EditorStateStore } from '@dxos/ui-editor';
+import type { EditorViewMode } from '@dxos/ui-editor/types';
 
-import { meta } from '#meta';
-
+import { MarkdownNamespace } from '../namespace.ts';
 import type * as Markdown from './Markdown.ts';
 
 export type EditorViewEntry = { view: EditorView; documentId: string };
@@ -32,21 +30,17 @@ export type EditorViewRegistry = {
   getByDocumentId: (documentId: string) => EditorViewEntry | undefined;
 };
 
-export const Settings = Capability.makeSingleton<Atom.Writable<Markdown.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
-);
+export const Settings = MarkdownNamespace.makeSingleton<Atom.Writable<Markdown.Settings>>()('settings');
 
 /** Editor state store for cursor positions, scroll state, etc. */
-export const EditorState = Capability.makeSingleton<EditorStateStore>()(`${meta.profile.key}.capability.editorState`);
+export const EditorState = MarkdownNamespace.makeSingleton<EditorStateStore>()('editorState');
 
 /** Registry of active EditorView instances keyed by attendable ID. */
-export const EditorViews = Capability.makeSingleton<EditorViewRegistry>()(`${meta.profile.key}.capability.editorViews`);
+export const EditorViews = MarkdownNamespace.makeSingleton<EditorViewRegistry>()('editorViews');
 
 // TODO(burdon): Move to ./types (external API)?
 // Multi capability: each contributing plugin provides one batch (array) of extension providers.
-export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>()(
-  `${meta.profile.key}.capability.extensions`,
-);
+export const ExtensionProvider = MarkdownNamespace.make<MarkdownExtensionProvider[]>()('extensions');
 
 /**
  * Hook-shaped contribution computing the editor's subject binding and review affordances (see
@@ -54,7 +48,7 @@ export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>()(
  * affordances. Contributions are app-lifetime: replacing the hook remounts the article (scroll and
  * selection reset), so contributors must register once at activation, not per render.
  */
-export const EditorBindingHook = Capability.make<UseEditorBinding>()(`${meta.profile.key}.capability.editorBinding`);
+export const EditorBindingHook = MarkdownNamespace.make<UseEditorBinding>()('editorBinding');
 
 /**
  * A contributed entry for the editor's view-mode dropdown: surfaces a per-document review mode (e.g.
@@ -74,9 +68,7 @@ export type ViewModeExtension = {
   order?: number;
 };
 
-export const ViewModeExtension = Capability.make<ViewModeExtension>()(
-  `${meta.profile.key}.capability.viewModeExtension`,
-);
+export const ViewModeExtension = MarkdownNamespace.make<ViewModeExtension>()('viewModeExtension');
 
 /**
  * A contributed entry for the editor's slash-command popup.
@@ -105,7 +97,7 @@ export type MenuExtension = {
   operation: Operation.Definition.Any;
 };
 
-export const MenuExtension = Capability.make<MenuExtension>()(`${meta.profile.key}.capability.menuExtension`);
+export const MenuExtension = MarkdownNamespace.make<MenuExtension>()('menuExtension');
 
 /** Per-document editing posture (Google-Docs-style); the review semantics are owned by contributors. */
 export type ReviewMode = 'editing' | 'suggesting' | 'viewing';

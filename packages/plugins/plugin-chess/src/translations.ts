@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Chess, ChessPositionIndex, PlayerReview } from '#types';
+
+import { ChessNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -37,7 +38,7 @@ export const translations = [
         'typename.label_one': 'Position index',
         'typename.label_other': 'Position indexes',
       },
-      [meta.profile.key]: {
+      [ChessNamespace.key]: {
         'plugin.name': 'Chess',
         'new-game.button': 'New game',
         'delete-game.label': 'Delete',

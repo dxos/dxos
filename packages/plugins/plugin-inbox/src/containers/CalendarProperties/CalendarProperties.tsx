@@ -18,13 +18,14 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { useSyncTrigger } from '#hooks';
-import { meta } from '#meta';
 import { Calendar } from '#types';
+
+import { InboxNamespace } from '../../namespace.ts';
 
 export type CalendarPropertiesProps = AppSurface.ObjectPropertiesProps<Calendar.Calendar>;
 
 export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(InboxNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector);

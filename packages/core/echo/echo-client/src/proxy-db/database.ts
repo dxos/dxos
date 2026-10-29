@@ -4,6 +4,7 @@
 
 import { type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -52,6 +53,7 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -149,18 +151,6 @@ export interface EchoDatabase extends Database.Database {
    */
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
 
-  /**
-   * Migration-scoped accessor to the automerge repo.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
-   */
-  readonly _repo: RepoProxy;
-
-  /**
-   * Returns the space root document handle for migration tools.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
-   */
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
-
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
   // `mergeBranch`/`deleteBranch`/`listBranches`/`getCurrentBranch`/`branch`). Client-only extras:
@@ -229,6 +219,9 @@ export type EchoDatabaseProps = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+
+  /** Starts a new space epoch whose root is the given document; enables `beginMigration({ root: 'replace' })`. */
+  createEpoch?: (rootUrl: string) => Promise<void>;
 };
 
 /**
@@ -382,6 +375,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
   readonly #runtime: EffectContext.Context<never>;
+  readonly #createEpoch?: (rootUrl: string) => Promise<void>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -401,6 +395,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._hypergraph = params.graph;
     this.#feedService = params.feedService;
     this.#runtime = params.runtime;
+    this.#createEpoch = params.createEpoch;
 
     this._entityManager = new EntityManager({
       graph: params.graph,
@@ -986,6 +981,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await this.#runRenameMigration(migration);
       } else if (Migration.isContentMigration(migration)) {
         contentTypes.add(migration.type);
+      } else if (Migration.isTransactionMigration(migration)) {
+        const transaction = await this.beginMigration(migration.options);
+        await EffectEx.runPromise(migration.run(transaction, { db: this }).pipe(Effect.andThen(transaction.commit())));
       }
     }
     // Content steps run per type, after object migrations have moved objects onto the types they name.
@@ -1211,6 +1209,28 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[] {
     return this._entityManager.getLoadedDocumentHandles();
+  }
+
+  async beginMigration(options: Migration.TransactionOptions = {}): Promise<Migration.Transaction> {
+    invariant(options.root === 'update' || this.#createEpoch, 'Database cannot create epochs.');
+    // Loaded on demand: migrations never run during boot.
+    const { MigrationTransaction } = await import('./migration-transaction.ts');
+    return new MigrationTransaction({
+      repo: this._repo,
+      rootHandle: this._entityManager.getSpaceRootDocHandle(),
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId: this.spaceId, spaceKey: this.spaceKey.toHex() },
+      flush: () => this.flush(),
+      createEpoch: this.#createEpoch && this.#createEpochAndAwaitRoot.bind(this, this.#createEpoch),
+      options,
+    });
+  }
+
+  /** The epoch can be applied before this database loads its root; a following transaction must read the new root. */
+  async #createEpochAndAwaitRoot(createEpoch: (rootUrl: string) => Promise<void>, rootUrl: string): Promise<void> {
+    const switched = this.rootChanged.waitFor(() => this._entityManager.getSpaceRootDocHandle().url === rootUrl);
+    await createEpoch(rootUrl);
+    await switched;
   }
 
   get _repo(): RepoProxy {

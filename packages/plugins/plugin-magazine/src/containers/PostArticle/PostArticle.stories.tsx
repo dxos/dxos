@@ -19,7 +19,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { MagazinePlugin } from '#plugin';
+import * as MagazinePlugin from '#meta';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
@@ -100,9 +100,9 @@ const meta: Meta<typeof DefaultStory> = {
           types: [Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
           onClientInitialized: seedSpace,
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        MagazinePlugin(),
+        MagazinePlugin.make(),
       ],
     }),
   ],

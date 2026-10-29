@@ -18,16 +18,17 @@ import type * as Instructions from '@dxos/compute/Instructions';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { AssistantNamespace } from '../namespace.ts';
 import * as Assistant from './Assistant.ts';
 import * as Ollama from './Ollama.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${AssistantNamespace.key}.capability.settings`,
 );
 
-export const OllamaManager = Capability.makeSingleton<Ollama.Manager>()(`${meta.profile.key}.capability.ollamaManager`);
+export const OllamaManager = Capability.makeSingleton<Ollama.Manager>()(
+  `${AssistantNamespace.key}.capability.ollamaManager`,
+);
 
 export const StateSchema = Schema.Struct({
   /** Map of primary object dxn to current chat dxn. */
@@ -38,11 +39,13 @@ export const StateSchema = Schema.Struct({
 
 export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.makeSingleton<Atom.Writable<AssistantState>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<AssistantState>>()(
+  `${AssistantNamespace.key}.capability.state`,
+);
 
 /** Session-scoped cache of transient (not yet persisted) companion chats keyed by companion DXN string. */
 export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<string, Obj.Unknown | undefined>>>()(
-  `${meta.profile.key}.capability.companionChatCache`,
+  `${AssistantNamespace.key}.capability.companionChatCache`,
 );
 
 export const HomeSuggestionsCacheSchema = Schema.Record(
@@ -62,7 +65,7 @@ export type HomeSuggestionsCache = Schema.Schema.Type<typeof HomeSuggestionsCach
 
 /** Per-space cache of LLM-generated home starter prompts, persisted across page reloads. */
 export const HomeSuggestionsCache = Capability.makeSingleton<Atom.Writable<HomeSuggestionsCache>>()(
-  `${meta.profile.key}.capability.homeSuggestionsCache`,
+  `${AssistantNamespace.key}.capability.homeSuggestionsCache`,
 );
 
 /**
@@ -81,7 +84,7 @@ export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
  * Present when the host supplied `codeModeTurnProducer`, since without it code mode never runs whatever
  * `Settings.disableCodeMode` says.
  */
-export const CodeModeAvailable = Capability.make<true>()(`${meta.profile.key}.capability.codeModeAvailable`);
+export const CodeModeAvailable = Capability.make<true>()(`${AssistantNamespace.key}.capability.codeModeAvailable`);
 
 /**
  * Whether an agent can run on this device; one that cannot is still listed, with the reason as a
@@ -138,21 +141,23 @@ export type Agent = {
   readonly respond?: (response: AgentResponse) => Effect.Effect<boolean, never, Database.Service>;
 };
 
-export const Agent = Capability.make<Agent>()(`${meta.profile.key}.capability.agent`);
+export const Agent = Capability.make<Agent>()(`${AssistantNamespace.key}.capability.agent`);
 
 /**
  * A durable process a chat can run on in place of the assistant's own agent process, named by its
  * key in `chat.session.process`. The agent service spawns it for such a chat; a chat that names
  * none runs on the assistant's.
  */
-export const AgentProcess = Capability.make<AgentProcessDefinition>()(`${meta.profile.key}.capability.agentProcess`);
+export const AgentProcess = Capability.make<AgentProcessDefinition>()(
+  `${AssistantNamespace.key}.capability.agentProcess`,
+);
 
 /**
  * Slash commands the chat prompt completes and runs without the model. Each plugin contributes the
  * commands for its own verbs; skills are offered as commands beside them.
  */
 export const SlashCommands = Capability.make<readonly SlashCommand.SlashCommand[]>()(
-  `${meta.profile.key}.capability.slashCommands`,
+  `${AssistantNamespace.key}.capability.slashCommands`,
 );
 
 /** Context a chat receives when it runs against a subject object. */
@@ -179,4 +184,4 @@ export type SubjectContext = {
   }) => Effect.Effect<SubjectBindings, Error, Database.Service | Registry.Service>;
 };
 
-export const SubjectContext = Capability.make<SubjectContext>()(`${meta.profile.key}.capability.subjectContext`);
+export const SubjectContext = Capability.make<SubjectContext>()(`${AssistantNamespace.key}.capability.subjectContext`);

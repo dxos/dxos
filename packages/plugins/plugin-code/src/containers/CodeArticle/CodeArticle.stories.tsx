@@ -17,7 +17,7 @@ import { Text } from '@dxos/schema';
 import { SpecDocument } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { CodePlugin } from '#plugin';
+import * as CodePlugin from '#meta';
 import { translations } from '#translations';
 import { CodeProject, SourceFile } from '#types';
 
@@ -127,7 +127,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        CodePlugin(),
+        CodePlugin.make(),
       ],
     })),
   ],

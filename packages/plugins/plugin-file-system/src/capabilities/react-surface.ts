@@ -10,9 +10,10 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { WorkspaceSettingsContainer } from '#containers';
-import { meta } from '#meta';
 
-const GENERAL_TYPE = `${meta.profile.key}.general`;
+import { FileSystemNamespace } from '../namespace.ts';
+
+const GENERAL_TYPE = `${FileSystemNamespace.key}.general`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

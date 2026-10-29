@@ -1,8 +1,7 @@
+import L from 'leaflet';
 //
 // Copyright 2026 DXOS.org
 //
-
-import L from 'leaflet';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 
@@ -15,8 +14,6 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { type ThemedClassName } from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
 import {
   type AreaOverride,
   type AreaShape,
@@ -25,6 +22,7 @@ import {
   type Rating,
   type RatingOverrides,
 } from '../../model/rating.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import {
   type Pin,
   type PinText,
@@ -129,7 +127,7 @@ export const ResultsMap = <T extends Rateable>({
   onOverrides,
   onSelect,
 }: ResultsMapProps<T>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [map, setMap] = useState<L.Map>();
   const layers = useRef<{ pins: L.LayerGroup; areas: L.LayerGroup; draft: L.LayerGroup }>(undefined);
   const [mode, setMode] = useState<Mode>('idle');
@@ -616,7 +614,7 @@ type AreaChipProps = {
 
 /** One drawn area: its name (editable), prefer or require, the soft edge, the count inside, zoom and delete. */
 const AreaChip = ({ area, active, count, onFocus, onChange, onDelete, onZoom }: AreaChipProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [label, setLabel] = useState(area.label);
   useEffect(() => setLabel(area.label), [area.label]);
   const soft = area.softM ?? DEFAULT_SOFT_M;

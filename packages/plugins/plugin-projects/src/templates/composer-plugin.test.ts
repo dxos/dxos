@@ -158,7 +158,7 @@ describe('Composer Plugin project template', () => {
     expect(write).toContain(`Use the key \`${KEY}\``);
     expect(write).not.toContain(PLUGIN_KEY_SLOT);
     expect(write).toContain("spec: 'PLUGIN.mdl'");
-    expect(write).toContain('AppCapability.pluginAsset');
+    expect(write).toContain('AppCapabilities.PluginAsset');
   });
 
   test('mints a camelCase plugin key no earlier project holds', ({ expect }) => {

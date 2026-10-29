@@ -27,6 +27,7 @@ import { type AnyProperties, EntityKind, KindId } from './internal/common/types/
 import { isInstanceOf } from './internal/Entity/type-uri.ts';
 import * as queryInternal from './internal/Query/index.ts';
 import type { LoadOptions, Ref } from './internal/Ref/ref.ts';
+import type * as Migration from './Migration.ts';
 import type * as Obj from './Obj.ts';
 import type * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
@@ -271,6 +272,14 @@ export interface Database extends Queryable {
    * that `opts` selects, so it is as slow as that selected backlog.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Starts staging structural changes that commit atomically; see {@link Migration.Transaction}.
+   *
+   * @throws When the database cannot commit with the chosen {@link Migration.TransactionOptions.root}.
+   * @performance Async; loads the transaction code on first use, then O(1).
+   */
+  beginMigration(options?: Migration.TransactionOptions): Promise<Migration.Transaction>;
 
   //
   // Branching. A branch is a writable alternate timeline of an object subtree (same object ids,
@@ -601,6 +610,22 @@ export const resolve: {
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
+
+/**
+ * Starts staging structural changes in the current database; see {@link Migration.Transaction}.
+ *
+ * @performance Async; loads the transaction code on first use, then O(1).
+ */
+export const beginMigration = (
+  options?: Migration.TransactionOptions,
+): Effect.Effect<Migration.Transaction, Error.MigrationError, Service> =>
+  Effect.gen(function* () {
+    const { db } = yield* Service;
+    return yield* Effect.tryPromise({
+      try: () => db.beginMigration(options),
+      catch: (cause) => new Error.MigrationError({ operation: 'begin' }, { cause }),
+    });
+  }).pipe(Effect.withSpan('Database.beginMigration'), withSpaceId);
 
 /**
  * Loads an object reference. A deleted target reads as absent unless `{ deleted: 'include' }` asks

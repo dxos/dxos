@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as TransformerPlugin from './TransformerPlugin.ts';
+export * as TransformerPlugin from '#meta';

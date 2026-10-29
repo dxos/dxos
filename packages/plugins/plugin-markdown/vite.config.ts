@@ -7,14 +7,10 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    MarkdownPlugin: 'src/MarkdownPlugin.ts',
-    plugin: 'src/plugin.tsx',
     skills: 'src/skills/index.ts',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     hooks: 'src/hooks/index.ts',
-    meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',

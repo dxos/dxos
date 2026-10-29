@@ -25,9 +25,9 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { Text } from '@dxos/schema';
 import { File, Person, Task, TaskSet } from '@dxos/types';
 
+import * as TasksPlugin from '#meta';
 import { translations } from '#translations';
 
-import * as TasksPlugin from '../../TasksPlugin.ts';
 import { TaskArticle } from './TaskArticle.tsx';
 
 const WORKED_TASK = 'Finalize roast curve';

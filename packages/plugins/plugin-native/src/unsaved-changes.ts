@@ -5,7 +5,7 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
-import { meta } from '#meta';
+import { NativeNamespace } from './namespace.ts';
 
 /** Saves every change that exists only in this page, resolving whether the app can go away without losing one. */
 export const saveBeforeLeaving = async (guards: readonly AppCapabilities.UnsavedChanges[]): Promise<boolean> => {
@@ -18,12 +18,12 @@ export const saveBeforeLeaving = async (guards: readonly AppCapabilities.Unsaved
 
 /** The toast raised when quitting or restarting would lose changes: the user can stay, or `leave` anyway. */
 export const unsavedChangesToast = (leaving: 'quit' | 'restart', leave: () => void): LayoutOperation.Toast => ({
-  id: `${meta.profile.key}.unsaved-changes`,
+  id: `${NativeNamespace.key}.unsaved-changes`,
   icon: 'ph--warning--regular',
-  title: ['unsaved-changes.label', { ns: meta.profile.key }],
-  description: ['unsaved-changes.description', { ns: meta.profile.key }],
+  title: ['unsaved-changes.label', { ns: NativeNamespace.key }],
+  description: ['unsaved-changes.description', { ns: NativeNamespace.key }],
   duration: Infinity,
-  actionLabel: [`${leaving}-anyway.label`, { ns: meta.profile.key }],
-  actionAlt: [`${leaving}-anyway.alt`, { ns: meta.profile.key }],
+  actionLabel: [`${leaving}-anyway.label`, { ns: NativeNamespace.key }],
+  actionAlt: [`${leaving}-anyway.alt`, { ns: NativeNamespace.key }],
   onAction: leave,
 });

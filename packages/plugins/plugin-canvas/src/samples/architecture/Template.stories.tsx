@@ -22,7 +22,7 @@ import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
-import { CanvasPlugin } from '#plugin';
+import * as CanvasPlugin from '#meta';
 import { translations } from '#translations';
 
 import { canvasViewAspect } from '../../containers/CanvasArticle/view-state.ts';
@@ -52,7 +52,7 @@ const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
   types: [...definition.schemas],
   plugins: [
     IllustratorPlugin.make(),
-    CanvasPlugin(),
+    CanvasPlugin.make(),
     MarkdownPlugin.make(),
     MermaidPlugin.make(),
     PresenterPlugin.make(),
@@ -95,7 +95,7 @@ const withDiagrams = (set: DiagramSet) =>
     const canvas = Promise.withResolvers<URI.URI>();
     return {
       types: [Drawing.Drawing, Drawing.Canvas],
-      plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+      plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
       onInit: async ({ space }) => {
         const root = await loadDiagramSet(space.db, set);
         await space.db.flush();

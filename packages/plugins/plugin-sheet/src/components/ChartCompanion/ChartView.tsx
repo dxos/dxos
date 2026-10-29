@@ -8,9 +8,9 @@ import { Plot, type PlotValue, toPlotData } from '@dxos/react-ui-plot';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
 import { type Sheet } from '#types';
 
+import { SheetNamespace } from '../../namespace.ts';
 import { TimelineChart } from './TimelineChart.tsx';
 
 export type ChartViewProps = {
@@ -25,7 +25,7 @@ export type ChartViewProps = {
 
 /** A chart of a range: a plot, or a timeline with its own toolbar. */
 export const ChartView = ({ chart, getValues, onUpdate, chrome }: ChartViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SheetNamespace.key);
   const data = useMemo(() => {
     const values = getValues(chart.range);
     return values && toPlotData(values, { header: chart.header });

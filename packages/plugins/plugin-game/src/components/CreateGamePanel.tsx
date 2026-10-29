@@ -12,8 +12,9 @@ import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { GameCapabilities } from '#types';
+
+import { GameNamespace } from '../namespace.ts';
 
 export type CreateGamePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to GameCapabilities.VariantProvider. */
@@ -102,7 +103,7 @@ type VariantPickerProps = {
 };
 
 const VariantPicker = ({ variants, onSave, onCancel }: VariantPickerProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GameNamespace.key);
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
   const { results, handleSearch } = useSearchListResults({
     items: sorted,
