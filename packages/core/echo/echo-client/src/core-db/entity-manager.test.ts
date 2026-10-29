@@ -69,26 +69,41 @@ describe('DatabaseImpl', () => {
       await db.query(Query.type(TestSchema.Expando, { id: textObject.id })).first({ timeout: 1000 });
     });
 
-    test("separate-doc object is treated as inline if it's both linked and inline", async () => {
-      const object = Obj.make(TestSchema.Expando, { content: '' });
-      // The second peer treats text as inline right after opening the document
+    test('an object both linked and inline is moved out of the directory when the space opens', async () => {
+      const object = Obj.make(TestSchema.Expando, { content: 'moved' });
+      let textUrl: string | undefined;
+      // An older peer copies the object into the space root, leaving its own document empty.
       const db = await createClientDbInSpaceWithObject(object, (handles) => {
-        const textHandle = handles.linkedDocHandles[0]!;
-        expect(getObjectCore(object).docHandle?.url).to.eq(textHandle.url);
+        const textHandle = handles.linkedDocHandles[0];
+        invariant(textHandle);
+        textUrl = textHandle.url;
         handles.spaceRootHandle.change((newDocument: DatabaseDirectory) => {
           newDocument.objects = textHandle.doc()?.objects;
         });
-        textHandle.change((newDocument: any) => {
+        textHandle.change((newDocument: DatabaseDirectory) => {
           newDocument.objects = {};
         });
       });
 
-      const text = db.getObjectById(object.id)!;
-      expect(text).not.to.be.undefined;
+      // The host migrates the inline copy into a document of its own and re-points the link at it.
       const spaceRootHandle = getDocHandles(db).spaceRootHandle;
-      expect(getObjectCore(text).docHandle?.url).to.eq(spaceRootHandle.url);
-      // The first peer rebinds its object to space root too
-      expect(getObjectCore(object).docHandle?.url).to.eq(spaceRootHandle.url);
+      await waitForCondition({
+        condition: () => {
+          const link = spaceRootHandle.doc()?.links?.[object.id]?.toString();
+          const loaded = db.getObjectById(object.id);
+          return (
+            spaceRootHandle.doc()?.objects?.[object.id] == null &&
+            link != null &&
+            loaded != null &&
+            getObjectCore(loaded).docHandle?.url === link
+          );
+        },
+        timeout: 5_000,
+      });
+      const link = spaceRootHandle.doc()?.links?.[object.id]?.toString();
+      expect(link).not.to.eq(textUrl);
+      expect(link).not.to.eq(spaceRootHandle.url);
+      expect(db.getObjectById<Obj.Unknown & { content: string }>(object.id)?.content).to.eq('moved');
     });
   });
 

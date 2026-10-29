@@ -203,6 +203,7 @@ export class DatabaseRoot implements Disposable {
     return DatabaseDirectory.getSpaceKey(doc);
   }
 
+  /** @deprecated Inline directory objects are migrated into linked documents; this counts the ones left. */
   getInlineObjectCount(): number | null {
     const doc = this.directory();
     if (!doc) {

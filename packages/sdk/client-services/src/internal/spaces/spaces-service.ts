@@ -20,7 +20,7 @@ import {
 } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { type EchoHost, EchoHostService } from '@dxos/echo-host';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type EntityStructure } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { writeMessages } from '@dxos/feed-store';
@@ -477,7 +477,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           assertArgument(SpaceId.isValid(request.targetSpaceId), 'targetSpaceId', 'Invalid space ID');
           const target =
             dataSpaceManager.getSpaceById(request.targetSpaceId) ?? raise(new Error('Target space not found'));
-          await this._hydrateSpaceFromSerialized(target, readSerializedSpaceArchive(request.archive), {
+          await this._hydrateSpaceFromSerialized(ctx, target, readSerializedSpaceArchive(request.archive), {
             merge: true,
           });
           return { newSpaceId: target.id };
@@ -485,7 +485,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
         if (format === SpacesService.SpaceArchiveFormat.enums.JSON) {
           const serialized = readSerializedSpaceArchive(request.archive);
           const space = await dataSpaceManager.createSpace(ctx, { tags: request.tags });
-          await this._populateImportedSpace(ctx, space, () => this._hydrateSpaceFromSerialized(space, serialized));
+          await this._populateImportedSpace(ctx, space, () => this._hydrateSpaceFromSerialized(ctx, space, serialized));
           await this._updateMetrics();
           return { newSpaceId: space.id };
         }
@@ -518,11 +518,11 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   /**
    * Populate a freshly-created space with the objects and feed messages described in a {@link SerializedSpace}.
    *
-   * Objects are written directly into the space's automerge root document as inline
-   * {@link EntityStructure} entries; feed messages are appended to the appropriate feed
-   * via {@link EchoHost.feedService}.
+   * Each object is written into a document of its own, linked from the space directory; feed messages are appended
+   * to the appropriate feed via {@link EchoHost.feedService}.
    */
   private async '_hydrateSpaceFromSerialized'(
+    ctx: Context,
     space: DataSpace,
     serialized: ReturnType<typeof readSerializedSpaceArchive>,
     { merge = false }: { merge?: boolean } = {},
@@ -530,20 +530,17 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     const databaseRoot = space.databaseRoot;
     assertState(databaseRoot, 'Space database root is not ready');
 
-    await databaseRoot.load();
-    databaseRoot.change((doc: DatabaseDirectory) => {
-      if (!doc.objects) {
-        doc.objects = {};
+    const directory = databaseRoot.directory();
+    const objects: Record<string, EntityStructure> = {};
+    for (const obj of serialized.objects) {
+      // Merging into a live space keeps its own copy of an object the archive also holds, whether it is linked or
+      // (from an older client) still inline in the directory.
+      if (merge && (directory?.objects?.[obj.id] || directory?.links?.[obj.id])) {
+        continue;
       }
-      for (const obj of serialized.objects) {
-        // Merging into a live space keeps its own copy of an object the archive also holds, whether it is inline in
-        // the root document or in a linked document of its own.
-        if (merge && (doc.objects[obj.id] || doc.links?.[obj.id])) {
-          continue;
-        }
-        doc.objects[obj.id] = objJsonToObjectStructure(obj);
-      }
-    });
+      objects[obj.id] = objJsonToObjectStructure(obj);
+    }
+    await this._echoHost.addObjects(ctx, space.id, objects);
 
     await this._importFeeds(space, serialized.feeds ?? [], { merge });
   }
