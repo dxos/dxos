@@ -30,4 +30,5 @@ export default () =>
     Capability.contribute(AppCapabilities.SkillDefinition, NoteTakerSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, SupportSkill),
     Capability.contribute(AppCapabilities.SkillDefinition, EmailSkill),
+    Capability.contributeAll(AppCapabilities.HookDefinition, BrainSkill.hooks),
   ]);

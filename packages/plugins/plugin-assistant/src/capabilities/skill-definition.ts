@@ -50,6 +50,7 @@ const skillDefinition = Effect.fnUntraced(function* () {
       AlarmSkill,
       TurnReviewSkill,
     ]),
+    Capability.contributeAll(AppCapabilities.HookDefinition, [...PlanningSkill.hooks, ...TurnReviewSkill.hooks]),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).

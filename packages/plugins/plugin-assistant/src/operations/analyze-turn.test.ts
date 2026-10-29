@@ -104,6 +104,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
   types: [Chat.Chat, Feed.Feed, Message.Message, Skill.Skill],
   skills: [TurnReviewSkill.make()],
+  agent: { hooks: () => TurnReviewSkill.hooks },
   // The reviewer gets the verdict; the conversational turn gets a plain reply.
   aiService: ScriptedLanguageModel.scriptedAiService((request) => ({
     parts: [

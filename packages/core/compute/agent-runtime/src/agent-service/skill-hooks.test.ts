@@ -8,11 +8,12 @@ import * as Schema from 'effect/Schema';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { ProcessManager } from '@dxos/compute-runtime';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
@@ -47,6 +48,14 @@ const FailingHook = Operation.make({
   output: Schema.Void,
 });
 
+const FollowUpHook = Operation.make({
+  meta: { key: DXN.make('com.example.operation.followUpHook'), name: 'Follow-up hook' },
+  input: Schema.Struct({}),
+  output: Hook.Output,
+});
+
+const FOLLOW_UP = 'Check your work once more.';
+
 /** Hook invocations in the order they started and finished, and the gate the background hook holds on. */
 type HookLog = { events: string[]; release: () => void; released: Promise<void> };
 
@@ -73,38 +82,44 @@ const handlers = OperationHandlerSet.make(
   ),
   FailingHook.pipe(Operation.withHandler(() => Effect.die(new Error('hook failed')))),
   QuickHook.pipe(Operation.withHandler(() => Effect.sync(() => void hookLog.events.push('quick')))),
+  // Asks for one more turn, then lets the request end.
+  FollowUpHook.pipe(
+    Operation.withHandler(() =>
+      Effect.sync(() => {
+        hookLog.events.push('follow-up');
+        return hookLog.events.filter((event) => event === 'follow-up').length === 1 ? { followUp: FOLLOW_UP } : {};
+      }),
+    ),
+  ),
 );
 
-const hook = (operation: Operation.Definition.Any, async: boolean): Skill.Hook => ({
-  spec: { _tag: 'end-request' },
+const HookSkill = Skill.make({ key: 'com.example.skill.hooks', name: 'Hooks' });
+const FailingHookSkill = Skill.make({ key: 'com.example.skill.failingHooks', name: 'Failing hooks' });
+// Its hook finishes at once, so its exit can race the agent registering it.
+const QuickHookSkill = Skill.make({ key: 'com.example.skill.quickHooks', name: 'Quick hooks' });
+const FollowUpSkill = Skill.make({ key: 'com.example.skill.followUp', name: 'Follow-up' });
+
+const hook = (skill: Skill.Skill, operation: Operation.Definition.Any, async = false): Hook.Definition => ({
+  event: 'end-request',
+  skill: Skill.getKey(skill),
+  operation,
   async,
-  function: Ref.make(Operation.serialize(operation)),
-});
-
-const HookSkill = Skill.make({
-  key: 'com.example.skill.hooks',
-  name: 'Hooks',
-  hooks: [hook(InlineHook, false), hook(BackgroundHook, true)],
-});
-
-const FailingHookSkill = Skill.make({
-  key: 'com.example.skill.failingHooks',
-  name: 'Failing hooks',
-  hooks: [hook(FailingHook, true)],
-});
-
-// Finishes at once, so its exit can race the agent registering it.
-const QuickHookSkill = Skill.make({
-  key: 'com.example.skill.quickHooks',
-  name: 'Quick hooks',
-  hooks: [hook(QuickHook, true)],
 });
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: handlers,
   types: [Skill.Skill, Feed.Feed, Message.Message],
-  skills: [HookSkill, FailingHookSkill, QuickHookSkill],
+  skills: [HookSkill, FailingHookSkill, QuickHookSkill, FollowUpSkill],
   aiService: ScriptedLanguageModel.scriptedAiService(() => ({ parts: [ScriptedLanguageModel.text('Done.')] })),
+  agent: {
+    hooks: () => [
+      hook(HookSkill, InlineHook),
+      hook(HookSkill, BackgroundHook, true),
+      hook(FailingHookSkill, FailingHook, true),
+      hook(QuickHookSkill, QuickHook, true),
+      hook(FollowUpSkill, FollowUpHook),
+    ],
+  },
 });
 
 /** The agent process serving the session's chat. */
@@ -114,7 +129,7 @@ const agentProcess = Effect.fnUntraced(function* (session: { chat: Obj.Unknown }
   return handle;
 });
 
-describe('end-request skill hooks', () => {
+describe('end-request hooks', () => {
   beforeEach(() => {
     hookLog = makeHookLog();
   });
@@ -144,6 +159,28 @@ describe('end-request skill hooks', () => {
   );
 
   it.effect(
+    "a hook's follow-up is queued as the next prompt and continues the request",
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession({ skills: [FollowUpSkill] });
+        yield* session.submitPrompt('Hello.');
+        yield* session.waitForCompletion();
+
+        // The follow-up ran a second turn, whose end fired the hook again; that one asked for nothing.
+        expect(hookLog.events).toEqual(['follow-up', 'follow-up']);
+        // The feed holds a prompt twice, as the queue entry and as the turn's message; both count the same.
+        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const count = (text: string) => messages.filter((message) => Message.extractText(message) === text).length;
+        expect(count(FOLLOW_UP)).toBe(count('Hello.'));
+        const followUp = messages.find((message) => Message.extractText(message) === FOLLOW_UP);
+        expect(followUp?.blocks[0]).toMatchObject({ disposition: 'synthetic' });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'a background hook that finishes at once still lets the process finish',
     Effect.fnUntraced(
       function* (_) {
@@ -155,6 +192,7 @@ describe('end-request skill hooks', () => {
         yield* Effect.promise(async () => {
           await expect.poll(() => handle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
         });
+        // Only this skill's hook fired: the others are scoped to skills the session did not bind.
         expect(hookLog.events).toEqual(['quick']);
       },
       Effect.provide(TestLayer),

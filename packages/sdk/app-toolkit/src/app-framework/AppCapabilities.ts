@@ -17,6 +17,7 @@ import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
 import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Obj, Type } from '@dxos/echo';
@@ -252,6 +253,14 @@ export const Toolkit = Capability$.make<Toolkit>()('org.dxos.app-framework.capab
 export const SkillDefinition = Capability$.make<Skill.Definition>()(
   'org.dxos.app-framework.capability.skillDefinition',
 );
+
+/**
+ * A hook the agent host runs at a point in a request's lifecycle, usually scoped to one of the plugin's
+ * skills. Read per request, so a hook contributed after the agent service was built still fires.
+ *
+ * @category Capability
+ */
+export const HookDefinition = Capability$.make<Hook.Definition>()('org.dxos.app-framework.capability.hookDefinition');
 
 /**
  * An MCP server a plugin ships, needing no credential. It is synced into the registry, where every

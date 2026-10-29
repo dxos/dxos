@@ -14,6 +14,7 @@ import { SessionConfig } from '@dxos/ai';
 import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
+import type * as Hook from '@dxos/compute/Hook';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
@@ -119,6 +120,8 @@ export interface Options {
   resident?: boolean;
   /** The MCP server a connection exposes (see `AgentProcessOptions.mcpEndpoint`). */
   mcpEndpoint?: McpEndpointOf;
+  /** Lifecycle hooks the agent process runs (see `AgentProcessOptions.hooks`). */
+  hooks?: () => readonly Hook.Definition[];
 }
 
 /**
@@ -200,6 +203,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           delegationStrategy: opts?.delegationStrategy,
           resident: opts?.resident,
           mcpEndpoint: opts?.mcpEndpoint,
+          hooks: opts?.hooks,
         });
 
       /**

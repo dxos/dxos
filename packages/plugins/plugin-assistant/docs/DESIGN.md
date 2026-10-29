@@ -118,7 +118,7 @@ sequenceDiagram
   `Process.spawn(operation)` — each tool call is a **linked child
   process**; its exit re-enters the turn via `onChildEvent` → `tool_result` queue entry.
 - After the turn: the delegation strategy's `reconcile` (see §4), alarm reconcile,
-  `maybeComplete` (end-request skill hooks may enqueue continuations).
+  `maybeComplete` (an end-request hook may return a follow-up, which continues the request).
 
 ### 1.5 Streaming path (up)
 

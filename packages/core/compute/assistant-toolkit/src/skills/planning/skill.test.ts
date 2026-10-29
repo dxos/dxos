@@ -27,6 +27,7 @@ const TestLayer = AssistantTestLayer({
   model: DXN.make('com.anthropic.model.claude-sonnet-5.default'),
   operationHandlers: PlanningHandlers,
   skills: [PlanningSkill.make()],
+  agent: { hooks: () => PlanningSkill.hooks },
   types: [
     Agent.Agent,
     Outline.Outline,
@@ -41,7 +42,7 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-/** Text the end-request hook enqueues; matching it proves the reminder reached the host's queue. */
+/** Text of the end-request hook's follow-up; matching it proves the reminder reached the queue. */
 const REMINDER = 'Your checklist still has unchecked items';
 
 const TASKS = ['Write a haiku about rain', 'Write a haiku about snow', 'Write a haiku about fog'];
@@ -64,8 +65,8 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         // "One task per turn" makes the first turn end with items still open, which is the state the
         // hook exists for. Without the reminder the process would simply succeed here.
         yield* agent.submitPrompt('Work through the checklist, completing one task per turn.');
-        // One call spans the continuation: the hook enqueues from inside the turn handler and arms
-        // the next alarm before it returns, so the process is never idle between turns.
+        // One call spans the continuation: the follow-up is queued from inside the turn handler, which
+        // arms the next alarm before it returns, so the process is never idle between turns.
         yield* agent.waitForCompletion();
 
         const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
