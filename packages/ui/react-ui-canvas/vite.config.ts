@@ -10,6 +10,7 @@ export default defineConfig({
     'motion': 'src/generator/motion.ts',
     'headless': 'src/headless.ts',
     'generator-worker': 'src/generator/worker.ts',
+    'testing': 'src/testing/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

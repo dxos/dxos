@@ -20,7 +20,18 @@ export type Dimension = Schema.Schema.Type<typeof Dimension>;
 
 /** Kinds every layout may hold; the dimension's own kinds are listed separately. */
 export const KINDS_SHARED: readonly string[] = ['link', 'label', 'group'];
-export const KINDS_2D: readonly string[] = ['rect', 'ellipse', 'polygon', 'path', 'note', 'image'];
+export const KINDS_2D: readonly string[] = [
+  'rect',
+  'ellipse',
+  'cloud',
+  'polygon',
+  'polyline',
+  'path',
+  'note',
+  'image',
+  'generator',
+  'diagram',
+];
 export const KINDS_3D: readonly string[] = ['cube', 'sphere', 'cylinder', 'cone', 'pyramid', 'mesh', 'solid'];
 
 /** Element ids may not collide with the animator's camera target. */
@@ -151,6 +162,8 @@ export const makeLayoutSchema = <E extends Schema.Top, M extends Schema.Top>(ele
     name: Schema.optional(Schema.String),
     model: Schema.optional(model),
     elements: Schema.Record(Schema.String, element),
+    /** Renderer-specific fields, as an element's `props` (a canvas View's layers, say). */
+    props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   });
 
 /** Elements `E` positioned in one coordinate space, placing objects of the model `M` names. */
@@ -158,6 +171,7 @@ export type Layout<E, M = string> = {
   readonly name?: string;
   readonly model?: M;
   readonly elements: { readonly [id: string]: E };
+  readonly props?: { readonly [key: string]: any };
 };
 
 //

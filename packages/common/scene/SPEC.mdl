@@ -424,3 +424,20 @@ decision D-33: A document's text and record form lists scenes, then layouts, the
   affects: [F-2.1]
   why: A reader meets what is shown before what it is made of; scenes and layouts often share a name, which separate namespaces allow.
 ```
+
+```mdl
+decision D-34: A layout carries renderer-specific `props`, as an element does; a canvas View written as a layout keeps every field the scene model has no slot for under `props.canvas`, so it reads back unchanged. A canvas portal or instance becomes an element placing a composite object (`view:<scene>`, `instance:<composite>`) whose parts is the inner View. Fills in [D-29].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Layout2D]
+  why: The canvas has more node types and fields than the scene model names; keeping the rest lets a canvas move onto layouts without losing any of it.
+```
+
+```mdl
+decision D-35: The 2D kinds include every built-in canvas node type (cloud, polyline, generator, diagram), so a layout written from a canvas validates. Fills in [D-34].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Validation would otherwise report every migrated cloud or polyline as a kind a 2D scene cannot hold.
+```
