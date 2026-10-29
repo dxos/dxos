@@ -15,7 +15,7 @@ import { loadClient } from './util.ts';
 
 const handler: Operation.WithHandler<typeof LighthouseOperation.StartResearch> = LighthouseOperation.StartResearch.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ research: researchRef }) {
+    Effect.fnUntraced(function* ({ research: researchRef, images }) {
       const research = yield* Database.load(researchRef);
       if (!research.goal.trim()) {
         return yield* Effect.fail(new ResearchGoalMissingError());
@@ -24,6 +24,7 @@ const handler: Operation.WithHandler<typeof LighthouseOperation.StartResearch> =
       const { run } = yield* client.createSession({
         goal: goalWithEngines(research.goal, research.engines),
         budget: BUDGETS[research.budget ?? 'quick'],
+        ...(images?.length ? { images } : {}),
       });
       Obj.update(research, (research) => {
         research.run = run;

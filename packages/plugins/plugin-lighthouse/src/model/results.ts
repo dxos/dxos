@@ -42,6 +42,9 @@ export type CardModel = {
 
 /** Subjects that are scaffolding rather than results: results pages, and the result nodes of a web search. */
 const SCAFFOLD = new Set([
+  // A session's query images and their features describe the input, not results.
+  'lh:ImageQuery',
+  'lh:ImageFeature',
   'schema:SearchResultsPage',
   'lh:SearchResult',
   'prov:Entity',
@@ -271,6 +274,31 @@ const TYPE_ICONS: Array<[RegExp, string]> = [
 export const iconOfTypes = (types: readonly string[]): string =>
   TYPE_ICONS.find(([pattern]) => types.some((type) => pattern.test(type)))?.[1] ?? 'ph--circle--regular';
 
+/**
+ * How much a result looks like the session's query image (lighthouse src/image/compare.ts): a tag coloured by the
+ * score, and a row naming the features the vision model saw on it.
+ */
+export const visualOf = (entity: Entity): { tag: CardTag; row: CardRow } | undefined => {
+  const raw = entity.props['lh:visualMatch']?.[0];
+  const match = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : Number.NaN;
+  if (!Number.isFinite(match) || match < 0) {
+    return undefined;
+  }
+  const percent = Math.round(match * 100);
+  const features = (entity.props['lh:matchedFeature'] ?? []).map(String);
+  return {
+    tag: {
+      label: `looks ${percent}% like your image`,
+      hue: match >= 0.7 ? 'emerald' : match >= 0.55 ? 'amber' : 'neutral',
+    },
+    row: {
+      icon: 'ph--image--regular',
+      text: `Visual match ${percent}%${features.length ? ` · ${features.join(', ')}` : ''}`,
+      title: 'lh:visualMatch, lh:matchedFeature',
+    },
+  };
+};
+
 /** A lighthouse entity as a card. */
 export const toCard = (entity: Entity): CardModel => {
   const url = urlOf(entity);
@@ -291,6 +319,7 @@ export const toCard = (entity: Entity): CardModel => {
       : [];
   }).slice(0, 5);
   const at = locationOf(entity);
+  const visual = visualOf(entity);
 
   return {
     id: entity.id,
@@ -303,8 +332,8 @@ export const toCard = (entity: Entity): CardModel => {
     images: imagesOf(entity),
     icon: iconOfTypes(entity.types),
     ...(/Organization|VentureFund|Corporation/.test(entity.types.join(' ')) ? { logo: true } : {}),
-    rows,
-    tags: [{ label: kindOf(entity) }, ...legalTags(entity)],
+    rows: visual ? [visual.row, ...rows].slice(0, 5) : rows,
+    tags: [...(visual ? [visual.tag] : []), { label: kindOf(entity) }, ...legalTags(entity)],
     ...(at
       ? { geo: { ...at, address: addressOf(entity) } }
       : rows.some((row) => row.location)

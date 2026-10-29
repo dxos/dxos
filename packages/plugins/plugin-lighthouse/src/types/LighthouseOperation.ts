@@ -28,6 +28,13 @@ export const FindingInput = Schema.Struct({
 
 export interface FindingInput extends Schema.Schema.Type<typeof FindingInput> {}
 
+/** An image sent with an input (base64 or a data: URL); lighthouse reads its features before the agent sees it. */
+export const InputImage = Schema.Struct({
+  data: Schema.String,
+  type: Schema.optional(Schema.String),
+  name: Schema.optional(Schema.String),
+});
+
 const services = [Database.Service, Capability.Service];
 
 export const StartResearch = Operation.make({
@@ -37,7 +44,11 @@ export const StartResearch = Operation.make({
     description: "Creates the lighthouse session for a Research's goal and budget, and records its run.",
     icon: 'ph--play--regular',
   },
-  input: Schema.Struct({ research: Ref.Ref(Research) }),
+  input: Schema.Struct({
+    research: Ref.Ref(Research),
+    /** Images of what to find (at most 4). */
+    images: Schema.optional(Schema.Array(InputImage)),
+  }),
   output: Schema.String.annotate({ description: 'The run id of the new session.' }),
   services,
 });
@@ -53,6 +64,7 @@ export const SendToResearch = Operation.make({
     research: Ref.Ref(Research),
     text: Schema.String,
     model: Schema.optional(Schema.String),
+    images: Schema.optional(Schema.Array(InputImage)),
   }),
   output: Schema.Void,
   services,

@@ -16,6 +16,7 @@ import { EntityId } from '@dxos/keys';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { type Entity, type Pick, type Session, type TrajectoryEvent } from '../client/types.ts';
+import { toImageRefs } from './images.ts';
 import { isResult, kindOf, priceOf, titleOf, urlOf } from './results.ts';
 
 /** The chip a failed or stopped session ends with; the view turns it into a continue message. */
@@ -26,6 +27,9 @@ export const RUN_ROLE = 'org.dxos.plugin.lighthouse.run';
 
 /** Surface role of the agent's report: one compact card per pick. */
 export const PICKS_ROLE = 'org.dxos.plugin.lighthouse.picks';
+
+/** The images a person attached to an input: `{ b64 }` holding `{ run, images }` (blobs of the run). */
+export const IMAGES_ROLE = 'org.dxos.plugin.lighthouse.images';
 
 /** A result as a row under the call that found it. */
 export type Pill = { id: string; title: string; url?: string; kind: string; detail?: string };
@@ -120,7 +124,7 @@ const asArray = (value: unknown): unknown[] => (Array.isArray(value) ? value : [
  * Run rows travel inside the thread's markdown as a `<surface>` tag. Tool outputs are JSON full of escaped quotes;
  * base64 holds nothing the markdown or the XML parser can act on. UTF-8 safe both ways.
  */
-export const encodeRuns = (runs: readonly RunData[]): string => {
+export const encodeRuns = (runs: readonly RunData[] | Readonly<Record<string, unknown>>): string => {
   const bytes = new TextEncoder().encode(JSON.stringify(runs));
   let binary = '';
   for (let index = 0; index < bytes.length; index += 0x8000) {
@@ -132,6 +136,14 @@ export const encodeRuns = (runs: readonly RunData[]): string => {
 /** The JSON a {@link encodeRuns} payload holds (a list of run rows; one row from an older thread). */
 export const decodeRuns = (b64: string): unknown =>
   JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), (char) => char.charCodeAt(0))));
+
+/** An input's attached images as one surface block; the widget reads what lighthouse saw in each. */
+const inputImages = (run: string, raw: unknown): ContentBlock.Any[] => {
+  const images = toImageRefs(raw);
+  return images.length
+    ? [{ _tag: 'surface', role: IMAGES_ROLE, data: { b64: encodeRuns({ run, images }) } } as ContentBlock.Any]
+    : [];
+};
 
 /** Keeps a run row's tag small: very long tags stop the thread's markdown parser. */
 const RUN_BUDGET = 9_000;
@@ -328,7 +340,7 @@ export const toMessages = (
             id: EntityId.deterministic(run, 'input', event.seq),
             created: event.t,
             sender: { role: 'user', name: senderName(asString(event.data.from)) },
-            blocks: [text(promptText(feedbackText(prompt) ?? prompt))],
+            blocks: [text(promptText(feedbackText(prompt) ?? prompt)), ...inputImages(run, event.data.images)],
           }),
         );
         break;

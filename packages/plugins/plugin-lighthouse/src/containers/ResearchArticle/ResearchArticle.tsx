@@ -28,11 +28,14 @@ import * as Status from '@dxos/react-ui/Status';
 import { Tag as TagChip } from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { type Entity, type Session } from '#client';
+import { type Entity, type InputImage, type Session } from '#client';
 import {
   ActiveFilters,
   type AreaNote,
+  AttachButton,
+  AttachmentStrip,
   FiltersPanel,
+  LighthouseThreadContext,
   ModelPanel,
   ResearchThread,
   ResultCard,
@@ -40,6 +43,7 @@ import {
   SubjectGraph,
   TracePanel,
   areaNoteOf,
+  useAttachments,
 } from '#components';
 import { useEngines, useExplain, useLighthouseClient, useSession, useSubjectGraph } from '#hooks';
 import { meta } from '#meta';
@@ -179,6 +183,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   const [drawRequest, setDrawRequest] = useState(0);
   const [showModel, setShowModel] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  // Images of what to find, sent with the next Run (lighthouse reads their features before the agent starts).
+  const goalImages = useAttachments();
   // A double-click refocuses the graph on a node; Back to subjects returns to the session's roots.
   const [focus, setFocus] = useState<string>();
   const [editing, setEditing] = useState(false);
@@ -373,12 +379,22 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       });
     }
     setEditing(false);
-    void invoke(LighthouseOperation.StartResearch, { research: Ref.make(research) });
-  }, [research, connections, session?.goal, invoke]);
+    const images = goalImages.payload();
+    goalImages.clear();
+    void invoke(LighthouseOperation.StartResearch, {
+      research: Ref.make(research),
+      ...(images.length ? { images } : {}),
+    });
+  }, [research, connections, session?.goal, invoke, goalImages]);
 
   const handleSend = useCallback(
-    async (text: string, options?: { model?: string }) => {
-      await invoke(LighthouseOperation.SendToResearch, { research: Ref.make(research), text, ...options });
+    async (text: string, options?: { model?: string; images?: InputImage[] }) => {
+      await invoke(LighthouseOperation.SendToResearch, {
+        research: Ref.make(research),
+        text,
+        ...(options?.model ? { model: options.model } : {}),
+        ...(options?.images?.length ? { images: options.images } : {}),
+      });
     },
     [research, invoke],
   );
@@ -681,6 +697,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   ]);
 
   const hasConnection = !!snapshot.connection || connections.length > 0;
+  // The thread's image widgets fetch blobs and image query nodes through the session's client.
+  const threadContext = useMemo(() => ({ client, run: snapshot.run }), [client, snapshot.run]);
   const budget = snapshot.budget ?? 'quick';
   const messages = useMemo(
     () => toMessages(session, state.events, state.results),
@@ -717,9 +735,12 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                   autoSave
                   onSave={handleSave}
                 >
-                  <Form.Fields />
+                  <div {...goalImages.dropTarget} data-dragging={goalImages.dragging || undefined}>
+                    <Form.Fields />
+                  </div>
                 </Form.Root>
               )}
+              <AttachmentStrip attachments={goalImages} />
               <span className='text-xs text-fg-subtle'>{formatBudget(BUDGETS[budget])}</span>
               {engines && engines.length > 0 && (
                 <Collapsible.Root>
@@ -748,6 +769,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
               )}
               <Layout.Flex gap='sm' align='center' justify='between'>
                 {session ? <Meters session={session} connected={state.connected} /> : <span />}
+                <span className='grow' />
+                <AttachButton attachments={goalImages} disabled={busy} />
                 <Button.Root
                   variant='primary'
                   icon='ph--play--regular'
@@ -758,7 +781,11 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                 />
               </Layout.Flex>
             </Layout.Flex>
-            {snapshot.run && <ResearchThread messages={messages} busy={busy} disabled={!client} onSend={handleSend} />}
+            {snapshot.run && (
+              <LighthouseThreadContext.Provider value={threadContext}>
+                <ResearchThread messages={messages} busy={busy} disabled={!client} onSend={handleSend} />
+              </LighthouseThreadContext.Provider>
+            )}
           </Layout.Flex>
 
           {mode === 'graph' ? (

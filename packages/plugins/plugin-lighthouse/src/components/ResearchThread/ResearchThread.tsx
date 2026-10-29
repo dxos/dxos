@@ -16,7 +16,9 @@ import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
+import { type InputImage } from '../../client/types.ts';
 import { RETRY, RUN_ROLE } from '../../model/trajectory.ts';
+import { AttachButton, AttachmentStrip, useAttachments } from '../ImageAttach/ImageAttach.tsx';
 import { ResultPills } from '../ResultPills/ResultPills.tsx';
 
 /** The thread's widgets beyond the assistant defaults: lighthouse results and picks render as pills. */
@@ -36,7 +38,7 @@ export type ResearchThreadProps = {
   busy?: boolean;
   disabled?: boolean;
   /** Sends a follow-up; `model: 'default'` is the Retry path (a model error usually means its provider is unusable). */
-  onSend?: (text: string, options?: { model?: string }) => Promise<void> | void;
+  onSend?: (text: string, options?: { model?: string; images?: InputImage[] }) => Promise<void> | void;
 };
 
 /** The thread. Mounted once there are messages, so the feed model starts with the whole history. */
@@ -63,21 +65,29 @@ export const ResearchThread = ({ messages, busy, disabled, onSend }: ResearchThr
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const attachments = useAttachments();
 
   const send = useCallback(
-    async (text: string, options?: { model?: string }) => {
+    async (text: string, options?: { model?: string; withImages?: boolean }) => {
       if (!text.trim() || !onSend) {
         return;
       }
       setSending(true);
       try {
-        await onSend(text.trim(), options);
+        const images = options?.withImages ? attachments.payload() : [];
+        await onSend(text.trim(), {
+          ...(options?.model ? { model: options.model } : {}),
+          ...(images.length ? { images } : {}),
+        });
         setDraft('');
+        if (options?.withImages) {
+          attachments.clear();
+        }
       } finally {
         setSending(false);
       }
     },
-    [onSend],
+    [onSend, attachments],
   );
 
   const handleEvent = useCallback(
@@ -93,7 +103,7 @@ export const ResearchThread = ({ messages, busy, disabled, onSend }: ResearchThr
     (event: KeyboardEvent<HTMLTextAreaElement>) => {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
-        void send(draft);
+        void send(draft, { withImages: true });
       }
     },
     [draft, send],
@@ -104,7 +114,16 @@ export const ResearchThread = ({ messages, busy, disabled, onSend }: ResearchThr
       <Layout.Flex column grow data-testid='lighthouse.thread'>
         {messages.length > 0 && <Thread messages={messages} onEvent={handleEvent} />}
       </Layout.Flex>
-      <Layout.Grid cols={['fill', 'min']} gap='sm' align='end' classNames='p-trim-md border-t border-separator'>
+      <AttachmentStrip attachments={attachments} />
+      <Layout.Grid
+        cols={['min', 'fill', 'min']}
+        gap='sm'
+        align='end'
+        classNames='p-trim-md border-t border-separator'
+        {...attachments.dropTarget}
+        data-dragging={attachments.dragging || undefined}
+      >
+        <AttachButton attachments={attachments} disabled={disabled} />
         <Field.Root>
           <Input.Textarea
             rows={2}
@@ -123,7 +142,7 @@ export const ResearchThread = ({ messages, busy, disabled, onSend }: ResearchThr
           iconOnly
           label={t('send.label')}
           disabled={disabled || sending || !draft.trim()}
-          onClick={() => void send(draft)}
+          onClick={() => void send(draft, { withImages: true })}
         />
       </Layout.Grid>
     </Layout.Flex>

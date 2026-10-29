@@ -14,11 +14,14 @@ import { loadClient, requireRun } from './util.ts';
 const handler: Operation.WithHandler<typeof LighthouseOperation.SendToResearch> =
   LighthouseOperation.SendToResearch.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ research: researchRef, text, model }) {
+      Effect.fnUntraced(function* ({ research: researchRef, text, model, images }) {
         const research = yield* Database.load(researchRef);
         const run = yield* requireRun(research);
         const client = yield* loadClient(research);
-        yield* client.sendMessage(run, text, model ? { model } : undefined);
+        yield* client.sendMessage(run, text, {
+          ...(model ? { model } : {}),
+          ...(images?.length ? { images } : {}),
+        });
       }),
     ),
   );

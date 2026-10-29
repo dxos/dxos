@@ -25,6 +25,7 @@ import {
   type Entity,
   type ExplainNode,
   type Extension,
+  type InputImage,
   type Issue,
   type IssueStatus,
   type NodeFacts,
@@ -69,13 +70,23 @@ export interface LighthouseClient {
   status(): Effect.Effect<Status, LighthouseError>;
   listEngines(): Effect.Effect<Engine[], LighthouseError>;
   listExtensions(): Effect.Effect<Extension[], LighthouseError>;
-  createSession(input: { goal: string; budget?: Budget }): Effect.Effect<{ run: string }, LighthouseError>;
+  createSession(input: {
+    goal: string;
+    budget?: Budget;
+    images?: readonly InputImage[];
+  }): Effect.Effect<{ run: string }, LighthouseError>;
   getSession(run: string): Effect.Effect<Session, LighthouseError>;
   /** Every session, archived ones included (a deep extension's research sessions are archived when they report). */
   listSessions(): Effect.Effect<Session[], LighthouseError>;
   /** A session's results (`GET /sessions/:run/results`), unranked, up to `limit`. */
   listResults(run: string, options?: { limit?: number }): Effect.Effect<Entity[], LighthouseError>;
-  sendMessage(run: string, text: string, options?: { model?: string }): Effect.Effect<void, LighthouseError>;
+  sendMessage(
+    run: string,
+    text: string,
+    options?: { model?: string; images?: readonly InputImage[] },
+  ): Effect.Effect<void, LighthouseError>;
+  /** A blob of the run (an input image, a feature crop) by its `sha256:` hash. */
+  getBlob(run: string, hash: string): Effect.Effect<Blob, LighthouseError>;
   stopSession(run: string): Effect.Effect<void, LighthouseError>;
   sendFeedback(run: string, id: string, vote: Vote): Effect.Effect<void, LighthouseError>;
   setOverrides(run: string, overrides: RatingOverrides): Effect.Effect<void, LighthouseError>;
@@ -225,8 +236,13 @@ export const makeClient = (endpoint: LighthouseEndpoint): LighthouseClient => {
       ),
     listEngines: () => get('/engines').pipe(Effect.map(toEngines)),
     listExtensions: () => get('/extensions').pipe(Effect.map(toExtensions)),
-    createSession: ({ goal, budget }) =>
-      post('/sessions', { goal, ...(budget ? { budget } : {}), from: CLIENT_NAME }).pipe(
+    createSession: ({ goal, budget, images }) =>
+      post('/sessions', {
+        goal,
+        ...(budget ? { budget } : {}),
+        ...(images?.length ? { images } : {}),
+        from: CLIENT_NAME,
+      }).pipe(
         Effect.flatMap((json) => {
           const run = asString(asRecord(json)?.run);
           return run
@@ -254,7 +270,29 @@ export const makeClient = (endpoint: LighthouseEndpoint): LighthouseClient => {
     listResults: (run, options) =>
       get(`${session(run)}/results?limit=${options?.limit ?? 500}`).pipe(Effect.map(toEntities)),
     sendMessage: (run, text, options) =>
-      post(`${session(run)}/messages`, { text, ...options, from: CLIENT_NAME }).pipe(Effect.asVoid),
+      post(`${session(run)}/messages`, {
+        text,
+        ...(options?.model ? { model: options.model } : {}),
+        ...(options?.images?.length ? { images: options.images } : {}),
+        from: CLIENT_NAME,
+      }).pipe(Effect.asVoid),
+    getBlob: (run, hash) =>
+      Effect.tryPromise({
+        try: async (signal) => {
+          const response = await fetch(
+            `${root}${session(run)}/blobs/${encodeURIComponent(hash.replace(/^sha256:/, ''))}`,
+            {
+              headers: endpoint.token ? { authorization: `Bearer ${endpoint.token}` } : {},
+              signal,
+            },
+          );
+          if (!response.ok) {
+            throw new Error(`blob ${hash}: ${response.status}`);
+          }
+          return response.blob();
+        },
+        catch: (cause) => new LighthouseError(undefined, 'blob', { message: `No blob ${hash}.`, cause }),
+      }),
     stopSession: (run) => post(`${session(run)}/stop`).pipe(Effect.asVoid),
     sendFeedback: (run, id, vote) =>
       post(`${session(run)}/feedback`, { id, vote, from: CLIENT_NAME }).pipe(Effect.asVoid),

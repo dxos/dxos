@@ -10,6 +10,7 @@ import { meta } from '#meta';
 import { Finding, Research } from '#types';
 
 import { filtersTranslations } from './components/FiltersPanel/translations.ts';
+import { imageTranslations } from './components/ImageAttach/translations.ts';
 import { metaTranslations } from './components/LighthouseMeta/translations.ts';
 import { geoTranslations } from './components/LocationPopover/translations.ts';
 import { modelTranslations } from './components/ModelPanel/translations.ts';
@@ -35,6 +36,7 @@ export const translations = [
       },
       [meta.profile.key]: {
         ...graphTranslations,
+        ...imageTranslations,
         ...traceTranslations,
         ...modelTranslations,
         ...mapTranslations,

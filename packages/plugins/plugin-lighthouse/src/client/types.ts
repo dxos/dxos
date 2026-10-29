@@ -78,6 +78,9 @@ export type RatingState = {
   feedback: Record<string, 'up' | 'down'>;
 };
 
+/** An image sent with an input: base64 (a data: URL is fine), its media type and file name. */
+export type InputImage = { data: string; type?: string; name?: string };
+
 export type Vote = 'up' | 'down' | 'clear';
 
 /** An extended ontology: a facet of a result read on demand (a menu, rooms, move-in cost). */

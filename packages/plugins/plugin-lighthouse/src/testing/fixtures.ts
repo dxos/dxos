@@ -259,6 +259,7 @@ export const makeFixtureClient = (status: Session['status'] = 'reported'): Light
   setOverrides: () => Effect.void,
   getView: () => Effect.succeed({}),
   setView: (_run, view) => Effect.succeed(view),
+  getBlob: () => Effect.succeed(new Blob()),
   extend: () => Effect.succeed({}),
   getEntity: (iri) =>
     Effect.succeed(

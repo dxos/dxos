@@ -537,6 +537,24 @@ test QA-5: Filters and sort
     - name: Saved
       do: Reload.
       expect: the same chips and "39 of 123"
+
+test QA-6: Search by image
+  desc: An image search opened in Composer: the photo the person gave and what lighthouse read from it, how much each result looks like it, and attaching a photo to a follow-up.
+  actors: both
+  status: passing            # 2026-10-29; autocue/image.mjs against image-mizuno-bkk-2, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon holds the image session image-mizuno-bkk-2 (find a Mizuno SINCE.1906 top in central Bangkok)
+  steps:
+    - name: Open the session
+      do: Create a Research named "Mizuno top" with Existing session "image-mizuno-bkk-2".
+      expect: the thread's first input shows the photo, "Read: Mizuno long-sleeve football training top", the marks and printed text with their crops (logo, "SINCE.1906", crest "C A"; no face) and the queries it suggested
+    - name: Visual match on cards
+      do: Look at the result cards.
+      expect: product results say "looks N% like your image" and a Visual match row naming the matched features
+    - name: Attach to a follow-up
+      do: Attach the photo in the composer, then remove it.
+      expect: a thumbnail above the composer with a remove button; nothing is sent
 ```
 
 ## Open questions
@@ -754,4 +772,20 @@ decision D-25: A view save that fails is retried a few times with a growing dela
   for: user:dmaretskyi
   affects: [ResearchArticle]
   why: The daemon running when the panel was built predated the view route and answered "No such route" until it restarted.
+```
+
+```mdl
+decision D-26: Image search from Composer, ported from lighthouse 2fc6758 and 3450175: images (attach, paste, drop, up to 4) go with the goal's Run and with follow-ups as `images` on /v1; the thread shows an input's images and what lighthouse read from each (its lh:ImageQuery and lh:ImageFeature nodes, crops from the run's blobs, never a face); cards show lh:visualMatch and lh:matchedFeature; query images and features are not cards.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResearchArticle, ResearchThread, ResultPills, ResultCard, op:StartResearch, op:SendToResearch, QA-6]
+```
+
+```mdl
+decision D-27: The thread's image widgets fetch blobs and image query nodes through the session's client, given to them by context, and show blobs as object URLs; the query node is found by the IRI lighthouse derives from the image's hash and polled until it is written. Fills in [D-26].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResultPills, ResearchThread]
+  why: Blobs need the API token, which an img src cannot send; the session's results leave image query nodes out.
 ```

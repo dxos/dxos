@@ -16,7 +16,17 @@ import { meta } from '#meta';
 
 import { asNumber, asRecord, asString } from '../../client/decode.ts';
 import { type Pick } from '../../client/types.ts';
-import { PICKS_ROLE, type Pill, RUN_ROLE, type RunCall, type RunData, decodeRuns } from '../../model/trajectory.ts';
+import { toImageRefs } from '../../model/images.ts';
+import {
+  IMAGES_ROLE,
+  PICKS_ROLE,
+  type Pill,
+  RUN_ROLE,
+  type RunCall,
+  type RunData,
+  decodeRuns,
+} from '../../model/trajectory.ts';
+import { InputImages } from '../InputImages/InputImages.tsx';
 
 const parse = (children: WidgetProps['children']): Record<string, unknown> | undefined => {
   try {
@@ -291,6 +301,16 @@ export const ResultPills = ({ role, children }: WidgetProps) => {
   if (role === PICKS_ROLE) {
     const picks = toPicks(data.picks);
     return picks.length ? <Picks picks={picks} gaps={asString(data.gaps)} /> : null;
+  }
+  if (role === IMAGES_ROLE) {
+    const b64 = asString(data.b64);
+    try {
+      const decoded = asRecord(b64 ? decodeRuns(b64) : data);
+      const images = toImageRefs(decoded?.images);
+      return images.length ? <InputImages images={images} /> : null;
+    } catch {
+      return null;
+    }
   }
   if (role === RUN_ROLE) {
     const runs = toRuns(data).filter((run) => run.calls.length || run.pills.length);
