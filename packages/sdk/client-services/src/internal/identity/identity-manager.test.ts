@@ -5,7 +5,7 @@
 import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { waitForCondition } from '@dxos/async';
+import { Trigger, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { credentialPayload, getCredentialAssertion } from '@dxos/credentials';
 import { SPACE_ROOT_TYPE, type SpaceRoot, createIdFromSpaceKey, isSpaceRoot } from '@dxos/echo-protocol';
@@ -190,6 +190,12 @@ describe('identity/identity-manager', () => {
 
       await peer.identityManager.setEdgeServices({ edgeHttpClient: flakyEdge });
       expect(peer.echoHost.getSpaceRootRefs(identity.haloSpaceId)).to.be.undefined;
+      const announced = new Trigger();
+      peer.identityManager.stateUpdate.on(() => {
+        if (identity.haloSpaceRootUrl === rootUrl) {
+          announced.wake();
+        }
+      });
 
       // Nothing else triggers anchoring again this session, so only the scheduled retry can adopt the root.
       await waitForCondition({
@@ -198,6 +204,8 @@ describe('identity/identity-manager', () => {
       });
       expect(identity.haloSpaceRootUrl).to.equal(rootUrl);
       expect(edge.migrations).to.equal(0);
+      // Clients see the root only once the manager announces it.
+      await announced.wait({ timeout: 1_000 });
     });
 
     test('with the flag on, a HALO mints no root of its own while edge cannot be asked', async () => {

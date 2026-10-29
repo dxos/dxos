@@ -708,7 +708,15 @@ export class IdentityManager {
       this._ctx,
       () => {
         this._haloAnchorRetryPending = false;
-        void this._anchorHaloOnRootDocument(this._ctx, identity).catch((err) => log.catch(err));
+        const previousRootUrl = identity.haloSpaceRootUrl;
+        void this._anchorHaloOnRootDocument(this._ctx, identity)
+          .then(() => {
+            // Clients learn of a root only through this event, and nothing else fires it for a background adoption.
+            if (identity.haloSpaceRootUrl !== previousRootUrl) {
+              this.stateUpdate.emit();
+            }
+          })
+          .catch((err) => log.catch(err));
       },
       this._haloAnchorRetryDelay,
     );
