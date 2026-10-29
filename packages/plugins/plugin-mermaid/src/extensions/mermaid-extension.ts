@@ -7,7 +7,7 @@ import { type EditorState, type Extension, type Range, StateField } from '@codem
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import Mermaid, { type MermaidConfig } from 'mermaid';
 
-import { type Diagram, diagramHeights, getDiagram, setDiagram } from './diagram-cache.ts';
+import { diagramHeights, getDiagram, setDiagram } from './diagram-cache.ts';
 
 export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 'themeCSS'>;
 
@@ -110,13 +110,7 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
             .map((line) => line.trim())
             .find((line) => line.length > 0 && !line.startsWith('%%'))
             ?.split(/\s/)[0] ?? '';
-        const widget = new MermaidWidget(
-          `mermaid-${node.from}`,
-          content,
-          config.config,
-          `${config.key}\n${content}`,
-          label,
-        );
+        const widget = new MermaidWidget(content, config.config, `${config.key}\n${content}`, label);
         const from = state.doc.lineAt(node.from).from;
         const to = state.doc.lineAt(node.to).to;
         decorations.push(Decoration.replace({ widget, block: true }).range(from, to));
@@ -148,10 +142,11 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
 /** A config with the key its diagrams are cached under. */
 const withKey = (config: MermaidConfig) => ({ config, key: JSON.stringify(config) });
 
+/** Mermaid removes the element with a render's id before rendering, so no two renders, cached or not, share one. */
+let renders = 0;
+
 class MermaidWidget extends WidgetType {
-  // TODO(burdon): Mermaid API requires unique id.
   constructor(
-    private readonly _id: string,
     private readonly _source: string,
     private readonly _config: MermaidConfig,
     /** The config and source, which together decide what the diagram renders as. */
@@ -180,9 +175,9 @@ class MermaidWidget extends WidgetType {
 
     // A diagram rendered before shows at once; a new one holds the height it last rendered at, so the text below it
     // does not move when it arrives.
-    const diagram = getDiagram(this._key);
-    if (diagram) {
-      this.fill(div, diagram, view);
+    const svg = getDiagram(this._key);
+    if (svg !== undefined) {
+      this.fill(div, view, svg);
       return div;
     }
     const height = diagramHeights.get(this._key);
@@ -195,22 +190,28 @@ class MermaidWidget extends WidgetType {
       // Global, so it is applied per render; the diagram-type style files list the selectors:
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/flowchart/styles.ts
       Mermaid.initialize(this._config);
-      const diagram = await this.render();
-      setDiagram(this._key, diagram);
-      div.style.minHeight = '';
-      this.fill(div, diagram, view);
+      try {
+        // https://github.com/mermaid-js/mermaid
+        await Mermaid.parse(this._source);
+        const { svg } = await Mermaid.render(`mermaid-${++renders}`, this._source);
+        setDiagram(this._key, svg);
+        this.fill(div, view, svg);
+      } catch (err) {
+        this.fill(div, view, undefined, String(err));
+      }
     });
 
     return div;
   }
 
-  private fill(div: HTMLElement, diagram: Diagram, view: EditorView) {
-    if (diagram.error !== undefined) {
+  private fill(div: HTMLElement, view: EditorView, svg: string | undefined, error?: string) {
+    div.style.minHeight = '';
+    if (svg === undefined) {
       div.className = 'cm-mermaid-error';
-      div.innerText = diagram.error;
+      div.innerText = error ?? '';
     } else {
       div.className = 'cm-mermaid';
-      div.innerHTML = diagram.svg;
+      div.innerHTML = svg;
       if (this._label) {
         const label = document.createElement('span');
         label.innerText = this._label;
@@ -226,16 +227,5 @@ class MermaidWidget extends WidgetType {
         }
       },
     });
-  }
-
-  private async render(): Promise<Diagram> {
-    try {
-      // https://github.com/mermaid-js/mermaid
-      await Mermaid.parse(this._source);
-      const { svg } = await Mermaid.render(this._id, this._source);
-      return { svg };
-    } catch (err) {
-      return { error: String(err) };
-    }
   }
 }
