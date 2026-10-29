@@ -4102,6 +4102,19 @@ importers:
         specifier: 'catalog:'
         version: 2.1.0
 
+  packages/common/scene:
+    dependencies:
+      '@dxos/animation':
+        specifier: workspace:*
+        version: link:../animation
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+    devDependencies:
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
+
   packages/common/sql-sqlite:
     dependencies:
       '@dxos/effect':
