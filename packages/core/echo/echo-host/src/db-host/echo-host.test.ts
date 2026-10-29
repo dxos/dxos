@@ -3,6 +3,7 @@
 //
 
 import { next as A, getHeads } from '@automerge/automerge';
+import { generateAutomergeUrl } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -1197,13 +1198,14 @@ describe('EchoHost directory snapshots', () => {
     const spaceKey = PublicKey.random();
     const spaceId = await createIdFromSpaceKey(spaceKey);
     const objectId = EntityId.random();
+    const linkedUrl = generateAutomergeUrl();
     {
       const host = new EchoHost({ runtime });
       await host.open(Context.default());
       const root = await host.createSpaceRoot(Context.default(), spaceKey);
       root.change((doc) => {
         doc.links ??= {};
-        doc.links[objectId] = new A.RawString('automerge:2');
+        doc.links[objectId] = new A.RawString(linkedUrl);
       });
       await host.flush(Context.default());
       await host.updateIndexes();
@@ -1214,24 +1216,24 @@ describe('EchoHost directory snapshots', () => {
     onTestFinished(async () => {
       await host.close();
     });
-    return { host, spaceId, objectId };
+    return { host, spaceId, objectId, linkedUrl };
   };
 
   test('a space opens from the directory the index stored, without loading its root', async ({ expect }) => {
-    const { host, spaceId, objectId } = await previousSession();
+    const { host, spaceId, objectId, linkedUrl } = await previousSession();
     const loadDoc = vi.spyOn(host.automergeHost, 'loadDoc');
 
     const root = await host.openSpaceRoot(Context.default(), spaceId);
     expect(root.isLoaded).toBe(false);
     expect(root.getVersion()).toBe(SpaceDocVersion.CURRENT);
-    expect(root.directory()?.links?.[objectId]?.toString()).toBe('automerge:2');
+    expect(root.directory()?.links?.[objectId]?.toString()).toBe(linkedUrl);
     expect(loadDoc.mock.calls.some(([, documentId]) => String(documentId).includes(root.documentId))).toBe(false);
 
     // A write loads the root, which then stays loaded.
     await root.load();
     root.change((doc) => {
       doc.links ??= {};
-      doc.links[EntityId.random()] = new A.RawString('automerge:3');
+      doc.links[EntityId.random()] = new A.RawString(generateAutomergeUrl());
     });
     expect(root.isLoaded).toBe(true);
   });
@@ -1248,7 +1250,7 @@ describe('EchoHost directory snapshots', () => {
       invariant(lease, 'root document not found');
       lease.change((doc) => {
         doc.links ??= {};
-        doc.links[EntityId.random()] = new A.RawString('automerge:4');
+        doc.links[EntityId.random()] = new A.RawString(generateAutomergeUrl());
       });
       await host.flush(Context.default());
     }
