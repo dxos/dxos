@@ -22,7 +22,6 @@ A `.mdl` file is the authoritative description of a component: Markdown prose pl
 | `lang/qa.mdl`                      | `test`, `step`, `suite` — executable QA                              |
 | `lang/changelog.mdl`               | `decision` — the attributed changelog                                |
 | `lang/sql.mdl`                     | `table` — a SQL table a component owns                               |
-| `lang/showcase.mdl`                | `showcase` — a non-normative example of a feature (a PR's deck)      |
 | `lang/PLUGIN-.template.mdl`        | Starting point for a new `PLUGIN.mdl`                                |
 
 Read the dialect file before you use one of its blocks. Copy `ext` definitions from `lang/`; do not
@@ -40,17 +39,6 @@ invent fields.
 4. **Cross-reference by id** — `[F-2.1]`, `type:Scene`, `op:Name` — never by prose paraphrase.
 5. **Name code, never its path.** Refer to code by component or symbol (`FeedStore`, `IndexEngine`) and
    to another spec by its frontmatter `id` (`org.dxos.feed`), not by file path: files move, names stay.
-
-## Showcases: non-normative examples
-
-When a PR that implemented a feature merges, its showcase (the `showcase` skill's deck) stays with the
-feature as a `showcase` block in a `## Showcase` section, after the features and before `## Changelog`,
-opened with "The following are non-normative examples." A showcase states nothing the system must do:
-it is not a spec item, reviews do not judge it, and when it disagrees with the code it is stale. Its
-`for:` cites the `feat`/`req` ids it shows, and `deus lint` (`--only mdl/showcase`) rejects one that
-cites none or an id the document does not declare. Name the PR and media by URL; the deck lives beside
-the spec as `showcase/<SC-n>.md`, located by its id. Adding a showcase is a spec change, so it needs a
-decision like any other.
 
 ## The changelog
 

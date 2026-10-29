@@ -122,11 +122,6 @@ git diff --stat "$BASE"...HEAD
 - Binaries (screenshots, videos, diagram PNGs) are attached with `gh --attach` so they render inline,
   falling back to the R2 bucket — both per the `hosting-artifacts` skill. Never commit them to make
   them visible.
-- **Every PR has a showcase**: the presentation of what it did, built by the `showcase` skill from the
-  Summary, the autocue scripts and the same media the UI section attaches. Its deck is linked on the
-  Summary's `**Showcase:**` line; a PR with no demo writes `summary only`, since its deck is the Summary
-  as one slide and can be rebuilt from the body. Rebuild the deck whenever a rewrite changes the Summary
-  or the media.
 
 ## Rewriting
 

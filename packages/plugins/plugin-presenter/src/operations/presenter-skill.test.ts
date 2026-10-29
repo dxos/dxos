@@ -5,7 +5,6 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import { readFileSync } from 'node:fs';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { WithProperties } from '@dxos/app-toolkit/testing';
@@ -17,7 +16,6 @@ import { EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
-import { extractNotes, parseSlide, splitSlides } from '#markdown';
 import { Presentation, PresenterOperation } from '#types';
 
 import { OperationTestLayer } from './operation-test-layer.ts';
@@ -115,50 +113,6 @@ describe('PresenterSkill operations', () => {
         });
         expect(bad.issues).toEqual([expect.stringMatching(new RegExp(`^Slide ${count + 1}: `))]);
         expect(presentation.slides).toHaveLength(count);
-      },
-      WithProperties,
-      Effect.provide(OperationTestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'ImportDeck splits a showcase deck into owned slides, keeping frontmatter and notes',
-    Effect.fnUntraced(
-      function* (_) {
-        const markdown = readFileSync(new URL('../../testing/showcase.md', import.meta.url), 'utf8');
-        const result = yield* Operation.invoke(PresenterOperation.ImportDeck, { name: 'Showcase', markdown });
-        expect(result.issues).toEqual([]);
-        expect(result.slides).toBe(4);
-        const id = result.id;
-        if (!id) {
-          throw new Error('No presentation was created.');
-        }
-
-        const presentation = yield* Database.resolve(EID.parse(id), Presentation.Presentation);
-        const contents = yield* slideContents(presentation);
-        expect(contents).toEqual(splitSlides(markdown));
-        expect(extractNotes(contents[1])).toBe('- Present a document as slides and page through them.');
-        expect(parseSlide(contents[2]).frontmatter.backgroundVideo).toMatch(/^https:\/\//);
-      },
-      WithProperties,
-      Effect.provide(OperationTestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    'ImportDeck saves nothing while any slide has a problem',
-    Effect.fnUntraced(
-      function* (_) {
-        const result = yield* Operation.invoke(PresenterOperation.ImportDeck, {
-          name: 'Bad',
-          markdown: '# One\n\n---\nlayout: nope\n---\n# Two',
-        });
-        expect(result.slides).toBe(2);
-        expect(result.issues).toEqual([expect.stringMatching(/^Slide 2: .*nope/)]);
-        expect(result.id).toBeUndefined();
-        expect(yield* Database.query(Filter.type(Presentation.Presentation)).run).toHaveLength(0);
       },
       WithProperties,
       Effect.provide(OperationTestLayer),

@@ -77,14 +77,6 @@ feat F-6: SQL tables
   req F-6.5: A `table` is part of the spec's data model: the viewer's Data model view shows it as a stored root with its columns as fields, its store as a tag, and a `REFERENCES <table>(<column>)` column as a reference to that table.
 ```
 
-```mdl
-feat F-7: Showcases
-  req F-7.1: The `showcase` block (`lang/showcase.mdl`, `org.dxos.mdl.showcase@1.0`) links features of a spec to a recorded example of them: the presentation a pull request produced when it implemented them.
-  req F-7.2: A showcase is non-normative; it is not a spec item, and a spec review does not judge it.
-  req F-7.3: A `showcase` names the `feat` and `req` ids it shows in `for:`, and `deus lint` reports one that names none or names an id the document does not declare.
-  req F-7.4: A showcase carries its pull request and media as URLs, never a file path; its deck is located from its id.
-```
-
 ## Changelog
 
 Backfilled on 2026-10-20 from the session that built the changelog,
@@ -424,31 +416,4 @@ decision D-38: A table is always a stored root; its columns are its fields and a
   for: user:dmaretskyi
   affects: [F-6.5]
   why: A table is persisted by definition, and a foreign key is the SQL form of the `Ref<…>` field that makes a `type` reference another.
-```
-
-```mdl
-decision D-39: When a pull request merges, the presentation it produced stays with the features it implemented, as the non-normative part of the spec: examples of the feature, not requirements of it.
-  date: 2026-10-27
-  by: user:richburdon
-  affects: [F-7.1, F-7.2]
-```
-
-```mdl
-decision D-40: The link is a `showcase` block in a new `lang/showcase.mdl` dialect, with `for`, `pr`, `video`, `image` and `note`; `deus lint` checks that `for:` cites only feat and req ids the document declares. Fills in [D-39].
-  date: 2026-10-27
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [F-7.1, F-7.3]
-  why: A block of its own keeps examples out of the requirement text that reviews judge, and one feature can gather several showcases over time; checking `for:` keeps a renamed feature from orphaning its examples.
-  rejected:
-    - "A `showcase:` field on `feat`: it mixes examples into the normative block and holds only one value cleanly."
-```
-
-```mdl
-decision D-41: A showcase names its pull request and media by URL, and its deck lives beside the spec as `showcase/<SC-n>.md`, so the spec names no path. Fills in [D-39] and [D-35].
-  date: 2026-10-27
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [F-7.4]
-  why: URLs outlive a move of the package, and deriving the deck's location from the id keeps [D-35] without losing the deck.
 ```

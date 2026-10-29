@@ -7,13 +7,11 @@ export {
   type ChangelogEntry,
   type MdlBlock,
   MISSING_DECISION,
-  type Showcase,
   checkChangelogChange,
   isTrivialEdit,
   lintMdl,
   parseChangelog,
   parseMdlBlocks,
-  parseShowcases,
 } from './check.ts';
 export { mdlLint } from './lint.ts';
 export { mdlComplete } from './complete.ts';

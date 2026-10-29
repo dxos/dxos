@@ -344,24 +344,6 @@ op GenerateSlideImage
   requires: [Database.Service, Operation.Service]
 ```
 
-```mdl
-op ImportDeck
-  key: org.dxos.operation.presenter.importDeck
-  desc: |
-    Creates a Presentation from one Slidev markdown deck: one owned markdown slide per `---`-separated part
-    (F-6.7's splitting rule), each keeping its own frontmatter and trailing notes comment, filed like a created
-    presentation. A pull request's showcase is imported this way. Nothing is saved while any slide has an issue.
-  input:
-    name: string
-    markdown: string            # the whole deck
-  output:
-    id?: string                 # the presentation's DXN; absent when there were issues
-    slides: number              # the number of parts the deck split into
-    issues: string[]
-  effects: [echo:write]
-  requires: [Database.Service, Capability.Service]
-```
-
 ## Features
 
 ```mdl
@@ -557,17 +539,6 @@ feat F-12: Speaker Notes
   req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
   req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
   req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
-```
-
-```mdl
-feat F-13: Showcase Decks
-
-  req F-13.1: A showcase, the account of what a body of work such as a pull request changed, is a Presentation: an ordered array of slides, each a markdown slide or a reference to an ECHO object, with at least one markdown slide.
-  req F-13.2: A showcase is written as one Slidev markdown deck: a summary slide first, then one slide per demo artifact, a video as a `backgroundVideo` slide and a screenshot as an image slide, with the demo's narration as that slide's notes.
-  req F-13.3:
-    when: the ImportDeck operation is invoked with a showcase deck
-    then: a Presentation is created with one owned slide per part of the deck, each keeping its frontmatter and notes
-  req F-13.4: The presenter skill imports a deck it is given whole with ImportDeck rather than rewriting its slides.
 ```
 
 ## Acceptance
@@ -1463,33 +1434,6 @@ decision D-75: A Slide has an array of takes (plugin-studio Variants, owned by t
   date: 2026-10-26
   by: user:richburdon
   affects: [Slide]
-```
-
-```mdl
-decision D-76: A showcase, the account an agent session leaves of what it did, is a presentation: an ordered array of slides, each a markdown document or a reference to an ECHO object. It has at least one markdown slide and can be a full narration with videos.
-  date: 2026-10-27
-  by: user:richburdon
-  affects: [F-13.1]
-```
-
-```mdl
-decision D-77: A showcase is one Slidev deck with frontmatter on every slide: the summary slide first, a video as a `backgroundVideo` slide linking the original, a screenshot as a centred image, and the recorded demo's narration as the slide's notes. Fills in [D-76].
-  date: 2026-10-27
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [F-13.2]
-  why: The deck is the format the presenter already parses (F-6), so the same file previews as a Markdown document and imports as a Presentation; frontmatter on every slide keeps a body line from reading as the next slide's YAML, and notes feed the teleprompter (F-12).
-  rejected:
-    - "JSON of Presentation and Slide objects: it is not readable in a pull request, and it duplicates the ECHO schema outside the plugin."
-```
-
-```mdl
-decision D-78: The `ImportDeck` operation creates a Presentation from a whole deck, splitting it as the document preview does, and the presenter skill offers it. Fills in [D-76].
-  date: 2026-10-27
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [op:ImportDeck, F-13.3, F-13.4]
-  why: CreatePresentation takes slides one string each and its instructions forbid `---`, so an agent handed a showcase would otherwise rewrite it slide by slide and could lose its frontmatter and notes.
 ```
 
 ---

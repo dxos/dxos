@@ -214,7 +214,7 @@ The user's part is two words and one click: "go", then the play button. Everythi
 7. **Commit the flow once it has run end to end.** Save it as `autocue/<name>.mjs` in the package it
    exercises — the plugin under test, or `composer-app` for a flow that spans plugins — and commit it, so
    the next session runs it instead of rediscovering every selector. Commit again whenever a later
-   session fixes it. Commit its script with it (see "Commit the script").
+   session fixes it.
 
 ### Flow metadata
 
@@ -235,38 +235,6 @@ reader can tell whether it is still in step with its spec:
 - **`@app`** says how to serve the app the flow runs against, including any build flags and
   environment it depends on.
 - Name each step after its `do:` text, so the flow and the spec can be read side by side.
-
-### Commit the script
-
-A demo must outlive the session that recorded it: a take nobody can regenerate, and narration that
-lived only in the conversation, are lost when it ends. So every committed flow has a **script** beside
-it, `autocue/<flow>.script.md`: its provenance (`flow`, `mdl`, `app`, and the published `video`), its
-setup steps, and its on-camera steps with the narration each one speaks. The script is what a
-reviewer reads and what the `showcase` skill turns into a PR's presentation; the flow is how the take
-is regenerated.
-
-```bash
-# After the take is uploaded: write (or refresh) the script from the flow's steps and doc comment.
-node .agents/skills/autocue/scripts/script.mjs write --flow packages/plugins/plugin-foo/autocue/<name>.mjs \
-  --video <url trim-static.mjs printed>
-```
-
-**An ad-hoc session becomes a flow too.** The driver appends every gesture op it serves over HTTP
-(not `run`, `status`, `steps`, `stop`, `screenshot`, `abort` or `countdown`) to `<out>/ops.jsonl`. When a
-demo was driven op by op, turn that log into a committed flow and its script in one step:
-
-```bash
-node .agents/skills/autocue/scripts/script.mjs write --ops /tmp/demo/ops.jsonl \
-  --flow packages/plugins/plugin-foo/autocue/<name>.mjs --title '<what it shows>.' \
-  --mdl 'packages/plugins/plugin-foo/PLUGIN.mdl test QA-n' --app 'composer-app via `moon run composer-app:serve`' \
-  --video <url>
-```
-
-Each `caption` op opens a step named after it (a `Step N — ` prefix is dropped) whose narration is the
-caption; the ops before the first caption become one `setup` step. It refuses to overwrite an existing
-flow. Then edit the flow as for any other: drop probes (`eval`, `text`, `count`), end each step on a
-wait for what it should show, add `done` checks, and run it end to end before committing. `script.mjs
-read <file.script.md>` prints a script as JSON. Tests: `node --test .agents/skills/autocue/scripts/script.test.mjs`.
 
 ## 1. Get the app running
 
@@ -778,8 +746,7 @@ comes from a GitHub attachment, which `gh --attach` mints; do not hand-roll the 
 (`POST /upload/policies/assets` wants a browser CSRF token and answers `422`/`403` to a PAT).
 
 So the convention is: attach the video and stills with `gh --attach`, the video's reference alone in its
-paragraph. Then build the PR's showcase from the same material with the `showcase` skill — the script's
-narration becomes the slide notes — and link it from the PR body's `**Showcase:**` line. Only where that is unavailable, fall back to a labelled R2 link for the video (with its
+paragraph. Only where that is unavailable, fall back to a labelled R2 link for the video (with its
 **duration and size** in the link text) and an R2 image embed for the stills, per [[hosting-artifacts]].
 
 ### Before/after, when the demo is a fix

@@ -21,7 +21,6 @@ export const make = (): Skill.Skill =>
     tools: Skill.toolDefinitions({
       operations: [
         PresenterOperation.CreatePresentation,
-        PresenterOperation.ImportDeck,
         PresenterOperation.AddSection,
         PresenterOperation.ListLayouts,
         PresenterOperation.PresentObject,
@@ -52,9 +51,6 @@ export const make = (): Skill.Skill =>
         If a tool returns issues, it saved nothing: fix what they name and call the same tool again, with every slide for
         ${Operation.toolName(PresenterOperation.CreatePresentation)} and with only the corrected slide for
         ${Operation.toolName(PresenterOperation.AddSection)}.
-        When you are given a whole deck as one markdown document, with ${'`---`'} between slides (such as a pull request's
-        showcase), import it unchanged with ${Operation.toolName(PresenterOperation.ImportDeck)} rather than rewriting its
-        slides; it keeps each slide's frontmatter, background video and speaker notes.
         Use ${Operation.toolName(PresenterOperation.AddSection)} to add a slide to an existing presentation, or to link an
         existing object as a slide.
         Present a presentation only when asked, with ${Operation.toolName(PresenterOperation.PresentObject)}.

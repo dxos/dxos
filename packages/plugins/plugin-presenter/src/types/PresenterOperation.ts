@@ -58,32 +58,6 @@ export const CreatePresentation = Operation.make({
   }),
 });
 
-export const ImportDeck = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.presenter.importDeck'),
-    name: 'Import deck',
-    description:
-      'Creates a presentation from one Slidev markdown deck, splitting it into a slide per `---` and keeping each ' +
-      "slide's frontmatter and notes; use it for a deck written as a whole document, such as a pull request showcase.",
-    icon: 'ph--file-arrow-down--regular',
-  },
-  // The capability manager carries the `DefaultParent` rule that files the presentation into the root collection.
-  services: [Capability.Service, Database.Service],
-  input: Schema.Struct({
-    name: Schema.String.annotate({ description: 'The presentation name.' }),
-    markdown: Schema.String.annotate({
-      description: 'The whole deck: Slidev markdown with `---` between slides and optional per-slide frontmatter.',
-    }),
-  }),
-  output: Schema.Struct({
-    id: Schema.optional(Schema.String).annotate({
-      description: 'The DXN of the created presentation; absent when there were issues and nothing was saved.',
-    }),
-    slides: Schema.Number.annotate({ description: 'The number of slides the deck was split into.' }),
-    issues: Issues,
-  }),
-});
-
 export const AddSection = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.presenter.addSection'),

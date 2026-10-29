@@ -2,8 +2,6 @@
 
 Every committed autocue flow, the `.mdl` test it was written from, and its published video when there is one.
 Add a row when you commit a flow, and fill in **Video** with the URL `trim-static.mjs` prints after uploading.
-Commit the flow's script (`autocue/<flow>.script.md`, written by `scripts/script.mjs write`) with it, so the
-narration survives the session and the `showcase` skill can turn the demo into slides.
 Videos are served from the `composer` R2 bucket at `https://assets.composer.space/demos/`.
 
 ## Plugins

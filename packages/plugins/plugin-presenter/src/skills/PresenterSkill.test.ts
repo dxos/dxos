@@ -14,6 +14,6 @@ describe('PresenterSkill', () => {
     const skill = PresenterSkill.make();
     expect(Skill.getKey(skill)).toBe(Presentation.SKILL_KEY);
     expect(PresenterSkill.key).toBe(Presentation.SKILL_KEY);
-    expect(skill.tools).toHaveLength(6);
+    expect(skill.tools).toHaveLength(5);
   });
 });

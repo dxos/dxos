@@ -1,5 +1,4 @@
 ---
-'@dxos/plugin-presenter': minor
 '@dxos/plugin-inbox': minor
 '@dxos/plugin-discord': minor
 '@dxos/plugin-projects': minor
@@ -9,9 +8,8 @@
 '@dxos/app-toolkit': patch
 ---
 
-Pull-request showcases, spec-driven templates and demo-ready inbox and Discord flows.
+Spec-driven templates, a generated DXOS wiki, and demo-ready inbox, Discord and transcription flows.
 
-- Presenter: new `ImportDeck` operation creates a Presentation from one whole Slidev markdown deck, keeping each slide's frontmatter and speaker notes; the Presenter skill offers it, so a pull request's showcase deck is imported unchanged.
 - Inbox: mailbox summaries link the people and organizations they mention as object chips; a new "Analyze New Mail" routine template analyzes mail as it arrives; Analyze is available on mailboxes with no connection.
 - Discord: a show-and-tell curator files links and attachments posted in a curated channel as `ShowAndTell.Entry` rows and answers "what did we do this week?"; `EnableShowAndTell` switches it on.
 - Projects: the Composer Plugin template bundles the plugin's `PLUGIN.mdl` so the registry can open its spec, and a new World Clock space template seeds the project, spec and features.

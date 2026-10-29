@@ -10,7 +10,6 @@ import { PresenterOperation } from '#types';
 export const PresenterOperationHandlerSet = OperationHandlerSet.lazy([
   PresenterOperation.SetPresenting.pipe(Operation.lazyHandler(() => import('./set-presenting.ts'))),
   PresenterOperation.CreatePresentation.pipe(Operation.lazyHandler(() => import('./create-presentation.ts'))),
-  PresenterOperation.ImportDeck.pipe(Operation.lazyHandler(() => import('./import-deck.ts'))),
   PresenterOperation.AddSection.pipe(Operation.lazyHandler(() => import('./add-section.ts'))),
   PresenterOperation.ListLayouts.pipe(Operation.lazyHandler(() => import('./list-layouts.ts'))),
   PresenterOperation.PresentObject.pipe(Operation.lazyHandler(() => import('./present-object.ts'))),
