@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Reactivity from 'effect/reactivity/Reactivity';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Order, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EntityMetaIndex, ObjectSnapshotIndex, ReverseRefIndex } from '@dxos/index-core';
@@ -102,9 +102,49 @@ describe('compiled plans seek the index', () => {
   it.effect('a type select over one feed seeks the feed, not the type across every feed', () =>
     Effect.gen(function* () {
       const feedUri = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
-      const details = yield* explain(Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri }]));
+      const details = yield* explain(
+        Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri, branches: 'all' }]),
+      );
       // The select's own seek; the dependency joins below it use the same index for other reasons.
       expect(details).toContain('SEARCH m USING INDEX idx_object_index_queueObjectId (spaceId=? AND queueId=?)');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a default type select over one feed seeks its main branch', () =>
+    Effect.gen(function* () {
+      const feedUri = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
+      const details = yield* explain(Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri }]));
+      expect(details).toContain(
+        'SEARCH m USING INDEX idx_object_index_queueBranch (spaceId=? AND queueId=? AND queueBranch=?)',
+      );
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a type select over one branch of one feed seeks the branch', () =>
+    Effect.gen(function* () {
+      const feedUri = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
+      const details = yield* explain(
+        Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri, branches: [EntityId.random()] }]),
+      );
+      expect(details).toContain(
+        'SEARCH m USING INDEX idx_object_index_queueBranch (spaceId=? AND queueId=? AND queueBranch=?)',
+      );
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a capped natural read of the main branch seeks the branch index', () =>
+    Effect.gen(function* () {
+      const feedUri = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
+      const details = yield* explain(
+        Query.select(Filter.everything())
+          .orderBy(Order.natural('desc'))
+          .limit(10)
+          .from([{ _tag: 'feed', feedUri, branches: [null] }]),
+      );
+      // `IS NULL` binds the branch column as an equality, so the main branch seeks like any other.
+      expect(details).toContain(
+        'SEARCH m USING INDEX idx_object_index_queueBranch (spaceId=? AND queueId=? AND queueBranch=?)',
+      );
     }).pipe(Effect.provide(TestLayer)),
   );
 
