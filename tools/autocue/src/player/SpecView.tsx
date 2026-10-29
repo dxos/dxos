@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -10,8 +10,9 @@ import { type Spec } from './types.ts';
 
 export type SpecViewProps = {
   spec: Spec;
-  /** The chapter under the playhead; the step recorded as it is highlighted. */
+  /** The chapter under the playhead (-1 for the intro); the block recorded as it is highlighted. */
   current: number;
+  /** Seeks to a chapter; -1 seeks to the start. */
   onSelect: (chapter: number) => void;
 };
 
@@ -38,10 +39,14 @@ const SourceLine = ({ text, header }: { text: string; header?: boolean }) => {
   );
 };
 
+/** One clickable span of the source: the intro (header and `given:`) or a step. */
+type Block = { key: string; from: number; to: number; chapter?: number };
+
 /**
- * The `.mdl` test the take was written from, as its source. Each step's lines are one block; a step the take
- * recorded is a button that seeks to its chapter, and the step under the playhead is highlighted. Steps the take did
- * not record (a `before` or `after` step, a human-only step) stay as text.
+ * The `.mdl` test the take was written from, as its source. The intro (the header, `given:` and everything before the
+ * first step) and each step are blocks marked by a rule in the margin; a block the take recorded is a button that seeks
+ * to its chapter (the intro to the start), and the one under the playhead is highlighted. Steps the take did not record
+ * (an `after` step, a human-only one) stay as dimmed text.
  */
 export const SpecView = ({ spec, current, onSelect }: SpecViewProps) => {
   const currentRef = useRef<HTMLButtonElement>(null);
@@ -50,8 +55,6 @@ export const SpecView = ({ spec, current, onSelect }: SpecViewProps) => {
     void currentRef.current?.scrollIntoView({ block: 'nearest' });
   }, [current]);
 
-  const blocks: ReactNode[] = [];
-  let line = 0;
   const lineNumber = (index: number) => (
     <span aria-hidden className='inline-block w-8 shrink-0 select-none pe-2 text-end text-fg-subtle tabular-nums'>
       {spec.line + index}
@@ -71,52 +74,51 @@ export const SpecView = ({ spec, current, onSelect }: SpecViewProps) => {
       </span>
     ));
 
-  for (const step of spec.steps) {
-    if (line < step.start) {
-      blocks.push(
-        <div key={`text-${line}`} className='px-2'>
-          {renderLines(line, step.start - 1)}
-        </div>,
-      );
-    }
-    const recorded = step.chapter !== undefined;
-    const isCurrent = recorded && step.chapter === current;
-    blocks.push(
-      recorded ? (
-        <button
-          key={`step-${step.start}`}
-          type='button'
-          ref={isCurrent ? currentRef : undefined}
-          aria-current={isCurrent ? 'step' : undefined}
-          title={`Jump to chapter ${(step.chapter ?? 0) + 1}`}
-          onClick={() => step.chapter !== undefined && onSelect(step.chapter)}
-          className={mx(
-            'block w-full cursor-pointer rounded-sm border-s-2 border-transparent px-2 py-0.5 text-start dx-focus-ring',
-            'hover:bg-hover-surface',
-            isCurrent && 'border-accent-text bg-current-surface hover:bg-current-surface-hover',
-          )}
-        >
-          {renderLines(step.start, step.end)}
-        </button>
-      ) : (
-        <div key={`step-${step.start}`} className='border-s-2 border-transparent px-2 py-0.5 opacity-70'>
-          {renderLines(step.start, step.end)}
-        </div>
-      ),
-    );
-    line = step.end + 1;
-  }
-  if (line < spec.lines.length) {
-    blocks.push(
-      <div key={`text-${line}`} className='px-2'>
-        {renderLines(line, spec.lines.length - 1)}
-      </div>,
-    );
-  }
+  const firstStep = spec.steps[0]?.start ?? spec.lines.length;
+  const blocks: Block[] = [{ key: 'intro', from: 0, to: firstStep - 1, chapter: -1 }];
+  spec.steps.forEach((step, index) => {
+    const next = spec.steps[index + 1]?.start ?? spec.lines.length;
+    // Lines between two steps (`after:`) belong to the step before them.
+    blocks.push({ key: `step-${step.start}`, from: step.start, to: next - 1, chapter: step.chapter });
+  });
 
   return (
-    <div role='document' aria-label={`${spec.path} test ${spec.test}`} className='py-2 font-mono text-xs leading-5'>
-      {blocks}
+    <div
+      role='document'
+      aria-label={`${spec.path} test ${spec.test}`}
+      className='flex flex-col gap-1 py-2 font-mono text-xs leading-5'
+    >
+      {blocks
+        .filter((block) => block.to >= block.from)
+        .map((block) => {
+          const recorded = block.chapter !== undefined;
+          const isCurrent = recorded && block.chapter === current;
+          const classNames = mx(
+            'block w-full border-s-2 px-2 py-0.5 text-start',
+            isCurrent ? 'border-accent-text bg-current-surface' : 'border-separator',
+          );
+          return recorded ? (
+            <button
+              key={block.key}
+              type='button'
+              ref={isCurrent ? currentRef : undefined}
+              aria-current={isCurrent ? 'step' : undefined}
+              title={block.chapter === -1 ? 'Jump to the start' : `Jump to chapter ${(block.chapter ?? 0) + 1}`}
+              onClick={() => block.chapter !== undefined && onSelect(block.chapter)}
+              className={mx(
+                classNames,
+                'cursor-pointer dx-focus-ring',
+                isCurrent ? 'hover:bg-current-surface-hover' : 'hover:border-fg-subtle hover:bg-hover-surface',
+              )}
+            >
+              {renderLines(block.from, block.to)}
+            </button>
+          ) : (
+            <div key={block.key} className={mx(classNames, 'border-separator-subtle opacity-60')}>
+              {renderLines(block.from, block.to)}
+            </div>
+          );
+        })}
     </div>
   );
 };

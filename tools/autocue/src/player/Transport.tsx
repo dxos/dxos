@@ -7,7 +7,7 @@ import React from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type Chapter } from './types.ts';
@@ -15,6 +15,8 @@ import { type Playback, RATES, formatClock } from './usePlayback.ts';
 
 /** `external` links out to the hosted copy, where a `download` attribute would be inert (an Artifact). */
 export type Download = { label: string; href: string; icon: string; external?: boolean };
+
+const RATE_ITEMS: Select.Option[] = RATES.map((rate) => ({ value: String(rate), label: `${rate}×` }));
 
 export type TransportProps = {
   playback: Playback;
@@ -57,18 +59,18 @@ export const Transport = ({ playback, chapters, downloads, onFullscreen }: Trans
       <Toolbar.Text classNames='min-w-0 flex-1 truncate font-medium'>
         {chapter ? `${playback.chapter + 1}. ${chapter.title}` : ''}
       </Toolbar.Text>
-      <Toolbar.ToggleGroup
-        type='single'
-        value={String(playback.rate)}
-        onValueChange={(value) => value && playback.setRate(Number(value))}
-        aria-label='Speed'
+      <Select.Root
+        items={RATE_ITEMS}
+        value={[String(playback.rate)]}
+        onValueChange={({ value }) => value[0] && playback.setRate(Number(value[0]))}
       >
-        {RATES.map((rate) => (
-          <ToggleGroup.Item key={rate} value={String(rate)} classNames='font-mono text-xs px-1.5'>
-            {`${rate}×`}
-          </ToggleGroup.Item>
-        ))}
-      </Toolbar.ToggleGroup>
+        <Select.Trigger aria-label='Speed' classNames='w-20 font-mono' />
+        <Select.Content>
+          {RATE_ITEMS.map((item) => (
+            <Select.Item key={item.value} item={item} />
+          ))}
+        </Select.Content>
+      </Select.Root>
       <Toolbar.Separator />
       <Button.Root
         variant='ghost'

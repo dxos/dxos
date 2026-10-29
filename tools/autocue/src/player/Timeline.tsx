@@ -17,7 +17,7 @@ export type TimelineProps = {
   onSeek: (time: number) => void;
 };
 
-type Span = { at: number; end: number; title: string; index?: number };
+type Span = { at: number; end: number; title: string; index?: number; intro?: boolean };
 
 /**
  * The seek bar, cut into one segment per chapter so a chapter reads as a place on the timeline; hovering names the
@@ -32,7 +32,7 @@ export const Timeline = ({ chapters, time, duration, current, onSeek }: Timeline
     if (!chapters.length) {
       return [{ at: 0, end: duration, title: '' }];
     }
-    const lead = chapters[0].at > 0.05 ? [{ at: 0, end: chapters[0].at, title: 'Intro' }] : [];
+    const lead = chapters[0].at > 0.05 ? [{ at: 0, end: chapters[0].at, title: 'Intro', intro: true }] : [];
     return [
       ...lead,
       ...chapters.map((chapter, index) => ({
@@ -94,7 +94,7 @@ export const Timeline = ({ chapters, time, duration, current, onSeek }: Timeline
               style={{ flex: `${length} 1 0` }}
               className={mx(
                 'relative h-full min-w-0.5 overflow-hidden rounded-xs bg-input-surface',
-                span.index === current && 'bg-current-surface',
+                (span.index === current || (span.intro && current < 0)) && 'bg-current-surface',
               )}
             >
               <div className='absolute inset-y-0 start-0 bg-accent-bg' style={{ width: `${fraction * 100}%` }} />

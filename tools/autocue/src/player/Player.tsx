@@ -57,6 +57,7 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
   const [help, setHelp] = useState(false);
   const { copied, copy } = useCopy();
   const screenRef = useRef<HTMLDivElement>(null);
+  const detailsRef = useRef<HTMLElement>(null);
 
   const selectDemo = useCallback(
     (next: number) => {
@@ -145,38 +146,57 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
   const created = manifest.created && new Date(manifest.created).toLocaleDateString(undefined, { dateStyle: 'medium' });
 
   return (
-    <Layout.Flex column gap='md' classNames='mx-auto w-full max-w-[1480px] px-4 py-4'>
-      <Layout.Flex gap='md' align='center' wrap asChild>
-        <header>
-          <h1 className='text-xl font-semibold text-fg text-balance'>{manifest.title}</h1>
-          <span className='text-sm text-fg-muted'>
-            {demos.length} demo{demos.length === 1 ? '' : 's'}
-            {created ? ` · ${created}` : ''}
-          </span>
-          <Layout.Flex grow={false} classNames='ms-auto'>
-            <Button.Root variant='ghost' icon='ph--keyboard--regular' label='Shortcuts' onClick={() => setHelp(true)} />
-          </Layout.Flex>
-        </header>
-      </Layout.Flex>
-
-      {demos.length > 1 && (
-        <Tabs.Root value={demo.id} onValueChange={(id) => selectDemo(demos.findIndex((item) => item.id === id))}>
-          <Tabs.List aria-label='Demos' classNames='overflow-x-auto'>
-            {demos.map((item, position) => (
-              <Tabs.Trigger
-                key={item.id}
-                value={item.id}
-                label={`${position + 1}. ${item.title} · ${formatClock(item.duration)}`}
+    <div className='flex flex-col bg-base-surface text-fg'>
+      {/* The first screen is the player, edge to edge; the details are below the fold. */}
+      <div className='grid grid-cols-1 grid-rows-[auto_auto_auto] lg:h-dvh lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-[auto_minmax(0,1fr)]'>
+        <Layout.Flex
+          gap='md'
+          align='center'
+          classNames='min-w-0 border-b border-separator px-3 py-1.5 lg:col-span-2'
+          asChild
+        >
+          <header>
+            <h1 className='min-w-12 truncate font-semibold text-fg'>{manifest.title}</h1>
+            <span className='hidden shrink-0 text-sm text-fg-muted sm:inline'>
+              {demos.length} demo{demos.length === 1 ? '' : 's'}
+              {created ? ` · ${created}` : ''}
+            </span>
+            {demos.length > 1 && (
+              <Tabs.Root
+                value={demo.id}
+                onValueChange={(id) => selectDemo(demos.findIndex((item) => item.id === id))}
+                classNames='min-w-0'
+              >
+                <Tabs.List aria-label='Demos' classNames='overflow-x-auto'>
+                  {demos.map((item, position) => (
+                    <Tabs.Trigger
+                      key={item.id}
+                      value={item.id}
+                      label={`${position + 1}. ${item.title} · ${formatClock(item.duration)}`}
+                    />
+                  ))}
+                </Tabs.List>
+              </Tabs.Root>
+            )}
+            <Layout.Flex gap='xs' grow={false} classNames='ms-auto shrink-0'>
+              <Button.Root
+                variant='ghost'
+                icon='ph--info--regular'
+                label='Details'
+                onClick={() => detailsRef.current?.scrollIntoView({ behavior: 'smooth' })}
               />
-            ))}
-          </Tabs.List>
-        </Tabs.Root>
-      )}
+              <Button.Root
+                variant='ghost'
+                icon='ph--keyboard--regular'
+                label='Shortcuts'
+                onClick={() => setHelp(true)}
+              />
+            </Layout.Flex>
+          </header>
+        </Layout.Flex>
 
-      {/* Stage, then the side panel, then the details: on a wide screen the panel spans both rows beside the other two. */}
-      <div className='grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_26rem]'>
-        <Layout.Flex column gap='sm' classNames='min-w-0'>
-          <div ref={screenRef} className='relative aspect-[16/10] max-w-full overflow-hidden rounded-md bg-black'>
+        <Layout.Flex column classNames='min-h-0 min-w-0'>
+          <div ref={screenRef} className='relative aspect-video min-h-0 bg-black lg:aspect-auto lg:flex-1'>
             <video
               ref={playback.videoRef}
               playsInline
@@ -212,18 +232,22 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
               {playback.flash}
             </div>
           </div>
-          <Timeline
-            chapters={demo.chapters}
-            time={playback.time}
-            duration={playback.duration}
-            current={playback.chapter}
-            onSeek={playback.seek}
-          />
-          <Transport playback={playback} chapters={demo.chapters} downloads={downloads} onFullscreen={fullscreen} />
+          <div className='border-t border-separator px-3'>
+            <Timeline
+              chapters={demo.chapters}
+              time={playback.time}
+              duration={playback.duration}
+              current={playback.chapter}
+              onSeek={playback.seek}
+            />
+          </div>
+          <div className='px-1 pb-1'>
+            <Transport playback={playback} chapters={demo.chapters} downloads={downloads} onFullscreen={fullscreen} />
+          </div>
         </Layout.Flex>
 
-        <Panel.Root classNames='max-h-[70vh] lg:row-span-2 lg:h-[min(80vh,52rem)] lg:max-h-none overflow-hidden rounded-md border border-separator bg-card-surface'>
-          <Panel.Header classNames='px-2'>
+        <Panel.Root classNames='h-[60vh] min-h-0 border-t border-separator bg-base-surface lg:h-auto lg:border-s lg:border-t-0'>
+          <Panel.Header classNames='border-b border-separator px-2'>
             <ToggleGroup.Root
               type='single'
               value={view}
@@ -246,31 +270,34 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
             </ScrollArea.Root>
           </Panel.Body>
         </Panel.Root>
-        <div className='grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-2'>
-          <Slate demo={demo} />
-          <Layout.Flex column gap='md' classNames='min-w-0'>
-            {demo.prompt && (
-              <CopyBlock
-                title='Run it yourself'
-                text={demo.prompt}
-                copied={copied === 'prompt'}
-                onCopy={() => void copy('prompt', demo.prompt ?? '')}
-              />
-            )}
-            {demo.script && (
-              <CopyBlock
-                title='Autocue script'
-                text={demo.script.source}
-                copied={copied === 'script'}
-                onCopy={() => void copy('script', demo.script?.source ?? '')}
-                collapsed={`${demo.script.path} · ${demo.script.source.split('\n').length} lines`}
-              />
-            )}
-          </Layout.Flex>
-        </div>
       </div>
 
+      <section
+        ref={detailsRef}
+        aria-label='Details'
+        className='grid grid-cols-1 border-t border-separator xl:grid-cols-3 xl:divide-x xl:divide-separator'
+      >
+        <Slate demo={demo} />
+        {demo.prompt && (
+          <CopyBlock
+            title='Run it yourself'
+            text={demo.prompt}
+            copied={copied === 'prompt'}
+            onCopy={() => void copy('prompt', demo.prompt ?? '')}
+          />
+        )}
+        {demo.script && (
+          <CopyBlock
+            title='Autocue script'
+            text={demo.script.source}
+            copied={copied === 'script'}
+            onCopy={() => void copy('script', demo.script?.source ?? '')}
+            collapsed={`${demo.script.path} · ${demo.script.source.split('\n').length} lines`}
+          />
+        )}
+      </section>
+
       <Shortcuts open={help} onOpenChange={setHelp} />
-    </Layout.Flex>
+    </div>
   );
 };

@@ -22,6 +22,9 @@ const ENVIRONMENT_HUES: Record<string, TagHue> = {
   production: 'emerald',
 };
 
+/** Flush columns, as Composer's panels are: no card frame of their own. */
+const SQUARE = 'rounded-none border-0 bg-transparent shadow-none';
+
 const isGithub = (remote?: string) => !!remote && /^https:\/\/github\.com\//.test(remote);
 
 const ExternalLink = ({ href, children }: { href?: string; children: ReactNode }) =>
@@ -102,7 +105,7 @@ export const Slate = ({ demo }: { demo: Demo }) => {
     ['Audio', demo.narrated ? 'Narrated voice-over' : 'No narration'],
   ];
   return (
-    <Card.Root>
+    <Card.Root classNames={SQUARE}>
       <Card.Header>
         <Card.Title>Recorded on</Card.Title>
       </Card.Header>
@@ -167,7 +170,7 @@ export const CopyBlock = ({
 }) => {
   const [open, setOpen] = useState(!collapsed);
   return (
-    <Card.Root>
+    <Card.Root classNames={SQUARE}>
       <Card.Header>
         <Card.Title>{title}</Card.Title>
         <Button.Root
@@ -191,7 +194,7 @@ export const CopyBlock = ({
       )}
       {open && (
         <Card.Row>
-          <pre className='max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-sm bg-input-surface p-3 font-mono text-xs'>
+          <pre className='max-h-72 overflow-auto whitespace-pre-wrap break-words bg-input-surface p-3 font-mono text-xs'>
             {text}
           </pre>
         </Card.Row>

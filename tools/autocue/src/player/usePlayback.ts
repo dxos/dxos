@@ -147,6 +147,11 @@ export const usePlayback = (chapters: Chapter[], fallbackDuration = 0): Playback
 
   const seekChapter = useCallback(
     (index: number) => {
+      if (index < 0) {
+        seek(0);
+        notify('Intro');
+        return;
+      }
       const target = chapters[index];
       if (target) {
         seek(target.at);
