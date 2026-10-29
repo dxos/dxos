@@ -11,4 +11,5 @@ export * from './resolve-sidebar-state.ts';
 export * from './upsert-toast.ts';
 export * from './openable-children.ts';
 export * from './update-active-deck.ts';
+export * from './workspace-fade.ts';
 export * from './workspace-retention.ts';

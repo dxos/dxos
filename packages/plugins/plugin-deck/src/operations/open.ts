@@ -22,6 +22,7 @@ import { CompanionViewState, DeckCapabilities } from '#types';
 import { applyWorkspace, computeActiveUpdates, currentNavigation, navigateDeck } from '../url/index.ts';
 import {
   addSubjectsToActiveDeck,
+  fadeOutDeck,
   isCompanionOpen,
   matchOpenEntities,
   openCompanionPlank,
@@ -48,6 +49,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         input.workspace && state.activeDeck !== input.workspace ? input.workspace : undefined,
       );
       if (workspaceToEnter) {
+        yield* fadeOutDeck();
         yield* applyWorkspace(workspaceToEnter);
       }
 
