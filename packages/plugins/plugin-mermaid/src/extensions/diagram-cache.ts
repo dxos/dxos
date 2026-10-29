@@ -7,10 +7,12 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 /** Rendered this session, so a document opened again shows its diagrams at once. Errors are not kept: a retry may pass. */
 const diagrams = new Map<string, string>();
 
-/** Characters of SVG kept at most; the oldest diagrams go first. */
+/** Characters of keys and SVG kept at most; the least recently used diagrams go first. */
 const MAX_CHARS = 4_000_000;
 
 let chars = 0;
+
+const size = (key: string, svg: string) => key.length + svg.length;
 
 export const getDiagram = (key: string): string | undefined => {
   const svg = diagrams.get(key);
@@ -22,16 +24,22 @@ export const getDiagram = (key: string): string | undefined => {
 };
 
 export const setDiagram = (key: string, svg: string) => {
-  chars -= diagrams.get(key)?.length ?? 0;
-  diagrams.delete(key);
+  const previous = diagrams.get(key);
+  if (previous !== undefined) {
+    diagrams.delete(key);
+    chars -= size(key, previous);
+  }
+  if (size(key, svg) > MAX_CHARS) {
+    return;
+  }
   diagrams.set(key, svg);
-  chars += svg.length;
+  chars += size(key, svg);
   for (const [oldest, old] of diagrams) {
-    if (chars <= MAX_CHARS || oldest === key) {
+    if (chars <= MAX_CHARS) {
       break;
     }
     diagrams.delete(oldest);
-    chars -= old.length;
+    chars -= size(oldest, old);
   }
 };
 
