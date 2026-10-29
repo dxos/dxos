@@ -46,7 +46,7 @@ import { Text } from '@dxos/schema';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
-import { ProjectView } from '#types';
+import { Feature, ProjectView } from '#types';
 
 import { ProjectArticle } from './ProjectArticle.tsx';
 
@@ -233,14 +233,18 @@ type StoryArgs = {
   attendableId: string;
   /** The seeded project the article opens. */
   projectName?: string;
+  /** The seeded feature whose level of the project's spec the article opens; the project's own level when absent. */
+  featureName?: string;
 };
 
-const DefaultStory = ({ role, attendableId, projectName = PROJECT_NAME }: StoryArgs) => {
+const DefaultStory = ({ role, attendableId, projectName = PROJECT_NAME, featureName }: StoryArgs) => {
   const [space] = useSpaces();
   const projects = useQuery(space?.db, Filter.type(Project.Project));
   const project = projects.find((entry) => entry.name === projectName);
-  if (!space?.db || !project) {
-    return <Loading data={{ db: !!space?.db, project: !!project }} />;
+  const features = useQuery(featureName ? space?.db : undefined, Filter.type(Feature.Feature));
+  const feature = features.find((entry) => entry.name === featureName);
+  if (!space?.db || !project || (featureName && !feature)) {
+    return <Loading data={{ db: !!space?.db, project: !!project, feature: !!feature }} />;
   }
 
   // `AttendableContainer` marks the subtree with `data-attendable-id`, which is what the deck's
@@ -251,7 +255,7 @@ const DefaultStory = ({ role, attendableId, projectName = PROJECT_NAME }: StoryA
   // renders permanently unattended.
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <ProjectArticle role={role} subject={project} attendableId={attendableId} />
+      <ProjectArticle role={role} subject={project} feature={feature} attendableId={attendableId} />
     </AttendableContainer>
   );
 };
@@ -374,7 +378,7 @@ export const Default: Story = {
 
 /**
  * A project with a spec: the overview counts the spec's features, and its Spec tab shows their map. The summary's
- * name opens the tab.
+ * name opens the tab, and the map's controls join the project's toolbar.
  */
 export const WithSpec: Story = {
   ...Default,
@@ -386,25 +390,54 @@ export const WithSpec: Story = {
     await userEvent.click(within(summary).getByRole('button', { name: SPEC_NAME }));
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
+    await expect(canvas.getByTestId('feature-map.new-feature')).toBeTruthy();
     await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
   },
 };
 
-/** A project without a spec: no Spec tab or summary line until Add spec gives it one, which opens its tab. */
+/** A project without a spec: its Spec tab offers to add one, and the new spec's map takes its place. */
 export const WithoutSpec: Story = {
   args: { ...Default.args, projectName: OTHER_PROJECT_NAME },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
     await expect(canvas.findByDisplayValue(OTHER_PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(canvas.findByTestId('projectsPlugin.tab.tasks')).resolves.toBeTruthy();
-    await expect(canvas.queryByTestId('projectsPlugin.tab.spec')).toBeNull();
     await expect(canvas.queryByTestId('projectsPlugin.specSummary')).toBeNull();
 
-    await userEvent.click(canvas.getByTestId('projectsPlugin.addSpec'));
-    const specTab = await canvas.findByTestId('projectsPlugin.tab.spec', undefined, { timeout: 10_000 });
-    await waitFor(() => expect(specTab.getAttribute('aria-selected')).toBe('true'));
-    await waitFor(() => expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull());
+    await showTab(canvas, 'spec');
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));
+    await expect(canvas.findByTestId('feature-map.new-feature', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.queryByTestId('projectsPlugin.spec.empty')).toBeNull();
+  },
+};
+
+/** One level down: a feature with a breakdown, its overview the feature and its Spec tab the breakdown's map. */
+export const FeatureLevel: Story = {
+  args: { ...Default.args, featureName: 'Provider sync' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'overview');
+    await expect(
+      canvas.findByTestId('feature-article.subfeatures', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await showTab(canvas, 'spec');
+    await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('Gmail', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/** A feature without a breakdown: its Spec tab is empty until Add spec breaks it down. */
+export const FeatureLevelWithoutSpec: Story = {
+  args: { ...Default.args, featureName: 'Compose & send' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    const empty = await canvas.findByTestId('projectsPlugin.spec.empty', undefined, { timeout: 10_000 });
+    await expect(within(empty).getByText(/no spec of its own/)).toBeTruthy();
+    await userEvent.click(within(empty).getByTestId('projectsPlugin.addSpec'));
+    await expect(canvas.findByTestId('feature-map.new-feature', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
 };
 

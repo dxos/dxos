@@ -103,6 +103,14 @@ export const getAncestry = (spec: Spec | undefined): Spec[] => {
   return chain;
 };
 
+/** The features from the top-level spec down to `feature`, each owning the spec the next one is on. */
+export const getLineage = (feature: Feature.Feature): Feature.Feature[] => [
+  ...getAncestry(getContainer(feature))
+    .flatMap((spec) => getOwner(spec) ?? [])
+    .reverse(),
+  feature,
+];
+
 /** Whether `spec` is the breakdown of `feature` or lies anywhere beneath it. */
 export const isWithin = (spec: Spec, feature: Feature.Feature): boolean =>
   getAncestry(spec).some((current) => getOwner(current)?.id === feature.id);

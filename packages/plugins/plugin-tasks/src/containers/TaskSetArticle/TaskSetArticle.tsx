@@ -45,7 +45,15 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
-import { ALL_STATUSES, STATUS_TERMS, filterTasks, foldStatuses, groupTasks, sortTasks } from '../../util/index.ts';
+import {
+  ALL_STATUSES,
+  STATUS_TERMS,
+  filterTasks,
+  foldStatuses,
+  groupTasks,
+  sortTasks,
+  withinScope,
+} from '../../util/index.ts';
 import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
@@ -53,6 +61,8 @@ import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
   /** Whether rows render their task's description beneath the title. */
   showDescription?: boolean;
+  /** Ids of the tasks to show, with the tasks filed under them; every task in the set when absent. */
+  scope?: readonly string[];
 };
 
 /**
@@ -67,13 +77,19 @@ export const TaskSetArticle = ({
   attendableId,
   subject: taskSet,
   showDescription = true,
+  scope,
 }: TaskSetArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const db = Obj.getDatabase(taskSet);
-  const allTasks = useTasks(taskSet);
+  const setTasks = useTasks(taskSet);
+  const scopeKey = scope?.join(',');
+  const allTasks = useMemo(
+    () => (scopeKey === undefined ? setTasks : withinScope(setTasks, new Set(scopeKey.split(',')))),
+    [setTasks, scopeKey],
+  );
   // The toolbar's filter, as the mailbox composes its own: the query editor's text is what the
   // reader edits, its parse is what the list is narrowed by. The status menu is a second view over
   // the same text — its choice lives in the text's `status:` terms — so there is one value, persisted

@@ -24,7 +24,7 @@ import {
 } from '#containers';
 import { Feature, Spec } from '#types';
 
-import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
+import { isArtifactsBranch, isChatsBranch, isSpecLevel } from '../capabilities/app-graph-builder.ts';
 import { FEATURE_COMPANION, MOVE_TASK_DIALOG } from '../constants.ts';
 
 /** React surfaces contributed by plugin-projects — articles and cards for projects, specs, features and showcases. */
@@ -68,6 +68,32 @@ export default Capability.makeModule(() =>
         ),
         component: ProjectFeatureCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, project: companionTo, attendableId }),
+      }),
+      // One level of a project's spec: the project article at that depth.
+      Surface.create({
+        id: 'project.specLevel',
+        filter: AppSurface.subject(AppSurface.Article, isSpecLevel),
+        component: ProjectArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({
+          role,
+          subject: subject.project,
+          feature: subject.feature,
+          attendableId,
+        }),
+      }),
+      Surface.create({
+        id: 'project.specLevel.companion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, FEATURE_COMPANION),
+          AppSurface.companion(AppSurface.Article, isSpecLevel),
+        ),
+        component: ProjectFeatureCompanion,
+        props: ({ role, data: { companionTo, attendableId } }) => ({
+          role,
+          project: companionTo.project,
+          feature: companionTo.feature,
+          attendableId,
+        }),
       }),
       Surface.create({
         id: 'feature.card',

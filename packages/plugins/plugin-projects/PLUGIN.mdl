@@ -353,3 +353,10 @@ decision D-9: A project owns its spec: `Project.spec` is a ref that makes the pr
   supersedes: D-1
   why: Deleting a project takes its spec with it, and a project reads its spec directly instead of querying for the spec that names it.
 ```
+
+```mdl
+decision D-10: A project article shows one level of the project's spec: the project's own, or the breakdown of a feature beneath it. Every level is a nav-tree node under the project's Spec branch, addressed by the lineage of features above it, and opens the same article with Overview, Spec and Tasks narrowed to that level. A level's Spec tab shows only its own spec, never a slice of its parent's, and offers Add spec while there is none. The map's controls sit in the article's toolbar, and its views are Canvas, Kanban and Document, the last offering to write the spec's document while it has none.
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: Three stacked toolbars (the project's, the map's and its trail) left little room for the map. A level as a node puts the trail in the plank heading, keeps the selected tab as the reader goes down, and makes a feature deep in the map feel like part of the project.
+```

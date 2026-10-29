@@ -34,8 +34,9 @@ import { QUICK_ENTRY_DIALOG } from '../constants.ts';
 const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
   Role.make('org.dxos.role.section');
 
-const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { showDescription?: boolean }>> =
-  Role.make('org.dxos.role.section');
+const TaskSetSection: Role.Role<
+  AppSurface.SectionData<TaskSetType.TaskSet, { showDescription?: boolean; scope?: readonly string[] }>
+> = Role.make('org.dxos.role.section');
 
 /**
  * An object shown beside the one it relates to — a task under the email it was extracted from. Typed
@@ -102,11 +103,12 @@ export default Capability.makeModule(() =>
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
         component: TaskSetArticle,
-        props: ({ role, data: { subject, attendableId, showDescription } }) => ({
+        props: ({ role, data: { subject, attendableId, showDescription, scope } }) => ({
           role,
           subject,
           attendableId,
           showDescription,
+          scope,
         }),
       }),
       Surface.create({

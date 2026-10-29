@@ -23,7 +23,7 @@ export const useProjectSpec = (project: Project.Project): Spec.Spec | undefined 
  * Ids of every feature on the spec and on the specs nested beneath it, read through atoms so a feature added at any
  * level, or a breakdown made for one, is counted. Stops at a spec already visited, so a cycle cannot loop.
  */
-export const useSpecTreeIds = (spec: Spec.Spec): readonly string[] => {
+export const useSpecTreeIds = (spec: Spec.Spec | undefined): readonly string[] => {
   const idsAtom = useMemo(
     () =>
       Atom.make((get) => {
@@ -43,7 +43,9 @@ export const useSpecTreeIds = (spec: Spec.Spec): readonly string[] => {
             }
           }
         };
-        visit(spec);
+        if (spec) {
+          visit(spec);
+        }
         return ids.join(',');
       }),
     [spec],
