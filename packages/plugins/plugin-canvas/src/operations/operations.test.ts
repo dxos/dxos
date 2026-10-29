@@ -12,14 +12,17 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { isGeneratorNode } from '@dxos/react-ui-canvas/headless';
+import { Scene } from '@dxos/scene';
 
-import { createCanvas, readViews, rootOf } from '#model';
+import { addCanvas, createCanvas, openScene, readViews, rootOf } from '#model';
 import { CanvasOperationHandlerSet } from '#operations';
-import { Canvas, CanvasOperation, Generator } from '#types';
+import { Canvas, CanvasOperation } from '#types';
+
+import schemaTypes from '../capabilities/schema.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CanvasOperationHandlerSet.handlers,
-  types: [Drawing.Drawing, Drawing.Canvas, Generator.Generator],
+  types: [Drawing.Drawing, Drawing.Canvas, ...schemaTypes],
   disableLlmMemoization: true,
 });
 
@@ -214,4 +217,36 @@ describe('scene revisions', () => {
     expect(Canvas.isNewerScene(Canvas.SCENE_SCHEMA_V1)).toBe(false);
     expect(Canvas.isNewerScene(undefined)).toBe(false);
   });
+
+  it.effect(
+    'apply and patch edit a scene canvas through its layout',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* addCanvas();
+        yield* Database.add(Drawing.make({ name: 'Scene', canvas }));
+        yield* Database.flush();
+        const layout = openScene(canvas)?.layout.target;
+        if (!Obj.instanceOf(Scene.Layout2D, layout)) {
+          throw new Error('A scene canvas opens a 2D layout.');
+        }
+        const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const ref = Ref.make(canvas);
+
+        yield* Operation.invoke(CanvasOperation.Apply, { canvas: ref, intents: [{ kind: 'create', node }] });
+        expect(layout.elements.n).toMatchObject({ kind: 'rect', center: { x: 0, y: 0 } });
+        const moved = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: ref,
+          intents: [{ kind: 'move', ids: ['n'], delta: { x: 10, y: 0 } }],
+        });
+        expect(layout.elements.n.center?.x).toBe(10);
+        yield* Database.flush();
+
+        const undo = { canvas: ref, from: moved.after, to: moved.before, paths: moved.paths };
+        expect(yield* Operation.invoke(CanvasOperation.Patch, undo)).toMatchObject({ written: 1, skipped: 0 });
+        expect(layout.elements.n.center?.x).toBe(0);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

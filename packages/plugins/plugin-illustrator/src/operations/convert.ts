@@ -23,7 +23,7 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Convert> = DrawingO
         return yield* Effect.fail(new IllustratorError.SameVariant({ context: { variant: variantId } }));
       }
       const variants = yield* Capability.getAll(IllustratorCapabilities.VariantProvider);
-      const to = variants.find((entry) => entry.id === variantId);
+      const to = IllustratorCapabilities.findVariant(variants, variantId);
       if (!to) {
         return yield* Effect.fail(new UnknownDrawingVariantError(variantId));
       }

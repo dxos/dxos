@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { Bounds } from '@dxos/react-ui-canvas/headless';
@@ -146,7 +146,7 @@ export const Apply = Operation.make({
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
-    canvas: Ref.Ref(Drawing.Canvas),
+    canvas: Ref.Ref(Obj.Unknown).annotate({ description: "The drawing's canvas: a scene canvas, or a legacy one." }),
     view: Schema.optional(Schema.String.annotate({ description: 'View id; the root View by default.' })),
     intents: Schema.Array(Schema.Any).annotate({ description: "Intents of the canvas's `Intent` union." }),
   }),
@@ -167,7 +167,7 @@ export const Patch = Operation.make({
     icon: 'ph--arrow-u-up-left--regular',
   },
   input: Schema.Struct({
-    canvas: Ref.Ref(Drawing.Canvas),
+    canvas: Ref.Ref(Obj.Unknown).annotate({ description: "The drawing's canvas: a scene canvas, or a legacy one." }),
     from: Heads,
     to: Heads,
     paths: Paths,

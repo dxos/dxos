@@ -9,8 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as HistoryTracker from '@dxos/app-framework/HistoryTracker';
-import { Ref } from '@dxos/echo';
-import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { type Obj, Ref } from '@dxos/echo';
 import {
   type CreateHistory,
   type HistoryState,
@@ -25,7 +24,7 @@ import { CanvasOperation } from '#types';
 export type TrackerHistoryOptions = {
   tracker: HistoryTracker.HistoryTracker;
   invoker: Pick<Capabilities.OperationInvoker, 'invoke'>;
-  canvas: Drawing.Canvas;
+  canvas: Obj.Unknown;
 };
 
 /**

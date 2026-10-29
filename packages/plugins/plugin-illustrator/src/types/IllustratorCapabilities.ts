@@ -36,6 +36,11 @@ type VariantBase = {
   icon?: string;
   /** Maps the scene DSL onto this variant's canvas. */
   builder: DrawingBuilder;
+  /**
+   * Renders drawings it matches but is never created or converted to: a format a newer variant of the same plugin
+   * replaces, kept so its drawings still open (and migrate).
+   */
+  hidden?: boolean;
 };
 
 /** A variant storing its content in the base `Drawing.Canvas`, matched by `schema` (tldraw, excalidraw, svg). */
@@ -134,7 +139,11 @@ export const variantSlug = (variant: Pick<DrawingVariant, 'label'>): string =>
 
 /** The variants a drawing on `schema` can be converted to for editing; the SVG variant is a read-only viewer. */
 export const editTargets = (variants: readonly DrawingVariant[], schema: string | undefined): DrawingVariant[] =>
-  variants.filter(({ id }) => id !== schema && id !== SVG_SCHEMA);
+  variants.filter(({ id, hidden }) => id !== schema && id !== SVG_SCHEMA && !hidden);
+
+/** The variant drawings of `id` are created and converted as: the one that is not hidden. */
+export const findVariant = (variants: readonly DrawingVariant[], id: string): DrawingVariant | undefined =>
+  variants.find((variant) => variant.id === id && !variant.hidden);
 
 /** The "Copy as …" label of the action converting a copy of a drawing to `variant`, keyed per variant so known ones translate. */
 export const copyLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label => [

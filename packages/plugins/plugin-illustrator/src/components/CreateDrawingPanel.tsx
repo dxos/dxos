@@ -37,7 +37,7 @@ export const CreateDrawingPanel = ({
 }: CreateDrawingPanelProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const capabilityVariants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
-  const variants = variantsProp ?? capabilityVariants;
+  const variants = (variantsProp ?? capabilityVariants).filter((variant) => !variant.hidden);
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
   const { results, handleSearch } = useSearchListResults({
     items: sorted,

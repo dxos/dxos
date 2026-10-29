@@ -27,8 +27,9 @@ import {
 } from '@dxos/react-ui-canvas/testing';
 import { Scene, toEcho } from '@dxos/scene';
 
+import { makeCanvas } from './canvas-document.ts';
 import { writeViews } from './content.ts';
-import { bindLayoutStore } from './layout-store.ts';
+import { bindLayoutStore, liveLayoutStore } from './layout-store.ts';
 import { legacyDocument } from './migrate-scenes.ts';
 
 /** A 2D exemplar in ECHO form, its root narrowed to the Scene2D it is. */
@@ -270,5 +271,40 @@ describe('scored mode on Layout2D', () => {
       expect(await scoresOf(stored)).toEqual(await scoresOf(held));
       bound.dispose();
     }
+  });
+});
+
+describe('bindLayoutStore over a Canvas', () => {
+  test("the store's style classes are the canvas's, both ways", () => {
+    const { canvas, scene } = makeCanvas();
+    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+      throw new Error('A 2D canvas opens a 2D scene.');
+    }
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, scene, { canvas });
+    const styles = bound.store.styles;
+    if (!styles) {
+      throw new Error('A canvas store has style classes.');
+    }
+    const warning = { id: 'warning', name: 'Warning', style: { hue: 'red' as const } };
+    registry.set(styles, { warning });
+    expect(canvas.styles).toEqual({ warning });
+    Obj.update(canvas, (canvas) => {
+      canvas.styles = { warning: { ...warning, name: 'Caution' } };
+    });
+    expect(registry.get(styles).warning?.name).toBe('Caution');
+    bound.dispose();
+  });
+
+  test('an open store is found by its canvas, until it is disposed', () => {
+    const { canvas, scene } = makeCanvas();
+    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+      throw new Error('A 2D canvas opens a 2D scene.');
+    }
+    const registry = Registry.make();
+    const bound = bindLayoutStore(registry, scene, { canvas });
+    expect(liveLayoutStore(canvas.id)?.bound).toBe(bound);
+    bound.dispose();
+    expect(liveLayoutStore(canvas.id)).toBeUndefined();
   });
 });

@@ -25,6 +25,9 @@ import {
 import { toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type Scene, fromEcho } from '@dxos/scene';
 
+import { type Canvas } from '#types';
+
+import { readStyles } from './content.ts';
 import { isLayout2D, isModel2D, makeLayoutWriter, plain, same } from './layout-writer.ts';
 
 export type BoundLayoutStore = {
@@ -50,7 +53,25 @@ const isLayoutHeads = (value: unknown): value is LayoutHeads =>
  * Binds `scene` to a store: one View per 2D layout it reaches, the scene's layout first. A new View (a Group, say) is
  * written as a new Layout2D; a composite object a write places goes to the root layout's model, made if it has none.
  */
-export const bindLayoutStore = (registry: Registry.AtomRegistry, scene: Scene.Scene2D): BoundLayoutStore => {
+export type BindLayoutStoreOptions = {
+  /** The canvas the scene belongs to: its style classes are the store's, and operations find the store by it. */
+  canvas?: Canvas.Canvas;
+};
+
+/** A binding and the registry its atoms live in. */
+export type LiveLayoutStore = { registry: Registry.AtomRegistry; bound: BoundLayoutStore };
+
+/** The bindings open now, by canvas id, so an operation edits the store a view shows rather than binding again. */
+const live = new Map<string, Set<LiveLayoutStore>>();
+
+/** The latest open binding of the canvas `id`, if a view has one. */
+export const liveLayoutStore = (id: string): LiveLayoutStore | undefined => [...(live.get(id) ?? [])].at(-1);
+
+export const bindLayoutStore = (
+  registry: Registry.AtomRegistry,
+  scene: Scene.Scene2D,
+  { canvas }: BindLayoutStoreOptions = {},
+): BoundLayoutStore => {
   const db: Database.Database | undefined = Obj.getDatabase(scene);
   const writer = makeLayoutWriter(scene);
   const { root, layouts, models } = writer;
@@ -102,7 +123,7 @@ export const bindLayoutStore = (registry: Registry.AtomRegistry, scene: Scene.Sc
     );
   };
 
-  const memory = createMemoryStore(Object.values(read()), {}, { root });
+  const memory = createMemoryStore(Object.values(read()), readStyles(canvas?.styles), { root });
   const current = storeVersions(registry, memory);
   const headsOf = (object: Obj.Any): readonly string[] => [...(Obj.version(object).automergeHeads ?? [])];
   // Without a database the layouts have no history, so the atom's snapshots stand in, as for the memory store.
@@ -196,12 +217,40 @@ export const bindLayoutStore = (registry: Registry.AtomRegistry, scene: Scene.Sc
     }
   });
 
-  return {
+  // The canvas's style classes, both ways; classes read from the canvas are not written back to it.
+  let readingStyles = false;
+  const unsubscribeStyles = canvas
+    ? registry.subscribe(memory.styles, (next) => {
+        if (!readingStyles && !same(canvas.styles ?? {}, next)) {
+          Obj.update(canvas, (canvas) => {
+            canvas.styles = plain(next);
+          });
+        }
+      })
+    : undefined;
+  const unsubscribeCanvas = canvas
+    ? Obj.subscribe(canvas, () => {
+        const next = readStyles(canvas.styles);
+        if (!same(next, registry.get(memory.styles))) {
+          readingStyles = true;
+          try {
+            registry.set(memory.styles, next);
+          } finally {
+            readingStyles = false;
+          }
+        }
+      })
+    : undefined;
+
+  const bound: BoundLayoutStore = {
     store,
     root,
     camera,
     dispose: () => {
       disposed = true;
+      canvas && live.get(canvas.id)?.delete(entry);
+      unsubscribeStyles?.();
+      unsubscribeCanvas?.();
       clearTimeout(settle);
       unsubscribeStore();
       unsubscribeCamera();
@@ -212,4 +261,7 @@ export const bindLayoutStore = (registry: Registry.AtomRegistry, scene: Scene.Sc
       subscriptions.clear();
     },
   };
+  const entry: LiveLayoutStore = { registry, bound };
+  canvas && live.set(canvas.id, (live.get(canvas.id) ?? new Set()).add(entry));
+  return bound;
 };
