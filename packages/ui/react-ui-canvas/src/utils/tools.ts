@@ -7,9 +7,15 @@ import { type Capabilities, type LinkRegistry, type NodeRegistry, type Tool } fr
 /** A tool the rail offers, with its icon, label and key; `T` is the host's own tool value (the 2D canvas's `Tool`). */
 export type ToolEntry<T = Tool> = { tool: T; icon: string; label: string; key?: string };
 
+/** The select tool's icon, which every scene view's rail uses. */
+export const SELECT_ICON = 'ph--cursor--regular';
+
+/** The hand: 2D pans with it, 3D orbits with it, so a rail reads the same in either. */
+export const HAND_ICON = 'ph--hand--regular';
+
 const BASE: ToolEntry[] = [
-  { tool: { kind: 'select' }, icon: 'ph--cursor--regular', label: 'Select', key: 'V' },
-  { tool: { kind: 'hand' }, icon: 'ph--hand--regular', label: 'Pan', key: 'H' },
+  { tool: { kind: 'select' }, icon: SELECT_ICON, label: 'Select', key: 'V' },
+  { tool: { kind: 'hand' }, icon: HAND_ICON, label: 'Pan', key: 'H' },
 ];
 
 /** The group of the fixed tools, which the rail ends with the read-only toggle. */

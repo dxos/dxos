@@ -7,6 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
+import { HAND_ICON, SELECT_ICON } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -20,8 +21,8 @@ const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] a
 type StoryProps = { exemplar: (typeof EXEMPLARS_3D)[number] };
 
 const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
-  { tool: 'select', icon: 'ph--cursor--regular', label: 'Select' },
-  { tool: 'orbit', icon: 'ph--globe-simple--regular', label: 'Orbit' },
+  { tool: 'select', icon: SELECT_ICON, label: 'Select' },
+  { tool: 'orbit', icon: HAND_ICON, label: 'Orbit' },
   { tool: 'move', icon: 'ph--arrows-out-cardinal--regular', label: 'Move' },
   { tool: 'rotate', icon: 'ph--arrow-clockwise--regular', label: 'Rotate' },
   { tool: 'scale', icon: 'ph--arrows-out--regular', label: 'Scale' },

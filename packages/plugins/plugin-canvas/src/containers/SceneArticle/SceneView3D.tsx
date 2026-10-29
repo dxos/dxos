@@ -46,6 +46,7 @@ import { useSceneDocument } from '../SceneStage/index.ts';
 import { ElementForm, elementFormIntents, elementFormValues } from './element-form.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { type SessionHistory, sessionHistory } from './session-history.ts';
+import { TOOL_GROUPS_3D } from './tools-3d.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
 import { canvasViewAspect } from './view-state.ts';
@@ -77,43 +78,7 @@ const freeElementId = (document: Scene.SceneDocument | undefined, layout: string
   return `${base}-${index}`;
 };
 
-const CREATE_KINDS = ['cube', 'sphere', 'cylinder', 'cone'] as const;
-
 const isLayout3D = (value: unknown): value is Scene.Layout3D => Obj.instanceOf(Scene.Layout3D, value);
-
-const KIND_ICONS: Record<(typeof CREATE_KINDS)[number], string> = {
-  cube: 'ph--cube--regular',
-  sphere: 'ph--circle--regular',
-  cylinder: 'ph--cylinder--regular',
-  cone: 'ph--triangle--regular',
-};
-
-/** The rail's groups: picking and the view, transforming, then making; ids name each tool's label and test id. */
-const TOOL_GROUPS: readonly { name: string; entries: readonly { id: string; tool: Tool3D; icon: string }[] }[] = [
-  {
-    name: 'Tools',
-    entries: [
-      { id: 'select', tool: 'select', icon: 'ph--cursor--regular' },
-      { id: 'orbit', tool: 'orbit', icon: 'ph--globe-simple--regular' },
-    ],
-  },
-  {
-    name: 'Transform',
-    entries: [
-      { id: 'move', tool: 'move', icon: 'ph--arrows-out-cardinal--regular' },
-      { id: 'rotate', tool: 'rotate', icon: 'ph--arrow-clockwise--regular' },
-      { id: 'scale', tool: 'scale', icon: 'ph--arrows-out--regular' },
-    ],
-  },
-  {
-    name: 'Make',
-    entries: [
-      { id: 'link', tool: 'link', icon: 'ph--line-segment--regular' },
-      { id: 'extrude', tool: 'extrude', icon: 'ph--arrow-fat-line-up--regular' },
-      ...CREATE_KINDS.map((kind) => ({ id: kind, tool: { create: kind }, icon: KIND_ICONS[kind] })),
-    ],
-  },
-];
 
 const sameTool = (left: Tool3D, right: Tool3D): boolean => JSON.stringify(left) === JSON.stringify(right);
 
@@ -489,7 +454,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   // Locked, the rail keeps only the tools that look: select and orbit.
   const toolGroups = useMemo<ToolGroup<Tool3D>[]>(
     () =>
-      TOOL_GROUPS.filter((group) => !readonly || group.name === 'Tools').map((group) => ({
+      TOOL_GROUPS_3D.filter((group) => !readonly || group.name === 'Tools').map((group) => ({
         name: group.name,
         collapsible: group.name === 'Make',
         entries: group.entries.map((entry) => ({
