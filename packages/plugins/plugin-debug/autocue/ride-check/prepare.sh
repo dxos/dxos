@@ -10,9 +10,15 @@
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 WORK=${1:?usage: prepare.sh <work dir>}
+# Absolute, since the setup below changes into it before the second `cd`.
+case "$WORK" in /*) ;; *) WORK="$PWD/$WORK" ;; esac
 GIT=(git -c user.name='Ride Check' -c user.email=ride-check@example.com)
 
 if [ ! -d "$WORK/.git" ]; then
+  if [ -d "$WORK" ] && [ -n "$(ls -A "$WORK")" ]; then
+    echo "prepare.sh: $WORK exists and is not empty; pass a new directory" >&2
+    exit 1
+  fi
   mkdir -p "$WORK"
   cp -R "$HERE/__fixtures__/worker/." "$WORK/"
   cd "$WORK"

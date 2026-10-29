@@ -25,12 +25,13 @@ A reader hands an agent a written spec of one page — should a cyclist ride now
 
 ### Spec (`spec.ts`, `SPEC.mdl`)
 
-- 1 `Spec.Spec` "Ride Check" whose content is `SPEC.mdl`: `type:Hour`, `type:Verdict`, `type:Forecast`, `feat` F-1 to F-4 written, `scenario` T-1 (the page answers) and T-2 (a change ships), decision D-1.
+- 1 `SpecDocument.SpecDocument` "Ride Check" whose content is `SPEC.mdl`: `type:Hour`, `type:Verdict`, `type:Forecast`, `feat` F-1 to F-4 written, `scenario` T-1 (the page answers) and T-2 (a change ships), decision D-1.
 - Foreign key `{ source: 'github.com/dxos/dxos', id: 'ride-check/SPEC.mdl' }`, the path the features cite.
 
 ### Features (`features.ts`)
 
-- 4 `Feature.Feature`, all `planned`, → the project (`project`), each citing one spec block (`specs: ['ride-check/SPEC.mdl#F-n']`):
+- 2 `Spec.Spec`: the "Ride Check" feature map, → the project (`project`) and the spec document (`document`), and the "Go / no-go" breakdown holding its subfeatures.
+- 4 `Feature.Feature` on the feature map, all `planned`, each citing one spec block (`specs: ['ride-check/SPEC.mdl#F-n']`):
   - `verdict` "Go / no-go" (F-1), subfeatures "Rain rule" and "Wind rule" (features on the spec that breaks it down), both `planned`; each feature carries its spec block's `req` lines as requirements.
   - `hourly` "Hourly forecast" (F-2).
   - `window` "Best window" (F-3).
@@ -47,9 +48,9 @@ A reader hands an agent a written spec of one page — should a cyclist ride now
 
 ## Checks
 
-- Exactly 1 project, 1 instructions, 1 task set, 3 tasks, 4 features, 1 spec and no documents.
+- Exactly 1 project, 1 instructions, 1 task set, 3 tasks, 6 features (4 and 2 subfeatures), 2 specs, 1 spec document and no documents.
 - Every persisted typename is declared by a partial.
 - Tasks are `todo`, in order, each depending on the one before it, and none is assigned.
-- Features are `planned`, belong to the project, cite F-1 to F-4 in order, and the last three depend on the first.
+- Features are `planned`, sit on the project's feature map, cite F-1 to F-4 in order, and the last three depend on the first.
 - The build task implements every feature, and nothing else implements one.
 - The spec's foreign key is the path the features cite.

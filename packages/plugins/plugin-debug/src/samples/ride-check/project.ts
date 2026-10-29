@@ -51,8 +51,9 @@ Deploy with the space's Cloudflare connection when it has one: query \`org.dxos.
 command has it; never read the value. Then plain \`wrangler deploy\` publishes \`ride-check\` on the account's \
 workers.dev subdomain, and later deploys update the same URL. Without a connection, \`wrangler deploy --temporary\` \
 mints a temporary account (wrangler 4.102 or later); its claim URL is a bearer credential, so give it to me directly \
-and file it nowhere, and redeploy from the same sandbox, which keeps that account for about an hour. A deploy that exited zero is not evidence: fetch \
-the URL and \`/api/forecast\` and check the bodies.
+and file it nowhere, and redeploy from the same sandbox, which keeps that account for about an hour and only \
+until it is claimed; after that a redeploy needs the space's Cloudflare connection. A deploy that exited zero is not \
+evidence: fetch the URL and \`/api/forecast\` and check the bodies.
 
 Commit the code to a repository attached to the sandbox before you finish, so a later change starts from it rather \
 than from nothing. A local sandbox cannot attach one: commit to a git repository in its workspace instead, and make \
