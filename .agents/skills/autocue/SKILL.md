@@ -225,8 +225,10 @@ reader can tell whether it is still in step with its spec:
 /**
  * Start a chess game and play the opening.
  *
+ * @title Play the opening
  * @mdl packages/plugins/plugin-chess/PLUGIN.mdl test QA-1
  * @app composer-app via `moon run composer-app:serve` on :5173
+ * @template Chess Club
  */
 ```
 
@@ -235,6 +237,10 @@ reader can tell whether it is still in step with its spec:
 - **`@app`** says how to serve the app the flow runs against, including any build flags and
   environment it depends on.
 - Name each step after its `do:` text, so the flow and the spec can be read side by side.
+- **`@title`**, **`@template`** and **`@prompt`** are optional and feed the autocue bundle (§5c): the demo's
+  name (default: the file name), the space template the take starts from, and the prompt a viewer copies to their
+  agent (default: generated from the other tags and the recording). The prose before the tags is the demo's
+  description, so write it for a viewer.
 
 ## 1. Get the app running
 
@@ -698,7 +704,8 @@ The trimmer also writes a self-contained `<name>.html` viewer: the video plus a 
 that seeks. That is for local review — browsers implement neither half of what is muxed into the file
 (no browser has a chapter UI for Matroska, and `<video>` populates `textTracks` only from `<track>`
 elements in the page, never from an in-container WebVTT track), so a page is the only way to click
-through steps in a browser. It is **not** a route into a PR.
+through steps in a browser. It is **not** a route into a PR. To share demos with people rather than review one
+locally, pack an autocue bundle instead (§5c).
 
 ## 5b. Attaching a demo to a PR
 
@@ -756,6 +763,27 @@ For a change to rendered output, a pair of stills beats a clip: see [[composer-u
 rather than rebuilding `main`), with `getBoundingClientRect()` / `getComputedStyle` numbers printed
 beside them. The driver's `eval` op does the measuring; `screenshot` takes the pair. A video of a layout
 fix mostly proves the app still runs.
+
+## 5c. Package it: the autocue format
+
+When the demo is for people to browse rather than one PR, pack it. `scripts/pack.mjs` turns one or more trimmed
+takes into an autocue bundle: a folder whose player shows each demo with its chapters on the timeline, keyboard
+navigation (`←`/`→` chapters, `[`/`]` demos, `<`/`>` speed, `?` for the rest), sound and speed controls, where it
+was recorded (branch, commit, Composer and EDGE environment, space template), the flow script, and a prompt to
+copy to an agent that records it again. The full spec is [FORMAT.md](FORMAT.md).
+
+```bash
+node .agents/skills/autocue/scripts/pack.mjs --out /tmp/bundle --title "Sheets" \
+  --demo /tmp/demo --demo /tmp/demo-2 --zip --upload sheets
+```
+
+- **The driver records the metadata on `stop`** (`recording` in `timeline.json`), reading the EDGE URL from the
+  live app, so `stop` must run before the browser closes. The trimmer carries it into `<name>.autocue.json`, which
+  is what `--demo` takes.
+- **Three targets from one folder.** `--upload` puts it in the `agent-artifacts` bucket and prints the player's
+  URL. `--zip` makes an archive that plays from disk. For a Claude Artifact, publish the `artifact.file_path` it
+  prints with `artifact.files` as `files`; each video must be under 15 MB, since an Artifact cannot load media from
+  another host.
 
 ## 6. Watch the demo before shipping it
 
