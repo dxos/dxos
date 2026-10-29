@@ -67,13 +67,19 @@ Toolbar, ToggleGroup, Tabs, Card, Dialog, Slider, Tag) and the DXOS theme, with 
 seconds, into a single `index.html` that holds its script, styles and the few icons it uses, then writes the manifest
 into it. Change the page there, never in a bundle.
 
-- **Chapters** (the default side panel) lists the steps; click one, or use `←`/`→` and `1`–`9`.
-- **Spec** (the advanced view, `V`) shows the `.mdl` test as source. Each recorded step is a block that seeks to its
-  chapter on a click, the step under the playhead is highlighted, and the same keys step through it. Steps the take
-  did not record (`after`, human-only steps) stay as text.
-- The transport has play, stop, previous and next chapter, speed (0.5× to 4×), volume and mute, fullscreen, and
-  **Video** and **Bundle** downloads.
-- Below the video: where it was recorded, the prompt to copy, and the flow's source.
+The page is laid out as a Composer plank: the video, its timeline and transport on the left, and a companion panel on
+the right whose tabs are the demo's data. Drag the panel's edge to resize it.
+
+- **Chapters** (the default tab) lists the steps; click one, or use `←`/`→` and `1`–`9`. Before the first step the
+  **Intro** row is current.
+- **Spec** shows the `.mdl` test as source. Each recorded step is a block that seeks to its chapter on a click, the
+  step under the playhead is highlighted, and the same keys step through it. Steps the take did not record (`after`,
+  human-only steps) stay as text.
+- **Recording** is where the take was made: branch and commit, Composer and EDGE environments, flow, spec, serve
+  line, date and audio. The header's info button opens it.
+- **Prompt** is the text to copy to an agent to record the demo again; **Script** is the flow's source.
+- The transport has play, stop, previous and next chapter, a speed menu (0.5× to 4×), volume and mute, fullscreen,
+  and **Video** and **Bundle** downloads.
 
 | key                    | action                                 |
 | ---------------------- | -------------------------------------- |
@@ -86,12 +92,12 @@ into it. Change the page there, never in a bundle.
 | `<` `>` (`,` `.`), `0` | slower / faster, reset to 1×           |
 | `↑` `↓`, `M`           | volume, mute                           |
 | `F`                    | fullscreen                             |
-| `V`                    | switch between chapters and the spec   |
+| `V`                    | next side panel tab                    |
 | `C`                    | copy the agent prompt                  |
 | `?`                    | the list of keys                       |
 
-`←` restarts the current chapter first when the head is more than 1.5 s into it. Speed, volume and the side panel
-are remembered per browser. Each demo has its own `#<id>`, so a link can open the reel on one demo.
+`←` restarts the current chapter first when the head is more than 1.5 s into it. Speed, volume, the side panel's
+tab and its width are remembered per browser. Each demo has its own `#<id>`, so a link can open the reel on one demo.
 
 ## Layout
 

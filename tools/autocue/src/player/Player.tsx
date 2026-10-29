@@ -3,10 +3,11 @@
 //
 
 import * as Registry from 'effect/reactivity/AtomRegistry';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Pane, type PaneTab } from '@dxos/plugin-deck/Pane';
 import { Attention, RootAttentionProvider } from '@dxos/react-ui-attention';
+import { ResizeHandle, resizeAttributes } from '@dxos/react-ui-dnd';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -19,10 +20,15 @@ import { Shortcuts, useKeyboard } from './Shortcuts.tsx';
 import { SpecView } from './SpecView.tsx';
 import { Timeline } from './Timeline.tsx';
 import { type Download, Transport } from './Transport.tsx';
-import { type Manifest } from './types.ts';
+import { type Demo, type Manifest } from './types.ts';
 import { formatClock, usePlayback } from './usePlayback.ts';
 
-export type PlayerView = 'chapters' | 'spec';
+export const PLAYER_VIEWS = ['chapters', 'spec', 'recording', 'prompt', 'script'] as const;
+
+export type PlayerView = (typeof PLAYER_VIEWS)[number];
+
+export const isPlayerView = (value: unknown): value is PlayerView =>
+  typeof value === 'string' && PLAYER_VIEWS.some((view) => view === value);
 
 export type PlayerProps = {
   manifest: Manifest;
@@ -30,18 +36,33 @@ export type PlayerProps = {
   initialDemo?: string;
   /** Called with the demo's id when the viewer moves to another one, e.g. to keep the page's `#hash` in step. */
   onDemoChange?: (id: string) => void;
-  /** The side panel to open on; the chapter list unless the viewer chose the spec before. */
+  /** The side panel tab to open on; the chapter list unless the viewer chose another before. */
   initialView?: PlayerView;
   onViewChange?: (view: PlayerView) => void;
+  /** The side panel's width in rem; the viewer can drag it. */
+  initialPanelSize?: number;
+  onPanelSizeChange?: (size: number) => void;
 };
 
 /** The player is one plank that always has the reader's attention, so its sigil, title and tabs read as current. */
 const ATTENDABLE_ID = 'autocue';
 
-const SIDE_TABS: PaneTab[] = [
+const SIDE_TABS: (PaneTab & { id: PlayerView })[] = [
   { id: 'chapters', icon: 'ph--list-numbers--regular', label: 'Chapters' },
   { id: 'spec', icon: 'ph--file-code--regular', label: 'Spec' },
+  { id: 'recording', icon: 'ph--info--regular', label: 'Recording' },
+  { id: 'prompt', icon: 'ph--robot--regular', label: 'Prompt' },
+  { id: 'script', icon: 'ph--code--regular', label: 'Script' },
 ];
+
+/** The side panel's width in rem: the default, and the range a drag keeps it in. */
+const PANEL_SIZE = { default: 24, min: 18, max: 48 };
+
+/** The tabs a demo has content for; the recording is always there. */
+const tabsFor = (demo: Demo | undefined) =>
+  SIDE_TABS.filter(
+    ({ id }) => (id !== 'spec' || demo?.spec) && (id !== 'prompt' || demo?.prompt) && (id !== 'script' || demo?.script),
+  );
 
 /** A bundle path, or the hosted copy of it when the page cannot reach the file itself (inside an Artifact). */
 const resolve = (manifest: Manifest, path: string) =>
@@ -52,7 +73,15 @@ const resolve = (manifest: Manifest, path: string) =>
  * lists the chapters, or (the advanced view) shows the `.mdl` test the take was written from with the current step
  * highlighted; both seek on a click and follow the same keys.
  */
-export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onViewChange }: PlayerProps) => {
+export const Player = ({
+  manifest,
+  initialDemo,
+  onDemoChange,
+  initialView,
+  onViewChange,
+  initialPanelSize,
+  onPanelSizeChange,
+}: PlayerProps) => {
   const demos = manifest.demos;
   const [index, setIndex] = useState(() =>
     Math.max(
@@ -62,12 +91,15 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
   );
   const demo = demos[index];
   const playback = usePlayback(demo?.chapters ?? [], demo?.duration);
-  const [view, setView] = useState<PlayerView>(initialView === 'spec' && demo?.spec ? 'spec' : 'chapters');
+  const tabs = tabsFor(demo);
+  const [chosenView, setView] = useState<PlayerView>(initialView ?? 'chapters');
+  // A demo without the chosen tab's content (no spec, say) falls back to its chapters.
+  const view = tabs.some((tab) => tab.id === chosenView) ? chosenView : 'chapters';
+  const [panelSize, setPanelSize] = useState(initialPanelSize ?? PANEL_SIZE.default);
   const [help, setHelp] = useState(false);
   const attention = useMemo(() => new Attention.AttentionManager(Registry.make(), [ATTENDABLE_ID]), []);
   const { copied, copy } = useCopy();
   const screenRef = useRef<HTMLDivElement>(null);
-  const detailsRef = useRef<HTMLElement>(null);
 
   const selectDemo = useCallback(
     (next: number) => {
@@ -108,7 +140,7 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
       playback,
       previousDemo: () => selectDemo(index - 1),
       nextDemo: () => selectDemo(index + 1),
-      toggleView: () => demo?.spec && changeView(view === 'spec' ? 'chapters' : 'spec'),
+      nextView: () => changeView(tabs[(tabs.findIndex((tab) => tab.id === view) + 1) % tabs.length].id),
       copyPrompt: () => {
         if (demo?.prompt) {
           void copy('prompt', demo.prompt);
@@ -119,7 +151,7 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
       showHelp: () => setHelp(true),
       disabled: help,
     }),
-    [playback, selectDemo, index, demo, view, changeView, copy, fullscreen, help],
+    [playback, selectDemo, index, demo, tabs, view, changeView, copy, fullscreen, help],
   );
   useKeyboard(keyboard);
 
@@ -145,6 +177,8 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
     return links;
   }, [manifest, demo]);
 
+  const gridStyle: CSSProperties & Record<`--${string}`, string> = { '--panel-size': `${panelSize}rem` };
+
   if (!demo) {
     return (
       <Layout.Flex center classNames='h-full text-fg-muted' role='status'>
@@ -157,7 +191,7 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
     <RootAttentionProvider attention={attention}>
       <div className='flex flex-col bg-base-surface text-fg'>
         {/* The first screen is a plank and its companion, as in Composer's deck; the details are below the fold. */}
-        <div className='grid grid-cols-1 lg:h-dvh lg:grid-cols-[minmax(0,1fr)_24rem]'>
+        <div className='grid grid-cols-1 lg:h-dvh lg:grid-cols-[minmax(0,1fr)_var(--panel-size)]' style={gridStyle}>
           <Pane.Root classNames='min-w-0'>
             <Pane.Toolbar>
               <Pane.Sigil attendableId={ATTENDABLE_ID} isMenu={false} aria-hidden>
@@ -179,9 +213,9 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
               <Button.Root
                 variant='ghost'
                 icon='ph--info--regular'
-                label='Details'
+                label='Recording'
                 iconOnly
-                onClick={() => detailsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => changeView('recording')}
               />
               <Button.Root
                 variant='ghost'
@@ -250,13 +284,34 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
             </Pane.Content>
           </Pane.Root>
 
-          <Pane.Root classNames='h-[60vh] min-h-0 border-t border-separator lg:h-auto lg:border-s lg:border-t-0'>
+          <Pane.Root
+            {...resizeAttributes}
+            classNames='h-[60vh] min-h-0 border-t border-separator lg:h-auto lg:border-s lg:border-t-0'
+          >
+            <ResizeHandle
+              side='inline-start'
+              classNames='hidden lg:flex'
+              size={panelSize}
+              fallbackSize={PANEL_SIZE.default}
+              minSize={PANEL_SIZE.min}
+              maxSize={PANEL_SIZE.max}
+              onSizeChange={(size, commit) => {
+                if (typeof size === 'number') {
+                  setPanelSize(size);
+                  if (commit) {
+                    onPanelSizeChange?.(size);
+                  }
+                }
+              }}
+            />
             <Pane.Toolbar>
               <Pane.Tabs
                 attendableId={ATTENDABLE_ID}
-                tabs={SIDE_TABS.filter((tab) => tab.id !== 'spec' || demo.spec)}
+                tabs={tabs}
+                // Past three, inactive tabs show their icon only, as Composer's companion does, so all stay in view.
+                maxTabs={3}
                 value={view}
-                onValueChange={(id) => (id === 'chapters' || id === 'spec') && changeView(id)}
+                onValueChange={(id) => isPlayerView(id) && changeView(id)}
               />
             </Pane.Toolbar>
             <Pane.Content asChild>
@@ -264,6 +319,22 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
                 <ScrollArea.Viewport>
                   {view === 'spec' && demo.spec ? (
                     <SpecView spec={demo.spec} current={playback.chapter} onSelect={playback.seekChapter} />
+                  ) : view === 'recording' ? (
+                    <Slate demo={demo} />
+                  ) : view === 'prompt' && demo.prompt ? (
+                    <CopyBlock
+                      title='Run it yourself'
+                      text={demo.prompt}
+                      copied={copied === 'prompt'}
+                      onCopy={() => void copy('prompt', demo.prompt ?? '')}
+                    />
+                  ) : view === 'script' && demo.script ? (
+                    <CopyBlock
+                      title={demo.script.path}
+                      text={demo.script.source}
+                      copied={copied === 'script'}
+                      onCopy={() => void copy('script', demo.script?.source ?? '')}
+                    />
                   ) : (
                     <ChapterList chapters={demo.chapters} current={playback.chapter} onSelect={playback.seekChapter} />
                   )}
@@ -272,31 +343,6 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
             </Pane.Content>
           </Pane.Root>
         </div>
-
-        <section
-          ref={detailsRef}
-          aria-label='Details'
-          className='grid grid-cols-1 border-t border-separator xl:grid-cols-3 xl:divide-x xl:divide-separator'
-        >
-          <Slate demo={demo} />
-          {demo.prompt && (
-            <CopyBlock
-              title='Run it yourself'
-              text={demo.prompt}
-              copied={copied === 'prompt'}
-              onCopy={() => void copy('prompt', demo.prompt ?? '')}
-            />
-          )}
-          {demo.script && (
-            <CopyBlock
-              title='Autocue script'
-              text={demo.script.source}
-              copied={copied === 'script'}
-              onCopy={() => void copy('script', demo.script?.source ?? '')}
-              collapsed={`${demo.script.path} · ${demo.script.source.split('\n').length} lines`}
-            />
-          )}
-        </section>
 
         <Shortcuts open={help} onOpenChange={setHelp} />
       </div>

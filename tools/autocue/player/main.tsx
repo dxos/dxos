@@ -11,7 +11,7 @@ import sprite from 'virtual:autocue-icons';
 import '@dxos/react-ui/theme.css';
 import * as Theme from '@dxos/react-ui/Theme';
 
-import { Player, type PlayerView } from '../src/player/Player.tsx';
+import { Player, type PlayerView, isPlayerView } from '../src/player/Player.tsx';
 import { sampleManifest } from '../src/player/testing/sample.ts';
 import { type Manifest } from '../src/player/types.ts';
 
@@ -35,12 +35,30 @@ const readManifest = (): Manifest => {
 };
 
 const VIEW_KEY = 'autocue:view';
-const readView = (): PlayerView | undefined => {
+const PANEL_SIZE_KEY = 'autocue:panel-size';
+
+/** Storage may be refused (private window, Artifact preview); the player then opens on its defaults. */
+const readStored = (key: string): string | undefined => {
   try {
-    return localStorage.getItem(VIEW_KEY) === 'spec' ? 'spec' : undefined;
+    return localStorage.getItem(key) ?? undefined;
   } catch {
     return undefined;
   }
+};
+const writeStored = (key: string, value: string) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+};
+
+const readView = (): PlayerView | undefined => {
+  const view = readStored(VIEW_KEY);
+  return isPlayerView(view) ? view : undefined;
+};
+
+const readPanelSize = (): number | undefined => {
+  const size = Number(readStored(PANEL_SIZE_KEY));
+  return Number.isFinite(size) && size > 0 ? size : undefined;
 };
 
 /** Dark unless the viewer chose light: the OS setting, overridden by a host's `data-theme` (Claude Artifacts set one). */
@@ -78,11 +96,9 @@ const App = ({ manifest }: { manifest: Manifest }) => {
         initialDemo={location.hash.slice(1) || undefined}
         onDemoChange={(id) => history.replaceState(null, '', `#${id}`)}
         initialView={readView()}
-        onViewChange={(view) => {
-          try {
-            localStorage.setItem(VIEW_KEY, view);
-          } catch {}
-        }}
+        onViewChange={(view) => writeStored(VIEW_KEY, view)}
+        initialPanelSize={readPanelSize()}
+        onPanelSizeChange={(size) => writeStored(PANEL_SIZE_KEY, String(size))}
       />
     </Theme.Provider>
   );

@@ -960,9 +960,6 @@ catalogs:
     domain-browser:
       specifier: ^4.22.0
       version: 4.22.0
-    effect:
-      specifier: 4.0.4
-      version: 4.0.4
     elkjs:
       specifier: ^0.12.0
       version: 0.12.0
@@ -26394,6 +26391,9 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-canvas
+      '@dxos/react-ui-dnd':
+        specifier: workspace:*
+        version: link:../../packages/ui/react-ui-dnd
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/ui-theme
@@ -26422,7 +26422,7 @@ importers:
         specifier: 'catalog:'
         version: 6.1.1(oxc-transform-react@0.145.0)(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
       effect:
-        specifier: 'catalog:'
+        specifier: 4.0.4
         version: 4.0.4
       typescript:
         specifier: 'catalog:'

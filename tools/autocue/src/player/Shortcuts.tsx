@@ -21,7 +21,7 @@ export const SHORTCUTS: [keys: string[], action: string][] = [
   [['↑', '↓'], 'Volume up or down'],
   [['M'], 'Mute or unmute'],
   [['F'], 'Fullscreen'],
-  [['V'], 'Switch between chapters and the spec'],
+  [['V'], 'Next side panel tab'],
   [['C'], 'Copy the agent prompt'],
   [['?'], 'Show this list'],
 ];
@@ -59,7 +59,7 @@ export type KeyboardActions = {
   playback: Playback;
   previousDemo: () => void;
   nextDemo: () => void;
-  toggleView: () => void;
+  nextView: () => void;
   copyPrompt: () => void;
   fullscreen: () => void;
   showHelp: () => void;
@@ -105,7 +105,7 @@ export const useKeyboard = (actions: KeyboardActions) => {
         '.': () => playback.stepRate(1),
         '0': () => playback.setRate(1),
         'f': actions.fullscreen,
-        'v': actions.toggleView,
+        'v': actions.nextView,
         'c': actions.copyPrompt,
         '?': actions.showHelp,
       };

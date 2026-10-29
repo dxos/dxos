@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="claude:viewport-fit-sides" content="cover" />
     <title>{{TITLE}}</title>
+    <!-- Inline, so a bundle under an R2 prefix or in an Artifact does not request /favicon.ico. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Cpath d='M12 9.5v13l10.5-6.5z' fill='white'/%3E%3C/svg%3E"
+    />
     <!-- Paints the theme's ground before the bundle runs, so a dark page does not flash white. -->
     <style>
       html,

@@ -3,7 +3,7 @@
 //
 
 import react from '@vitejs/plugin-react';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { type Plugin, defineConfig, searchForWorkspaceRoot } from 'vite';
 
@@ -16,48 +16,46 @@ const phosphor = path.join(rootDir, 'node_modules/@phosphor-icons/core/assets');
 
 const ICONS_ID = 'virtual:autocue-icons';
 
-/** Every `ph--<name>--<weight>` the player names, so its sprite carries those and nothing else. */
-const usedIcons = (): string[] => {
-  const sources = path.join(dirname, '../src/player');
-  const names = new Set<string>();
-  const scan = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const file = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        scan(file);
-      } else if (/\.tsx?$/.test(entry.name)) {
-        for (const [name] of readFileSync(file, 'utf8').matchAll(/ph--[a-z0-9-]+--[a-z]+/g)) {
-          names.add(name);
-        }
-      }
-    }
-  };
-  scan(sources);
-  // Icons the design system draws on its own (dialog close, list check, caret).
-  ['ph--x--regular', 'ph--check--regular', 'ph--caret-down--bold'].forEach((name) => names.add(name));
-  return [...names].sort();
+const ICON_PATTERN = /ph--[a-z0-9-]+--(?:regular|bold|fill|light|thin|duotone)/g;
+const SPRITE_PLACEHOLDER = '__AUTOCUE_ICON_SPRITE__';
+
+/** A Phosphor file as a `<symbol>`, the shape the icon registry ingests from `/icons.svg`; undefined if none exists. */
+const symbolFor = (icon: string): string | undefined => {
+  const [, name, weight] = icon.split('--');
+  const file = path.join(phosphor, weight, `${name}${weight === 'regular' ? '' : `-${weight}`}.svg`);
+  if (!existsSync(file)) {
+    return undefined;
+  }
+  const svg = readFileSync(file, 'utf8');
+  const viewBox = svg.match(/viewBox="([^"]+)"/)?.[1] ?? '0 0 256 256';
+  const body = svg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
+  return `<symbol id="${icon}" viewBox="${viewBox}" fill="currentColor">${body}</symbol>`;
 };
 
-/** Phosphor's files as `<symbol>`s, the shape the icon registry ingests from `/icons.svg`. */
-const iconSprite = (): Plugin => ({
-  name: 'autocue-icons',
-  resolveId: (id) => (id === ICONS_ID ? `\0${ICONS_ID}` : undefined),
-  load: (id) => {
-    if (id !== `\0${ICONS_ID}`) {
+/**
+ * The sprite of every icon named in a module that reaches the bundle, the design system's own included (a Select's
+ * caret, a dialog's close), so none falls back to fetching `/phosphor/…` from a host that has no such path.
+ */
+const iconSprite = (): Plugin => {
+  const names = new Set<string>();
+  return {
+    name: 'autocue-icons',
+    resolveId: (id) => (id === ICONS_ID ? `\0${ICONS_ID}` : undefined),
+    load: (id) => (id === `\0${ICONS_ID}` ? `export default ${JSON.stringify(SPRITE_PLACEHOLDER)};` : undefined),
+    transform: (code) => {
+      for (const [name] of code.matchAll(ICON_PATTERN)) {
+        names.add(name);
+      }
       return undefined;
-    }
-    const symbols = usedIcons().map((icon) => {
-      const [, name, weight] = icon.split('--');
-      const file = path.join(phosphor, weight, `${name}${weight === 'regular' ? '' : `-${weight}`}.svg`);
-      const svg = readFileSync(file, 'utf8');
-      const viewBox = svg.match(/viewBox="([^"]+)"/)?.[1] ?? '0 0 256 256';
-      const body = svg.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
-      return `<symbol id="${icon}" viewBox="${viewBox}" fill="currentColor">${body}</symbol>`;
-    });
-    const sprite = `<svg xmlns="http://www.w3.org/2000/svg"><defs>${symbols.join('')}</defs></svg>`;
-    return `export default ${JSON.stringify(sprite)};`;
-  },
-});
+    },
+    // Every module has been transformed by now, so the sprite is complete.
+    renderChunk: (code) => {
+      const symbols = [...names].sort().flatMap((icon) => symbolFor(icon) ?? []);
+      const sprite = `<svg xmlns="http://www.w3.org/2000/svg"><defs>${symbols.join('')}</defs></svg>`;
+      return code.replace(new RegExp(`(["'])${SPRITE_PLACEHOLDER}\\1`), () => JSON.stringify(sprite));
+    },
+  };
+};
 
 /**
  * Folds the built script and stylesheet into `index.html`, so the player is one file that `pack.mjs` fills with a

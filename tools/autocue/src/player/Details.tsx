@@ -160,45 +160,24 @@ export const CopyBlock = ({
   text,
   copied,
   onCopy,
-  collapsed,
 }: {
   title: string;
   text: string;
   copied: boolean;
   onCopy: () => void;
-  collapsed?: string;
-}) => {
-  const [open, setOpen] = useState(!collapsed);
-  return (
-    <Card.Root classNames={SQUARE}>
-      <Card.Header>
-        <Card.Title>{title}</Card.Title>
-        <Button.Root
-          variant='ghost'
-          icon={copied ? 'ph--check--regular' : 'ph--copy--regular'}
-          label={copied ? 'Copied' : 'Copy'}
-          onClick={onCopy}
-        />
-      </Card.Header>
-      {collapsed && (
-        <Card.Row>
-          <Button.Root
-            variant='ghost'
-            icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-            label={collapsed}
-            align='start'
-            onClick={() => setOpen(!open)}
-            classNames='font-mono text-xs'
-          />
-        </Card.Row>
-      )}
-      {open && (
-        <Card.Row>
-          <pre className='max-h-72 overflow-auto whitespace-pre-wrap break-words bg-input-surface p-3 font-mono text-xs'>
-            {text}
-          </pre>
-        </Card.Row>
-      )}
-    </Card.Root>
-  );
-};
+}) => (
+  <Card.Root classNames={SQUARE}>
+    <Card.Header>
+      <Card.Title classNames='truncate'>{title}</Card.Title>
+      <Button.Root
+        variant='ghost'
+        icon={copied ? 'ph--check--regular' : 'ph--copy--regular'}
+        label={copied ? 'Copied' : 'Copy'}
+        onClick={onCopy}
+      />
+    </Card.Header>
+    <Card.Row>
+      <pre className='whitespace-pre-wrap break-words bg-input-surface p-3 font-mono text-xs'>{text}</pre>
+    </Card.Row>
+  </Card.Root>
+);
