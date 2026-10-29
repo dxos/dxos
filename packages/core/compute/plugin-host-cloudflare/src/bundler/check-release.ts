@@ -8,6 +8,8 @@ import { type BundlePluginOptions, bundlePlugin } from './bundle-plugin.ts';
 import { loadRelease } from './release-loader.ts';
 
 export type ReleaseCheck = {
+  /** The release's files, keyed by path: what is published. */
+  readonly files: Readonly<Record<string, Uint8Array>>;
   readonly manifest: PluginRelease.Manifest;
   readonly catalog: PluginCatalog.Catalog;
   /** Bytes of the modules a Dynamic Worker loads, source maps excluded. */
@@ -40,5 +42,5 @@ export const checkRelease = async (options: BundlePluginOptions): Promise<Releas
   const moduleBytes = Object.entries(assets)
     .filter(([path]) => !path.endsWith('.map'))
     .reduce((total, [, content]) => total + content.byteLength, 0);
-  return { manifest: release.manifest, catalog, moduleBytes, problems };
+  return { files: assets, manifest: release.manifest, catalog, moduleBytes, problems };
 };

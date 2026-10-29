@@ -22,3 +22,17 @@ moon run plugin-markdown:check-edge-release
 
 It fails when the release imports a module it does not contain, a module fails to activate, or the plugin contributes
 no operations, skills or types on EDGE.
+
+## Writing a release
+
+`--release-dir <dir>` also writes each release that passes to `<dir>/<pluginKey>/<version>/`, the files registry-service
+publishes. `--entry` checks one module that exports a plugin's `make` instead of the package's exports, with
+`--dependency` for each plugin it may depend on. The test plugin's release, which the EDGE e2e suite publishes when
+`DX_PLUGIN_RELEASE_DIR` points at it:
+
+```bash
+node dist/lib/bin/check-release.mjs \
+  --entry src/testing/test-plugin-entry.ts \
+  --dependency src/testing/test-base-plugin-entry.ts \
+  --release-dir /tmp/edge-releases
+```
