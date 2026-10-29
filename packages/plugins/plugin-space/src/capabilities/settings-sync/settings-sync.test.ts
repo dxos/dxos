@@ -15,12 +15,14 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { SpacePlugin } from '#plugin';
+import * as SpacePlugin from '#meta';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin.make({})] });
 
 describe('SettingsSync', () => {
   test('binds once an identity arrives after the space list', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SpacePlugin({})],
+      plugins: [ClientPlugin.make({}), SpacePlugin.make({})],
     });
 
     const client = harness.get(ClientCapabilities.Client);
