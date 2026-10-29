@@ -49,11 +49,11 @@ export const useBoundCanvasStore = (canvas: Drawing.Canvas): BoundCanvasStore | 
   return bound;
 };
 
-/** The canvas's open scene's layout store, bound for the canvas's lifetime in this view; a new canvas rebinds. */
-export const useBoundLayoutStore = (canvas: Canvas.Canvas): BoundLayoutStore | undefined => {
+/** The open scene's layout store (the one `key` names, else the canvas's first), bound for the canvas's lifetime in this view; a new canvas rebinds. */
+export const useBoundLayoutStore = (canvas: Canvas.Canvas, key?: string): BoundLayoutStore | undefined => {
   const registry = useRegistry();
   const [bound, setBound] = useState<BoundLayoutStore>();
-  const scene = openScene(canvas);
+  const scene = openScene(canvas, key);
   useEffect(() => {
     if (!Obj.instanceOf(Scene.Scene2D, scene)) {
       return;

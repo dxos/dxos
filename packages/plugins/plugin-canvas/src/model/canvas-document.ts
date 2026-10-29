@@ -71,9 +71,13 @@ export const addCanvas = Effect.fn(function* (settings: Parameters<typeof makeCa
   return yield* Database.add(canvas);
 });
 
-/** The scene a canvas opens at: its first, when it has loaded. */
-export const openScene = (canvas: Canvas.Canvas): StoredScene | undefined => {
-  const scene = canvas.scenes[0]?.target;
+/** The scene a canvas opens at: the one a viewer picked (`key`) when the canvas lists it, else its first, once loaded. */
+export const openScene = (canvas: Canvas.Canvas, key?: string): StoredScene | undefined => {
+  const picked =
+    key === undefined
+      ? undefined
+      : canvas.scenes.map((ref) => ref.target).find((scene) => isStoredScene(scene) && scene.key === key);
+  const scene = picked ?? canvas.scenes[0]?.target;
   return isStoredScene(scene) ? scene : undefined;
 };
 
@@ -94,23 +98,47 @@ export const canvasDocument = (canvas: Canvas.Canvas): Scene.SceneDocument => {
 };
 
 /**
- * Adds a scene over `scene`'s layout at `camera`, as another saved view of the same drawing, and lists it last.
+ * Adds a scene over `scene`'s layout at `camera`, as another saved view of the same drawing, and lists it last; in
+ * either dimension, the camera being the scene's own kind.
  */
-export const addScene = (canvas: Canvas.Canvas, scene: Scene.Scene2D, camera: Scene.Camera2D): Scene.Scene2D => {
+export function addScene(canvas: Canvas.Canvas, scene: Scene.Scene2D, camera: Scene.Camera2D): Scene.Scene2D;
+export function addScene(canvas: Canvas.Canvas, scene: Scene.Scene3D, camera: Scene.Camera3D): Scene.Scene3D;
+export function addScene(
+  canvas: Canvas.Canvas,
+  scene: Scene.Scene2D | Scene.Scene3D,
+  camera: Scene.Camera2D | Scene.Camera3D,
+): Scene.Scene2D | Scene.Scene3D {
+  const key = freeSceneKey(canvas, scene.key);
   const layout = scene.layout.target;
-  if (!Obj.instanceOf(Scene.Layout2D, layout)) {
-    throw new Error('A scene is added over a loaded 2D layout.');
+  // A stored scene's camera is that object's own; the new scene gets a plain copy.
+  const copy = structuredClone(Obj.getSnapshot(scene).camera);
+  const given = camera === scene.camera ? copy : camera;
+  const added =
+    Obj.instanceOf(Scene.Scene2D, scene) && Obj.instanceOf(Scene.Layout2D, layout) && isCamera2D(given)
+      ? Obj.make(Scene.Scene2D, { key, layout: Ref.make(layout), camera: given })
+      : Obj.instanceOf(Scene.Scene3D, scene) && Obj.instanceOf(Scene.Layout3D, layout) && !isCamera2D(given)
+        ? Obj.make(Scene.Scene3D, { key, layout: Ref.make(layout), camera: given })
+        : undefined;
+  if (!added) {
+    throw new Error('A scene is added over a loaded layout of its own dimension.');
   }
-  const added = Obj.make(Scene.Scene2D, {
-    key: `${scene.key}:${canvas.scenes.length}`,
-    layout: Ref.make(layout),
-    camera,
-  });
   Obj.getDatabase(canvas)?.add(added);
   Obj.update(canvas, (canvas) => {
     canvas.scenes.push(Ref.make(added));
   });
   return added;
+}
+
+const isCamera2D = (camera: Scene.Camera2D | Scene.Camera3D): camera is Scene.Camera2D => 'zoom' in camera;
+
+/** The first `<base>:<n>` no scene of the canvas uses. */
+const freeSceneKey = (canvas: Canvas.Canvas, base: string): string => {
+  const taken = new Set(canvas.scenes.flatMap((ref) => (isStoredScene(ref.target) ? [ref.target.key] : [])));
+  let index = canvas.scenes.length;
+  while (taken.has(`${base}:${index}`)) {
+    index++;
+  }
+  return `${base}:${index}`;
 };
 
 /** The canvas's model and every model one of its layouts places objects from. */

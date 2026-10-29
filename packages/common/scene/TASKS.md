@@ -106,3 +106,4 @@ stage 3; the work stays in dxos/dxos#14282.
         toggles spacetime had.
 - [ ] Follow-up: converge react-ui-canvas's `Intent` with `LayoutIntent`.
 - [ ] **3D snapping to other objects** (alignment guides while moving), after grid snapping (D-64).
+- [ ] Layer lock in both dimensions (2D has none yet; D-85): locked layers' elements unpickable and uneditable.

@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { StyleGridField, applyStyleChoice } from '@dxos/react-ui-canvas';
+import { LayerField, StyleGridField, applyStyleChoice } from '@dxos/react-ui-canvas';
 import { StepAnnotation } from '@dxos/react-ui-form';
 import { type Scene } from '@dxos/scene';
 
@@ -87,5 +87,14 @@ describe('element form', () => {
       inner && SchemaAST.isObjects(inner) ? inner.propertySignatures.find((f) => f.name === 'opacity') : undefined;
     const type = opacity && SchemaAST.isUnion(opacity.type) ? opacity.type.types[0] : opacity?.type;
     expect(type && Option.getOrUndefined(StepAnnotation.getFromAst(type))).toBe(0.1);
+  });
+
+  test("the layer is edited as in 2D: the form shows it and a change writes the element's layer", () => {
+    expect(elementFormValues({ ...cube, layer: 'back' }).layer).toBe('back');
+    const values = elementFormValues(cube);
+    expect(elementFormIntents(cube, { ...values, layer: 'front' })).toEqual([
+      { kind: 'update', id: 'box', path: ['layer'], value: 'front' },
+    ]);
+    expect(ELEMENT_FORM_FIELDS.layer).toBe(LayerField);
   });
 });

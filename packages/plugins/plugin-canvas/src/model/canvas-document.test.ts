@@ -159,4 +159,39 @@ describe('canvas document', () => {
     expect(added.layout.target).toBe(layout);
     expect([scene.camera.zoom, added.camera.zoom]).toEqual([1, 2]);
   });
+
+  test('a 3D canvas adds a scene over its layout, as 2D does, with its own camera', () => {
+    const { canvas, layout, scene } = makeCanvas({ dimension: '3d' });
+    if (!Obj.instanceOf(Scene.Scene3D, scene)) {
+      throw new Error('A 3D canvas opens a 3D scene.');
+    }
+    const added = addScene(canvas, scene, { ...scene.camera, yaw: 90 });
+    expect(Obj.instanceOf(Scene.Scene3D, added)).toBe(true);
+    expect(added.layout.target).toBe(layout);
+    expect(canvas.scenes.map((ref) => ref.target)).toEqual([scene, added]);
+  });
+
+  test('a viewer opens the scene it picked, by key; an unknown key opens the first', () => {
+    const { canvas, scene } = makeCanvas();
+    if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+      throw new Error('A 2D canvas opens a 2D scene.');
+    }
+    const added = addScene(canvas, scene, { center: { x: 0, y: 0 }, zoom: 2 });
+    expect(openScene(canvas, added.key)).toBe(added);
+    expect(openScene(canvas, 'gone')).toBe(scene);
+    expect(openScene(canvas)).toBe(scene);
+  });
+
+  test("a stored scene's own camera starts the added scene, copied rather than shared", async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add(types);
+    const { canvas, model, layout, scene } = makeCanvas({ dimension: '3d' });
+    [model, layout, scene, canvas].forEach((object) => db.add(object));
+    if (!Obj.instanceOf(Scene.Scene3D, scene)) {
+      throw new Error('A 3D canvas opens a 3D scene.');
+    }
+    const added = addScene(canvas, scene, scene.camera);
+    expect(added.camera).toEqual(scene.camera);
+    expect(canvas.scenes).toHaveLength(2);
+  });
 });

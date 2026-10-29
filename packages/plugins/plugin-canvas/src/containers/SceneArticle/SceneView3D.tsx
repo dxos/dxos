@@ -16,6 +16,7 @@ import {
   InspectorPanel,
   InspectorSection,
   type Layer,
+  LayersContext,
   LayersInspector,
   ObjectsInspector,
   PropertiesEmpty,
@@ -84,6 +85,7 @@ import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { getSessionClipboard, nextPaste, pasteOffset, setSessionClipboard } from './scene-clipboard.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
+import { useSceneChoice } from './use-scene-choice.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
 import { canvasViewAspect } from './view-state.ts';
 
@@ -142,7 +144,8 @@ const label = (key: string): [string, { ns: string }] => [key, { ns: CanvasNames
 export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) => {
   const { t } = UiHooks.useTranslation(CanvasNamespace.key);
   const chrome = sceneChrome(role);
-  const scene = openScene(canvas);
+  const { key: sceneKey, choice: sceneChoice } = useSceneChoice(canvas);
+  const scene = openScene(canvas, sceneKey);
   const stored = Obj.instanceOf(Scene.Scene3D, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
   const [tool, setTool] = useState<Tool3D>('select');
@@ -584,29 +587,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
           }
         },
       )
-      .action(
-        'make-object',
-        {
-          label: label('make-object.label'),
-          icon: 'ph--package--regular',
-          disabled: !commands['make-object']?.enabled(),
-          disposition: 'toolbar',
-          testId: 'canvas3d.make-object',
-        },
-        makeObject,
-      )
       .separator()
-      .action(
-        'import-mesh',
-        {
-          label: label('import-mesh.label'),
-          icon: 'ph--upload-simple--regular',
-          disabled: modelId === undefined,
-          disposition: 'toolbar',
-          testId: 'canvas3d.import-mesh',
-        },
-        () => void onImportMesh().catch((error) => setNotice(`Could not import the mesh: ${String(error)}`)),
-      )
       .action(
         'export-stl',
         {
@@ -851,28 +832,32 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
           )}
           {selected && (
             <InspectorSection section={{ ...SECTIONS_3D.properties, title: t('properties.label') }}>
-              <Form.Root
-                key={selected.id}
-                schema={ElementForm}
-                values={elementFormValues(selected)}
-                fieldMap={ELEMENT_FORM_FIELDS}
-                fieldOverrides={ELEMENT_FORM_OVERRIDES}
-                readonly={readonly}
-                autoSave
-                // A typed value writes the scene once, when the field blurs, not on every keystroke.
-                commitOn='blur'
-                onSave={handleSave}
-              >
-                <Form.Viewport scroll={false}>
-                  <Form.Content>
-                    <Form.Fields />
-                  </Form.Content>
-                </Form.Viewport>
-              </Form.Root>
+              <LayersContext.Provider value={layers}>
+                <Form.Root
+                  key={selected.id}
+                  schema={ElementForm}
+                  values={elementFormValues(selected)}
+                  fieldMap={ELEMENT_FORM_FIELDS}
+                  fieldOverrides={ELEMENT_FORM_OVERRIDES}
+                  readonly={readonly}
+                  autoSave
+                  // A typed value writes the scene once, when the field blurs, not on every keystroke.
+                  commitOn='blur'
+                  onSave={handleSave}
+                >
+                  <Form.Viewport scroll={false}>
+                    <Form.Content>
+                      <Form.Fields />
+                    </Form.Content>
+                  </Form.Viewport>
+                </Form.Root>
+              </LayersContext.Provider>
             </InspectorSection>
           )}
           <InspectorSection section={SECTIONS_3D.views}>
             <ViewsInspector
+              sceneChoice={sceneChoice}
+              readonly={readonly}
               tree={tree}
               selected={new Set(selection)}
               place={{ path: rootLayout === undefined ? [] : editing ? [rootLayout, editing] : [rootLayout] }}
@@ -891,6 +876,13 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               objects={entries}
               readonly={readonly}
               onPlace={(id) => setTool({ place: id })}
+              onMakeObject={makeObject}
+              canMakeObject={commands['make-object']?.enabled() ?? false}
+              onImport={
+                modelId === undefined
+                  ? undefined
+                  : () => void onImportMesh().catch((error) => setNotice(`Could not import the mesh: ${String(error)}`))
+              }
               onSelect={(id) => {
                 const parts = objects.find((object) => object.id === id)?.parts;
                 if (parts !== undefined) {

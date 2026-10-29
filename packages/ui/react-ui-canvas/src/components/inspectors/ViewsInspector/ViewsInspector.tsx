@@ -4,6 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { SelectControl } from '@dxos/react-ui-form';
 import {
   Tree,
   type TreeData,
@@ -13,6 +14,7 @@ import {
   createStaticTreeModel,
   filterTreeModel,
 } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
@@ -34,7 +36,20 @@ import {
 } from '../../../utils/index.ts';
 import { type InspectorProps } from '../types.ts';
 
+/** The canvas's saved views (scenes over its layouts), one of them open in this viewer. */
+export type SceneChoice = {
+  scenes: readonly { id: string; name: string }[];
+  open: string;
+  onOpen: (id: string) => void;
+  /** Adds a scene over the open one's layout, at the view's camera. */
+  onAdd?: () => void;
+  /** Removes a scene; the last one is kept. */
+  onDelete?: (id: string) => void;
+};
+
 export type ViewsInspectorProps = InspectorProps & {
+  /** The canvas's scenes, picked and added above the hierarchy, the same in both dimensions. */
+  sceneChoice?: SceneChoice;
   scenes?: ViewMap;
   /** The canvas's root View. */
   root?: ViewId;
@@ -93,7 +108,9 @@ const matches = (item: ViewTreeItem, text: string) =>
  * opens (Enter or a double-click); a filter narrows the rows by label or type.
  */
 export const ViewsInspector = ({
+  sceneChoice,
   classNames,
+  readonly,
   scenes,
   root,
   tree: treeProp,
@@ -261,6 +278,33 @@ export const ViewsInspector = ({
           onChange={(event) => setFilter(event.target.value)}
         />
       </Toolbar.Root>
+      {sceneChoice && (
+        <Toolbar.Root data-testid='views-scenes'>
+          <SelectControl
+            items={sceneChoice.scenes.map((scene) => ({ value: scene.id, label: scene.name }))}
+            value={sceneChoice.open}
+            onValueChange={(next) => next && sceneChoice.onOpen(next)}
+          />
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--plus--regular'
+            label='Add scene'
+            disabled={readonly || !sceneChoice.onAdd}
+            data-testid='views-scene-add'
+            onClick={() => sceneChoice.onAdd?.()}
+          />
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--trash--regular'
+            label='Delete scene'
+            disabled={readonly || !sceneChoice.onDelete || sceneChoice.scenes.length < 2}
+            data-testid='views-scene-delete'
+            onClick={() => sceneChoice.onDelete?.(sceneChoice.open)}
+          />
+        </Toolbar.Root>
+      )}
       <Tree.Root
         ref={treeRef}
         model={shown}

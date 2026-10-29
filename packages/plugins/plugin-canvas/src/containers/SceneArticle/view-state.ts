@@ -15,6 +15,8 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 const CameraSchema = Schema.Struct({ x: Schema.Number, y: Schema.Number, zoom: Schema.Number });
 
 const CanvasViewStateSchema = Schema.Struct({
+  /** The scene this viewer has open, by key; the canvas's first when unset or no longer listed. */
+  scene: Schema.optional(Schema.String),
   /** Where the root scene was last left. */
   camera: Schema.optional(CameraSchema),
   /** This viewer only looks at the drawing: nothing is selected, and no tool, handle, port or panel edits it. */

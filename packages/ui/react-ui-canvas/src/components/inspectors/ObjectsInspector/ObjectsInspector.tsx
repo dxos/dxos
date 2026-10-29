@@ -33,6 +33,12 @@ export type ObjectsInspectorProps = InspectorProps & {
   thumbnail?: (id: ViewId) => ReactNode;
   /** Gives the scene a timeline; absent while it has one or cannot be edited. */
   onAnimate?: () => void;
+  /** Makes an object of the canvas selection (in 2D, Group does this); absent where nothing can be made. */
+  onMakeObject?: () => void;
+  /** Whether the selection can become an object now. */
+  canMakeObject?: boolean;
+  /** Defines an object from a mesh file; absent where meshes are not offered. */
+  onImport?: () => void;
 };
 
 /**
@@ -48,6 +54,9 @@ export const ObjectsInspector = ({
   onSelect,
   onRename,
   onPlace,
+  onMakeObject,
+  canMakeObject = true,
+  onImport,
   onDuplicate,
   onDelete,
   thumbnail,
@@ -67,6 +76,28 @@ export const ObjectsInspector = ({
           data-testid='objects-place'
           onClick={() => current && onPlace?.(current.id)}
         />
+        {onMakeObject && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--package--regular'
+            label='Make object'
+            disabled={readonly || !canMakeObject}
+            data-testid='objects-make'
+            onClick={onMakeObject}
+          />
+        )}
+        {onImport && (
+          <Button.Root
+            variant='ghost'
+            iconOnly
+            icon='ph--upload-simple--regular'
+            label='Import mesh'
+            disabled={readonly}
+            data-testid='objects-import'
+            onClick={onImport}
+          />
+        )}
         <Button.Root
           variant='ghost'
           iconOnly

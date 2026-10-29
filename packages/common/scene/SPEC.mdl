@@ -796,3 +796,19 @@ decision D-83: Each view keeps one table of its scene commands (`SceneCommands`:
   for: user:richburdon
   why: Four surfaces each deciding "is Delete enabled" drift apart; one table makes them agree by construction.
 ```
+
+```mdl
+decision D-84: Each viewer opens one of the canvas's scenes, kept by key in the canvas's view state (shared by both dimensions; the first scene when unset or gone); the Views inspector picks, adds (over the open scene's layout, at its camera) and deletes scenes the same way in 2D and 3D, keeping the last one. Fills in [D-75].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A canvas with several scenes needs one place to switch between them, and the open scene is this viewer's choice, not the drawing's.
+```
+
+```mdl
+decision D-85: The 3D Properties form edits an element's layer with 2D's layer field, and Make object and Import mesh sit in the shared Objects inspector's toolbar rather than the actions bar; a layer lock waits until 2D has one, so both dimensions gain it together. Fills in [D-75].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: Each of these is the same control in both dimensions; locking layers only in 3D would break the parity rule.
+```

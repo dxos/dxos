@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation } from '@dxos/echo';
-import { STYLE_FIELD_OVERRIDES, STYLE_FIELDS, styleFields } from '@dxos/react-ui-canvas';
+import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS, styleFields } from '@dxos/react-ui-canvas';
 import { type FormFieldMap, type FormFieldOverride, StepAnnotation } from '@dxos/react-ui-form';
 import { type LayoutIntent, Scene } from '@dxos/scene';
 
@@ -28,6 +28,7 @@ type FormVec3 = Schema.Schema.Type<typeof FormVec3>;
 /** The fields a person edits in the 3D Properties form; bindings and parts are the tools' and the Library's. */
 export const ElementForm = Schema.Struct({
   label: Scene.Element3D.fields.label,
+  layer: Scene.Element3D.fields.layer,
   style: Schema.optional(Schema.Struct({ ...Scene.Style.fields, opacity: styleFields.opacity })),
   center: Schema.optional(formVec3(1)),
   rotation: Schema.optional(formVec3(15)),
@@ -35,8 +36,8 @@ export const ElementForm = Schema.Struct({
 });
 export type ElementForm = Schema.Schema.Type<typeof ElementForm>;
 
-/** The 2D canvas's style fields: its colour grid at `style.hue`, which sets the tone too. */
-export const ELEMENT_FORM_FIELDS: FormFieldMap = STYLE_FIELDS;
+/** The 2D canvas's style fields (its colour grid at `style.hue`, which sets the tone too) and its layer field. */
+export const ELEMENT_FORM_FIELDS: FormFieldMap = { ...STYLE_FIELDS, layer: LayerField };
 
 /** How those fields present, as in 2D. */
 export const ELEMENT_FORM_OVERRIDES: Record<string, FormFieldOverride> = STYLE_FIELD_OVERRIDES;
@@ -59,6 +60,7 @@ const complete = (value: FormVec3 | undefined, fallback: Vec3): Vec3 => ({
 /** The form's values for an element: an unset transform shows as the identity rather than as empty, required axes. */
 export const elementFormValues = (element: Scene.Element3D): ElementForm => ({
   label: element.label,
+  layer: element.layer,
   style: element.style,
   center: element.center ?? IDENTITY.center,
   rotation: element.rotation ?? IDENTITY.rotation,
@@ -67,7 +69,7 @@ export const elementFormValues = (element: Scene.Element3D): ElementForm => ({
 
 /** The updates a save makes: only fields that changed, and a vector always whole, so the stored element stays valid. */
 export const elementFormIntents = (element: Scene.Element3D, values: ElementForm): LayoutIntent[] => [
-  ...(['label', 'style'] as const).flatMap((field): LayoutIntent[] =>
+  ...(['label', 'layer', 'style'] as const).flatMap((field): LayoutIntent[] =>
     JSON.stringify(values[field]) === JSON.stringify(element[field])
       ? []
       : [{ kind: 'update', id: element.id, path: [field], value: values[field] }],

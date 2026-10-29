@@ -31,6 +31,7 @@ import {
   type Node,
   type Overlay,
   type Projection,
+  type SceneChoice,
   type SceneDisplay,
   type ViewId,
   type ViewStore,
@@ -79,6 +80,7 @@ import { sessionStacks } from './canvas-history.ts';
 import { CanvasClipboardText } from './CanvasClipboardText.tsx';
 import { display2D, sceneChrome } from './scene-chrome.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
+import { useSceneChoice } from './use-scene-choice.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 /** What a drawing surface passes a scene view, beside the canvas it shows. */
@@ -100,7 +102,8 @@ const NewerFormatBanner = () => {
 /** A 2D `Canvas`: its open scene's layouts, its settings, and the mode its settings name. */
 export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: CanvasFormat.Canvas }) => {
   const registry = useRegistry();
-  const bound = useBoundLayoutStore(canvas);
+  const { key: sceneKey, choice: sceneChoice } = useSceneChoice(canvas);
+  const bound = useBoundLayoutStore(canvas, sceneKey);
   useReconciledMigrations(props.drawing, canvas, props.role === AppSurface.Article.role);
   const [snapshot] = useObject(canvas);
   const settings = snapshot.settings;
@@ -115,7 +118,7 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
     [canvas],
   );
   const mode = CanvasFormat.projectionOf(settings);
-  const layout = bound ? openScene(canvas)?.layout.target : undefined;
+  const layout = bound ? openScene(canvas, sceneKey)?.layout.target : undefined;
   // The projection's own model lives in the layout, so it persists with the arrangement; its atoms follow the layout
   // until the mode or layout changes, then let it go.
   const models = useMemo(() => {
@@ -177,6 +180,7 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
       onSettingsChange={handleSettingsChange}
       createProjection={createProjection}
       newer={false}
+      sceneChoice={sceneChoice}
     />
   );
 };
@@ -190,6 +194,8 @@ export type CanvasEngineViewProps = SceneSurfaceProps & {
   createProjection: CreateProjection | undefined;
   /** A legacy canvas a newer plugin saved: read-only here. */
   newer: boolean;
+  /** The canvas's scenes, for the Views inspector; a legacy canvas has none. */
+  sceneChoice?: SceneChoice;
 };
 
 /** How the engine makes a canvas's projection over its store. */
@@ -209,6 +215,7 @@ export const CanvasEngineView = ({
   onSettingsChange,
   createProjection,
   newer,
+  sceneChoice,
 }: CanvasEngineViewProps) => {
   const settings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
   // A frame showing an object (not a canvas drawing) opens it in the app; the frame's view shows the frame's own
@@ -415,7 +422,7 @@ export const CanvasEngineView = ({
                     onGroupsChange={handleGroupsChange}
                     sceneFilter={isLocalScene}
                   />
-                  <Canvas.Views />
+                  <Canvas.Views sceneChoice={sceneChoice} />
                   <Canvas.Layers />
                   <Canvas.Objects />
                 </>

@@ -48,6 +48,7 @@ import {
   PropertiesInspector,
   type PropertiesInspectorProps,
   ViewsInspector,
+  type ViewsInspectorProps,
 } from '../inspectors/index.ts';
 import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
 import { SceneLayer } from '../SceneLayer/index.ts';
@@ -228,7 +229,7 @@ export const OBJECTS_INSPECTOR: InspectorSectionDef = {
  * The hierarchy under the root (VIEWS.md §4): rows select on the canvas, opening their View first; a View row opens it;
  * a drag restacks a row among its siblings in the open View, as one intent.
  */
-export const CanvasViews = () => {
+export const CanvasViews = ({ sceneChoice }: Pick<ViewsInspectorProps, 'sceneChoice'> = {}) => {
   const { store, root, readonly, capabilities, intents } = useCanvasDocument('Canvas.Views');
   const navigation = useCanvasNavigation('Canvas.Views');
   const selection = useAtomValue(useCanvasSelection('Canvas.Views').atoms.selection);
@@ -239,6 +240,8 @@ export const CanvasViews = () => {
   return (
     <InspectorSection section={VIEWS_INSPECTOR}>
       <ViewsInspector
+        sceneChoice={sceneChoice}
+        readonly={readonly}
         scenes={scenes}
         root={root}
         place={isolation ? { path, isolate: isolation.composite } : { path }}
