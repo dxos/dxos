@@ -25,6 +25,9 @@
       "path": "../invariant"
     },
     {
+      "path": "../scene"
+    },
+    {
       "path": "../util"
     }
   ]

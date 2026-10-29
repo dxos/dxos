@@ -195,6 +195,7 @@
       "@dxos/rpc",
       "@dxos/rpc-tunnel",
       "@dxos/rpc-tunnel-e2e",
+      "@dxos/scene",
       "@dxos/schema",
       "@dxos/shell",
       "@dxos/solid-ui",

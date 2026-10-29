@@ -52,11 +52,11 @@ export type ParseResult = {
 
 const ESCAPES: Record<string, string> = { n: '\n', t: '\t', r: '\r' };
 
-const unquote = (raw: string): string =>
+export const unquote = (raw: string): string =>
   raw.slice(1, -1).replace(/\\(.)/g, (_match, character: string) => ESCAPES[character] ?? character);
 
 /** Spreads a field only when it is set, so an absent option never becomes an explicit `undefined`. */
-const optional = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } => {
+export const optional = <K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } => {
   const result: { [P in K]?: V } = {};
   if (value !== undefined) {
     result[key] = value;
@@ -79,7 +79,7 @@ const kindOf = (shapeName: string, keyword: string | undefined): ElementKind | u
   return ELEMENT_KINDS.find((kind) => kind === word);
 };
 
-const childrenOf = (node: SyntaxNode): SyntaxNode[] => {
+export const childrenOf = (node: SyntaxNode): SyntaxNode[] => {
   const children: SyntaxNode[] = [];
   for (let child = node.firstChild; child; child = child.nextSibling) {
     children.push(child);

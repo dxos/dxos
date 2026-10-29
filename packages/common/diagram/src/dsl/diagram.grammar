@@ -30,8 +30,25 @@ statement {
   NodeDecl |
   EdgeDecl |
   NoteDecl |
-  FragmentDecl
+  FragmentDecl |
+  SceneDecl
 }
+
+//
+// Scene-model statements (`@dxos/scene`): one block per scene, its camera, and one line per element.
+// The words are contextual, so documents that already use `scene`, `camera` or `element` as ids keep parsing.
+//
+
+// scene <id> [dim=2d|3d] [theme=…] [name="…"] [component=true] { camera … element … }
+SceneDecl { ckw<"scene"> Id Attribute* SceneBody }
+SceneBody { "{" (CameraStmt | ElementStmt)* "}" }
+
+// camera center=x,y zoom=… (2D) | camera target=x,y,z yaw=… pitch=… distance=… fov=… projection=… (3D)
+CameraStmt { ckw<"camera"> Attribute* }
+
+// element <id> <kind> ["label"] [@ x,y | @ x,y,z] [name=value]*
+ElementStmt { ckw<"element"> Id Word Label? Position? Attribute* }
+Position { "@" (Point3 | Point) }
 
 // object <id> [@ x,y] [scale=…] [index=…] [ref=…] { … }
 ObjectDecl { kw<"object"> Id ObjectAttr* Body }
@@ -145,7 +162,7 @@ Ref { name | String }
 // the only case that wanted one.
 Attribute { AttrName "=" AttrValue }
 AttrName  { name }
-AttrValue { Number | Size | Ratio | String | Word }
+AttrValue { Number | Size | Size3 | Ratio | String | Word | Point3 | Point | Dimension }
 // `aspect=4:3`.
 Ratio { Number ":" Number }
 
@@ -164,10 +181,13 @@ Word {
 Id    { name | String }
 Label { String }
 Point { Number "," Number }
+Point3 { Number "," Number "," Number }
 Range { Number ".." Number }
 
 Number { number }
 Size   { size }
+Size3  { size3 }
+Dimension { dimension }
 
 // Keyword specialization: the statement and element-kind words drive the structure, so they
 // must not lex as ids. An id that collides is written quoted (the printer does it).
@@ -195,6 +215,10 @@ ckw<term> { @extend[@name={term}]<name, term> }
   number { decimal }
   // `100x50`, longer than the `100` a bare number would match, so the tokenizer prefers it.
   size { decimal "x" decimal }
+  // `2x1x0.5`, a 3D scale.
+  size3 { decimal "x" decimal "x" decimal }
+  // `dim=2d`; a name cannot start with a digit, and longest match prefers this to the number `2`.
+  dimension { $[23] "d" }
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
@@ -204,7 +228,7 @@ ckw<term> { @extend[@name={term}]<name, term> }
 
   "@" "->" "<->" "--" ".." "{" "}" "=" "," ":" "|" "~" "(" ")"
 
-  @precedence { size, number }
+  @precedence { size3, size, dimension, number }
   @precedence { name, Comment }
 }
 

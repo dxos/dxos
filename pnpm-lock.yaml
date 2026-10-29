@@ -3553,6 +3553,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../scene
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
