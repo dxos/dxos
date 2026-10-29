@@ -13,7 +13,8 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type Chapter } from './types.ts';
 import { type Playback, RATES, formatClock } from './usePlayback.ts';
 
-export type Download = { label: string; href: string; icon: string };
+/** `external` links out to the hosted copy, where a `download` attribute would be inert (an Artifact). */
+export type Download = { label: string; href: string; icon: string; external?: boolean };
 
 export type TransportProps = {
   playback: Playback;
@@ -98,7 +99,7 @@ export const Transport = ({ playback, chapters, downloads, onFullscreen }: Trans
           key={download.href}
           href={download.href}
           rel='noopener'
-          download
+          download={download.external ? undefined : ''}
           classNames='inline-flex items-center gap-1 whitespace-nowrap'
         >
           <Icon.Icon icon={download.icon} />

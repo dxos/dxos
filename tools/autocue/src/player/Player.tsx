@@ -116,10 +116,20 @@ export const Player = ({ manifest, initialDemo, onDemoChange, initialView, onVie
     const links: Download[] = [];
     const video = demo?.videos[0];
     if (video) {
-      links.push({ label: 'Video', href: resolve(manifest, video.src), icon: 'ph--download-simple--regular' });
+      links.push({
+        label: 'Video',
+        href: resolve(manifest, video.src),
+        icon: 'ph--download-simple--regular',
+        external: !!manifest.hosted,
+      });
     }
     if (manifest.archive) {
-      links.push({ label: 'Bundle', href: resolve(manifest, manifest.archive), icon: 'ph--file-zip--regular' });
+      links.push({
+        label: 'Bundle',
+        href: resolve(manifest, manifest.archive),
+        icon: 'ph--file-zip--regular',
+        external: !!manifest.hosted,
+      });
     }
     return links;
   }, [manifest, demo]);
