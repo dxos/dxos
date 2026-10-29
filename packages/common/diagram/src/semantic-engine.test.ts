@@ -732,6 +732,54 @@ describe('semantic engine', { timeout: 120_000 }, () => {
       expect(labelsOf(objects, 'feeds')).toHaveLength(1);
     });
 
+    test('a root trunk into the same targets as another mirrors it from the far side', ({ expect }) => {
+      const { objects, problems } = sceneOf(`
+        diagram flow=down
+        node Drawing
+        node Canvas
+        node S2
+        node S3
+        node Shot
+        edge Drawing -> Canvas
+        edge Canvas -> S2 "content"
+        edge Canvas -> S3 "content"
+        edge Shot -> S2 "stage"
+        edge Shot -> S3 "stage"
+      `);
+      expect(problems).toEqual([]);
+      const [canvas, s2, s3, shot] = ['Canvas', 'S2', 'S3', 'Shot'].map((id) => rectOf(objects, id));
+      expect(s3.y).toBe(s2.y);
+      expect(canvas.y + canvas.h).toBeLessThan(s2.y);
+      expect(shot.y).toBeGreaterThan(s2.y + s2.h);
+      expect(trunksOf(objects)).toHaveLength(2);
+      expect(analyze(objects).metrics.crossings).toBe(0);
+    });
+
+    test('a spoke with edges of its own sits at the end of its trunk, the others together', ({ expect }) => {
+      const { objects } = sceneOf(`
+        diagram flow=down
+        node Drawing
+        node TL
+        node EX
+        node Canvas
+        node S2
+        node S3
+        node Shot
+        edge Drawing -> TL "content"
+        edge Drawing -> EX "content"
+        edge Drawing -> Canvas "content"
+        edge Canvas -> S2 "content"
+        edge Canvas -> S3 "content"
+        edge Shot -> S2 "stage"
+        edge Shot -> S3 "stage"
+      `);
+      const [tl, canvas, ex] = ['TL', 'Canvas', 'EX'].map((id) => rectOf(objects, id));
+      expect(canvas.y).toBe(tl.y);
+      expect(ex.y).toBe(tl.y);
+      const order = [tl, canvas, ex].sort((left, right) => left.x - right.x);
+      expect([order[0], order.at(-1)]).toContain(canvas);
+    });
+
     test('compile keeps the shared trunk when nothing was hinted', async ({ expect }) => {
       const { commands } = await EffectEx.runPromise(
         compile(`

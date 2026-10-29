@@ -37,6 +37,9 @@ export type PlaceEdge = {
   spoke?: boolean;
 };
 
+/** The spokes of one trunk; `branching` are those with edges of their own, which belong at an end of the set. */
+export type PlaceFamily = { members: readonly string[]; branching: readonly string[] };
+
 /** How a group may be shaped: at most `maxWidth` columns, and near-square when `compact`. */
 export type GroupShape = { maxWidth?: number; compact?: boolean };
 
@@ -53,6 +56,8 @@ export type PlaceInput = {
   /** Group relations; `from` and `target` are group ids. */
   groupRelations: readonly PlaceRelation[];
   edges: readonly PlaceEdge[];
+  /** The spokes of each trunk, which read as one set when they sit side by side. */
+  families?: readonly PlaceFamily[];
   flow: Semantic.Flow;
   /** Box half-extent as a fraction of the cell pitch, for the edge-through-box test. */
   box?: { x: number; y: number };
@@ -88,6 +93,8 @@ const WEIGHT = {
   aspect: 12,
   extent: 1.5,
   slack: 3,
+  /** Per cell a trunk's spokes spread beyond their own, and per spoke with edges of its own between two others. */
+  family: 8,
   infeasible: 100_000,
 };
 
@@ -113,6 +120,7 @@ type Index = {
     ends: Uint8Array;
   }[];
   relations: { from: number; kind: Semantic.RelationKind; target: number; soft: boolean; weight?: number }[];
+  families: { members: number[]; branching: number[] }[];
   groupRelations: { from: number; kind: Semantic.RelationKind; target: number; soft: boolean }[];
   /** Neighbour lists without duplicates, for the hub and chain terms. */
   neighbours: number[][];
@@ -182,6 +190,10 @@ const indexOf = (input: PlaceInput): Index => {
         : [{ from, kind: relation.kind, target, soft: relation.soft, weight: relation.weight }];
     });
   const relations = resolve(input.relations, byId);
+  const families = (input.families ?? []).map((family) => ({
+    members: family.members.flatMap((id) => byId.get(id) ?? []),
+    branching: family.branching.flatMap((id) => byId.get(id) ?? []),
+  }));
   const followers = Array.from({ length: count }, (_, node) => {
     const seen = new Set([node]);
     const queue = [node];
@@ -207,6 +219,7 @@ const indexOf = (input: PlaceInput): Index => {
     members,
     edges,
     relations,
+    families,
     groupRelations: resolve(input.groupRelations, groupIndex),
     neighbours: neighbours.map((set) => [...set]),
     inDegree,
@@ -775,6 +788,29 @@ const score = (index: Index, state: State, occupied: Map<number, number>, strict
             : 0);
     } else {
       total += relation.soft ? (relation.weight ?? WEIGHT.soft) : hard;
+    }
+  }
+
+  // Families: a trunk's spokes in one line across the flow, side by side, the branching ones at an end.
+  const across = index.flow === 'down' || index.flow === 'up' ? col : row;
+  const rank = index.flow === 'down' || index.flow === 'up' ? row : col;
+  for (const family of index.families) {
+    const placed = family.members.filter((member) => !Number.isNaN(across[member]));
+    if (placed.length < 2) {
+      continue;
+    }
+    // A set split across rows is no set at all, so it costs as much as the widest spread.
+    if (placed.some((member) => rank[member] !== rank[placed[0]])) {
+      total += WEIGHT.family * placed.length;
+      continue;
+    }
+    const low = Math.min(...placed.map((member) => across[member]));
+    const high = Math.max(...placed.map((member) => across[member]));
+    total += WEIGHT.family * (high - low + 1 - placed.length);
+    for (const member of family.branching) {
+      if (across[member] > low && across[member] < high) {
+        total += WEIGHT.family;
+      }
     }
   }
 

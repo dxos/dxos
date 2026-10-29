@@ -309,6 +309,10 @@ feat F-5: Shared trunks
   req F-5.5: A trunk the router cannot draw falls back to separate edges, with a warning on the first edge.
 
   req F-5.6: A trunk's hub is placed upstream of its spokes along the flow, and the trunk leaves the hub on the side that faces them; a spoke enters from the facing side unless that costs a detour. A side the author pinned overrides both.
+
+  req F-5.7: A trunk's spokes sit side by side as peers; a spoke with edges of its own sits at an end of the set, so the others stay together.
+
+  req F-5.8: When two trunks feed the same spokes, one whose hub nothing else feeds is placed on the far side of the spokes, mirroring the other, so each trunk has its own gutter.
 ```
 
 ## The `draw` call
@@ -559,4 +563,38 @@ decision D-18: The placer charges a spoke no bend for its junction and a backwar
   why: Edges are placed one at a time, so without the discount every fan prices its outer spokes' bends and the hub drifts level with them; a trunk only drops straight when the hub's own centre is a junction candidate.
   rejected:
     - Hard spoke sides: two trunks into the same targets then compete for one gutter and the second loops around the outside.
+```
+
+```mdl
+decision D-19: A trunk's spokes are peers placed together under it with no detour into any of them, and similar spokes sit next to each other with an unlike one (Canvas, beside TLDraw and Excalidraw) at the end.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.7]
+```
+
+```mdl
+decision D-20: A second trunk into the same targets mirrors the first from the other side: Canvas above Scene2D and Scene3D, Shot below them.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.8]
+```
+
+```mdl
+decision D-21: Similarity is read from structure: a spoke with edges beyond its trunk is unlike the others. The placer charges each extra cell a trunk's spokes spread over, each such spoke between two others, and a set split across rows as its widest spread. Fills in [D-19].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.7]
+  why: The engine has no notion of what nodes mean, but leaves versus nodes that lead on is visible in the graph and matched the example.
+  rejected:
+    - Skipping a set split across rows: the placer then escaped the cost by dropping the unlike spoke a row.
+```
+
+```mdl
+decision D-22: Only a trunk whose hub nothing else feeds is mirrored, at most one per set of spokes, by reading its edges against the flow during placement. Fills in [D-20].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.8]
+  why: A hub with its own inputs has to stay downstream of them; the far side has one gutter, so a third trunk keeps the usual side.
 ```
