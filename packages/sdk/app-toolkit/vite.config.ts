@@ -27,6 +27,7 @@ export default defineConfig({
     'app-graph/AppNode': 'src/app-graph/AppNode.ts',
     'app-graph/AppNodeMatcher': 'src/app-graph/AppNodeMatcher.ts',
     'app-graph/TypeSection': 'src/app-graph/TypeSection.ts',
+    'app/AppPush': 'src/app/AppPush.ts',
     'app/AppUpdate': 'src/app/AppUpdate.ts',
     'app/GraphPath': 'src/app/GraphPath.ts',
     'app/NativeOAuth': 'src/app/NativeOAuth.ts',

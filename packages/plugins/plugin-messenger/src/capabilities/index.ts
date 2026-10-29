@@ -5,6 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -41,8 +42,20 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 
+// Headless: a device that opted in re-registers on every start, whether or not settings are ever opened.
+export const PushNotifications = Capability.lazyModule(
+  'PushNotifications',
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [AppCapabilities.PushNotifications],
+    activatesOn: ClientEvents.SpacesAvailable,
+    environments: ['browser'],
+  },
+  () => import('./push-notifications.ts'),
+);
+
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.deckCompanion.messenger'],
+  roles: ['org.dxos.role.deckCompanion.messenger', 'org.dxos.role.article'],
 });
 
 export const Schema = AppCapability.schema(() => import('./schema.ts'));

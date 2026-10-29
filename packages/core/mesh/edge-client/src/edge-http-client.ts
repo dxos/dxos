@@ -42,11 +42,14 @@ import {
   type JoinSpaceResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
+  type PushSubscribeRequest,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
   type SerializedError,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
+  type VapidPublicKeyResponse,
+  VapidPublicKeyResponseSchema,
 } from '@dxos/protocols';
 import {
   type QueryRequest as QueryRequestProto,
@@ -490,6 +493,46 @@ export class EdgeHttpClient extends BaseHttpClient {
       ...args,
       body: { ids },
       method: 'POST',
+      auth: true,
+    });
+  }
+
+  //
+  // Push (browser push subscriptions for inbox notices)
+  //
+
+  /**
+   * The `applicationServerKey` to subscribe with; fails with a 404 when EDGE has no push configured.
+   */
+  public async getVapidPublicKey(ctx: Context, args?: EdgeHttpCallArgs): Promise<VapidPublicKeyResponse> {
+    const response = await this._call(ctx, new URL('/push/vapid-public-key', this.baseUrl), { ...args, method: 'GET' });
+    return Schema.decodeUnknownSync(VapidPublicKeyResponseSchema)(response);
+  }
+
+  /**
+   * Registers (or refreshes) this device's push subscription, so notices put into the identity's inbox are pushed to it.
+   */
+  public async putPushSubscription(
+    ctx: Context,
+    subscription: PushSubscribeRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<void> {
+    await this._call(ctx, new URL('/push/subscriptions', this.baseUrl), {
+      ...args,
+      body: subscription,
+      method: 'PUT',
+      auth: true,
+    });
+  }
+
+  /**
+   * Forgets a push subscription of this identity.
+   */
+  public async deletePushSubscription(ctx: Context, endpoint: string, args?: EdgeHttpCallArgs): Promise<void> {
+    await this._call(ctx, new URL('/push/subscriptions', this.baseUrl), {
+      ...args,
+      body: { endpoint },
+      method: 'DELETE',
       auth: true,
     });
   }

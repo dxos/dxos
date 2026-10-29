@@ -58,6 +58,8 @@ export type PluginConfig = State & {
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
+  /** URL of the push-only service worker (`push/push-worker.ts`). */
+  pushWorker?: string;
   isTauri?: boolean;
   isStrict?: boolean;
   isPopover?: boolean;
@@ -91,6 +93,7 @@ export const getCorePlugins = ({
   externalPlugins = true,
   isLocal,
   isPwa,
+  pushWorker,
   isTauri,
   isPopover,
   isMobile,
@@ -144,7 +147,8 @@ export const getCorePlugins = ({
     PreviewPlugin.make(),
     ProcessManagerPlugin.make(),
     ProgressPlugin.make(),
-    !isTauri && isPwa && PwaPlugin.make(),
+    // Loaded without the offline worker too, since push has its own.
+    !isTauri && PwaPlugin.make({ offline: isPwa, pushWorker }),
     RegistryPlugin.make({ externalPlugins }),
     RoutinePlugin.make(),
     SearchPlugin.make(),

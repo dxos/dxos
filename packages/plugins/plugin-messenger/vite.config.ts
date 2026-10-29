@@ -19,6 +19,7 @@ export default defineConfig({
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
+    push: 'src/push/index.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
   },

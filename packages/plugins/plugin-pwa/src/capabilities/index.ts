@@ -22,7 +22,10 @@ import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { type PwaOptions } from '#types';
 
+import { makePushProvider } from './push-provider.ts';
+import { registerPushWorker } from './push-worker.ts';
 import { makeUpdateManager, progressStatus } from './update-manager.ts';
 
 // Every 15 minutes rather than hourly. A check is one conditional request for the worker script, and
@@ -49,14 +52,19 @@ const isPrecacheProgress = (data: unknown): data is PrecacheProgress =>
 
 export const RegisterPwa = Capability.inlineModule(
   'RegisterPwa',
-  { requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry], provides: [AppCapabilities.UpdateManager] },
-  Effect.fnUntraced(function* () {
+  {
+    requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry],
+    provides: [AppCapabilities.UpdateManager],
+    props: (options: PwaOptions.PwaPluginOptions) => options.offline ?? true,
+  },
+  Effect.fnUntraced(function* (offline: boolean) {
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const atomRegistry = yield* Capabilities.AtomRegistry;
 
     // No service workers at all on an insecure origin and in some embedded webviews. Under the vite dev
-    // server the plugin still loads, but `virtual:pwa-register` is a stub that never registers.
-    const supported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
+    // server the plugin still loads, but `virtual:pwa-register` is a stub that never registers. Without
+    // `offline` the build ships a self-destroying worker, which registering would only reload the page for.
+    const supported = offline && typeof navigator !== 'undefined' && 'serviceWorker' in navigator;
     const dev = import.meta.env.DEV;
     const statusAtom = Atom.make<AppUpdate.Status>(
       !supported ? { kind: 'unsupported' } : dev ? { kind: 'dev' } : { kind: 'idle' },
@@ -69,41 +77,46 @@ export const RegisterPwa = Capability.inlineModule(
       resolveRegistration = resolve;
     });
 
-    const updateSW = registerSW({
-      onRegisteredSW: (_swUrl, swRegistration) => {
-        registration = swRegistration;
-        resolveRegistration(swRegistration);
-      },
-      onNeedRefresh: () => {
-        // The worker is installed and waiting, so the download is already done — this is `ready`, not
-        // `available`. See AppUpdate.Manager on why the web has no `install` step.
-        setStatus({ kind: 'ready' });
-        void invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.need-refresh`,
-          title: ['need-refresh.label', { ns: meta.profile.key }],
-          description: ['need-refresh.description', { ns: meta.profile.key }],
-          // Persists until acted on. It used to expire after 4 minutes, which left a user who missed
-          // it with no way back to the update; the settings row is that way back now, and a toast
-          // that outlives the glance costs nothing next to a client running a stale build for days.
-          duration: Infinity,
-          actionLabel: ['refresh.label', { ns: meta.profile.key }],
-          actionAlt: ['refresh.alt', { ns: meta.profile.key }],
-          onAction: () => updateSW(true),
-        });
-      },
-      onOfflineReady: () => {
-        void invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.offline-ready`,
-          title: ['offline-ready.label', { ns: meta.profile.key }],
-          closeLabel: ['confirm.label', { ns: meta.profile.key }],
-        });
-      },
-      onRegisterError: (err) => {
-        log.error(err);
-        setStatus({ kind: 'failed', error: err instanceof Error ? err.message : String(err) });
-        resolveRegistration(undefined);
-      },
-    });
+    const updateSW = supported
+      ? registerSW({
+          onRegisteredSW: (_swUrl, swRegistration) => {
+            registration = swRegistration;
+            resolveRegistration(swRegistration);
+          },
+          onNeedRefresh: () => {
+            // The worker is installed and waiting, so the download is already done — this is `ready`, not
+            // `available`. See AppUpdate.Manager on why the web has no `install` step.
+            setStatus({ kind: 'ready' });
+            void invokePromise(LayoutOperation.AddToast, {
+              id: `${meta.profile.key}.need-refresh`,
+              title: ['need-refresh.label', { ns: meta.profile.key }],
+              description: ['need-refresh.description', { ns: meta.profile.key }],
+              // Persists until acted on. It used to expire after 4 minutes, which left a user who missed
+              // it with no way back to the update; the settings row is that way back now, and a toast
+              // that outlives the glance costs nothing next to a client running a stale build for days.
+              duration: Infinity,
+              actionLabel: ['refresh.label', { ns: meta.profile.key }],
+              actionAlt: ['refresh.alt', { ns: meta.profile.key }],
+              onAction: () => void updateSW?.(true),
+            });
+          },
+          onOfflineReady: () => {
+            void invokePromise(LayoutOperation.AddToast, {
+              id: `${meta.profile.key}.offline-ready`,
+              title: ['offline-ready.label', { ns: meta.profile.key }],
+              closeLabel: ['confirm.label', { ns: meta.profile.key }],
+            });
+          },
+          onRegisterError: (err) => {
+            log.error(err);
+            setStatus({ kind: 'failed', error: err instanceof Error ? err.message : String(err) });
+            resolveRegistration(undefined);
+          },
+        })
+      : undefined;
+    if (!supported) {
+      resolveRegistration(undefined);
+    }
 
     // Precache progress doubles as the download meter for an update in flight. Read here as well as in
     // `UpdateProgress` because the two surfaces are independent: the progress registry is optional, and
@@ -127,7 +140,7 @@ export const RegisterPwa = Capability.inlineModule(
       dev,
       registration: whenRegistered,
       container: navigator.serviceWorker,
-      skipWaiting: () => updateSW(true),
+      skipWaiting: async () => updateSW?.(true),
       reload: () => window.location.reload(),
     });
 
@@ -148,8 +161,40 @@ export const RegisterPwa = Capability.inlineModule(
 
     yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
 
-    return Capability.contribute(AppCapabilities.UpdateManager, manager);
+    return [Capability.contribute(AppCapabilities.UpdateManager, manager)];
   }),
+);
+
+/**
+ * Push rides its own service worker, registered apart from the offline one: it activates at once instead of after the
+ * whole build is precached, and it works in builds that ship no offline worker at all.
+ */
+export const RegisterPush = Capability.inlineModule(
+  'RegisterPush',
+  {
+    provides: [AppCapabilities.PushProvider],
+    props: (options: PwaOptions.PwaPluginOptions) => options.pushWorker,
+  },
+  (pushWorker: string | undefined) =>
+    Effect.sync(() => {
+      const supported =
+        pushWorker !== undefined &&
+        typeof navigator !== 'undefined' &&
+        'serviceWorker' in navigator &&
+        'PushManager' in window &&
+        'Notification' in window;
+      const registration = supported
+        ? registerPushWorker(navigator.serviceWorker, pushWorker)
+        : Promise.resolve(undefined);
+      const provider = makePushProvider({
+        supported,
+        messages: supported ? navigator.serviceWorker : undefined,
+        pushManager: registration.then((registered) => registered?.pushManager),
+        permission: () => (supported ? Notification.permission : 'denied'),
+        requestPermission: () => Notification.requestPermission(),
+      });
+      return [Capability.contribute(AppCapabilities.PushProvider, provider)];
+    }),
 );
 
 // Separate from `RegisterPwa` so that an app without the progress registry still registers the

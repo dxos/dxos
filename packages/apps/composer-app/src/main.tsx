@@ -43,6 +43,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, markMilestone, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
+import pushWorker from './push/push-worker.ts?worker&url';
 import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
 import {
   APP_KEY,
@@ -673,6 +674,7 @@ const main = async () => {
     isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
     isPwa,
+    pushWorker,
     isTauri,
     isPopover,
     isMobile,

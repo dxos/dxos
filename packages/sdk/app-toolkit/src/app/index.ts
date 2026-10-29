@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * as AppPush from './AppPush.ts';
 export * as AppUpdate from './AppUpdate.ts';
 export * as NativeOAuth from './NativeOAuth.ts';
 export * as NativePasskey from './NativePasskey.ts';
