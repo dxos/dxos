@@ -306,6 +306,9 @@ const geometry = (
 
 const OPPOSITE: Record<Semantic.Side, Semantic.Side> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
 
+const mapEnd = (end: Route.End | undefined, map: (end: Route.End) => Route.End): Route.End | undefined =>
+  end && map(end);
+
 /** The side of the hub every spoke lies wholly beyond, if there is one. */
 const facingSide = (hub: Rect | undefined, spokes: readonly (Rect | undefined)[]): Semantic.Side | undefined => {
   if (!hub) {
@@ -349,12 +352,17 @@ const draw = (
   const grouped = Semantic.buses(diagram);
   const facing = new Map(
     grouped.buses.flatMap((bus) => {
-      const side = bus.implicit
-        ? facingSide(
+      const spokeOf = (edge: Semantic.Edge) => (bus.direction === 'out' ? edge.to : edge.from);
+      // A side the author pinned is the router's to honour; otherwise the trunk leaves toward its spokes.
+      const pinned =
+        (bus.hub.sides !== undefined && !bus.hub.soft) ||
+        bus.edges.some((edge) => spokeOf(edge).sides !== undefined && !spokeOf(edge).soft);
+      const side = pinned
+        ? undefined
+        : facingSide(
             rects.get(bus.hub.node),
-            bus.edges.map((edge) => rects.get(edge.from.node)),
-          )
-        : undefined;
+            bus.edges.map((edge) => rects.get(spokeOf(edge).node)),
+          );
       return side ? [[bus, side] as const] : [];
     }),
   );
@@ -400,7 +408,12 @@ const draw = (
     const side = facing.get(bus);
     const hub = endOf(bus.hub, side && [side]);
     const spokes = bus.edges.flatMap((edge) => {
-      const end = endOf(bus.direction === 'out' ? edge.to : edge.from, side && [OPPOSITE[side]]);
+      const spoke = bus.direction === 'out' ? edge.to : edge.from;
+      // A subtype's triangle must meet the bus head-on; any other spoke may turn in from the side to avoid a detour.
+      const end =
+        side && !bus.implicit
+          ? mapEnd(endOf(spoke), (found) => ({ ...found, sides: Semantic.SIDES, preferred: [OPPOSITE[side]] }))
+          : endOf(spoke, side && [OPPOSITE[side]]);
       return end ? [{ id: edge.id, end }] : [];
     });
     const significance = Math.max(...bus.edges.map((edge) => Semantic.significance(edge.relation, edge.stroke)));
@@ -647,6 +660,11 @@ const prepare = (source: Semantic.Diagram): Prepared => {
   const pins = checkPins(source, pitch, issues);
   const diagram = checkRelations(source, pins, issues);
   const { relations, groupRelations } = relationsOf(diagram);
+  const spokes = new Set(
+    Semantic.buses(diagram)
+      .buses.filter((bus) => !bus.implicit)
+      .flatMap((bus) => bus.edges),
+  );
   const input: Place.PlaceInput = {
     nodes: diagram.nodes.map((node) => ({ id: node.id, group: node.group, pin: pins.get(node.id) })),
     groups: diagram.groups.map((group) => group.id),
@@ -657,6 +675,7 @@ const prepare = (source: Semantic.Diagram): Prepared => {
       from: edge.from.node,
       to: edge.to.node,
       upward: Semantic.pointsUp(edge.relation),
+      ...(spokes.has(edge) ? { spoke: true } : {}),
       // Preferred sides are the router's to weigh; the placement keeps every side open.
       sides: { start: edge.from.soft ? undefined : edge.from.sides, end: edge.to.soft ? undefined : edge.to.sides },
     })),

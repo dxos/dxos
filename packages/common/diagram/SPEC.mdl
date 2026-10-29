@@ -307,6 +307,8 @@ feat F-5: Shared trunks
   req F-5.4: A shared label is drawn once, on the trunk; unlabelled edges and edges with different labels are routed on their own.
 
   req F-5.5: A trunk the router cannot draw falls back to separate edges, with a warning on the first edge.
+
+  req F-5.6: A trunk's hub is placed upstream of its spokes along the flow, and the trunk leaves the hub on the side that faces them; a spoke enters from the facing side unless that costs a detour. A side the author pinned overrides both.
 ```
 
 ## The `draw` call
@@ -539,4 +541,22 @@ decision D-16: A diagram with a property or `bus` trunk keeps the mermaid engine
   for: user:richburdon
   affects: [F-5.2]
   why: The mermaid engine draws no trunks, so its layout winning would silently undo them.
+```
+
+```mdl
+decision D-17: The hub of a trunk sits above its spokes in a downward flow (upstream of them in any flow), and its trunk leaves toward them.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-18: The placer charges a spoke no bend for its junction and a backward-flow cost for lying level with its hub; the router tries the hub's centre lines as junctions, pins the trunk to the side facing every spoke, and makes the spokes' facing side a preference. Inheritance buses keep their hard sides. Fills in [D-17].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.6]
+  why: Edges are placed one at a time, so without the discount every fan prices its outer spokes' bends and the hub drifts level with them; a trunk only drops straight when the hub's own centre is a junction candidate.
+  rejected:
+    - Hard spoke sides: two trunks into the same targets then compete for one gutter and the second loops around the outside.
 ```

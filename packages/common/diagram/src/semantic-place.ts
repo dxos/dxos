@@ -33,6 +33,8 @@ export type PlaceEdge = {
   sides?: { start?: readonly Semantic.Side[]; end?: readonly Semantic.Side[] };
   /** The target is an abstraction that reads best against the flow, above its subtypes. */
   upward?: boolean;
+  /** One branch of a trunk: the bend at its junction is drawn anyway, and the trunk leaves its hub along the flow. */
+  spoke?: boolean;
 };
 
 /** How a group may be shaped: at most `maxWidth` columns, and near-square when `compact`. */
@@ -101,6 +103,7 @@ type Index = {
     from: number;
     to: number;
     upward?: boolean;
+    spoke?: boolean;
     /**
      * The best template per displacement, which depends only on the signs of dx and dy: its bends
      * and the indices into `ALL_SIDES` of its sides, indexed by `(sign dx + 1) * 3 + sign dy + 1`.
@@ -159,7 +162,7 @@ const indexOf = (input: PlaceInput): Index => {
     const to = byId.get(edge.to);
     return from === undefined || to === undefined || from === to
       ? []
-      : [{ from, to, upward: edge.upward, ...templatesOf(edge.sides?.start, edge.sides?.end) }];
+      : [{ from, to, upward: edge.upward, spoke: edge.spoke, ...templatesOf(edge.sides?.start, edge.sides?.end) }];
   });
   const neighbours: Set<number>[] = ids.map(() => new Set());
   const inDegree = new Int32Array(count);
@@ -609,10 +612,11 @@ const score = (index: Index, state: State, occupied: Map<number, number>, strict
     const blocked =
       (bends === 0 && blockedStraight(fromCol, fromRow, dx, dy, occupied)) ||
       (bends === 1 && blockedCorners(fromCol, fromRow, dx, dy, occupied));
-    total += WEIGHT.bend * (blocked ? 2 : bends) + WEIGHT.length * (Math.abs(dx) + Math.abs(dy));
+    const charged = edge.spoke ? Math.max(0, bends - 1) : bends;
+    total += WEIGHT.bend * (blocked ? 2 : charged) + WEIGHT.length * (Math.abs(dx) + Math.abs(dy));
     const along = index.flow === 'down' ? dy : index.flow === 'up' ? -dy : index.flow === 'right' ? dx : -dx;
     const forward = edge.upward ? -along : along;
-    total += forward < 0 ? WEIGHT.backward : forward === 0 ? WEIGHT.sideways : 0;
+    total += forward < 0 || (forward === 0 && edge.spoke) ? WEIGHT.backward : forward === 0 ? WEIGHT.sideways : 0;
     lineFrom[lines] = edge.from;
     lineTo[lines] = edge.to;
     lineBent[lines] = bends > 0 ? 1 : 0;

@@ -597,7 +597,12 @@ describe('semantic engine', { timeout: 120_000 }, () => {
       { x: 192, y: 384, w: 64, h: 64 },
       { x: 192, y: 192, w: 64, h: 64 },
     ];
-    // No channels, and every spoke-aligned junction lies inside a spoke, so the bus cannot form.
+    // Other boxes fill the hub's column and row.
+    const blockers = [
+      { x: 0, y: 160, w: 64, h: 320 },
+      { x: 192, y: 0, w: 64, h: 64 },
+    ];
+    // No channels, and every junction aligned with the hub or a spoke lies inside a box, so the bus cannot form.
     const pieces = Route.routeAll(
       [],
       [
@@ -611,7 +616,7 @@ describe('semantic engine', { timeout: 120_000 }, () => {
           direction: 'out',
         },
       ],
-      { obstacles: [hub, a, b], avoid: [], channels: { xs: [], ys: [] } },
+      { obstacles: [hub, a, b, ...blockers], avoid: [], channels: { xs: [], ys: [] } },
     );
     expect(pieces.map(({ id, bus }) => ({ id, bus }))).toEqual([
       { id: 'H-A', bus: undefined },
