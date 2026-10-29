@@ -37,6 +37,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -86,6 +89,9 @@
     },
     {
       "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-scene"
     },
     {
       "path": "../../ui/ui-theme"

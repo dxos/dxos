@@ -112,8 +112,9 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withAttention('story'),
     withPluginManager({ capabilities: [Capability.contribute(AnimatorCapabilities.Stage, dotsStage)] }),
+    // Outermost, so the plugin manager's registry (which holds the stages) is the one components read.
+    withAttention('story'),
   ],
   parameters: {
     layout: 'fullscreen',

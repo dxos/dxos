@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import React, { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { type Camera, Canvas } from '@dxos/react-ui-canvas';
+import { type Camera, Canvas, createCanvasAtoms } from '@dxos/react-ui-canvas';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Scene } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -40,12 +41,23 @@ export const Scene2DView = ({ renderer = 'dom', camera3d, theme3d, ...props }: S
   return lifted ? (
     <Scene3DView classNames={props.classNames} document={lifted} camera={camera3d} theme={theme3d} />
   ) : (
-    <CanvasView {...props} />
+    <CanvasView key={props.document.scenes[0]?.id} {...props} />
   );
 };
 
 const CanvasView = ({ classNames, document, theme, camera = 'fit' }: Scene2DViewProps) => {
-  const { store, root } = useMemo(() => toCanvasViews(document), [document]);
+  const registry = useContext(RegistryContext);
+  const rootId = document.scenes[0]?.id ?? '';
+  // One store and one set of canvas atoms per root; later documents (an animation's samples) are written into them,
+  // so the canvas updates in place rather than remounting each frame.
+  const [{ store, atoms }] = useState(() => ({
+    store: toCanvasViews(document).store,
+    atoms: createCanvasAtoms(rootId),
+  }));
+  useLayoutEffect(() => {
+    registry.set(store.views, Object.fromEntries(toCanvasViews(document).views.map((view) => [view.id, view])));
+  }, [registry, store, document]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<{ width: number; height: number }>();
   useLayoutEffect(() => {
@@ -60,25 +72,27 @@ const CanvasView = ({ classNames, document, theme, camera = 'fit' }: Scene2DView
     return () => observer.disconnect();
   }, []);
 
-  const scene = document.scenes[0];
   const fit = camera === 'fit';
-  const initialCamera = !fit && size ? centredCamera(camera, size) : undefined;
+  useLayoutEffect(() => {
+    if (camera !== 'fit' && size) {
+      registry.set(atoms.camera, centredCamera(camera, size));
+    }
+  }, [registry, atoms, camera, size]);
+
+  const scene = document.scenes[0];
   return (
     <div ref={containerRef} className={mx('relative dx-fill overflow-hidden', classNames)} data-testid='scene.2d'>
-      {(fit || initialCamera) && (
-        <Canvas.Root
-          // A new camera or document remounts the canvas, which only reads its initial camera once.
-          key={`${root}:${JSON.stringify(camera)}:${size?.width ?? 0}`}
-          store={store}
-          root={root}
-          readonly
-          theme={theme ?? scene?.theme}
-          initialCamera={initialCamera}
-          initialDisplay={{ snap: false, guides: false, fit }}
-        >
-          <Canvas.Viewport />
-        </Canvas.Root>
-      )}
+      <Canvas.Root
+        key={rootId}
+        store={store}
+        root={rootId}
+        atoms={atoms}
+        readonly
+        theme={theme ?? scene?.theme}
+        initialDisplay={{ snap: false, guides: false, fit }}
+      >
+        <Canvas.Viewport />
+      </Canvas.Root>
     </div>
   );
 };
