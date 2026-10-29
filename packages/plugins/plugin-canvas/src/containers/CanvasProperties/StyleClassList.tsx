@@ -47,10 +47,9 @@ export const StyleClassList = ({ classes, uses, readonly, onRename, onDelete }: 
                     onOpenChange={(open) => setOpenId(open ? styleClass.id : undefined)}
                     data-testid={`style-class-${styleClass.id}`}
                   >
-                    <div
-                      aria-hidden
-                      className={mx('size-4 shrink-0 self-center rounded-sm border', hue.surface, hue.border)}
-                    />
+                    <OrderedList.ItemIcon>
+                      <div aria-hidden className={mx('size-4 rounded-sm border', hue.surface, hue.border)} />
+                    </OrderedList.ItemIcon>
                     <OrderedList.ItemText />
                     <OrderedList.ItemDescription>{count === 1 ? '1 use' : `${count} uses`}</OrderedList.ItemDescription>
                     {!readonly && onDelete && <SystemButton.Remove onClick={() => onDelete(styleClass.id)} />}
