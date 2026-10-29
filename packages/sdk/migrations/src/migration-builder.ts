@@ -154,12 +154,22 @@ export class MigrationBuilder {
     }
     invariant(this._newRoot, 'New root not created');
 
-    this._newRoot.change((doc: DatabaseDirectory) => {
-      const propertiesStructure = doc.objects?.[this._space.properties.id];
+    const propertiesId = this._space.properties.id;
+    // Properties are linked like any other object; only spaces not yet migrated still inline them in the root.
+    const handle = this._newRoot.doc()?.objects?.[propertiesId]
+      ? this._newRoot
+      : await this._findObjectContainingHandle(propertiesId);
+    if (!handle) {
+      return;
+    }
+
+    handle.change((doc: DatabaseDirectory) => {
+      const propertiesStructure = doc.objects?.[propertiesId];
       propertiesStructure && changeFn(propertiesStructure);
     });
-    await this._newRoot.whenReady();
-    this._addHandleToFlushList(this._newRoot.documentId!);
+    await handle.whenReady();
+    invariant(handle.documentId, 'Properties document id not available after whenReady');
+    this._addHandleToFlushList(handle.documentId);
   }
 
   /**

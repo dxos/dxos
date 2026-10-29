@@ -634,7 +634,7 @@ const main = async () => {
   void client
     .initialize()
     // A boot-cached client initializes before its worker connects, and the worker is still to be taken then.
-    .then(() => client.waitUntilServicesOpen())
+    .then(() => client.waitUntilServicesReady())
     .catch((err) => log.error('client services failed to open', { error: err }))
     // A follower tab never takes the worker, which would otherwise hold its place on the storage lock.
     .finally(() => prespawnedWorker.dispose());
