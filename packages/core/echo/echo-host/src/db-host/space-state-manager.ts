@@ -22,9 +22,8 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type DocumentLease } from '../automerge/document-lease.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state/index.ts';
-import { DatabaseRoot } from './database-root.ts';
+import { DatabaseRoot, type DatabaseRootSource } from './database-root.ts';
 
 export type SpaceStateManagerProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
@@ -95,6 +94,16 @@ export class SpaceStateManager extends Resource {
     return this._roots.get(documentId);
   }
 
+  /** Whether the document is the directory of a space this host stores, opened this session or not. */
+  isSpaceRootDocument(documentId: DocumentId): boolean {
+    for (const rootId of this._rootBySpace.values()) {
+      if (rootId === documentId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   getSpaceRootDocumentId(spaceId: SpaceId): DocumentId | undefined {
     return this._rootBySpace.get(spaceId);
   }
@@ -110,7 +119,7 @@ export class SpaceStateManager extends Resource {
 
   isBranchDocument(documentId: DocumentId): boolean {
     for (const root of this._roots.values()) {
-      const doc = root.doc();
+      const doc = root.directory();
       if (!doc) {
         continue;
       }
@@ -194,17 +203,20 @@ export class SpaceStateManager extends Resource {
     return false;
   }
 
-  /** Takes ownership of `lease`: the root holds it until the space is removed or the manager closes. */
-  async assignRootToSpace(spaceId: SpaceId, lease: DocumentLease<DatabaseDirectory>): Promise<DatabaseRoot> {
+  /** Takes ownership of a lease in `source`: the root holds it until the space is removed or the manager closes. */
+  async assignRootToSpace(spaceId: SpaceId, source: DatabaseRootSource): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
-    const existing = this._roots.get(lease.documentId);
+    const documentId = 'lease' in source ? source.lease.documentId : source.documentId;
+    const existing = this._roots.get(documentId);
     if (existing) {
       root = existing;
-      // The root already holds a lease on this document, so the caller's is surplus.
-      lease[Symbol.dispose]();
+      // The root already holds this document, so the caller's lease is surplus.
+      if ('lease' in source) {
+        source.lease[Symbol.dispose]();
+      }
     } else {
-      root = new DatabaseRoot(lease);
-      this._roots.set(lease.documentId, root);
+      root = new DatabaseRoot(source);
+      this._roots.set(documentId, root);
     }
 
     if (this._rootBySpace.get(spaceId) === root.documentId && this._perSpaceContext.has(spaceId)) {
@@ -274,8 +286,7 @@ export class SpaceStateManager extends Resource {
     ctx.onDispose(() => this._documentListCheck.delete(spaceId));
 
     const triggerCheckOnChange = () => documentListCheckScheduler.trigger();
-    root.on('change', triggerCheckOnChange);
-    ctx.onDispose(() => root.off('change', triggerCheckOnChange));
+    ctx.onDispose(root.changed.on(triggerCheckOnChange));
 
     documentListCheckScheduler.trigger();
 

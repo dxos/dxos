@@ -215,7 +215,7 @@ describe('DocumentsSynchronizer', () => {
     expect((await update).passive).toEqual(expect.objectContaining({ json: undefined }));
   });
 
-  test('a passive update to a links-only directory carries only the links it changed', async () => {
+  test('a passive directory gets its JSON on the first send only', async () => {
     const { host, synchronizer, next } = await setupPassive();
     const root = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
@@ -223,39 +223,53 @@ describe('DocumentsSynchronizer', () => {
       links: {},
     });
     await host.flush(Context.default());
-    const shownAt = A.getHeads(root.doc());
-    await synchronizer.addDocuments([{ documentId: root.documentId, heads: shownAt, passive: true }]);
 
-    const objectId = EntityId.random();
-    const update = next();
+    let update = next();
+    await synchronizer.addDocuments([{ documentId: root.documentId, passive: true }]);
+    const first = await update;
+    expect(first.passive?.json).toBe(directoryJson(root.doc()));
+    expect(first.passive?.heads).toEqual(A.getHeads(root.doc()));
+
+    // A later change is the client's cue to load the directory, so it carries only the change.
+    update = next();
     root.change((doc) => {
       doc.links ??= {};
-      // A raw string, as the client writes links: a plain one is Automerge text and changes by splices.
-      doc.links[objectId] = new A.RawString('automerge:2');
+      doc.links[EntityId.random()] = new A.RawString('automerge:2');
     });
     await host.flush(Context.default());
-    const linked = await update;
-    expect(linked.passive?.directory).toBeUndefined();
-    expect(linked.passive?.directoryDelta?.base).toEqual(shownAt);
-    expect(deltaLinks(linked)).toEqual({ [objectId]: 'automerge:2' });
-    expect(linked.passive?.heads).toEqual(A.getHeads(root.doc()));
+    const changed = await update;
+    expect(changed.passive?.json).toBeUndefined();
+    expect(changed.mutation?.length).toBeGreaterThan(0);
+  });
 
-    const unlinked = next();
-    root.change((doc) => {
-      delete doc.links?.[objectId];
+  test('a passive directory with a current snapshot is first sent from storage, without loading it', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const root = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: SpaceId.random() },
+      links: {},
     });
     await host.flush(Context.default());
-    expect(deltaLinks(await unlinked)).toEqual({ [objectId]: null });
+    const heads = A.getHeads(root.doc());
+    const updates: DataService.DocumentUpdate[] = [];
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
+      readDirectorySnapshot: async () => ({ heads, json: '{"links":{}}' }),
+    });
+    await openAndClose(synchronizer);
+    const acquireDoc = vi.spyOn(host, 'acquireDoc');
 
-    // Anything beyond link entries resends the whole directory.
-    const branched = next();
-    root.change((doc) => {
-      doc.branches = {};
-    });
-    await host.flush(Context.default());
-    const full = await branched;
-    expect(full.passive?.directoryDelta).toBeUndefined();
-    expect(full.passive?.directory).toBe(directoryJson(root.doc()));
+    await synchronizer.addDocuments([{ documentId: root.documentId, passive: true }]);
+    await waitForCondition({ condition: () => updates.length > 0, timeout: 5_000 });
+    const [update] = updates;
+    expect(update.passive).toEqual({ heads, json: '{"links":{}}' });
+    invariant(update.mutation, 'update carries no stored changes');
+    expect(A.getHeads(A.loadIncremental(A.init<DatabaseDirectory>(), update.mutation))).toEqual(heads);
+    expect(acquireDoc).not.toHaveBeenCalled();
   });
 
   test('re-adding a document switches its mode', async () => {
@@ -467,13 +481,6 @@ describe('DocumentsSynchronizer', () => {
 });
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
-
-/** The link delta an update carries, which the caller expects it to. */
-const deltaLinks = (update: DataService.DocumentUpdate): unknown => {
-  const links = update.passive?.directoryDelta?.links;
-  invariant(links, 'update carries no link delta');
-  return JSON.parse(links);
-};
 
 const setupPassive = async () => {
   const { runtime, dispose } = createTestSqliteRuntime();

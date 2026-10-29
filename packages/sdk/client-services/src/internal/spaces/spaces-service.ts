@@ -530,6 +530,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     const databaseRoot = space.databaseRoot;
     assertState(databaseRoot, 'Space database root is not ready');
 
+    await databaseRoot.load();
     databaseRoot.change((doc: DatabaseDirectory) => {
       if (!doc.objects) {
         doc.objects = {};

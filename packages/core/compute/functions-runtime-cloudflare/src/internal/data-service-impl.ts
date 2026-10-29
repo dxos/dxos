@@ -198,13 +198,6 @@ export class DataServiceImpl implements DataService.Handlers {
     return Effect.void;
   }
 
-  /** An empty snapshot: the client loads the directory over its subscription instead. */
-  ['DataService.getDirectorySnapshot'](
-    _request: DataService.GetDirectorySnapshotRequest,
-  ): Effect.Effect<DataService.DirectorySnapshot, BaseError> {
-    return Effect.succeed({});
-  }
-
   ['DataService.subscribeSpaceSyncState'](
     _request: DataService.GetSpaceSyncStateRequest,
   ): EffectStream.Stream<DataService.SpaceSyncState, Error> {

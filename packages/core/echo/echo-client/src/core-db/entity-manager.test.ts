@@ -135,7 +135,7 @@ describe('DatabaseImpl', () => {
       return { db, reader, root, object };
     };
 
-    test('a link another client removes evicts the object without loading the root', async () => {
+    test('a link another client removes loads a passive root and evicts the object', async () => {
       const { db, reader, root, object } = await openReader();
       expect((await reader.loadObjectCoreById(object.id))?.id).toBe(object.id);
 
@@ -143,7 +143,7 @@ describe('DatabaseImpl', () => {
       await db.flush();
       await waitForCondition({ condition: () => reader.getObjectDocumentId(object.id) === undefined, timeout: 5_000 });
       expect(reader.getObjectById(object.id)).toBeUndefined();
-      expect(root.state).toBe('passive');
+      expect(root.state).not.toBe('passive');
     });
 
     test('an inline object another client writes into the root loads the root and shows the object', async () => {

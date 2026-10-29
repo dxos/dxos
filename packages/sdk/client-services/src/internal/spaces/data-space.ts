@@ -15,7 +15,7 @@ import { type DatabaseRoot, type DocumentLease, type EchoHost } from '@dxos/echo
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type HypercoreStore, type HypercoreWrapper } from '@dxos/feed-store';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -378,8 +378,9 @@ export class DataSpace {
 
   async *getAllDocuments(): AsyncIterable<[string, Uint8Array]> {
     invariant(this._databaseRoot, 'Space is not ready');
-    const doc = this._databaseRoot.doc() ?? failedInvariant();
-    const root = save(doc);
+    // A root opened from its snapshot is exported from its stored changes rather than loaded to be saved.
+    const doc = this._databaseRoot.doc();
+    const root = doc ? save(doc) : await this._echoHost.exportDoc(this._databaseRoot.url);
     yield [this._databaseRoot.documentId, root];
 
     for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
@@ -567,6 +568,21 @@ export class DataSpace {
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
+        // The persisted root this space already opened, from its snapshot or loaded, needs no load to be checked:
+        // it carries the space's identifiers unless it predates them, and only then is it loaded to write them.
+        const current = this._databaseRoot;
+        const access = current?.url === rootUrl ? current.directory()?.access : undefined;
+        if (current && access?.spaceId && access.spaceKey) {
+          using _guard = await this._epochProcessingMutex.acquire();
+          if (current.getVersion() !== SpaceDocVersion.CURRENT) {
+            this._state = SpaceState.SPACE_REQUIRES_MIGRATION;
+            this.stateUpdate.emit();
+          } else if (this._state !== SpaceState.SPACE_READY) {
+            await this._enterReadyState();
+          }
+          return;
+        }
+
         lease = await this.#loadRootDoc(rootUrl as AutomergeUrl);
         if (this._ctx.disposed) {
           return;

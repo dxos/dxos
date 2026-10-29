@@ -7,7 +7,7 @@ import { type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler, asyncTimeout } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { type DatabaseDirectory, backingJson, directoryJson } from '@dxos/echo-protocol';
+import { BACKED_DIRECTORY_LIMIT, type DatabaseDirectory, backingJson, directoryJson } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
@@ -41,6 +41,11 @@ export type DocumentsSynchronizerProps = {
   maxBatchBytes?: number;
   /** Override of {@link MAX_BATCH_DOCUMENTS}. */
   maxBatchDocuments?: number;
+  /**
+   * A space directory's JSON at the heads its document is stored at, for answering a passive subscription that
+   * holds nothing with the stored changes and that JSON, without loading the document.
+   */
+  readDirectorySnapshot?: (documentId: DocumentId) => Promise<{ heads: Heads; json: string } | undefined>;
 };
 
 /** A document a client subscribes to, with the heads it already holds and whether it holds it unloaded. */
@@ -67,6 +72,9 @@ export class DocumentsSynchronizer extends Resource {
    * Used to batch updates.
    */
   private readonly _pendingUpdates = new Set<DocumentId>();
+
+  /** First sends read from storage rather than from a loaded document; see `readDirectorySnapshot`. */
+  readonly #storedSends = new Map<DocumentId, DataService.DocumentUpdate>();
 
   /**
    * Documents whose on-disk probe completed negative and that need a
@@ -139,6 +147,9 @@ export class DocumentsSynchronizer extends Resource {
         waiting.push({ documentId, heads, syncState });
         continue;
       }
+      if (passive && (await this.#sendFromStorage(documentId))) {
+        continue;
+      }
       log('loading document', { documentId });
       const lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
       const syncState: DocSyncState = {
@@ -165,6 +176,30 @@ export class DocumentsSynchronizer extends Resource {
         }
       });
     }
+  }
+
+  /**
+   * Queues the first send of a passive directory from its stored changes and snapshot, which the client shows it
+   * from; nothing loads the document until it changes. Later sends take the usual path.
+   */
+  async #sendFromStorage(documentId: DocumentId): Promise<boolean> {
+    const snapshot = await this._params.readDirectorySnapshot?.(documentId);
+    if (!snapshot) {
+      return false;
+    }
+    const bytes = await this._params.automergeHost.readStoredChanges(documentId, { limit: BACKED_DIRECTORY_LIMIT });
+    if (!bytes || this._lifecycleState === LifecycleState.CLOSED || this._syncStates.has(documentId)) {
+      return false;
+    }
+    // The stored changes may be ahead of the snapshot's heads, never behind; the next change sends what follows them.
+    this._syncStates.set(documentId, { passive: true, lastSentHead: snapshot.heads });
+    this.#storedSends.set(documentId, {
+      documentId,
+      mutation: bytes,
+      passive: { heads: [...snapshot.heads], json: snapshot.json },
+    });
+    this._sendUpdatesJob?.trigger();
+    return true;
   }
 
   /** Queues the initial send once the document is loaded, then lets go of it. */
@@ -231,6 +266,7 @@ export class DocumentsSynchronizer extends Resource {
       syncState?.initialLease?.[Symbol.dispose]();
       this._syncStates.delete(documentId);
       this._pendingUpdates.delete(documentId);
+      this.#storedSends.delete(documentId);
       this._pendingRequesting.delete(documentId);
     }
   }
@@ -283,6 +319,13 @@ export class DocumentsSynchronizer extends Resource {
     const maxBytes = this._params.maxBatchBytes ?? MAX_BATCH_BYTES;
     const maxDocuments = this._params.maxBatchDocuments ?? MAX_BATCH_DOCUMENTS;
     let bytes = 0;
+    for (const [documentId, update] of this.#storedSends) {
+      updates.push(update);
+      bytes += (update.mutation?.byteLength ?? 0) + (update.passive?.json?.length ?? 0);
+      this.#storedSends.delete(documentId);
+      // Superseded: what is pending now follows the stored changes this send carries.
+      this._pendingUpdates.delete(documentId);
+    }
 
     // Consumed one at a time so whatever does not fit stays pending for the next tick.
     for (const documentId of this._pendingUpdates) {
@@ -293,10 +336,7 @@ export class DocumentsSynchronizer extends Resource {
       const update = await this._getPendingChanges(documentId);
       if (update) {
         updates.push(update);
-        bytes +=
-          (update.mutation?.byteLength ?? 0) +
-          (update.passive?.json?.length ?? 0) +
-          (update.passive?.directory?.length ?? 0);
+        bytes += (update.mutation?.byteLength ?? 0) + (update.passive?.json?.length ?? 0);
       }
     }
     if (this._pendingUpdates.size > 0) {
@@ -395,47 +435,25 @@ export class DocumentsSynchronizer extends Resource {
   }
 }
 
+/**
+ * What a passive client shows the document from: its one object, or, on the first send only, the directory it reads
+ * as. A later change to a directory is the client's cue to load it, so only the bytes follow.
+ */
 const passiveObject = (
   doc: A.Doc<DatabaseDirectory>,
   since: Heads | undefined,
 ): DataService.DocumentUpdate['passive'] => {
   const heads = A.getHeads(doc);
   const [entry] = Object.entries(doc.objects ?? {});
-  const updatedAt = lastChangeTime(doc, heads);
-  if (entry) {
-    return {
-      heads,
-      json: backingJson(doc, entry[1], objectStructureToJson(entry[0] as EntityId, entry[1])),
-      updatedAt,
-    };
-  }
-  // Read without knowing which document is a space root: a client applies it only to the root it holds unloaded.
-  const links = since && linkDelta(A.diff(doc, since, heads));
-  return links
-    ? { heads, updatedAt, directoryDelta: { base: [...since], links: JSON.stringify(links) } }
-    : { heads, updatedAt, directory: directoryJson(doc) };
-};
-
-/**
- * The link entries a change set put or deleted, or undefined when it touched anything else: a root gains an
- * object per created object, so resending its whole directory on each would cost a client time in its size.
- */
-const linkDelta = (patches: A.Patch[]): Record<string, string | null> | undefined => {
-  const links: Record<string, string | null> = {};
-  for (const patch of patches) {
-    if (patch.path.length !== 2 || patch.path[0] !== 'links') {
-      return undefined;
-    }
-    const objectId = String(patch.path[1]);
-    if (patch.action === 'del') {
-      links[objectId] = null;
-    } else if (patch.action === 'put' && (typeof patch.value === 'string' || patch.value instanceof A.RawString)) {
-      links[objectId] = patch.value.toString();
-    } else {
-      return undefined;
-    }
-  }
-  return links;
+  return {
+    heads,
+    json: entry
+      ? backingJson(doc, entry[1], objectStructureToJson(entry[0] as EntityId, entry[1]))
+      : since === undefined
+        ? directoryJson(doc)
+        : undefined,
+    updatedAt: lastChangeTime(doc, heads),
+  };
 };
 
 const lastChangeTime = (doc: A.Doc<unknown>, heads: A.Heads): number | undefined => {

@@ -136,45 +136,36 @@ describe('DocHandleProxy', () => {
     expect(handle._getPendingChanges()).toEqual(A.saveSince(handle.doc(), A.getHeads(stored)));
   });
 
-  test('a passive update with a directory moves the shown heads without loading the document', () => {
-    const base = A.from<{ links: Record<string, string> }>({ links: {} });
-    const next = A.change(A.clone(base), (doc) => {
-      doc.links.a = 'automerge:a';
-    });
+  test("a directory handle with no bytes is shown by the host's first send, and keeps its JSON", async () => {
+    const stored = A.from<{ links: Record<string, string> }>({ links: { a: 'automerge:a' } });
     const handle = new DocHandleProxy<{ links: Record<string, string> }>({
       documentId: DOCUMENT_ID,
-      passive: { bytes: A.save(base), heads: A.getHeads(base) },
+      directory: true,
       onDelete: () => {},
     });
-    const directories: (string | undefined)[] = [];
-    handle.on('passive', ({ directory }) => directories.push(directory));
+    expect(handle._subscription()).toEqual({ passive: true });
+    const events: unknown[] = [];
+    handle.on('passive', (event) => events.push(event));
 
-    const directory = JSON.stringify({ links: { a: 'automerge:a' } });
-    handle._integratePassiveUpdate(A.saveSince(next, A.getHeads(base)), { heads: A.getHeads(next), directory });
-    expect(directories).toEqual([directory]);
+    const json = JSON.stringify({ links: { a: 'automerge:a' } });
+    handle._integratePassiveUpdate(A.save(stored), { heads: A.getHeads(stored), json });
+    await handle.whenPassiveShown();
+    expect(events).toEqual([]);
     expect(handle.state).toBe('passive');
-    expect(handle.passiveHeads).toEqual(A.getHeads(next));
+    expect(handle.passiveHeads).toEqual(A.getHeads(stored));
+    expect(handle.passiveJson).toBe(json);
+    expect(handle._subscription()).toEqual({ heads: A.getHeads(stored), passive: true });
     expect(handle.doc().links).toEqual({ a: 'automerge:a' });
   });
 
-  test('a link delta from heads the handle does not show is not applied', () => {
-    const base = A.from<{ links: Record<string, string> }>({ links: {} });
+  test('a directory handle waiting on a document the host cannot produce fails its wait', async () => {
     const handle = new DocHandleProxy<{ links: Record<string, string> }>({
       documentId: DOCUMENT_ID,
-      passive: { bytes: A.save(base), heads: A.getHeads(base) },
+      directory: true,
       onDelete: () => {},
     });
-    const deltas: (string | undefined)[] = [];
-    handle.on('passive', ({ directoryLinks }) => deltas.push(directoryLinks));
-    const links = JSON.stringify({ a: 'automerge:a' });
-
-    handle._integratePassiveUpdate(undefined, { heads: ['other'], directoryDelta: { base: ['elsewhere'], links } });
-    expect(deltas).toEqual([undefined]);
-    expect(handle.passiveHeads).toEqual(A.getHeads(base));
-
-    handle._integratePassiveUpdate(undefined, { heads: ['next'], directoryDelta: { base: A.getHeads(base), links } });
-    expect(deltas).toEqual([undefined, links]);
-    expect(handle.passiveHeads).toEqual(['next']);
+    handle._failPassiveWait(DOCUMENT_ID);
+    await expect(handle.whenPassiveShown()).rejects.toSatisfy(DocumentUnavailableError.is);
   });
 
   test('a document the host cannot produce fails its waiters', async () => {

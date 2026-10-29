@@ -19,7 +19,7 @@ import {
   EchoFeedCodec,
   EntityStructure,
   SpaceDocVersion,
-  directoryJson,
+  createIdFromSpaceKey,
 } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -1190,41 +1190,74 @@ const idLookupRequest = (
 });
 
 describe('EchoHost directory snapshots', () => {
-  const getSnapshot = (host: EchoHost, documentId: string) =>
-    EffectEx.runPromise(host.dataService['DataService.getDirectorySnapshot']({ documentId }));
-
-  test('serves a links-only directory as JSON at its stored heads, then from SQLite', async () => {
-    const { host, spaceId } = await setup();
-    const lease = await host.createDoc<DatabaseDirectory>({
-      version: SpaceDocVersion.CURRENT,
-      access: { spaceId },
-      links: { [EntityId.random()]: 'automerge:2' },
+  /** A space whose root links one object, opened by a host that is then closed, as a previous session would. */
+  const previousSession = async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const objectId = EntityId.random();
+    {
+      const host = new EchoHost({ runtime });
+      await host.open(Context.default());
+      const root = await host.createSpaceRoot(Context.default(), spaceKey);
+      root.change((doc) => {
+        doc.links ??= {};
+        doc.links[objectId] = new A.RawString('automerge:2');
+      });
+      await host.flush(Context.default());
+      await host.updateIndexes();
+      await host.close();
+    }
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
     });
-    await host.flush(Context.default());
+    return { host, spaceId, objectId };
+  };
 
+  test('a space opens from the directory the index stored, without loading its root', async ({ expect }) => {
+    const { host, spaceId, objectId } = await previousSession();
     const loadDoc = vi.spyOn(host.automergeHost, 'loadDoc');
-    const first = await getSnapshot(host, lease.documentId);
-    expect(first.json).toBe(directoryJson(lease.doc()));
-    expect(first.heads).toEqual(getHeads(lease.doc()));
-    invariant(first.bytes, 'snapshot has no bytes');
-    expect(A.getHeads(A.loadIncremental(A.init(), first.bytes))).toEqual(first.heads);
-    const loads = loadDoc.mock.calls.length;
 
-    const second = await getSnapshot(host, lease.documentId);
-    expect(second.json).toBe(first.json);
-    expect(loadDoc.mock.calls.length).toBe(loads);
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    expect(root.isLoaded).toBe(false);
+    expect(root.getVersion()).toBe(SpaceDocVersion.CURRENT);
+    expect(root.directory()?.links?.[objectId]?.toString()).toBe('automerge:2');
+    expect(loadDoc.mock.calls.some(([, documentId]) => String(documentId).includes(root.documentId))).toBe(false);
 
-    lease.change((doc) => {
+    // A write loads the root, which then stays loaded.
+    await root.load();
+    root.change((doc) => {
       doc.links ??= {};
-      doc.links[EntityId.random()] = 'automerge:3';
+      doc.links[EntityId.random()] = new A.RawString('automerge:3');
     });
-    await host.flush(Context.default());
-    const third = await getSnapshot(host, lease.documentId);
-    expect(third.json).toBe(directoryJson(lease.doc()));
-    expect(third.heads).toEqual(getHeads(lease.doc()));
+    expect(root.isLoaded).toBe(true);
   });
 
-  test('serves a directory with inline objects as bytes alone', async () => {
+  test('a change saved to a root opened from its snapshot loads the root', async ({ expect }) => {
+    const { host, spaceId } = await previousSession();
+    const root = await host.openSpaceRoot(Context.default(), spaceId);
+    expect(root.isLoaded).toBe(false);
+
+    const changed = Promise.withResolvers<void>();
+    root.changed.once(() => changed.resolve());
+    {
+      using lease = await host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), root.documentId);
+      invariant(lease, 'root document not found');
+      lease.change((doc) => {
+        doc.links ??= {};
+        doc.links[EntityId.random()] = new A.RawString('automerge:4');
+      });
+      await host.flush(Context.default());
+    }
+    await changed.promise;
+    expect(root.isLoaded).toBe(true);
+    expect(Object.keys(root.directory()?.links ?? {})).toHaveLength(2);
+  });
+
+  test('a directory with inline objects has no snapshot', async ({ expect }) => {
     const { host, spaceId } = await setup();
     const lease = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
@@ -1233,15 +1266,8 @@ describe('EchoHost directory snapshots', () => {
       links: {},
     });
     await host.flush(Context.default());
-
-    const snapshot = await getSnapshot(host, lease.documentId);
-    expect(snapshot.json).toBeUndefined();
-    expect(snapshot.bytes?.length).toBeGreaterThan(0);
-  });
-
-  test('serves nothing for a document it does not store', async () => {
-    const { host } = await setup();
-    expect(await getSnapshot(host, '2DrjgbFdhNzImM8Gjt9MeQJGGgV')).toEqual({});
+    await host.updateIndexes();
+    expect(await host.readDirectorySnapshot(lease.documentId)).toBeUndefined();
   });
 });
 

@@ -9,10 +9,10 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Obj, Query } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient } from '@dxos/echo-client';
-import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { invariant } from '@dxos/invariant';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { deferHandlers, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
 
@@ -87,7 +87,7 @@ describe('space root JSON', () => {
       .toBe('added by the reader');
   });
 
-  test('a host update to a passive root routes the new object without loading the root', async ({ expect }) => {
+  test('a host change to a passive root loads it, and the root routes the new object', async ({ expect }) => {
     const peer = await builder.createPeer({ types: [TestSchema.Task] });
     const db = await peer.createDatabase();
     db.add(Obj.make(TestSchema.Task, { title: 'first' }));
@@ -105,7 +105,29 @@ describe('space root JSON', () => {
       .toBe(db.getObjectDocumentId(added.id));
     const loaded = await reader.query(Query.type(TestSchema.Task, { id: added.id })).first();
     expect(loaded.title).toBe('added by the writer');
-    expect(root.state).toBe('passive');
+    expect(root.state).not.toBe('passive');
+  });
+
+  test('a space opened again by a fresh host loads its root on neither side', async ({ expect }) => {
+    const storagePath = createTmpPath();
+    const first = await builder.createPeer({ types: [TestSchema.Task], storagePath });
+    const db = await first.createDatabase();
+    const task = db.add(Obj.make(TestSchema.Task, { title: 'from the last session' }));
+    await db.flush();
+    const { spaceKey, rootUrl } = db;
+    invariant(rootUrl, 'database has no space root');
+    await first.close();
+
+    const peer = await builder.createPeer({ types: [TestSchema.Task], storagePath });
+    const reader = await peer.openDatabase(spaceKey, rootUrl);
+    const hostRoot = peer.host.roots.get(reader.getSpaceRootDocHandle().documentId ?? failedInvariant());
+    expect(hostRoot?.isLoaded).toBe(false);
+    expect(reader.getSpaceRootDocHandle().state).toBe('passive');
+
+    const loaded = await reader.query(Query.type(TestSchema.Task, { id: task.id })).first();
+    expect(loaded.title).toBe('from the last session');
+    expect(hostRoot?.isLoaded).toBe(false);
+    expect(reader.getSpaceRootDocHandle().state).toBe('passive');
   });
 });
 
