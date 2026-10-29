@@ -51,7 +51,7 @@ import { Feature, FeatureOperation, ProjectCapabilities, ProjectOperation, Proje
 import { useFeatureGraph, useOpenSpecLevel, useProjectSpec, useRefTargets, useSpecTreeIds } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
-import { useSpecMapActions } from '../SpecFeatures/spec-map-actions.tsx';
+import { useSpecMapActions } from '../SpecFeatures/spec-map-actions.ts';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
@@ -125,7 +125,11 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
   const openLevel = useOpenSpecLevel(subject, attendableId);
   const handleZoom = useCallback((id: string) => openLevel(feature, id), [openLevel, feature]);
   const lineage = useMemo(() => (feature ? Spec.getLineage(feature).map(({ id }) => id) : []), [feature]);
-  const { mode, actions: specActions } = useSpecMapActions({
+  const {
+    mode,
+    actions: specActions,
+    featureActions,
+  } = useSpecMapActions({
     db,
     spec,
     viewId: subject.id,
@@ -197,6 +201,7 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
     project: subject,
     tabs,
     specActions: tab === 'spec' && spec ? specActions : undefined,
+    featureActions: tab === 'spec' && spec ? featureActions : undefined,
     checkedTasks: delegatableTasks,
     showPipeline,
     onAddArtifact: () => void handleAddArtifact(),
@@ -592,6 +597,8 @@ export type ToolbarActionsProps = {
   tabs: ReactNode;
   /** The level's map actions, on the Spec tab while the level has a spec: placed after the tabs. */
   specActions?: ActionGroupBuilderFn;
+  /** Adding features to the level's map, offered with the same condition: grouped first in the overflow. */
+  featureActions?: ActionGroupBuilderFn;
   /** The checked rows not already with the agent, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
   /** Whether the pipeline chart is shown under the ledger. */
@@ -611,6 +618,7 @@ const useToolbarActions = ({
   project,
   tabs,
   specActions,
+  featureActions,
   checkedTasks,
   showPipeline,
   onAddArtifact,
@@ -682,15 +690,15 @@ const useToolbarActions = ({
           },
           () => {},
         )
-        // The map's own controls sit with the tab they act on, so the level needs no second bar.
+        // The map's views sit between two gaps, centred between the tabs and the tools, so the level needs no second bar.
+        .separator()
         .subgraph(
           specActions &&
             ((group) => {
-              group.separator('line');
               specActions(group);
+              group.separator();
             }),
         )
-        .separator()
         .action(
           'create-chat',
           {
@@ -734,20 +742,28 @@ const useToolbarActions = ({
               onTogglePipeline,
             ),
         )
-        // In the trailing overflow rather than on the toolbar: adding an artifact is occasional
-        // next to starting a chat, and a bare `+` beside the tabs read as adding a tab.
+        // In the trailing overflow rather than on the toolbar: adding an artifact or a feature is
+        // occasional next to starting a chat, and a bare `+` beside the tabs read as adding a tab.
         .menu(
           'overflow',
           (group) =>
-            group.action(
-              'add-artifact',
-              {
-                label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
-                icon: 'ph--plus--regular',
-                testId: 'projectsPlugin.addArtifact',
-              },
-              onAddArtifact,
-            ),
+            group
+              .subgraph(
+                featureActions &&
+                  ((group) => {
+                    featureActions(group);
+                    group.separator('line');
+                  }),
+              )
+              .action(
+                'add-artifact',
+                {
+                  label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
+                  icon: 'ph--plus--regular',
+                  testId: 'projectsPlugin.addArtifact',
+                },
+                onAddArtifact,
+              ),
           'projectsPlugin.overflow',
         )
         .build(),
@@ -760,6 +776,7 @@ const useToolbarActions = ({
       createChat,
       delegateTasks,
       specActions,
+      featureActions,
       checkedTasks.length,
       delegating,
       showPipeline,

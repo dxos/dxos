@@ -437,8 +437,9 @@ const makeSpecLevelNode = (
       icon,
       iconHue: 'amber',
       role: 'branch',
-      // Selecting a level opens the project at that depth (see `ProjectArticle`), on the tab the reader was on.
-      selectable: true,
+      // Selecting a feature opens the project at that depth (see `ProjectArticle`), on the tab the reader was on. The
+      // Spec branch only groups them: the project's own spec is its project node's Spec tab.
+      selectable: level.feature !== undefined,
       draggable: false,
       droppable: false,
       space,

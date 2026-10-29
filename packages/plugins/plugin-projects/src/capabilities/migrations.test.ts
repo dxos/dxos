@@ -146,6 +146,23 @@ describe('feature migrations', () => {
     expect(mail.spec).toBeUndefined();
   });
 
+  test('a 0.1.0 spec without a document is given one, and one with a document keeps it', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
+    graph.registry.add([LegacySpec.Spec, Spec.Spec, Feature.Feature, SpecDocument.SpecDocument]);
+    const kept = db.add(SpecDocument.make({ name: 'Inbox' }));
+    const inbox = db.add(Obj.make(LegacySpec.Spec, { name: 'Inbox', features: [], document: Ref.make(kept) }));
+    const sync = db.add(Obj.make(LegacySpec.Spec, { name: 'Sync', features: [] }));
+    await db.flush();
+    await db.runMigrations([makeSpecOwners()]);
+
+    const specs = await db.query(Filter.type(Spec.Spec)).run();
+    const byId = (id: string) => specs.find((spec) => spec.id === id);
+    expect((await byId(inbox.id)?.document.load())?.id).toBe(kept.id);
+    const made = await byId(sync.id)?.document.load();
+    expect(made && Obj.getParent(made)?.id).toBe(sync.id);
+    expect(made && (await made.content.load()).content).toContain('name: Sync');
+  });
+
   test('Demonstrates 0.1.0 edges become 0.2.0 with their endpoints, before the showcase itself migrates', async ({
     expect,
   }) => {

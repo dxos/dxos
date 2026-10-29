@@ -14,7 +14,7 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - NavigationTargetResolver: resolves a github: key to the spec or file it names
     - OperationHandler: the plugin's operations (importSpec, listLocalSpecs, the Coder tools)
     - PluginAsset: this document, served as the plugin's own spec
-    - ReactSurface: the spec article and section surfaces
+    - ReactSurface: the spec article surface, and the code project's article and section surfaces
     - Schema: the SpecDocument and CodeProject types
     - Settings: repos to sync and build settings
     - SkillDefinition: the Coder skill
@@ -1406,6 +1406,13 @@ decision D-34: The decision graph draws questions as cards with an `answers` edg
   for: user:dmaretskyi
   affects: [F-18.4]
   why: The graph and the margin are the other places a spec shows its changelog.
+```
+
+```mdl
+decision D-35: This plugin depends on plugin-projects and renders a spec document only as an article. A spec document embedded as a section, as in a project's Document view, is plugin-projects' plain MDL editor.
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: plugin-projects owns specs and their documents, and a plugin reaches another's UI through surfaces, never its components. This page's margins, diff view and jumps need the editor itself, so it keeps its own.
 ```
 
 ---

@@ -4,11 +4,12 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
-import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { type Database, Filter, Obj } from '@dxos/echo';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { type Database, Obj } from '@dxos/echo';
 import {
   Attention,
   useSelection,
@@ -17,26 +18,23 @@ import {
   useViewStateActions,
 } from '@dxos/react-ui-attention';
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Feature, FeatureMapView, type Spec } from '#types';
 
-import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { FEATURE_COMPANION } from '../../constants.ts';
+import { ADD_FEATURE_DIALOG, FEATURE_COMPANION } from '../../constants.ts';
 import { useFeatureEditing } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
+import { type AddFeatureDialogProps } from '../AddFeatureDialog/index.ts';
 
 const NONE: readonly string[] = [];
 
+// The document first: it is the spec, and the map and board are views of the features drawn from it.
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
+  { mode: 'document', icon: 'ph--file-text--regular' },
   { mode: 'canvas', icon: 'ph--graph--regular' },
   { mode: 'kanban', icon: 'ph--kanban--regular' },
-  { mode: 'document', icon: 'ph--file-text--regular' },
 ];
-
-/** plugin-code, which renders a spec document; named by id since neither plugin depends on the other. */
-const SPEC_EDITOR_PLUGIN = 'org.dxos.plugin.code';
 
 /** The ids of the features on `spec`'s map, by name; read through atoms, so an agent's add or a peer's rename lands. */
 export const useLevelIds = (spec: Spec.Spec | undefined): readonly string[] => {
@@ -85,18 +83,12 @@ export const useFeatureSelection = (attendableId: string | undefined) => {
   return { selectedId, select };
 };
 
-/** The map's view mode, held under `viewId`; the document view needs plugin-code, so it falls back to the canvas. */
-export const useSpecMapMode = (viewId: string, attendableId: string | undefined) => {
+/** The map's view mode, held under `viewId`, so levels sharing it keep the reader's choice. */
+export const useSpecMapMode = (viewId: string) => {
   const { mode } = useViewState(FeatureMapView.aspect, viewId);
   const { update } = useViewStateActions(FeatureMapView.aspect, viewId);
-  const enabledPlugins = useAtomValue(PluginManagerProvider.usePluginManager().enabled);
-  const documentAvailable = !!attendableId && enabledPlugins.includes(SPEC_EDITOR_PLUGIN);
   const setMode = useCallback((mode: FeatureMapView.Mode) => update((prev) => ({ ...prev, mode })), [update]);
-  return {
-    mode: mode === 'document' && !documentAvailable ? ('canvas' as const) : mode,
-    modes: documentAvailable ? MODES : MODES.filter(({ mode }) => mode !== 'document'),
-    setMode,
-  };
+  return { mode, setMode };
 };
 
 export type SpecMapActionsProps = {
@@ -107,11 +99,14 @@ export type SpecMapActionsProps = {
   /** Keys the view mode, so levels sharing it keep the reader's choice. */
   viewId: string;
   attendableId?: string;
-  /** Left out of the add picker besides the map's own features: the features above it. */
+  /** Not offered when adding an existing feature, besides the map's own features: the features above it. */
   exclude?: readonly string[];
 };
 
-/** The map's toolbar actions — view mode, new feature, add an existing one — for a host toolbar to place. */
+/**
+ * The map's actions for a host toolbar to place: `actions` switch the view mode, and `featureActions` (new feature,
+ * add an existing one) belong in its overflow menu, since they are occasional next to reading the map.
+ */
 export const useSpecMapActions = ({
   db,
   spec,
@@ -121,8 +116,8 @@ export const useSpecMapActions = ({
   exclude = NONE,
 }: SpecMapActionsProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
-  const { mode, modes, setMode } = useSpecMapMode(viewId, attendableId);
-  const ids = useLevelIds(parentId ? undefined : spec);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { mode, setMode } = useSpecMapMode(viewId);
   const editing = useFeatureEditing(db, spec);
   const { select } = useFeatureSelection(attendableId);
 
@@ -131,10 +126,19 @@ export const useSpecMapActions = ({
     () => void editing.createFeature(t('feature-map.new-feature.name'), parentId).then((id) => id && select(id)),
     [editing, parentId, select, t],
   );
-  const handleAdd = useCallback((id: string) => editing.moveFeature(id, parentId), [editing, parentId]);
+  const handleAdd = useCallback(
+    () =>
+      spec &&
+      void invokePromise(LayoutOperation.UpdateDialog, {
+        subject: ADD_FEATURE_DIALOG,
+        blockAlign: 'start',
+        props: { spec, parentId, exclude } satisfies AddFeatureDialogProps,
+      }),
+    [invokePromise, spec, parentId, exclude],
+  );
 
   const actions = useCallback<ActionGroupBuilderFn>(
-    (group) => {
+    (group) =>
       group.group(
         'mode',
         {
@@ -144,7 +148,7 @@ export const useSpecMapActions = ({
           value: mode,
         },
         (modeGroup) =>
-          modes.forEach(({ mode, icon }) =>
+          MODES.forEach(({ mode, icon }) =>
             modeGroup.action(
               mode,
               {
@@ -155,10 +159,12 @@ export const useSpecMapActions = ({
               () => setMode(mode),
             ),
           ),
-      );
-      if (mode === 'document') {
-        return;
-      }
+      ),
+    [mode, setMode],
+  );
+
+  const featureActions = useCallback<ActionGroupBuilderFn>(
+    (group) =>
       group
         .action(
           'new-feature',
@@ -169,26 +175,17 @@ export const useSpecMapActions = ({
           },
           handleNew,
         )
-        .custom('add-feature', { label: ['feature-map.add-feature.label', { ns: ProjectsNamespace.key }] }, () => (
-          <ObjectAddPicker
-            db={db}
-            filter={Filter.type(Feature.Feature)}
-            exclude={[...ids, ...exclude]}
-            onSelect={handleAdd}
-            onCreate={(name) => editing.createFeature(name, parentId)}
-            trigger={
-              <Button.Root
-                icon='ph--list-plus--regular'
-                iconOnly
-                label={t('feature-map.add-feature.label')}
-                data-testid='feature-map.add-feature'
-              />
-            }
-          />
-        ));
-    },
-    [mode, modes, setMode, handleNew, handleAdd, db, ids, exclude, editing, parentId, t],
+        .action(
+          'add-feature',
+          {
+            label: ['feature-map.add-feature.label', { ns: ProjectsNamespace.key }],
+            icon: 'ph--list-plus--regular',
+            testId: 'feature-map.add-feature',
+          },
+          handleAdd,
+        ),
+    [handleNew, handleAdd],
   );
 
-  return { mode, actions };
+  return { mode, actions, featureActions: mode === 'document' ? undefined : featureActions };
 };

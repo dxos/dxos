@@ -8,18 +8,16 @@ import React, { Fragment, useCallback, useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { SpecDocument } from '@dxos/types';
 
 import { FeatureKanban } from '#components';
 import { Feature, FeatureMapView, Spec } from '#types';
@@ -28,7 +26,7 @@ import { Feature, FeatureMapView, Spec } from '#types';
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
-import { useFeatureSelection, useLevelIds, useSpecMapActions } from './spec-map-actions.tsx';
+import { useFeatureSelection, useLevelIds, useSpecMapActions } from './spec-map-actions.ts';
 
 type Point = Spec.Position;
 
@@ -76,17 +74,6 @@ export const SpecMap = ({ spec, mode, attendableId, onZoom }: SpecMapProps) => {
   const handleZoom = useCallback((id: string | undefined) => id && onZoom(id), [onZoom]);
   const specDocument = useResolveRef(snapshot?.document);
 
-  // A spec starts without a document; writing one gives it the document view's text.
-  const handleCreateDocument = useCallback(() => {
-    if (!db) {
-      return;
-    }
-    const document = db.add(SpecDocument.make({ name: spec.name }));
-    Obj.update(spec, (spec) => {
-      spec.document = Ref.make(document);
-    });
-  }, [db, spec]);
-
   // Only the boxes that moved are written, so a drag touches one entry of the layout rather than all of it.
   const handlePositionsChange = useCallback(
     (next: Record<string, Point>) => {
@@ -108,21 +95,17 @@ export const SpecMap = ({ spec, mode, attendableId, onZoom }: SpecMapProps) => {
   );
 
   if (mode === 'document') {
-    return specDocument ? (
+    // A section rather than an article: the spec document's own page (plugin-code's, when enabled) is for opening it.
+    return (
       <div className='grid min-h-0 h-full' data-testid='feature-map.document'>
-        <Surface.Surface type={AppSurface.Article} data={{ subject: specDocument, attendableId }} limit={1} />
+        {specDocument && (
+          <Surface.Surface
+            type={AppSurface.Section}
+            data={{ subject: specDocument, attendableId: attendableId ?? spec.id }}
+            limit={1}
+          />
+        )}
       </div>
-    ) : (
-      <Layout.Flex column center gap='sm' classNames='h-full' data-testid='feature-map.document.empty'>
-        <Status.Empty icon='ph--file-text--regular'>{t('feature-map.document.empty.message')}</Status.Empty>
-        <Button.Root
-          icon='ph--file-plus--regular'
-          data-testid='feature-map.document.create'
-          onClick={handleCreateDocument}
-        >
-          {t('feature-map.document.create.label')}
-        </Button.Root>
-      </Layout.Flex>
     );
   }
 
@@ -217,7 +200,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
     [updateView],
   );
 
-  const { mode, actions } = useSpecMapActions({
+  const { mode, actions, featureActions } = useSpecMapActions({
     db,
     spec: level ?? spec,
     parentId: level ? undefined : zoomed?.id,
@@ -225,7 +208,10 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
     attendableId,
     exclude,
   });
-  const menu = useMenuBuilder(() => MenuBuilder.make().subgraph(actions).build(), [actions]);
+  const menu = useMenuBuilder(() => {
+    const builder = MenuBuilder.make().subgraph(actions);
+    return (featureActions ? builder.menu('overflow', featureActions, 'feature-map.overflow') : builder).build();
+  }, [actions, featureActions]);
 
   return (
     <Panel.Root role={role}>

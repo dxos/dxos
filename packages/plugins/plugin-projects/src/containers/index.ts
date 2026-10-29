@@ -5,12 +5,18 @@
 import { type ComponentType } from 'react';
 import { lazy } from 'react';
 
+import { type AddFeatureDialogProps } from './AddFeatureDialog/index.ts';
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
 import { type FeatureCompanionProps, type ProjectFeatureCompanionProps } from './FeatureCompanion/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
+import { type SpecDocumentArticleProps } from './SpecDocumentArticle/index.ts';
 import { type SpecArticleProps } from './SpecFeatures/index.ts';
+
+export const AddFeatureDialog: ComponentType<AddFeatureDialogProps> = lazy(() =>
+  import('./AddFeatureDialog/index.ts').then((module) => ({ default: module.AddFeatureDialog })),
+);
 
 export const FeatureArticle: ComponentType<FeatureArticleProps> = lazy(() =>
   import('./FeatureArticle/index.ts').then((module) => ({ default: module.FeatureArticle })),
@@ -31,6 +37,11 @@ export const ProjectFeatureCompanion: ComponentType<ProjectFeatureCompanionProps
 // Lazy: the canvas engine is large, and only a spec's map needs it.
 export const SpecArticle: ComponentType<SpecArticleProps> = lazy(() =>
   import('./SpecFeatures/index.ts').then((module) => ({ default: module.SpecArticle })),
+);
+
+// Lazy: the editor engine is large, and only an opened spec document needs it.
+export const SpecDocumentArticle: ComponentType<SpecDocumentArticleProps> = lazy(() =>
+  import('./SpecDocumentArticle/index.ts').then((module) => ({ default: module.SpecDocumentArticle })),
 );
 
 export const ProjectArticle: ComponentType<any> = lazy(() =>

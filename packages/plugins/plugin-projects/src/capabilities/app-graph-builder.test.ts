@@ -162,6 +162,8 @@ describe('project app graph builder', () => {
         expect(branch.id).toEqual(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPEC_SEGMENT));
         expect(branch.type).toEqual(SPEC_LEVEL_TYPE);
         expect(branch.data).toEqual({ branch: 'spec', project });
+        // The branch only groups the levels; the project's own spec is the project node's Spec tab.
+        expect(branch.properties.selectable).toBe(false);
 
         // A level per feature, by name, addressed by the lineage of features above it.
         const levels = yield* Effect.promise(() => children(SPEC_SEGMENT));
@@ -169,6 +171,7 @@ describe('project app graph builder', () => {
           { branch: 'spec', project, feature: compose },
           { branch: 'spec', project, feature: sync },
         ]);
+        expect(levels.map((node) => node.properties.selectable)).toEqual([true, true]);
         const nested = yield* Effect.promise(() => children(SPEC_SEGMENT, sync.id));
         expect(nested.map((node) => node.id)).toEqual([
           GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPEC_SEGMENT, sync.id, gmail.id),

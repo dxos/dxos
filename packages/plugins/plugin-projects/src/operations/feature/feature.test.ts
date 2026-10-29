@@ -195,8 +195,8 @@ feat F-1: Sync
       const [target] = yield* Database.query(Filter.type(Spec.Spec)).run;
       expect(target).toMatchObject({ id: first.spec, name: 'Inbox' });
       expect(Spec.getProject(target)?.id).toBe(project.id);
-      const document = target.document && (yield* Database.load(target.document));
-      expect(document?.name).toBe('packages/a/PLUGIN.mdl');
+      const document = yield* Database.load(target.document);
+      expect(document.name).toBe('packages/a/PLUGIN.mdl');
       const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
       expect(feature).toMatchObject({
         name: 'Sync',
@@ -215,8 +215,8 @@ feat F-1: Sync
       expect(second).toEqual({ spec: target.id, created: [], updated: [feature.id] });
       expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'New mail shows within ten seconds.' }]);
       expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(1);
-      const content = document && (yield* Database.load(document.content));
-      expect(content?.content).toContain('ten seconds');
+      const content = yield* Database.load(document.content);
+      expect(content.content).toContain('ten seconds');
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -238,18 +238,18 @@ feat F-1: Sync
       expect(Spec.getContainer(feature)?.id).toBe(target.id);
       const [source] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter(({ id }) => id === first.spec);
       expect(source?.features).toHaveLength(0);
-      // The path's document moves with it rather than being duplicated.
-      expect(source?.document).toBeUndefined();
-      const documents = yield* Database.query(Filter.type(SpecDocument.SpecDocument)).run;
-      expect(documents).toHaveLength(1);
-      expect(target.document?.uri).toBe(Ref.make(documents[0]).uri);
-      expect(Obj.getParent(documents[0])?.id).toBe(target.id);
+      // The path moves to the target's document, so the next import without a target finds the target.
+      const keyed = yield* Database.query(
+        Filter.foreignKeys(SpecDocument.SpecDocument, [
+          { source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' },
+        ]),
+      ).run;
+      expect(keyed.map((document) => Obj.getParent(document)?.id)).toEqual([target.id]);
+      expect(Obj.getMeta(yield* Database.load(source.document)).keys).toEqual([]);
 
       yield* importSpec.handler({ path: 'packages/b/PLUGIN.mdl', text, spec: ref(target) });
-      const document = target.document && (yield* Database.load(target.document));
-      expect(document && Obj.getMeta(document).keys).toEqual([
-        { source: Feature.SPEC_KEY_SOURCE, id: 'packages/b/PLUGIN.mdl' },
-      ]);
+      const document = yield* Database.load(target.document);
+      expect(Obj.getMeta(document).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/b/PLUGIN.mdl' }]);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -262,12 +262,11 @@ feat F-1: Sync
       yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text: changed, spec: ref(target) });
       expect(Spec.getContainer(feature)?.id).toBe(first.spec);
       expect(target.features).toHaveLength(0);
-      // The source keeps the path's one document, updated, so deleting the feature cannot take it with the breakdown.
-      const documents = yield* Database.query(Filter.type(SpecDocument.SpecDocument)).run;
-      expect(documents).toHaveLength(1);
-      expect(Obj.getParent(documents[0])?.id).toBe(first.spec);
-      expect(target.document).toBeUndefined();
-      const content = yield* Database.load(documents[0].content);
+      // The source keeps the path's document, updated, so deleting the feature cannot take it with the breakdown.
+      const [source] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter(({ id }) => id === first.spec);
+      const document = yield* Database.load(source.document);
+      expect(Obj.getParent(document)?.id).toBe(first.spec);
+      const content = yield* Database.load(document.content);
       expect(content.content).toBe(changed);
     }).pipe(Effect.provide(testLayer())),
   );

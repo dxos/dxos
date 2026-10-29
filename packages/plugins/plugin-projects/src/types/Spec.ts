@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { SpecDocument } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
 
@@ -26,7 +27,7 @@ export type Layout = Schema.Schema.Type<typeof Layout>;
 /**
  * A feature map: the features a product area should reach, laid out on a canvas. A spec nests by a feature owning a
  * spec of its own, which breaks that feature down. A top-level spec may be owned by the project whose tasks deliver it
- * (`Project.spec`), and may hold the normative `.mdl` document its features were extracted from.
+ * (`Project.spec`). Every spec holds its normative `.mdl` document.
  */
 export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.2.0'))(
   Schema.Struct({
@@ -50,9 +51,10 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
 
     layout: Schema.optional(Layout.pipe(Annotation.FormInputAnnotation.set(false))),
 
-    /** The normative text the features were extracted from; owned, since a document lives only within its spec. */
-    document: Schema.optional(
-      Ref.Ref(SpecDocument.SpecDocument).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    /** The normative text the features are extracted from; owned, since a document lives only within its spec. */
+    document: Ref.Ref(SpecDocument.SpecDocument).pipe(
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
@@ -61,11 +63,26 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
   ),
 ) {}
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Spec>, 'features'> &
-  Partial<Pick<Obj.MakeProps<typeof Spec>, 'features'>>;
+export type MakeProps = Omit<Obj.MakeProps<typeof Spec>, 'features' | 'document'> &
+  Partial<Pick<Obj.MakeProps<typeof Spec>, 'features' | 'document'>>;
 
-/** `features` starts as an empty list so two peers lazily creating it cannot each write a fresh one. */
-export const make = (props: MakeProps): Spec => Obj.make(Spec, { features: [], ...props });
+/**
+ * `features` starts as an empty list so two peers lazily creating it cannot each write a fresh one. The document, unless
+ * given, is a new one headed with the spec's name.
+ */
+export const make = ({ document, ...props }: MakeProps): Spec =>
+  Obj.make(Spec, { features: [], ...props, document: document ?? Ref.make(makeDocument(props.name)) });
+
+/** A spec's starting document: front matter naming it, ready for its features. */
+export const makeDocument = (name: string): SpecDocument.SpecDocument =>
+  SpecDocument.make({
+    name,
+    content: trim`
+      ---
+      name: ${name}
+      ---
+    `,
+  });
 
 export const instanceOf = (value: unknown): value is Spec => Obj.instanceOf(Spec, value);
 

@@ -360,3 +360,17 @@ decision D-10: A project article shows one level of the project's spec: the proj
   by: user:wittjosiah
   why: Three stacked toolbars (the project's, the map's and its trail) left little room for the map. A level as a node puts the trail in the plank heading, keeps the selected tab as the reader goes down, and makes a feature deep in the map feel like part of the project.
 ```
+
+```mdl
+decision D-11: The Spec branch only groups the feature levels and is not selectable; the project's own spec is the project node's Spec tab. The map's views (Document, Canvas, Kanban, in that order) sit centred in the article's toolbar, and Add new feature and Add existing feature sit in its overflow, grouped above Create artifact. The Document view renders the spec's document as a section, which this plugin contributes as a plain MDL editor, so the view never depends on another plugin; it is also the article for a document no richer plugin renders. Refines [D-10].
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: The spec is a part of the project, not a page of its own, and the document is the spec, with the map and board drawn from it. Adding features is occasional next to reading them.
+```
+
+```mdl
+decision D-12: Every spec holds its document: `Spec` 0.2.0 makes `document` required, a new spec is made with one headed by its name, and the 0.1.0 migration gives each spec without one a new document. The Spec tab opens on the Document view. Importing a `.mdl` file into a spec writes the spec's own document and moves the file's path to it, unless the spec lies beneath the one already holding that path. Refines [D-1] and [D-11].
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: The document is the spec; a spec without one has nothing to read, and the map and board are drawn from it.
+```

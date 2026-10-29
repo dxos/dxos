@@ -377,8 +377,8 @@ export const Default: Story = {
 };
 
 /**
- * A project with a spec: the overview counts the spec's features, and its Spec tab shows their map. The summary's
- * name opens the tab, and the map's controls join the project's toolbar.
+ * A project with a spec: the overview counts the spec's features, and its Spec tab shows the spec, its document first.
+ * The summary's name opens the tab, and the map's controls join the project's toolbar.
  */
 export const WithSpec: Story = {
   ...Default,
@@ -388,14 +388,58 @@ export const WithSpec: Story = {
     const summary = await canvas.findByTestId('projectsPlugin.specSummary', undefined, { timeout: 10_000 });
     await waitFor(() => expect(summary.textContent).toMatch(/\d+ features/), { timeout: 10_000 });
     await userEvent.click(within(summary).getByRole('button', { name: SPEC_NAME }));
-    await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
-    await expect(canvas.getByTestId('feature-map.new-feature')).toBeTruthy();
     await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
+
+    // The view modes sit on the toolbar; on a map, adding features is in its overflow, ahead of Create artifact.
+    await userEvent.click(canvas.getByTestId('projectsPlugin.featureMap.canvas'));
+    await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await userEvent.click(canvas.getByTestId('projectsPlugin.overflow'));
+    const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
+    const items = within(menu)
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('data-testid'));
+    await expect(items).toEqual(['feature-map.new-feature', 'feature-map.add-feature', 'projectsPlugin.addArtifact']);
+    await expect(within(menu).getAllByRole('separator')).toHaveLength(1);
   },
 };
 
-/** A project without a spec: its Spec tab offers to add one, and the new spec's map takes its place. */
+/** Add existing feature, in the overflow, moves a feature from elsewhere onto the level's map, picked in a dialog. */
+export const AddExistingFeature: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await userEvent.click(
+      await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
+    );
+    await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await userEvent.click(canvas.getByTestId('projectsPlugin.overflow'));
+    await userEvent.click(await screen.findByTestId('feature-map.add-feature'));
+    const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
+    // The map's own features are not offered; a subfeature from beneath one is.
+    await expect(within(dialog).queryByText('Provider sync')).toBeNull();
+    await userEvent.click(await within(dialog).findByText('IMAP', undefined, { timeout: 10_000 }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('IMAP', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/** The Spec tab opens on the spec's `.mdl` document, made with the spec and headed with its name. */
+export const SpecDocument: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(document.textContent).toContain(`name: ${SPEC_NAME}`), { timeout: 10_000 });
+  },
+};
+
+/** A project without a spec: its Spec tab offers to add one, and the new spec, with its document, takes its place. */
 export const WithoutSpec: Story = {
   args: { ...Default.args, projectName: OTHER_PROJECT_NAME },
   play: async ({ canvasElement }) => {
@@ -406,7 +450,8 @@ export const WithoutSpec: Story = {
 
     await showTab(canvas, 'spec');
     await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));
-    await expect(canvas.findByTestId('feature-map.new-feature', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(document.textContent).toContain('name:'), { timeout: 10_000 });
     await expect(canvas.queryByTestId('projectsPlugin.spec.empty')).toBeNull();
   },
 };
@@ -422,6 +467,9 @@ export const FeatureLevel: Story = {
       canvas.findByTestId('feature-article.subfeatures', undefined, { timeout: 10_000 }),
     ).resolves.toBeTruthy();
     await showTab(canvas, 'spec');
+    await userEvent.click(
+      await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
+    );
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await expect(canvas.findByText('Gmail', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
   },
@@ -437,7 +485,9 @@ export const FeatureLevelWithoutSpec: Story = {
     const empty = await canvas.findByTestId('projectsPlugin.spec.empty', undefined, { timeout: 10_000 });
     await expect(within(empty).getByText(/no spec of its own/)).toBeTruthy();
     await userEvent.click(within(empty).getByTestId('projectsPlugin.addSpec'));
-    await expect(canvas.findByTestId('feature-map.new-feature', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(
+      canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
   },
 };
 

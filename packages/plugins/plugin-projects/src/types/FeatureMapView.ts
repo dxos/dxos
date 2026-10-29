@@ -24,5 +24,5 @@ export const aspect: ViewState.Aspect<State> = ViewState.define<State>({
   key: 'org.dxos.plugin.projects.featureMap',
   backend: 'local',
   schema: State,
-  defaultValue: () => ({ mode: 'canvas' }),
+  defaultValue: () => ({ mode: 'document' }),
 });

@@ -205,7 +205,8 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
 /**
  * `Spec` 0.1.0 → 0.2.0: the project owns its spec (`Project.spec`, which makes it the spec's ECHO parent) where the spec
  * used to name the project. A project that already owns a spec keeps it, and a breakdown keeps the feature that owns
- * it; either way the spec simply stops naming the project.
+ * it; either way the spec simply stops naming the project. A spec without a document is given one, since 0.2.0 always
+ * holds one.
  */
 export const makeSpecOwners = (): Migration.ObjectMigration => {
   // The project each spec named, read in the transform while its refs are still live.
@@ -213,14 +214,20 @@ export const makeSpecOwners = (): Migration.ObjectMigration => {
   return Migration.define({
     from: LegacySpec.Spec,
     to: Spec.Spec,
-    transform: async ({ id, project, name, description, features, layout, document }) => {
+    transform: async ({ id, project, name, description, features, layout, document }, { db }) => {
       const owner = await project?.tryLoad();
       if (Obj.instanceOf(Project.Project, owner)) {
         owners.set(id, owner);
       }
-      return { name, description, features, layout, document };
+      return { name, description, features, layout, document: document ?? Ref.make(db.add(Spec.makeDocument(name))) };
     },
-    onMigration: async ({ object }) => {
+    onMigration: async ({ before, object }) => {
+      // The migrated data is written in place, so a new document is made the spec's child here.
+      const document = before.document ? undefined : await object.document.tryLoad();
+      if (document) {
+        Obj.setParent(document, object);
+      }
+
       const owner = owners.get(object.id);
       owners.delete(object.id);
       if (owner && !owner.spec && !Obj.getParent(object)) {
