@@ -81,7 +81,7 @@ classDiagram
 
   Plugin "1" *-- "0..n" PluginModule : modules
   PluginModule --> ActivationSpec : activation
-  Module ..> PluginModule : Plugin.addModule()
+  Module ..> PluginModule : Plugin.config() modules
   ActivationSpec ..> Tag : requires / provides
   ActivationSpec ..> MultiTag : requires / provides
   Tag ..> Contribution : Capability.contribute()
@@ -109,6 +109,22 @@ registry boundary — the authoring layer and the storage layer:
 that becomes three registry entries, with the `deactivate` hook pinned to the first so it runs
 exactly once.
 
+## Defining a plugin
+
+A plugin is a single `dx.config.ts` default-exporting `Plugin.config({ plugin, modules })`. The config is
+data plus loaders: each module is an `AppCapability` maker or `Capability.lazyModule` whose body is a
+`import(…, { with: { type: 'module-url' } })`. `Plugin.namespace(key)` (a leaf `src/namespace.ts`) supplies the
+key and the tag makers, so the config can name the tags its modules provide without importing the plugin's
+own `meta`.
+
+At build time `pluginConfigPlugin` evaluates the config in Node, never loading a body, and replaces it with a
+`Plugin.Manifest`: the plugin data, and per module its activation spec, tags and body URL. Each body becomes its
+own chunk and `Plugin.fromManifest` turns the manifest back into a plugin factory whose bodies load on
+activation. A library build emits one entry per runtime (`?dx-env=node|workerd`) restricted to the modules whose
+`environments` name it. In tests and storybook the config is served as authored (`moduleBodyAttributePlugin`
+drops the attribute), and `Plugin.fromModules` builds the plugin directly. Authoring rules are in
+[API.md](./API.md#composing-a-plugin).
+
 ## Activation
 
 ```mermaid
@@ -116,7 +132,7 @@ flowchart TB
   subgraph authoring["Authoring (compile time)"]
     A1["Capability.make / makeSingleton<br/>defines a Tag"]
     A2["Capability.lazyModule / inlineModule<br/>or an AppCapability maker<br/>→ Capability.Module"]
-    A3["Plugin.define(meta).pipe(<br/>Plugin.addModule(...), Plugin.make)<br/>→ Plugin"]
+    A3["dx.config.ts:<br/>Plugin.config({ plugin, modules })<br/>→ PluginConfig → make() → Plugin"]
     A1 --> A2 --> A3
   end
 
@@ -173,18 +189,19 @@ must be camelCase (`DXN.Name`).
 
 ## Where things live
 
-| Concept                                                              | File                                                     |
-| -------------------------------------------------------------------- | -------------------------------------------------------- |
-| Tags, arity, `Contribution`, `contribute`, module makers             | `src/core/capability.ts`                                 |
-| `Plugin`, `PluginModule`, `ActivationSpec`, the builder              | `src/core/plugin.ts`                                     |
-| Public manager API, unit composition, shutdown, failure policy       | `src/core/plugin-manager/plugin-manager.ts`              |
-| Shared substrate: atoms, status channel, fibers (`ManagerState`)     | `src/core/plugin-manager/manager-state.ts`               |
-| Catalog: add/enable/disable, lazy resolution, dependency closure     | `src/core/plugin-manager/plugin-catalog.ts`              |
-| Lifecycle engine: start/activate/deactivate/reset, rounds, waves     | `src/core/plugin-manager/activation-scheduler.ts`        |
-| Ordering logic (runnable selection, waves, cycles), on `@dxos/graph` | `src/core/plugin-manager/activation-graph.ts`            |
-| Memoized module loads, provides validation, deactivation             | `src/core/plugin-manager/module-loader.ts`               |
-| The NSID-keyed registry and its reactive views                       | `src/core/capability-manager.ts`                         |
-| Tagged errors (cycle, missing/duplicate provider, mismatch)          | `src/core/errors.ts`                                     |
-| Per-capability module makers (`surface`, `settings`, …)              | `@dxos/app-toolkit` `src/app-framework/AppCapability.ts` |
+| Concept                                                               | File                                                     |
+| --------------------------------------------------------------------- | -------------------------------------------------------- |
+| Tags, arity, `Contribution`, `contribute`, module makers              | `src/core/capability.ts`                                 |
+| `Plugin`, `PluginModule`, `ActivationSpec`, `Plugin.config`, manifest | `src/core/plugin.ts`                                     |
+| Build-time `dx.config.ts` → manifest evaluation                       | `src/vite-plugin/plugin-config/index.ts`                 |
+| Public manager API, unit composition, shutdown, failure policy        | `src/core/plugin-manager/plugin-manager.ts`              |
+| Shared substrate: atoms, status channel, fibers (`ManagerState`)      | `src/core/plugin-manager/manager-state.ts`               |
+| Catalog: add/enable/disable, lazy resolution, dependency closure      | `src/core/plugin-manager/plugin-catalog.ts`              |
+| Lifecycle engine: start/activate/deactivate/reset, rounds, waves      | `src/core/plugin-manager/activation-scheduler.ts`        |
+| Ordering logic (runnable selection, waves, cycles), on `@dxos/graph`  | `src/core/plugin-manager/activation-graph.ts`            |
+| Memoized module loads, provides validation, deactivation              | `src/core/plugin-manager/module-loader.ts`               |
+| The NSID-keyed registry and its reactive views                        | `src/core/capability-manager.ts`                         |
+| Tagged errors (cycle, missing/duplicate provider, mismatch)           | `src/core/errors.ts`                                     |
+| Per-capability module makers (`surface`, `settings`, …)               | `@dxos/app-toolkit` `src/app-framework/AppCapability.ts` |
 
 Worked examples: `@dxos/plugin-client` and `@dxos/plugin-markdown`.

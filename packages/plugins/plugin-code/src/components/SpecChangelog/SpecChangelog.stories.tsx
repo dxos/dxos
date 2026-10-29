@@ -110,7 +110,12 @@ const STORY_DIR = 'packages/plugins/plugin-code/src/components/SpecChangelog/';
 const SOURCES: Record<string, string> = Object.fromEntries(
   Object.entries(
     import.meta.glob<string>(
-      ['../../../../plugin-code/src/**/*.{ts,tsx}', '../../../../plugin-file-system/src/**/*.{ts,tsx}'],
+      [
+        '../../../../plugin-code/dx.config.ts',
+        '../../../../plugin-code/src/**/*.{ts,tsx}',
+        '../../../../plugin-file-system/dx.config.ts',
+        '../../../../plugin-file-system/src/**/*.{ts,tsx}',
+      ],
       { query: '?raw', import: 'default', eager: true },
     ),
   ).map(([file, text]) => [new URL(file, `file:///${STORY_DIR}`).pathname.slice(1), text]),

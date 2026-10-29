@@ -541,6 +541,9 @@
       "path": "packages/plugins/plugin-library/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-lighthouse/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-linear/tsconfig.json"
     },
     {

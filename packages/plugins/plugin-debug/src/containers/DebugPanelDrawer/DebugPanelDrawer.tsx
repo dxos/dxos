@@ -10,8 +10,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
+import { DebugNamespace } from '../../namespace.ts';
 import {
   DEBUG_PANEL_CONTEXT,
   DebugPanel,
@@ -38,7 +37,7 @@ export const DebugPanelDrawer = ({ contextId = DEBUG_PANEL_CONTEXT }: DebugPanel
 DebugPanelDrawer.displayName = 'DebugPanelDrawer';
 
 const DebugPanelDrawerContent = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DebugNamespace.key);
   const { mode, setMode } = useDebugPanelContext();
   const { invokePromise } = Hooks.useOperationInvoker();
 

@@ -4,6 +4,6 @@
 
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
+import { SearchNamespace } from './namespace.ts';
 
-export const SEARCH_DIALOG = DXN.make(`${meta.profile.key}.searchDialog`);
+export const SEARCH_DIALOG = DXN.make(`${SearchNamespace.key}.searchDialog`);

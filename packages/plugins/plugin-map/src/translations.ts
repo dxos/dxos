@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as geoTranslations } from '@dxos/react-ui-geo/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Map } from '#types';
+
+import { MapNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -23,7 +24,7 @@ export const translations = [
         'delete-object.label': 'Delete map',
         'object-deleted.label': 'Map deleted',
       },
-      [meta.profile.key]: {
+      [MapNamespace.key]: {
         'plugin.name': 'Maps',
         'toggle-type.label': 'Toggle view',
         'map.companion.label': 'Map',

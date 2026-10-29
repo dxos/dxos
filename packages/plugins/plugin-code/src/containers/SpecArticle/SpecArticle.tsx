@@ -77,10 +77,10 @@ import {
   reviewGutter,
   sourceLinks,
 } from '#components';
-import { meta } from '#meta';
 import { getSpecKey } from '#sync';
 import { CodeOperation } from '#types';
 
+import { CodeNamespace } from '../../namespace.ts';
 import {
   type DiffAgainst,
   fileKey,
@@ -164,7 +164,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(CodeNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;

@@ -14,8 +14,8 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
 
+import { CodeNamespace } from '../../namespace.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
 import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { VerdictCard } from '../VerdictCard/index.ts';
@@ -41,7 +41,7 @@ const ReviewPanelContext = createContext<Pick<ReviewPanelProps, 'onSelect' | 'on
  * The list is the shared card container: arrow keys move the current card, and the current card follows the spec.
  */
 export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode, read }: ReviewPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const verdicts = useMemo(
     () =>
       [...(review?.verdicts ?? [])].sort(

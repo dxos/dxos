@@ -24,7 +24,8 @@ import { mention } from '@dxos/ui-editor';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
 import { useThreadMessages } from '#hooks';
-import { meta } from '#meta';
+
+import { ReviewNamespace } from '../../namespace.ts';
 
 // TODO(wittjosiah): Factor out to @dxos/echo-react as a reactive hook that subscribes to
 // relation changes. The try/catch should not be necessary — Relation.getSource should
@@ -93,7 +94,7 @@ export const CommentThread = ({
   onAcceptProposal,
   onAcceptChange,
 }: CommentThreadProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ReviewNamespace.key);
   const detached = !anchor.anchor;
   const source = useRelationSource(anchor);
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;

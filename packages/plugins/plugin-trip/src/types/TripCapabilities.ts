@@ -6,8 +6,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
+import { TripNamespace } from '../namespace.ts';
 import type * as BookingSearch from './BookingSearch.ts';
 import type * as Routing from './Routing.ts';
 
@@ -17,7 +16,7 @@ import type * as Routing from './Routing.ts';
  * the segment kind being searched.
  */
 export const BookingService = Capability.make<BookingSearch.BookingService>()(
-  `${meta.profile.key}.capability.bookingService`,
+  `${TripNamespace.key}.capability.bookingService`,
 );
 
 /**
@@ -25,5 +24,5 @@ export const BookingService = Capability.make<BookingSearch.BookingService>()(
  * resolves all contributions and uses the first (or the one matching the requested provider id).
  */
 export const RoutingService = Capability.makeSingleton<Routing.RoutingService>()(
-  `${meta.profile.key}.capability.routingService`,
+  `${TripNamespace.key}.capability.routingService`,
 );

@@ -4,7 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { ReviewNamespace } from '../namespace.ts';
 
 /**
  * Runtime identity of the comment-thread AI agent.
@@ -24,7 +24,9 @@ export interface AgentIdentity {
   readonly avatar?: string;
 }
 
-export const AgentIdentity = Capability.makeSingleton<AgentIdentity>()(`${meta.profile.key}.capability.agentIdentity`);
+export const AgentIdentity = Capability.makeSingleton<AgentIdentity>()(
+  `${ReviewNamespace.key}.capability.agentIdentity`,
+);
 
 /**
  * Built-in default identity used by ReviewPlugin when no host has contributed

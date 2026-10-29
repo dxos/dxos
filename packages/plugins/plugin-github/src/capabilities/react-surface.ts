@@ -13,10 +13,10 @@ import { isSpace } from '@dxos/react-client/echo';
 import { Issue, PullRequest, Repo } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
-import { IMPORT_PULL_REQUEST_DIALOG } from '#meta';
 import { Walkthrough } from '#types';
 
 import { GitHubCard, PullRequestCard } from '../cards/index.ts';
+import { IMPORT_PULL_REQUEST_DIALOG } from '../constants.ts';
 import {
   ImportPullRequestDialog,
   PullRequestArticle,

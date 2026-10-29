@@ -6,8 +6,10 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment, useCallback, useMemo } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import {
@@ -20,19 +22,20 @@ import {
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { FeatureKanban } from '#components';
-import { FEATURE_COMPANION, meta } from '#meta';
 import { Feature, FeatureMapView, Spec } from '#types';
 
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
+import { FEATURE_COMPANION, SPEC_DOCUMENT_COMPANION } from '../../constants.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type SpecFeaturesProps = {
   role?: string;
@@ -77,7 +80,7 @@ const useTrail = (root: Spec.Spec, feature: Feature.Feature | undefined): { id: 
  * back out.
  */
 export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const { mode, focus } = useViewState(FeatureMapView.aspect, spec.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, spec.id);
   const db = Obj.getDatabase(spec);
@@ -172,12 +175,37 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
   );
   const handleAdd = useCallback((id: string) => editing.moveFeature(id, zoomed?.id), [editing, zoomed]);
 
+  // The document lives only within its spec, so the spec's toolbar is the way to it.
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const hasDocument = useObject(spec)[0]?.document !== undefined;
+  const handleOpenDocument = useCallback(
+    () =>
+      void invokePromise(LayoutOperation.UpdateCompanion, {
+        subject: Attention.linkedSegment(SPEC_DOCUMENT_COMPANION),
+        // Anchored to this plank, which need not be the attended one when its toolbar is clicked.
+        anchor: attendableId,
+      }),
+    [invokePromise, attendableId],
+  );
+
   const menu = useMenuBuilder((): ActionGraphProps => {
-    return MenuBuilder.make()
+    const builder = MenuBuilder.make();
+    if (hasDocument) {
+      builder.action(
+        'open-document',
+        {
+          label: ['feature-map.open-document.label', { ns: ProjectsNamespace.key }],
+          icon: 'ph--file-text--regular',
+          testId: 'feature-map.open-document',
+        },
+        handleOpenDocument,
+      );
+    }
+    return builder
       .group(
         'mode',
         {
-          label: ['feature-map.mode.label', { ns: meta.profile.key }],
+          label: ['feature-map.mode.label', { ns: ProjectsNamespace.key }],
           variant: 'toggleGroup',
           selectCardinality: 'single',
           value: mode,
@@ -187,7 +215,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
             group.action(
               mode,
               {
-                label: [`feature-map.mode.${mode}.label`, { ns: meta.profile.key }],
+                label: [`feature-map.mode.${mode}.label`, { ns: ProjectsNamespace.key }],
                 icon,
                 testId: `projectsPlugin.featureMap.${mode}`,
               },
@@ -199,7 +227,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
       .action(
         'new-feature',
         {
-          label: ['feature-map.new-feature.label', { ns: meta.profile.key }],
+          label: ['feature-map.new-feature.label', { ns: ProjectsNamespace.key }],
           icon: 'ph--plus--regular',
           testId: 'feature-map.new-feature',
         },
@@ -209,7 +237,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
         'add-feature',
         {
           variant: 'custom',
-          label: ['feature-map.add-feature.label', { ns: meta.profile.key }],
+          label: ['feature-map.add-feature.label', { ns: ProjectsNamespace.key }],
           render: () => (
             <ObjectAddPicker
               db={db}
@@ -231,7 +259,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
         () => {},
       )
       .build();
-  }, [mode, updateView, db, ids, trail, zoomed, editing, handleNew, handleAdd, t]);
+  }, [mode, updateView, db, ids, trail, zoomed, editing, handleNew, handleAdd, hasDocument, handleOpenDocument, t]);
 
   // Only the boxes that moved are written, so a drag touches one entry of the layout rather than all of it.
   const handlePositionsChange = useCallback(

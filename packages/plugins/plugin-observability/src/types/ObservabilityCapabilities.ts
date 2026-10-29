@@ -13,12 +13,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type Client } from '@dxos/client';
 import type * as ObservabilityNs from '@dxos/observability/Observability';
 
-import { meta } from '#meta';
+import { ObservabilityNamespace } from '../namespace.ts';
 
-export const Namespace = Capability.makeSingleton<string>()(`${meta.profile.key}.capability.namespace`);
+export const Namespace = Capability.makeSingleton<string>()(`${ObservabilityNamespace.key}.capability.namespace`);
 
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${ObservabilityNamespace.key}.capability.settings`,
 );
 
 export const StateSchema = Schema.Struct({
@@ -28,10 +28,10 @@ export const StateSchema = Schema.Struct({
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${ObservabilityNamespace.key}.capability.state`);
 
 export const Observability = Capability.makeSingleton<ObservabilityNs.Observability>()(
-  `${meta.profile.key}.capability.observability`,
+  `${ObservabilityNamespace.key}.capability.observability`,
 );
 
 /**
@@ -39,7 +39,9 @@ export const Observability = Capability.makeSingleton<ObservabilityNs.Observabil
  * The callback is responsible for the entire download (read store, encode, save file).
  */
 export type LogDownloader = () => void | Promise<void>;
-export const LogDownloader = Capability.makeSingleton<LogDownloader>()(`${meta.profile.key}.capability.logDownloader`);
+export const LogDownloader = Capability.makeSingleton<LogDownloader>()(
+  `${ObservabilityNamespace.key}.capability.logDownloader`,
+);
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
 // TODO(burdon): Figure out how to share defs.

@@ -11,7 +11,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
+import { DoctorNamespace } from '../namespace.ts';
 
 export const DIAGNOSTICS_DECK_COMPANION_ID = 'diagnostics';
 
@@ -19,14 +19,14 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       AppGraphBuilder.createExtension({
-        id: `${meta.profile.key}.diagnosticsDeckCompanion`,
+        id: `${DoctorNamespace.key}.diagnosticsDeckCompanion`,
         relation: AppNode.companion,
         match: GraphNodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: DIAGNOSTICS_DECK_COMPANION_ID,
-              label: ['diagnostics-tab.label', { ns: meta.profile.key }],
+              label: ['diagnostics-tab.label', { ns: DoctorNamespace.key }],
               icon: 'ph--first-aid-kit--regular',
               data: DIAGNOSTICS_DECK_COMPANION_ID,
               position: Position.last,

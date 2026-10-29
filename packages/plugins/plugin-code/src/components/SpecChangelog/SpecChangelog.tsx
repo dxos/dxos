@@ -22,8 +22,8 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
 
+import { CodeNamespace } from '../../namespace.ts';
 import { ApiSurface } from '../ApiSurface/index.ts';
 import { ChangelogGraph, type DecisionModel, buildChangelogGraph } from '../ChangelogGraph/index.ts';
 import { DataModelGraph } from '../DataModelGraph/index.ts';
@@ -74,7 +74,7 @@ export const SpecChangelog = ({
   onOpenCode,
   read,
 }: SpecChangelogProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const themeMode = Hooks.useThemeMode();
   const [view, setView] = useState<SpecView>(defaultView);
   const [selected, setSelected] = useState<string>();

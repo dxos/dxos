@@ -301,6 +301,7 @@
       "@dxos/plugin-kanban",
       "@dxos/plugin-lametric",
       "@dxos/plugin-library",
+      "@dxos/plugin-lighthouse",
       "@dxos/plugin-linear",
       "@dxos/plugin-lingo",
       "@dxos/plugin-magazine",

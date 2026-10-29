@@ -21,13 +21,13 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { ComplexMap } from '@dxos/util';
 
-import { SpacePlugin } from '#plugin';
+import * as SpacePlugin from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import type { ObjectFormHandle } from '../util/index.ts';
 import { TestObject } from './testing.ts';
 
-await Harness.preload({ plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin({})] });
+await Harness.preload({ plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin.make({})] });
 
 /**
  * `OpenObjectForm` returns what the dialog produced, which means the handler has to stay suspended
@@ -121,7 +121,7 @@ const ephemeralState = () =>
 
 const setup = async (onOpen: (handle: ObjectFormHandle) => void) => {
   const harness = await Harness.createComposerTestApp({
-    plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin({}), makeStubLayoutPlugin(onOpen)],
+    plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin.make({}), makeStubLayoutPlugin(onOpen)],
   });
 
   const client = harness.get(ClientCapabilities.Client);

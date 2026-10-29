@@ -209,6 +209,8 @@ export class SpaceProxy implements Space, CustomInspectable {
       spaceKey: this.key,
       owningObject: this,
       branchStore: createDeviceLocalBranchStore(this.id),
+      createEpoch: (automergeRootUrl) =>
+        this._createEpoch({ migration: SpacesService.Migration.enums.REPLACE_AUTOMERGE_ROOT, automergeRootUrl }),
     });
 
     const self = this;

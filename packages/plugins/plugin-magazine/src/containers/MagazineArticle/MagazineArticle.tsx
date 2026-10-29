@@ -21,16 +21,16 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { useVisibleMagazinePosts } from '#atoms';
-import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
+import { MagazineNamespace } from '../../namespace.ts';
 import { MagazineTile } from './MagazineTile.tsx';
 import { useToolbar } from './useToolbar.tsx';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MagazineNamespace.key);
   const invoker = Hooks.useOperationInvoker();
   const [magazine] = useObject(subject);
   const curateProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createCurateProgressKey(subject));

@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
+import { SlackNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [SlackNamespace.key]: {
         'plugin.name': 'Slack',
         'sync-now.label': 'Sync now',
         'sync-this-chat.label': 'Sync this chat',
