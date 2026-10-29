@@ -126,7 +126,7 @@ const DefaultStory = () => {
         <Canvas.Viewport />
         <Canvas.Navigation />
         <Canvas.Actions />
-        <Canvas.Debug />
+        <Canvas.Camera />
         <Canvas.Tools />
       </Canvas.Root>
       <GraphPanel graph={graph} overlay={overlay} />

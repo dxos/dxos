@@ -270,7 +270,7 @@ export const DataFlowView = ({
       {chrome && (
         <>
           <Canvas.Navigation />
-          <Canvas.Debug />
+          <Canvas.Camera />
           <Canvas.Theme />
         </>
       )}

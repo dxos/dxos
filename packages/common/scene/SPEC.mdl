@@ -618,3 +618,23 @@ decision D-57: react-ui-canvas's tool rail is generic over the host's tool value
   for: user:richburdon
   why: One component per panel keeps the two views alike as either changes.
 ```
+
+```mdl
+decision D-58: A 3D selection is drawn in the 2D canvas's selection colour (the theme's focus colour), as a silhouette outline and a thin world-aligned bounding box per selected element.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-59: The 3D editor has the 2D canvas's camera bar (fit, actual size, zoom in and out, and the zoom as a percentage of the authored view) and its read-only lock, one lock per canvas shared by both dimensions; locked, only select and orbit work. A vector field shows its axes on one row.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-60: A shape created in 3D rests on the ground rather than being centred on it, its centre half its unit height above the point clicked; the ground grid is drawn as faint minor lines one unit apart with a major line every fourth, fading towards its edge, and drawn with lines rather than Babylon's GridMaterial, which needs a dependency the workspace does not have. The 3D Properties steppers move a centre one grid unit, a rotation 15 degrees and a scale 0.1. Fills in [D-54] and [D-59].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: A shape through the ground plane shows the grid across it; the 2D canvas has no rotation or scale steppers to match, so these are new values.
+```

@@ -4,23 +4,33 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Annotation } from '@dxos/echo';
+import { StepAnnotation } from '@dxos/react-ui-form';
 import { type LayoutIntent, Scene } from '@dxos/scene';
 
-/** A vector as the form edits it: each axis may be cleared while typing, and a cleared axis takes the default's. */
-const FormVec3 = Schema.Struct({
-  x: Schema.optional(Schema.Number),
-  y: Schema.optional(Schema.Number),
-  z: Schema.optional(Schema.Number),
-});
+/** An axis as the form edits it: clearable while typing, and stepped by `step` with the stepper. */
+const axis = (step: number) => Schema.optional(Schema.Number.pipe(StepAnnotation.set(step)));
+
+/** A vector as the form edits it, its axes on one row; a cleared axis takes the default's. */
+const formVec3 = (step: number) =>
+  Schema.Struct({ x: axis(step), y: axis(step), z: axis(step) }).pipe(
+    Annotation.FormLayoutAnnotation.set({
+      [Annotation.DEFAULT_LAYOUT_NAME]:
+        '<grid cols="3" fixed="true"><field name="x"/><field name="y"/><field name="z"/></grid>',
+    }),
+  );
+
+/** A centre steps one unit of the ground grid's minor lines; a rotation 15 degrees; a scale a tenth. */
+const FormVec3 = formVec3(1);
 type FormVec3 = Schema.Schema.Type<typeof FormVec3>;
 
 /** The fields a person edits in the 3D Properties form; bindings and parts are the tools' and the Library's. */
 export const ElementForm = Schema.Struct({
   label: Scene.Element3D.fields.label,
   style: Scene.Element3D.fields.style,
-  center: Schema.optional(FormVec3),
-  rotation: Schema.optional(FormVec3),
-  scale: Schema.optional(FormVec3),
+  center: Schema.optional(formVec3(1)),
+  rotation: Schema.optional(formVec3(15)),
+  scale: Schema.optional(formVec3(0.1)),
 });
 export type ElementForm = Schema.Schema.Type<typeof ElementForm>;
 

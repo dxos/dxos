@@ -165,3 +165,32 @@ export const zoomBy = (camera: Scene.Camera3D, factor: number): Scene.Camera3D =
   ...camera,
   distance: Math.max(1e-3, camera.distance * factor),
 });
+
+/** The share of the view a fitted scene leaves as a margin round its bounds. */
+const FIT_MARGIN = 1.15;
+
+/**
+ * The camera looking at `bounds` from the same angle, near enough that the sphere round them fills the shorter side of
+ * the view (with a margin); a camera with nothing to frame stays as it was.
+ */
+export const fitCamera = (
+  camera: Scene.Camera3D,
+  bounds: { center: Vec3; radius: number },
+  viewport: Viewport,
+): Scene.Camera3D => {
+  if (bounds.radius <= 0) {
+    return camera;
+  }
+  // The narrower of the two half-angles: the vertical field, or the horizontal one on a portrait view.
+  const aspect = viewport.width / Math.max(1, viewport.height);
+  const half = Math.min(camera.fov / 2, Math.atan(Math.tan(camera.fov / 2) * aspect));
+  return {
+    ...camera,
+    target: { ...bounds.center },
+    distance: (bounds.radius * FIT_MARGIN) / Math.sin(half),
+  };
+};
+
+/** How near the camera is to the authored view's, as a percentage: nearer reads higher, as a 2D zoom does. */
+export const zoomPercent = (camera: Scene.Camera3D, authored: Scene.Camera3D): number =>
+  Math.round((authored.distance / Math.max(1e-3, camera.distance)) * 100);

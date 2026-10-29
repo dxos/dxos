@@ -75,11 +75,11 @@ const cubeDrawing = () =>
       const stored = toEcho(
         Dsl.readScenes(trim`
           scene cube dim=3d layout=cube name="Cube" {
-            camera target=0,0,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
+            camera target=0,1,0 yaw=-45 pitch=30 distance=8 fov=0.8 projection=perspective
           }
 
           layout cube dim=3d {
-            element box cube @ 0,0,0 scale=2 hue=blue surface=solid
+            element box cube @ 0,1,0 scale=2 hue=blue surface=solid
           }
         `).document,
       );

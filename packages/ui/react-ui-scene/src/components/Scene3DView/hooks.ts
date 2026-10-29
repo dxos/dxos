@@ -89,6 +89,7 @@ export const useSceneRenderer = (
       canvas,
       theme: look,
       background: cssColorToHex(getComputedStyle(container).backgroundColor, '#f4f5f7'),
+      selection: focusColor(container),
     });
     setRenderer(next);
     const observer = new ResizeObserver(([entry]) => {
@@ -102,8 +103,17 @@ export const useSceneRenderer = (
       setRenderer(undefined);
     };
   }, [look]);
+  // The focus colour follows the app's theme (light or dark), so it is read again as the view re-renders.
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    container && renderer?.setSelectionColor(focusColor(container));
+  });
   return { renderer, size };
 };
+
+/** The theme's focus colour, which the 2D canvas draws its selection frame in, as a hex string. */
+const focusColor = (element: HTMLElement): string =>
+  cssColorToHex(getComputedStyle(element).getPropertyValue('--color-focus').trim(), '#3b82f6');
 
 export type OrbitOptions = {
   /** Off where something else drives the camera. */

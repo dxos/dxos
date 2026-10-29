@@ -59,7 +59,8 @@ import { type RenderItem, type RenderList } from './render-list.ts';
 import { type MaterialSpec, type Theme3D, materialSpec } from './style.ts';
 
 /** The outline of a selected item: the theme's focus blue. */
-const SELECTION_COLOR = Color3.FromHexString('#3b82f6');
+/** The selection colour when the host gives none. */
+const DEFAULT_SELECTION = '#3b82f6';
 
 /** The radius of the faint lattice sphere the presentation theme draws behind everything. */
 const BACKDROP_RADIUS = 4000;
@@ -86,6 +87,8 @@ export type SceneRenderer3DOptions = {
   theme: Theme3D;
   /** The CAD background, read from the surface the view sits on. */
   background: string;
+  /** The selection colour (the theme's focus colour, as the 2D canvas's selection frame); a blue when unset. */
+  selection?: string;
 } & (
   | { canvas: HTMLCanvasElement; engine?: undefined }
   /** An engine of the caller's, e.g. a `NullEngine` in a test. */
@@ -167,9 +170,12 @@ export class SceneRenderer3D {
   readonly #instances: Record<Instance3D['primitive'], Mesh>;
   #grid?: LinesMesh;
   readonly #highlight: HighlightLayer;
+  #selection: string;
+  readonly #boxes = new Map<string, { mesh: LinesMesh; min: Vector3; max: Vector3 }>();
 
-  constructor({ canvas, engine, theme, background }: SceneRenderer3DOptions) {
+  constructor({ canvas, engine, theme, background, selection = DEFAULT_SELECTION }: SceneRenderer3DOptions) {
     this.#theme = theme;
+    this.#selection = selection;
     const presentation = theme === 'presentation';
     this.#engine =
       engine ?? new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, adaptToDeviceRatio: true });
@@ -206,6 +212,30 @@ export class SceneRenderer3D {
       blurVerticalSize: 0.5,
     });
     this.#highlight.innerGlow = false;
+  }
+
+  /** The selection colour, as a hex string. */
+  get highlightColor(): string {
+    return this.#selection;
+  }
+
+  /** Each selected item's world-aligned bounding box: its corners and colour, by key. */
+  get boxes(): Record<string, { min: Vector3; max: Vector3; color: string }> {
+    return Object.fromEntries(
+      [...this.#boxes].map(([key, { min, max }]) => [key, { min, max, color: this.#selection }]),
+    );
+  }
+
+  /** Changes the selection colour, e.g. when the theme does. */
+  setSelectionColor(color: string): void {
+    if (color === this.#selection) {
+      return;
+    }
+    this.#selection = color;
+    this.#highlight.removeAllMeshes();
+    this.#clearBoxes();
+    this.#outline();
+    this.#view && this.#scene.render();
   }
 
   /** The keys of the items outlined as selected. */
@@ -250,6 +280,8 @@ export class SceneRenderer3D {
     this.#pose(camera);
     this.#view = camera;
     this.#scene.render();
+    // Materials compile asynchronously: draw again once the scene's are ready, and until the outline's are.
+    this.#scene.executeWhenReady(() => this.#scene.render());
     this.#settle();
   }
 
@@ -353,6 +385,7 @@ export class SceneRenderer3D {
   }
 
   dispose(): void {
+    this.#clearBoxes();
     this.#highlight.dispose();
     this.#gizmos?.dispose();
     this.#layers?.normal.dispose();
@@ -390,14 +423,58 @@ export class SceneRenderer3D {
   }
 
   #outline(): void {
+    const color = Color3.FromHexString(this.#selection);
     for (const [key, { surface }] of this.#items) {
       const selected = this.#selected.has(key);
       if (selected && !this.#highlight.hasMesh(surface)) {
-        this.#highlight.addMesh(surface, SELECTION_COLOR);
+        this.#highlight.addMesh(surface, color);
       } else if (!selected && this.#highlight.hasMesh(surface)) {
         this.#highlight.removeMesh(surface);
       }
     }
+    // The boxes follow the items' current bounds, so a moved or resized item's box is drawn afresh.
+    this.#clearBoxes();
+    for (const [key, { surface }] of this.#items) {
+      if (this.#selected.has(key)) {
+        this.#boxes.set(key, this.#createBox(key, surface, color));
+      }
+    }
+  }
+
+  /** A thin wire box round an item's world-aligned bounds, drawn apart from the outline (which only meshes take). */
+  #createBox(key: string, surface: AbstractMesh, color: Color3): { mesh: LinesMesh; min: Vector3; max: Vector3 } {
+    surface.computeWorldMatrix(true);
+    const { minimumWorld: min, maximumWorld: max } = surface.getBoundingInfo().boundingBox;
+    const corner = (x: number, y: number, z: number) =>
+      new Vector3(x ? max.x : min.x, y ? max.y : min.y, z ? max.z : min.z);
+    const edges: [number, number, number, number, number, number][] = [
+      [0, 0, 0, 1, 0, 0],
+      [0, 1, 0, 1, 1, 0],
+      [0, 0, 1, 1, 0, 1],
+      [0, 1, 1, 1, 1, 1],
+      [0, 0, 0, 0, 1, 0],
+      [1, 0, 0, 1, 1, 0],
+      [0, 0, 1, 0, 1, 1],
+      [1, 0, 1, 1, 1, 1],
+      [0, 0, 0, 0, 0, 1],
+      [1, 0, 0, 1, 0, 1],
+      [0, 1, 0, 0, 1, 1],
+      [1, 1, 0, 1, 1, 1],
+    ];
+    const mesh = CreateLineSystem(
+      `box-${key}`,
+      { lines: edges.map(([x0, y0, z0, x1, y1, z1]) => [corner(x0, y0, z0), corner(x1, y1, z1)]) },
+      this.#scene,
+    );
+    mesh.color = color;
+    mesh.alpha = 0.8;
+    mesh.isPickable = false;
+    return { mesh, min: min.clone(), max: max.clone() };
+  }
+
+  #clearBoxes(): void {
+    this.#boxes.forEach(({ mesh }) => mesh.dispose());
+    this.#boxes.clear();
   }
 
   #pose(camera: Model.Camera3D): void {

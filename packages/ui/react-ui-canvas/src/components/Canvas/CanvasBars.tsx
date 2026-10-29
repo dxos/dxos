@@ -134,8 +134,8 @@ export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2
 CanvasActions.displayName = 'Canvas.Actions';
 
 /** The camera's controls and numbers; nothing here changes the scene. */
-export const CanvasDebug = ({ classNames = 'bottom-2 left-2' }: CanvasBarProps) => {
-  const { atoms, commands } = useCanvasNavigation('Canvas.Debug');
+export const CanvasCamera = ({ classNames = 'bottom-2 left-2' }: CanvasBarProps) => {
+  const { atoms, commands } = useCanvasNavigation('Canvas.Camera');
   const camera = useAtomValue(atoms.camera);
   const fitting = useAtomValue(atoms.fitting);
   const actions = useMemo<CameraActions>(
@@ -155,7 +155,7 @@ export const CanvasDebug = ({ classNames = 'bottom-2 left-2' }: CanvasBarProps) 
   );
 };
 
-CanvasDebug.displayName = 'Canvas.Debug';
+CanvasCamera.displayName = 'Canvas.Camera';
 
 //
 // Theme

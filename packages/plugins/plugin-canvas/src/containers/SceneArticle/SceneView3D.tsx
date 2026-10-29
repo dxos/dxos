@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type VersionChange,
   type VersionedSource,
@@ -14,20 +15,32 @@ import {
   recordChanges,
 } from '@dxos/react-ui-canvas/headless';
 import {
+  CameraToolbar,
   DisplayPanel,
   FLOATING_BAR,
   InspectorPanel,
   InspectorSection,
   type InspectorSectionDef,
+  ReadonlyToggle,
   type ToolGroup,
   ToolRail,
 } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Scene3DEditor, Scene3DView, type Tool3D, exportSTL, importMesh, loadManifold } from '@dxos/react-ui-scene';
+import {
+  Scene3DEditor,
+  Scene3DView,
+  type Tool3D,
+  exportSTL,
+  fitCamera,
+  importMesh,
+  loadManifold,
+  zoomBy,
+  zoomPercent,
+} from '@dxos/react-ui-scene';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
-import { type LayoutIntent, Scene, findLayout, reachedObjects, resolveLayout3D } from '@dxos/scene';
+import { type LayoutIntent, Scene, bounds3D, findLayout, reachedObjects, resolveLayout3D } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 import { downloadBlob } from '@dxos/util';
 
@@ -40,6 +53,7 @@ import { useSceneDocument } from '../SceneStage/index.ts';
 import { ElementForm, elementFormIntents, elementFormValues } from './element-form.ts';
 import { grid3D, sceneChrome } from './scene-chrome.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
+import { canvasViewAspect } from './view-state.ts';
 
 export type SceneView3DProps = {
   canvas: Canvas.Canvas;
@@ -126,6 +140,9 @@ const THEMES = [
   { id: 'presentation', key: 'theme.presentation.label' },
 ] as const;
 
+/** How far one zoom step moves the camera, as the 2D canvas's zoom step. */
+const ZOOM_STEP = 1.25;
+
 const isTheme3D = (value: string | undefined): value is 'cad' | 'presentation' =>
   value === 'cad' || value === 'presentation';
 
@@ -197,7 +214,37 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
 
   // The orbit, grid and look are this viewer's own view; the scene's camera and theme are the authored ones.
   const view = useScene3DView(canvas);
+  // One lock per canvas, the 2D canvas's: this viewer's view state over the canvas's own setting.
+  const contextId = Entity.getURI(canvas);
+  const { readonly: viewReadonly } = useViewState(canvasViewAspect, contextId);
+  const { update: updateCanvasView } = useViewStateActions(canvasViewAspect, contextId);
+  const readonly = viewReadonly ?? canvas.settings.readonly ?? false;
+  const handleReadonlyChange = useCallback(
+    (next: boolean) => updateCanvasView((state) => ({ ...state, readonly: next })),
+    [updateCanvasView],
+  );
   const authoredTheme = document?.scenes[0]?.theme;
+  const authored = stored?.camera;
+  const current = view.camera ?? authored;
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  // The camera bar moves only this viewer's view, never the scene's authored camera.
+  const cameraActions = useMemo(
+    () =>
+      current && authored
+        ? {
+            fit: () => {
+              const layout = document?.layouts.find((layout) => layout.id === (editing ?? document.scenes[0]?.layout));
+              const elements = document && layout?.dim === '3d' ? resolveLayout3D(document, layout) : {};
+              view.onCameraChange(fitCamera(current, bounds3D(elements), viewport));
+            },
+            fitting: false,
+            zoomReset: () => view.onCameraChange(authored),
+            zoomIn: () => view.onCameraChange(zoomBy(current, 1 / ZOOM_STEP)),
+            zoomOut: () => view.onCameraChange(zoomBy(current, ZOOM_STEP)),
+          }
+        : undefined,
+    [current, authored, document, editing, viewport, view.onCameraChange],
+  );
   const theme = view.theme ?? (isTheme3D(authoredTheme) ? authoredTheme : 'cad');
 
   const editingLayout = editing ?? document?.scenes[0]?.layout;
@@ -443,9 +490,10 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
     [editingLayout, selected, handleIntent],
   );
 
+  // Locked, the rail keeps only the tools that look: select and orbit.
   const toolGroups = useMemo<ToolGroup<Tool3D>[]>(
     () =>
-      TOOL_GROUPS.map((group) => ({
+      TOOL_GROUPS.filter((group) => !readonly || group.name === 'Tools').map((group) => ({
         name: group.name,
         collapsible: group.name === 'Make',
         entries: group.entries.map((entry) => ({
@@ -454,7 +502,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
           label: t(`tool.${entry.id}.label`),
         })),
       })),
-    [t],
+    [t, readonly],
   );
   const themes = useMemo(() => THEMES.map(({ id, key }) => ({ id, name: t(key) })), [t]);
 
@@ -483,6 +531,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
             editing={editing}
             selection={selection}
             tool={tool}
+            readonly={readonly}
             theme={theme}
             grid={grid3D(role, view.grid)}
             onSelect={setSelection}
@@ -490,14 +539,30 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
             onEdit={(layout) => setEditing(layout === document.scenes[0]?.layout ? undefined : layout)}
             camera={view.camera}
             onCameraChange={view.onCameraChange}
+            onResize={setViewport}
           >
             {/* The floating panels, placed as the 2D canvas places its own. */}
             <div className='absolute top-2 bottom-14 left-2 pointer-events-none'>
-              <ToolRail groups={toolGroups} tool={tool} same={sameTool} testId={toolTestId} onToolChange={setTool} />
+              <ToolRail
+                groups={toolGroups}
+                tool={tool}
+                same={sameTool}
+                testId={toolTestId}
+                groupEnd={{ Tools: <ReadonlyToggle readonly={readonly} onReadonlyChange={handleReadonlyChange} /> }}
+                onToolChange={setTool}
+              />
             </div>
-            <div className='absolute w-max bottom-2 left-1/2 -translate-x-1/2'>
-              <ActionToolbar {...menu} classNames={FLOATING_BAR} attendableId={attendableId} />
-            </div>
+            {/* Every action here edits the scene, so a locked canvas shows none, as the 2D canvas does. */}
+            {!readonly && (
+              <div className='absolute w-max bottom-2 left-1/2 -translate-x-1/2'>
+                <ActionToolbar {...menu} classNames={FLOATING_BAR} attendableId={attendableId} />
+              </div>
+            )}
+            {cameraActions && current && authored && (
+              <div className='absolute w-max bottom-2 left-2'>
+                <CameraToolbar actions={cameraActions}>{zoomPercent(current, authored)}%</CameraToolbar>
+              </div>
+            )}
             <div className='absolute w-max bottom-2 right-2'>
               <DisplayPanel
                 theme={themes.find((option) => option.id === theme) ?? themes[0]}
@@ -526,6 +591,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
                 key={selected.id}
                 schema={ElementForm}
                 values={elementFormValues(selected)}
+                readonly={readonly}
                 autoSave
                 onSave={handleSave}
               >
@@ -540,6 +606,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
           <InspectorSection section={{ ...LIBRARY, title: t('library.label') }}>
             <LibraryPanel
               objects={objects}
+              readonly={readonly}
               placing={typeof tool === 'object' && 'place' in tool ? tool.place : undefined}
               onPlace={(id) => setTool({ place: id })}
               onEditParts={(layout) => {

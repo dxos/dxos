@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { clickSelects, orbitButtons } from './tools.ts';
+import { clickSelects, editableTool, orbitButtons, restingCenter } from './tools.ts';
 
 describe('tools', () => {
   test('the orbit tool gives the left button to the orbit; every other tool keeps it', () => {
@@ -17,5 +17,19 @@ describe('tools', () => {
   test('a click with the orbit tool selects nothing', () => {
     expect(clickSelects('orbit')).toBe(false);
     expect(clickSelects('select')).toBe(true);
+  });
+
+  test('a new shape rests on the ground: its unit body sits above the point clicked, not through it', () => {
+    expect(restingCenter({ x: 2, y: 0, z: -1 })).toEqual({ x: 2, y: 0.5, z: -1 });
+  });
+
+  test('locked, only select and orbit stay: every editing tool falls back to select', () => {
+    expect(editableTool('orbit', true)).toBe('orbit');
+    expect(editableTool('select', true)).toBe('select');
+    for (const tool of ['move', 'rotate', 'scale', 'link', 'extrude'] as const) {
+      expect(editableTool(tool, true)).toBe('select');
+    }
+    expect(editableTool({ create: 'cube' }, true)).toBe('select');
+    expect(editableTool('move', false)).toBe('move');
   });
 });

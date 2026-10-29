@@ -23,7 +23,7 @@ import { DEFAULT_CAMERA, onScene, useManifoldGeometry, useOrbit, useSceneRendere
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
-import { type Tool3D, clickSelects, orbitButtons } from './tools.ts';
+import { type Tool3D, clickSelects, editableTool, orbitButtons, restingCenter } from './tools.ts';
 
 /**
  * What a left click does: select, transform the selection with a gizmo, link two elements, place one, or (extrude)
@@ -39,11 +39,15 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   /** Ids of elements in the edited layout. */
   selection: readonly string[];
   tool: Tool3D;
+  /** Locked: only select and orbit work, and nothing is changed by a click, drag or key. */
+  readonly?: boolean;
   theme?: Theme3D;
   /** Draws the ground grid. */
   grid?: boolean;
   /** Overlays drawn over the scene (floating panels); their pointer events never reach the scene. */
   children?: ReactNode;
+  /** Called with the view's size as it is laid out and resized, e.g. to fit the camera to it. */
+  onResize?: (size: { width: number; height: number }) => void;
   /** Where to look; the scene's camera when unset. */
   camera?: Scene.Camera3D;
   geometry?: GeometrySource;
@@ -84,17 +88,25 @@ export const Scene3DEditor = ({
   scene: sceneId,
   editing: editingProp,
   selection,
-  tool,
+  tool: toolProp,
+  readonly = false,
   theme,
   grid = false,
   children,
+  onResize,
   camera,
   geometry: givenGeometry,
   onSelect,
-  onIntent,
+  onIntent: onIntentProp,
   onEdit,
   onCameraChange,
 }: Scene3DEditorProps) => {
+  const tool = editableTool(toolProp, readonly);
+  // Locked, every edit stops here, whichever gesture or key would have made it.
+  const onIntent = useCallback(
+    (layout: string, intent: LayoutIntent) => !readonly && onIntentProp(layout, intent),
+    [readonly, onIntentProp],
+  );
   const scene = findScene(doc, sceneId);
   const editing = editingProp ?? scene?.layout ?? '';
   const layout = findLayout(doc, editing);
@@ -104,6 +116,7 @@ export const Scene3DEditor = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { renderer, size } = useSceneRenderer(containerRef, canvasRef, look);
+  useEffect(() => onResize?.(size), [size, onResize]);
   const view = useOrbit(containerRef, given, size, {
     enabled: true,
     buttons: orbitButtons(tool),
@@ -217,7 +230,10 @@ export const Scene3DEditor = ({
         const center = toLocal(transform, hit.point);
         const intent: LayoutIntent =
           'create' in tool
-            ? { kind: 'create', element: { id: freeId(layout, tool.create), kind: tool.create, center } }
+            ? {
+                kind: 'create',
+                element: { id: freeId(layout, tool.create), kind: tool.create, center: restingCenter(center) },
+              }
             : { kind: 'create', element: { id: freeId(layout, tool.place), object: tool.place, center } };
         onIntent(editing, intent);
         onSelect([intent.element.id]);

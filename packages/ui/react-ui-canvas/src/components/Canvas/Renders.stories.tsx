@@ -62,7 +62,7 @@ const DefaultStory = () => {
       <Counted id='actions'>
         <Canvas.Actions />
       </Counted>
-      <Canvas.Debug />
+      <Canvas.Camera />
       <Counted id='theme'>
         <Canvas.Theme />
       </Counted>

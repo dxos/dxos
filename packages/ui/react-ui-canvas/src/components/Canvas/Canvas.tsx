@@ -11,7 +11,7 @@
 
 import {
   CanvasActions,
-  CanvasDebug,
+  CanvasCamera,
   CanvasNavigation,
   CanvasTheme,
   CanvasTimeline,
@@ -26,7 +26,7 @@ export const Canvas = {
   Viewport: CanvasViewport,
   Navigation: CanvasNavigation,
   Actions: CanvasActions,
-  Debug: CanvasDebug,
+  Camera: CanvasCamera,
   Theme: CanvasTheme,
   Tools: CanvasTools,
   Properties: CanvasProperties,

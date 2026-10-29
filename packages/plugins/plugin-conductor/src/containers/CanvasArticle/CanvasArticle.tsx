@@ -105,7 +105,7 @@ const CanvasScene = ({ role, subject, controller }: CanvasSceneProps) => {
           <Canvas.Viewport overlay={<Bullets controller={controller} projection={projection} />} />
           <Canvas.Navigation />
           <Canvas.Actions />
-          <Canvas.Debug />
+          <Canvas.Camera />
           <Canvas.Tools />
         </Canvas.Root>
       </Root>

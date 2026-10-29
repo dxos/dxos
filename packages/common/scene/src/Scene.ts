@@ -9,7 +9,12 @@ import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 
 export { Vec3 };
 
-export const Vec2 = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+/** A 2D vector; a form shows its axes side by side. */
+export const Vec2 = Schema.Struct({ x: Schema.Number, y: Schema.Number }).pipe(
+  Annotation.FormLayoutAnnotation.set({
+    [Annotation.DEFAULT_LAYOUT_NAME]: '<grid cols="2" fixed="true"><field name="x"/><field name="y"/></grid>',
+  }),
+);
 export type Vec2 = Schema.Schema.Type<typeof Vec2>;
 
 export const Size2 = Schema.Struct({ width: Schema.Number, height: Schema.Number });

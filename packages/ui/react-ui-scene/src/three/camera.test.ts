@@ -6,7 +6,17 @@ import { describe, expect, test } from 'vitest';
 
 import { type Scene } from '@dxos/scene';
 
-import { cameraPosition, groundPoint, orbitBy, panBy, project, toOrbit, zoomBy } from './camera.ts';
+import {
+  cameraPosition,
+  fitCamera,
+  groundPoint,
+  orbitBy,
+  panBy,
+  project,
+  toOrbit,
+  zoomBy,
+  zoomPercent,
+} from './camera.ts';
 
 const camera = (props: Partial<Scene.Camera3D> = {}): Scene.Camera3D => ({
   target: { x: 0, y: 0, z: 0 },
@@ -112,6 +122,39 @@ describe('camera', () => {
       // Looking down from above, a pixel at the top of a steep perspective view still meets the ground; one far above
       // the horizon of a level view does not.
       expect(groundPoint(camera({ pitch: 0 }), viewport, { x: 400, y: 0 })).toBeUndefined();
+    });
+  });
+
+  describe('camera bar', () => {
+    const viewport = { width: 800, height: 600 };
+
+    test('fit centres the bounds and frames them whole, keeping the angle', () => {
+      const bounds = { center: { x: 4, y: 1, z: -2 }, radius: 3 };
+      const fitted = fitCamera(camera({ yaw: 30, pitch: 20 }), bounds, viewport);
+      expect(fitted.target).toEqual(bounds.center);
+      expect(fitted).toMatchObject({ yaw: 30, pitch: 20 });
+      for (const offset of [-1, 1]) {
+        for (const axis of ['x', 'y', 'z'] as const) {
+          const point = { ...bounds.center, [axis]: bounds.center[axis] + offset * bounds.radius };
+          const screen = project(fitted, viewport, point)!;
+          expect(screen.x).toBeGreaterThanOrEqual(0);
+          expect(screen.x).toBeLessThanOrEqual(viewport.width);
+          expect(screen.y).toBeGreaterThanOrEqual(0);
+          expect(screen.y).toBeLessThanOrEqual(viewport.height);
+        }
+      }
+    });
+
+    test('fitting nothing leaves the camera as it was', () => {
+      const given = camera();
+      expect(fitCamera(given, { center: { x: 0, y: 0, z: 0 }, radius: 0 }, viewport)).toBe(given);
+    });
+
+    test('the zoom reads 100% at the authored distance and steps with each zoom', () => {
+      const authored = camera({ distance: 10 });
+      expect(zoomPercent(authored, authored)).toBe(100);
+      expect(zoomPercent(zoomBy(authored, 1 / 1.25), authored)).toBe(125);
+      expect(zoomPercent(zoomBy(authored, 2), authored)).toBe(50);
     });
   });
 });

@@ -395,7 +395,7 @@ export const CanvasEngineView = ({
                 <>
                   <Canvas.Navigation />
                   <Canvas.Actions />
-                  <Canvas.Debug />
+                  <Canvas.Camera />
                   <Canvas.Theme />
                 </>
               )}

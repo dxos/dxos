@@ -103,7 +103,7 @@ const Editor = ({
       <Canvas.Viewport liveDepth={liveDepth} />
       <Canvas.Navigation />
       <Canvas.Actions />
-      <Canvas.Debug />
+      <Canvas.Camera />
       <Canvas.Theme />
       <Canvas.Tools />
       <Canvas.Properties />

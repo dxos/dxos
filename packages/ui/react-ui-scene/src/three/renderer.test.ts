@@ -47,7 +47,7 @@ describe('SceneRenderer3D.pick', () => {
       deterministicLockstep: false,
       lockstepMaxSteps: 1,
     });
-    const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#ffffff' });
+    const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#ffffff', selection: '#ff8800' });
     view.render(renderList(document), CAMERA);
     return view;
   };
@@ -66,6 +66,25 @@ describe('SceneRenderer3D.pick', () => {
     view.select([]);
     expect(view.highlighted).toEqual([]);
     view.dispose();
+  });
+
+  test('a selected item gets a world-aligned box of its bounds in the selection colour, removed on deselect', () => {
+    const view = renderer(doc([{ id: 'a', kind: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    view.select(['a']);
+    const box = view.boxes.a;
+    expect(box?.color).toBe('#ff8800');
+    expect(box?.min.x).toBeCloseTo(0);
+    expect(box?.max.x).toBeCloseTo(2);
+    expect(box?.min.y).toBeCloseTo(0);
+    expect(box?.max.y).toBeCloseTo(4);
+    expect(box?.min.z).toBeCloseTo(0);
+    expect(box?.max.z).toBeCloseTo(6);
+    expect(view.highlightColor).toBe('#ff8800');
+    view.select([]);
+    expect(view.boxes).toEqual({});
+    view.select(['a']);
+    view.dispose();
+    expect(view.boxes).toEqual({});
   });
 
   test('the ground grid is hidden until shown, and hides again', () => {

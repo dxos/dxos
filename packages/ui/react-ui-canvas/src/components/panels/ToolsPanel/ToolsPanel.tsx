@@ -165,17 +165,7 @@ export const ToolsPanel = ({
   const groupEnd = useMemo(
     () =>
       onReadonlyChange && {
-        [TOOLS_GROUP]: (
-          <Button.Toggle
-            variant='ghost'
-            iconOnly
-            icon={readonly ? 'ph--lock-simple--regular' : 'ph--lock-simple-open--regular'}
-            label={readonly ? 'Read-only: click to edit' : 'Editing: click to make read-only'}
-            pressed={readonly}
-            data-testid='palette-readonly'
-            onPressedChange={() => onReadonlyChange(!readonly)}
-          />
-        ),
+        [TOOLS_GROUP]: <ReadonlyToggle readonly={readonly} onReadonlyChange={onReadonlyChange} />,
       },
     [readonly, onReadonlyChange],
   );
@@ -194,6 +184,21 @@ export const ToolsPanel = ({
     />
   );
 };
+
+export type ReadonlyToggleProps = { readonly: boolean; onReadonlyChange: (readonly: boolean) => void };
+
+/** The tool rail's lock: switches a view between looking at the scene and editing it. */
+export const ReadonlyToggle = ({ readonly, onReadonlyChange }: ReadonlyToggleProps) => (
+  <Button.Toggle
+    variant='ghost'
+    iconOnly
+    icon={readonly ? 'ph--lock-simple--regular' : 'ph--lock-simple-open--regular'}
+    label={readonly ? 'Read-only: click to edit' : 'Editing: click to make read-only'}
+    pressed={readonly}
+    data-testid='palette-readonly'
+    onPressedChange={() => onReadonlyChange(!readonly)}
+  />
+);
 
 const paletteDragData = (tool: Tool): Record<string, unknown> | undefined =>
   tool.kind === 'node' ? nodeDragData(tool.type) : undefined;

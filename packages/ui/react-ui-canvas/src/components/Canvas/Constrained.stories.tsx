@@ -87,7 +87,7 @@ const DefaultStory = () => {
         <Canvas.Viewport />
         <Canvas.Navigation />
         <Canvas.Actions />
-        <Canvas.Debug />
+        <Canvas.Camera />
         <Canvas.Tools />
       </Canvas.Root>
       <ConstraintList model={model} />

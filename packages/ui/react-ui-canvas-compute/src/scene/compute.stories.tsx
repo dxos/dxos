@@ -116,7 +116,7 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
             <Canvas.Viewport overlay={<Bullets controller={controller} projection={projection} />} />
             <Canvas.Navigation />
             <Canvas.Actions />
-            <Canvas.Debug />
+            <Canvas.Camera />
             <Canvas.Tools />
           </Canvas.Root>
           <DiagnosticOverlay diagnostics={diagnostics} />

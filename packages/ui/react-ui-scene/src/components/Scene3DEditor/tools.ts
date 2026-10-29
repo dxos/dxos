@@ -12,3 +12,16 @@ export const orbitButtons = (tool: Tool3D): 'all' | 'secondary' => (tool === 'or
 
 /** A click picks with every tool but orbit, whose drags only move the camera. */
 export const clickSelects = (tool: Tool3D): boolean => tool !== 'orbit';
+
+/** Half a new shape's unit height: a created shape stands on the point clicked rather than sinking through the ground. */
+const HALF_UNIT = 0.5;
+
+/** Where a created shape's centre goes for a point on the ground, so its unit body rests on it. */
+export const restingCenter = (point: { x: number; y: number; z: number }): { x: number; y: number; z: number } => ({
+  ...point,
+  y: point.y + HALF_UNIT,
+});
+
+/** The tool in use: a locked (read-only) scene keeps only select and orbit, which look without changing anything. */
+export const editableTool = (tool: Tool3D, readonly: boolean): Tool3D =>
+  readonly && tool !== 'select' && tool !== 'orbit' ? 'select' : tool;
