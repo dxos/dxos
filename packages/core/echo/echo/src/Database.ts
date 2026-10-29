@@ -54,8 +54,6 @@ export type GetObjectByIdOptions = {
   deleted?: boolean;
 };
 
-export type ObjectPlacement = 'root-doc' | 'linked-doc';
-
 /**
  * Whether a write was a person's own action, reported with ECHO's trace events. `system` is everything a person
  * did not directly do: agents, syncs and imports, seeded content, migrations and automation. When no origin is
@@ -92,16 +90,6 @@ export type WriteOptions = {
 };
 
 export type AddOptions = {
-  /**
-   * Where to place the object in the Automerge document tree.
-   * Root document is always loaded with the space.
-   * Linked documents are loaded lazily.
-   * Placing large number of objects in the root document may slow down the initial load.
-   *
-   * @default 'linked-doc'
-   */
-  placeIn?: ObjectPlacement;
-
   /** See {@link Origin}. */
   origin?: Origin;
 
@@ -109,7 +97,7 @@ export type AddOptions = {
    * Append the object to this feed instead of the automerge-backed space database. The object is
    * returned synchronously (a live feed object) and persisted in the background — confirm the write
    * completed with {@link Database.flush}. Synchronous alternative to the async
-   * {@link Database.appendToFeed}; `placeIn` is ignored when set.
+   * {@link Database.appendToFeed}.
    */
   to?: Feed.Feed;
 };
