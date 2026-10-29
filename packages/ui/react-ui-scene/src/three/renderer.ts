@@ -40,6 +40,7 @@ import { type Instance3D } from '@dxos/animation';
 import { type Scene as Model } from '@dxos/scene';
 
 import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
+import { meshData } from './io/mesh.ts';
 import {
   LATTICE_OPACITY,
   PRESENTATION_BACKGROUND,
@@ -441,7 +442,8 @@ export class SceneRenderer3D {
     }
     for (const item of items) {
       const spec = materialSpec(item.style, this.#theme);
-      const data = geometry?.(item);
+      // An imported mesh carries its own triangles; Manifold supplies solids' and rounded cubes'.
+      const data = geometry?.(item) ?? meshData(item);
       const signature = itemSignature(item.kind, spec, data);
       let meshes = this.#items.get(item.key);
       if (meshes?.signature !== signature) {

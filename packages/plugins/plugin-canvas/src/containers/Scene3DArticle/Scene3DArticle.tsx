@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
@@ -15,9 +16,10 @@ import {
 } from '@dxos/react-ui-canvas/headless';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Scene3DEditor, type Tool3D } from '@dxos/react-ui-scene';
+import { Scene3DEditor, type Tool3D, exportSTL, importMesh, loadManifold } from '@dxos/react-ui-scene';
 import * as Panel from '@dxos/react-ui/Panel';
 import { type LayoutIntent, Scene, findLayout, reachedObjects, resolveLayout3D } from '@dxos/scene';
+import { downloadBlob } from '@dxos/util';
 
 import { applyLayoutIntent, layoutSource, openScene, writeModelIntent } from '#model';
 import { type Canvas } from '#types';
@@ -32,6 +34,17 @@ export type Scene3DArticleProps = {
   role?: string;
   attendableId?: string;
 };
+
+/** Opens the browser's file picker for one mesh file; resolves undefined when nothing was picked. */
+const pickMeshFile = (): Promise<File | undefined> =>
+  new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.obj,.glb';
+    input.onchange = () => resolve(input.files?.[0]);
+    input.oncancel = () => resolve(undefined);
+    input.click();
+  });
 
 /** The first id of the form `base-n` the layout does not use. */
 const freeElementId = (document: Scene.SceneDocument | undefined, layout: string, base: string): string => {
@@ -131,6 +144,42 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
   // The canvas model is the Library; extracting a selection makes a composite object of it.
   const modelId = document?.models[0]?.id;
   const objects = useMemo(() => Object.values(document?.models[0]?.objects ?? {}), [document]);
+
+  // A mesh is defined once in the model and then placed, so placing it again stores no more triangles.
+  const onImportMesh = useCallback(async () => {
+    const file = await pickMeshFile();
+    if (!file || modelId === undefined) {
+      return;
+    }
+    const exit = await Effect.runPromiseExit(importMesh(file));
+    if (exit._tag !== 'Success') {
+      setNotice(`Could not import "${file.name}".`);
+      return;
+    }
+    const taken = new Set(Object.keys(document?.models.find((model) => model.id === modelId)?.objects ?? {}));
+    let id = exit.value.id;
+    for (let index = 2; taken.has(id); index++) {
+      id = `${exit.value.id}-${index}`;
+    }
+    const problems = writeModelIntent(canvas, { kind: 'define', model: modelId, object: { ...exit.value, id } });
+    if (problems.length > 0) {
+      setNotice(problems.map(({ message }) => message).join(' '));
+      return;
+    }
+    setNotice(undefined);
+    setTool({ place: id });
+  }, [canvas, document, modelId]);
+
+  // The selection as drawn, or every visible element when nothing is selected.
+  const onExportSTL = useCallback(async () => {
+    const layout = editing ?? document?.scenes[0]?.layout;
+    if (!document || !layout) {
+      return;
+    }
+    const wasm = await loadManifold();
+    const buffer = exportSTL(document, layout, selection.length > 0 ? selection : undefined, wasm);
+    await downloadBlob(new Blob([buffer], { type: 'model/stl' }), `${layout}.stl`);
+  }, [document, editing, selection]);
 
   const menu = useMenuBuilder(() => {
     const builder = MenuBuilder.make();
@@ -291,6 +340,28 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
       )
       .separator()
       .action(
+        'import-mesh',
+        {
+          label: label('import-mesh.label'),
+          icon: 'ph--upload-simple--regular',
+          disabled: modelId === undefined,
+          disposition: 'toolbar',
+          testId: 'canvas3d.import-mesh',
+        },
+        () => void onImportMesh().catch((error) => setNotice(`Could not import the mesh: ${String(error)}`)),
+      )
+      .action(
+        'export-stl',
+        {
+          label: label('export-stl.label'),
+          icon: 'ph--download-simple--regular',
+          disposition: 'toolbar',
+          testId: 'canvas3d.export-stl',
+        },
+        () => void onExportSTL().catch((error) => setNotice(`Could not export STL: ${String(error)}`)),
+      )
+      .separator()
+      .action(
         'undo',
         {
           label: label('undo.label'),
@@ -325,6 +396,8 @@ export const Scene3DArticle = ({ canvas, role, attendableId }: Scene3DArticlePro
     modelId,
     document,
     canvas,
+    onImportMesh,
+    onExportSTL,
   ]);
 
   const handleSave = useCallback(

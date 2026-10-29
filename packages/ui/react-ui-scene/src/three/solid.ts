@@ -180,6 +180,10 @@ const build = (elements: Elements3D, id: string, wasm: ManifoldToplevel, path: r
   }
 };
 
+/** An element as a Manifold solid in its layout's coordinates; the caller deletes it. Throws when it cannot be built. */
+export const solidManifold = (elements: Elements3D, id: string, wasm: ManifoldToplevel): Manifold =>
+  build(elements, id, wasm, []);
+
 /** A Manifold's triangles in Babylon's left-handed winding. */
 export const toMeshData = (solid: Manifold): MeshData => {
   const mesh = solid.getMesh();

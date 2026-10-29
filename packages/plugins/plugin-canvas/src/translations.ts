@@ -23,6 +23,8 @@ export const translations = [
         'tool.extrude.label': 'Extrude face',
         'join.label': 'Join',
         'subtract.label': 'Subtract',
+        'import-mesh.label': 'Import mesh (OBJ, GLB)',
+        'export-stl.label': 'Export STL',
         'tool.cube.label': 'Cube',
         'tool.sphere.label': 'Sphere',
         'tool.cylinder.label': 'Cylinder',
