@@ -196,21 +196,24 @@ export const PROPERTIES_INSPECTOR: InspectorSectionDef = {
   defaultOpen: true,
 };
 
-const VIEWS_INSPECTOR: InspectorSectionDef = {
+/** Shared by both dimensions' scene views. */
+export const VIEWS_INSPECTOR: InspectorSectionDef = {
   id: 'views',
   title: 'Views',
   icon: 'ph--tree-structure--regular',
   order: 1,
 };
 
-const LAYERS_INSPECTOR: InspectorSectionDef = {
+/** Shared by both dimensions' scene views. */
+export const LAYERS_INSPECTOR: InspectorSectionDef = {
   id: 'layers',
   title: 'Layers',
   icon: 'ph--stack--regular',
   order: 3,
 };
 
-const OBJECTS_INSPECTOR: InspectorSectionDef = {
+/** Shared by both dimensions' scene views. */
+export const OBJECTS_INSPECTOR: InspectorSectionDef = {
   id: 'objects',
   title: 'Objects',
   icon: 'ph--cube--regular',

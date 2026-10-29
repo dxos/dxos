@@ -35,9 +35,11 @@ import {
 import { type InspectorProps } from '../types.ts';
 
 export type ViewsInspectorProps = InspectorProps & {
-  scenes: ViewMap;
+  scenes?: ViewMap;
   /** The canvas's root View. */
-  root: ViewId;
+  root?: ViewId;
+  /** The rows to show, built by the caller; otherwise built from `scenes` under `root`. */
+  tree?: ViewTreeItem;
   /** What the canvas shows: the open View's path, or the Object open in isolation and the path within it. */
   place?: ViewPlace;
   /** The canvas selection, in the open View: the rows of these elements show as selected, and the first is revealed. */
@@ -69,6 +71,8 @@ const iconFor = (item: ViewTreeItem): string =>
       ? 'ph--line-segment--regular'
       : ((item.type && ICONS[item.type]) ?? 'ph--shapes--regular');
 
+const EMPTY_TREE: ViewTreeItem = { id: 'empty', kind: 'view', path: [], label: '', children: [] };
+
 /** The synthetic root the tree model needs, so the root View is a row of its own. */
 const ROOT = '__views';
 /** The Tree's id, which starts every row's path. */
@@ -92,6 +96,7 @@ export const ViewsInspector = ({
   classNames,
   scenes,
   root,
+  tree: treeProp,
   place,
   selected,
   onSelect,
@@ -100,7 +105,10 @@ export const ViewsInspector = ({
 }: ViewsInspectorProps) => {
   const registry = useRegistry();
   const treeRef = useRef<TreeRootHandle>(null);
-  const tree = useMemo(() => buildViewTree(scenes, root), [scenes, root]);
+  const tree = useMemo(
+    () => treeProp ?? (scenes && root ? buildViewTree(scenes, root) : EMPTY_TREE),
+    [treeProp, scenes, root],
+  );
 
   // Every row with its path as the Tree keys it, for the selection, the reveal and a double-click's lookup.
   const rows = useMemo(() => {

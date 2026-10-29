@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { PROPERTIES_INSPECTOR } from '@dxos/react-ui-canvas';
+import { LAYERS_INSPECTOR, OBJECTS_INSPECTOR, PROPERTIES_INSPECTOR, VIEWS_INSPECTOR } from '@dxos/react-ui-canvas';
 
 import { SECTIONS_3D, display2D, grid3D, sceneChrome } from './scene-chrome.ts';
 
@@ -40,10 +40,13 @@ describe('sceneChrome', () => {
     }
   });
 
-  test("3D stacks its inspectors as 2D does: Properties is 2D's own section, at the top; the Library below it", () => {
-    expect(SECTIONS_3D.properties).toBe(PROPERTIES_INSPECTOR);
+  test("3D's inspector sections are 2D's own: Properties first, then Views, Objects and Layers", () => {
+    expect(SECTIONS_3D).toEqual({
+      properties: PROPERTIES_INSPECTOR,
+      views: VIEWS_INSPECTOR,
+      objects: OBJECTS_INSPECTOR,
+      layers: LAYERS_INSPECTOR,
+    });
     expect(SECTIONS_3D.properties).toMatchObject({ order: 0, pane: 'upper', defaultOpen: true });
-    expect(SECTIONS_3D.library.pane ?? 'lower').toBe('lower');
-    expect(SECTIONS_3D.library.order).toBeGreaterThan(SECTIONS_3D.properties.order);
   });
 });

@@ -734,3 +734,17 @@ decision D-74: Commit-on-blur is an opt-in `commitOn: 'blur'` of the form librar
   for: user:richburdon
   why: One form behaviour for every inspector, rather than each field kind special-cased in the canvas.
 ```
+
+```mdl
+decision D-75: 2D and 3D share the Views, Objects and Layers inspectors over the scene model; the 3D Library becomes the shared Objects inspector.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-76: The shared inspectors take rows built per dimension: 2D builds them from its View store, 3D from the scene document (the layout tree with a composite's parts read-only under it, the model's objects with their placement counts, the layout's layers). A 3D layout keeps its layers where a 2D one does (`props.canvas.layers`), and a hidden layer's elements, with the links bound to them, are neither drawn nor picked. Layers have no lock in either dimension, as 2D has none. Fills in [D-75].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  why: One component per inspector, fed by an adapter, keeps both dimensions' panels identical without changing 2D's engine.
+```

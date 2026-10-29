@@ -15,10 +15,15 @@ import {
   FLOATING_BAR,
   InspectorPanel,
   InspectorSection,
+  type Layer,
+  LayersInspector,
+  ObjectsInspector,
   PropertiesEmpty,
   ReadonlyToggle,
   type ToolGroup,
   ToolRail,
+  ViewsInspector,
+  between,
   propertiesShown,
 } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
@@ -62,7 +67,6 @@ import {
 import { type Canvas } from '#types';
 
 import { CanvasNamespace } from '../../namespace.ts';
-import { LibraryPanel } from '../LibraryPanel/index.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
 import { type SessionHistory, isDocumentStep, sessionHistory } from './canvas-history.ts';
 import {
@@ -72,6 +76,7 @@ import {
   elementFormIntents,
   elementFormValues,
 } from './element-form.ts';
+import { layersOf, layoutTree3D, objectEntries, withoutHidden } from './inspectors-3d.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
 import { getSessionClipboard, nextPaste, pasteOffset, setSessionClipboard } from './scene-clipboard.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
@@ -310,6 +315,34 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
   // The canvas model is the Library; extracting a selection makes a composite object of it.
   const modelId = document?.models[0]?.id;
   const objects = useMemo(() => Object.values(document?.models[0]?.objects ?? {}), [document]);
+
+  // The shared Views, Objects and Layers inspectors, read from the document as 2D reads them from its View store.
+  const rootLayout = document?.scenes[0]?.layout;
+  const tree = useMemo(() => (document ? layoutTree3D(document) : undefined), [document]);
+  const entries = useMemo(() => (document ? objectEntries(document) : []), [document]);
+  const shown = useMemo(() => (document ? withoutHidden(document) : undefined), [document]);
+  const openLayout = useCallback(
+    (layout: string | undefined) => setEditing(layout === undefined || layout === rootLayout ? undefined : layout),
+    [rootLayout],
+  );
+  const layers = useMemo(() => (record ? layersOf(record) : []), [record]);
+  const writeLayers = useCallback(
+    (next: readonly Layer[]) => {
+      const target = editingLayout === undefined ? undefined : layouts.get(editingLayout);
+      if (!target) {
+        return;
+      }
+      Obj.update(target, (target) => {
+        const props = target.props ?? {};
+        const canvasProps = typeof props.canvas === 'object' && props.canvas !== null ? props.canvas : {};
+        target.props = {
+          ...props,
+          canvas: { ...canvasProps, layers: Object.fromEntries(next.map((layer) => [layer.id, layer])) },
+        };
+      });
+    },
+    [editingLayout, layouts],
+  );
 
   // A mesh is defined once in the model and then placed, so placing it again stores no more triangles.
   const onImportMesh = useCallback(async () => {
@@ -691,7 +724,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         <InspectorPanel.Root docked={!readonly && dock.docked} readonly={readonly} onDockedChange={dock.onDockedChange}>
           <InspectorPanel.Frame>
             <Scene3DEditor
-              document={document}
+              document={shown ?? document}
               scene={stored.key}
               editing={editing}
               selection={selection}
@@ -777,16 +810,66 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
               </Form.Root>
             </InspectorSection>
           )}
-          <InspectorSection section={{ ...SECTIONS_3D.library, title: t('library.label') }}>
-            <LibraryPanel
-              objects={objects}
-              readonly={readonly}
-              placing={typeof tool === 'object' && 'place' in tool ? tool.place : undefined}
-              onPlace={(id) => setTool({ place: id })}
-              onEditParts={(layout) => {
-                setSelection([]);
-                setEditing(layout);
+          <InspectorSection section={SECTIONS_3D.views}>
+            <ViewsInspector
+              tree={tree}
+              selected={new Set(selection)}
+              place={{ path: rootLayout === undefined ? [] : editing ? [rootLayout, editing] : [rootLayout] }}
+              onSelect={(next) => {
+                openLayout(next.path.at(-1));
+                setSelection(next.ids);
               }}
+              onOpen={(path) => {
+                setSelection([]);
+                openLayout(path.at(-1));
+              }}
+            />
+          </InspectorSection>
+          <InspectorSection section={SECTIONS_3D.objects}>
+            <ObjectsInspector
+              objects={entries}
+              readonly={readonly}
+              onPlace={(id) => setTool({ place: id })}
+              onSelect={(id) => {
+                const parts = objects.find((object) => object.id === id)?.parts;
+                if (parts !== undefined) {
+                  setSelection([]);
+                  openLayout(parts);
+                }
+              }}
+              onDelete={(id, instances) => {
+                if (modelId === undefined) {
+                  return;
+                }
+                if (instances) {
+                  for (const layout of document.layouts) {
+                    const ids = Object.values(layout.elements)
+                      .filter((element) => element.object === id)
+                      .map((element) => element.id);
+                    ids.length > 0 && handleIntent(layout.id, { kind: 'delete', ids });
+                  }
+                }
+                const problems = writeModelIntent(canvas, { kind: 'remove', model: modelId, id });
+                setNotice(problems.length > 0 ? problems.map(({ message }) => message).join(' ') : undefined);
+              }}
+            />
+          </InspectorSection>
+          <InspectorSection section={SECTIONS_3D.layers}>
+            <LayersInspector
+              layers={layers}
+              readonly={readonly}
+              onToggle={(id) =>
+                writeLayers(layers.map((layer) => (layer.id === id ? { ...layer, hidden: !layer.hidden } : layer)))
+              }
+              onRename={(id, name) =>
+                writeLayers(layers.map((layer) => (layer.id === id ? { ...layer, name } : layer)))
+              }
+              onCreate={() => {
+                const id = `layer-${layers.length + 1}`;
+                writeLayers([...layers, { id, name: `Layer ${layers.length + 1}`, z: between(layers.at(-1)?.z) }]);
+                return id;
+              }}
+              onDelete={(ids) => writeLayers(layers.filter((layer) => !ids.includes(layer.id)))}
             />
           </InspectorSection>
         </InspectorPanel.Root>
