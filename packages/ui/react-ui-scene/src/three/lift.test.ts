@@ -21,8 +21,8 @@ describe('liftScene', () => {
     const scene = lifted('links').scenes[0];
     expect(scene.dim).toBe('3d');
     const b = scene.dim === '3d' ? scene.elements.b : undefined;
-    expect(b).toMatchObject({ kind: 'cube', position: { x: 200 / PIXELS_PER_UNIT, y: 0 } });
-    expect(b?.scale?.x).toBeCloseTo(120 / PIXELS_PER_UNIT);
+    expect(b).toMatchObject({ kind: 'cube', position: { x: 256 / PIXELS_PER_UNIT, y: 0 } });
+    expect(b?.scale?.x).toBeCloseTo(128 / PIXELS_PER_UNIT);
   });
 
   test('keeps links, labels and child scenes', () => {

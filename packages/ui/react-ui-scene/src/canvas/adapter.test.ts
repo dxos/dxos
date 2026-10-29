@@ -6,7 +6,8 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
-import { EXEMPLARS } from '@dxos/diagram/testing';
+import { EXEMPLARS, EXEMPLAR_NAMES } from '@dxos/diagram/testing';
+import { MAJOR_GRID } from '@dxos/react-ui-canvas';
 
 import { toCanvasViews } from './adapter.ts';
 
@@ -52,5 +53,23 @@ describe('toCanvasViews', () => {
   test('makes a store the canvas reads', () => {
     const { store, root } = views(EXEMPLARS.links);
     expect(Registry.make().get(store.view(root))?.nodes.c).toBeDefined();
+  });
+
+  test('puts every edge of every 2D exemplar node on a major grid line', () => {
+    const offGrid = EXEMPLAR_NAMES.flatMap((name) =>
+      Dsl.readScenes(EXEMPLARS[name])
+        .document.scenes.filter((scene) => scene.dim === '2d')
+        .flatMap((scene) => Object.values(toCanvasViews({ scenes: [scene] }).views[0].nodes))
+        .filter((node) =>
+          [
+            node.center.x - node.size.width / 2,
+            node.center.x + node.size.width / 2,
+            node.center.y - node.size.height / 2,
+            node.center.y + node.size.height / 2,
+          ].some((edge) => edge % MAJOR_GRID !== 0),
+        )
+        .map((node) => `${name}/${node.id}`),
+    );
+    expect(offGrid).toEqual([]);
   });
 });

@@ -89,7 +89,7 @@ const CanvasView = ({ classNames, document, theme, camera = 'fit' }: Scene2DView
         atoms={atoms}
         readonly
         theme={theme ?? scene?.theme}
-        initialDisplay={{ snap: false, guides: false, fit }}
+        initialDisplay={{ snap: true, guides: false, fit }}
       >
         <Canvas.Viewport />
       </Canvas.Root>

@@ -1,8 +1,8 @@
 scene links dim=2d name="Links" theme=flat {
-  camera center=200,0 zoom=1
-  element a rect "A" @ 0,0 size=120x80 hue=blue surface=solid border=true rounded=true
-  element b rect "B" @ 200,0 size=120x80 hue=green surface=solid border=true rounded=true
-  element c rect "C" @ 400,0 size=120x80 hue=amber surface=solid border=true rounded=true
+  camera center=256,0 zoom=1
+  element a rect "A" @ 0,0 size=128x128 hue=blue surface=solid border=true rounded=true
+  element b rect "B" @ 256,0 size=128x128 hue=green surface=solid border=true rounded=true
+  element c rect "C" @ 512,0 size=128x128 hue=amber surface=solid border=true rounded=true
   element ab link from=a to=b end=arrow
   element bc link from=b to=c end=arrow
 }

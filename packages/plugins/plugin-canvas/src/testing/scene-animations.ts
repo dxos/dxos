@@ -13,8 +13,8 @@ const DURATION = 5;
 /** A short script per exemplar: 2D shapes move and fade under a zoom; 3D scenes turn and rearrange under the camera. */
 const SCRIPTS: Record<ExemplarName, Animation.Beat[]> = {
   square: [
-    { duration: 1.5, ease: 'ease-in-out', set: { a: { rotation: 45, size: { width: 220, height: 220 } } } },
-    { at: 2.5, duration: 1.5, ease: 'ease-in-out', set: { a: { rotation: 0, size: { width: 160, height: 160 } } } },
+    { duration: 1.5, ease: 'ease-in-out', set: { a: { rotation: 45, size: { width: 256, height: 256 } } } },
+    { at: 2.5, duration: 1.5, ease: 'ease-in-out', set: { a: { rotation: 0, size: { width: 128, height: 128 } } } },
   ],
   links: [
     { duration: 1.5, ease: 'ease-in-out', set: { a: { center: { x: 0, y: -80 } } }, camera: { zoom: 1.4 } },
@@ -27,8 +27,8 @@ const SCRIPTS: Record<ExemplarName, Animation.Beat[]> = {
     },
   ],
   subscene: [
-    { duration: 2, ease: 'ease-in-out', set: { b: { size: { width: 280, height: 196 } } }, camera: { zoom: 1.3 } },
-    { at: 3, duration: 2, ease: 'ease-in-out', set: { b: { size: { width: 200, height: 140 } } }, camera: { zoom: 1 } },
+    { duration: 2, ease: 'ease-in-out', set: { b: { size: { width: 384, height: 384 } } }, camera: { zoom: 1.3 } },
+    { at: 3, duration: 2, ease: 'ease-in-out', set: { b: { size: { width: 256, height: 256 } } }, camera: { zoom: 1 } },
   ],
   cube: [
     { duration: 2.5, ease: 'ease-in-out', set: { box: { rotation: { x: 0, y: 45, z: 0 } } }, camera: { yaw: 0 } },
