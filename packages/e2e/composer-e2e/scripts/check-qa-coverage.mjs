@@ -85,7 +85,8 @@ const readSpec = (file) => {
       const tags = [...test[4].matchAll(/'(@[^']+)'/g)].map((match) => match[1]);
       tests.push({
         file,
-        title: [...trail.map((entry) => entry.title), test[3]].join(' > '),
+        // Playwright's title-path separator, which the .mdl specs quote.
+        title: [...trail.map((entry) => entry.title), test[3]].join(' \u203A '),
         tags,
         // A disabled test still declares its flow, but must not be counted as covering it.
         skipped: test[1] !== undefined || inheritedSkip,

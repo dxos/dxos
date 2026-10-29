@@ -135,12 +135,13 @@ export const toEvents = (report: JsonReport, options: ReportOptions): TestEvent[
   const events: TestEvent[] = [];
 
   for (const [spec, trail] of walk(report.suites ?? [], [])) {
-    const suite = trail.join(' > ');
+    // Playwright's title-path separator, which the .mdl specs quote.
+    const suite = trail.join(' \u203A ');
     // The `@QA-n` tags bind this test to the `.mdl` flows it automates, so a chart can report on a
     // JOURNEY rather than on a file - and a flow whose rows all went red is the thing a reader of
     // the failing-tests table actually wants named.
     const qa = (spec.tags ?? []).filter((tag) => /^@?(?:[a-z-]+:)?QA-\d+$/.test(tag)).join(',');
-    const title = [...trail, spec.title].join(' > ');
+    const title = [...trail, spec.title].join(' \u203A ');
     for (const test of spec.tests ?? []) {
       const status = toStatus(test);
       const browser = test.projectName || 'unknown';
