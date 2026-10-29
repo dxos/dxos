@@ -275,6 +275,44 @@ describe('migrateSceneDrawing', () => {
       expect(await reconcile(drawing)).toBe(false);
     });
 
+    test('a View only the losing peer made is adopted by the winner, with the object that places it', async () => {
+      const { drawing, winner, loser } = await migratedTwice();
+      const registry = Registry.make();
+      const scene = openScene(loser);
+      if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+        throw new Error('A migrated canvas opens a 2D scene.');
+      }
+      const bound = bindLayoutStore(registry, scene, { canvas: loser });
+      const views = registry.get(bound.store.views);
+      const size = { width: 128, height: 128 };
+      const rootView = views[bound.root];
+      registry.set(bound.store.views, {
+        ...views,
+        'peer-view': {
+          id: 'peer-view',
+          nodes: { x: createNode({ type: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
+          links: {},
+        },
+        [bound.root]: {
+          ...rootView,
+          nodes: {
+            ...rootView.nodes,
+            p: createNode({ type: 'view', id: 'p', z: 'a9', center: { x: 0, y: 0 }, size, scene: 'peer-view' }),
+          },
+        },
+      });
+      bound.dispose();
+      expect(await reconcile(drawing)).toBe(true);
+      const layout = winner.layouts
+        .map((ref) => ref.target)
+        .find((target) => Obj.instanceOf(Scene.Layout2D, target) && target.key === 'peer-view');
+      expect(layout).toBeDefined();
+      expect(rootLayout(winner).elements.p).toMatchObject({ object: 'view:peer-view' });
+      const model = winner.model?.target;
+      expect(Obj.instanceOf(Scene.Model2D, model) && model.objects['view:peer-view']?.parts?.target).toBe(layout);
+      expect(await db.query(Filter.type(Canvas.Canvas)).run()).toEqual([winner]);
+    });
+
     test("the winner's own edit wins where both changed a field; the loser's other changes are kept", async () => {
       const { drawing, winner, loser, id } = await migratedTwice();
       Obj.update(rootLayout(winner), (layout) => {

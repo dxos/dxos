@@ -210,6 +210,72 @@ const replayLayout = (target: Scene.Layout2D, base: Scene.LayoutRecord2D, copy: 
   });
 
 /**
+ * Moves onto `winner` what only the losing `canvas` made during the race: its layouts and scenes whose keys neither the
+ * legacy content nor the winner has, and the model objects the winner lacks. They are moved, not copied, so the
+ * loser's removal leaves them, and the Refs between them (a composite's parts) still hold.
+ */
+const adoptNew = (
+  winner: Canvas.Canvas,
+  canvas: Canvas.Canvas,
+  known: { layouts: Set<string>; scenes: Set<string> },
+) => {
+  const layouts = canvas.layouts.flatMap((ref) =>
+    Obj.instanceOf(Scene.Layout2D, ref.target) && !known.layouts.has(ref.target.key) ? [ref.target] : [],
+  );
+  const scenes = canvas.scenes.flatMap((ref) =>
+    Obj.instanceOf(Scene.Scene2D, ref.target) && !known.scenes.has(ref.target.key) ? [ref.target] : [],
+  );
+  const models = [
+    canvas.model?.target,
+    ...canvas.layouts.map((ref) => (Obj.instanceOf(Scene.Layout2D, ref.target) ? ref.target.model?.target : undefined)),
+  ].filter((model) => Obj.instanceOf(Scene.Model2D, model));
+  const winnerModel = winner.model?.target;
+  const target = Obj.instanceOf(Scene.Model2D, winnerModel) ? winnerModel : undefined;
+  const missing = models.flatMap((model) =>
+    Object.entries(model.objects).filter(([id]) => !target || target.objects[id] === undefined),
+  );
+  // Without a model of its own, the winner takes the loser's whole, so the parts Refs need no rewriting.
+  const adoptedModel = target === undefined && missing.length > 0 ? models[0] : undefined;
+  if (target && missing.length > 0) {
+    Obj.update(target, (target) => {
+      for (const [id, object] of missing) {
+        const { parts, ...fields } = object;
+        target.objects[id] = { ...plain(fields), ...(parts?.target ? { parts: Ref.make(parts.target) } : {}) };
+      }
+    });
+  }
+  const model = target ?? adoptedModel;
+  Obj.update(canvas, (canvas) => {
+    canvas.layouts = canvas.layouts.filter((ref) => !layouts.some((layout) => layout === ref.target));
+    canvas.scenes = canvas.scenes.filter((ref) => !scenes.some((scene) => scene === ref.target));
+    adoptedModel && (canvas.model = undefined);
+  });
+  // The loser's own layouts still name the adopted model, and removing the loser removes every model they name.
+  for (const ref of canvas.layouts) {
+    const layout = ref.target;
+    adoptedModel &&
+      Obj.instanceOf(Scene.Layout2D, layout) &&
+      layout.model?.target === adoptedModel &&
+      Obj.update(layout, (layout) => (layout.model = undefined));
+  }
+  for (const layout of layouts) {
+    model && layout.model?.target !== model && Obj.update(layout, (layout) => (layout.model = Ref.make(model)));
+  }
+  Obj.update(winner, (winner) => {
+    winner.layouts.push(...layouts.map((layout) => Ref.make(layout)));
+    winner.scenes.push(...scenes.map((scene) => Ref.make(scene)));
+    adoptedModel && (winner.model = Ref.make(adoptedModel));
+  });
+  // The winner's root layout places the adopted objects, so it reads them from the same model.
+  const root = winner.scenes[0]?.target;
+  const rootLayout = Obj.instanceOf(Scene.Scene2D, root) ? root.layout.target : undefined;
+  model &&
+    Obj.instanceOf(Scene.Layout2D, rootLayout) &&
+    rootLayout.model?.target !== model &&
+    Obj.update(rootLayout, (rootLayout) => (rootLayout.model = Ref.make(model)));
+};
+
+/**
  * When `drawing`'s canvas was migrated while another peer migrated the same legacy canvas, adopts the drawing's
  * canvas as the winner: each other canvas created from that legacy canvas has what it changed (relative to the legacy
  * content) replayed into the winner, then is removed with its scenes, layouts, model and relation. Returns whether it
@@ -272,6 +338,10 @@ export const reconcileMigrations = Effect.fn(function* (drawing: Drawing.Drawing
     }
     Obj.update(winner, (winner) => {
       replayFields(winner.settings, baseSettings, canvas.settings);
+    });
+    adoptNew(winner, canvas, {
+      layouts: new Set([...baseLayouts.keys(), ...winnerLayouts.keys()]),
+      scenes: new Set([...baseScenes.keys(), ...winnerScenes.keys()]),
     });
     yield* Database.remove(relation);
     removeCanvas(canvas);

@@ -506,3 +506,13 @@ decision D-43: A conversion records `CreatedFrom` only when it makes a copy; a c
   for: user:richburdon
   why: A relation to a removed object dangles.
 ```
+
+```mdl
+decision D-44: Reconciling a parallel migration also adopts what only the losing canvas made: its layouts and scenes whose keys neither the legacy content nor the winner has move onto the winner, with the model objects the winner lacks (the loser's whole model when the winner has none), so a View a peer made during the race is kept. Otherwise as [D-42].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-42
+  why: Dropping a peer's new View lost user work the replay of edited fields was meant to keep.
+  rejected: Copying the loser's layouts, which would break the Refs between a composite object's parts and its model.
+```
