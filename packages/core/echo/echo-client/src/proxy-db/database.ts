@@ -1221,9 +1221,16 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       // spaceKey is deprecated but still written so older clients can resolve the owning space.
       access: { spaceId: this.spaceId, spaceKey: this.spaceKey.toHex() },
       flush: () => this.flush(),
-      createEpoch: this.#createEpoch,
+      createEpoch: this.#createEpoch && this.#createEpochAndAwaitRoot.bind(this, this.#createEpoch),
       options,
     });
+  }
+
+  /** The epoch can be applied before this database loads its root; a following transaction must read the new root. */
+  async #createEpochAndAwaitRoot(createEpoch: (rootUrl: string) => Promise<void>, rootUrl: string): Promise<void> {
+    const switched = this.rootChanged.waitFor(() => this._entityManager.getSpaceRootDocHandle().url === rootUrl);
+    await createEpoch(rootUrl);
+    await switched;
   }
 
   get _repo(): RepoProxy {

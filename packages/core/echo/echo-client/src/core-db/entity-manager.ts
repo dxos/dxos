@@ -2066,9 +2066,23 @@ export class EntityManager implements IDatabaseBinding {
         ) {
           return;
         }
+        const previous = this._objectDocumentHandles.get(objectId);
+        if (previous == null) {
+          return;
+        }
+        // Move the change listener as a branch switch does: `_processDocumentUpdate` rebinds an object
+        // to whichever document fires a change, so the superseded one must stop firing for it.
+        const spaceRoot = this.getSpaceRootDocHandle();
+        if (previous !== spaceRoot && (this._documentObjects.get(previous)?.size ?? 0) <= 1) {
+          previous.off('change', this._onDocumentUpdate);
+        }
+        if (handle !== spaceRoot) {
+          handle.off('change', this._onDocumentUpdate);
+          handle.on('change', this._onDocumentUpdate);
+        }
         if (this._objects.has(objectId)) {
           this._rebindObjects(handle, [objectId]);
-        } else if (this._objectDocumentHandles.has(objectId)) {
+        } else {
           this._bindObjectDocument(objectId, handle);
         }
       })
