@@ -114,8 +114,6 @@ export const useTextEditor = (
       view = new EditorView({
         parent: parentRef.current,
         state,
-        // `scrollTo` is the position recorded at the top of the viewport, so restore it there.
-        scrollTo: scrollTo != null ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
         dispatchTransactions: debug ? debugDispatcher : undefined,
       });
 
@@ -134,7 +132,10 @@ export const useTextEditor = (
     };
   }, deps);
 
-  useEffect(() => {
+  // A layout effect, so the restore reaches CodeMirror before its first measure and the editor never paints at the top.
+  // It goes through `restoreEditorState`, which leaves alone an editor that does not scroll itself: a section in a
+  // collection otherwise scrolls the whole stack to its recorded position.
+  useLayoutEffect(() => {
     if (!view || (scrollTo == null && !selection)) {
       return;
     }
