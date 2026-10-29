@@ -558,6 +558,11 @@ dist-tags: versions are immutable, and a channel is a tag that points at one of 
   Any such option applies to every plugin alike, whoever publishes it.
 - **Facet scope.** Whether one supervisor per (space, plugin) is the right grain, or per plugin
   instance object.
+- **Data-plane compatibility.** A release bundles its own ECHO client, so it opens a space only when
+  that client speaks the protocol of the db-service it runs against. A release built from dxos `main`
+  one day ahead of the dxos EDGE pins already timed out opening a space root. Whether a manifest
+  records the SDK version it was built from, and compute-service refuses a release the data plane
+  cannot serve, or the data service protocol is versioned instead.
 
 ## Changelog
 
@@ -751,4 +756,13 @@ decision D-21: A release serves only its primary plugin's operations, skills and
   for: user:dmaretskyi
   affects: [PluginEntrypoint, PluginCatalog, F-5.4]
   why: plugin-agent, plugin-discord and plugin-projects fail to activate without their dependencies, and serving a dependency's operations would claim keys its own release owns.
+```
+
+```mdl
+decision D-22: Operation keys are stored, resolved and matched in their bare form (`org.example.op`); an operation's own `dxn:` key and an invocation's bare key name the same operation. Data-plane compatibility is recorded as an open question. Fills in [D-3].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginRouter, PluginEntrypoint, F-5, F-6]
+  why: The EDGE e2e test with a real bundled release failed to resolve: catalogs carry `dxn:` keys while compute-service invokes bare ones. The same test showed a release built ahead of EDGE's pinned dxos cannot open a space.
 ```
