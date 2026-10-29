@@ -181,8 +181,10 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
     () =>
       void invokePromise(LayoutOperation.UpdateCompanion, {
         subject: Attention.linkedSegment(SPEC_DOCUMENT_COMPANION),
+        // Anchored to this plank, which need not be the attended one when its toolbar is clicked.
+        anchor: attendableId,
       }),
-    [invokePromise],
+    [invokePromise, attendableId],
   );
 
   const menu = useMenuBuilder((): ActionGraphProps => {
