@@ -116,23 +116,37 @@ export const EnableGitHubFileSync = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.enableFileSync'),
     name: 'Enable GitHub File Sync',
-    description: 'Sync files of a bound GitHub repository (such as .mdl specs) with objects in the space, both ways.',
+    description:
+      'Start syncing the files of a repository the space already syncs from GitHub (such as .mdl specs, which ' +
+      'become Spec objects) with objects in the space, both ways. Composer edits go to a write branch with one pull request.',
     icon: 'ph--files--regular',
   },
   input: Schema.Struct({
-    repository: Ref.Ref(Repo.Repo),
-    /** Branch read from; the repository's default branch when absent. */
-    branch: Schema.String.pipe(Schema.optional),
-    /** Branch written to; `composer/<spaceId>` when absent. */
-    writeBranch: Schema.String.pipe(Schema.optional),
-    /** FileMapping ids to run; every contributed mapping when absent. */
-    mappings: Schema.Array(Schema.String).pipe(Schema.optional),
-    /** Globs that narrow every mapping, e.g. `packages/plugins/**`. */
-    paths: Schema.Array(Schema.String).pipe(Schema.optional),
+    repository: Ref.Ref(Repo.Repo).annotate({
+      description: 'The org.dxos.type.repo object to sync; it must already be bound by the GitHub connection.',
+    }),
+    branch: Schema.String.pipe(Schema.optional).annotate({
+      description: "Branch read from; the repository's default branch when absent.",
+    }),
+    writeBranch: Schema.String.pipe(Schema.optional).annotate({
+      description: 'Branch Composer edits are committed to; composer/<spaceId> when absent. Never the read branch.',
+    }),
+    mappings: Schema.Array(Schema.String).pipe(Schema.optional).annotate({
+      description: 'File mapping ids to run, e.g. org.dxos.plugin.code.spec; every contributed mapping when absent.',
+    }),
+    paths: Schema.Array(Schema.String).pipe(Schema.optional).annotate({
+      description: 'Repository-relative globs that narrow every mapping, e.g. packages/plugins/**.',
+    }),
   }),
-  output: Schema.Struct({ binding: Schema.String, created: Schema.Boolean }),
+  output: Schema.Struct({
+    /** The file binding's id. */
+    binding: Schema.String,
+    /** False where the repository already had a file binding, which is then returned unchanged. */
+    created: Schema.Boolean,
+  }),
+  types: [Repo.Repo],
   services: [Database.Service],
-});
+}).pipe(Operation.visible, Operation.mutation('write'));
 
 /**
  * Import a pull request named by a github.com URL or `owner/repo#123` into the space, so it can be

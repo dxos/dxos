@@ -320,7 +320,8 @@ op EnableGitHubFileSync
   key: org.dxos.operation.github.enableFileSync
   desc: |
     Adds a file binding next to a repository's item binding, with the same credential and repository
-    id. Returns the existing file binding when there is one.
+    id. Returns the existing file binding when there is one. Visible, and a tool of the GitHub skill, so
+    the Composer agent and the MCP server can call it.
   input:
     repository: Ref<Repo>
     branch?: string               # default: the repository's default branch
@@ -647,4 +648,12 @@ decision D-15: F-4.5's per-user attribution and F-4.6's pull from the write bran
   for: user:dmaretskyi
   affects: [F-4.3, F-4.5, F-4.6, F-5.3, T-4]
   why: Holding the push back cannot overwrite a reviewer's commit, which is what F-4.6 protects, and keeps the first version small; the skipped entries show the user why nothing was pushed. compareCommits does not report sizes, so F-2.4's limit is checked after the fetch when the change came from a compare.
+```
+
+```mdl
+decision D-16: EnableGitHubFileSync is a visible operation and a tool of the GitHub skill, whose instructions tell the agent to call it with the repository's Repo object. Fills in [D-13].
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [EnableGitHubFileSync]
+  why: With no button and no tool, nothing could turn file sync on; the Composer agent and the MCP server reach operations only through visible operations and skills.
 ```
