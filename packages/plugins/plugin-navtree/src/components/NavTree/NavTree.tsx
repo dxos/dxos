@@ -25,7 +25,6 @@ export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string }
 >;
 
 // TODO(wittjosiah): Refactor to Radix-style.
-// Memoized: the container re-renders on every layout change, and a re-render here re-renders every tab and panel.
 export const NavTree = memo(
   forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
     const { onBack, onItemHover } = useNavTreeContext();
