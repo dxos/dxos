@@ -10,8 +10,8 @@ export type HeightMemory = {
   set: (key: string, height: number) => void;
 };
 
-/** Entries kept at most; the oldest go first. */
-const MAX_HEIGHTS = 500;
+/** Entries kept at most; the least recently used go first. */
+const MAX_HEIGHTS = 1_000;
 
 /** How long a write waits, so a burst of resizes is one write. */
 const SAVE_DELAY_MS = 1_000;
@@ -35,7 +35,17 @@ export const createHeightMemory = (name: string): HeightMemory => {
   };
 
   return {
-    get: (key) => load().get(hash(key)),
+    // Reading keeps an entry: what is still opened is not what goes first.
+    get: (key) => {
+      const store = load();
+      const id = hash(key);
+      const height = store.get(id);
+      if (height !== undefined) {
+        store.delete(id);
+        store.set(id, height);
+      }
+      return height;
+    },
     set: (key, height) => {
       const store = load();
       const id = hash(key);
@@ -62,10 +72,13 @@ export const createHeightMemory = (name: string): HeightMemory => {
 /** How long an element keeps the height reserved for it while its content arrives. */
 const RESERVE_MS = 1_000;
 
+/** Heights are remembered per width, in steps this wide: the same content is taller in a narrower column. */
+const WIDTH_STEP = 32;
+
 /**
- * Reserves the height `key` last rendered at as `ref`'s minimum height while its content arrives, then records the
- * heights it renders at. A section whose content loads a moment after it mounts otherwise grows into it and pushes
- * everything below it down. No `key`, no reservation.
+ * Reserves the height `key` last rendered at, at this width if known, as `ref`'s minimum height while its content arrives, then
+ * records the heights it renders at. A section whose content loads a moment after it mounts otherwise grows into it and
+ * pushes everything below it down. No `key`, no reservation.
  */
 export const useReservedHeight = (
   memory: HeightMemory,
@@ -77,19 +90,36 @@ export const useReservedHeight = (
     if (!element || key === undefined) {
       return;
     }
-    const reserved = memory.get(key);
-    if (reserved !== undefined) {
-      element.style.minHeight = `${reserved}px`;
-    }
-    // While reserved, only a height past the reservation is the content's own.
-    let released = reserved === undefined;
+    // At mount, the height it last rendered at whatever the width; observations then refine it by width. A column can
+    // lay out at no width first, or settle its width while the content arrives (a companion opening beside the plank).
+    let reserved = memory.get(key);
+    let reservedFor: string | undefined;
+    let released = false;
+    const reserve = (height: number | undefined) => {
+      reserved = height;
+      // A minimum, so content already taller than it is unaffected.
+      element.style.minHeight = height !== undefined ? `${height}px` : '';
+    };
+    reserve(reserved);
     const release = setTimeout(() => {
       released = true;
       element.style.minHeight = '';
     }, RESERVE_MS);
+    // Observations arrive after layout and before paint, so the width costs no forced layout per element.
     const observer = new ResizeObserver(([entry]) => {
-      const height = Math.round(entry.borderBoxSize[0]?.blockSize ?? 0);
-      if (height > 0 && (released || height > (reserved ?? 0))) {
+      const box = entry.borderBoxSize[0];
+      if (!box || box.inlineSize === 0) {
+        return;
+      }
+      const slot = `${key}@${Math.round(box.inlineSize / WIDTH_STEP)}`;
+      if (!released && slot !== reservedFor) {
+        reservedFor = slot;
+        reserve(memory.get(slot) ?? reserved);
+      }
+      // While reserved, only a height past the reservation is the content's own.
+      if (box.blockSize > 0 && (released || reserved === undefined || box.blockSize > reserved)) {
+        const height = Math.round(box.blockSize);
+        memory.set(slot, height);
         memory.set(key, height);
       }
     });
