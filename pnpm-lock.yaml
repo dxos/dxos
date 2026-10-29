@@ -1611,6 +1611,15 @@ catalogs:
     vitest:
       specifier: 4.1.10
       version: 4.1.10
+    vscode-languageclient:
+      specifier: ^9.0.1
+      version: 9.0.1
+    vscode-languageserver:
+      specifier: ^9.0.1
+      version: 9.0.1
+    vscode-languageserver-textdocument:
+      specifier: ^1.0.12
+      version: 1.0.12
     vscode-oniguruma:
       specifier: ^2.0.1
       version: 2.0.1
@@ -26637,6 +26646,25 @@ importers:
         specifier: 'catalog:'
         version: 2.8.2
 
+  tools/mdl-language-server:
+    dependencies:
+      '@dxos/deus':
+        specifier: workspace:*
+        version: link:../../packages/reflect/deus
+      vscode-languageserver:
+        specifier: 'catalog:'
+        version: 9.0.1
+      vscode-languageserver-textdocument:
+        specifier: 'catalog:'
+        version: 1.0.12
+    devDependencies:
+      esbuild:
+        specifier: '>=0.28.0'
+        version: 0.28.2
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(happy-dom@20.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
+
   tools/protobuf-test: {}
 
   tools/storybook-lit:
@@ -26914,10 +26942,23 @@ importers:
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
 
   tools/vscode-mdl:
+    dependencies:
+      vscode-languageclient:
+        specifier: 'catalog:'
+        version: 9.0.1
     devDependencies:
+      '@dxos/mdl-language-server':
+        specifier: workspace:*
+        version: link:../mdl-language-server
+      '@types/vscode':
+        specifier: 'catalog:'
+        version: 1.104.0
       '@vscode/vsce':
         specifier: 'catalog:'
         version: 3.9.2
+      esbuild:
+        specifier: '>=0.28.0'
+        version: 0.28.2
       shiki:
         specifier: 'catalog:'
         version: 4.5.0
@@ -46360,6 +46401,10 @@ packages:
     resolution: {integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==}
     engines: {node: '>=14.0.0'}
 
+  vscode-languageclient@9.0.1:
+    resolution: {integrity: sha512-JZiimVdvimEuHh5olxhxkht09m3JzUGwggb5eRUkzzJhZ2KjCN0nh55VfiED9oez9DyF8/fz1g1iBV3h+0Z2EA==}
+    engines: {vscode: ^1.82.0}
+
   vscode-languageserver-protocol@3.17.5:
     resolution: {integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==}
 
@@ -48800,7 +48845,7 @@ snapshots:
       '@changesets/should-skip-package': 1.0.0
       '@changesets/types': 7.0.0
       '@manypkg/get-packages': 3.1.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   '@changesets/errors@1.0.0': {}
 
@@ -48819,8 +48864,8 @@ snapshots:
       '@changesets/errors': 1.0.0
       '@changesets/types': 7.0.0
       '@manypkg/get-packages': 3.1.0
-      picomatch: 4.0.5
-      tinyexec: 1.3.0
+      picomatch: 4.0.7
+      tinyexec: 1.3.1
 
   '@changesets/parse@1.0.0':
     dependencies:
@@ -71237,6 +71282,12 @@ snapshots:
   void-elements@3.1.0: {}
 
   vscode-jsonrpc@8.2.0: {}
+
+  vscode-languageclient@9.0.1:
+    dependencies:
+      minimatch: 10.2.5
+      semver: 7.8.5
+      vscode-languageserver-protocol: 3.17.5
 
   vscode-languageserver-protocol@3.17.5:
     dependencies:
