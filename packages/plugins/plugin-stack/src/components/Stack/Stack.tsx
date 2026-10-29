@@ -9,6 +9,7 @@ import React, {
   forwardRef,
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -189,6 +190,9 @@ const DragHandleGlyph = () => (
   </svg>
 );
 
+/** Where each section's height is remembered, so a collection opened again keeps its sections still while they load. */
+const sectionHeights = Hooks.createHeightMemory('stack-section');
+
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
   const { t } = Hooks.useTranslation(StackNamespace.key);
@@ -198,6 +202,8 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const attentionAttrs = useAttentionAttributes(attendableId);
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
+  const contentRef = useRef<HTMLDivElement>(null);
+  Hooks.useReservedHeight(sectionHeights, isCollapsed ? undefined : id, contentRef);
   const icon = Obj.getIcon(object)?.icon ?? 'ph--circle-dashed--regular';
   const title = useLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
 
@@ -281,7 +287,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
           {rail}
         </Layout.Flex>
       </div>
-      <div {...attentionAttrs} className='min-w-0'>
+      <div {...attentionAttrs} ref={contentRef} className='min-w-0'>
         <span className='sr-only'>{title}</span>
         {isCollapsed ? (
           <Layout.Flex classNames='h-(--dx-toolbar-size) p-1'>
