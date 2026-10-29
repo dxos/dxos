@@ -27,7 +27,7 @@ export const display2D = <D extends { snap?: boolean; guides?: boolean }>(role: 
 export const grid3D = (role: string | undefined, grid: boolean): boolean => sceneChrome(role).grid && grid;
 
 /** The 3D inspectors: 2D's own Properties section first (the docked panel's upper half), the Library below it. */
-export const SECTIONS_3D = {
+export const SECTIONS_3D: Readonly<Record<'properties' | 'library', InspectorSectionDef>> = {
   properties: PROPERTIES_INSPECTOR,
   library: { id: 'library', title: 'Library', icon: 'ph--package--regular', order: 1 },
-} as const satisfies Record<string, InspectorSectionDef>;
+};
