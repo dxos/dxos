@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -12,9 +13,9 @@ import { SVG_SCHEMA } from '@dxos/diagram';
 import type { Database, Obj, Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { type DrawingBuilder } from '#model';
 
+import { IllustratorNamespace } from '../namespace.ts';
 import type * as Drawing from './Drawing.ts';
 
 /**
@@ -23,7 +24,7 @@ import type * as Drawing from './Drawing.ts';
  * Consumers iterate via `Capability.getAll(IllustratorCapabilities.VariantProvider)` (Effect) or
  * `useCapabilities(IllustratorCapabilities.VariantProvider)` (React).
  */
-export const VariantProvider = Capability.make<DrawingVariant>()(`${meta.profile.key}.capability.variant`);
+export const VariantProvider = Capability.make<DrawingVariant>()(`${IllustratorNamespace.key}.capability.variant`);
 
 /**
  * Contribution from a renderer plugin (e.g. plugin-tldraw, plugin-excalidraw).
@@ -50,6 +51,27 @@ export type DrawingVariant = {
   /** Optional Article/Section/Slide surface component for this variant. */
   article?: ComponentType<DrawingVariantSurfaceProps>;
 };
+
+/**
+ * A conversion between two drawing variants, contributed by a plugin that converts better than the generic scene
+ * replay `DrawingOperation.Convert` falls back to (e.g. one that also maps shapes the scene DSL cannot carry).
+ */
+export const Converter = Capability.make<DrawingConverter>()(`${IllustratorNamespace.key}.capability.converter`);
+
+export type DrawingConverter = {
+  /** The source variant id (`Canvas.schema`). */
+  from: string;
+  /** The target variant id. */
+  to: string;
+  /** Builds a new canvas of the target variant from the source canvas, which it leaves unchanged. */
+  convert: (
+    source: Drawing.Canvas,
+    variants: { from: DrawingVariant; to: DrawingVariant },
+  ) => Effect.Effect<ConvertedCanvas, Error, Database.Service | Capability.Service>;
+};
+
+/** A converter's result: the new canvas, and the scene object ids written to it. */
+export type ConvertedCanvas = { canvas: Drawing.Canvas; upserted: readonly string[] };
 
 export type DrawingVariantSurfaceProps = {
   /** The base Drawing object (may be a snapshot from useObject/Surface). */
@@ -80,8 +102,22 @@ export const variantSlug = (variant: Pick<DrawingVariant, 'label'>): string =>
 export const editTargets = (variants: readonly DrawingVariant[], schema: string | undefined): DrawingVariant[] =>
   variants.filter(({ id }) => id !== schema && id !== SVG_SCHEMA);
 
+/** The "Copy as …" label of the action converting a copy of a drawing to `variant`, keyed per variant so known ones translate. */
+export const copyLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label => [
+  `copy-as-${variantSlug(variant)}.label`,
+  { ns: IllustratorNamespace.key, defaultValue: `Copy as ${variant.label}` },
+];
+
 /** The "Edit in …" label of the action converting a drawing to `variant`, keyed per variant so known ones translate. */
 export const editLabel = (variant: Pick<DrawingVariant, 'label'>): Theme.Label => [
   `edit-in-${variantSlug(variant)}.label`,
-  { ns: meta.profile.key, defaultValue: `Edit in ${variant.label}` },
+  { ns: IllustratorNamespace.key, defaultValue: `Edit in ${variant.label}` },
 ];
+
+/**
+ * Refit requests, a counter per canvas URI: the drawing operations an agent calls (`Draw`, `Edit`) bump it, and a
+ * variant's view reframes its scene when it changes, so an edit the viewer did not make is brought into view.
+ */
+export const Refit = Capability.makeSingleton<Atom.Writable<Record<string, number>>>()(
+  `${IllustratorNamespace.key}.capability.refit`,
+);

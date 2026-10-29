@@ -48,7 +48,8 @@ describe('extension', () => {
     }
   });
 
-  test('keeps the molecules of the buckets it started with', ({ expect }) => {
+  // Steps the simulation through ~50 s of frames: 6.6 s on a laptop, up to 45 s in a 4 vCPU CI shard.
+  test('keeps the molecules of the buckets it started with', { timeout: 90_000 }, ({ expect }) => {
     const base = layoutDataFlow(APPS);
     const simulation = new DataFlowSimulation(base, { seed: 3, warmup: 40 });
     const split = partitionHub(base.hub, 3);

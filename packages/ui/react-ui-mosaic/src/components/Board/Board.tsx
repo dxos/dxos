@@ -21,7 +21,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks/index.ts';
 import { Mosaic, type MosaicPlaceholderProps, type MosaicStackProps, mosaicStyles } from '../Mosaic/index.ts';
-import { BoardContextProvider, type BoardContextValue, useBoardContext } from './BoardContext.ts';
+import { BOARD_CARD_SELECTOR, BoardContextProvider, type BoardContextValue, useBoardContext } from './BoardContext.ts';
 import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column.tsx';
 import { BoardItem, type BoardItemProps } from './Item.tsx';
 
@@ -33,8 +33,12 @@ const BOARD_ROOT_NAME = 'Board.Root';
 
 type BoardRootProps<TColumn = any, TItem = any> = PropsWithChildren<BoardContextValue<TColumn, TItem>>;
 
-const BoardRootInner = ({ model, children }: BoardRootProps) => {
-  return <BoardContextProvider model={model}>{children}</BoardContextProvider>;
+const BoardRootInner = ({ model, navigation, itemProps, children }: BoardRootProps) => {
+  return (
+    <BoardContextProvider model={model} navigation={navigation} itemProps={itemProps}>
+      {children}
+    </BoardContextProvider>
+  );
 };
 
 BoardRootInner.displayName = BOARD_ROOT_NAME;
@@ -55,7 +59,8 @@ type BoardContentProps<TColumn = any> = Util.ThemedClassName<{
 
 const BoardContentInner = Util.composable<HTMLDivElement, BoardContentProps>(
   ({ debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
-    const { model } = useBoardContext(BOARD_CONTENT_NAME);
+    const { model, navigation } = useBoardContext(BOARD_CONTENT_NAME);
+    const grid = navigation === 'grid';
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -63,7 +68,12 @@ const BoardContentInner = Util.composable<HTMLDivElement, BoardContentProps>(
 
     return (
       <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
-        <Focus.Group asChild orientation='horizontal'>
+        {/* In a grid the cards are the members, wherever they sit: the columns are panels, not stops. */}
+        <Focus.Group
+          asChild
+          orientation={grid ? 'grid' : 'horizontal'}
+          itemSelector={grid ? BOARD_CARD_SELECTOR : undefined}
+        >
           <Mosaic.Container
             asChild
             withFocus

@@ -24,7 +24,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 
-import { LingoPlugin } from '#plugin';
+import * as LingoPlugin from '#meta';
 import { translations } from '#translations';
 import { Language, Vocabulary, Word } from '#types';
 
@@ -135,7 +135,7 @@ const meta = {
         }),
         MarkdownPlugin.make(),
         StoryAiPlugin(),
-        LingoPlugin(),
+        LingoPlugin.make(),
       ],
     }),
   ],

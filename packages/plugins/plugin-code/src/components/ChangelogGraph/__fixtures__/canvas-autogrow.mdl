@@ -1,0 +1,118 @@
+---
+id: org.dxos.example.canvas-autogrow
+name: CanvasAutogrow
+version: 0.1.0
+---
+
+A synthetic spec modelled on `packages/ui/react-ui-canvas/SPEC.mdl`: a person gives one line of
+direction, an agent fills in the design, and the person approves most of it and overrides the rest.
+Story fixture for `ChangelogGraph`; not a real spec.
+
+## Extensions
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Features
+
+```mdl
+feat F-2: Grid and bounds
+  req F-2.1: The scene's bounds are derived from its content and grow to the major grid.
+  req F-2.2: While dragging, bounds grow to the minor grid; on drop they snap to the major grid.
+  req F-2.3: The camera never scrolls to follow a drag past the viewport edge.
+  req F-2.4: Bounds shrink only on an explicit fit, never during an edit.
+```
+
+## Changelog
+
+```mdl
+decision D-1: The canvas grows to fit its content.
+  date: 2026-10-02
+  by: user:alice
+  affects: [Scene]
+```
+
+```mdl
+decision D-2: Bounds are derived from content, never stored. Fills in [D-1].
+  date: 2026-10-02
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene, F-2.1]
+  why: Stored bounds drift from the content whenever a node moves outside an edit path.
+```
+
+```mdl
+decision D-3: Bounds grow to the major grid. Fills in [D-1].
+  date: 2026-10-02
+  by: agent:claude-code
+  for: user:alice
+  affects: [F-2.1]
+  why: Growing to the minor grid re-lays the canvas on every drag step.
+  rejected:
+    - Fixed padding: clips large nodes at the edge.
+```
+
+```mdl
+decision D-4: The camera scrolls to follow a drag past the viewport edge. Fills in [D-1].
+  date: 2026-10-02
+  by: agent:claude-code
+  for: user:alice
+  affects: [F-2.3]
+  why: Growth is invisible if the node being dragged leaves the screen.
+```
+
+```mdl
+decision D-5: Bounds never shrink during an edit; only an explicit fit shrinks them. Fills in [D-2].
+  date: 2026-10-03
+  by: agent:claude-code
+  for: user:alice
+  affects: [F-2.4]
+  why: Shrinking under the pointer moves the grid origin mid-gesture.
+```
+
+```mdl
+decision D-6: The grow step is computed from the drawn grid level, not a constant. Fills in [D-3].
+  date: 2026-10-03
+  by: agent:claude-code
+  for: user:alice
+  affects: [F-2.1]
+  why: The drawn level changes with zoom; a constant step would snap to lines that are not visible.
+```
+
+```mdl
+decision D-7: Approve [D-2], [D-5] and [D-6].
+  date: 2026-10-05
+  by: user:alice
+```
+
+```mdl
+decision D-8: Bounds grow to the minor grid while dragging and snap to the major grid on drop.
+  date: 2026-10-05
+  by: user:alice
+  affects: [F-2.2]
+  supersedes: D-3
+```
+
+```mdl
+decision D-9: The camera never auto-scrolls during a drag.
+  date: 2026-10-05
+  by: user:alice
+  affects: [F-2.3]
+  supersedes: D-4
+```
+
+```mdl
+decision D-10: The snap on drop is animated over one frame budget, so it reads as settling rather than a jump. Fills in [D-8].
+  date: 2026-10-06
+  by: agent:claude-code
+  for: user:alice
+  affects: [F-2.2]
+```
+
+```mdl
+decision D-11: Approve [D-10].
+  date: 2026-10-07
+  by: user:alice
+```

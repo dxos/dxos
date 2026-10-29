@@ -43,7 +43,7 @@ const vertices = (d: string) =>
 
 describe('polygonPath', () => {
   test('a vertex per side, the first centred on top', () => {
-    const d = polygonPath({ width: 100, height: 80 }, 2, 5);
+    const d = polygonPath({ width: 100, height: 80 }, { inset: 2, sides: 5 });
     expect(d.startsWith('M 50 ')).toBe(true);
     expect(d.split(' L ')).toHaveLength(5);
     expect(d.endsWith(' Z')).toBe(true);
@@ -52,7 +52,7 @@ describe('polygonPath', () => {
   test('regular in any frame, and centred in it by its own bounds', () => {
     const size = { width: 300, height: 100 };
     for (const sides of [3, 5, 6]) {
-      const points = vertices(polygonPath(size, 0, sides));
+      const points = vertices(polygonPath(size, { sides }));
       const xs = points.map(({ x }) => x);
       const ys = points.map(({ y }) => y);
       expect((Math.min(...xs) + Math.max(...xs)) / 2).toBeCloseTo(150, 1);
@@ -69,7 +69,34 @@ describe('polygonPath', () => {
     }
   });
 
+  test('fit to a circle puts every vertex on the circle that fits the frame, centred on it', () => {
+    const size = { width: 300, height: 100 };
+    for (const sides of [3, 5, 6]) {
+      for (const { x, y } of vertices(polygonPath(size, { sides, fit: 'circle' }))) {
+        expect(Math.hypot(x - 150, y - 50)).toBeCloseTo(50, 1);
+      }
+    }
+    // A sharp corner's mitred stroke stays on the circle: a triangle's tip reaches twice the inset past its vertex.
+    const [top] = vertices(polygonPath({ width: 100, height: 100 }, { sides: 3, fit: 'circle', inset: 2 }));
+    expect(top.y - 2 / Math.sin(Math.PI / 6)).toBeCloseTo(0, 1);
+    // A triangle on the circle leaves room below its base, where fitting the frame would fill it.
+    const ys = vertices(polygonPath({ width: 100, height: 100 }, { sides: 3, fit: 'circle' })).map(({ y }) => y);
+    expect(Math.max(...ys)).toBeCloseTo(75, 1);
+  });
+
+  test('rounded corners are an arc per vertex, the radius capped by half an edge', () => {
+    const d = polygonPath({ width: 100, height: 100 }, { sides: 6, radius: 8 });
+    expect(d.match(/ A /g)).toHaveLength(6);
+    expect(d.match(/ L /g)).toHaveLength(6);
+    const radius = (path: string) => Number(path.split(' A ')[1].split(' ')[0]);
+    expect(radius(d)).toBeCloseTo(8, 1);
+    // A radius larger than the edges allow meets at each edge's midpoint instead.
+    const capped = polygonPath({ width: 100, height: 100 }, { sides: 6, radius: 1000 });
+    expect(radius(capped)).toBeLessThan(1000);
+    expect(polygonPath({ width: 100, height: 100 }, { sides: 6, radius: 0 })).not.toContain(' A ');
+  });
+
   test('a triangle at least', () => {
-    expect(polygonPath({ width: 100, height: 100 }, 0, 2).split(' L ')).toHaveLength(3);
+    expect(polygonPath({ width: 100, height: 100 }, { sides: 2 }).split(' L ')).toHaveLength(3);
   });
 });

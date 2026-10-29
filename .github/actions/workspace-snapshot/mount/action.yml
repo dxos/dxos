@@ -1,0 +1,76 @@
+name: Mount workspace snapshot
+description: >
+  Mount a squashfs snapshot of the workspace (source, .git, every node_modules, moon's local cache) plus
+  ~/.proto and ~/.moon, each under its own overlayfs, so the job's checkout fetches only the commits since
+  the snapshot and `pnpm install` links only the lockfile delta. Runs before the job's checkout: fetch
+  this directory first with a sparse `actions/checkout` (`sparse-checkout: .github/actions/workspace-
+  snapshot`), and the mount covers it. Any failure leaves an empty workspace and `mounted` false, and the
+  job carries on with a normal checkout and setup. Pass its `mounted` output to the setup action as
+  `prebuilt`.
+
+inputs:
+  tag:
+    description: The snapshot's tag in `repository` (`ws-latest-sqfs` is the newest from main).
+    default: ws-latest-sqfs
+  repository:
+    description: The public GHCR repository holding the snapshots, pulled anonymously.
+    default: ghcr.io/dxos/gh-actions
+
+outputs:
+  mounted:
+    description: '"true" when the snapshot is mounted, "false" when the job fell back to an empty workspace.'
+    value: ${{ steps.mount.outputs.mounted }}
+
+runs:
+  using: composite
+  steps:
+    - name: Mount
+      id: mount
+      shell: bash
+      env:
+        TAG: ${{ inputs.tag }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: |
+        mount_snapshot() (
+          set -euo pipefail
+          sudo mkdir -p /mnt/ws && sudo chown "$(id -u):$(id -g)" /mnt/ws
+          image=/mnt/ws/workspace.sqfs
+          bash "$GITHUB_ACTION_PATH/../fetch.sh" "$REPOSITORY" "$TAG" workspace.sqfs "$image"
+
+          SECONDS=0
+          mkdir -p /mnt/ws/lower
+          sudo mount -t squashfs -o loop,ro "$image" /mnt/ws/lower
+          for pair in "ws:$GITHUB_WORKSPACE" "proto:$HOME/.proto" "moon:$HOME/.moon"; do
+            name=${pair%%:*}; target=${pair#*:}
+            mkdir -p "/mnt/ws/upper/$name" "/mnt/ws/work/$name" "$target"
+            sudo mount -t overlay overlay \
+              -o "lowerdir=/mnt/ws/lower/$name,upperdir=/mnt/ws/upper/$name,workdir=/mnt/ws/work/$name" "$target"
+          done
+          echo "mount: ${SECONDS}s, snapshot $(git -C "$GITHUB_WORKSPACE" rev-parse --short=12 HEAD)"
+        )
+
+        # A plain statement, not an `if` condition: bash ignores `set -e` inside anything run as a condition,
+        # so a failing step would fall through and report the mount as done.
+        set +e
+        mount_snapshot
+        status=$?
+        set -e
+        if [ "$status" -eq 0 ]; then
+          echo "mounted=true" >> "$GITHUB_OUTPUT"
+          # `.github/actions/playwright` fetches the same snapshot's Playwright file, which only browser jobs need.
+          echo "WORKSPACE_SNAPSHOT_REF=$REPOSITORY:$TAG" >> "$GITHUB_ENV"
+        else
+          echo "::warning::Workspace snapshot $TAG unavailable; using the normal checkout and setup."
+          for target in "$GITHUB_WORKSPACE" "$HOME/.proto" "$HOME/.moon" /mnt/ws/lower; do
+            sudo umount "$target" 2>/dev/null || true
+          done
+          find "$GITHUB_WORKSPACE" -mindepth 1 -delete
+          echo "mounted=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    # On an overlay the workspace is its own filesystem, so pnpm would pick a store on it; that no longer
+    # matches node_modules/.modules.yaml, and pnpm would recreate node_modules from scratch.
+    - name: Pin the pnpm store
+      if: ${{ steps.mount.outputs.mounted == 'true' }}
+      shell: bash
+      run: echo "npm_config_store_dir=$HOME/.local/share/pnpm/store" >> "$GITHUB_ENV"

@@ -10,6 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -22,7 +23,7 @@ import { type SearchResult, buildSnippet } from '@dxos/react-ui-search';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { buildSearchQuery, toSearchResults } from '#hooks';
+import { toSearchResults } from '#hooks';
 import { translations } from '#translations';
 
 import { SearchResultList } from './SearchResultList.tsx';
@@ -54,7 +55,7 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const [query, setQuery] = useState('');
 
-  const objects = useQuery(space?.db, buildSearchQuery(query));
+  const objects = useQuery(space?.db, ObjectCombobox.searchQuery(query));
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const enrichedResults = useMemo(() => results.map((result) => enrichResult(result, query)), [results, query]);
 

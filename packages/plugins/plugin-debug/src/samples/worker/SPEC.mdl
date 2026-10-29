@@ -1,0 +1,113 @@
+---
+id: com.example.hello-worker
+name: Hello Worker
+version: 0.1.0
+---
+
+One Cloudflare Worker that answers every request with a greeting and the current time, deployed from a sandbox with
+no Cloudflare account and handed to its reader to claim.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`      |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Types
+
+```mdl
+type Greeting
+  desc: The JSON body the Worker answers every request with.
+  fields:
+    message: string        # a fixed greeting
+    time: string           # the current time, ISO 8601 in UTC
+```
+
+## Features
+
+```mdl
+feat F-1: Greeting endpoint
+  desc: One fetch handler, with no router, dependencies or build step beyond wrangler's own.
+
+  req F-1.1: Every request, whatever its method or path, is answered with `type:Greeting` as JSON.
+  req F-1.2: `time` is the moment the request was served, in UTC.
+```
+
+F-2 to F-4 are named on the project's feature map — Deploy without an account, Verified response, Claimed
+account — and are not written yet. Each gets a `feat` block here, with its requirements, before the implementation is
+planned.
+
+## Acceptance
+
+```mdl
+scenario T-1: The Worker greets
+  when: a client fetches any path on the Worker
+  then: the response is `type:Greeting` with `time` within a minute of the request
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: The Hello Worker template seeds this spec partly written, with the project's features filed against it and a partial task list; the assistant completes the spec, plans the implementation as tasks and works them until the Worker answers.
+  date: 2026-10-21
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-2: The seeded spec states `type:Greeting` and [F-1] in full and only names F-2 to F-4, which the assistant writes from the feature map. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: The endpoint is the part a reader can state up front; the deploy, its verification and the claim are where the agent's plan has to meet wrangler's real behaviour.
+  rejected: Seeding every feat block with placeholder requirements, which the dialect would accept but which reads as a finished spec.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+`decision` is defined in [`changelog.mdl`](https://github.com/dxos/dxos/blob/main/packages/reflect/deus/lang/changelog.mdl).

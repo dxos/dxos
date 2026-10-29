@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 
 import { type Feature } from '#types';
 
-import { FeatureCardBody } from '../../components/FeatureCard/index.ts';
+import { FeatureCard } from '../../components/FeatureCard/index.ts';
 import { useFeatureGraph } from '../../hooks/index.ts';
 
 export type FeatureCardContentProps = AppSurface.ObjectCardProps<Feature.Feature>;
@@ -18,5 +18,13 @@ export type FeatureCardContentProps = AppSurface.ObjectCardProps<Feature.Feature
 export const FeatureCardContent = ({ subject }: FeatureCardContentProps) => {
   const { lookup } = useFeatureGraph(Obj.getDatabase(subject), [subject.id], { neighbours: true });
   const feature = lookup(subject.id);
-  return feature ? <FeatureCardBody feature={feature} lookup={lookup} /> : null;
+  return feature ? (
+    <FeatureCard.Provider feature={feature} lookup={lookup}>
+      <FeatureCard.Body>
+        <FeatureCard.Description />
+        <FeatureCard.Tags />
+        <FeatureCard.Summary />
+      </FeatureCard.Body>
+    </FeatureCard.Provider>
+  ) : null;
 };

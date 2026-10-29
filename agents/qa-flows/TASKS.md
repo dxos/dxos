@@ -34,7 +34,7 @@ Already had flows before this branch: plugin-chess, plugin-deepseek, plugin-mark
 - [x] `plugin-claude`
 - [x] `plugin-code`
 - [x] `plugin-commerce`
-- [x] `plugin-computer`
+- [x] `plugin-dev-shell`
 - [x] `plugin-conductor`
 - [x] `plugin-connector`
 

@@ -3,6 +3,6 @@
 //
 
 export { type BoardColumnContextValue, useBoardColumn } from './BoardColumnContext.ts';
-export { type BoardModel, useBoard } from './BoardContext.ts';
+export { BOARD_CARD_SELECTOR, type BoardModel, type BoardNavigation, useBoard } from './BoardContext.ts';
 
 export * from './Board.tsx';

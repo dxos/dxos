@@ -6,11 +6,12 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, type URI } from '@dxos/echo';
+import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, URI } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
+import { type HintSyntax, makeDescriber } from './describe.ts';
 import {
   type BindingsContext,
   type Dialect,
@@ -44,34 +45,49 @@ export const EffectDialect: Dialect = {
     `const DOCS = Object.freeze({ ...(await runEffect(loadDocs)), ...catalog });\n` +
     `return await runEffect(Effect.gen(function* () {\n${code}\n}));`,
 
-  bindings: ({ runtime, operations, print }: BindingsContext) => ({
-    // The namespaces the code is written against, exactly as a module would import them.
-    Effect,
-    Database: { ...Database, resolve: resolveWith(operations) },
-    Filter,
-    Query,
-    Order,
-    Obj,
-    Relation,
-    Ref,
-    Type,
-    DXN,
-    Operation,
+  bindings: ({ runtime, operations, skills, print }: BindingsContext) => {
+    const describe = makeDescriber({ syntax: EFFECT_HINTS, skills });
+    return {
+      // The namespaces the code is written against, exactly as a module would import them.
+      Effect,
+      Database: { ...Database, resolve: resolveWith(operations) },
+      Filter,
+      Query,
+      Order,
+      Obj,
+      Relation,
+      Ref,
+      Type,
+      DXN,
+      Operation,
+      // A tool with no operation behind it, such as an MCP server's, is called by its name instead.
+      Tools: Object.fromEntries(
+        operations.flatMap((operation) =>
+          operation.definition ? [] : [[operation.name, (input: unknown = {}) => operation.invoke(input)]],
+        ),
+      ),
 
-    print: (...values: unknown[]) => Effect.sync(() => print(...values)),
+      // Described against the code's own database, so a printed object carries the relations, children
+      // and referrers around it — what the model cannot see by reading its fields.
+      print: (...values: unknown[]) =>
+        Effect.forEach(values, describe).pipe(
+          Effect.map((lines) => print(...lines)),
+          Effect.provideContext(runtime),
+        ),
 
-    /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
-    loadDocs,
+      /** Supplied by `wrap`, not by the model: the static half of `DOCS`. */
+      loadDocs,
 
-    /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
-    catalog: renderCatalog({
-      operations,
-      types: describeTypes(Context.get(runtime, Database.Service).db),
-    }),
+      /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
+      catalog: renderCatalog({
+        operations,
+        types: describeTypes(Context.get(runtime, Database.Service).db),
+      }),
 
-    /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
-    runEffect: RuntimeProvider.runPromise(Effect.succeed(runtime)),
-  }),
+      /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
+      runEffect: RuntimeProvider.runPromise(Effect.succeed(runtime)),
+    };
+  },
 
   instructions: ({ operations, types }: InstructionsContext) => trim`
     ## Code mode
@@ -82,14 +98,20 @@ export const EffectDialect: Dialect = {
     \`import\` or \`require\` — the modules below are already in scope.
 
     Prefer one \`eval\` call that does the whole job — resolve, query, change, print — over a call
-    per step. Print the specific values you need to reason about, not whole objects.
+    per step. Print the specific values you need to reason about, not long lists of whole objects.
+    Stay on the objects the request names or the conversation is attached to: reading or changing
+    others the request did not ask about spends calls and risks unasked-for writes.
 
     ### In scope
 
     - \`Database\`, \`Filter\`, \`Query\`, \`Order\`, \`Obj\`, \`Relation\`, \`Ref\`, \`Type\`, \`DXN\`,
       \`Operation\`, \`Effect\` — the DXOS modules, as a source file would import them.
     - \`print(...values)\` — an effect: \`yield* print('count', tasks.length)\`. Strings go through
-      verbatim, everything else is printed as JSON.
+      verbatim. An object prints as a card: its type, id, label and fields, refs as \`→ type id "label"\`,
+      then counts of its relations, children and referrers with the exact code that fetches each —
+      the only way to see that those exist. Print the object itself, never \`JSON.stringify\` it.
+      Anything else prints as JSON, long strings and arrays cut with a \`…[+N chars]\` / \`… N more\`
+      marker.
     - \`DOCS\` — the full reference for this API: a plain object mapping file names to markdown
       strings. Read the file you need before writing anything this prompt does not show, a long one in
       slices (\`yield* print(DOCS['queries.md'].slice(0, 1000))\`); \`README.md\` shows how to grep
@@ -117,7 +139,18 @@ export const EffectDialect: Dialect = {
     ${renderTypes(types, ({ dxn }) => dxn)}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
+
+    ${renderEffectTools(operations)}
   `,
+};
+
+/** The code a printed object's hints show, in this dialect: each fetches the group it counts. */
+const EFFECT_HINTS: HintSyntax = {
+  relations: (id, relation, direction) =>
+    `yield* Database.query(Query.select(Filter.id('${id}')).${direction === 'out' ? 'sourceOf' : 'targetOf'}('${relation}')).run`,
+  children: (id) => `yield* Database.query(Query.select(Filter.id('${id}')).children()).run`,
+  referrers: (id, type, field) =>
+    `yield* Database.query(Query.select(Filter.id('${id}')).referencedBy('${type}'${field === undefined ? '' : `, '${field}'`})).run`,
 };
 
 /** The `DOCS` entries generated per evaluation from what the turn can resolve. */
@@ -164,6 +197,19 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
  * Every other DXN — a type, an object — goes to the real resolver.
  */
+/** An object's legacy ECHO DXN (`dxn:echo:<space>:<id>`, `@` for this space), which models still write. */
+const LEGACY_ECHO_DXN = /^dxn:echo:([A-Z0-9]+|@):([0-9A-Z]{26})$/;
+
+/** The object URI a legacy ECHO DXN names, since no resolver reads that form any more; any other string as is. */
+export const fromLegacyEchoDXN = (ref: string): URI.URI => {
+  const match = LEGACY_ECHO_DXN.exec(ref);
+  if (!match) {
+    return URI.make(ref);
+  }
+  const [, space, id] = match;
+  return URI.make(space === '@' ? `echo:///${id}` : `echo://${space}/${id}`);
+};
+
 const resolveWith = (operations: readonly SandboxOperation[]) => {
   const definitions = new Map(
     operations.flatMap(({ definition }) => (definition ? [[operationKey(definition), definition] as const] : [])),
@@ -173,7 +219,8 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
     if (definition !== undefined) {
       return Effect.succeed(definition);
     }
-    return schema === undefined ? Database.resolve(ref) : Database.resolve(ref, schema);
+    const target = typeof ref === 'string' ? fromLegacyEchoDXN(ref) : ref;
+    return schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
   };
 };
 
@@ -197,6 +244,21 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
 
   ${renderOperationList(operations)}
 `;
+
+/** The tools no operation backs, which `Tools` binds by name; nothing when there are none. */
+const renderEffectTools = (operations: readonly SandboxOperation[]): string => {
+  const tools = operations.filter((operation) => !operation.definition);
+  return tools.length === 0
+    ? ''
+    : trim`
+      ### Tools
+
+      The conversation's MCP servers add these. They are NOT tools here either: each is an effect on
+      \`Tools\`, taking one argument matching its input schema, and a failed call fails the program.
+
+      ${tools.map((tool) => renderOperation(tool, (name) => `yield* Tools[${JSON.stringify(name)}](input)`)).join('\n')}
+    `;
+};
 
 /** One line per operation backed by a definition, naming the DXN it resolves by. */
 const renderOperationList = (operations: readonly SandboxOperation[]): string =>

@@ -11,9 +11,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Media from '@dxos/react-ui/Media';
 import { type File } from '@dxos/types';
 
-import { meta } from '#meta';
-
 import { useFileUrl } from '../../hooks/index.ts';
+import { FileNamespace } from '../../namespace.ts';
 
 export type FileCardProps = AppSurface.ObjectCardProps<File.File>;
 
@@ -24,7 +23,7 @@ export type FileCardProps = AppSurface.ObjectCardProps<File.File>;
  * it holds rather than a form of its properties.
  */
 export const FileCard = ({ subject: file }: FileCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(FileNamespace.key);
 
   const [name] = useObject(file, 'name');
   const [fit, setFit] = useState<Media.ImageProps['fit']>('contain');

@@ -61,9 +61,10 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
    * @param data
    */
   protected mergeData(data: GraphModel.AnyData = emptyGraph) {
-    // Merge nodes.
+    // Merge nodes. Indexed by id: linear scans here made every topology update quadratic.
+    const previous = new Map(this._layout.graph.nodes.map((node) => [node.id, node]));
     const nodes: GraphLayoutNode[] = data.nodes.map((node) => {
-      let current: GraphLayoutNode = this._layout.graph.nodes.find((n) => n.id === this.options.idAccessor(node));
+      let current: GraphLayoutNode = previous.get(this.options.idAccessor(node));
       if (!current) {
         current = {
           id: this.options.idAccessor(node),
@@ -84,12 +85,13 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
     // Replace edges. Preserve `type` so projectors can classify edges by their source
     // semantics (e.g. the plexus projector groups by relation vs ref); projectors that
     // synthesize their own edges (bundle, cluster) overwrite this downstream.
+    const nodesById = new Map(nodes.map((node) => [node.id, node]));
     const edges = data.edges
       .map((edge) => ({
         id: edge.id,
         type: (edge as { type?: string }).type,
-        source: nodes.find((n) => n.id === edge.source),
-        target: nodes.find((n) => n.id === edge.target),
+        source: nodesById.get(edge.source),
+        target: nodesById.get(edge.target),
         data: edge.data,
       }))
       .filter((edge) => edge.source && edge.target);

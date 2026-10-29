@@ -44,6 +44,7 @@ export default Capability.makeModule(
         // The user enters the source in the dialog; we don't know it ahead of time.
         source: '',
         label: 'Custom Token',
+        kind: 'custom',
         credentialForm: {
           schema: CustomTokenForm,
           defaultValues: { source: '', token: '' },

@@ -21,11 +21,11 @@ describe('deepseek connector', () => {
         const result = yield* entry.credentialForm.onSubmit({ values: { token: '  sk-abc  ' }, connector });
 
         expect(result.kind).toBe('complete');
-        expect(result.accessToken.source).toBe(DEEPSEEK_SOURCE);
+        expect(result.accessToken?.source).toBe(DEEPSEEK_SOURCE);
         // Trimmed, so a pasted key with surrounding whitespace still authenticates.
-        expect(result.accessToken.token).toBe('sk-abc');
+        expect(result.accessToken?.token).toBe('sk-abc');
         expect(result.connection.connectorId).toBe(DEEPSEEK_CONNECTOR_ID);
-        expect(result.connection.accessToken.target?.token).toBe('sk-abc');
+        expect(result.connection.accessToken?.target?.token).toBe('sk-abc');
       }),
     ));
 

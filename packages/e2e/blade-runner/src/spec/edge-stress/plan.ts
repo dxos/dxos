@@ -26,7 +26,7 @@ import { type ClientIndex, type Model, makeFleetModel } from './model.ts';
 import {
   BudgetExhausted,
   type EdgeStressResult,
-  type EdgeStressSpec,
+  EdgeStressSpec,
   type EdgeTarget,
   type Real,
   assertCanCleanUp,
@@ -44,47 +44,9 @@ import {
  */
 const COMMAND_POOL_FACTOR = 8;
 
-/**
- * The one place a spec is written down; every run starts here and overrides what it changes.
- *
- * `readYAMLSpecFile` replaces the spec wholesale rather than merging it over the defaults, so
- * without this each variant of the run needed its own copy of every field — which is how a single
- * plan came to have six config files that then drifted apart.
- *
- * Deliberately independent of `edge`: with no spec file `main.ts` merges `--spec` over a *complete*
- * `defaultSpec()`, so a field that varied by target would already be pinned to the local value and
- * `--spec '{"edge":"dev"}'` could never pull in the dev one. Timeouts are stall detectors, not
- * waits, so the value generous enough for dev costs a healthy local run nothing.
- */
-export const DEFAULT_SPEC: EdgeStressSpec = {
-  platform: 'nodejs',
-  edge: 'local',
-  // Five identities, one of them with a second device, so HALO replication is always in play.
-  devicesPerIdentity: [2, 1, 1, 1, 1],
-  // D11: the agent is the always-online member that lets a joiner in when every device is offline.
-  agents: true,
-  maxSpaces: 5,
-  maxDocumentsPerSpace: 100,
-  maxCommands: 25,
-  sampleDraws: 12,
-  /**
-   * An hour is the ceiling, not the expected duration: a stall is caught by
-   * `quiescenceTimeoutMs` (or `CALL_BUDGET_MS` for a hung peer) in a minute or two, and this only
-   * bounds a run that is making slow progress rather than none.
-   */
-  maxRuntimeMs: 60 * 60_000,
-  quiescenceTimeoutMs: 90_000,
-  checkpoints: true,
-  // Off until finding 5 (a cut link crashes the peer) is fixed; see RESULTS.md.
-  partitions: false,
-  cleanup: true,
-};
-
-/** The empty default covers a spec file that sets nothing, which yields `undefined`, not `{}`. */
-export const resolveSpec = (overrides: Partial<EdgeStressSpec> = {}): EdgeStressSpec => ({
-  ...DEFAULT_SPEC,
-  ...overrides,
-});
+/** A complete spec, or an error naming the missing, unknown or out-of-range field. */
+export const decodeEdgeStressSpec = (input: unknown): EdgeStressSpec =>
+  Schema.decodeUnknownSync(EdgeStressSpec)(input, { onExcessProperty: 'error' });
 
 /**
  * Both endpoints of one EDGE deployment: the Hub is served under `/hub/` of the same origin, so a
@@ -104,13 +66,13 @@ export const urlsFor = (edge: EdgeTarget): { edgeUrl: string; hubUrl: string } =
  */
 export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
   defaultSpec(): EdgeStressSpec {
-    return DEFAULT_SPEC;
+    throw new Error('edgeStress has no default spec; pass -s configs/edge-stress-nightly.yml');
   }
 
   async run(env: SchedulerEnvImpl<EdgeStressSpec>, params: TestProps<EdgeStressSpec>): Promise<EdgeStressResult> {
-    // A spec file and `--spec` both supply only the fields they change, so what arrives here is a
-    // partial spec even though the harness types it whole.
-    const spec = resolveSpec(params.spec);
+    // Decoded here rather than trusted: the spec file and any `--spec` override reach this point
+    // untyped, and a missing or misspelled field must stop the run before it creates anything.
+    const spec = decodeEdgeStressSpec(params.spec);
     const { edgeUrl, hubUrl } = urlsFor(spec.edge);
     assertCanCleanUp(spec.edge, spec.cleanup);
     const limits: Model['limits'] = {

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 
 import {
@@ -232,6 +233,72 @@ describe('buildSpanTree', () => {
       Trace.OperationStart.key,
       Trace.OperationEnd.key,
     ]);
+  });
+
+  describe('a run-again chain', () => {
+    const yielded = { key: 'sync', outcome: 'failure', errorCode: Process.RUN_AGAIN_ERROR_CODE } as const;
+    const invocation = (meta: Trace.Meta, end?: Trace.PayloadType<typeof Trace.OperationEnd>) =>
+      withMeta(
+        meta,
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'sync' });
+          if (end) {
+            yield* Trace.write(Trace.OperationEnd, end);
+          }
+        }),
+      );
+
+    test('groups the invocations of a run under one span that ends with the last one', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, { key: 'sync', outcome: 'success' });
+          yield* invocation({ pid: 'other' }, { key: 'sync', outcome: 'success' });
+        }),
+      );
+      const tree = buildSpanTree(messages);
+      expect(tree.children.map((span) => span.id)).toEqual(['run:sync-1', expect.stringMatching(/^other#/)]);
+      const [run] = tree.children;
+      expect(run.meta.run).toBe(true);
+      expect(run.children.map((span) => span.meta.pid)).toEqual(['sync-1', 'sync-2']);
+      expect(run.events.map((event) => event.type)).toEqual([Trace.OperationStart.key, Trace.OperationEnd.key]);
+    });
+
+    test('a run whose latest invocation yielded stays open', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, yielded);
+        }),
+      );
+      const [run] = buildSpanTree(messages).children;
+      expect(run.children).toHaveLength(2);
+      expect(run.events.map((event) => event.type)).toEqual([Trace.OperationStart.key]);
+    });
+
+    // The continuation can never come (the dispatcher stopped, the retry was dropped): past the span
+    // timeout the run is closed like any abandoned span instead of showing as running forever.
+    test('a run whose continuation never came is closed after the span timeout', ({ expect }) => {
+      const messages = collectTraceEvents(
+        Effect.gen(function* () {
+          yield* invocation({ pid: 'sync-1' }, yielded);
+          yield* invocation({ pid: 'sync-2', runId: 'sync-1' }, yielded);
+        }),
+      );
+      // The last yield lands at timestamp 4.
+      const [open] = buildSpanTree(messages, { now: 4 + DEFAULT_SPAN_TIMEOUT_MS - 1 }).children;
+      expect(open.events.map((event) => event.type)).toEqual([Trace.OperationStart.key]);
+
+      const [closed] = buildSpanTree(messages, { now: 4 + DEFAULT_SPAN_TIMEOUT_MS }).children;
+      expect(closed.events.map((event) => event.type)).toEqual([Trace.OperationStart.key, Trace.OperationEnd.key]);
+      expect(closed.events[1].data).toMatchObject({ outcome: 'failure' });
+    });
+
+    test('an invocation that yielded is a run before its continuation starts', ({ expect }) => {
+      const [run] = buildSpanTree(collectTraceEvents(invocation({ pid: 'sync-1' }, yielded))).children;
+      expect(run.meta.run).toBe(true);
+      expect(run.children.map((span) => span.meta.pid)).toEqual(['sync-1']);
+    });
   });
 
   test('flattenSpanTree returns root + all descendants in depth-first order', ({ expect }) => {

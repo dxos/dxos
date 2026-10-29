@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, type ReactNode, useMemo } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
 
 import { type Obj, type Ref } from '@dxos/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
+import type * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
-import { useVariantSource } from '../../hooks/index.ts';
+import { useVariantSource } from '../../hooks/useVariantSource.ts';
+import { StudioNamespace } from '../../namespace.ts';
 import { GalleryImage } from '../GalleryImage/index.ts';
 
 /** The subset of a {@link Variant} a gallery tile needs (a live object or a snapshot). */
@@ -27,10 +27,8 @@ export type VariantTileSource = {
 export type VariantGalleryProps = {
   variants: ReadonlyArray<VariantTileSource>;
   emptyMessage?: ReactNode;
-  /** Ids of selected tiles (keyed by {@link VariantTileSource.id}). Enables the selection outline. */
-  selectedIds?: ReadonlySet<string>;
-  /** Emitted when a tile is clicked; the container toggles its selection state. */
-  onSelect?: (id: string, event: MouseEvent) => void;
+  /** Each tile's selection, by tile id (e.g. `useListSelection`'s `bind(id).rowProps`); tiles are not selectable without it. */
+  itemProps?: (id: string) => Focus.ItemBinding | undefined;
 };
 
 /** Stable per-tile id: the backing object id, else the url / content DXN, else the index. */
@@ -63,8 +61,8 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
  * each tile resolves its own source via {@link useVariantSource}; selection state is owned by the
  * container (see `useListSelection`).
  */
-export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }: VariantGalleryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+export const VariantGallery = ({ variants, emptyMessage, itemProps }: VariantGalleryProps) => {
+  const { t } = Hooks.useTranslation(StudioNamespace.key);
   const items = useMemo(() => variants.map((variant, index) => ({ variant, index })), [variants]);
 
   if (items.length === 0) {
@@ -81,8 +79,7 @@ export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }
         <Masonry.Viewport
           items={items}
           getId={(data?: TileData) => (data ? tileId(data.variant, data.index) : '')}
-          selectedIds={selectedIds}
-          onSelect={onSelect}
+          itemProps={itemProps}
         />
       </Masonry.Content>
     </Masonry.Root>

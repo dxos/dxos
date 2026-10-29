@@ -64,7 +64,7 @@ const isDisabledRefusal = (error: unknown): boolean => isRefusal(error) && error
  * view (edge entries here supersede the bare database ones).
  *
  * `invokeTrigger` force-runs the trigger's cron on the EDGE dispatcher via
- * {@link EdgeHttpClient.forceRunCronTrigger}; `resetTrigger` rewinds a feed trigger's EDGE-held
+ * {@link EdgeHttpClient.forceRunCronTrigger}, carrying the fire event's `data`; `resetTrigger` rewinds a feed trigger's EDGE-held
  * cursor via {@link EdgeHttpClient.resetTrigger}.
  */
 const toState = (status: EdgeTriggerStatus): Trigger.State => ({
@@ -112,7 +112,10 @@ const make = (
         // Manual invocation of a remote trigger maps onto force-running its cron on the EDGE
         // dispatcher; refresh the view promptly afterwards.
         Effect.tryPromise({
-          try: () => getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id),
+          try: () =>
+            getEdgeClient().forceRunCronTrigger(DxosContext.default(), spaceId, options.trigger.id, {
+              data: 'data' in options.event ? options.event.data : undefined,
+            }),
           catch: (error) => (error instanceof EdgeCallFailedError ? error : new Cause.UnknownError(error)),
         }).pipe(
           Effect.tapError((error) =>

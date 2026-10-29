@@ -17,7 +17,7 @@ Design: [VIEWS.md](./VIEWS.md). Each phase is one commit, typechecked, tested, a
 4. ~~Phase 2 (groups are Objects).~~ Done 2026-10-19.
 5. ~~Phase 3b (orphans).~~ Done 2026-10-19.
    In parallel, as chips: react-ui-list Tree filter/reveal/range selection; tldraw import (plugin-canvas backlog).
-   Not attempted: Phases 3 and 4 (saved-data changes), Phase 6 (needs #14047 reviewed).
+   Not attempted: Phases 3 and 4 (saved-data changes).
 
 ## Phase 0 — Canvas core refactor
 
@@ -104,21 +104,31 @@ Built on `@dxos/react-ui-list` Tree (VIEWS.md §6b).
 - [x] Views panel: drag rows to restack within a container. `controller.document.restack` → one `reorder` intent through the open View's projection; `canRestack`/`viewReorder` unit-tested.
   - Decisions (2026-10-19): the restack is the existing `reorder` intent rather than `update` with a `z`, as `reorder` is exactly that edit; a drop is accepted only among siblings in the open View, since the projection is the open View's (restacking another View would need its own projection or navigating there mid-drag); a View row's click selects its frame in the parent View, and only Open/Enter/double-click drill in; row selection navigates without animation so the selection lands in the View it names; `restackZ` now reports a move that changes nothing as undefined.
 - [ ] Objects panel: the library (open in isolation, place, duplicate, rename, delete); anonymous Objects hidden. (Hidden since Phase 2, but for the selected one.)
-- [ ] Delete AboutInspector, its story and its Canvas part.
+- [x] Delete AboutInspector, its story and its Canvas part. (`Canvas.About` removed; the Views rows carry the counts.)
 
 ## Phase 6 — Undo (VIEWS.md §8)
 
-- [ ] app-framework `HistoryTracker`: redo (future stack), scoped `undo/redo/canUndo(scope)`, transactions, merge keys, entry context.
-- [ ] A versioned-store interface (`heads()`, `read(path, heads)`, `write`) over the memory store (snapshot refs) and ECHO (Automerge heads).
-- [ ] `CanvasOperation.Apply` (intents → heads before/after and written paths) and `CanvasOperation.Patch`, with their `UndoMapping`.
-- [ ] Route canvas gestures and panel edits through `Apply`; projections emit patches, not snapshots.
-- [ ] Undo restores the View path and selection; Cmd+Z / Shift+Cmd+Z in a focused canvas use its scope.
-- [ ] Remove `utils/undo.ts` and the `undo` atom.
+- [x] app-framework `HistoryTracker`: redo (future stack), scoped `undo/redo/canUndo(scope)`, transactions, merge keys, entry context.
+  - Landed in dxos/dxos#14047: `redo`/`canRedo`, `undo(scope)`, `transaction(label, effect)`, merge keys inside a 500 ms window, per-entry `context`, and the `applied` stream (before/after each undo and redo).
+- [x] A versioned-store interface (`heads()`, `read(path, heads)`, `write`) over the memory store (snapshot refs) and ECHO (Automerge heads).
+  - `model/versioned.ts` (`VersionedSource`, `recordChanges`, `patchSource`, `diffPaths`), exported from `headless`; `ViewStore.versions`, absent on the memory store, whose atom snapshots are its heads (`storeVersions`). plugin-canvas's `bindCanvasStore` reads each bound drawing's `Obj.version` heads and reads a path back through `Obj.getVersion`. Tests: `model/versioned.test.ts`, plugin-canvas `store.test.ts` › versions.
+  - Decisions: paths are leaf paths into the store's `ViewMap` (records walked key by key, arrays are leaves), so a move writes `center.x`/`center.y` and a concurrent edit to another field survives; a patch moves each path from one heads to another, writing it only while it still holds the `from` value (§8.3 Q4), so the same patch serves undo (after → before) and redo (before → after).
+- [x] `CanvasOperation.Apply` (intents → heads before/after and written paths) and `CanvasOperation.Patch`, with their `UndoMapping`.
+  - plugin-canvas: `Apply { canvas, view?, intents }` applies freehand (orphans pruned with the intent) and returns `{ canvas, before, after, paths }`; `Patch { canvas, from, to, paths, context?, mergeKey? }` (key `canvas.applyPatch`, as `patch` is not a known verb) moves the paths between heads, skipping conflicts, and reports `written`/`unchanged`/`skipped`. Both run over the store a view has open (`liveCanvasStore`), else one bound for the call. `capabilities/undo-mappings.ts`: Apply → Patch(after → before), Patch → Patch reversed; scope is the canvas object's id (from the output, so an agent's ref and the view's agree); Patch carries the view's context and merge key. Test: `operations.test.ts` › canvas edit operations.
+  - app-framework (small, tested addition): `UndoMapping.merge(earlier, later)` folds two merged invocations into one forward and re-derives the inverse, since a patch is relative to its heads and the tracker's default (earliest inverse, latest forward) would undo only the first and redo only the last. Test: `history-tracker.test.ts` › merging.
+- [x] Route canvas gestures and panel edits through `Apply`; projections emit patches, not snapshots.
+  - react-ui-canvas `engine/history.ts`: `CanvasHistory { commit, undo, redo, state, connect, view }`; every intent is a commit (`withHistory` on the projection), and controller and Objects-panel actions wrap their record edits in one commit (nested commits join it), so a gesture is one entry. `createLocalHistory` (two stacks of patches, merge key and window) is the default, so stories keep ⌘Z/⇧⌘Z and the toolbar buttons with no host; `Canvas.Root` takes `history` (an instance from `useCanvasHistory`, shared with a host's panels over the same projection, or a `CreateHistory`). Arrow nudges of one selection share a merge key. Projections lose `snapshot`/`restore`: a projection with a model of its own exposes it as `model` (a `VersionedSource`, patched with the store: constrained, dynamic) and `restored()` (the compute projection reconciles its graph). Tests: `engine/history.test.ts`, `controller.test.ts`, `dynamic.test.ts`, react-ui-canvas-compute `scene.test.ts`.
+  - plugin-canvas `CanvasArticle` gives the canvas `createTrackerHistory` when Composer has a `HistoryTracker`: each commit is applied locally, then recorded as `CanvasOperation.Patch(before → after)`, a no-op forward the tracker can redo; undo and redo call `tracker.undo(scope)`/`redo(scope)` and the view follows `tracker.applied`. Checked in Storybook (`CanvasArticle › Default`): drag, ⌘Z, ⇧⌘Z, and the toolbar's Undo.
+  - Decisions: gestures are recorded through `Patch`, not `Apply` (VIEWS.md §8.3 Q3 updated): the canvas must show a gesture's result in the frame it ends, and the invoker is asynchronous, and the controller's commands write records (Group's Object, a pruned orphan) that no intent expresses; `Apply` is the path for agents and MCP, and both share one log and one inverse. `Apply` and `Patch` declare no services, since the tracker invokes an inverse with no space. app-framework `UndoMapping.toast` (false for both canvas mappings) keeps the deck from raising an undo toast per gesture; plugin-deck filters on it. The tracker history records the store only, so a projection with a model of its own (constrained, dynamic) has local undo only; plugin-canvas uses freehand and lattice, which have none.
+- [x] Undo restores the View path and selection; Cmd+Z / Shift+Cmd+Z in a focused canvas use its scope.
+  - Each entry's context is the View path (and the isolated Object, if any) and the selection when its commit began; undo and redo open that place without animation and select what is left of the selection. In Composer the context rides on the `Patch` input (`UndoMapping.context`), and the scope is the canvas object's id, so the canvas's keys undo its own edits only.
+- [x] Remove `utils/undo.ts` and the `undo` atom. (`withUndo`, `recordViews`, `recordStoreStep`, `UndoState` and their test are gone; the toolbar reads `document.history`.)
 
 ## Follow-ups
 
-- [ ] Decide VIEWS.md §7 open questions (tag effects, link rows, merged View record, orphans, Views inside Objects).
+- [x] Fold VIEWS.md's model into SPEC.mdl (Ontology, `type:View`/`Tag`, [F-4], [F-9]); DESIGN.md §3–4 and ANIMATION.md §4 point at it.
+- [ ] Decide VIEWS.md §7 open questions: merged View record (Q3). Views inside Objects (Q5) decided no (SPEC.mdl D-5, approved D-6).
 - [ ] Rotation: ports and link ends turn with the node (`portPoint`, route side normals, the pointer machine's port picks); the selection frame and its handles turn too; marquee and content bounds use the rotated frame.
 - [ ] Docked inspectors: the bottom-left (navigation) and bottom-centre (actions) bars overlap when the canvas is narrow (seen in `Canvas › Docked` with the dock open).
-- [ ] Ungroup brings the Object's animation tracks back out (Group moves them in; Ungroup drops them).
-- [ ] The Objects panel's "Delete object and its instances" and host operations clean up orphans in the same intent, not on the next load.
+- [x] Ungroup brings the Object's animation tracks back out, renamed to the new nodes and mapped through the Instance's transform.
+- [x] The Objects panel's "Delete object and its instances" cleans up orphans in the same step (`removeComposite`). Host operations still clean up on load.

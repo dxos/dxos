@@ -5,10 +5,10 @@
 export { type BranchStore } from './branching.ts';
 export * from './entity-manager.ts';
 export * from './object-core.ts';
+export * from './working-set-row.ts';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.
 export {
-  type AddCoreOptions,
   type AtomicReplaceObjectProps,
   type DecodedAutomergePrimaryValue,
   type DocumentChanges,

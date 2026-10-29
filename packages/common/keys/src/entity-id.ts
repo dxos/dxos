@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { type PRNG, type ULIDFactory, monotonicFactory } from 'ulidx';
+import { type PRNG, type ULIDFactory, decodeTime, monotonicFactory } from 'ulidx';
 
 import { withStatics } from './schema-statics.ts';
 
@@ -20,9 +20,11 @@ const MNEMONIC_PATTERN = new RegExp(`^[0-9A-HJKMNP-TV-Z]{${MNEMONIC_LENGTH}}$`, 
 // export const EntityIdSchema = Schema.ULID.pipe(S.brand(EntityIdBrand));
 // JSON Schema patterns take no flags, so the canonical uppercase form is exported in place of the
 // case-insensitive check, which effect would otherwise drop.
+const ENTITY_ID_PATTERN = /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i;
+
 const EntityIdSchema = Schema.String.pipe(
   Schema.check(
-    Schema.isPattern(/^[0-7][0-9A-HJKMNP-TV-Z]{25}$/i, {
+    Schema.isPattern(ENTITY_ID_PATTERN, {
       toJsonSchema: () => ({ pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$' }),
     }),
   ),
@@ -77,6 +79,12 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
    * ```
    */
   'deterministic'(...seed: (string | number)[]): EntityId;
+
+  /**
+   * When the id was generated (ms since epoch), read from its ULID time component.
+   * A {@link deterministic} id reads as 0.
+   */
+  'getTimestamp'(id: EntityId): number;
 
   /**
    * WARNING: To be used only within tests.
@@ -150,16 +158,12 @@ let factory: ULIDFactory = monotonicFactory();
 let seedTime: number | undefined;
 
 export const EntityId: EntityIdClass = withStatics(EntityIdSchema, {
-  isValid: (id: string): id is EntityId => {
-    try {
-      Schema.decodeSync(EntityIdSchema)(id);
-      return true;
-    } catch {
-      return false;
-    }
-  },
+  // Checked against the pattern directly: called per object on every feed read, where a schema decode
+  // (and a thrown error per miss) dominated the read.
+  isValid: (id: string): id is EntityId => typeof id === 'string' && ENTITY_ID_PATTERN.test(id),
 
-  make: (id: string): EntityId => Schema.decodeSync(EntityIdSchema)(id) as EntityId,
+  make: (id: string): EntityId =>
+    typeof id === 'string' && ENTITY_ID_PATTERN.test(id) ? id : Schema.decodeSync(EntityIdSchema)(id),
 
   random: (): EntityId => factory(seedTime) as EntityId,
 
@@ -184,6 +188,8 @@ export const EntityId: EntityIdClass = withStatics(EntityIdSchema, {
     }
     return (time + rand) as EntityId;
   },
+
+  getTimestamp: (id: EntityId): number => decodeTime(id),
 
   dangerouslyDisableRandomness: (): void => {
     factory = monotonicFactory(makeTestPRNG());

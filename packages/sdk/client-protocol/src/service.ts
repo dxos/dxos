@@ -320,6 +320,10 @@ export interface SpacesServicePromise {
   writeCredentials: (request: RpcSpacesService.WriteCredentialsRequest, options?: RequestOptions) => Promise<void>;
   queryCredentials: (request: RpcSpacesService.QueryCredentialsRequest, options?: RequestOptions) => Stream<Credential>;
   createEpoch: (request: RpcSpacesService.CreateEpochRequest, options?: RequestOptions) => Promise<CreateEpochResponse>;
+  migrateSpaceRoot: (
+    request: RpcSpacesService.MigrateSpaceRootRequest,
+    options?: RequestOptions,
+  ) => Promise<RpcSpacesService.MigrateSpaceRootResponse>;
   exportSpace: (
     request: RpcSpacesService.ExportSpaceRequest,
     options?: RequestOptions,
@@ -362,9 +366,10 @@ export interface ClientServicesProvider {
 
   /**
    * The underlying service connection was re-established.
-   * Fires after all reconnection callbacks have completed.
+   * Fires after all reconnection callbacks have completed. `isOwner` is true when this client hosts
+   * the services it reconnected to, so unloading it would also tear those services down again.
    */
-  reconnected?: Event<void>;
+  reconnected?: Event<{ isOwner: boolean }>;
 
   /**
    * Register a callback to be invoked when services reconnect.

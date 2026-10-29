@@ -39,6 +39,7 @@ export default Capability.makeModule(
         id: OAuthProvider.ATPROTO,
         source: ATMOSPHERE_SOURCE,
         label: 'Atmosphere',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.ATPROTO,
           scopes: [...ATPROTO_OAUTH_SCOPES],

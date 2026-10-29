@@ -41,6 +41,9 @@ export type NodeSurface = Schema.Schema.Type<typeof NodeSurface>;
 export const Radius = Schema.Literals(['none', 'sm', 'md', 'lg', 'xl', '2xl']);
 export type Radius = Schema.Schema.Type<typeof Radius>;
 
+/** Each radius step in px, as the theme's `rounded-*` classes draw it. */
+export const RADIUS_PX: Record<Radius, number> = { 'none': 0, 'sm': 4, 'md': 6, 'lg': 8, 'xl': 12, '2xl': 16 };
+
 /**
  * How a link is drawn: `line`, a single stroke; `tube`, a shaded strip; `rails`, two edges over a faint strip;
  * `glass`, a translucent strip with fine edges.

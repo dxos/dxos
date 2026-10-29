@@ -128,8 +128,8 @@ Sorted with DXOS operations first and `com.example` fixtures last.
 | `org.dxos.operation.commerce.runProviderSearch`             | `@dxos/plugin-commerce`      | `types/SearchOperation.ts`                                        | Run Provider Search             |       |
 | `org.dxos.operation.commerce.runSearch`                     | `@dxos/plugin-commerce`      | `types/SearchOperation.ts`                                        | Run Search                      |       |
 | `org.dxos.operation.commerce.setProviderTemplate`           | `@dxos/plugin-commerce`      | `types/SearchOperation.ts`                                        | Set Provider Template           | ✓     |
-| `org.dxos.operation.computer.applyEdits`                    | `@dxos/plugin-computer`      | `types/ComputerOperation.ts`                                      | Edits                           | ✓     |
-| `org.dxos.operation.computer.runBash`                       | `@dxos/plugin-computer`      | `types/ComputerOperation.ts`                                      | Bash                            | ✓     |
+| `org.dxos.operation.devShell.applyEdits`                    | `@dxos/plugin-dev-shell`     | `types/DevShellOperation.ts`                                      | Edits                           | ✓     |
+| `org.dxos.operation.devShell.runBash`                       | `@dxos/plugin-dev-shell`     | `types/DevShellOperation.ts`                                      | Bash                            | ✓     |
 | `org.dxos.operation.connector.createConnection`             | `@dxos/plugin-connector`     | `types/ConnectorOperation.ts`                                     | Create Connection               |       |
 | `org.dxos.operation.crm.attachImage`                        | `@dxos/plugin-crm`           | `types/CrmOperation.ts`                                           | Attach image                    | ✓     |
 | `org.dxos.operation.crm.enrichImages`                       | `@dxos/plugin-crm`           | `types/CrmOperation.ts`                                           | Enrich images                   |       |

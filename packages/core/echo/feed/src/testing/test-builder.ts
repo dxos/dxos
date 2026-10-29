@@ -276,6 +276,10 @@ export class TestPeer extends Resource {
     return this.#feedStore.append(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
+  setFeedOptions(req: Parameters<FeedStore['setFeedOptions']>[0]) {
+    return this.#feedStore.setFeedOptions(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
+  }
+
   appendLocal(req: Parameters<FeedStore['appendLocal']>[0]) {
     return this.#feedStore.appendLocal(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }

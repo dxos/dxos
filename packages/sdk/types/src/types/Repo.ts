@@ -53,6 +53,36 @@ export class Repo extends Type.makeObject<Repo>(DXN.make('org.dxos.type.repo', '
 /** Factory wrapper around `Obj.make` for {@link Repo}. */
 export const make = (props: Obj.MakeProps<typeof Repo>): Repo => Obj.make(Repo, props);
 
+/**
+ * Foreign-key source of a repository hosted by EDGE (Cloudflare Artifacts); the key's id is the
+ * repository's id in the sandbox service.
+ */
+export const EDGE_SOURCE = 'edge.dxos.network';
+
+/** The repository's id on EDGE, when EDGE hosts it. */
+export const edgeId = (repo: Repo): string | undefined => Obj.getKeys(repo, EDGE_SOURCE).at(-1)?.id;
+
+/**
+ * Makes a repository hosted by EDGE. EDGE repositories belong to a space, so the space stands in
+ * as the owner; the repository on EDGE is created by the first request that names its id.
+ */
+export const makeEdge = ({
+  spaceId,
+  name = '',
+  ...props
+}: {
+  spaceId: string;
+  name?: string;
+  description?: string;
+  defaultBranch?: string;
+}): Repo =>
+  Obj.make(Repo, {
+    name,
+    owner: spaceId,
+    ...props,
+    [Obj.Meta]: { keys: [{ source: EDGE_SOURCE, id: Obj.ID.random() }] },
+  });
+
 /** Returns true when value is a Repo object. */
 export const instanceOf = (value: unknown): value is Repo => Obj.instanceOf(Repo, value);
 

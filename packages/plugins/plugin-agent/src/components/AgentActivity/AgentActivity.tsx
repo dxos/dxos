@@ -13,10 +13,9 @@ import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
+import { AgentNamespace } from '../../namespace.ts';
 
 //
 // Root
@@ -31,7 +30,7 @@ type AgentActivityRootProps = PropsWithChildren<{
 
 /** The agent's activity panel: who it is, its skills, channels and conversations in one scrolling body. */
 const AgentActivityRoot = ({ role, toolbar, error, children }: AgentActivityRootProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <Panel.Root role={role}>
       {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
@@ -84,11 +83,13 @@ const AgentActivityToolbar = ({
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['activity-actions.label', { ns: meta.profile.key }] })
+        .root({ label: ['activity-actions.label', { ns: AgentNamespace.key }] })
+        // The panel's name leads and takes the free space, which keeps the actions at the end.
+        .text('title', { label: ['activity-companion.label', { ns: AgentNamespace.key }] })
         .action(
           'refresh',
           {
-            label: ['activity-refresh.label', { ns: meta.profile.key }],
+            label: ['activity-refresh.label', { ns: AgentNamespace.key }],
             icon: 'ph--arrows-counter-clockwise--regular',
             disabled: busy,
           },
@@ -97,7 +98,7 @@ const AgentActivityToolbar = ({
         .action(
           running ? 'stop' : 'start',
           {
-            label: [running ? 'activity-stop.label' : 'activity-start.label', { ns: meta.profile.key }],
+            label: [running ? 'activity-stop.label' : 'activity-start.label', { ns: AgentNamespace.key }],
             icon: running ? 'ph--plugs-connected--regular' : 'ph--plugs--regular',
             disabled: busy || (!running && !connectable),
           },
@@ -107,20 +108,7 @@ const AgentActivityToolbar = ({
     [running, connectable, busy, onStart, onStop, onRefresh],
   );
 
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  return (
-    <ActionToolbar
-      {...menuActions}
-      attendableId={attendableId}
-      alwaysActive={attendableId === undefined}
-      // The panel's name leads and takes the free space, which keeps the actions at the end.
-      start={
-        <>
-          <Toolbar.Text>{t('activity-companion.label')}</Toolbar.Text>
-        </>
-      }
-    />
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />;
 };
 
 AgentActivityToolbar.displayName = 'AgentActivity.Toolbar';
@@ -166,7 +154,7 @@ type AgentActivityAgentProps = {
 
 /** Which agent the panel is about: its name, and the object id EDGE and the bindings refer to it by. */
 const AgentActivityAgent = ({ id, name }: AgentActivityAgentProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <AgentActivityList label={t('agent.heading')} ids={[id]} empty=''>
       <Listbox.Item id={id}>
@@ -190,7 +178,7 @@ type AgentActivityChannelsProps = PropsWithChildren<{
 
 /** The channels the agent converses in; children are {@link AgentActivityChannel} rows. */
 const AgentActivityChannels = ({ ids, children }: AgentActivityChannelsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <AgentActivityList label={t('channels.label')} ids={ids} empty={t('channels-empty.message')}>
       {children}
@@ -216,7 +204,7 @@ type AgentActivityChannelProps = {
 
 /** One channel the agent converses in. */
 const AgentActivityChannel = ({ id, name, detail, missing = false, onRemove }: AgentActivityChannelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <Listbox.Item id={id} classNames='dx-hover'>
       <Listbox.ItemIcon icon='ph--hash--regular' />
@@ -240,7 +228,7 @@ type AgentActivitySkillsProps = PropsWithChildren<{
 
 /** The skills bound to the agent's conversation; children are {@link AgentActivitySkill} rows. */
 const AgentActivitySkills = ({ ids, children }: AgentActivitySkillsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <AgentActivityList label={t('skills.heading')} ids={ids} empty={t('skills-empty.message')}>
       {children}
@@ -283,7 +271,7 @@ type AgentActivityConversationsProps = PropsWithChildren<{
 
 /** The agent's conversations bridged from its channels; children are {@link AgentActivityConversation} rows. */
 const AgentActivityConversations = ({ ids, children }: AgentActivityConversationsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <AgentActivityList label={t('conversations.heading')} ids={ids} empty={t('conversations-empty.message')}>
       {children}
@@ -317,7 +305,7 @@ const AgentActivityConversation = ({
   onSelect,
   onDelete,
 }: AgentActivityConversationProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   return (
     <Listbox.Item id={id} onClick={() => onSelect?.(id)} classNames='dx-hover'>
       <Listbox.ItemIcon icon='ph--chat-circle-dots--regular' />

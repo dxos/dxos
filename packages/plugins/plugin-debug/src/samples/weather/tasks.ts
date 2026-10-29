@@ -38,13 +38,13 @@ const STEPS: ReadonlyArray<TaskSeed> = [
   {
     title: 'Configure the server for this space',
     description:
-      "Set the Worker URL on the Weather MCP skill's `mcpServers` as `{ name: 'weather', url, protocol: 'http' }` through the Database skill's update tool. The skill is already bound to this chat and servers are connected at the start of every turn, so `get_weather` appears on your next turn — no restart.",
+      "Add the Worker URL as an MCP connection named `weather` with the Skill Manager's `add-mcp-connection` tool. The connection is on in this chat and servers are connected at the start of every turn, so its tool appears on your next turn as `mcp__weather__get_weather` — no restart.",
     estimate: 'xs',
   },
   {
     title: 'Test the tool from this chat',
     description:
-      'Before calling, check CORS against the deployed URL — `curl -i -X OPTIONS -H "Origin: http://localhost" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type,mcp-session-id" <url>` must return the allow headers; a browser client fails its preflight otherwise, and the tool never appears. Then call `get_weather` for Berlin (52.52, 13.41) and file the response on the project. The call has to appear as a tool call in the transcript; a forecast the model produced on its own is a failure, not a pass.',
+      'Before calling, check CORS against the deployed URL — `curl -i -X OPTIONS -H "Origin: http://localhost" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type,mcp-session-id" <url>` must return the allow headers; a browser client fails its preflight otherwise, and the tool never appears. Then call `mcp__weather__get_weather` for Berlin (52.52, 13.41) and file the response on the project. The call has to appear as a tool call in the transcript; a forecast the model produced on its own is a failure, not a pass.',
     estimate: 'xs',
   },
 ];

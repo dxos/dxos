@@ -13,7 +13,8 @@ fileGroups:
   production:
     - src/**/*
     - '!src/test/**/*'
-    - '!src/**/*.test.tsx?'
+    - '!src/**/*.test.ts'
+    - '!src/**/*.test.tsx'
     - '!src/playwright/**/*'
     - '!src/**/*.spec.ts'
     - '!src/stories/**/*'
@@ -21,7 +22,8 @@ fileGroups:
 
   tests:
     - src/test/**/*
-    - src/**/*.test.tsx?
+    - src/**/*.test.ts
+    - src/**/*.test.tsx
     - src/playwright/**/*
     - src/**/*.spec.ts
 

@@ -10,9 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { File } from '@dxos/types';
+import { File, Repo } from '@dxos/types';
 
-import * as Repository from './Repository.ts';
 import * as RepositoryService from './RepositoryService.ts';
 import * as Sandbox from './Sandbox.ts';
 import * as SandboxService from './SandboxService.ts';
@@ -33,8 +32,9 @@ export const CreateSandbox = Operation.make({
       description: 'Base container image to use. Defaults to the service default.',
     }),
     repositories: Schema.optional(
-      Schema.Array(Ref.Ref(Repository.Repository)).annotate({
-        description: 'Repositories to attach: each is a git remote, named after the repository, in every command.',
+      Schema.Array(Ref.Ref(Repo.Repo)).annotate({
+        description:
+          'Repositories to attach, each hosted by EDGE: each is a git remote, named after the repository, in every command.',
       }),
     ),
     accountAccess: Schema.optional(Schema.Boolean).annotate({
@@ -238,7 +238,7 @@ export const AttachRepository = Operation.make({
   },
   input: Schema.Struct({
     sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
-    repository: Ref.Ref(Repository.Repository).annotate({ description: 'The repository object ID.' }),
+    repository: Ref.Ref(Repo.Repo).annotate({ description: 'The repository object ID; EDGE must host it.' }),
   }),
   output: Schema.Struct({
     remote: Schema.String.annotate({

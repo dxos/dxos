@@ -59,10 +59,16 @@ export interface WorkerSession {
  */
 const EDGE_NETWORKING_START_DELAY = '300 millis';
 
+/** Why the runtime asks its embedder to shut it down. */
+export type WorkerShutdownRequestReason = 'reset' | 'storage-stuck' | 'last-session-closed';
+
 export type WorkerRuntimeOptions = {
   configProvider: Effect.Effect<Config>;
-  /** The runtime wants to terminate (its last session closed, or a reset finished); the embedder closes its scope. */
-  requestShutdown?: Effect.Effect<void>;
+  /**
+   * The runtime wants to terminate (its last session closed, a reset finished, or storage is stuck); the
+   * embedder closes its scope. `reason` names which, for the embedder to report.
+   */
+  requestShutdown?: (reason: WorkerShutdownRequestReason) => Effect.Effect<void>;
   /**
    * @default true
    */
@@ -116,7 +122,7 @@ export class WorkerRuntime extends Context.Service<WorkerRuntime, WorkerRuntimeS
  */
 export const makeWorkerRuntime = ({
   configProvider,
-  requestShutdown = Effect.void,
+  requestShutdown = () => Effect.void,
   automaticallyConnectWebrtc = true,
   sqliteLayer,
   memorySignalManagerContext,
@@ -184,16 +190,16 @@ export const makeWorkerRuntime = ({
         }),
       );
     }
-    yield* Hook.on(Events.Reset, () => requestShutdown);
+    yield* Hook.on(Events.Reset, () => requestShutdown('reset'));
     // The tabs hold every change this process has not saved, and reconnect to a replacement with them.
-    yield* Hook.on(Events.StorageStuck, () => requestShutdown);
+    yield* Hook.on(Events.StorageStuck, () => requestShutdown('storage-stuck'));
     yield* Hook.on(
       SessionClosed,
       Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {
         sessions.delete(session);
         if (sessions.size === 0) {
           // Terminate the worker when all sessions are closed.
-          yield* requestShutdown;
+          yield* requestShutdown('last-session-closed');
         } else if (automaticallyConnectWebrtc) {
           yield* reconnectWebrtc;
         }

@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import * as GooglePlugin from '#meta';
 import { GoogleOperation } from '#types';
-
-import * as GooglePlugin from './GooglePlugin.ts';
 
 // Activation and the handler set are not covered: the handlers import `@dxos/pipeline-rdf`, whose
 // comunica dependency requires `process/`, a specifier the vitest workerd pool cannot resolve

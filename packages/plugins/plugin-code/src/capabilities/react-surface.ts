@@ -8,13 +8,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as ProjectView from '@dxos/plugin-projects/ProjectView';
-import { isTauri } from '@dxos/util';
+import { SpecDocument } from '@dxos/types';
 
-import { CodeArticle, CodeSettings, ProjectFolder, SpecArticle } from '#containers';
-import { meta } from '#meta';
-import { CodeProject, Spec } from '#types';
+import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
+import { CodeProject } from '#types';
 
+import { CodeNamespace } from '../namespace.ts';
 import { isPluginSpecSubject } from '../plugin-spec.ts';
 
 export default Capability.makeModule(() =>
@@ -24,13 +23,13 @@ export default Capability.makeModule(() =>
         id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
         component: SpecArticle,
-        props: ({ role, data: { subject } }) => ({ role, content: subject.content }),
+        props: ({ role, data: { subject } }) => ({ role, content: subject.content, sourceKey: subject.sourceKey }),
       }),
       Surface.create({
         id: 'specArticle',
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Spec.Spec),
-          AppSurface.object(AppSurface.Section, Spec.Spec),
+          AppSurface.object(AppSurface.Article, SpecDocument.SpecDocument),
+          AppSurface.object(AppSurface.Section, SpecDocument.SpecDocument),
         ),
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
@@ -45,15 +44,8 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
-        id: 'projectFolder',
-        // Only the desktop app runs coding agents, so only it has a folder to choose.
-        filter: Surface.makeFilter(ProjectView.Settings, () => isTauri()),
-        component: ProjectFolder,
-        props: ({ data: { project } }) => ({ project }),
-      }),
-      Surface.create({
         id: 'codeSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, CodeNamespace.key),
         component: CodeSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

@@ -557,13 +557,18 @@ export class SyncClient {
    * Unknowable, so `false`, before anything was pulled or against a server that predates reporting
    * it. Two local holders of the cursor slot count as a difference: the replica cannot be in step
    * with an authority that has one block per position.
+   *
+   * An empty slot on either side is also unknowable rather than a difference: positions are issued
+   * contiguously, so a slot at or below the high-water mark empties only when retention deletes its
+   * block, and a rollback shows instead as a cursor beyond the server or another block at the slot.
+   * Read as a difference, a trimmed cursor block would replay the namespace on every pull.
    */
   #cursorBlockDiffers(
     opts: { spaceId: SpaceId; feedNamespace: string },
     cursor: number,
     cursorBlock: FeedProtocol.BlockKey | null | undefined,
   ): Effect.Effect<boolean, unknown, SqlClient.SqlClient> {
-    if (cursor < 0 || cursorBlock === undefined) {
+    if (cursor < 0 || cursorBlock == null) {
       return Effect.succeed(false);
     }
     return this.#feedStore
@@ -571,11 +576,11 @@ export class SyncClient {
       .pipe(
         Effect.map(
           (holders) =>
-            cursorBlock === null ||
-            holders.length !== 1 ||
-            holders[0].feedId !== cursorBlock.feedId ||
-            holders[0].actorId !== cursorBlock.actorId ||
-            holders[0].sequence !== cursorBlock.sequence,
+            holders.length > 1 ||
+            (holders.length === 1 &&
+              (holders[0].feedId !== cursorBlock.feedId ||
+                holders[0].actorId !== cursorBlock.actorId ||
+                holders[0].sequence !== cursorBlock.sequence)),
         ),
       );
   }

@@ -34,17 +34,12 @@ tasks:
       - $DX_RUN_MANUAL_TESTS
       - $DX_RUN_MODEL_FIXTURE_TESTS
       - $DX_UPDATE_MODEL_FIXTURES
+      # Set per run on the nightly, so its tests execute instead of replaying a cache hit.
+      - $DX_TEST_RUN_ID
     outputs:
       - /coverage/$project/storybook/**
       - /test-results/$project/storybook/**
     options:
-      # Storybook test sessions occasionally die mid-run with "Browser
-      # connection was closed", which fails entire suites at the file-collection
-      # phase (vitest's project-level `retry` only retries individual tests).
-      # A whole-task retry reruns vitest from scratch with a fresh chromium.
-      # 2 retries (3 total attempts) — the chromium issue has been observed to
-      # persist across an immediate single retry in CI.
-      retryCount: 2
       timeout: 600
 
 inheritedBy:

@@ -12,6 +12,7 @@ import { Database, Obj } from '@dxos/echo';
 import { GitHubOperation } from '#types';
 
 import { GitHubApi } from '../services/index.ts';
+import { toRepoDescriptor } from './repo.ts';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's
@@ -35,7 +36,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
         }
 
         return yield* Effect.gen(function* () {
-          const remoteRepos = yield* GitHubApi.fetchUserRepos();
+          const remoteRepos = yield* GitHubApi.fetchReachableRepos();
           const sorted = [...remoteRepos].sort((left, right) =>
             left.full_name.toLowerCase().localeCompare(right.full_name.toLowerCase()),
           );
@@ -43,6 +44,8 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
             id: String(repo.id),
             name: repo.full_name,
             description: repo.description ?? undefined,
+            // What `materializeTarget` needs to file the `Repo` without asking GitHub again.
+            metadata: toRepoDescriptor(repo),
           }));
           return { targets };
         }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromConnection(connection))));

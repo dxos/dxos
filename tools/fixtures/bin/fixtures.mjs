@@ -30,17 +30,29 @@
 // CI never has either credential, so `pull` cannot succeed there; fixture-backed tests stay gated on
 // the file's presence and skip. That is an absence of capability rather than a policy.
 //
+// `--scope agents` is the one shared exception: such fixtures (e.g. voice recordings for transcription evals) live
+// under `agents/` rather than a user's prefix and are encrypted to the team's agents key as well as the pusher's own,
+// so cloud agents can pull what a person pushed, and nobody else can.
+//
+// Each machine has ONE identity, `DX_FIXTURES_AGE_KEY`: a person's own key locally (agents running locally act as
+// that person), and the agents key in the cloud sandbox, where it defaults to the 1Password reference below. A
+// cloud agent's pushes are therefore readable by cloud agents only, unless it adds `--recipient <age1...>`.
+//
+// A fixture is any file: JSON archives are checked as such, anything else (a `.wav`) is carried as-is with its
+// extension.
+//
 // Setup (once per developer):
 //   age-keygen -o ~/.config/dxos/fixtures.key     # then store it in 1Password
 //   export DX_FIXTURES_AGE_KEY=~/.config/dxos/fixtures.key
 //
 // Usage:
-//   moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]
-//   moon run fixtures:pull -- <name> [--at <version>] [--user <user>]
+//   moon run fixtures:push -- <file> --name <name> [--scope agents] [--recipient <age1...>]
+//   moon run fixtures:pull -- <name> [--scope agents] [--at <version>] [--user <user>]
 //   moon run fixtures:info          # local fixtures + config (the remote has no listing API)
 //
 // Environment:
-//   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference.
+//   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference. In the cloud sandbox
+//                         (`CLAUDE_CODE_REMOTE`) it defaults to the agents key.
 //   DX_FIXTURES_BUCKET    Overrides the bucket name (default `test-fixtures`).
 //   DX_FIXTURES_DIR       Overrides the local directory (default `<repo>/testing/fixtures`).
 //   CLOUDFLARE_ACCOUNT_ID Required by wrangler when the token spans several accounts.
@@ -73,6 +85,17 @@ const NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
 // `YYYYMMDD-HHMMSS`, validated wherever it comes back off the network or a flag.
 const VERSION_RE = /^\d{8}-\d{6}$/;
 
+// A file extension, interpolated into keys and filenames like a name.
+const EXTENSION_RE = /^[a-z0-9]{1,8}$/;
+
+// Public half of the team's agents key (its secret is in 1Password, eng-dev); `--scope agents` encrypts to it.
+const AGENTS_RECIPIENT = 'age197g2gqngxhg9vj3f627hyz8qjcduklz2a048dft29jg4zfwguavqygsjkw';
+
+const SCOPES = ['user', 'agents'];
+
+// Where the agents key's secret is; a cloud agent's identity unless DX_FIXTURES_AGE_KEY says otherwise.
+const AGENTS_IDENTITY = 'op://eng-dev/network.dxos.fixtures/credential';
+
 const main = () => {
   const [command, ...rest] = process.argv.slice(2);
   switch (command) {
@@ -102,42 +125,47 @@ const push = (args) => {
   // captured come from the filename. Adopting the capture stamp — rather than minting an upload
   // time — keeps one identity for the archive on disk and in R2, and makes the version mean "when
   // this mailbox looked like this" rather than "when it happened to be uploaded".
-  const { name: parsedName, version: parsedVersion } = parseArchiveName(basename(source));
+  const { name: parsedName, version: parsedVersion, extension } = parseArchiveName(basename(source));
   const name = validName(flags.name ?? parsedName);
   const version = parsedVersion ?? timestamp();
+  const scope = validScope(flags.scope);
 
-  // Sanity-check the payload before it becomes an opaque blob: an archive is a JSON array of
+  // Sanity-check a JSON payload before it becomes an opaque blob: an archive is a JSON array of
   // serialized messages, and pushing the wrong file is only discoverable after a pull otherwise.
-  const messages = readArchive(source);
+  const contents = extension === 'json' ? `${readArchive(source)} messages` : extension;
   requireBinary('age', 'brew install age');
 
   // Default to our own public key so a push is always reversible by the pusher; an explicit
-  // `--recipient` is the deliberate act of handing one archive to someone else.
-  const recipient = flags.recipient ?? ownRecipient();
+  // `--recipient` is the deliberate act of handing one archive to someone else. The agents scope adds the
+  // agents key, so any agent can read it too.
+  const recipients = [flags.recipient ?? ownRecipient(), ...(scope === 'agents' ? [AGENTS_RECIPIENT] : [])];
   if (flags.recipient) {
     console.warn(`Encrypting for ${flags.recipient} — you will NOT be able to decrypt this archive.\n`);
   }
 
   const owner = userInfo().username;
-  const key = remoteKey(name, owner, version);
+  const key = remoteKey({ scope, owner, name, version, extension });
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
   const pointer = join(tmpdir(), `dxos-fixture-${process.pid}.latest`);
   try {
-    execFileSync('age', ['-r', recipient, '-o', encrypted, source], { stdio: 'inherit' });
+    execFileSync('age', [...recipients.flatMap((recipient) => ['-r', recipient]), '-o', encrypted, source], {
+      stdio: 'inherit',
+    });
     wrangler(['r2', 'object', 'put', `${BUCKET}/${key}`, '--file', encrypted, '--remote']);
 
     // Each push is a new object, so history accumulates rather than overwriting. Nothing can
     // enumerate it (wrangler's R2 surface is get/put/delete), so the newest version is recorded in
     // a companion pointer — a few bytes naming the version, holding no fixture content.
-    writeFileSync(pointer, version);
-    wrangler(['r2', 'object', 'put', `${BUCKET}/${pointerKey(name, owner)}`, '--file', pointer, '--remote']);
+    // A JSON fixture's pointer is the bare version, as before extensions; any other names its extension too.
+    writeFileSync(pointer, extension === 'json' ? version : `${version}.${extension}`);
+    wrangler(['r2', 'object', 'put', `${BUCKET}/${pointerKey({ scope, owner, name })}`, '--file', pointer, '--remote']);
   } finally {
     rmSync(encrypted, { force: true });
     rmSync(pointer, { force: true });
   }
 
-  console.log(`\nPushed ${messages} messages (${size(source)}) → ${key}`);
-  console.log(`Pull elsewhere with:  moon run fixtures:pull -- ${name}`);
+  console.log(`\nPushed ${contents} (${size(source)}) → ${key}`);
+  console.log(`Pull elsewhere with:  moon run fixtures:pull -- ${name}${scope === 'agents' ? ' --scope agents' : ''}`);
 };
 
 const pull = (args) => {
@@ -147,15 +175,18 @@ const pull = (args) => {
   }
   const name = validName(positional[0]);
   const owner = flags.user ?? userInfo().username;
+  const scope = validScope(flags.scope);
 
   requireBinary('age', 'brew install age');
   const identity = identityFile();
 
-  // An explicit `--at` pins a version; otherwise resolve the newest through the pointer object.
-  const version = flags.at ? validVersion(flags.at) : readPointer(name, owner);
-  const key = remoteKey(name, owner, version);
+  // An explicit `--at` pins a version (with `--ext` for a non-JSON one); otherwise the pointer names the newest.
+  const { version, extension } = flags.at
+    ? { version: validVersion(flags.at), extension: validExtension(flags.ext ?? 'json') }
+    : readPointer({ scope, owner, name });
+  const key = remoteKey({ scope, owner, name, version, extension });
 
-  const out = join(FIXTURES_DIR, `${name}-${version}.json`);
+  const out = join(FIXTURES_DIR, `${name}-${version}.${extension}`);
   mkdirSync(dirname(out), { recursive: true });
 
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
@@ -166,21 +197,22 @@ const pull = (args) => {
     rmSync(encrypted, { force: true });
   }
 
-  const messages = readArchive(out);
-  console.log(`\nPulled ${messages} messages (${size(out)}) → ${out}`);
+  const contents = extension === 'json' ? `${readArchive(out)} messages` : extension;
+  console.log(`\nPulled ${contents} (${size(out)}) → ${out}`);
   console.log(`Tests resolve it by name: fixturePath('${name}') takes the newest local version.`);
 };
 
-/** Newest version of a fixture, from the pointer object written by `push`. */
-const readPointer = (name, owner) => {
+/** Newest version of a fixture and its extension, from the pointer object written by `push`. */
+const readPointer = (location) => {
   const file = join(tmpdir(), `dxos-fixture-${process.pid}.latest`);
   try {
-    wrangler(['r2', 'object', 'get', `${BUCKET}/${pointerKey(name, owner)}`, '--file', file, '--remote']);
-    const version = readFileSync(file, 'utf8').trim();
-    if (!VERSION_RE.test(version)) {
-      fail(`Malformed pointer for "${name}": ${JSON.stringify(version)}`);
+    wrangler(['r2', 'object', 'get', `${BUCKET}/${pointerKey(location)}`, '--file', file, '--remote']);
+    const pointer = readFileSync(file, 'utf8').trim();
+    const [version, extension = 'json'] = pointer.split('.');
+    if (!VERSION_RE.test(version) || !EXTENSION_RE.test(extension)) {
+      fail(`Malformed pointer for "${location.name}": ${JSON.stringify(pointer)}`);
     }
-    return version;
+    return { version, extension };
   } finally {
     rmSync(file, { force: true });
   }
@@ -193,12 +225,12 @@ const readPointer = (name, owner) => {
  * get/put/delete), so browse the Cloudflare dashboard for the full history.
  */
 const info = () => {
-  console.log(`identity:   ${process.env.DX_FIXTURES_AGE_KEY ?? '(unset — DX_FIXTURES_AGE_KEY)'}`);
+  console.log(`identity:   ${configuredIdentity() ?? '(unset — DX_FIXTURES_AGE_KEY)'}`);
   console.log(`directory:  ${FIXTURES_DIR}`);
   console.log(`bucket:     ${BUCKET}`);
   console.log(`user:       ${userInfo().username}`);
 
-  const entries = existsSync(FIXTURES_DIR) ? readdirSync(FIXTURES_DIR).filter((entry) => entry.endsWith('.json')) : [];
+  const entries = existsSync(FIXTURES_DIR) ? readdirSync(FIXTURES_DIR).filter((entry) => !entry.startsWith('.')) : [];
   if (entries.length === 0) {
     console.log('\nNo fixtures pulled. Get one: moon run fixtures:pull -- <name>');
     return;
@@ -226,6 +258,9 @@ const info = () => {
 
 /** Message count of an archive, or a marker when it cannot be read (so info never throws). */
 const entryCount = (path) => {
+  if (!path.endsWith('.json')) {
+    return '';
+  }
   try {
     const parsed = JSON.parse(readFileSync(path, 'utf8'));
     return Array.isArray(parsed) ? `${parsed.length} entries` : '(not an array)';
@@ -234,23 +269,43 @@ const entryCount = (path) => {
   }
 };
 
+/** Remote folder: the shared agents one, or the user's own. */
+const remotePrefix = ({ scope, owner }) => (scope === 'agents' ? 'agents' : `mailbox/${owner}`);
+
 /** Remote key for one version of a named fixture. */
-const remoteKey = (name, owner, version) => `mailbox/${owner}/${name}-${version}.json.age`;
+const remoteKey = ({ scope, owner, name, version, extension }) =>
+  `${remotePrefix({ scope, owner })}/${name}-${version}.${extension}.age`;
 
 /** Companion object naming the newest version — the stand-in for the listing wrangler cannot do. */
-const pointerKey = (name, owner) => `mailbox/${owner}/${name}.latest`;
+const pointerKey = ({ scope, owner, name }) => `${remotePrefix({ scope, owner })}/${name}.latest`;
 
 /** Sortable, filename-safe UTC stamp: `20260804-181500`. */
 const timestamp = () => new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
 
 /**
- * Splits `<name>-<version>.json` (what the capture tool writes) into its parts. A file without a
- * trailing stamp yields no version, so the whole basename is the name and the caller stamps it now.
+ * Splits `<name>-<version>.<ext>` (what the capture tool writes) into its parts. A file without a
+ * trailing stamp yields no version, so the whole stem is the name and the caller stamps it now.
  */
 const parseArchiveName = (filename) => {
-  const stem = filename.replace(/\.json$/, '');
+  const dot = filename.lastIndexOf('.');
+  const extension = validExtension(dot > 0 ? filename.slice(dot + 1).toLowerCase() : 'json');
+  const stem = dot > 0 ? filename.slice(0, dot) : filename;
   const match = stem.match(/^(.*)-(\d{8}-\d{6})$/);
-  return match ? { name: match[1], version: match[2] } : { name: stem, version: undefined };
+  return match ? { name: match[1], version: match[2], extension } : { name: stem, version: undefined, extension };
+};
+
+const validExtension = (extension) => {
+  if (!EXTENSION_RE.test(extension)) {
+    fail(`Invalid file extension: "${extension}".`);
+  }
+  return extension;
+};
+
+const validScope = (scope = 'user') => {
+  if (!SCOPES.includes(scope)) {
+    fail(`Invalid scope: "${scope}". Use one of: ${SCOPES.join(', ')}.`);
+  }
+  return scope;
 };
 
 const validVersion = (version) => {
@@ -273,9 +328,13 @@ const validName = (name) => {
  */
 const ownRecipient = () => execFileSync('age-keygen', ['-y', identityFile()], { encoding: 'utf8' }).trim();
 
+/** This machine's identity: `DX_FIXTURES_AGE_KEY`, else the agents key in the cloud sandbox. */
+const configuredIdentity = () =>
+  process.env.DX_FIXTURES_AGE_KEY || (process.env.CLAUDE_CODE_REMOTE ? AGENTS_IDENTITY : undefined);
+
 /** Path to the age identity file, resolving an `op://` reference to a temporary file. */
 const identityFile = () => {
-  const configured = process.env.DX_FIXTURES_AGE_KEY;
+  const configured = configuredIdentity();
   if (!configured) {
     fail('DX_FIXTURES_AGE_KEY is required. Create one: age-keygen -o ~/.config/dxos/fixtures.key');
   }
@@ -371,8 +430,8 @@ const fail = (message) => {
 const usage = (message) => {
   console.error(`${message}\n`);
   console.error('Usage:');
-  console.error('  moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]');
-  console.error('  moon run fixtures:pull -- <name> [--at <version>] [--user <user>]');
+  console.error('  moon run fixtures:push -- <file> --name <name> [--scope agents] [--recipient <age1...>]');
+  console.error('  moon run fixtures:pull -- <name> [--scope agents] [--at <version> [--ext <ext>]] [--user <user>]');
   console.error('  moon run fixtures:info');
   process.exit(1);
 };

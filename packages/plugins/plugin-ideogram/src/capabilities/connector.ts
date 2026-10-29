@@ -23,33 +23,41 @@ type IdeogramTokenFormValues = Schema.Schema.Type<typeof IdeogramTokenForm>;
  * `ideogram.ai`) so `plugin-studio`'s generate operation can resolve it via
  * `CredentialsService`. Mirrors plugin-ibkr's non-OAuth `credentialForm` connector.
  */
-export const createIdeogramConnectorEntry = () => ({
-  id: IDEOGRAM_CONNECTOR_ID,
-  source: IDEOGRAM_SOURCE,
-  label: 'Ideogram',
-  credentialForm: {
-    schema: IdeogramTokenForm,
-    defaultValues: { token: '' } satisfies Partial<IdeogramTokenFormValues>,
-    onSubmit: ({ values, connector }: { values: IdeogramTokenFormValues; connector: { id: string; label?: string } }) =>
-      Effect.sync(() => {
-        const token = values.token.trim();
-        if (!token) {
-          throw new Error('Ideogram connection requires an API key.');
-        }
+export const createIdeogramConnectorEntry = () =>
+  ({
+    id: IDEOGRAM_CONNECTOR_ID,
+    source: IDEOGRAM_SOURCE,
+    label: 'Ideogram',
+    kind: 'custom',
+    credentialForm: {
+      schema: IdeogramTokenForm,
+      defaultValues: { token: '' } satisfies Partial<IdeogramTokenFormValues>,
+      onSubmit: ({
+        values,
+        connector,
+      }: {
+        values: IdeogramTokenFormValues;
+        connector: { id: string; label?: string };
+      }) =>
+        Effect.sync(() => {
+          const token = values.token.trim();
+          if (!token) {
+            throw new Error('Ideogram connection requires an API key.');
+          }
 
-        const accessToken = Obj.make(AccessToken.AccessToken, {
-          source: IDEOGRAM_SOURCE,
-          token,
-        });
-        const connection = Obj.make(Connection.Connection, {
-          name: connector.label ?? 'Ideogram',
-          connectorId: connector.id,
-          accessToken: Ref.make(accessToken),
-        });
-        return { kind: 'complete' as const, accessToken, connection };
-      }),
-  },
-});
+          const accessToken = Obj.make(AccessToken.AccessToken, {
+            source: IDEOGRAM_SOURCE,
+            token,
+          });
+          const connection = Obj.make(Connection.Connection, {
+            name: connector.label ?? 'Ideogram',
+            connectorId: connector.id,
+            accessToken: Ref.make(accessToken),
+          });
+          return { kind: 'complete' as const, accessToken, connection };
+        }),
+    },
+  }) satisfies ConnectorSpec.ConnectorEntry;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

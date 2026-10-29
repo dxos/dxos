@@ -290,15 +290,15 @@ describe('feeds', () => {
 
       const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getFeedUri(feed)!)));
       const called = new Event();
-      const calledOnce = called.waitForCount(1);
       const sub = query.subscribe(() => called.emit());
+      // The local append is in the results before the index answers with the rest of the feed.
+      const calledWithBoth = called.waitForCondition(() => query.results.length === 2);
 
       // Append new contact.
       await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })]);
 
       // Wait for update.
-      await calledOnce;
-      expect(query.results).toHaveLength(2);
+      await calledWithBoth;
       expect(query.results.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
       sub();
     });
@@ -426,6 +426,8 @@ describe('feeds', () => {
       const feed = db.add(Feed.make({ name: 'people' }));
 
       await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'john' })]);
+      // Nothing written here stays held, so only the index can answer.
+      await db.evictFeedHandle(feed);
 
       const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getFeedUri(feed)!)));
       const observed: number[] = [];

@@ -38,11 +38,12 @@ const fakeFact = (target: string, step: number): Parameters<typeof FactFeed.make
 /**
  * Stands in for EDGE running the back-index trigger: while the space's back-index trigger is enabled, each tick moves
  * the top actionable target of its crawl state one step (pending → active → done), appends facts to its fact feed,
- * and spawns one thread under a finished channel when the trigger's input descends threads. Returns a stop function.
+ * and spawns one thread under a finished channel when the trigger's input descends threads. Returns a stop function that
+ * waits for a step in flight.
  */
-export const startFakeBackIndexRunner = (db: Database.Database): (() => void) => {
+export const startFakeBackIndexRunner = (db: Database.Database): (() => Promise<void>) => {
   let step = 0;
-  let running = false;
+  let running: Promise<void> | undefined;
   const tick = async () => {
     const [trigger] = (await db.query(Filter.type(Trigger.Trigger)).run()).filter(
       (candidate) => candidate.enabled && Ref.isRef(candidate.input?.state),
@@ -98,13 +99,15 @@ export const startFakeBackIndexRunner = (db: Database.Database): (() => void) =>
   const interval = setInterval(() => {
     // One step at a time: a slow append must not overlap the next tick.
     if (!running) {
-      running = true;
-      void tick().finally(() => {
-        running = false;
+      running = tick().finally(() => {
+        running = undefined;
       });
     }
   }, TICK_MS);
-  return () => clearInterval(interval);
+  return async () => {
+    clearInterval(interval);
+    await running;
+  };
 };
 
 /** What signing in with Discord leaves in the space: a user OAuth connection holding its token. */

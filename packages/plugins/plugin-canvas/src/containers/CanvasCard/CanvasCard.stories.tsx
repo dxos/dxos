@@ -16,8 +16,8 @@ import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
 import * as Card from '@dxos/react-ui/Card';
 import { Cell, ModuleContainer, type ResolvedCellProps, createStoryDecorators } from '@dxos/storybook-testing';
 
+import * as CanvasPlugin from '#meta';
 import { createCanvas, nodeKey, rootOf } from '#model';
-import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 
 // Dispatched through the illustrator's card surface, as a stack or popover shows it, so the story covers the variant
@@ -46,7 +46,7 @@ const meta: Meta<typeof ModuleContainer> = {
   render: ModuleContainer,
   decorators: createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin()],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
       const canvas = space.db.add(createCanvas());
       const root = rootOf(canvas.content);
@@ -81,7 +81,7 @@ export const Test: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
     await waitFor(() => expect(canvasElement.querySelectorAll('[data-node-id]').length).toBe(3), { timeout: 10_000 });
-    for (const testId of ['palette', 'properties', 'layers', 'about', 'scene-view-dock']) {
+    for (const testId of ['palette', 'properties', 'layers', 'views', 'scene-view-dock']) {
       await expect(canvas.queryByTestId(testId)).not.toBeInTheDocument();
     }
     await expect(canvasElement.querySelector('[role="toolbar"]')).toBeNull();

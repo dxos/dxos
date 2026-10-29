@@ -9,9 +9,9 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Repo } from '@dxos/types';
 
 import { Branches, CommitInfo, RepositoryFile, Tree } from '../services/RepositoryClient.ts';
-import * as Repository from './Repository.ts';
 import * as RepositoryService from './RepositoryService.ts';
 
 const RefInput = Schema.optional(Schema.String).annotate({
@@ -49,7 +49,7 @@ export const GetBranches = Operation.make({
     icon: 'ph--git-branch--regular',
   },
   input: Schema.Struct({
-    repository: Ref.Ref(Repository.Repository).annotate({ description: 'The repository object ID.' }),
+    repository: Ref.Ref(Repo.Repo).annotate({ description: 'The repository object ID; EDGE must host it.' }),
   }),
   output: Branches,
   services: [Database.Service, RepositoryService.Service],
@@ -63,7 +63,7 @@ export const GetLog = Operation.make({
     icon: 'ph--clock-counter-clockwise--regular',
   },
   input: Schema.Struct({
-    repository: Ref.Ref(Repository.Repository).annotate({ description: 'The repository object ID.' }),
+    repository: Ref.Ref(Repo.Repo).annotate({ description: 'The repository object ID; EDGE must host it.' }),
     ref: RefInput,
     limit: Schema.optional(Schema.Number).annotate({ description: 'At most 100; defaults to 30.' }),
     offset: Schema.optional(Schema.Number),
@@ -80,7 +80,7 @@ export const GetTree = Operation.make({
     icon: 'ph--tree-structure--regular',
   },
   input: Schema.Struct({
-    repository: Ref.Ref(Repository.Repository).annotate({ description: 'The repository object ID.' }),
+    repository: Ref.Ref(Repo.Repo).annotate({ description: 'The repository object ID; EDGE must host it.' }),
     ref: RefInput,
     path: Schema.optional(Schema.String).annotate({ description: 'Directory path; the root when omitted.' }),
   }),
@@ -96,7 +96,7 @@ export const ReadFile = Operation.make({
     icon: 'ph--file-text--regular',
   },
   input: Schema.Struct({
-    repository: Ref.Ref(Repository.Repository).annotate({ description: 'The repository object ID.' }),
+    repository: Ref.Ref(Repo.Repo).annotate({ description: 'The repository object ID; EDGE must host it.' }),
     ref: RefInput,
     path: Schema.String.annotate({ description: 'File path from the repository root.' }),
   }),

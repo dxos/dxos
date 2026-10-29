@@ -32,6 +32,8 @@ export const translations = [
         'system-button.unstar.label': 'Unstar',
         'system-button.bookmark.label': 'Bookmark',
         'system-button.unbookmark.label': 'Remove bookmark',
+        'system-button.check.label': 'Check',
+        'system-button.uncheck.label': 'Uncheck',
         'system-button.expand.label': 'Expand',
         'system-button.collapse.label': 'Collapse',
         'system-button.ai.label': 'Run AI',

@@ -68,7 +68,9 @@ test QA-1: Create a planet and reshape it with live parameters
         NO `invoke` — nothing in the test captured the planet (the create step is human-only), so
         there is no id to pass `removeObjects`; deletion stays human-only rather than passing an
         empty `objects` list, which removes nothing.
+```
 
+```mdl
 test QA-2: Populate a planet and tour its views
   desc: |
     Objects on the planet and the three views of it: the 3D globe, the flat map, and the camera riding an
@@ -99,7 +101,9 @@ test QA-2: Populate a planet and tour its views
     - name: Back to the globe
       do: Return to 3D and spin the globe once more.
       expect: the globe shows with the objects where the simulation has moved them
+```
 
+```mdl
 test QA-3: Showcase clip
   desc: |
     The 10s showcase clip: Spin a generated planet. Recorded light at 60 fps with no ident, captions or

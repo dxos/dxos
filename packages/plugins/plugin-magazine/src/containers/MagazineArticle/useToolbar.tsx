@@ -15,8 +15,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { type MagazineView } from '#atoms';
-import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
+
+import { MagazineNamespace } from '../../namespace.ts';
 
 export type UseToolbarProps = {
   magazine: Magazine.Magazine;
@@ -56,7 +57,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
         invoker.invoke(
           FeedOperation.CurateMagazine,
           { magazine: Ref.make(magazine) },
-          { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: meta.profile.key }] } },
+          { spaceId: db?.spaceId, notify: { error: ['curate-error.message', { ns: MagazineNamespace.key }] } },
         ),
       ),
     [runExclusive, invoker, magazine, db],
@@ -96,7 +97,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
         invoker.invoke(
           FeedOperation.ClearMagazine,
           { magazine: Ref.make(magazine) },
-          { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: meta.profile.key }] } },
+          { spaceId: db?.spaceId, notify: { error: ['clear-error.message', { ns: MagazineNamespace.key }] } },
         ),
       ),
     [runExclusive, invoker, magazine, db],
@@ -119,7 +120,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
           .group(
             'view',
             {
-              label: ['view-filter.label', { ns: meta.profile.key }],
+              label: ['view-filter.label', { ns: MagazineNamespace.key }],
               variant: 'toggleGroup',
               selectCardinality: 'single',
               value: view,
@@ -128,7 +129,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
               group.action(
                 'starred',
                 {
-                  label: ['only-starred.label', { ns: meta.profile.key }],
+                  label: ['only-starred.label', { ns: MagazineNamespace.key }],
                   icon: view === 'starred' ? 'ph--star--fill' : 'ph--star--regular',
                 },
                 () => setView(view === 'starred' ? 'default' : 'starred'),
@@ -136,7 +137,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
               group.action(
                 'archived',
                 {
-                  label: ['show-archived.label', { ns: meta.profile.key }],
+                  label: ['show-archived.label', { ns: MagazineNamespace.key }],
                   icon: 'ph--archive--regular',
                 },
                 () => setView(view === 'archived' ? 'default' : 'archived'),
@@ -148,7 +149,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
           .action(
             'add-feed',
             {
-              label: ['add-feed.label', { ns: meta.profile.key }],
+              label: ['add-feed.label', { ns: MagazineNamespace.key }],
               icon: 'ph--plus--regular',
               iconOnly: true,
             },
@@ -157,7 +158,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
           .action(
             'clear',
             {
-              label: ['clear-magazine.label', { ns: meta.profile.key }],
+              label: ['clear-magazine.label', { ns: MagazineNamespace.key }],
               icon: 'ph--broom--regular',
               iconOnly: true,
               disabled: busy,
@@ -167,7 +168,7 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
           .action(
             'curate',
             {
-              label: [curateLabel, { ns: meta.profile.key }],
+              label: [curateLabel, { ns: MagazineNamespace.key }],
               icon: busy ? 'ph--circle-notch--regular' : 'ph--sparkle--regular',
               iconClassNames: busy ? 'animate-spin' : undefined,
               iconOnly: true,

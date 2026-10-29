@@ -40,6 +40,7 @@ export default defineConfig({
     ScrollContainer: 'src/components/ScrollContainer/ScrollContainer.tsx',
     Select: 'src/components/Select/Select.tsx',
     Show: 'src/flow/Show.tsx',
+    ColorPicker: 'src/components/ColorPicker/ColorPicker.tsx',
     Splitter: 'src/components/Splitter/Splitter.tsx',
     Status: 'src/namespaces/Status.ts',
     SystemButton: 'src/components/SystemButton/SystemButton.tsx',

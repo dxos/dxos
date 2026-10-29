@@ -25,7 +25,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
 
 import { useChatModel, useChatServices, usePresets } from '#hooks';
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
 
@@ -74,12 +74,12 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
   return (
     <div className='flex justify-center p-4'>
       <div className='w-full max-w-document-width'>
-        <Chat.Root chat={chat} db={db} chatModel={chatModel}>
+        <Chat.Root chat={chat} db={db} chatModel={chatModel} defaultDrawer={initialTasksVisible ? 'tasks' : undefined}>
           <Chat.Status classNames='px-3 rounded-sm bg-group-surface' />
           {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
               has no node, so the row shows only its own controls unless a plugin renders one. The
               checklist is the prompt's own disclosed region now, not a sibling the story places. */}
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} defaultTasksVisible={initialTasksVisible} />
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} />
         </Chat.Root>
       </div>
     </div>
@@ -126,7 +126,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        AssistantPlugin({}),
+        AssistantPlugin.make({}),
         StorybookPlugin.make({}),
       ],
       capabilities,
@@ -239,7 +239,7 @@ export const TestQueueFull: Story = {
 
 /**
  * The row's own controls, with nothing contributed to it. The microphone is deliberately absent:
- * it is not the prompt's, it is filed on the chat's graph node by plugin-transcription.
+ * it is not the prompt's, it is filed on the prompt's graph node by plugin-transcription.
  */
 export const TestBareRow: Story = {
   args: {},

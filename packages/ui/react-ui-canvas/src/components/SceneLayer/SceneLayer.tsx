@@ -30,6 +30,7 @@ import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
   type LineStyle,
+  LINK_FONT_SIZE,
   type LinkId,
   type LinkKind,
   MAJOR_GRID_RATIO,
@@ -40,6 +41,7 @@ import {
   type NodeId,
   type NodeRegistry,
   type NodeViewProps,
+  RADIUS_PX,
   type StyleMap,
   type View,
   type ViewStore,
@@ -68,6 +70,7 @@ import {
   classedNode,
   compositeBounds,
   contentBounds,
+  cornerRadius,
   diagramLinkMarkup,
   diagramNodeMarkup,
   elementLayer,
@@ -129,6 +132,8 @@ export type SceneLayerProps = {
   focus?: { id: ElementId; opacity: number };
   /** The text part being edited in place, if any. */
   editing?: { id: NodeId; part: PartKey };
+  /** A node in an edit mode of its own (its vertices), drawn translucent so its handles read over it. */
+  dimmed?: NodeId;
   /** The node whose embedded content takes input. */
   active?: NodeId;
   /** A node drawn as a preview of what a gesture will create: translucent, dashed, and not pressable. */
@@ -160,6 +165,7 @@ export const SceneLayer = memo(
     opening,
     focus,
     editing,
+    dimmed,
     active,
     ghost,
     debug,
@@ -300,6 +306,7 @@ export const SceneLayer = memo(
                           text={link.text}
                           backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
                           textClass={CAPTION_TEXT[look.tone]}
+                          fontSize={lines.get(link.id)?.fontSize ?? LINK_FONT_SIZE}
                         />
                       )}
                     </g>
@@ -331,7 +338,7 @@ export const SceneLayer = memo(
                     selected={!plain && (selected?.has(node.id) ?? false)}
                     hovered={hover === node.id}
                     opening={opening === node.id}
-                    fade={focus && focus.id !== node.id ? fadeStyle : undefined}
+                    fade={focus && focus.id !== node.id ? fadeStyle : dimmed === node.id ? DIMMED : undefined}
                     chromeFade={focus?.id === node.id ? fadeStyle : undefined}
                     editingPart={editing?.id === node.id ? editing.part : undefined}
                     active={active === node.id}
@@ -707,13 +714,13 @@ const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkSt
   );
 };
 
-type LinkTextProps = { path: string; text: string; backdrop: string; textClass: string };
+type LinkTextProps = { path: string; text: string; backdrop: string; textClass: string; fontSize: number };
 
 /** A caption's backdrop margin around its text, in scene units. */
 const LINK_TEXT_PAD = { x: 8, y: 2 };
 
 /** A link's caption at the middle of its route, over a halo of the canvas so it reads where it crosses lines. */
-const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
+const LinkText = ({ path, text, backdrop, textClass, fontSize }: LinkTextProps) => {
   const ref = useRef<SVGPathElement>(null);
   const textRef = useRef<SVGTextElement>(null);
   // The full caption, laid out but invisible, so it can be measured however much of it is shown.
@@ -748,7 +755,7 @@ const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
       count--;
     }
     setShown(`${text.slice(0, count).trimEnd()}…`);
-  }, [at, text]);
+  }, [at, text, fontSize]);
   // The backdrop fits the text as set, so it is measured once the text is placed.
   useLayoutEffect(() => {
     const element = textRef.current;
@@ -761,7 +768,7 @@ const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
         height: height + LINK_TEXT_PAD.y * 2,
       });
     }
-  }, [at, shown]);
+  }, [at, shown, fontSize]);
   return (
     <>
       <path ref={ref} d={path} className='fill-none stroke-none' />
@@ -775,13 +782,14 @@ const LinkText = ({ path, text, backdrop, textClass }: LinkTextProps) => {
             y={at.y}
             textAnchor='middle'
             dominantBaseline='central'
-            className={mx(textClass, 'text-sm')}
+            className={textClass}
+            style={{ fontSize }}
             data-link-text
           >
             {shown !== text && <title>{text}</title>}
             {shown}
           </text>
-          <text ref={measureRef} x={at.x} y={at.y} className='text-sm invisible' aria-hidden>
+          <text ref={measureRef} x={at.x} y={at.y} className='invisible' style={{ fontSize }} aria-hidden>
             {text}
           </text>
         </>
@@ -797,25 +805,33 @@ const LINK_TEXT_CLEARANCE = 12;
 const RUN_STEP = 2;
 
 /**
- * The length of the straight horizontal run through a path's midpoint, or undefined when the midpoint is on a vertical
- * run (a caption there is not bounded by the line it sits on).
+ * The horizontal extent of the straight run through a path's midpoint, or undefined when that run is steeper than
+ * level (a caption there is not bounded by the line it sits on).
  */
 const horizontalRun = (element: SVGPathElement, length: number): number | undefined => {
   const middle = length / 2;
-  const { y } = element.getPointAtLength(middle);
-  const level = (at: number) => Math.abs(element.getPointAtLength(at).y - y) < 0.5;
-  if (!level(Math.max(0, middle - RUN_STEP)) || !level(Math.min(length, middle + RUN_STEP))) {
+  const mid = element.getPointAtLength(middle);
+  const ahead = element.getPointAtLength(Math.min(length, middle + RUN_STEP));
+  const dx = ahead.x - mid.x;
+  const dy = ahead.y - mid.y;
+  const step = Math.hypot(dx, dy);
+  if (step === 0 || Math.abs(dy) > Math.abs(dx)) {
     return undefined;
   }
+  // A point is on the run while it stays on the line through the midpoint in the run's direction.
+  const straight = (at: number) => {
+    const { x, y } = element.getPointAtLength(at);
+    return Math.abs((x - mid.x) * dy - (y - mid.y) * dx) / step < 0.5;
+  };
   let start = middle;
-  while (start > 0 && level(Math.max(0, start - RUN_STEP))) {
+  while (start > 0 && straight(Math.max(0, start - RUN_STEP))) {
     start = Math.max(0, start - RUN_STEP);
   }
   let end = middle;
-  while (end < length && level(Math.min(length, end + RUN_STEP))) {
+  while (end < length && straight(Math.min(length, end + RUN_STEP))) {
     end = Math.min(length, end + RUN_STEP);
   }
-  return end - start;
+  return Math.abs(element.getPointAtLength(end).x - element.getPointAtLength(start).x);
 };
 
 type NodeFrameProps = Omit<NodeViewProps, 'editing'> & {
@@ -877,6 +893,9 @@ const NodeFrame = memo(
     const borderless =
       (def?.bare === true && drawn.style?.border === false && drawn.style?.fill === false && !chromeFade) ||
       silhouette !== undefined;
+    const circled = def?.bounds?.(drawn) === 'circle';
+    // A screen pixel at any zoom.
+    const hairline = 1 / Math.max(props.zoom, 0.05);
     const frameStyle: CSSProperties & Record<`--${string}`, string> = {
       left: bounds.x,
       top: bounds.y,
@@ -889,7 +908,7 @@ const NodeFrame = memo(
       ...(thick ? (chromeFade ? { padding: border } : { borderWidth: border }) : {}),
       ...(borderless ? { borderWidth: 0, borderRadius: 0 } : {}),
       // An outline, so the frame's layout is untouched; a screen pixel at any zoom.
-      ...(framed ? { outlineWidth: 1 / Math.max(props.zoom, 0.05), outlineStyle: 'solid' } : {}),
+      ...(framed && !circled ? { outlineWidth: hairline, outlineStyle: 'solid' } : {}),
       ...fade,
       ...nodeOpacity(drawn, fade),
     };
@@ -912,7 +931,7 @@ const NodeFrame = memo(
             drawn.style?.fontFamily === 'monospace' && 'font-mono',
             interactive && !node.locked && 'cursor-grab',
             ghost && 'opacity-50 border-dashed pointer-events-none',
-            framed && 'outline-focus/40',
+            framed && !circled && 'outline-focus/40',
           )}
           style={frameStyle}
           data-node-id={node.id}
@@ -940,12 +959,33 @@ const NodeFrame = memo(
           {silhouette ? (
             // The look's classes on a box-less wrapper, so the silhouette's layers inherit its colours.
             <div className={mx('contents', ...frameLook)}>
-              <Silhouette outline={silhouette} node={drawn} border={border} />
+              <Silhouette
+                outline={silhouette}
+                filled={def?.filled?.(drawn) ?? true}
+                node={drawn}
+                border={border}
+                radius={RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))]}
+                // A guide is dashed whatever its line style, as a box's border is.
+                lineStyle={
+                  drawn.style?.guide
+                    ? 'dashed'
+                    : (drawn.style?.lineStyle ?? styleVariant(look.styleSet, drawn.style?.tone).borderStyle)
+                }
+              />
               <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
             </div>
           ) : (
             <Component {...props} node={drawn} editing={editing} onOpen={onOpen} />
           )}
+          {(framed || selected) &&
+            circled && (
+              // Inside the frame, which clips: the circle the shape fits, as wide as the frame's shorter side.
+              <div
+                aria-hidden
+                className='absolute top-1/2 left-1/2 -translate-1/2 aspect-square rounded-full border-solid border-focus/40 pointer-events-none'
+                style={{ height: Math.min(bounds.width, bounds.height), borderWidth: hairline }}
+              />
+            )}
           {debug && (
             <div
               className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
@@ -986,33 +1026,47 @@ const NodeFrame = memo(
 
 NodeFrame.displayName = 'NodeFrame';
 
-type SilhouetteProps = { outline: NonNullable<NodeDef['silhouette']>; node: Node; border: number };
+type SilhouetteProps = {
+  outline: NonNullable<NodeDef['silhouette']>;
+  /** False for an open outline, which has no inside to fill. */
+  filled: boolean;
+  node: Node;
+  border: number;
+  radius: number;
+  /** Solid, dashed or dotted, as a box's border would draw. */
+  lineStyle?: LineStyle['lineStyle'];
+};
 
 /**
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, node, border }: SilhouetteProps) => {
+const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: SilhouetteProps) => {
   const { width, height } = node.size;
+  const dash = dashArray(lineStyle, border);
   const masks = useMemo(() => {
-    const path = outline(node, border / 2);
+    const path = outline(node, border / 2, radius);
     const image = (body: string) =>
       `url("data:image/svg+xml,${encodeURIComponent(
         `<svg xmlns='http://www.w3.org/2000/svg' width='${width}' height='${height}' viewBox='0 0 ${width} ${height}'>${body}</svg>`,
       )}")`;
     return {
       fill: image(`<path d='${path}' fill='white'/>`),
-      stroke: image(`<path d='${path}' fill='none' stroke='white' stroke-width='${border}'/>`),
+      stroke: image(
+        `<path d='${path}' fill='none' stroke='white' stroke-width='${border}'${dash ? ` stroke-dasharray='${dash}' stroke-linecap='round'` : ''}/>`,
+      ),
     };
-  }, [outline, node, width, height, border]);
+  }, [outline, node, width, height, border, radius, dash]);
   const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
   return (
     <>
-      <div
-        aria-hidden
-        className='dx-cover pointer-events-none'
-        style={{ ...layer, backgroundColor: 'inherit', maskImage: masks.fill }}
-      />
+      {filled && (
+        <div
+          aria-hidden
+          className='dx-cover pointer-events-none'
+          style={{ ...layer, backgroundColor: 'inherit', maskImage: masks.fill }}
+        />
+      )}
       {/* Border all the way in, so the whole layer is the border colour. */}
       <div
         aria-hidden
@@ -1029,6 +1083,8 @@ const Silhouette = ({ outline, node, border }: SilhouetteProps) => {
 };
 
 /** The node's own opacity (its style's, over its class's) under any fade the layer applies; nothing when opaque. */
+const DIMMED: CSSProperties = { opacity: 0.5 };
+
 const nodeOpacity = (node: Node, fade: CSSProperties | undefined): CSSProperties | undefined => {
   const opacity = node.style?.opacity;
   if (opacity === undefined || opacity >= 1) {
@@ -1087,6 +1143,8 @@ export const EllipseNodeView = LabelNodeView;
 export const CloudNodeView = LabelNodeView;
 
 export const PolygonNodeView = LabelNodeView;
+
+export const PolylineNodeView = LabelNodeView;
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: Pick<NodeViewProps, 'node'>) => (

@@ -98,7 +98,7 @@ export const resolveDiscordToken = (
 /** Load a connection's `AccessToken` and resolve its secret. */
 const resolveConnectionToken = Effect.fnUntraced(function* (connectionRef: Ref.Ref<Connection.Connection>) {
   const connection = yield* Database.load(connectionRef);
-  const accessToken = yield* Database.load(connection.accessToken);
+  const accessToken = yield* Database.load(Connection.getAccessToken(connection));
   return yield* resolveDiscordToken(accessToken);
 });
 

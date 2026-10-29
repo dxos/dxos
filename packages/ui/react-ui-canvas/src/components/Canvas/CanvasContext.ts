@@ -60,6 +60,8 @@ export type CanvasServices = {
   capabilities: Capabilities;
   /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
   readonly: boolean;
+  /** No surface is drawn under the scene. */
+  transparent: boolean;
   /** Toggles `readonly`; absent when the host does not offer the toggle. */
   onReadonlyChange?: (readonly: boolean) => void;
   nodeRegistry: NodeRegistry;
@@ -133,13 +135,10 @@ export const useCanvasSelection = (
 /** The active tool and the grid aids. */
 export const useCanvasTools = (
   consumer: string,
-): CanvasAspect<
-  Pick<CanvasAtoms, 'tool' | 'linkType' | 'layer' | 'snap' | 'guides' | 'lattice' | 'debug'>,
-  ToolsCommands
-> => {
+): CanvasAspect<Pick<CanvasAtoms, 'tool' | 'linkType' | 'layer' | 'snap' | 'guides' | 'debug'>, ToolsCommands> => {
   const { atoms, controller } = useCanvasServices(consumer);
-  const { tool, linkType, layer, snap, guides, lattice, debug } = atoms;
-  return { atoms: { tool, linkType, layer, snap, guides, lattice, debug }, commands: controller.tools };
+  const { tool, linkType, layer, snap, guides, debug } = atoms;
+  return { atoms: { tool, linkType, layer, snap, guides, debug }, commands: controller.tools };
 };
 
 /**
@@ -172,7 +171,7 @@ export type CanvasTime = CanvasAspect<
 
 export const [CanvasTimeProvider, useCanvasTime] = createContext<CanvasTime>('Canvas.Root');
 
-/** Text editing and the clipboard; its own provider, as a host may mount a view that edits nothing. */
+/** Edit mode (a node's text or vertices) and the clipboard; its own provider, as a host may mount a view that edits nothing. */
 export type CanvasEditing = CanvasAspect<Pick<CanvasAtoms, 'editing' | 'active' | 'clipboard'>, EditingCommands>;
 
 export const [CanvasEditingProvider, useCanvasEditing] = createContext<CanvasEditing>('Canvas.Root');
@@ -206,6 +205,8 @@ export type CanvasGesture = {
     | 'onPointPointerDown'
     | 'onMidpointPointerDown'
     | 'onPointContextMenu'
+    | 'onVertexPointerDown'
+    | 'onVertexMidpointPointerDown'
     | 'removePoint'
     | 'menu'
     | 'closeMenu'

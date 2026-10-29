@@ -11,15 +11,15 @@ import { log } from '@dxos/log';
 
 import { GitHubOperation } from '#types';
 
-import { githubToken, resolvePullRequest } from './pull-request.ts';
+import { githubAccess, resolvePullRequest } from './pull-request.ts';
 import { ensureRefreshTrigger, refreshPullRequest } from './refresh.ts';
 
 const handler: Operation.WithHandler<typeof GitHubOperation.SyncPullRequest> = GitHubOperation.SyncPullRequest.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ pullRequest: ref }) {
       const { pullRequest, db } = yield* resolvePullRequest(ref);
-      const token = yield* githubToken().pipe(Effect.provide(Database.layer(db)));
-      const updated = yield* refreshPullRequest(pullRequest, token);
+      const access = yield* githubAccess().pipe(Effect.provide(Database.layer(db)));
+      const updated = yield* refreshPullRequest(pullRequest, access);
       // Spaces that imported pull requests before the scheduled refresh existed get it on next open.
       yield* ensureRefreshTrigger().pipe(
         Effect.provide(Database.layer(db)),

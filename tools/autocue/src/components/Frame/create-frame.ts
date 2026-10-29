@@ -20,6 +20,15 @@ export type FrameMode = 'overlay' | 'layout';
  */
 export type BandStyle = 'band' | 'panel';
 
+/**
+ * The title's and captions' colours, whatever the page's theme: white type on black, or black type on white. Unset,
+ * captions are white on black and floating panels invert the page's theme.
+ */
+export type FrameColors = 'white-on-black' | 'black-on-white';
+
+/** Where the caption sits: against the top or bottom edge, or centred vertically. */
+export type CaptionPosition = 'top' | 'middle' | 'bottom';
+
 export type FrameOptions = {
   /**
    * `overlay` fixes the header and caption over the page; `layout` lays them over the host's children (through a
@@ -36,6 +45,12 @@ export type FrameOptions = {
   size?: FrameSize;
   /** The caption's style; defaults to `panel`. */
   captionStyle?: BandStyle;
+  /** Where the caption sits; defaults to `bottom`. */
+  captionPosition?: CaptionPosition;
+  /** The title's and captions' colours; see `FrameColors`. */
+  colors?: FrameColors;
+  /** The opacity (0–1) of the caption panel's background; unset keeps `--autocue-caption-alpha`. */
+  captionBackground?: number;
   /** On, the header's text also shows as a translucent band over the top; defaults to off (no panels). */
   headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel when the frame opens (see `playOpen`); 0 or unset skips it. */
@@ -52,6 +67,9 @@ export type FrameHandle = {
   setCaption: (text?: FrameText) => void;
   setSize: (size?: FrameSize) => void;
   setCaptionStyle: (style: BandStyle) => void;
+  setCaptionPosition: (position: CaptionPosition) => void;
+  setCaptionBackground: (alpha?: number) => void;
+  setColors: (colors?: FrameColors) => void;
   setHeaderBand: (show: boolean) => void;
   /**
    * Shows the header's text alone, as a panel centred in the frame, for `ms`; then fades it out as the header and
@@ -74,6 +92,15 @@ export const FRAME_STYLES = `
   /* The recording always fills the frame; nothing below takes space from it. */
   .frame.layout .content { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
   .header.off { display: none; }
+  /* Declared on the frame, so they win over the host's tokens and the page-theme inversion alike. */
+  .frame.white-on-black { --autocue-caption-rgb: 0, 0, 0; --autocue-caption-fg: #fff;
+    --autocue-band-surface: rgba(0, 0, 0, 0.72);
+    --autocue-band-fg: #fff; --autocue-band-muted: #b3b3b3; --autocue-panel-surface: rgba(0, 0, 0, 0.92);
+    --autocue-panel-fg: #fff; --autocue-panel-muted: #b3b3b3; }
+  .frame.black-on-white { --autocue-caption-rgb: 255, 255, 255; --autocue-caption-fg: #000;
+    --autocue-band-surface: rgba(255, 255, 255, 0.72);
+    --autocue-band-fg: #000; --autocue-band-muted: #595959; --autocue-panel-surface: rgba(255, 255, 255, 0.95);
+    --autocue-panel-fg: #000; --autocue-panel-muted: #595959; }
   /* Only the bands ignore the pointer: inherited through the slot, it would disable the content too. */
   .band { box-sizing: border-box; text-align: center; pointer-events: none; backdrop-filter: blur(6px);
     background: var(--autocue-band-surface); color: var(--autocue-band-fg); }
@@ -83,6 +110,8 @@ export const FRAME_STYLES = `
   .frame.overlay .band:not(.panel) { position: fixed; z-index: var(--autocue-layer); }
   .header:not(.panel) { top: 0; }
   .caption:not(.panel) { bottom: 0; }
+  .caption.top:not(.panel) { top: 0; bottom: auto; }
+  .caption.middle:not(.panel) { top: 50%; bottom: auto; transform: translateY(-50%); }
   .panel { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: max-content; max-width: 80%;
     border-radius: var(--autocue-panel-radius); box-shadow: var(--autocue-panel-shadow);
     --autocue-band-surface: var(--autocue-panel-surface); --autocue-band-fg: var(--autocue-panel-fg);
@@ -96,15 +125,17 @@ export const FRAME_STYLES = `
     justify-content: center; }
   /* Final Cut Pro's caption: a black box fitted to the text, low in the frame, with no shadow or blur. */
   .caption.panel { bottom: var(--autocue-caption-inset); height: auto; padding: 14px 30px 16px;
-    border-radius: var(--autocue-caption-radius); box-shadow: none; backdrop-filter: none;
-    --autocue-band-surface: var(--autocue-caption-surface); --autocue-band-fg: var(--autocue-caption-fg);
-    --autocue-band-muted: var(--autocue-caption-muted); }
+    border-radius: var(--autocue-caption-radius); box-shadow: none; backdrop-filter: blur(var(--autocue-caption-blur));
+    --autocue-band-surface: rgba(var(--autocue-caption-rgb), var(--autocue-caption-alpha)); --autocue-band-fg: var(--autocue-caption-fg);
+    --autocue-band-muted: var(--autocue-caption-fg); }
+  .caption.panel.top { top: var(--autocue-caption-inset); bottom: auto; }
+  .caption.panel.middle { top: 50%; bottom: auto; transform: translate(-50%, -50%); }
   .caption.panel .title { font: 700 40px/1.2 var(--autocue-caption-font); letter-spacing: -0.01em; }
   .caption.panel .subtitle { font: 500 20px/1.3 var(--autocue-caption-font); margin-top: 6px; }
   .caption .title, .caption .subtitle, .panel .title, .panel .subtitle { white-space: nowrap; overflow: hidden;
     text-overflow: ellipsis; }
   .caption .title { font: 600 26px/1.3 var(--autocue-font); }
-  .caption .subtitle { font: 400 19px/1.35 var(--autocue-font); margin-top: 4px; color: var(--autocue-band-muted); }
+  .caption .subtitle { font: 400 19px/1.35 var(--autocue-font); margin-top: 4px; }
   /* The opening title: the header's text, larger, centred in the frame, alone; the header and caption fade in as it
      fades out. */
   .header, .open-title { transition: opacity var(--autocue-open-fade) ease; }
@@ -149,6 +180,9 @@ export const createFrame = (
     caption,
     size,
     captionStyle = 'panel',
+    captionPosition = 'bottom',
+    captionBackground,
+    colors,
     headerBand: showHeaderBand = false,
     open,
   }: FrameOptions = {},
@@ -255,6 +289,27 @@ export const createFrame = (
   };
   setCaptionStyle(captionStyle);
 
+  const setCaptionPosition = (position: CaptionPosition) => {
+    captionBand.classList.toggle('top', position === 'top');
+    captionBand.classList.toggle('middle', position === 'middle');
+  };
+  setCaptionPosition(captionPosition);
+
+  const setCaptionBackground = (alpha?: number) => {
+    if (alpha === undefined) {
+      frame.style.removeProperty('--autocue-caption-alpha');
+    } else {
+      frame.style.setProperty('--autocue-caption-alpha', String(Math.min(1, Math.max(0, alpha))));
+    }
+  };
+  setCaptionBackground(captionBackground);
+
+  const setColors = (next?: FrameColors) => {
+    frame.classList.toggle('white-on-black', next === 'white-on-black');
+    frame.classList.toggle('black-on-white', next === 'black-on-white');
+  };
+  setColors(colors);
+
   const setHeaderBand = (show: boolean) => {
     headerBand.classList.toggle('off', !show);
   };
@@ -314,6 +369,9 @@ export const createFrame = (
     setCaption,
     setSize,
     setCaptionStyle,
+    setCaptionPosition,
+    setCaptionBackground,
+    setColors,
     setHeaderBand,
     playOpen,
     dispose: () => {

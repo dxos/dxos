@@ -47,6 +47,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `capability`| `org.dxos.mdl.capability@1.0`  |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0` |
 
 ## Types
 
@@ -209,7 +210,9 @@ capability CallsCapabilities.Manager
     the lifetime of the Client.
   type: CallManager
   events: [client-ready]
+```
 
+```mdl
 capability CallsCapabilities.EventHandler
   desc: |
     Pluggable per-call lifecycle callback. Contributors (e.g. the in-plugin
@@ -217,7 +220,9 @@ capability CallsCapabilities.EventHandler
     state changes without being coupled to the host object.
   type: CallProperties
   multi: true
+```
 
+```mdl
 capability CallsCapabilities.CallTransportProvider
   desc: |
     Pluggable live-transport for a Call, keyed by `kind`. Mirrors
@@ -460,6 +465,24 @@ op provisionCall
     transportKind?: string           # defaults to the Cloudflare provider
   output: Call
   effects: [echo:write]
+```
+
+```mdl
+op SetSimulatedParticipants
+  key: org.dxos.operation.calls.setSimulatedParticipants
+  desc: |
+    Test seam for stories, tests and demo recordings. Fills the call with participants whose
+    camera and microphone are played from video files, with no swarm or SFU behind them. While
+    set, joining stays local (no EDGE needed): the participants appear once the local user joins,
+    their files play from the top, and their speaking state follows their audio. An empty list
+    removes them. A participant's `screenshare` starts sharing a screen recording `start` seconds
+    in; `transcript` lines are emitted as `CallManager.simulatedUtterance` when their `start` is
+    reached, timed by the participants' files.
+  input:
+    participants: { name: string, src: string, screenshare?: { src: string, start: number }, avatar?: boolean | { visualization: string, config?: Record<string, number | string> } }[]   # src is a video URL (WebM in Chromium); with avatar, an agent visualization driven by src's sound replaces its picture, so src may be audio only, where the caller of CallManager.simulate supplies an avatar renderer
+    transcript?: { speaker: string, start: number, text: string }[]   # speaker is a display name; start in seconds
+  requires: [CallsCapabilities.Manager]
+  effects: [device]
 ```
 
 ## Features
@@ -775,7 +798,7 @@ scenario T-13: Resume a Call after the live session ends
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
-None of the `op` blocks above have a runtime `Operation.make` counterpart — `startCall`,
+Apart from `SetSimulatedParticipants`, none of the `op` blocks above have a runtime `Operation.make` counterpart — `startCall`,
 `leaveCall`, `toggleAudio`/`toggleVideo`/`toggleScreenshare`, `raiseHand`, `pinParticipant`, and
 `provisionCall` are all plain async methods on `CallManager` (`packages/plugins/plugin-calls/src/calls/call-manager.ts`),
 called directly from UI handlers — there is no invoker key for any of them. Every test below is
@@ -855,6 +878,102 @@ test QA-2: Provision a resumable Call without joining
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: A call can be filled with simulated participants played from video files, so a four-person meeting can be recorded as a demo with no live participants.
+  date: 2026-10-17
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-2: One simulated participant shares a screen: a recording of Composer, starting a few seconds into the conversation.
+  date: 2026-10-18
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-3: An agent can take a participant's seat in the call, shown as an abstract avatar that moves with, and speaks, that participant's voice.
+  date: 2026-10-19
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-4: `SetSimulatedParticipants` takes timed `transcript` lines and a per-participant `screenshare` (`src`, `start`), both timed by the participants' files. Fills in [D-1] and [D-2].
+  date: 2026-10-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: The files are the conversation's clock, so lines and the shared screen stay on the audio however the page stalls.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-5: A participant with `avatar` shows an abstract shape driven by its file's sound instead of its picture, so `src` may be audio only. Fills in [D-3].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: An agent's voice has no camera; analysing the track the call plays keeps picture and sound in step.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-6: A simulated participant's `avatar` names a visualization from `@dxos/agent-visualization` and overrides of its config; `true` keeps the default look. Fills in [D-5].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: The visualizations moved into their own package, each with its own config, so a QA step or demo picks the look by id and preset.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-7: plugin-calls draws an avatar only through a renderer its caller passes to `CallManager.simulate`; without one, an avatar participant shows its file's picture. Fills in [D-6].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  why: plugin-calls is published and `@dxos/agent-visualization` is private, and a published package may not depend on a private one; stories pass a renderer built on it.
+  rejected:
+    - Publishing `@dxos/agent-visualization` now: new packages stay private until they have a trusted publisher.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-8: The agent visualizations live in `@dxos/react-ui-experimental` (as its `AgentVisualization` namespace), not in a package of their own. Supersedes [D-6].
+  date: 2026-10-20
+  by: user:richburdon
+  supersedes: D-6
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-9: plugin-calls still draws avatars only through a renderer its caller passes to `CallManager.simulate`, now so that it does not depend on the experimental visualizations and their 3D libraries; the default look is the orb. Fills in [D-8]; supersedes [D-7].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-7
+  affects: [op:SetSimulatedParticipants]
+  why: With the visualizations in a published package the private-dependency rule no longer applies, but plugin-calls ships to every Composer user and needs none of three.js or React Three Fiber.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-10: react-ui-experimental exports the agent visualizations as its `Avatar` namespace, from `components/Avatar/`. Fills in [D-8].
+  date: 2026-10-20
+  by: user:richburdon
+  affects: [op:SetSimulatedParticipants]
+  source: https://github.com/dxos/dxos/pull/14040
+```
 
 ## Appendix: Extension Definitions
 
@@ -947,4 +1066,22 @@ ext capability
     type: TypeRef
     events?: EventList
     multi?: boolean
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true, not as the edit that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
 ```

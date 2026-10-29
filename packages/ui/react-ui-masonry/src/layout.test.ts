@@ -46,6 +46,18 @@ describe('layout', () => {
     expect(height).toBe(80); // 10 + 30 + 10 + 20 + 10.
   });
 
+  test('no perimeter starts flush and ends at the last tile', ({ expect }) => {
+    const { rects, height } = layout({
+      heights: [30, 20],
+      columnCount: 1,
+      containerWidth: 100,
+      gapPx: 10,
+      perimeter: false,
+    });
+    expect(rects.map((rect) => rect.y)).toEqual([0, 40]);
+    expect(height).toBe(60);
+  });
+
   test('handles an empty input', ({ expect }) => {
     const { rects, height } = layout({ heights: [], columnCount: 3, containerWidth: 300, gapPx: 8 });
     expect(rects).toEqual([]);

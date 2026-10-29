@@ -11,7 +11,6 @@ import type { EntityId, URI } from '@dxos/keys';
 
 import * as internal from './internal/index.ts';
 import * as objInternal from './internal/Obj/index.ts';
-import type * as Ref from './Ref.ts';
 import type * as Relation from './Relation.ts';
 import type * as Tag from './Tag.ts';
 import * as Type from './Type.ts';
@@ -370,9 +369,9 @@ export const update = <T extends Unknown>(entity: T, callback: internal.ChangeCa
  * Add a tag to an entity.
  * Must be called within an `Entity.update`, `Obj.update`, or `Relation.update` callback.
  *
- * @performance O(t) in the tag count; dedupes by ref URI before appending.
+ * @performance O(t) in the tag count; dedupes by tag id before appending.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from an entity.
@@ -380,7 +379,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  *
  * @performance O(t) in the tag count.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.removeTag(entity, tag);
 
 //
 // Atoms

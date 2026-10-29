@@ -8,9 +8,11 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
+import { ClientNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({})] });
+
+const moduleId = (name: string) => `${ClientNamespace.key}.module.${name}`;
 
 describe('ClientPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {

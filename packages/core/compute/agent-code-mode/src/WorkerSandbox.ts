@@ -13,11 +13,13 @@ import type * as WorkerThreads from 'node:worker_threads';
 
 import { type ClientServicesHandlers, Rpc, makeClientServicesHandlers } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, JsonSchema, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import type { BindingsContext } from './Dialect.ts';
+import { toRefs } from './refs.ts';
 import * as Sandbox from './Sandbox.ts';
 import * as Wire from './Wire.ts';
 import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
@@ -95,11 +97,13 @@ export const make = (options: Options): Sandbox.Sandbox => ({
         dialect: dialect.name,
         space,
         types: registrySnapshot(db),
+        skills: context.skills,
         operations: context.operations.map((operation) => ({
           key: String(operation.definition?.meta.key ?? operation.name),
           name: operation.name,
           description: operation.description,
           parameters: operation.parameters,
+          backed: operation.definition !== undefined,
         })),
       };
 
@@ -241,7 +245,7 @@ const invokeDefinition = (context: BindingsContext, key: string, input: unknown,
   const { db } = Context.get(context.runtime, Database.Service);
   return Wire.catchUp(db, heads).pipe(
     Effect.andThen(Wire.decode(input, db)),
-    Effect.flatMap((decoded) => Operation.invoke(definition, decoded)),
+    Effect.flatMap((decoded) => Operation.invoke(definition, toRefs(definition.input.ast, decoded))),
     Effect.flatMap((value) => Wire.settle(db).pipe(Effect.map((heads) => ({ value: Wire.encode(value, db), heads })))),
     Effect.provide(context.runtime),
     Effect.match({
@@ -264,9 +268,10 @@ const registrySnapshot = (db: Database.Database): SandboxInit['types'] =>
     }
     const typename = Type.getTypename(entity);
     const version = Type.getVersion(entity);
+    const skills = Skill.annotatedSkillKeys(entity);
     return typename === undefined || version === undefined
       ? []
-      : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity) }];
+      : [{ typename, version, jsonSchema: JsonSchema.toJsonSchema(entity), ...(skills.length > 0 && { skills }) }];
   });
 
 /**

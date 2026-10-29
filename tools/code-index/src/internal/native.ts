@@ -22,7 +22,7 @@ import type { Binding, Graph } from './graph.ts';
  * `tools/code-index-native`, loaded as a Node-API addon. Terms cross the boundary as N-Triples text.
  */
 
-/** Where `moon run code-index-native:cargo-build` leaves the addon. */
+/** Where `moon run code-index-native:build-native` leaves the addon. */
 export const ADDON_PATH = fileURLToPath(new URL('../../../code-index-native/code-index-native.node', import.meta.url));
 
 /** The oxigraph and journal directories' parent inside a store. */
@@ -117,7 +117,7 @@ export const sourcesHash = (crate = dirname(ADDON_PATH)): string | undefined => 
 
 /**
  * Why the addon cannot be trusted to match its sources, if it cannot. Running the CLI directly
- * skips moon's `cargo-build` dependency, so a pull that changes the crate leaves the old addon in
+ * skips moon's `build-native` dependency, so a pull that changes the crate leaves the old addon in
  * place, and its symptoms — a RocksDB lock error, a missing method — do not name the cause.
  */
 export const staleness = (addon: { sourcesHash?: () => string }, crate?: string): string | undefined => {
@@ -354,7 +354,7 @@ export const make = <E>(
     if (!isAvailable()) {
       return yield* Effect.fail(
         fail('Native backend not built')(
-          new Error(`No addon at ${ADDON_PATH}; run \`moon run code-index-native:cargo-build\`.`),
+          new Error(`No addon at ${ADDON_PATH}; run \`moon run code-index-native:build-native\`.`),
         ),
       );
     }
@@ -363,7 +363,7 @@ export const make = <E>(
     if (stale !== undefined) {
       return yield* Effect.fail(
         fail('Native backend out of date')(
-          new Error(`${ADDON_PATH}: ${stale}; run \`moon run code-index-native:cargo-build\`.`),
+          new Error(`${ADDON_PATH}: ${stale}; run \`moon run code-index-native:build-native\`.`),
         ),
       );
     }

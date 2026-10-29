@@ -25,6 +25,7 @@ export const translations = [
         'filter-results.placeholder': 'Filter results…',
 
         // ToolsExplorer
+        'connecting.message': 'Connecting to MCP Server…',
         'connection-failed.title': 'MCP Server connection failed',
         'not-configured.title': 'MCP Server is not configured',
         'not-configured.message': 'Set the EDGE endpoint (runtime.services.edge.url) to browse tools.',

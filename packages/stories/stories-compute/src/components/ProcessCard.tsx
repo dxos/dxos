@@ -36,20 +36,70 @@ const useNow = (active: boolean): number => {
   return now;
 };
 
-export type ProcessCardProps = PropsWithChildren<{
-  location: Process.Location;
-  handle: Process.Any;
+export type ProcessCardViewProps = PropsWithChildren<{
+  pid: string;
+  location: Process.Location['kind'];
+  state: Process.State;
+  /** Time since the process started, frozen once it ends. */
+  elapsed: number;
   /** Progress shown beside the elapsed time. */
   progress?: ReactNode;
+  onKill?: () => void;
   /** Removes the card once its process has ended. */
   onRemove?: () => void;
 }>;
 
-/** A spawned process's card: pid, location, state and elapsed time above the process's own view. */
-export const ProcessCard = ({ location, handle, progress, onRemove, children }: ProcessCardProps) => {
+/** A process's card from plain values: pid, location, state and elapsed time above the process's own view. */
+export const ProcessCardView = ({
+  pid,
+  location,
+  state,
+  elapsed,
+  progress,
+  onKill,
+  onRemove,
+  children,
+}: ProcessCardViewProps) => (
+  <Card.Root grid data-testid='process-tile'>
+    <Card.Header>
+      <Layout.Block rail='start'>
+        <Icon.Icon icon='ph--cpu--regular' />
+      </Layout.Block>
+      <Card.Title truncate classNames='font-mono'>
+        {pid}
+      </Card.Title>
+      {TERMINAL_STATES.includes(state) ? (
+        <Card.Action system='delete' onClick={onRemove} data-testid='process-remove' />
+      ) : (
+        <Card.Action icon='ph--stop-circle--regular' label='Kill' onClick={onKill} data-testid='process-kill' />
+      )}
+    </Card.Header>
+    <Card.Row icon={location === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'} data-testid='process-location'>
+      <Card.Text>{location}</Card.Text>
+    </Card.Row>
+    <Card.Row icon='ph--pulse--regular' data-testid='process-state'>
+      <Card.Text>{state}</Card.Text>
+    </Card.Row>
+    <Card.Row
+      icon='ph--timer--regular'
+      trailing={progress != null ? <Card.Text variant='muted'>{progress}</Card.Text> : undefined}
+      data-testid='process-output'
+    >
+      <Card.Text classNames='font-mono'>{formatElapsed(elapsed)}</Card.Text>
+    </Card.Row>
+    {children != null && <Card.Row span='full'>{children}</Card.Row>}
+  </Card.Root>
+);
+
+export type ProcessCardProps = Omit<ProcessCardViewProps, 'pid' | 'location' | 'state' | 'elapsed' | 'onKill'> & {
+  location: Process.Location;
+  handle: Process.Any;
+};
+
+/** A spawned process's card, following the handle's status. */
+export const ProcessCard = ({ location, handle, ...props }: ProcessCardProps) => {
   const status = useAtomValue(handle.statusAtom);
-  const terminal = TERMINAL_STATES.includes(status.state);
-  const now = useNow(!terminal);
+  const now = useNow(!TERMINAL_STATES.includes(status.state));
   const end = Option.match(status.completedAt, { onNone: () => now, onSome: (date) => date.getTime() });
 
   const handleKill = () => {
@@ -57,37 +107,13 @@ export const ProcessCard = ({ location, handle, progress, onRemove, children }: 
   };
 
   return (
-    <Card.Root grid data-testid='process-tile'>
-      <Card.Header>
-        <Layout.Block>
-          <Icon.Icon icon='ph--cpu--regular' />
-        </Layout.Block>
-        <Card.Title truncate classNames='font-mono'>
-          {handle.pid}
-        </Card.Title>
-        {terminal ? (
-          <Card.Action system='delete' onClick={onRemove} data-testid='process-remove' />
-        ) : (
-          <Card.Action icon='ph--stop-circle--regular' label='Kill' onClick={handleKill} data-testid='process-kill' />
-        )}
-      </Card.Header>
-      <Card.Row
-        icon={location.kind === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'}
-        data-testid='process-location'
-      >
-        <Card.Text>{location.kind}</Card.Text>
-      </Card.Row>
-      <Card.Row icon='ph--pulse--regular' data-testid='process-state'>
-        <Card.Text>{status.state}</Card.Text>
-      </Card.Row>
-      <Card.Row
-        icon='ph--timer--regular'
-        trailing={<Card.Text variant='muted'>{progress}</Card.Text>}
-        data-testid='process-output'
-      >
-        <Card.Text classNames='font-mono'>{formatElapsed(end - status.startedAt.getTime())}</Card.Text>
-      </Card.Row>
-      <Card.Row span='full'>{children}</Card.Row>
-    </Card.Root>
+    <ProcessCardView
+      {...props}
+      pid={handle.pid}
+      location={location.kind}
+      state={status.state}
+      elapsed={end - status.startedAt.getTime()}
+      onKill={handleKill}
+    />
   );
 };

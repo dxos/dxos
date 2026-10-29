@@ -4,16 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import { type Context } from '@dxos/context';
-import type { Obj } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
-import { type EntityMeta } from './indexes/entity-meta-index.ts';
 import { type IndexerObject } from './indexes/interface.ts';
+import { type ObjectSnapshotIndex } from './indexes/object-snapshot-index.ts';
 
 /**
  * Cursor identity of every index fed from this source. `objectMeta.version` is global, so one
@@ -45,23 +43,15 @@ export class IndexedObjectSource implements IndexDataSource {
   readonly sourceName = 'index';
   readonly indexed = true;
 
-  readonly #sql: SqlClient.SqlClient;
+  readonly #snapshots: ObjectSnapshotIndex;
 
-  constructor(sql: SqlClient.SqlClient) {
-    this.#sql = sql;
+  constructor(snapshots: ObjectSnapshotIndex) {
+    this.#snapshots = snapshots;
   }
 
   /** How many objects {@link getChangedObjects} has yet to read past `cursors`. */
   countChangedObjects(cursors: DataSourceCursor[]): Effect.Effect<number, SqlError.SqlError> {
-    return Effect.gen({ self: this }, function* () {
-      const [row] = yield* this.#sql<{ count: number }>`
-        SELECT COUNT(*) AS count
-        FROM objectMeta AS m
-        JOIN objectSnapshot AS s ON s.recordId = m.recordId
-        WHERE m.version > ${readVersion(cursors)}
-      `;
-      return row?.count ?? 0;
-    });
+    return this.#snapshots.countStampedSince(readVersion(cursors));
   }
 
   getChangedObjects(
@@ -70,37 +60,25 @@ export class IndexedObjectSource implements IndexDataSource {
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
-      const sql = this.#sql;
-      const cursor = readVersion(cursors);
       const limit = Math.min(opts?.limit ?? INDEX_BATCH_SIZE, INDEX_BATCH_SIZE);
-
-      // Inner join: a record's snapshot row is written in the same transaction that stamps its
-      // counter, so a counter with no snapshot names a record that no longer exists.
-      const rows = yield* sql<EntityMeta & { snapshot: string }>`
-        SELECT m.*, s.snapshot
-        FROM objectMeta AS m
-        JOIN objectSnapshot AS s ON s.recordId = m.recordId
-        WHERE m.version > ${cursor}
-        ORDER BY m.version
-        LIMIT ${limit}
-      `;
+      const rows = yield* this.#snapshots.readStampedSince(readVersion(cursors), limit);
       if (rows.length === 0) {
         return { objects: [], cursors: [] };
       }
 
-      const objects = rows.map((row): IndexerObject => ({
-        spaceId: row.spaceId,
-        queueId: row.queueId === '' ? null : Schema.decodeSync(EntityId)(row.queueId),
-        queueNamespace: row.queueNamespace === '' ? null : row.queueNamespace,
-        documentId: row.documentId === '' ? null : row.documentId,
-        queuePosition: row.queuePosition,
-        recordId: row.recordId,
-        data: JSON.parse(row.snapshot) as Obj.JSON,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt ?? 0,
+      const objects = rows.map(({ meta, snapshot }): IndexerObject => ({
+        spaceId: meta.spaceId,
+        queueId: meta.queueId === '' ? null : Schema.decodeSync(EntityId)(meta.queueId),
+        queueNamespace: meta.queueNamespace === '' ? null : meta.queueNamespace,
+        documentId: meta.documentId === '' ? null : meta.documentId,
+        queuePosition: meta.queuePosition,
+        recordId: meta.recordId,
+        data: snapshot,
+        createdAt: meta.createdAt,
+        updatedAt: meta.updatedAt ?? 0,
       }));
 
-      return { objects, cursors: [{ ...CURSOR, cursor: rows[rows.length - 1].version }] };
+      return { objects, cursors: [{ ...CURSOR, cursor: rows[rows.length - 1].meta.version }] };
     });
   }
 }

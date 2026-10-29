@@ -29,8 +29,17 @@ export type ElementKind = (typeof ELEMENT_KINDS)[number];
 /** Statements that state intent and leave layout to the engine. */
 export const SEMANTIC_KEYWORDS = ['diagram', 'group', 'node', 'edge'] as const;
 
-/** Statement keywords. */
-export const STATEMENT_KEYWORDS = ['object', 'elements', 'move', 'remove', ...SEMANTIC_KEYWORDS] as const;
+/**
+ * Sequence-diagram words. Contextual: a keyword where a statement or fragment section starts and a
+ * plain name anywhere else, so they are not {@link RESERVED} and ids may use them unquoted.
+ */
+export const SEQUENCE_KEYWORDS = ['note', 'fragment', 'else'] as const;
+
+/** Statement keywords the grammar reserves. */
+const RESERVED_STATEMENTS = ['object', 'elements', 'move', 'remove', ...SEMANTIC_KEYWORDS] as const;
+
+/** Statement keywords, contextual ones included. */
+export const STATEMENT_KEYWORDS = [...RESERVED_STATEMENTS, 'note', 'fragment'] as const;
 
 /** Keywords inside semantic statements: `@cell(c,r)`, `via …`, `bus`, `compact`. */
 export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus', 'compact'] as const;
@@ -40,7 +49,7 @@ export const CLAUSE_KEYWORDS = ['cell', 'via', 'bus', 'compact'] as const;
  * `_` is reserved too: it is the unbound arrow end.
  */
 export const RESERVED: ReadonlySet<string> = new Set<string>([
-  ...STATEMENT_KEYWORDS,
+  ...RESERVED_STATEMENTS,
   ...ELEMENT_KINDS,
   ...CLAUSE_KEYWORDS,
   '_',
@@ -81,7 +90,7 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   diamond: BOX_ATTRS,
   triangle: BOX_ATTRS,
   circle: STYLE,
-  line: [{ name: 'closed', type: 'boolean' }, ...STYLE],
+  line: [{ name: 'closed', type: 'boolean' }, { name: 'guide', type: 'boolean' }, ...STYLE],
   curve: STYLE,
   arc: STYLE,
   text: [{ name: 'w', type: 'number' }, ...STYLE],
@@ -103,6 +112,7 @@ export const OBJECT_ATTRS: readonly AttrSpec[] = [
 
 /** `diagram` attributes. */
 export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
+  { name: 'kind', type: 'enum', values: Semantic.DIAGRAM_KINDS },
   { name: 'flow', type: 'enum', values: Semantic.FLOWS },
   { name: 'grid', type: 'size' },
   { name: 'box', type: 'size' },
@@ -119,6 +129,7 @@ export const GROUP_ATTRS: readonly AttrSpec[] = [
 /** `node` attributes. */
 export const NODE_ATTRS: readonly AttrSpec[] = [
   { name: 'ref', type: 'string' },
+  { name: 'role', type: 'enum', values: Semantic.ROLES },
   { name: 'shape', type: 'enum', values: Scene.BoxKind.literals },
   { name: 'color', type: 'enum', values: Scene.Color.literals },
   { name: 'fill', type: 'enum', values: Scene.Fill.literals },
@@ -132,6 +143,9 @@ export const EDGE_ATTRS: readonly AttrSpec[] = [
   { name: 'stroke', type: 'enum', values: Scene.Stroke.literals },
   { name: 'color', type: 'enum', values: Scene.Color.literals },
 ];
+
+/** `note` attributes. */
+export const NOTE_ATTRS: readonly AttrSpec[] = [{ name: 'color', type: 'enum', values: Scene.Color.literals }];
 
 /** Placement relations a `node` or `group` may state; `~` before one makes it a preference. */
 export const RELATION_WORDS: readonly string[] = Semantic.RELATION_KINDS;

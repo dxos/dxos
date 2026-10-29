@@ -25,8 +25,10 @@ describe('style classes', () => {
 
   test('an element takes its class look under its own', ({ expect }) => {
     expect(classedNode(nodes.a, styles).style).toEqual({ hue: 'blue', lineStyle: 'dashed', rounded: true });
-    // A link takes only the common base of the class's style: its colour and line style.
+    // A link takes only what its style shares with the class's: its colour, line style and caption size.
     expect(classedLink(links.l, styles).style).toEqual({ hue: 'red', lineStyle: 'solid' });
+    const sized = { warn: { ...styles.warn, style: { ...styles.warn.style, fontSize: 18 } } };
+    expect(classedLink(links.l, sized).style).toEqual({ hue: 'red', lineStyle: 'solid', fontSize: 18 });
   });
 
   test("a node's line style draws its border", ({ expect }) => {

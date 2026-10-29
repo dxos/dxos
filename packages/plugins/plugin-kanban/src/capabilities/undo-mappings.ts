@@ -6,8 +6,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 
-import { meta } from '#meta';
 import { KanbanOperation } from '#types';
+
+import { KanbanNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -21,7 +22,7 @@ export default Capability.makeModule(() =>
           props: output.props,
           index: output.index,
         }),
-        message: ['card-field-deleted.label', { ns: meta.profile.key }],
+        message: ['card-field-deleted.label', { ns: KanbanNamespace.key }],
       }),
       UndoMapping.make({
         operation: KanbanOperation.DeleteCard,
@@ -29,7 +30,7 @@ export default Capability.makeModule(() =>
         deriveContext: (_input, output) => ({
           card: output.card,
         }),
-        message: ['card-deleted.label', { ns: meta.profile.key }],
+        message: ['card-deleted.label', { ns: KanbanNamespace.key }],
       }),
     ]),
   ),

@@ -9,16 +9,16 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { Dsl, MermaidEngine, SVG_SCHEMA, SvgHandler } from '@dxos/diagram';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { SvgBuilder, makeBuilder } from '#model';
+import { SvgBuilder, bindArrowEnds, makeBuilder } from '#model';
 import { Drawing, IllustratorCapabilities, IllustratorError } from '#types';
 
 import { UnknownDrawingVariantError } from '../util/load-drawing.ts';
-import convertHandler, { bindArrowEnds } from './convert.ts';
+import convertHandler from './convert.ts';
 
 const SOURCE = 'flowchart LR\n  A[Client] --> B[Server]';
 
@@ -32,13 +32,20 @@ const editableVariant: IllustratorCapabilities.DrawingVariant = {
   builder: makeBuilder({ schema: FAKE_SCHEMA, handler: SvgHandler }),
 };
 
-const capabilities = () => {
+const capabilities = (converters: readonly IllustratorCapabilities.DrawingConverter[] = []) => {
   const manager = CapabilityManager.make({ registry: Registry.make() });
   for (const variant of [svgVariant, editableVariant]) {
     manager.contribute({
       interface: IllustratorCapabilities.VariantProvider,
       implementation: variant,
       module: variant.id,
+    });
+  }
+  for (const converter of converters) {
+    manager.contribute({
+      interface: IllustratorCapabilities.Converter,
+      implementation: converter,
+      module: `${converter.from}->${converter.to}`,
     });
   }
   return manager;
@@ -50,7 +57,7 @@ describe('convert', () => {
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    ({ db } = await builder.createDatabase({ types: [Drawing.Drawing, Drawing.Canvas] }));
+    ({ db } = await builder.createDatabase({ types: [Drawing.Drawing, Drawing.Canvas, Collection.Collection] }));
   });
 
   afterEach(async () => {
@@ -63,10 +70,15 @@ describe('convert', () => {
     return db.add(Drawing.make({ name: 'Imported', canvas }));
   };
 
-  const run = (drawing: Drawing.Drawing, variant: string) =>
+  // In place unless `copy`, as the tests below were written for; the copy tests pass it.
+  const run = (
+    drawing: Drawing.Drawing,
+    variant: string,
+    { copy = false, converters = [] }: { copy?: boolean; converters?: IllustratorCapabilities.DrawingConverter[] } = {},
+  ) =>
     convertHandler
-      .handler({ drawing: Ref.make(drawing), variant })
-      .pipe(Effect.provideService(Capability.Service, capabilities()), Effect.provide(Database.layer(db)));
+      .handler({ drawing: Ref.make(drawing), variant, ...(copy ? {} : { replace: true }) })
+      .pipe(Effect.provideService(Capability.Service, capabilities(converters)), Effect.provide(Database.layer(db)));
 
   test('replays the scene onto a fresh canvas of the target variant and drops the old canvas', async ({ expect }) => {
     const drawing = await addSvgDrawing();
@@ -139,5 +151,37 @@ describe('convert', () => {
       ['A/box', 'B/box'],
       ['B/box', 'C/box'],
     ]);
+  });
+
+  test('by default converts into a new drawing beside the source, which is left as it was', async ({ expect }) => {
+    const drawing = await addSvgDrawing();
+    const original = await drawing.canvas.load();
+    const folder = db.add(Collection.make({ objects: [Ref.make(drawing)] }));
+    await db.flush();
+
+    const result = await EffectEx.runPromise(run(drawing, FAKE_SCHEMA, { copy: true }));
+    const copy = await result.drawing.load();
+    expect(copy.id).not.toBe(drawing.id);
+    expect(copy.name).toBe(drawing.name);
+    expect((await copy.canvas.load()).schema).toBe(FAKE_SCHEMA);
+    expect((await drawing.canvas.load()).id).toBe(original.id);
+    expect(folder.objects.map((ref) => ref.target?.id)).toContain(copy.id);
+  });
+
+  test("uses a converter registered for the pair over the scene replay, so a variant's own mapping wins", async ({
+    expect,
+  }) => {
+    const drawing = await addSvgDrawing();
+    const converter: IllustratorCapabilities.DrawingConverter = {
+      from: SVG_SCHEMA,
+      to: FAKE_SCHEMA,
+      convert: () =>
+        Effect.gen(function* () {
+          const canvas = yield* Database.add(Drawing.makeCanvas({ schema: FAKE_SCHEMA }));
+          return { canvas, upserted: ['custom'] };
+        }),
+    };
+    const result = await EffectEx.runPromise(run(drawing, FAKE_SCHEMA, { copy: true, converters: [converter] }));
+    expect(result.upserted).toEqual(['custom']);
   });
 });

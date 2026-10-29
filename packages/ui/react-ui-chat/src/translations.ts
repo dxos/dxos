@@ -9,7 +9,9 @@ export const translationKey = '@dxos/react-ui-chat';
 export const translations = [
   {
     'en-US': {
-      [translationKey]: {},
+      [translationKey]: {
+        'commands.label': 'Commands',
+      },
     },
   },
 ] as const satisfies Theme.Resource[];

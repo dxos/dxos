@@ -159,12 +159,21 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
   //
 
   // TODO(wittjosiah): Doesn't align with getSimpleType where Tuples are treated as objects.
+  // A `[lng, lat, height?]` tuple: draft-07 `items` from older views, or the `prefixItems` Effect emits.
   [Format.TypeFormat.GeoPoint]: extend(Format.TypeFormat.GeoPoint, TypeEnum.Array, {
     // TODO(wittjosiah): If this is an array or tuple then it shows up in the form.
-    items: Schema.Any,
+    items: Schema.optional(Schema.Any),
+    prefixItems: Schema.optional(Schema.Any),
     minItems: Schema.Literal(2),
-    additionalItems: Schema.Literal(false),
-  }),
+    maxItems: Schema.optional(Schema.Literal(3)),
+    additionalItems: Schema.optional(Schema.Literal(false)),
+  }).pipe(
+    Schema.check(
+      Schema.makeFilter((property: object) =>
+        'items' in property || 'prefixItems' in property ? true : 'GeoPoint must be a tuple',
+      ),
+    ),
+  ),
 };
 
 /**

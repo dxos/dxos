@@ -28,7 +28,7 @@ const PATH = '/mcp';
 const VERSION = '0.0.0-eval';
 
 export type McpHost = {
-  /** Streamable HTTP endpoint, ready to hand to a skill's `mcpServers` entry. */
+  /** Streamable HTTP endpoint, ready to add as an MCP connection. */
   readonly url: string;
 };
 

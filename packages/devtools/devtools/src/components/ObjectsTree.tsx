@@ -10,13 +10,12 @@ import * as Match from 'effect/Match';
 import * as Order from 'effect/Order';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
-import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import React from 'react';
 
 import { raise } from '@dxos/debug';
-import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -76,8 +75,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter, ids, 
         model={model.treeModel}
         // `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`, whose automatic minimum is the content's
         // min-content width, so a long relation typename on a deep row would widen the track and push the trailing
-        // column instead of truncating. The role shares the actions' track: a `min-content` column of its own is sized
-        // from the widest role across every row, so opening a node whose child has a role shifted every row's button.
+        // column instead of truncating.
         columns='var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) min-content'
         onOpenChange={handleOpenChange}
         onSelect={handleSelect}
@@ -88,7 +86,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter, ids, 
   );
 };
 
-/** A row: the relation direction and the entity's glyph, its label, then its role and action menu. */
+/** A row: the entity's glyph (a relation's direction), its label, then a relation's glyph and the action menu. */
 const renderRow = (node: TreeNode<ObjectsTreeItem>) =>
   node.item ? (
     <Tree.Item node={node}>
@@ -103,25 +101,25 @@ const renderRow = (node: TreeNode<ObjectsTreeItem>) =>
 
 type ObjectsTreeRowProps = { item: ObjectsTreeItem; path: string[] };
 
-/** Relation direction arrow plus the entity's own glyph, which a static icon name cannot express. */
+/**
+ * An object's glyph, or a relation's direction relative to the row it hangs off: the slot is one block, so a relation's
+ * own glyph goes to the end of the row (`ObjectsTreeColumns`).
+ */
 const ObjectsTreeIcon = ({ item, path }: ObjectsTreeRowProps) => {
   const { model } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const scoped = useAtomValue(model.itemAt(path)) ?? item;
   const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
-  return (
-    <>
-      {scoped.type === 'outgoing-relation' && (
-        <Icon.Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />
-      )}
-      {scoped.type === 'incoming-relation' && (
-        <Icon.Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />
-      )}
-      <Icon.Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
-    </>
-  );
+  switch (scoped.type) {
+    case 'outgoing-relation':
+      return <Icon.Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />;
+    case 'incoming-relation':
+      return <Icon.Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />;
+    default:
+      return <Icon.Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />;
+  }
 };
 
-/** Trailing column: the reference key this entity is held under, and the per-row action menu. */
+/** Trailing column: a relation's own glyph, and the per-row action menu. */
 const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
   const { model, onOpen, canOpen } = useContext(ObjectsTreeContext) ?? raise(new Error('ObjectsTreeContext not found'));
   const node = useAtomValue(model.itemAt(path)) ?? item;
@@ -160,7 +158,9 @@ const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
 
   return (
     <div ref={visibleRef} className='flex shrink-0 items-center gap-1'>
-      {node.role && <span className='text-fg-subtle text-xs'>{node.role}</span>}
+      {node.type !== 'object' && (
+        <Icon.Icon icon={node.icon} classNames={['w-4 h-4', node.iconHue ? getStyles(node.iconHue).text : undefined]} />
+      )}
       <Menu.Root>
         <Menu.Trigger asChild>
           <Button.Root
@@ -249,10 +249,6 @@ export type ObjectsTreeItem = {
   label: string;
   icon: string;
   iconHue?: string;
-  /**
-   * For children that are also referenced by parents, this is set to the key of the parent.
-   */
-  role?: string;
   entity: Entity.Snapshot;
 };
 
@@ -638,7 +634,6 @@ export class ObjectsTreeModel {
         `${Obj.isObject(entity) ? 'Object' : 'Relation'}-${entity.id.slice(-4)}`,
       icon,
       iconHue: hue,
-      role: computeRole(entity),
       entity,
     };
   }
@@ -699,22 +694,3 @@ const itemOrder: Order.Order<ObjectsTreeItem> = Order.mapInput(
     Match.exhaustive,
   ),
 );
-
-const computeRole = (entity: Entity.Snapshot): string | undefined => {
-  if (!Obj.isSnapshot(entity)) {
-    log.info('not an object');
-    return undefined;
-  }
-  const parent = Obj.getParent(entity);
-  if (parent === undefined) {
-    return undefined;
-  }
-
-  for (const key of Record.keys(parent)) {
-    if (Ref.isRef(parent[key]) && parent[key].target?.id === entity.id) {
-      return `$.${key}`;
-    }
-  }
-
-  return undefined;
-};

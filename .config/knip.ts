@@ -88,7 +88,7 @@ const AUXILIARY_ENTRY = [
   // Alias targets wired up in the storybook config, never imported by name.
   '.storybook/mocks/**',
   // Stand-in package trees the introspection tests read from disk.
-  'src/__fixtures__/**',
+  'src/**/__fixtures__/**',
   'scripts/**/*.{ts,mts,js,mjs}',
 ];
 
@@ -427,7 +427,6 @@ const TESTING_ENTRY_ONLY: Record<string, string[]> = {
 };
 
 const BUNDLER_RESOLVED: Record<string, string[]> = {
-  'packages/plugins/plugin-presenter': ['marked'],
   // The app's import map is built from its direct dependencies, and plugins loaded by URL import
   // these bare; nothing in the app imports them, but without the declaration they have no entry.
   'packages/apps/composer-app': [
@@ -486,6 +485,7 @@ for (const manifest of globSync(
     browser = {},
     dependencies = {},
     devDependencies = {},
+    peerDependencies = {},
   } = JSON.parse(readFileSync(manifest, 'utf8'));
 
   // Self-referencing subpath imports (`#meta`, `#plugin`) are otherwise unresolvable: knip follows
@@ -544,7 +544,7 @@ for (const manifest of globSync(
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...moonInvokedDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
-      ...typeOnlyDependencies(dir, Object.keys(dependencies)),
+      ...typeOnlyDependencies(dir, Object.keys({ ...dependencies, ...peerDependencies })),
       ...bundledDependencies(dir),
       ...(DECLARED_IN_TYPES[dir] ?? []),
       ...(TESTING_ENTRY_ONLY[dir] ?? []),
@@ -594,6 +594,8 @@ const config: KnipConfig = {
     // Shipped by @dxos/app-framework, a dependency of every plugin the `composer-plugin` tag
     // applies to; the tag file that invokes it lives at the root, which declares no such dep.
     'dx-plugin',
+    // moon's built-in no-op command (`.moon/tasks/source-hash.yml`), not a binary.
+    'noop',
   ],
   ignoreDependencies: [
     //

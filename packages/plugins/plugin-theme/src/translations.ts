@@ -46,6 +46,7 @@ export const translations = [
         'settings-scope.conflict-dialog.keep-shared.label': 'Keep shared',
         'not-found.heading': 'Not Found',
         'not-found.description': "This object doesn't exist or is no longer available.",
+        'prompt.label': 'Prompt',
         'empty-space.message': 'Nobody else is in this space… yet.',
         'space-members.label': 'Members',
         'go-to-space.label': 'Done',

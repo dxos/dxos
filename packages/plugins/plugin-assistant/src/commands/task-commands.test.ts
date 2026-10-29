@@ -32,6 +32,13 @@ describe('task slash commands', () => {
     expect(titles(chat)).toEqual(['Draft the plan', 'Ship it']);
   });
 
+  test('/task:create makes a title of one line', async ({ expect }) => {
+    const { chat, run } = await setup(builder);
+
+    await run('/task:create Fix login\n  on   Safari');
+    expect(titles(chat)).toEqual(['Fix login on Safari']);
+  });
+
   test('/task:create rejects an empty title', async ({ expect }) => {
     const { chat, run } = await setup(builder);
 

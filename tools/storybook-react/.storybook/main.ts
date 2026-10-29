@@ -5,7 +5,7 @@
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { type InlineConfig, type Plugin } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
@@ -16,7 +16,9 @@ import importSource from '@dxos/vite-plugin-import-source';
 import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 import { reactCompilerOptions } from '../../../react-compiler.config.ts';
+import { withRetry } from './indexers.ts';
 import { isPerfBundle, perfBundlePlugin } from './perf-bundle.ts';
+import { specFilesPlugin } from './spec-files.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -371,6 +373,10 @@ export const createConfig = ({
     // Marks stories whose files git reports changed; its `git` spawn fails here (EBADF) and logs an error on every start.
     changeDetection: false,
   },
+  // A story file read mid-write (a checkout, a merge, a formatter) would otherwise fail every story until it changed again.
+  // Skipping applies to the dev server only: a build or a test run must still fail on a story that cannot be indexed.
+  experimental_indexers: async (existing = [], options) =>
+    existing.map((indexer) => withRetry(indexer, { skipOnFailure: options.configType === 'DEVELOPMENT' && !isVitest })),
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,
@@ -397,6 +403,24 @@ export const createConfig = ({
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
+    // Read from the workspace path on the first config served: this package does not depend on
+    // app-framework, so a test run that never loads a config must not need it built.
+    let appFrameworkVitePlugin:
+      | Promise<{ stripModuleBodyAttributes: (code: string, ast: unknown) => string | null }>
+      | undefined;
+    const moduleBodyAttributePlugin = (): Plugin => ({
+      name: 'module-url-attribute',
+      async transform(code, id) {
+        if (!/\/dx\.config\.ts$/.test(id.split('?')[0])) {
+          return null;
+        }
+        appFrameworkVitePlugin ??= import(
+          pathToFileURL(resolve(rootDir, 'packages/sdk/app-framework/dist/lib/vite-plugin.mjs')).href
+        );
+        const { stripModuleBodyAttributes } = await appFrameworkVitePlugin;
+        return stripModuleBodyAttributes(code, this.parse(code));
+      },
+    });
 
     const finalConfig = mergeConfig(
       {
@@ -517,6 +541,9 @@ export const createConfig = ({
           // `?module-url` imports: stories that hand module URLs to a worker to `import()`.
           ModuleUrlPlugin(),
 
+          // `?spec` imports: spec text a published page can replace without a rebuild.
+          specFilesPlugin({ rootDir }),
+
           importSource({
             // Always resolve package-internal `#*` subpath imports (e.g. `#translations`,
             // `#meta`) to the `source` condition (`./src/...`); otherwise they fall through
@@ -563,6 +590,9 @@ export const createConfig = ({
           //
 
           DxosLogPlugin(),
+
+          // Stories load plugin configs as authored; the browser rejects their module-body import attribute.
+          moduleBodyAttributePlugin(),
 
           // Hosts the Claude Agent SDK so stories reach it same-origin. Storybook builds its vite
           // config here and never loads a package's `vite.config.ts`, so a story cannot mount its

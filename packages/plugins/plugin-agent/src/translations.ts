@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { AgentChannels, AgentEmail, Goal } from '#types';
+
+import { AgentNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -32,7 +33,7 @@ export const translations = [
         'typename.label_other': 'Goals',
         'object-name.placeholder': 'New goal',
       },
-      [meta.profile.key]: {
+      [AgentNamespace.key]: {
         'plugin.name': 'Agent',
         'email-channel.label': 'Email address',
         'email-channel.description':
@@ -86,9 +87,6 @@ export const translations = [
           "You don't administer any agents yet. Create one in a space, or ask an agent's admin to add you to its space.",
         'agents-panel-no-match.message': 'No agents match.',
         'agents-search.placeholder': 'Search agents',
-        'agent-admins.label': 'Admins: {{admins}}',
-        'agent-admin-you.label': '{{name}} (you)',
-        'agent-open-space.label': 'Open {{name}}',
         'agent-space-unnamed.label': 'Untitled space',
         'agent-did.label': "The agent's identity (DID)",
         'agent-key.label': "The agent's identity key",

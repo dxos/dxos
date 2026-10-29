@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { compactInterval, formatCompact } from './format-time.ts';
+import { compactInterval, formatCompact, formatRelative, relativeInterval } from './format-time.ts';
 
 const now = new Date('2026-09-24T12:00:00Z');
 const daysBefore = (days: number): string => new Date(now.getTime() - days * 24 * 60 * 60_000).toISOString();
@@ -73,5 +73,30 @@ describe('compactInterval', () => {
   test('a date never changes again on any timer this component owns', ({ expect }) => {
     expect(compactInterval(daysBefore(30), { now })).to.eq(undefined);
     expect(compactInterval('not a date', { now })).to.eq(undefined);
+  });
+});
+
+describe('formatRelative', () => {
+  test('the first minute is "now", or the caller\'s translation of it', ({ expect }) => {
+    expect(formatRelative(minutesBefore(0.5), { now })).to.eq('now');
+    expect(formatRelative(minutesBefore(0.5), { now, justNow: 'just now' })).to.eq('just now');
+  });
+
+  test('relative within two days', ({ expect }) => {
+    expect(formatRelative(minutesBefore(5), { now })).to.eq('5 minutes ago');
+    expect(formatRelative(minutesBefore(3 * 60), { now })).to.eq('3 hours ago');
+    expect(formatRelative(minutesBefore(30 * 60), { now })).to.eq('yesterday');
+  });
+
+  test('the calendar date from two days on, and for the future', ({ expect }) => {
+    expect(formatRelative(daysBefore(2), { now })).not.to.contain('ago');
+    expect(formatRelative(daysBefore(-1), { now })).not.to.contain('ago');
+    expect(formatRelative('not a date', { now })).to.eq('');
+  });
+
+  test('wakes on the minute, then the hour, then never', ({ expect }) => {
+    expect(relativeInterval(minutesBefore(5.5), { now })).to.eq(30_000);
+    expect(relativeInterval(minutesBefore(150), { now })).to.eq(30 * 60_000);
+    expect(relativeInterval(daysBefore(3), { now })).to.eq(undefined);
   });
 });

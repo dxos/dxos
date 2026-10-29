@@ -2,12 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { IllustratorNamespace } from './src/namespace.ts';
+import * as IllustratorCapabilities from './src/types/IllustratorCapabilities.ts';
+import * as IllustratorEvents from './src/types/IllustratorEvents.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.illustrator',
+    key: IllustratorNamespace.key,
     name: 'Illustrator',
     author: 'DXOS',
     description: trim`
@@ -38,4 +50,70 @@ export default Config2.make({
     ],
     tags: ['alpha'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commentConfig(
+      () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: IllustratorEvents.Start,
+      },
+    ),
+    // Browser-only: the entry supplies `CreateDrawingPanel`, the React form that picks the drawing
+    // variant and collects its input.
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+      },
+    ),
+    // Migration providers stay eager: a migration missing when a space opens is a data hazard.
+    Capability.lazyModule(
+      'IllustratorMigrations',
+      { provides: [ClientCapabilities.Migration] },
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      { activatesOn: ActivationEvents.Idle },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: IllustratorNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
+    }),
+    Capability.lazyModule(
+      'RefitState',
+      { provides: [IllustratorCapabilities.Refit], activatesOn: ActivationEvents.Startup },
+      () => import('./src/capabilities/refit-state.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'IllustratorSvgVariant',
+      {
+        provides: [IllustratorCapabilities.VariantProvider],
+        activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
+      },
+      () => import('#svg-variant', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

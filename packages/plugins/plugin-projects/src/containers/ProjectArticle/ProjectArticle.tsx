@@ -8,7 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -27,7 +27,6 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
-import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -39,10 +38,11 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
-import { ObjectCard, ProjectPipeline } from '#components';
-import { meta } from '#meta';
+import { ObjectGallery, ProjectPipeline } from '#components';
 import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
+import { useRefTargets } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
@@ -68,7 +68,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
   const { tab, pipeline: showPipeline, axis = 'time', legend = 'title' } = useViewState(ProjectView.aspect, subject.id);
@@ -90,6 +90,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const taskSet = useResolveRef(project.taskSet);
   // The project's scratch outline (created lazily by its chats).
   const outline = useResolveRef(project.outline);
+  const artifacts = useRefTargets(project.artifacts);
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
@@ -310,7 +311,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   )}
 
                   <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
-                    <ObjectGallery refs={project.artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                    <ObjectGallery objects={artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                   </Form.FieldSet>
 
                   {/* Settings other plugins keep for this project, such as its folder on this device. */}
@@ -534,7 +535,7 @@ const useToolbarActions = ({
           'tabs',
           {
             variant: 'custom',
-            label: ['views.label', { ns: meta.profile.key }],
+            label: ['views.label', { ns: ProjectsNamespace.key }],
             render: () => tabs,
           },
           () => {},
@@ -543,7 +544,7 @@ const useToolbarActions = ({
         .action(
           'create-chat',
           {
-            label: ['create-chat.label', { ns: meta.profile.key }],
+            label: ['create-chat.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--sparkle--regular',
             disposition: 'toolbar',
             testId: 'projectsPlugin.createChat',
@@ -555,7 +556,7 @@ const useToolbarActions = ({
         .action(
           'delegate-tasks',
           {
-            label: ['delegate-tasks.label', { ns: meta.profile.key }],
+            label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
             icon: 'ph--paper-plane-tilt--regular',
             disposition: 'toolbar',
             disabled: checkedTasks.length === 0 || delegating,
@@ -567,7 +568,7 @@ const useToolbarActions = ({
         .group(
           'view',
           {
-            label: ['view.label', { ns: meta.profile.key }],
+            label: ['view.label', { ns: ProjectsNamespace.key }],
             variant: 'toggleGroup',
             selectCardinality: 'multiple',
             value: showPipeline ? ['pipeline'] : [],
@@ -576,7 +577,7 @@ const useToolbarActions = ({
             group.action(
               'pipeline',
               {
-                label: ['pipeline.label', { ns: meta.profile.key }],
+                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: ProjectsNamespace.key }],
                 icon: 'ph--chart-bar-horizontal--regular',
                 testId: 'projectsPlugin.pipeline',
               },
@@ -591,7 +592,7 @@ const useToolbarActions = ({
             group.action(
               'add-artifact',
               {
-                label: ['create-artifact.label', { ns: meta.profile.key }],
+                label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
                 icon: 'ph--plus--regular',
                 testId: 'projectsPlugin.addArtifact',
               },
@@ -615,52 +616,3 @@ const useToolbarActions = ({
     ],
   );
 };
-
-type ObjectTileData = { object: Obj.Unknown; onClick: () => void; onDelete: () => void };
-
-type ObjectGalleryProps = {
-  refs: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
-  onOpen: (object: Obj.Unknown) => void;
-  onDelete: (object: Obj.Unknown) => void;
-};
-
-/**
- * A project's linked objects (its artifacts) as clickable cards. Unresolved refs are omitted until
- * their target loads.
- */
-const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
-  // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
-  // synchronously would leave the gallery permanently empty (the refs come off a snapshot of the
-  // project, which carries no resolver, so `.target` is undefined there even once loaded).
-  // `ref.atom` yields the live entity and tracks loading without tracking mutations — a rename
-  // re-renders just its card, since `ObjectCard` subscribes itself.
-  const objectsAtom = useMemo(
-    () => Atom.make((get) => refs.map((ref) => get(ref.atom)).filter((object): object is Obj.Unknown => !!object)),
-    [refs],
-  );
-  const objects = useAtomValue(objectsAtom);
-  const items = useMemo<ObjectTileData[]>(
-    () => objects.map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
-    [objects, onOpen, onDelete],
-  );
-
-  if (items.length === 0) {
-    return null;
-  }
-
-  return (
-    // No `Masonry.Content`: it renders a `ScrollArea.Root`, and `Form.Viewport` already scrolls this
-    // surface. Nested, the inner scroll root shrink-wrapped to its scrollbar gutter, so the
-    // viewport's `contentWidth > 0` gate suppressed every tile — the sections rendered their
-    // headings and nothing else.
-    <Masonry.Root Tile={ObjectTile} centered={false}>
-      <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} scroll={false} />
-    </Masonry.Root>
-  );
-};
-
-const ObjectTile = memo(({ data }: { data: ObjectTileData | undefined; index: number }) =>
-  data ? <ObjectCard object={data.object} onClick={data.onClick} onDelete={data.onDelete} /> : null,
-);
-
-ObjectTile.displayName = 'ObjectTile';

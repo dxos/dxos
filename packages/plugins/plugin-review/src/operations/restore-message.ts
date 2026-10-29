@@ -5,30 +5,31 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Feed, Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Thread } from '@dxos/types';
+import { Message, Thread } from '@dxos/types';
 
 import { CommentOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof CommentOperation.RestoreMessage> = CommentOperation.RestoreMessage.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ anchor, message, messageIndex }) {
+    Effect.fnUntraced(function* ({ anchor, message }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const db = Obj.getDatabase(thread);
       invariant(db, 'Database not found');
 
-      Obj.update(thread, (thread) => {
-        thread.messages.splice(messageIndex, 0, Ref.make(message));
-      });
+      // Re-appended under its own id and `created`, so the thread's send-order sort puts it back where it was.
+      const { id, ...fields } = message;
+      const feed = yield* Effect.promise(() => thread.feed.load());
+      yield* Feed.append(feed, [Obj.make(Message.Message, { id, ...fields })]).pipe(Effect.provide(Database.layer(db)));
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'comments.message.undo-delete',
         properties: {
           spaceId: db.spaceId,
           threadId: thread.id,
-          messageId: message.id,
+          messageId: id,
         },
       });
     }),

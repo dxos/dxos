@@ -1,0 +1,51 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/* Every rule that affects printing is keyed on `html[data-printing-deck]`, which only the deck being printed sets. */
+@page slide {
+  size: 2560px 1440px;
+  margin: 0;
+}
+
+[data-print-deck] {
+  display: none;
+}
+
+@media print {
+  /* The deck prints through its own container, so the rest of the app (chrome, overlays, other decks) is dropped. */
+  html[data-printing-deck] body > :not([data-print-deck]) {
+    display: none !important;
+  }
+
+  html[data-printing-deck],
+  html[data-printing-deck] body {
+    height: auto !important;
+    overflow: visible !important;
+    background: none !important;
+  }
+
+  html[data-printing-deck] [data-print-deck] {
+    display: block !important;
+  }
+
+  /* One slide per page, at the nominal 2560x1440 canvas size. */
+  html[data-printing-deck] [data-print-deck] > [data-print-slide] {
+    page: slide;
+    position: relative;
+    width: 2560px;
+    height: 1440px;
+    overflow: hidden;
+    break-after: page;
+    break-inside: avoid;
+  }
+
+  html[data-printing-deck] [data-print-deck] > [data-print-slide]:last-child {
+    break-after: auto;
+  }
+
+  /* Click steps are a live-presentation device: on paper every step is shown. */
+  html[data-printing-deck] [data-print-deck] [data-step] {
+    visibility: visible !important;
+  }
+}

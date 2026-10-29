@@ -5,6 +5,7 @@
 
 export * from './AgentProperties/index.ts';
 export * from './Chat/index.ts';
+export * from './ChatDetails/index.ts';
 export * from './ConnectorAuthMenu/index.ts';
 export { TracePanel } from '../containers/TracePanel/TracePanel.tsx';
 export * from './Toolbox/index.ts';

@@ -165,7 +165,7 @@ export const createComputeProjection = ({
   };
 
   /**
-   * The compute graph brought in line with the restored scene: a shape whose node is gone gets it back
+   * The compute graph brought in line with the patched scene: a shape whose node is gone gets it back
    * under the same id, a node this projection mirrored whose shape is gone goes, and the edges between
    * shape-backed nodes are exactly the scene's links.
    */
@@ -209,11 +209,8 @@ export const createComputeProjection = ({
     scene,
     apply,
     capabilities: freehand.capabilities,
-    snapshot: freehand.snapshot,
-    restore: (snapshot) => {
-      freehand.restore(snapshot);
-      reconcile(registry.get(freehand.scene));
-    },
+    // Undo patches the store; the compute graph is then brought in line with the scene it left.
+    restored: () => reconcile(registry.get(freehand.scene)),
   };
 };
 

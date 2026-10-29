@@ -23,11 +23,11 @@ describe('IBKR connector', () => {
         });
 
         expect(result.kind).toBe('complete');
-        expect(result.accessToken.source).toBe(IBKR_SOURCE);
+        expect(result.accessToken?.source).toBe(IBKR_SOURCE);
         // The Flex token maps to AccessToken.token (the secret).
-        expect(result.accessToken.token).toBe('flex-token-abc');
+        expect(result.accessToken?.token).toBe('flex-token-abc');
         // The Flex query ID maps to AccessToken.account (non-secret, readable by AI tools).
-        expect(result.accessToken.account).toBe('QID-9');
+        expect(result.accessToken?.account).toBe('QID-9');
         // Connection references the access token and uses the connector id.
         expect(result.connection.connectorId).toBe(IBKR_CONNECTOR_ID);
       }),
@@ -53,8 +53,8 @@ describe('IBKR connector', () => {
         });
 
         expect(result.kind).toBe('complete');
-        expect(result.accessToken.token).toBe('padded-token');
-        expect(result.accessToken.account).toBe('QID-42');
+        expect(result.accessToken?.token).toBe('padded-token');
+        expect(result.accessToken?.account).toBe('QID-42');
       }),
     ));
 });

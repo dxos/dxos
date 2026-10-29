@@ -18,9 +18,10 @@ import * as Panel from '@dxos/react-ui/Panel';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { VariantGallery } from '#components';
-import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
 import { type MediaArtifact } from '#types';
+
+import { StudioNamespace } from '../../namespace.ts';
 
 /** `'all'` gallery, or the index of a produced (frozen) variant. */
 type Selected = 'all' | number;
@@ -48,7 +49,7 @@ export const MediaArtifactVariants = ({
   attendableId,
   actionsNodeId,
 }: MediaArtifactVariantsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StudioNamespace.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const db = Obj.getDatabase(artifact);
   const [artifactSnapshot] = useObject(artifact);
@@ -124,13 +125,13 @@ export const MediaArtifactVariants = ({
 
   const menuActions = useMenuBuilder(
     (get) => {
-      const builder = MenuBuilder.make().root({ label: ['variants-toolbar.menu', { ns: meta.profile.key }] });
+      const builder = MenuBuilder.make().root({ label: ['variants-toolbar.menu', { ns: StudioNamespace.key }] });
       // Segmented tab strip (All / one per produced variant), custom-rendered to keep the buttons.
       builder.action(
         'tabs',
         {
           variant: 'custom',
-          label: ['all.tab.label', { ns: meta.profile.key }],
+          label: ['all.tab.label', { ns: StudioNamespace.key }],
           render: () => (
             <>
               <Button.Root variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
@@ -156,7 +157,7 @@ export const MediaArtifactVariants = ({
           'cover',
           {
             variant: 'custom',
-            label: ['cover.label', { ns: meta.profile.key }],
+            label: ['cover.label', { ns: StudioNamespace.key }],
             render: () => (
               <Input.Checkbox
                 checked={isCover}
@@ -186,12 +187,15 @@ export const MediaArtifactVariants = ({
           <VariantGallery
             variants={galleryItems}
             emptyMessage={t('empty.message')}
-            onSelect={(id) => {
-              const index = variants.findIndex((variant) => variant.id === id);
-              if (index >= 0) {
-                setSelected(index);
-              }
-            }}
+            // A tile opens its variant (click or Enter); the gallery has no selection of its own.
+            itemProps={(id) => ({
+              onActivate: () => {
+                const index = variants.findIndex((variant) => variant.id === id);
+                if (index >= 0) {
+                  setSelected(index);
+                }
+              },
+            })}
           />
         ) : (
           selectedVariant &&

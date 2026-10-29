@@ -51,6 +51,11 @@ export type FetchMessagesProps = {
   readonly searchFilter?: string;
   /** Called with each date chunk's enumerated id count, to accumulate the retrieval total. */
   readonly onEnumerated?: (count: number) => void;
+  /**
+   * Called once with Gmail's `resultSizeEstimate` for the backward window, which then reports no page
+   * counts: the estimate covers the whole remaining backfill, where pages stop at the run's cap.
+   */
+  readonly onEstimate?: (count: number) => void;
   /** Called once per message retrieved (full fetch), to advance progress. */
   readonly onRetrieved?: () => void;
   /** Incremental delta's created message ids; when set, replaces the forward window (backward still runs). */
@@ -81,22 +86,30 @@ export const fetchMessages = (
           end: window.end,
           searchFilter: config.searchFilter,
           onEnumerated: config.onEnumerated,
+          onEstimate: window.direction === 'backward' ? config.onEstimate : undefined,
         })
       : Stream.empty;
 
-  const forward = config.forwardIds ? Stream.fromIterable(config.forwardIds) : idsFor(config.windows.forward);
+  // `after:` is day-granular, so the forward window re-lists `max`'s whole day; its messages older than the
+  // window are left to the backward walk, since committing them oldest-first under the cap would drop `min`
+  // past the rest of that day and strand it as already synced.
+  const listed = (ids: Stream.Stream<string, GoogleMailApiError, GoogleMailApi>, floor = 0) =>
+    ids.pipe(Stream.map((messageId) => ({ messageId, floor })));
+  const forward = config.forwardIds
+    ? listed(Stream.fromIterable(config.forwardIds))
+    : listed(idsFor(config.windows.forward), config.windows.forward?.start.getTime());
 
-  return Stream.concat(forward, idsFor(config.windows.backward)).pipe(
-    Cursor.skipCommitted('skip-committed', (messageId) => messageId),
+  return Stream.concat(forward, listed(idsFor(config.windows.backward))).pipe(
+    Cursor.skipCommitted('skip-committed', ({ messageId }) => messageId),
     Stream.mapEffect(
-      (messageId) =>
+      ({ messageId, floor }) =>
         Effect.gen(function* () {
           const api = yield* GoogleMailApi;
           const message = yield* api
             .getMessage(config.userId, messageId)
             .pipe(Effect.withSpan('google-sync.fetch.message'));
           config.onRetrieved?.();
-          return Option.some(message);
+          return Number.parseInt(message.internalDate) < floor ? Option.none() : Option.some(message);
         }).pipe(
           // A message deleted before this fetch 404s forever and the token only advances on a clean run,
           // so failing here wedges the mailbox on that one id. Any other error must still fail, so the
@@ -126,6 +139,8 @@ type FetchMessageIdsProps = {
   readonly searchFilter?: string;
   /** Called with each date chunk's enumerated id count, to accumulate the retrieval total. */
   readonly onEnumerated?: (count: number) => void;
+  /** Called with the query's `resultSizeEstimate` from its first page, in place of page counts. */
+  readonly onEstimate?: (count: number) => void;
 };
 
 /** Streams Gmail message ids over one window's `[start, end)` range in `direction` order. */
@@ -161,7 +176,7 @@ const fetchMessageIds = (config: FetchMessageIdsProps) =>
 const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChunk, config: FetchMessageIdsProps) =>
   Stream.unwrap(
     Effect.gen(function* () {
-      const { userId, label, direction, searchFilter, onEnumerated } = config;
+      const { userId, label, direction, searchFilter, onEnumerated, onEstimate } = config;
 
       // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
@@ -191,11 +206,18 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
         return Stream.paginate(undefined as string | undefined, (pageToken: string | undefined) =>
           Effect.gen(function* () {
             log('fetching message IDs', { query, pageToken });
-            const { messages, nextPageToken } = yield* listPage(pageToken);
+            const { messages, nextPageToken, resultSizeEstimate } = yield* listPage(pageToken);
             const ids = (messages ?? []).map((message) => message.id);
-            log('fetched message IDs', { count: ids.length, done: !nextPageToken });
-            // Report each page's count as it arrives so the meter's retrieval total leads the fetch.
-            onEnumerated?.(ids.length);
+            log('fetched message IDs', { count: ids.length, done: !nextPageToken, resultSizeEstimate });
+            // The first page's estimate sizes the whole remaining backfill, which this run's cap leaves to
+            // later runs; without it, report each page's count as it arrives so the total leads the fetch.
+            if (onEstimate) {
+              if (pageToken === undefined) {
+                onEstimate(resultSizeEstimate);
+              }
+            } else {
+              onEnumerated?.(ids.length);
+            }
             return [ids, Option.fromNullishOr(nextPageToken)] as const;
           }),
         );

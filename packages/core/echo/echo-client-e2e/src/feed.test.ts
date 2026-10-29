@@ -243,8 +243,9 @@ describe('feeds', () => {
 
       await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'jane' })]);
 
+      // The unacknowledged append notifies first; the index's answer completes the set.
       await calledOnce;
-      expect(query.results).toHaveLength(2);
+      await expect.poll(() => query.results.length).toBe(2);
       expect(query.results.map((obj) => obj.name).sort()).toEqual(['jane', 'john']);
       sub();
     });

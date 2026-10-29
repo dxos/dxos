@@ -1,0 +1,32 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as KvsStore from '@dxos/effect/KvsStore';
+
+import { ClaudeCapabilities, Settings } from '#types';
+
+import { ClaudeNamespace } from '../namespace.ts';
+
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    const settingsAtom = KvsStore.make({
+      key: ClaudeNamespace.key,
+      schema: Settings.Settings,
+      defaultValue: () => ({ agentPermissionMode: Settings.DEFAULT_AGENT_PERMISSION_MODE }),
+    });
+
+    return [
+      Capability.contribute(ClaudeCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
+        prefix: ClaudeNamespace.key,
+        schema: Settings.Settings,
+        atom: settingsAtom,
+      }),
+    ];
+  }),
+);

@@ -500,11 +500,15 @@ shadow root, so neither Playwright's actionability checks nor the app's hit test
 
 `caption` pins a banner to the bottom of the page, so the video explains itself with no editing. The banner is the
 caption band of `tools/autocue`'s `Frame` (story `tools/autocue/Frame`), injected in overlay mode, so change its look
-there:
+there. `--caption-position top` (or `middle`) moves it off a subject that lives at the bottom of the plank, and
+`--caption-background 0.85` makes its translucent black panel (0.6 by default, blurred behind) more opaque. `--caption-colors black-on-white` (or `white-on-black`) fixes the title's and captions' colours:
 
 ```bash
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'
 ```
+
+`"position"` (`top`, `middle` or `bottom`) on a caption moves it, and the captions after it, off whatever the
+step shows: `--caption-position` is only where they start.
 
 When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
@@ -646,6 +650,10 @@ private voice on the DXOS HeyGen account; `--voices` lists the account's own voi
 catalog. It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env` / `.secrets/heygen.txt` (in
 the worktree or the primary checkout). A cue that runs into the next one
 is reported, so shorten its text rather than letting the voices overlap.
+
+A demo whose subject is a video call casts its participants as HeyGen avatars (`heygen.mjs`) and cuts them into
+call tracks (`conversation.mjs`, `align.py`); the runbook is
+[`plugin-meeting/autocue/README.md`](../../../packages/plugins/plugin-meeting/autocue/README.md).
 
 ### For a phone: `--mp4`
 

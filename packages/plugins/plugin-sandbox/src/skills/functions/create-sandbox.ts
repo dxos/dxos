@@ -7,8 +7,9 @@ import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { type Repo } from '@dxos/types';
 
 import { Sandbox, SandboxOperation, SandboxService } from '#types';
 
@@ -28,13 +29,15 @@ export default SandboxOperation.CreateSandbox.pipe(
         );
       }
 
+      const spaceId = db.spaceId;
+      // Resolved before the sandbox is stored, so a repository EDGE does not host fails the call
+      // without leaving a sandbox behind. Annotated: naming `Repo` keeps the emitted d.ts portable (TS2883).
+      const attachments: readonly Ref.Ref<Repo.Repo>[] = repositories;
+      const attached = yield* resolveAttachments(spaceId, attachments).pipe(Effect.orDie);
+
       const sandbox = Sandbox.make({ name, baseImage, repositories: [...repositories] });
       yield* Database.add(sandbox);
-
       const sandboxId = sandbox.id;
-      const spaceId = db.spaceId;
-
-      const attached = yield* resolveAttachments(spaceId, repositories).pipe(Effect.orDie);
       const record = yield* sandboxService
         .create(spaceId, sandboxId, { name, baseImage, repositories: attached })
         .pipe(Effect.orDie);

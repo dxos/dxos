@@ -4,8 +4,7 @@
 
 import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
-
+import { SpacetimeNamespace } from '../../namespace.ts';
 import { type EditorState } from '../../tools/index.ts';
 
 /** Creates the view options toggle group. */
@@ -18,7 +17,7 @@ export const createViewActions =
     builder.group(
       'view',
       {
-        label: ['view.label', { ns: meta.profile.key }],
+        label: ['view.label', { ns: SpacetimeNamespace.key }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'multiple',
@@ -30,7 +29,7 @@ export const createViewActions =
         group.action(
           'showGrid',
           {
-            label: ['view.grid.label', { ns: meta.profile.key }],
+            label: ['view.grid.label', { ns: SpacetimeNamespace.key }],
             checked: editorState.showGrid,
             icon: 'ph--grid-four--regular',
           },
@@ -39,7 +38,7 @@ export const createViewActions =
         group.action(
           'showDebug',
           {
-            label: ['view.debug.label', { ns: meta.profile.key }],
+            label: ['view.debug.label', { ns: SpacetimeNamespace.key }],
             checked: editorState.showDebug,
             icon: 'ph--bug--regular',
           },

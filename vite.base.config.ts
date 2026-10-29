@@ -10,15 +10,16 @@ import { execFile } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import path, { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
-import { type Plugin, type UserConfig, defineConfig as viteDefineConfig } from 'vite';
+import { type Plugin, type PluginOption, type UserConfig, defineConfig as viteDefineConfig } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
 import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
-import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
+import type { BrowserCommand, Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
@@ -541,7 +542,7 @@ export type BrowserOptions = {
   optimizeDeps?: string[];
   nodeExternal?: boolean;
   injectGlobals?: boolean;
-  plugins?: Plugin[];
+  plugins?: PluginOption[];
   /** JSX runtime for browser tests. */
   jsx?: 'react' | 'solid';
 };
@@ -589,15 +590,18 @@ const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
     }
   : {};
 
+const throttleCpu: BrowserCommand<[]> = async ({ context, page }) => {
+  const rate = Number(process.env.DX_STORYBOOK_CPU_THROTTLE ?? 1);
+  if (rate > 1 && context.browser()?.browserType().name() === 'chromium') {
+    const session = await context.newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate });
+  }
+};
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
       name: 'storybook',
-      // The playwright/chromium session occasionally dies mid-run with
-      // "Browser connection was closed while running tests", causing every
-      // subsequent story file to fail to import. Retry once so a transient
-      // browser-side flake doesn't fail the whole job.
-      retry: 1,
       // Defaults to per-file isolation; opt out (see `StorybookOptions.isolate`) to share the WASM-backed
       // module graph across story files and avoid cumulative WebAssembly memory exhaustion.
       ...(options?.isolate !== undefined ? { isolate: options.isolate } : {}),
@@ -611,6 +615,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         // `DX_STORYBOOK_BROWSER` runs the stories elsewhere, for a story that pins browser-specific behaviour.
         instances: [{ browser: process.env.DX_STORYBOOK_BROWSER || 'chromium' }],
+        commands: { throttleCpu },
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
@@ -632,6 +637,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       // `node:events` etc. directly). Without this vite externalises them and browser
       // tests fail with "Module has been externalized for browser compatibility".
       nodeStdResolvePlugin(),
+      dxModuleAttributePlugin(),
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
         // The --ci flag will skip prompts and not open a browser.
@@ -1123,7 +1129,10 @@ const buildTestConfig = (
   const storybookProject = storybook
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
-  const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject({ jsx: outerJsx, ...b }));
+  // Vitest projects do not inherit the root plugins, and the browser loads `dx.config.ts` as authored.
+  const browserProjects = normalizeBrowserOptions(browser).map((b) =>
+    createBrowserProject({ jsx: outerJsx, ...b, plugins: [...(b.plugins ?? []), dxModuleAttributePlugin()] }),
+  );
   const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
@@ -1186,6 +1195,84 @@ const conditionalSubpathEntries = (cwd: string): Record<string, string> => {
 };
 
 /**
+ * Build entries for every `package.json` export or import whose source is `dx.config.ts`, named after
+ * the built target: a `Plugin.config` plugin declares its modules there, so the build adds that one
+ * entry and {@link dxConfigPlugin} emits each module body from it.
+ */
+const DX_CONFIG_ENVIRONMENTS = ['workerd', 'node', 'tauri', 'browser'] as const;
+
+const dxConfigEntries = (cwd: string): Record<string, string> => {
+  const pkgPath = join(cwd, 'package.json');
+  if (!existsSync(join(cwd, 'dx.config.ts')) || !existsSync(pkgPath)) {
+    return {};
+  }
+  const { exports, imports } = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  const entries: Record<string, string> = {};
+  const entryName = (built: string) => path.posix.basename(built).replace(/\.mjs$/, '');
+  for (const target of [...Object.values<any>(exports ?? {}), ...Object.values<any>(imports ?? {})]) {
+    if (target?.source !== './dx.config.ts') {
+      continue;
+    }
+    const built = target.import ?? target.default;
+    if (typeof built === 'string') {
+      entries[entryName(built)] = 'dx.config.ts';
+    }
+    // A runtime condition gets an entry holding only that runtime's modules (see `pluginConfigPlugin`).
+    for (const env of DX_CONFIG_ENVIRONMENTS) {
+      if (typeof target[env] === 'string') {
+        entries[entryName(target[env])] = `dx.config.ts?dx-env=${env}`;
+      }
+    }
+  }
+  return entries;
+};
+
+/** The workspace's `@dxos/app-framework/vite-plugin` (built), or `undefined` before its first build. */
+const APP_FRAMEWORK_DIR = join(workspaceRoot, 'packages/sdk/app-framework');
+const loadAppFrameworkVitePlugin = async () => {
+  const target = JSON.parse(readFileSync(join(APP_FRAMEWORK_DIR, 'package.json'), 'utf8')).exports?.['./vite-plugin']
+    ?.import;
+  const file = typeof target === 'string' ? join(APP_FRAMEWORK_DIR, target) : undefined;
+  return file && existsSync(file) ? import(pathToFileURL(file).href) : undefined;
+};
+
+/**
+ * Strips the module-body import attribute from `dx.config.ts`, which browsers reject. Added to every
+ * browser-hosted test project, since any of them may load a plugin's config as authored. Loads
+ * app-framework only on the first config it meets: packages built before app-framework's own
+ * dependencies cannot import it, and never load a config.
+ */
+const dxModuleAttributePlugin = (): Plugin => {
+  let vitePlugin: ReturnType<typeof loadAppFrameworkVitePlugin> | undefined;
+  return {
+    name: 'module-url-attribute',
+    async transform(code, id) {
+      if (!/\/dx\.config\.ts$/.test(id.split('?')[0])) {
+        return null;
+      }
+      vitePlugin ??= loadAppFrameworkVitePlugin();
+      const loaded = await vitePlugin;
+      if (!loaded) {
+        throw new Error(`Build @dxos/app-framework to serve ${id}.`);
+      }
+      return loaded.stripModuleBodyAttributes(code, this.parse(code));
+    },
+  };
+};
+
+/**
+ * `pluginConfigPlugin` (build only, so tests keep importing the authored config) and
+ * {@link dxModuleAttributePlugin}.
+ */
+const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
+  const vitePlugin = await loadAppFrameworkVitePlugin();
+  if (!vitePlugin) {
+    throw new Error(`A Plugin.config package needs @dxos/app-framework built to build ${cwd}.`);
+  }
+  return [vitePlugin.pluginConfigPlugin({ apply: 'build' }), vitePlugin.moduleBodyAttributePlugin()];
+};
+
+/**
  * Single entry point for a DXOS library package's `vite.config.ts`.
  *
  * - Library JS → `dist/lib/<entry>.mjs` (rolldown, all non-relative imports external).
@@ -1222,7 +1309,8 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         : [];
   // Per-condition subpaths are added to whatever the package declares, so a package gaining its
   // first condition needs no edit here.
-  const barrelEntries = conditionalSubpathEntries(process.cwd());
+  const barrelEntries = { ...conditionalSubpathEntries(process.cwd()), ...dxConfigEntries(process.cwd()) };
+  const hasDxConfigEntry = Object.values(barrelEntries).some((entry) => entry.startsWith('dx.config.ts'));
   // Derived first so an explicitly configured entry always wins.
   const resolvedEntry =
     Object.keys(barrelEntries).length > 0
@@ -1311,6 +1399,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       // After the log transform so it sees the final emitted chunk.
       ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
+      ...(hasDxConfigEntry ? [dxConfigPlugin(process.cwd())] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

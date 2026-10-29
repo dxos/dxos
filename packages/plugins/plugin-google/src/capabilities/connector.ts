@@ -129,6 +129,7 @@ export default Capability.makeModule(
         id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Gmail',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [...GMAIL_OAUTH_SCOPES],
@@ -152,6 +153,7 @@ export default Capability.makeModule(
         id: GOOGLE_CALENDAR_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Google Calendar',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [...GOOGLE_CALENDAR_OAUTH_SCOPES],
@@ -170,6 +172,7 @@ export default Capability.makeModule(
         id: GOOGLE_CONTACTS_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
         label: 'Google Contacts',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.GOOGLE,
           scopes: [...GOOGLE_CONTACTS_OAUTH_SCOPES],

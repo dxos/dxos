@@ -5,7 +5,7 @@
 import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
 
-import { FENCE_REGEX } from './lint.ts';
+import { FENCE_REGEX } from './blocks.ts';
 
 // Standard fields for each block type.
 // In future this will be derived from resolved `ext` definitions.
@@ -19,6 +19,7 @@ const BLOCK_FIELDS: Record<string, string[]> = {
   service: ['desc', 'loading', 'ops', 'errors', 'note'],
   db: ['desc', 'backend', 'entities', 'queries', 'note'],
   module: ['desc', 'api', 'styleguide'],
+  decision: ['date', 'by', 'for', 'affects', 'supersedes', 'why', 'rejected', 'source'],
 };
 
 /**

@@ -7,6 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Obj } from '@dxos/echo';
 import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
@@ -14,7 +15,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { GITHUB_APP_PROVIDER_ID, GITHUB_MCP_ENDPOINT, GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
 import { GitHubApi } from '../services/index.ts';
 
 /**
@@ -58,10 +59,58 @@ const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
     ),
   );
 
+/** The App installation's account names the connection; an installation token cannot call `/user`. */
+const onAppTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
+  Effect.gen(function* () {
+    if (accessToken.account) {
+      return;
+    }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
+    const account = yield* GitHubApi.fetchInstallationAccount().pipe(
+      Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
+    );
+    if (account) {
+      Obj.update(accessToken, (accessToken) => {
+        accessToken.account = account;
+      });
+    }
+  }).pipe(Effect.orDie);
+
+/** An uninstalled App, or a token EDGE can no longer mint, fails the installation's repository read. */
+const testAppConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
+  Effect.flatMap(GitHubApi.resolveToken(accessToken), (token) =>
+    GitHubApi.fetchInstallationAccount().pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token }))),
+  ).pipe(
+    Effect.asVoid,
+    Effect.mapError(
+      () =>
+        new ConnectorError.ConnectionTestError({
+          message: 'GitHub rejected the App installation. Reinstall the App to continue syncing.',
+        }),
+    ),
+  );
+
 /**
- * Contributes a single `ConnectorSpec.Connector` entry that wires GitHub's two operations,
- * its target materializer, and the token-created hook to the `'github.com'`
- * source. plugin-connector routes by `connectorId`.
+ * Every 3 minutes: a poll of a quiet repository is one conditional request GitHub answers `304`
+ * without charging the rate limit, so polling this often costs at most 20 requests an hour per binding.
+ */
+const GITHUB_SYNC_CRON = '*/3 * * * *';
+
+const sync: ConnectorSpec.ConnectorEntry['sync'] = {
+  operation: GitHubOperation.SyncGitHubRepositories,
+  getTargets: GitHubOperation.GetGitHubRepositories,
+  materializeTarget: GitHubOperation.MaterializeGitHubTarget,
+  optionsSchema: GitHubOperation.SyncOptions,
+  // The interval belongs to this trigger; nothing on the binding mirrors it.
+  trigger: Trigger.specTimer(GITHUB_SYNC_CRON),
+  // Polls run on EDGE, where the sync operation is registered, so they continue with no client open.
+  remote: true,
+};
+
+/**
+ * Contributes GitHub's two `ConnectorSpec.Connector` entries: one acting as the user who connects,
+ * one as DXOS's GitHub App installed on an account or org. Both wire the same sync operations and
+ * target materializer to the `'github.com'` source; plugin-connector routes by `connectorId`.
  *
  * Sync targets are repositories, not organizations — orgs and their members
  * are auto-pulled as a side effect of syncing any repo they own.
@@ -77,18 +126,29 @@ export default Capability.makeModule(
         id: GITHUB_PROVIDER_ID,
         source: GITHUB_SOURCE,
         label: 'GitHub',
+        kind: 'user',
+        mcp: () => GITHUB_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.GITHUB,
           scopes: [],
         },
-        sync: {
-          operation: GitHubOperation.SyncGitHubRepositories,
-          getTargets: GitHubOperation.GetGitHubRepositories,
-          materializeTarget: GitHubOperation.MaterializeGitHubTarget,
-          optionsSchema: GitHubOperation.SyncOptions,
-        },
+        sync,
         onTokenCreated,
         testConnection,
+      },
+      {
+        id: GITHUB_APP_PROVIDER_ID,
+        source: GITHUB_SOURCE,
+        label: 'GitHub App',
+        kind: 'app',
+        mcp: () => GITHUB_MCP_ENDPOINT,
+        oauth: {
+          provider: OAuthProvider.GITHUB,
+          scopes: [],
+        },
+        sync,
+        onTokenCreated: onAppTokenCreated,
+        testConnection: testAppConnection,
       },
     ]);
   }),

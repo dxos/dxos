@@ -81,15 +81,23 @@ export const Convert = Operation.make({
     key: DXN.make('org.dxos.operation.illustrator.convert'),
     name: 'Convert Drawing',
     description:
-      'Moves a drawing onto another variant (renderer) by re-applying its scene to a fresh canvas of that variant, e.g. to make a read-only SVG drawing editable in Excalidraw. Shapes not managed by the scene DSL are not carried over.',
+      "Converts a drawing to another variant (renderer), e.g. to make a read-only SVG drawing editable in Excalidraw: by default into a new drawing beside it, leaving the source as it is; with `replace`, in place. A variant's own converter is used when one is registered; otherwise the drawing's scene is re-applied to a fresh canvas, which fails on shapes the scene DSL does not manage.",
     icon: 'ph--swap--regular',
   },
   input: Schema.Struct({
     drawing: Ref.Ref(Drawing.Drawing).annotate({ description: 'The drawing to convert.' }),
     variant: Schema.String.annotate({ description: 'Target variant id (canvas typename), e.g. `excalidraw.com/2`.' }),
+    replace: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Convert the drawing in place, dropping its old canvas, rather than into a new drawing beside it.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     ...SceneOutput,
+    drawing: Ref.Ref(Drawing.Drawing).annotate({
+      description: 'The converted drawing: the new copy, or the source when replaced.',
+    }),
     upserted: Schema.Array(Schema.String).annotate({ description: 'Object ids written to the new canvas.' }),
   }),
   services: [Capability.Service, Database.Service],
@@ -111,6 +119,9 @@ export const Draw = Operation.make({
         '`group <id> ["label"] [right-of|below… <group>] { node… edge… }`, `edge <a>[:side|side] -> <b>[:side] ["label"] [via x,_ | _,y] [bus]`',
         '(`~` before a relation makes it soft; `<->` two arrows; `a -> b, c bus` one trunk), `diagram [flow=down|right]`; the engine places and routes the rest.',
         'In place of `->` an edge may name its relationship, left end being the child/whole/owner/one side: `extends`, `implements`, `composes`, `owns`, `one-to-many`, `many-to-many`, `depends-on`.',
+        '`diagram kind=sequence` draws participants (nodes, `role=actor` for a person) as columns and messages (edges) as rows in source order:',
+        '`calls` opens an activation that `returns` closes, `sends` is asynchronous; `note <a>[, <b>] "…"`, `fragment alt|opt|loop|par|break|critical ["guard"] { … } [else ["guard"] { … }]`.',
+        '`diagram kind=dataflow` gives each node `role=process|store|external` (default process) and labels each edge with the data that flows.',
         'Scene statements are `object <id> [@ <x>,<y>] [scale=] [index=] [ref=] { <element>* }`,',
         '`elements <objectId> { … }`, `move <id> @ <x>,<y>`, `remove object <id>`, `remove elements <id> <ids…>`.',
         'An element is `<kind> <id> <geometry> ["label"] <name=value>*` where kind is rect/ellipse/diamond/triangle',
@@ -142,12 +153,16 @@ export const Draw = Operation.make({
   services: [Capability.Service, Database.Service],
 });
 
+/**
+ * @deprecated Mermaid input is deprecated; write the semantic diagram DSL and call {@link Draw}, which covers
+ * structure, sequence and data-flow diagrams.
+ */
 export const Generate = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.illustrator.generate'),
     name: 'Generate Drawing',
     description:
-      'Replaces a drawing with a diagram compiled from a mermaid description (flowchart or classDiagram). The dialect owns layout, so no coordinates are supplied.',
+      'DEPRECATED: use Draw with the semantic diagram DSL instead. Replaces a drawing with a diagram compiled from a mermaid description (flowchart or classDiagram). The dialect owns layout, so no coordinates are supplied.',
     icon: 'ph--graph--regular',
   },
   input: Schema.Struct({
@@ -175,7 +190,7 @@ export const Score = Operation.make({
     description:
       'Grades the drawing as laid out, on one 0–1 scale (1 is good): each layout constraint (pass 1 / fail 0) and cost ' +
       'term (crossings, overlapping arrows, overlapping labels, bends, length, gaps, compactness), their overall score, ' +
-      'and the diagnostics behind them. Call after Generate to decide what to change before regenerating.',
+      'and the diagnostics behind them. Call after Draw to decide what to change before drawing again.',
     icon: 'ph--gauge--regular',
   },
   input: Schema.Struct({

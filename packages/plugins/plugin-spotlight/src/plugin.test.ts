@@ -6,15 +6,18 @@ import { describe, test } from 'vitest';
 
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { SpotlightPlugin } from '#plugin';
+import * as SpotlightPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { SpotlightNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [SpotlightPlugin.make()] });
+
+const moduleId = (name: string) => `${SpotlightNamespace.key}.module.${name}`;
 
 describe('SpotlightPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [SpotlightPlugin()],
+      plugins: [SpotlightPlugin.make()],
     });
 
     // These are dependency-mode roots, so they all activate immediately. `#plugin` resolves the node

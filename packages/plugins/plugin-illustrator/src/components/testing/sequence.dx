@@ -1,0 +1,21 @@
+diagram kind=sequence
+node User "User" role=actor
+node App "Composer"
+node Edge "EDGE router"
+node Db "Space DB"
+edge User -> App "open space"
+edge App calls Edge "query(spaceId)"
+edge Edge calls Db "load docs"
+edge Db returns Edge "docs"
+note Edge "merges with local state"
+edge Edge returns App "objects"
+fragment loop "every 5s" {
+  edge App sends Edge "sync heartbeat"
+}
+fragment alt "cached" {
+  edge App calls App "read cache"
+} else "miss" {
+  edge App calls Edge "fetch"
+  edge Edge returns App "rows"
+}
+note App, Edge "replicated over WebSocket"

@@ -97,18 +97,18 @@ the task graph owns it (echo-query `prebuild-lezer` is the template).
       measure React reachability and cannot see unmet `requires` or missing config
 - [x] DESIGN.md refreshed: §5.4 escape hatch marked removed (zero `overrides.*.ts` remain), §5.6
       estimates replaced with the landed counts, §6.2 inbox entry corrected, §6.4 corrected to
-      record the plugin-computer exception
+      record the plugin-dev-shell exception
 - [x] **Verify the merge is green.** The merge commit was pushed with the test sweep still
       running and five suites failing (`pipeline-discord`, `plugin-calls`, `plugin-sample`,
       `plugin-transformer`, `plugin-zen`); three match the known 15s-timeout flake, two were never
       examined. Its own message says the sweep is NOT part of its verification
-- [ ] Tag `plugin-computer` (or add the check below and let it force the issue). It has
+- [ ] Tag `plugin-dev-shell` (or add the check below and let it force the issue). It has
       `src/capabilities/index.ts`, no `composer-plugin` tag, and an unconditioned `#capabilities`.
       Safe today only because both its modules are headless families and its barrel imports no
       React. See DESIGN.md §6.4
 - [ ] Check that fails when a package has `src/capabilities/index.ts` but lacks the
       `composer-plugin` tag. Four plugins have slipped this net so far (plugin-google,
-      plugin-jmap, plugin-lingo, plugin-computer), and it will keep happening. Inverts the
+      plugin-jmap, plugin-lingo, plugin-dev-shell), and it will keep happening. Inverts the
       default from opt-in-to-safety to opt-out-deliberately
 - [ ] `plugin-client`'s `plugin.test.ts > modules activate on the expected events` needs a timeout
       above vitest's 15s default. Measured at 12.5s against a 15s budget, so it flakes under
@@ -249,10 +249,10 @@ belong to its tracking, not to a project whose mechanism they describe:
 
 Three items outlive the mechanism and want their own issues:
 
-- **`plugin-computer` is untagged**, with a barrel and an unconditioned `#capabilities`. Safe only
+- **`plugin-dev-shell` is untagged**, with a barrel and an unconditioned `#capabilities`. Safe only
   because its two modules are headless families and its barrel imports no React.
 - **No check that a capabilities barrel implies the `composer-plugin` tag.** Eight plugins have
-  slipped it — google, jmap, lingo, computer, claude-agents, stream-deck, lametric, mobile — three
+  slipped it — google, jmap, lingo, dev-shell, claude-agents, stream-deck, lametric, mobile — three
   of them in a single day's merges. Until it exists, every merge from main reopens the hole.
 - **Guard-target drift**: 8 guards trace `--to "@dxos/react-ui"` where 79 trace
   `{react,react-dom}`, so a bare `import from 'react'` passes the narrower ones — the exact leak

@@ -18,6 +18,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
+import { markMilestone } from '@dxos/util';
 
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
@@ -114,10 +115,17 @@ export default Capability.makeModule(
       // A reload drops every change only this page holds. The reconnect hands those to the new worker,
       // so the reload waits until it has them, and is skipped while it does not: a broken session the
       // user can still save from beats a clean one without their changes. A reset discards them anyway.
-      client.services.reconnected?.on(async () => {
+      //
+      // A tab that reconnected to a worker it now owns does not reload: its reload releases the leader
+      // lock and kills that worker, so the other tab reconnects and reloads in turn, forever.
+      client.services.reconnected?.on(async ({ isOwner }) => {
         if (client.resetting) {
           log.info('client reset, reloading to the app root');
           window.location.href = window.location.origin;
+          return;
+        }
+        if (isOwner) {
+          log.info('client reconnected to a worker this tab now leads, not reloading');
           return;
         }
         if (!(await saveUnsavedChanges(client))) {
@@ -136,6 +144,7 @@ export default Capability.makeModule(
           spacesAvailableFired = true;
           // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
           performance.mark('milestone:spaces-ready');
+          markMilestone('spaces.ready');
           const exit = await Effect.gen(function* () {
             yield* Plugin.activate(ClientEvents.SpacesAvailable);
             if (onSpacesAvailable) {

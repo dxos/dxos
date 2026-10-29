@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { PreviewNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [PreviewNamespace.key]: {
         'unable-to-create-preview.message': 'No preview',
         'todo.label': 'To do',
         'in-progress.label': 'In progress',

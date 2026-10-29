@@ -193,3 +193,61 @@ describe('DXN.NameSchema', () => {
     expect(isName('dxn:com.example.type.thing')).toBe(false); // already a full DXN, not a bare name
   });
 });
+
+describe('DXN mnemonic suffix', () => {
+  const name = 'dxn:network.dxos.team.features.mcp.codeMode';
+  const parse = (value: string): DXN.DXN => {
+    const dxn = DXN.tryMake(value);
+    if (dxn === undefined) {
+      throw new Error(`Invalid DXN: ${value}`);
+    }
+    return dxn;
+  };
+
+  test('tryMake accepts a mnemonic after the name or the version', ({ expect }) => {
+    expect(DXN.tryMake(`${name}#ABC123`)).toBe(`${name}#ABC123`);
+    expect(DXN.tryMake(`${name}#abc123`)).toBe(`${name}#abc123`);
+    expect(DXN.tryMake(`${name}:1.0.0#ABC123`)).toBe(`${name}:1.0.0#ABC123`);
+  });
+
+  test('tryMake rejects a malformed mnemonic', ({ expect }) => {
+    expect(DXN.tryMake(`${name}#`)).toBeUndefined();
+    expect(DXN.tryMake(`${name}#ABC12`)).toBeUndefined();
+    expect(DXN.tryMake(`${name}#ABC1234`)).toBeUndefined();
+    // Crockford base32 excludes I, L, O and U.
+    expect(DXN.tryMake(`${name}#ABCIL0`)).toBeUndefined();
+    expect(DXN.tryMake(`${name}#ABC123:1.0.0`)).toBeUndefined();
+  });
+
+  test('getName and getVersion ignore the mnemonic', ({ expect }) => {
+    const dxn = parse(`${name}:1.2.3#ABC123`);
+    expect(DXN.getName(dxn)).toBe('network.dxos.team.features.mcp.codeMode');
+    expect(DXN.getVersion(dxn)).toBe('1.2.3');
+    expect(DXN.getVersion(parse(`${name}#ABC123`))).toBeUndefined();
+  });
+
+  test('getMnemonic returns the suffix uppercased', ({ expect }) => {
+    expect(DXN.getMnemonic(parse(`${name}#abc123`))).toBe('ABC123');
+    expect(DXN.getMnemonic(parse(name))).toBeUndefined();
+  });
+
+  test('withMnemonic sets and replaces the suffix; withoutMnemonic removes it', ({ expect }) => {
+    const plain = parse(name);
+    const linked = DXN.withMnemonic(plain, 'abc123');
+    expect(linked).toBe(`${name}#ABC123`);
+    expect(DXN.withMnemonic(linked, 'ZZZ999')).toBe(`${name}#ZZZ999`);
+    expect(DXN.withoutMnemonic(linked)).toBe(name);
+    expect(DXN.withoutMnemonic(plain)).toBe(name);
+    expect(() => DXN.withMnemonic(plain, 'bad')).toThrow();
+  });
+
+  test('NameSchema rejects a name with a mnemonic', ({ expect }) => {
+    expect(Schema.is(DXN.NameSchema)('network.dxos.team.features.mcp.codeMode')).toBe(true);
+    expect(Schema.is(DXN.NameSchema)('network.dxos.team.features.mcp.codeMode#ABC123')).toBe(false);
+  });
+
+  test('make never builds a DXN with a mnemonic', ({ expect }) => {
+    const nsid: string = 'network.dxos.team.features.mcp.codeMode#ABC123';
+    expect(() => DXN.make(nsid)).toThrow();
+  });
+});

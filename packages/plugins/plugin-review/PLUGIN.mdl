@@ -40,6 +40,7 @@ The following extension dialects are used in this document.
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## External types & capabilities
 
@@ -245,13 +246,14 @@ service HistoryProvider
 ```
 
 ```mdl
-service AgentRunner
+service CommentAgentRunner
   desc: |
-    Capability that executes one agent turn for a thread + subject. Default implementation performs
-    one LanguageModel.generateText call with edit tools registered per turn (editAnchoredRange,
-    updateDocument). Stub implementations are used in storybook + tests.
+    `AppCapabilities.CommentAgentRunner` (@dxos/app-toolkit): executes one agent turn for a thread +
+    subject after the triggering message is in the thread's feed. plugin-assistant contributes it
+    (a hidden chat per thread, running on the thread's feed, bound to the subject); stories and tests
+    pass a stub through `ReviewPluginOptions.agentRunner`. Without one the agent never fires.
   methods:
-    run(input: { thread: Thread, subject: Obj.Any }) -> Effect<void>
+    run(input: { thread: Thread, subject: Obj.Any, message: Message }) -> Effect<void>
 ```
 
 ## Operations
@@ -263,36 +265,50 @@ op Create
   key: org.dxos.operation.review.create
   desc: Create a (staged) comment thread anchored to a subject; seeds CommentsState.drafts.
   input: { subject: Obj.Any, anchor?: String, name?: String, branch?: String }
+```
 
+```mdl
 op AddMessage
   key: org.dxos.operation.review.addMessage
   desc: |
     Append a user message to a thread (promoting a staged draft to active). Evaluates the agent
     trigger gate and schedules RespondToThread when it passes.
   input: { subject: Obj.Any, anchor: AnchoredTo, sender: Actor, text: String }
+```
 
+```mdl
 op Delete
   key: org.dxos.operation.review.delete
   desc: Delete a thread + its anchor. Undoable via Restore.
   input: { anchor: AnchoredTo, subject: Obj.Any, thread?: Thread }
   output: { thread?: Thread, anchor?: AnchoredTo }
+```
 
+```mdl
 op Restore
   key: org.dxos.operation.review.restore
   desc: Inverse of Delete.
   input: { thread: Thread, anchor: AnchoredTo }
+```
 
+```mdl
 op DeleteMessage
   key: org.dxos.operation.review.deleteMessage
   desc: Delete a single message from a thread. Undoable via RestoreMessage.
-  input: { anchor: AnchoredTo, subject: Obj.Any, messageId: String }
-  output: { message?: Message, messageIndex?: Number }
+  input: { anchor: AnchoredTo, subject: Obj.Any, message: Message }
+  output: { message?: Message }
+```
 
+```mdl
 op RestoreMessage
   key: org.dxos.operation.review.restoreMessage
   desc: Inverse of DeleteMessage.
-  input: { anchor: AnchoredTo, message: Message, messageIndex: Number }
+  input: { anchor: AnchoredTo, message: Message }
+  note: Re-appends the message to the thread's feed with its id; the thread reads messages in `created` order, so it
+    returns to its place.
+```
 
+```mdl
 op SetResolved
   key: org.dxos.operation.review.setResolved
   desc: Set thread.status to active or resolved.
@@ -301,22 +317,34 @@ op SetResolved
   note: |
     Renamed from ToggleResolved, and not only a rename: the caller now states the status it wants
     rather than flipping whatever is current, so `resolved` is required.
+```
 
+```mdl
 op Select
   key: org.dxos.operation.review.select
   desc: Set the currently-selected thread (CommentsState.current); omit `current` to clear it.
   input: { current?: String }
+```
 
+```mdl
 op RespondToThread
   key: org.dxos.operation.review.respondToThread
   desc: Run one agent turn against a thread. Scheduled by AddMessage when the gate passes.
-  input: { thread: Ref<Thread>, subject: Ref<Obj.Any> }
+  input: { thread: Ref<Thread>, subject: Ref<Obj.Any>, messageId: ObjectId }
+  note: |
+    Writes a pending reply in the agent's name, runs the turn through `AppCapabilities.CommentAgentRunner` (3-minute
+    timeout), then removes the pending reply, or rewrites it as a failure notice when the turn fails. An edit that
+    collapsed the thread's anchored range is re-anchored to the changed text.
+```
 
+```mdl
 op SetAgentConfig
   key: org.dxos.operation.review.setAgentConfig
   desc: Mutate thread.agent. Undefined config means off.
   input: { thread: Ref<Thread>, config?: AgentConfig }
+```
 
+```mdl
 op CreateProposals
   key: org.dxos.operation.review.createProposals
   desc: |
@@ -345,7 +373,9 @@ component CommentsArticle
   props:
     attendableId?: String
     subject: Obj.Any
+```
 
+```mdl
 component ObjectHistory
   desc: |
     Generic History companion (gated by HistoryProvider): the git-graph Timeline of checkpoints,
@@ -354,7 +384,9 @@ component ObjectHistory
     binding). Nested branch-of-branch is guarded off (flat registry).
   props:
     subject: Obj.Any
+```
 
+```mdl
 component Suggestions
   desc: |
     Review companion for a document's `kind:'suggestion'` branches: SuggestionSources resolves live
@@ -375,7 +407,9 @@ component Suggestions
     reject: { group: SuggestionGroup }
     select: { group: SuggestionGroup }
     toggleAuthor: { author: String }
+```
 
+```mdl
 component SuggestionAuthors
   desc: |
     Per-author visibility toggles: one dx-tag chip per suggesting author in the author's hue, the
@@ -385,7 +419,9 @@ component SuggestionAuthors
     authors: { author: String, label: String, hue: Hue, hidden: Boolean }[]
   emits:
     toggle: { author: String }
+```
 
+```mdl
 component SuggestionThread
   desc: |
     Renders grouped changes as change-block tiles (before/after) with Accept/Reject, tinted with the
@@ -398,7 +434,9 @@ component SuggestionThread
     authorLabels?: Map<String, String>
     authorHues?: Map<String, String>
     selected?: { author: String, from: Number, to: Number }
+```
 
+```mdl
 component SuggestionSources
   desc: |
     Headless enumerator (render-prop + onResolved callback). Renders one invisible probe per active
@@ -409,13 +447,17 @@ component SuggestionSources
     document: VersionedObject
     authorHues?: Map<String, String>
     onResolved?: (resolved: ResolvedSuggestionBranch[]) -> void
+```
 
+```mdl
 component VersionToolbar
   desc: |
     Editor banner for non-ambient selections: checkpoint / branch / fork context, the
     Base | Diff | Branch selector for a selected branch, and return-to-now. Ambient review has no
     banner — the view-mode dropdown is the only control.
+```
 
+```mdl
 component AgentToggle
   desc: |
     Per-thread radio popover hung off the thread header. Three states off / mention / auto; shows
@@ -448,7 +490,9 @@ feat F-1: Version-aware editor binding (the same-view invariant)
 
   req F-1.5: After a view-mode dropdown selection the editor MUST regain focus with its caret
     intact; the editor MUST NOT steal focus on ambient/programmatic mode changes.
+```
 
+```mdl
 feat F-2: Suggestion rendering
 
   req F-2.1: A suggestion MUST render as the author's proposed text in the author's colour, replaced
@@ -469,7 +513,9 @@ feat F-2: Suggestion rendering
   req F-2.5: Toggling an author's visibility MUST remove that author's decorations, change bars and
     cards for this user only (source-level filter, session-local hiddenAuthors); the branches
     themselves are untouched.
+```
 
+```mdl
 feat F-3: Review workflow
 
   req F-3.1: Accept MUST fold exactly one change into main (cursor-anchored cherry-pick, undoable);
@@ -481,7 +527,9 @@ feat F-3: Review workflow
 
   req F-3.3: The editor and the companion MUST share one current-change selection (viewAspect):
     click either side to reveal the other.
+```
 
+```mdl
 feat F-4: Version history
 
   req F-4.1: Checkpoint/fork/base views MUST render historical content read-only from detached
@@ -490,7 +538,9 @@ feat F-4: Version history
   req F-4.2: The History companion (gated per-type by HistoryProvider) MUST expose checkpoints,
     branch tips, forks and merges on a git-graph timeline, with create/merge/discard actions;
     sub-branching is guarded off while the registry is flat.
+```
 
+```mdl
 feat F-5: Comment threads
 
   req F-5.1: The comment extension MUST create anchored threads from selections, keep AnchoredTo
@@ -502,7 +552,9 @@ feat F-5: Comment threads
 
   req F-5.3: Mutations MUST route through operations (never direct schema writes from views);
     Delete/DeleteMessage MUST be undoable.
+```
 
+```mdl
 feat F-6: Per-thread agent
 
   req F-6.1: Thread.agent gates AI involvement (absent/disabled = none); the trigger gate fires only
@@ -510,6 +562,12 @@ feat F-6: Per-thread agent
     AgentIdentity.name; responses append as assistant messages; runner errors never lose the user's
     message.
 
+  req F-6.2: A new thread on any subject takes its agent config from the `commentAgentMode` setting
+    (`off` | `auto` | `mention`, default `mention`); `off` creates a user-only thread. A thread saved
+    without a config follows the current setting.
+```
+
+```mdl
 feat F-7: Independence & testability
 
   req F-7.1: The plugin MUST NOT import other plugins' source; all cross-plugin wiring is via
@@ -534,43 +592,57 @@ scenario T-1: Shared scenarios (both tiers)
     suggestion a clean insert anchored before text typed at it, and hold editor focus after every
     dropdown selection; a multi-word bold wrap is ONE atomic suggestion; a suggested table is a
     clean block insertion; a table-cell edit stays inside the cell.
+```
 
+```mdl
 scenario T-2: Same-view swap
   given: The DocumentVersioning / SuggestingSwapTest play
   when: Suggesting is entered, typed into, and exited through the real dropdown
   then: One .cm-content DOM node and one EditorView across the whole round-trip; the caret survives;
     the edit lands on the branch as a tracked change and renders as the user's suggestion on exit.
+```
 
+```mdl
 scenario T-3: Lifecycle model
   given: The deriveBinding and applyViewModeSelection tables (review-lifecycle.test.ts)
   when: Every posture/selection/resolution combination is derived
   then: Subjects, keys, editability and loading match the tables; a stale readonly view mode cannot
     survive into Suggesting.
+```
 
+```mdl
 scenario T-4: Branch reconciliation (I-2)
   given: An existing suggestion branch with a stale anchor (main advanced), edited or not
   when: Suggesting is re-entered (find-or-create)
   then: The SAME branch id is returned; main's progress is folded in (CRDT); the author's edits
     survive; main's text never renders as the author's deletion.
+```
 
+```mdl
 scenario T-5: Diff-layer invariants (ui-editor review suite)
   given: diffHunks / pairMarkupHunks / rebaseHunks / cherryPickHunk unit tests
   then: Hunks are minimal; word replaces keep word granularity; delimiter pairs coalesce and apply
     atomically; a doc insertion at a trailing pure-insert anchor stays behind the proposal; applying
     every hunk reconstructs the proposal.
+```
 
+```mdl
 scenario T-6: Per-author visibility (F2.7)
   given: The AuthorVisibilityTest play (two seeded authors)
   when: One author is toggled off and back on in the companion
   then: That author's overlay and cards disappear and return; the other author is untouched; the
     branches survive.
+```
 
+```mdl
 scenario T-7: Comment/agent behaviour
   given: The comment operation and trigger-gate unit tests
   then: Auto mode responds once per user message; mention mode gates on @name; assistant messages
     and resolved threads never trigger; delete/restore round-trips; runner failures keep the user's
     message and emit `comments.agent.failed`.
+```
 
+```mdl
 scenario T-8: Walkthroughs
   given: TEST-PLAN.md F1–F6 against the DocumentVersioning / CommentsArticle stories
   then: The agent pre-runs every automatable step headlessly; a human pass confirms feel (latency,
@@ -610,14 +682,19 @@ test QA-1: Comment on a document, reply, and resolve
       capture: created
       expect: a staged comment thread appears in the CommentsArticle companion, anchored to the
         selection
-      assert: return !!$result.thread
+      assert: return !!$result.threadId
 
     - name: Add a message
       do: Type "please fix this" and press Enter to send.
       invoke: org.dxos.operation.review.addMessage { subject: $given.doc, anchor: $created.anchor, sender: $given.identity, text: "please fix this" }
       capture: added
       expect: the message appears in the thread, promoting it from staged to active
-      assert: return $result.thread.messages.some((m) => m.id === $added.message?.id)
+      assert: |
+        const { Filter, Obj, Query } = window.__DXOS__;
+        const db = Obj.getDatabase($given.doc);
+        const [thread] = await db.query(Filter.id($created.threadId)).run();
+        const messages = await db.query(Query.select(Filter.everything()).from(await thread.feed.load())).run();
+        return messages.some((message) => message.blocks.some((block) => block.text === 'please fix this'));
 
     - name: Resolve the thread
       do: Click the checkmark on the thread header.
@@ -631,3 +708,25 @@ test QA-1: Comment on a document, reply, and resolve
       expect: the thread no longer appears in the companion
 ```
 
+## Changelog
+
+```mdl
+decision D-1: The `commentAgentMode` setting moves here from plugin-markdown and applies to comment threads on every subject, not only Markdown documents; the default is `mention`.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [F-6.2]
+```
+
+```mdl
+decision D-2: Comment threads keep their messages in a feed the thread owns (`Thread` 0.3.0, migrated from 0.2.0), and plugin-assistant runs agent turns on that feed through `AppCapabilities.CommentAgentRunner`; the plugin's own LLM runner is deleted. Design: `docs/COMMENT-FEEDS.md`.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [F-6.1, F-6.2, CommentAgentRunner]
+```
+
+```mdl
+decision D-3: While an agent turn runs the thread shows a pending reply in the agent's name, which the reply replaces; an agent edit that replaces the anchored text keeps the comment on the edited text; `@`-mentions complete from the agent and the space's members and render as atomic pills in the mentioned actor's hue.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [RespondToThread, F-6.2]
+```

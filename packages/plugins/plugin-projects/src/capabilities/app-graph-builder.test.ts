@@ -9,20 +9,27 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { SpecDocument } from '@dxos/types';
 
+import { Feature, Spec } from '#types';
+
+import { attach } from '../operations/feature/util.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
   ARTIFACTS_SEGMENT,
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
+  createSpecBreakdownsExtension,
+  createSpecDocumentCompanionExtension,
 } from './app-graph-builder.ts';
 
 describe('project app graph builder', () => {
@@ -76,6 +83,62 @@ describe('project app graph builder', () => {
     ]);
     expect(actions[0].properties.disposition).toEqual('list-item-primary');
   });
+
+  test("lists the specs that break down a spec's features as its children, nested to any depth", async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const root = yield* Database.add(Spec.make({ name: 'DXOS' }));
+        const addFeature = Effect.fn(function* (spec: Spec.Spec, name: string) {
+          const feature = yield* Database.add(Feature.make({ name, status: 'planned' }));
+          attach(spec, feature);
+          return feature;
+        });
+        const addBreakdown = Effect.fn(function* (feature: Feature.Feature) {
+          const breakdown = yield* Database.add(Spec.make({ name: feature.name }));
+          Obj.update(feature, (feature) => {
+            feature.spec = Ref.make(breakdown);
+          });
+          return breakdown;
+        });
+
+        // Two features with breakdowns, added in reverse of the order they are listed in, and one without.
+        const sync = yield* addFeature(root, 'Sync');
+        yield* addFeature(root, 'Search');
+        const compose = yield* addFeature(root, 'Compose');
+        const composeSpec = yield* addBreakdown(compose);
+        const syncSpec = yield* addBreakdown(sync);
+        const drafts = yield* addFeature(syncSpec, 'Drafts');
+        const draftsSpec = yield* addBreakdown(drafts);
+        yield* Database.flush();
+
+        const extensions = yield* createSpecBreakdownsExtension();
+        const children = yield* Effect.promise(() => getSubjectChildren(root, extensions));
+        expect(children.map((node) => node.data)).toEqual([syncSpec, composeSpec]);
+        const grandchildren = yield* Effect.promise(() => getSubjectChildren(syncSpec, extensions));
+        expect(grandchildren.map((node) => node.data)).toEqual([draftsSpec]);
+        expect(yield* Effect.promise(() => getSubjectChildren(draftsSpec, extensions))).toEqual([]);
+      }).pipe(Effect.provide(TestDatabaseLayer({ types: [Spec.Spec, Feature.Feature] }))),
+    );
+  });
+
+  test("contributes the spec's document as a companion, and nothing while it holds none", async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const extensions = yield* createSpecDocumentCompanionExtension();
+        const bare = yield* Database.add(Spec.make({ name: 'Bare' }));
+        expect(yield* Effect.promise(() => getSubjectCompanions(bare, extensions))).toEqual([]);
+
+        const document = yield* Database.add(SpecDocument.make({ name: 'PLUGIN.mdl', content: '# Spec' }));
+        const spec = yield* Database.add(Spec.make({ name: 'DXOS' }));
+        Obj.update(spec, (spec) => {
+          spec.document = Ref.make(document);
+        });
+        yield* Database.flush();
+        const companions = yield* Effect.promise(() => getSubjectCompanions(spec, extensions));
+        expect(companions.map((node) => node.data)).toEqual([document]);
+      }).pipe(Effect.provide(TestDatabaseLayer({ types: [Spec.Spec, Feature.Feature, SpecDocument.SpecDocument] }))),
+    );
+  });
 });
 
 const SUBJECT_ID = 'subject';
@@ -118,4 +181,12 @@ const getSubjectChildren = async (subject: unknown, extensions: AppGraphBuilder.
   const context = await setupSubject(subject, extensions);
   await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID));
   return context.registry.get(context.graph.connections(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'child'));
+};
+
+const getSubjectCompanions = async (subject: unknown, extensions: AppGraphBuilder.BuilderExtension[]) => {
+  const context = await setupSubject(subject, extensions);
+  await context.expand(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'companion');
+  return context.registry.get(
+    context.graph.connections(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID), 'companion'),
+  );
 };

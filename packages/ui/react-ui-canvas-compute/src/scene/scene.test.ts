@@ -8,7 +8,16 @@ import { describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type Link, type Node, createMemoryStore, createViewSchema, nodePorts } from '@dxos/react-ui-canvas/scene';
+import {
+  type Link,
+  type Node,
+  createLocalHistory,
+  createMemoryStore,
+  createViewSchema,
+  nodePorts,
+  storeVersions,
+  withHistory,
+} from '@dxos/react-ui-canvas/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';
 import { computeNodeDefs, computeNodeRegistry } from '../registry.ts';
@@ -46,7 +55,7 @@ const setup = () => {
     }
     return node.node;
   };
-  return { model, update, projection, scene, nodeOf, computeIdOf };
+  return { model, registry, store, update, projection, scene, nodeOf, computeIdOf };
 };
 
 const line = (id: string, source: Link['source'], target: Link['target']): Link => ({
@@ -169,8 +178,16 @@ describe('compute projection', () => {
     expect(scene().nodes[gpt.id]).toBeUndefined();
   });
 
-  test('restoring a snapshot brings the compute graph back with it', ({ expect }) => {
-    const { model, projection, scene, nodeOf, computeIdOf } = setup();
+  test('undoing an edit brings the compute graph back with the scene', ({ expect }) => {
+    const { model, registry, store, projection: compute, scene, nodeOf, computeIdOf } = setup();
+    const history = createLocalHistory()({
+      registry,
+      store: storeVersions(registry, store),
+      context: () => ({ path: [], selection: [] }),
+      view: {},
+    });
+    const projection = withHistory(compute, history);
+    history.view.projection = projection;
     const gpt = nodeOf('gpt');
     const gptCompute = computeIdOf('gpt');
     const nodes = model.nodes.length;
@@ -178,17 +195,15 @@ describe('compute projection', () => {
     const links = Object.keys(scene().links).length;
     const incident = model.edges.filter((edge) => edge.source === gptCompute || edge.target === gptCompute).length;
     expect(incident).toBeGreaterThan(0);
-    const before = projection.snapshot();
     projection.apply({ kind: 'delete', ids: [gpt.id] });
     expect(model.findNode(gptCompute)).toBeUndefined();
     expect(model.edges.length).toBe(edges - incident);
-    projection.restore(before);
+    history.undo();
     expect(model.findNode(gptCompute)?.type).toBe('gpt');
     expect(model.nodes.length).toBe(nodes);
     expect(model.edges.length).toBe(edges);
     expect(Object.keys(scene().links).length).toBe(links);
 
-    const created = projection.snapshot();
     const node = computeNodeRegistry.constant.create({
       id: 'k',
       z: 'z',
@@ -197,7 +212,7 @@ describe('compute projection', () => {
     });
     projection.apply({ kind: 'create', node });
     expect(model.nodes.length).toBe(nodes + 1);
-    projection.restore(created);
+    history.undo();
     expect(model.nodes.length).toBe(nodes);
     expect(scene().nodes.k).toBeUndefined();
   });

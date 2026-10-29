@@ -43,38 +43,23 @@ Non-goals for the prototype: freehand drawing, cross-scene links, multiplayer cu
 ```
  drawing model (source of truth)      projection (layout)                 surface (render + interact)
  ┌──────────────────────────┐        ┌──────────────────────────┐        ┌──────────────────────────┐
- │ 1 freehand: Scene cells  │──id──▶ │ positioned Scene         │──atom─▶│ Canvas / SceneLayer   │
+ │ 1 freehand: View nodes   │──id──▶ │ positioned View          │──atom─▶│ Canvas / SceneLayer   │
  │   with center/size       │◀─set── │                          │◀intent─│ control frame, ports,    │
  ├──────────────────────────┤        ├──────────────────────────┤        │ camera, selection, tools │
- │ 2 constrained: DSL       │──solve▶│ positioned Scene         │──atom─▶│                          │
+ │ 2 constrained: DSL       │──solve▶│ positioned View          │──atom─▶│                          │
  │   (commands/constraints) │◀rewrite│                          │◀intent─│                          │
  ├──────────────────────────┤        ├──────────────────────────┤        │                          │
- │ 3 dynamic: ECHO graph    │─layout▶│ positioned Scene         │──atom─▶│                          │
+ │ 3 dynamic: ECHO graph    │─layout▶│ positioned View          │──atom─▶│                          │
  │   + optional overrides   │◀overr.─│ (engine + overrides)     │◀intent─│                          │
  └──────────────────────────┘        └──────────────────────────┘        └──────────────────────────┘
 ```
 
-**Projection seam** (the only thing the surface knows):
-
-```ts
-type Projection = {
-  scene: Atom<Scene>; // positioned nodes and links; re-emitted on every model change
-  apply: (intent: Intent) => void; // may reject, partially apply, or rewrite the model
-  capabilities: { move?: boolean; resize?: boolean; link?: boolean; create?: boolean };
-};
-
-type Intent =
-  | { kind: 'move'; ids: CellId[]; delta: Point }
-  | { kind: 'resize'; id: CellId; bounds: Bounds }
-  | { kind: 'link'; link: Link }
-  | { kind: 'create'; node: Node }
-  | { kind: 'delete'; ids: CellId[] }
-  | { kind: 'reorder'; id: CellId; z: string };
-```
+**Projection seam** (the only thing the surface knows): `type:Projection` and the operations in `SPEC.mdl`. The
+surface reads a positioned View and emits intents; the variants differ only in what an intent means.
 
 | Variant           | Model                                                                                                                   | `project`                                                                                                                                                                 | `apply(move A by Δ)`                                                                                                                                                     | Existing pieces to reuse                                                                |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| **1 freehand**    | `Scene` with stored `center/size` (tldraw-like)                                                                         | identity                                                                                                                                                                  | writes `center`                                                                                                                                                          | the spike                                                                               |
+| **1 freehand**    | `View` with stored `center/size` (tldraw-like)                                                                          | identity                                                                                                                                                                  | writes `center`                                                                                                                                                          | the spike                                                                               |
 | **2 constrained** | a DSL: `plugin-illustrator` `Scene.Command`s, or cardinal constraints (`A east of B`, `A aligned with B`, `A inside G`) | a solver (cardinal constraints → longest-path ranks per axis, then packing); or a dialect's `compile`                                                                     | classifies the drop against neighbours and **rewrites the constraint** (A dragged left of B → `A west of B`), then re-solves; ambiguous drops are rejected and snap back | illustrator `dialect.ts`, `layout.ts` (`rank`), `uml-grid.ts`, `ortho-router.ts`        |
 | **3 dynamic**     | an external ECHO graph (objects + relations)                                                                            | a layout engine (illustrator `Layout.rank`, dagre, ELK) produces cells and links; an `Overlay {positions, collapsed, labels}` (react-ui-diagram's pattern) applies on top | fixed layout: reject; hybrid: write an override into the `Overlay`; graph edits re-run the engine and overrides that still resolve survive                               | react-ui-diagram `types/diagram.ts` (`Overlay`), `model/layout.ts`; illustrator engines |
 
@@ -82,8 +67,8 @@ Variant 2 needs a **relative coordinate system** in the DSL: constraints are exp
 (`grid`, `lanes`, `radial` later). The solver for the prototype is deliberately small: cardinal relations only,
 one rank pass per axis, equal cell sizes, snapped to the grid.
 
-Mixed scenes are allowed at the cell level in phase 2 (a freehand scene containing a portal to a dynamic scene is
-already supported, since the projection is per scene).
+Mixed Views are allowed (a freehand View containing a `view` node onto a dynamic View is supported, since the
+projection is per View).
 
 ## 3b. Reusing plugin-illustrator's DSL mechanism
 
@@ -124,41 +109,14 @@ planned in §9; the `projections/*` modules become thin dialect wrappers. Decisi
 
 ## 4. Data model
 
-> The container terms below (scene, frame, composite, layer) are being reconciled into Views, Objects and Tags:
-> see [VIEWS.md](./VIEWS.md).
-
-```ts
-Point  = { x, y }            Size = { width, height }
-Camera = { x, y, zoom }      // screen = (scene + {x, y}) * zoom
-
-Scene = { id, name?, nodes: Record<NodeId, Node>, links: Record<LinkId, Link> }   // positioned; the surface's input
-
-NodeBase = { id, type: string, z: string /* fractional index */, locked?, center: Point, size: Size, ports?: Port[], style?: NodeStyle }
-NodeStyle = { hue?: Hue /* theme hue: fill, text and border */, rounded?, fill?, border?, guide? /* dashed, unfilled */, className? }   // frame look; absent = default
-Rect     = NodeBase & { type: 'rect', label? }
-Ellipse  = NodeBase & { type: 'ellipse', label? }                // inscribed in the frame
-Class    = NodeBase & { type: 'class', name, attributes: string[], methods: string[] }   // UML
-Note     = NodeBase & { type: 'note', text }
-View     = NodeBase & { type: 'view', scene: ViewId }                // stored `type: 'frame'` reads as `view`
-BuiltinNode = Rect | Ellipse | Class | Note | View              // the engine's own; a host type is NodeBase & its fields
-Object   = NodeBase & { type: 'object', size: Size, object: Ref, overrides? }   // phase 2: Surface + derived props
-
-LinkBase = { id, type, z, locked?, source: Endpoint, target: Endpoint, ends?: { start?: Marker, end?: Marker } }
-Line     = LinkBase & { type: 'line' }
-Curve    = LinkBase & { type: 'curve' }                       // cubic, tangent along each port's normal
-Spline   = LinkBase & { type: 'spline', points: Point[] }     // rounded polyline bending around the points
-Endpoint = { node: NodeId, port?: PortId } | { point: Point } // no port = automatic (closest appropriate pair); a point = free end
-Marker   = 'arrow' | 'circle'
-
-NodeDef  = { type, name, icon, key, group?, schema, component, create(props), defaultSize, portsPerSide?, ports?(node), resizable?, minSize?, openable? }   // registry
-LinkDef  = { type, name, icon, key }
-Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; drawn at the nearest major grid line */, accepts?: 'in'|'out'|'any' }
-```
+The authoritative model — the Ontology (View, Object, Instance, Tag), the types and the intents — is
+`SPEC.mdl` (`org.dxos.ui.react-ui-canvas`). This section keeps the reasoning behind the node, link and port
+types; `VIEWS.md` keeps the reasoning behind the containers.
 
 - **Open node types** (decision 1, M1): the engine works on `NodeBase` (every node has a centre and a size, so
   placing, hit testing, ports and routes need no registry) and narrows to its built-ins with guards
   (`isRectNode`, …). A host registers its own types with their schema, view, `create` and ports, and builds its
-  scene schema with `createViewSchema(defs.map((def) => def.schema))`, so validation stays exact per type; the
+  View schema with `createViewSchema(defs.map((def) => def.schema))`, so validation stays exact per type; the
   palette groups types by `NodeDef.group`. A type the registry does not know renders as a frame with its name.
 - **Port direction** (decision 2): `Port.accepts` (`in`, `out`, default either) filters `pairPorts` and the drop
   target (a link leaves an `out` port and lands on an `in` port; a node with no acceptable port takes no drop),
@@ -173,7 +131,7 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
   The registry only renders and declares ports and flags; the projection never depends on it.
 - `contentBounds(scene)` is derived: union of node frames plus padding, grown to the major grid; an empty scene
   has none. Fit frames it; nothing draws it.
-- **Derived properties**: an `Object` node's displayed props (label, icon, colour, summary, ports) come from a
+- **Derived properties**: an ECHO-object node's displayed props (label, icon, colour, summary, ports) come from a
   `projector(obj) → NodeProps` chosen by the object's type, merged under `node.overrides`. Rendering goes through
   `Surface` so plugins own the card body; the projector only supplies what the frame and ports need.
 - **Text parts** (`parts.ts`): a node type renders its text through `TextPart`s named by the property they edit
@@ -203,8 +161,8 @@ Port     = { id, side: 'n'|'e'|'s'|'w', offset: number /* 0..1 along the side; d
   diamond handles and the midpoint of every span as a dot: drag a diamond to move a point, drag a dot to add
   one there and move it in the same gesture, double-click on the spline inserts one at the nearest segment,
   alt-click removes one; each is an `update` of `points`.
-- A scene referenced from two portals is a Muse "linked card"; nothing forbids it.
-- Ephemeral state (selection, hover, drag offset, camera, scene path, tool, last link type) lives in per-view
+- A View opened by two `view` nodes is a Muse "linked card"; nothing forbids it.
+- Ephemeral state (selection, hover, drag offset, camera, View path, tool, last link type) lives in per-view
   atoms, never in the model.
 
 ## 4b. Layers and data structures as built
@@ -225,14 +183,14 @@ Four layers, each one an Effect atom the next one subscribes to; nothing below a
 
 | Layer          | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Data structure                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Store**      | Every scene of a document, by id (`store.ts`). In memory now; the ECHO `Canvas.content` map in phase 3. Writes go through `updateView(registry, store, id, fn)`, a no-op when `fn` returns the same object.                                                                                                                                                                                                                                                         | `ViewStore = { scenes: Atom.Writable<Record<ViewId, Scene>>, scene(id): Atom<Scene \| undefined> }`; the per-id atom is derived and cached so a view subscribes to exactly the scene it shows.                                                                                                                                                                                                                                                                                                                                           |
-| **Projection** | The meaning of an intent for one scene (`projection.ts`, `projections/*`). `freehand` is the identity (`reduceIntent`, a pure reducer over `Scene`); `constrained` keeps a `ConstrainedModel {nodes, constraints}` and re-solves; `dynamic` keeps a `GraphModel {nodes, edges}` plus an `Overlay {positions}` and re-lays out. Each returns a `Projection` over its own atoms.                                                                                      | `Projection = { scene: Atom<Scene>, apply(intent), capabilities }`. `Intent = move {ids, delta} \| resize {id, bounds} \| link {link} \| create {node} \| delete {ids} \| reorder {id, z} \| update {id, values}`. `Capabilities` flags which intents the projection accepts; the surface greys out the rest.                                                                                                                                                                                                                            |
+| **Store**      | Every View and Object definition of a document, by id (`store.ts`): in memory for stories, plugin-canvas's ECHO records for a drawing. Writes go through `updateView(registry, store, id, fn)`, a no-op when `fn` returns the same object.                                                                                                                                                                                                                          | `ViewStore = { views: Atom.Writable<Record<ViewId, View>>, view(id): Atom<View \| undefined>, styles?, isRoot?, versions? }` (SPEC.mdl `type:ViewStore`); the per-id atom is derived and cached so a canvas subscribes to exactly the View it shows.                                                                                                                                                                                                                                                                                     |
+| **Projection** | The meaning of an intent for one View (`projection.ts`, `projections/*`). `freehand` is the identity (`reduceIntent`, a pure reducer over `View`); `constrained` keeps a `ConstrainedModel {nodes, constraints}` and re-solves; `dynamic` keeps a `GraphModel {nodes, edges}` plus an `Overlay {positions}` and re-lays out. Each returns a `Projection` over its own atoms.                                                                                        | `Projection = { scene: Atom<View>, apply(intent), capabilities, model? }` (SPEC.mdl `type:Projection`); the intents are SPEC.mdl's operations. `Capabilities` flags which intents the projection accepts; the surface greys out the rest.                                                                                                                                                                                                                                                                                                |
 | **View state** | Everything ephemeral for one view (`atoms.ts`): the camera, the scene path (breadcrumbs), selection, hover, the active tool, the grid/snap toggle, the in-flight drag and the drill history. Created by `createCanvasAtoms(root)` and optionally owned by the host, so two views of one scene stay independent and a panel (properties, constraint list) shares the view's selection.                                                                               | `CanvasAtoms = { camera: Atom.Writable<Camera>, path: Atom.Writable<ViewId[]>, selection: Atom.Writable<ReadonlySet<CellId>>, hover, tool: Tool, snap: boolean, drag: Drag \| undefined, history: {entries, index} }`. `Drag` is a union of the pointer machine's states: `pan {last}`, `marquee {from, to, additive}`, `move {ids, origin, anchor, delta}`, `resize {id, handle, start, bounds}`, `link {source, from, to, target?}`, `create {tool, from, to}`; the transient result is rendered, the intent is emitted on pointer-up. |
 | **Surface**    | Rendering and gestures (`Canvas.tsx`, `SceneLayer.tsx`, `ControlFrame.tsx`). `Canvas` reads the atoms, runs the pointer state machine and key handling, and calls `projection.apply`. `SceneLayer` renders one scene under one CSS transform: a `div` per placed cell (component from the registry) and an `svg` of link paths; a live portal mounts a nested read-only layer. `ControlFrame` draws the selection outline, handles, ports, marquee and rubber band. | `NodeRegistry = Record<NodeType, NodeDef>` and `LinkRegistry = Record<LinkType, LinkDef>` (decision 12); the palette is generated from both. `LinkGeometry = { link, path, source: RouteEnd, target: RouteEnd }` is computed per render from `pairPorts` + `curvePath`. `Tier = dot \| preview \| live` per portal from its screen size with hysteresis.                                                                                                                                                                                 |
 
-The model on the wire between the layers is the positioned `Scene` of §4: `{ id, name?, nodes, links }` with typed `Node`s (centre plus per-type properties) and typed `Link`s (endpoints plus, for a spline, control points), every element carrying `{ id, type, z, locked? }`. Scene bounds, hit tests, port positions and link routes are all derived from it (`hit.ts`, `ports.ts`, `route.ts`, `camera.ts`) and never stored; `order.ts` supplies the fractional `z` keys.
+The model on the wire between the layers is the positioned `View` (SPEC.mdl `type:View`): `{ id, name?, nodes, links, … }` with typed `Node`s (centre plus per-type properties) and typed `Link`s (endpoints plus, for a spline, control points), every element carrying `{ id, type, z, locked? }`. Scene bounds, hit tests, port positions and link routes are all derived from it (`hit.ts`, `ports.ts`, `route.ts`, `camera.ts`) and never stored; `order.ts` supplies the fractional `z` keys.
 
-Data flow for one gesture: pointer-down hit-tests the positioned scene in scene coordinates → the surface writes a `Drag` atom → each move updates the drag's transient geometry (snapped for a node gesture; a link band follows the pointer and snaps on release) and the surface renders the scene with `reduceIntent` applied locally for preview → pointer-up emits one `Intent` → the projection applies, rewrites or rejects it and writes its model (the store, a constraint set, an overlay) → the projection's `scene` atom re-emits → the surface re-renders. The undo unit is the intent.
+Data flow for one gesture: pointer-down hit-tests the positioned scene in scene coordinates → the surface writes a `Drag` atom → each move updates the drag's transient geometry (snapped for a node gesture; a link band follows the pointer and snaps on release) and the surface renders the scene with `reduceIntent` applied locally for preview → pointer-up emits one `Intent` → the projection applies, rewrites or rejects it and writes its model (the store, a constraint set, an overlay) → the projection's `scene` atom re-emits → the surface re-renders. The undo unit is the committed edit (SPEC.mdl [F-4.1]).
 
 ## 4c. Prototypes (designed 2026-10-07; type prototypes built)
 
@@ -452,6 +410,7 @@ a scene by mode.)
 | Properties                      | Geometry reads as Column / Row and Span X / Span Y (whole cells, step 1) via `fieldOverrides`; the scene's spec when nothing is selected.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Switching on                    | Every node is quantized once; a shape landing on occupied cells moves to the nearest free cells, in z-order, as one undoable batch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Snap and lattice toggles        | Snap (G) on with the lattice toggle (Shift+G, shown only on a lattice scene) on is lattice mode; snap on with the lattice off snaps to the basic grid; snap off is free. The projection reads both per intent (`constrained`), so outside lattice mode intents apply as freehand. Smart links route through the gutters whenever the lattice toggle is on, snap or not. A shape left off the lattice snaps onto it the next time it is moved. The guides toggle only hides the cells, which show only while the lattice is on.                                                                                                                                                                                        |
+| Dynamic projection              | The dynamic projection takes the same spec (`DynamicOptions.lattice`): it ranks the graph one node per cell and snaps moved nodes' overrides onto free cells, so a derived graph (a feature map) shows the same guides.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 **Lanes and crossings.** Routing each link on its own puts parallel links on the same gutter centre line,
 drawn on top of each other. The standard answer, from VLSI routing and orthogonal connector routing

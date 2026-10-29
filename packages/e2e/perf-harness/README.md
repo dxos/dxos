@@ -7,7 +7,7 @@ A flow is described once, in a `.mdl` QA test, and executed once, as a Playwrigh
 
 - Flows: [`composer-app/spec/PERF.mdl`](../../apps/composer-app/spec/PERF.mdl)
 - Specs: `composer-app/src/playwright/perf-*.spec.ts`, task `composer-app:e2e-perf`
-- Nightly: [`.depot/workflows/perf-nightly.yml`](../../../.depot/workflows/perf-nightly.yml)
+- Nightly: [`.github/workflows/perf-nightly.yml`](../../../.github/workflows/perf-nightly.yml)
 
 ## Where to start
 

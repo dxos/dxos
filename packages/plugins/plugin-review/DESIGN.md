@@ -195,7 +195,8 @@ Therefore:
   sequence.
 - The `!test` CI exclusions on the interactive stories are debt, not policy: each excluded play must
   either be made CI-stable or replaced by one that is. A feature whose only coverage is manual is
-  treated as uncovered.
+  treated as uncovered. `DocumentVersioning.stories.tsx` is excluded as a whole until its plays are
+  fixed.
 - The walkthrough scripts live in [TEST-PLAN.md](./TEST-PLAN.md) (F1–F6); the agent runs them
   headlessly before they are ever handed to a human.
 

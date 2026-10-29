@@ -38,6 +38,9 @@ export type ConstructDatabaseProps = {
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 
+  /** Starts a new space epoch whose root is the given document; enables `beginMigration`. */
+  createEpoch?: (rootUrl: string) => Promise<void>;
+
   /**
    * Run a reactive query for a set of dynamic schema.
    * @default true
@@ -181,7 +184,7 @@ export class EchoClient extends Resource {
     this._dbUpdateSubscriptions.clear();
     for (const db of this._databases.values()) {
       this._graph._unregisterDatabase(db.spaceId);
-      await db.close();
+      await db.close(ctx);
     }
     this._databases.clear();
   }
@@ -195,6 +198,7 @@ export class EchoClient extends Resource {
     spaceKey,
     branchStore,
     documentRetention,
+    createEpoch,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -210,6 +214,7 @@ export class EchoClient extends Resource {
       spaceKey,
       branchStore,
       documentRetention,
+      createEpoch,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);

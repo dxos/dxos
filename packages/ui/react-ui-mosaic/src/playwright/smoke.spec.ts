@@ -4,7 +4,7 @@
 
 import { type Page, expect, test } from '@playwright/test';
 
-import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl, warmStory } from '@dxos/test-utils/playwright';
 
 import { BoardManager } from './board-manager.ts';
 
@@ -19,12 +19,16 @@ test.describe('Board', () => {
   let board: BoardManager;
   let close: () => Promise<void>;
 
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(180_000);
+    await warmStory(browser, STORY_URL, (warm) =>
+      warm.getByTestId('board-column').first().waitFor({ state: 'visible', timeout: 150_000 }),
+    );
+  });
+
   test.beforeEach(async ({ browser }) => {
     ({ page, close } = await setupPage(browser, { url: STORY_URL }));
-    // Generous, and explicit: storybook compiles the story on first request, so whichever test runs
-    // first pays it. Waiting here attributes a slow story load to this locator rather than reporting a
-    // bare `beforeEach` timeout.
-    await page.getByTestId('board-column').first().waitFor({ state: 'visible', timeout: 45_000 });
+    await page.getByTestId('board-column').first().waitFor({ state: 'visible' });
     board = new BoardManager(page.locator('body'));
   });
 

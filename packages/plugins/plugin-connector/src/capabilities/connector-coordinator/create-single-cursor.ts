@@ -39,7 +39,7 @@ export const createSingleCursor = (
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<SingleCursorResult | undefined, never> =>
   Effect.gen(function* () {
-    const accessToken = yield* Database.load(connection.accessToken);
+    const accessToken = yield* Database.load(Connection.getAccessToken(connection));
     const account = accessToken.account;
     let target: Obj.Unknown | undefined;
     if (existingTarget) {
@@ -75,11 +75,13 @@ export const createSingleCursor = (
     const adopted = yield* Binding.prepare({
       target,
       accessToken,
-      source: connection.accessToken,
+      source: Connection.getAccessToken(connection),
     });
     const cursor =
       adopted ??
-      (yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) })));
+      (yield* Database.add(
+        Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(target) }),
+      ));
     invariant(Cursor.isExternal(cursor));
     log.info('bound single-target connector', {
       connectorId: connection.connectorId,

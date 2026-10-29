@@ -71,7 +71,7 @@
   --color-r1-surface: light-dark(oklch(0.986 0.001 190), var(--dx-surface-chrome));
   /* The sidebars' landmark edges, lifted from the expanded sidebar tone and fixed rather than
      surface-derived, so a collapsed sidebar (which wears the rail's darker tone) keeps the same line
-     as the expanded one. L1 takes `subdued-separator`'s lift; R1, `separator`'s. */
+     as the expanded one. L1 takes `separator-subtle`'s lift; R1, `separator`'s. */
   --color-l1-separator: oklch(
     from var(--color-l1-surface) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c h
   );
@@ -169,7 +169,7 @@
   /*
    * Separators. Fixed neutrals collided with the surfaces they divide once the ladder inverted:
    * in light mode `separator` was neutral-200, the same value as the base canvas, and
-   * `subdued-separator` matched the sidebar exactly — both invisible. The offsets below reproduce
+   * `separator-subtle` matched the sidebar exactly — both invisible. The offsets below reproduce
    * the dark-mode appearance they had (0.166 / 0.115 / 0.089 / 0.064 above the base surface) and
    * mirror it in light.
    */

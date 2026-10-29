@@ -1,0 +1,277 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type PlotValue } from '@dxos/react-ui-plot';
+
+/**
+ * A short timeline for stories and tests: a header row, then one event per row from 1945 to 2028 (with a Wikipedia
+ * image where one is free to use), dated by month or by year. Categories nest by path: `Tech/` (Hardware, Software, AI),
+ * and `Macro` with its financial- (FIC), tech- (TIC) and military-industrial (MIC) complexes.
+ */
+export const technologyTimeline: PlotValue[][] = [
+  ['Date', 'Category', 'Event', 'Description', 'Image'],
+  [
+    '1945-12',
+    'Tech/Hardware',
+    'ENIAC',
+    'The first general-purpose electronic computer runs its first job: a thermonuclear-weapon calculation for Los Alamos.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/ENIAC_Penn1.jpg/500px-ENIAC_Penn1.jpg',
+  ],
+  [
+    '1961-01',
+    'Macro/MIC',
+    'Military–industrial complex named',
+    'In his farewell address, Eisenhower warns against the unwarranted influence of the military–industrial complex.',
+    'https://upload.wikimedia.org/wikipedia/commons/1/15/Eisenhower_farewell.jpg',
+  ],
+  [
+    '1970-01',
+    'Tech/Software',
+    'Unix epoch',
+    'Unix time counts seconds from 00:00:00 UTC on 1 January 1970.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/1000000000_seconds_since_Unix_time_epoch.jpg/500px-1000000000_seconds_since_Unix_time_epoch.jpg',
+  ],
+  [
+    '1981-06',
+    'Macro/FIC',
+    'Volcker shock',
+    'The Fed raises rates to about 20% to break inflation.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Paul_A._Volcker_%28James_D._Wolfensohn%29_am_19._Symposium_1989-HSGH_022-000765_%28cropped%29_%282%29.jpg/500px-Paul_A._Volcker_%28James_D._Wolfensohn%29_am_19._Symposium_1989-HSGH_022-000765_%28cropped%29_%282%29.jpg',
+  ],
+  [
+    '1981-08',
+    'Tech/Hardware',
+    'IBM PC',
+    'IBM’s open-architecture PC makes the personal computer a business standard.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/IBM_Personal_Computer_badge_recreation.svg/500px-IBM_Personal_Computer_badge_recreation.svg.png',
+  ],
+  [
+    '1984-01',
+    'Tech/Hardware',
+    'Macintosh',
+    'Apple’s Macintosh brings the mouse and graphical interface to the mass market.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Computer_macintosh_128k%2C_1984_%28all_about_Apple_onlus%29.jpg/500px-Computer_macintosh_128k%2C_1984_%28all_about_Apple_onlus%29.jpg',
+  ],
+  ['1985-11', 'Tech/Software', 'Microsoft Windows', 'Windows 1.0 brings a graphical shell to MS-DOS.', null],
+  [
+    '1987-10',
+    'Macro/FIC',
+    'Black Monday',
+    'The Dow falls 22.6% in a single day.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/S%26P_500_index_around_the_time_of_the_crash.png/500px-S%26P_500_index_around_the_time_of_the_crash.png',
+  ],
+  [
+    '1989-11',
+    'Macro',
+    'Berlin Wall falls',
+    'The border opens and the Cold War division of Europe ends.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1c/West_and_East_Germans_at_the_Brandenburg_Gate_in_1989.jpg/500px-West_and_East_Germans_at_the_Brandenburg_Gate_in_1989.jpg',
+  ],
+  [
+    '1991-01',
+    'Macro/MIC',
+    'Gulf War',
+    'Precision-guided munitions are shown on live television.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/USAF_F-16A_F-15C_F-15E_Desert_Storm_edit2.jpg/500px-USAF_F-16A_F-15C_F-15E_Desert_Storm_edit2.jpg',
+  ],
+  [
+    '1991-08',
+    'Tech/Software',
+    'World Wide Web',
+    'Tim Berners-Lee publishes the first website at CERN.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Chrome_on_Linux.png/500px-Chrome_on_Linux.png',
+  ],
+  [
+    '1991-09',
+    'Tech/Software',
+    'Linux',
+    'Linus Torvalds releases the Linux kernel.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/500px-Tux.svg.png',
+  ],
+  [
+    '1997-05',
+    'Tech/AI',
+    'Deep Blue beats Kasparov',
+    'IBM’s chess computer defeats the world champion in a match.',
+    'https://upload.wikimedia.org/wikipedia/commons/b/be/Deep_Blue.jpg',
+  ],
+  [
+    '1998-05',
+    'Macro/TIC',
+    'US v. Microsoft',
+    'Antitrust case over bundling Internet Explorer with Windows.',
+    'https://upload.wikimedia.org/wikipedia/commons/7/78/Seal_of_the_Court_of_Appeals_for_the_District_of_Columbia.png',
+  ],
+  [
+    '1998-09',
+    'Tech/Software',
+    'Google',
+    'Google incorporates and launches its PageRank search engine.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Googleplex_HQ_%28cropped%29.jpg/500px-Googleplex_HQ_%28cropped%29.jpg',
+  ],
+  [
+    '2000-03',
+    'Macro',
+    'Dot-com crash',
+    'The Nasdaq falls almost 80% from its peak by 2002.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/84/Nasdaq_Composite_dot-com_bubble.svg/500px-Nasdaq_Composite_dot-com_bubble.svg.png',
+  ],
+  [
+    '2001-09',
+    'Macro',
+    '9/11',
+    'Terrorist attacks on New York and Washington.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/WTC_smoking_on_9-11.jpeg/500px-WTC_smoking_on_9-11.jpeg',
+  ],
+  [
+    '2003-05',
+    'Macro/MIC',
+    'Palantir',
+    'Palantir is founded to build data analysis software for intelligence agencies.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Palantir_1_2018-09-06.jpg/500px-Palantir_1_2018-09-06.jpg',
+  ],
+  [
+    '2004-08',
+    'Macro/TIC',
+    'Google IPO',
+    'Google goes public.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Googleplex_HQ_%28cropped%29.jpg/500px-Googleplex_HQ_%28cropped%29.jpg',
+  ],
+  [
+    '2006-03',
+    'Tech/Software',
+    'AWS',
+    'Amazon launches S3 and EC2, starting the public cloud.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/500px-Amazon_Web_Services_Logo.svg.png',
+  ],
+  [
+    '2007-06',
+    'Tech/Hardware',
+    'iPhone',
+    'Apple’s iPhone starts the touchscreen smartphone era.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/IPhone_18_Pro_Vector.svg/500px-IPhone_18_Pro_Vector.svg.png',
+  ],
+  [
+    '2008-09',
+    'Macro',
+    'Financial crisis',
+    'Mortgage and credit default swap losses trigger a global crisis.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Lehman_Brothers_Times_Square_by_David_Shankbone.jpg/500px-Lehman_Brothers_Times_Square_by_David_Shankbone.jpg',
+  ],
+  [
+    '2008-09',
+    'Tech/Software',
+    'Android',
+    'Android 1.0 ships on the HTC Dream, Google’s open answer to the iPhone.',
+    null,
+  ],
+  ['2008-10', 'Macro/FIC', 'TARP bank bailout', 'Congress commits $700B to stabilize the banks.', null],
+  [
+    '2012-09',
+    'Tech/AI',
+    'AlexNet (CNNs)',
+    'A convolutional network wins ImageNet, launching modern deep learning.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/AlexNet_block_diagram.svg/500px-AlexNet_block_diagram.svg.png',
+  ],
+  [
+    '2015-12',
+    'Macro/TIC',
+    'OpenAI founded',
+    'A non-profit AI lab launches with $1B in pledges from backers including Sam Altman and Elon Musk.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/1515_Third_Street.jpg/500px-1515_Third_Street.jpg',
+  ],
+  [
+    '2016-03',
+    'Tech/AI',
+    'AlphaGo beats Lee Sedol',
+    'DeepMind’s program wins at Go, a decade ahead of expectations.',
+    null,
+  ],
+  ['2017-04', 'Macro/MIC', 'Project Maven', 'The Pentagon applies machine learning to drone footage.', null],
+  [
+    '2017-06',
+    'Tech/AI',
+    'Transformer paper',
+    '“Attention Is All You Need” introduces the transformer architecture.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Transformer%2C_full_architecture.png/500px-Transformer%2C_full_architecture.png',
+  ],
+  [
+    '2020-03',
+    'Macro',
+    'COVID',
+    'A global pandemic shuts down economies and accelerates remote work.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Covid-19_SP_-_UTI_V._Nova_Cachoeirinha.jpg/500px-Covid-19_SP_-_UTI_V._Nova_Cachoeirinha.jpg',
+  ],
+  [
+    '2022-03',
+    'Tech/Hardware',
+    'Nvidia H100',
+    'The data-center GPU that trains the large language models.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/NVIDIA_H100_%28%E6%9E%81%E5%AE%A2%E6%B9%BEGeekerwan%29_025.png/500px-NVIDIA_H100_%28%E6%9E%81%E5%AE%A2%E6%B9%BEGeekerwan%29_025.png',
+  ],
+  [
+    '2022-11',
+    'Tech/AI',
+    'ChatGPT (RLHF)',
+    'OpenAI releases ChatGPT, tuned with reinforcement learning from human feedback.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/OpenAI_logo_2025_%28symbol%29.svg/500px-OpenAI_logo_2025_%28symbol%29.svg.png',
+  ],
+  [
+    '2023-03',
+    'Macro/FIC',
+    'SVB collapse',
+    'Silicon Valley Bank fails in a fast, phone-driven bank run.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/3003_West_Tasman_Drive_entrance_2%2C_Santa_Clara%2C_California.jpg/500px-3003_West_Tasman_Drive_entrance_2%2C_Santa_Clara%2C_California.jpg',
+  ],
+  ['2023-03', 'Tech/AI', 'Claude', 'Anthropic releases its Claude assistant.', null],
+  [
+    '2024-08',
+    'Macro/TIC',
+    'Google ruled a monopolist',
+    'A federal judge rules Google illegally maintained its search monopoly.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png/500px-Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png',
+  ],
+  [
+    '2024-10',
+    'Tech/Hardware',
+    'Starship booster caught',
+    'The launch tower’s arms catch a returning Super Heavy booster.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/SpaceX_Starship_ignition_during_IFT-5.jpg/500px-SpaceX_Starship_ignition_during_IFT-5.jpg',
+  ],
+  [
+    '2027-02',
+    'Macro/MIC',
+    'Major internet disruption from bot attack',
+    'Speculative: an automated attack takes down large parts of the internet.',
+    null,
+  ],
+  [
+    '2028-12',
+    'Macro/TIC',
+    'US takes stake in BigAI',
+    'Speculative: the US government takes ownership stakes in the largest AI companies.',
+    null,
+  ],
+];
+
+/** The categories in the order they are listed and laid out. */
+export const technologyTimelineOrder = [
+  'Tech/Hardware',
+  'Tech/Software',
+  'Tech/AI',
+  'Macro',
+  'Macro/FIC',
+  'Macro/TIC',
+  'Macro/MIC',
+];
+
+/** Tech in shades of blue; each complex in its own hue. */
+export const technologyTimelineColors: Record<string, string> = {
+  'Tech/Hardware': 'blue-300',
+  'Tech/Software': 'blue-400',
+  'Tech/AI': 'blue-600',
+  'Macro/FIC': 'green',
+  'Macro/TIC': 'blue',
+  'Macro/MIC': 'rose',
+};

@@ -17,7 +17,15 @@ import { LogLevel, log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
 import { type Commit } from '../components/Timeline/index.ts';
-import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree.ts';
+import {
+  ROOT_SPAN_ID,
+  type Span,
+  buildSpanTree,
+  isRunAgainEnd,
+  isSpanBeginEvent,
+  isSpanEndEvent,
+  walkSpanTree,
+} from './span-tree.ts';
 
 /**
  * Branch name for top-level operation invocations.
@@ -329,14 +337,9 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       log('invalid trace event', { type: event.type });
       return undefined;
     }
-    // A `RunAgainError` (Operation.runAgain) is a scheduler yield, not a hard error: the trace records
-    // it as a failure tagged with the run-again error code, but it will be re-invoked. Detect it here
-    // and present it as a distinct warn-level state rather than folding it into failure. Fall back to
-    // the legacy message for events persisted before `errorCode` existed.
-    const incomplete =
-      event.data.outcome === 'failure' &&
-      (event.data.errorCode === Process.RUN_AGAIN_ERROR_CODE ||
-        (event.data.errorCode === undefined && event.data.error === Process.RUN_AGAIN_MESSAGE));
+    // A `RunAgainError` (Operation.runAgain) is a scheduler yield, not a hard error: it will be
+    // re-invoked. Present it as a distinct warn-level state rather than folding it into failure.
+    const incomplete = isRunAgainEnd(event);
     const presentation =
       event.data.outcome === 'success'
         ? { icon: ICONS.operationEndSuccess.icon, level: ICONS.operationEndSuccess.level, suffix: '' }
@@ -541,6 +544,10 @@ const isCompletedSpan = (span: Span): boolean => {
  * Both nested spans and top-level spans (whose parent is the synthetic root) are eligible
  * once they have completed: a span with no inner activity is collapsed regardless of where
  * it sits in the tree.
+ *
+ * A run (see `SpanMeta.run`) always collapses once it is over, and so does each of its
+ * invocations that has finished: while the run continues it is a branch with one commit per
+ * invocation, and when it is done it is one commit.
  */
 const isCollapsibleSpan = (span: Span, parent: Span | null, collapseCompletedSpans: boolean): boolean => {
   if (span.id === ROOT_SPAN_ID) {
@@ -548,6 +555,9 @@ const isCollapsibleSpan = (span: Span, parent: Span | null, collapseCompletedSpa
   }
   if (parent === null) {
     return false;
+  }
+  if (isCompletedSpan(span) && (span.meta.run || parent.meta.run)) {
+    return true;
   }
   if (span.events.length === 2 && span.children.length === 0) {
     const firstEvent = span.events[0];

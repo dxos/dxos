@@ -6,14 +6,16 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
+import { type Repo } from '@dxos/types';
 
-import { type Repository, RepositoryOperation, RepositoryService } from '#types';
+import { RepositoryOperation, RepositoryService } from '#types';
 
 /** The repository's space and id, as the service addresses it. */
-const resolve = Effect.fn(function* (repository: Ref.Ref<Repository.Repository>) {
+const resolve = Effect.fn(function* (repository: Ref.Ref<Repo.Repo>) {
   const { db } = yield* Database.Service;
   const loaded = yield* Database.load(repository);
-  return { spaceId: db.spaceId, repositoryId: loaded.id, service: yield* RepositoryService.Service };
+  const repositoryId = yield* RepositoryService.edgeIdOf(loaded).pipe(Effect.orDie);
+  return { spaceId: db.spaceId, repositoryId, service: yield* RepositoryService.Service };
 });
 
 export const branches = RepositoryOperation.GetBranches.pipe(

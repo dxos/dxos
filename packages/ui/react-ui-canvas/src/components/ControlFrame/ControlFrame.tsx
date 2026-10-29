@@ -12,7 +12,14 @@ import React, { memo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ControlPointRef, type Drag, type Handle, type LinkEnd, isMoving } from '../../engine/index.ts';
+import {
+  type ControlPointRef,
+  type Drag,
+  type Editing,
+  type Handle,
+  type LinkEnd,
+  isMoving,
+} from '../../engine/index.ts';
 import {
   type Bounds,
   type Capabilities,
@@ -28,17 +35,23 @@ import {
   type View,
   endpointNode,
   isPointEndpoint,
+  isPolylineNode,
   nodeDef,
 } from '../../model/index.ts';
 import {
   type LatticeSpec,
+  VERTEX_SNAP_PX,
+  type VertexShape,
   boundsFromPoints,
   curvePath,
   handlePoint,
+  hasVertices,
   linkGeometry,
   nodeBounds,
   nodePorts,
   oppositeSide,
+  polylineMidpoints,
+  polylineVertices,
   portPoint,
   viewLinkGeometry,
 } from '../../utils/index.ts';
@@ -77,6 +90,11 @@ export type ControlFrameProps = {
   /** `index` is where in the link's points a control point at `point` would be inserted. */
   onMidpointPointerDown?: (link: SplineLink, index: number, point: Point, event: React.PointerEvent) => void;
   onPointContextMenu?: (link: SplineLink, index: number, event: React.MouseEvent) => void;
+  /** The node in vertex edit mode: its vertices are drawn to drag, and its resize handles are not. */
+  vertexEditing?: Extract<Editing, { kind: 'vertices' }>;
+  onVertexPointerDown?: (node: Node, index: number, event: React.PointerEvent) => void;
+  /** `index` is where in the node's vertices one inserted at `point` would go. */
+  onVertexMidpointPointerDown?: (node: Node, index: number, point: Point, event: React.PointerEvent) => void;
 };
 
 /** The midpoint of every span of a spline's polyline, each with the index a control point there takes. */
@@ -113,6 +131,9 @@ export const ControlFrame = memo(
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    vertexEditing,
+    onVertexPointerDown,
+    onVertexMidpointPointerDown,
   }: ControlFrameProps) => {
     const unit = 1 / Math.max(zoom, 0.05);
     const handleSize = 8 * unit;
@@ -136,13 +157,17 @@ export const ControlFrame = memo(
           )
         : undefined;
     const single = selectedNodes.length === 1 ? selectedNodes[0] : undefined;
+    // A node locked while its vertices are edited keeps no handles, so nothing can still move them.
+    const editedNode = vertexEditing && capabilities.update ? scene.nodes[vertexEditing.id] : undefined;
+    const edited = editedNode?.locked ? undefined : editedNode;
     // Only the node under the pointer: every node's ports at once is a field of dots that hides the
     // diagram the user is drawing, and a link can start from a body now, so they are a refinement
     // rather than the only way in.
     const portNodes = new Set<Node>();
     const hovered = hover ? scene.nodes[hover] : undefined;
-    // A selected node shows its handles instead: ports on the same frame crowd them and the label.
-    if (hovered && capabilities.link && !selection.has(hovered.id)) {
+    // A selected node shows its handles instead: ports on the same frame crowd them and the label. While anything is
+    // selected, another node's ports would read as part of the selection, so hover shows them only with none.
+    if (hovered && capabilities.link && selection.size === 0) {
       portNodes.add(hovered);
     }
     // Pointer capture during a link drag suppresses hover, so the drop target shows its ports itself.
@@ -286,25 +311,39 @@ export const ControlFrame = memo(
         {/* A hovered link's ends go under a node's handles, so a resize handle on the same point still wins. */}
         {linkUnder && linkHandles(linkUnder, true)}
         {/* Handles after the ports so a handle wins where a port sits on the same point (a side centre). */}
-        {single && capabilities.resize && nodeDef(registry, single)?.resizable && !single.locked && (
-          <g>
-            {HANDLES.map((handle) => {
-              const point = handlePoint(nodeBounds(single), handle);
-              return (
-                <rect
-                  key={handle}
-                  x={point.x - handleSize / 2}
-                  y={point.y - handleSize / 2}
-                  width={handleSize}
-                  height={handleSize}
-                  className='fill-base-surface stroke-focus pointer-events-auto'
-                  strokeWidth={unit}
-                  style={{ cursor: cursorFor(handle) }}
-                  onPointerDown={(event) => onHandlePointerDown?.(single, handle, event)}
-                />
-              );
-            })}
-          </g>
+        {single &&
+          single.id !== edited?.id &&
+          capabilities.resize &&
+          nodeDef(registry, single)?.resizable &&
+          !single.locked && (
+            <g>
+              {HANDLES.map((handle) => {
+                const point = handlePoint(nodeBounds(single), handle);
+                return (
+                  <rect
+                    key={handle}
+                    x={point.x - handleSize / 2}
+                    y={point.y - handleSize / 2}
+                    width={handleSize}
+                    height={handleSize}
+                    className='fill-base-surface stroke-focus pointer-events-auto'
+                    strokeWidth={unit}
+                    style={{ cursor: cursorFor(handle) }}
+                    onPointerDown={(event) => onHandlePointerDown?.(single, handle, event)}
+                  />
+                );
+              })}
+            </g>
+          )}
+        {edited && hasVertices(edited) && (
+          <VertexHandles
+            node={edited}
+            closed={isPolylineNode(edited) && edited.params?.closed === true}
+            selected={vertexEditing?.vertex}
+            unit={unit}
+            onVertexPointerDown={onVertexPointerDown}
+            onVertexMidpointPointerDown={onVertexMidpointPointerDown}
+          />
         )}
         {/* A link's end and control-point handles all move it, so they follow the `update` capability together. */}
         {selectedLinks.map((link) => linkHandles(link, false))}
@@ -327,6 +366,7 @@ export const ControlFrame = memo(
             strokeWidth={portStroke}
           />
         )}
+        {drag?.kind === 'vertices' && <VertexBand drag={drag} unit={unit} />}
         {marquee && (
           <rect
             x={marquee.x}
@@ -369,3 +409,98 @@ export const ControlFrame = memo(
 );
 
 ControlFrame.displayName = 'ControlFrame';
+
+/**
+ * A line being drawn vertex by vertex: the segments placed, the next one following the pointer, and a dot per vertex;
+ * the first ringed while a press there would close the line.
+ */
+const VertexBand = ({ drag, unit }: { drag: Extract<Drag, { kind: 'vertices' }>; unit: number }) => {
+  const [first] = drag.points;
+  const last = drag.points[drag.points.length - 1];
+  const closing =
+    drag.points.length >= 3 && Math.hypot(drag.to.x - first.x, drag.to.y - first.y) <= VERTEX_SNAP_PX * unit;
+  return (
+    <g data-testid='vertex-band' className='pointer-events-none'>
+      <polyline
+        points={drag.points.map(({ x, y }) => `${x},${y}`).join(' ')}
+        className='fill-none stroke-focus'
+        strokeWidth={2 * unit}
+      />
+      <line
+        x1={last.x}
+        y1={last.y}
+        x2={closing ? first.x : drag.to.x}
+        y2={closing ? first.y : drag.to.y}
+        className='stroke-focus'
+        strokeWidth={2 * unit}
+        strokeDasharray={`${6 * unit} ${4 * unit}`}
+      />
+      {drag.points.map(({ x, y }, index) => (
+        <circle
+          key={index}
+          cx={x}
+          cy={y}
+          r={(index === 0 && closing ? 6 : 3) * unit}
+          className={index === 0 && closing ? 'fill-focus stroke-focus' : 'fill-base-surface stroke-focus'}
+          strokeWidth={unit}
+        />
+      ))}
+    </g>
+  );
+};
+
+type VertexHandlesProps = Pick<ControlFrameProps, 'onVertexPointerDown' | 'onVertexMidpointPointerDown'> & {
+  node: Node & VertexShape;
+  closed: boolean;
+  /** The vertex last pressed, which Delete removes. */
+  selected?: number;
+  unit: number;
+};
+
+/** A node's vertices in vertex edit mode: a small square to drag at each vertex and a dot to add one mid-segment. */
+const VertexHandles = ({
+  node,
+  closed,
+  selected,
+  unit,
+  onVertexPointerDown,
+  onVertexMidpointPointerDown,
+}: VertexHandlesProps) => {
+  const vertices = polylineVertices(node);
+  const size = 7 * unit;
+  return (
+    <g data-testid='vertex-handles'>
+      {/* Midpoints first, so a vertex wins wherever the two land on each other. */}
+      {polylineMidpoints(vertices, closed).map(({ index, point }) => (
+        <circle
+          key={`midpoint-${index}`}
+          data-testid='vertex-midpoint'
+          cx={point.x}
+          cy={point.y}
+          r={4 * unit}
+          // Solid, ringed in the canvas colour, so it reads over the line's own stroke.
+          className='fill-focus stroke-base-surface pointer-events-auto cursor-copy hover:stroke-focus'
+          strokeWidth={1.5 * unit}
+          onPointerDown={(event) => onVertexMidpointPointerDown?.(node, index, point, event)}
+        />
+      ))}
+      {vertices.map((point, index) => (
+        <rect
+          key={index}
+          data-testid='vertex-handle'
+          data-index={index}
+          x={point.x - size / 2}
+          y={point.y - size / 2}
+          width={size}
+          height={size}
+          className={mx(
+            'stroke-focus pointer-events-auto cursor-move hover:fill-focus',
+            selected === index ? 'fill-focus' : 'fill-base-surface',
+          )}
+          strokeWidth={unit}
+          onPointerDown={(event) => onVertexPointerDown?.(node, index, event)}
+        />
+      ))}
+    </g>
+  );
+};

@@ -24,15 +24,36 @@ import { Blog } from '#types';
 
 import { PublicationArticle } from './PublicationArticle.tsx';
 
-const POST_COUNT = 3;
+const POST_COUNT = 32;
 
-/** Builds a `Publication` with a handful of posts, each with a name and description. */
+const TOPICS = [
+  'Local-first software',
+  'Why our sync engine finally stopped losing edits after we rewrote conflict resolution from scratch',
+  'Designing for offline',
+  'CRDTs in practice',
+  'A field guide to schema migrations',
+  'Notes from the team offsite',
+  'Shipping smaller pull requests',
+  'What we learned running a public beta for six months with no marketing budget',
+];
+
+const SUMMARIES = [
+  'A short take.',
+  'How a small change in the data model removed an entire class of bugs, and what it cost us along the way.',
+  'Lessons, mistakes and a few charts.',
+  'We compare three approaches, measure each against real workloads, and explain why we picked the boring one. Includes the benchmarks, the trade-offs we accepted, and the open questions we still have.',
+];
+
+/** Builds a `Publication` with enough posts to scroll, varying title and summary lengths so tiles reflow. */
 const makeStoryPublication = (): Blog.Publication => {
   const publication = Blog.makePublication({ name: 'Story Publication' });
-  for (let i = 0; i < POST_COUNT; i++) {
+  for (let index = 0; index < POST_COUNT; index++) {
+    const topic = TOPICS[index % TOPICS.length];
+    const part = Math.floor(index / TOPICS.length);
     const post = Blog.makePost({
-      name: `Post ${i + 1}`,
-      description: `Summary for post ${i + 1}.`,
+      name: part === 0 ? topic : `${topic} (part ${part + 1})`,
+      // Every fifth post has no summary, as a fresh draft would.
+      description: index % 5 === 4 ? undefined : SUMMARIES[(index * 3) % SUMMARIES.length],
     });
     Obj.update(publication, (publication) => {
       publication.posts ??= [];

@@ -26,6 +26,7 @@ import {
   type EntityMeta,
   type QueueRef,
   type SourceRef,
+  buildQueueExpiryCondition,
   buildTypeDxnCondition,
   sourceRefs,
   splitSourceRefs,
@@ -92,8 +93,8 @@ const buildFtsSourceCondition = (
       sql`(${sql.or(
         queues.map((queue) =>
           queue.spaceId !== undefined
-            ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId})`
-            : sql`m.queueId = ${queue.queueId}`,
+            ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue, sql`m.updatedAt`)})`
+            : sql`(m.queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue, sql`m.updatedAt`)})`,
         ),
       )})`,
     );

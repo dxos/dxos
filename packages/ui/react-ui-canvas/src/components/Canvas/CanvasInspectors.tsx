@@ -43,15 +43,13 @@ import {
   viewOptions,
 } from '../../utils/index.ts';
 import {
-  AboutInspector,
-  type AboutStat,
   LayersInspector,
   ObjectsInspector,
   PropertiesInspector,
   type PropertiesInspectorProps,
   ViewsInspector,
 } from '../inspectors/index.ts';
-import { InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
+import { InspectorPanel, InspectorSection, type InspectorSectionDef } from '../panels/index.ts';
 import { SceneLayer } from '../SceneLayer/index.ts';
 import { useCanvasDocument, useCanvasNavigation, useCanvasSelection, useCanvasServices } from './CanvasContext.ts';
 
@@ -59,22 +57,40 @@ import { useCanvasDocument, useCanvasNavigation, useCanvasSelection, useCanvasSe
 // Properties
 //
 
-export type CanvasPropertiesProps = Pick<PropertiesInspectorProps, 'fields' | 'db' | 'getOptions' | 'overrides'> & {
+export type CanvasPropertiesProps = Pick<
+  PropertiesInspectorProps,
+  'fields' | 'db' | 'getOptions' | 'overrides' | 'groups' | 'onGroupsChange'
+> & {
   /** Narrows the scenes a scene shape may open (e.g. to the host's own, not those it shows from elsewhere). */
   sceneFilter?: (id: ViewId) => boolean;
 };
 
 /** The selected element's properties: shown while something is selected. */
-export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilter }: CanvasPropertiesProps) => {
+export const CanvasProperties = ({
+  fields,
+  db,
+  getOptions,
+  overrides,
+  groups,
+  onGroupsChange,
+  sceneFilter,
+}: CanvasPropertiesProps) => {
   const { projection, atoms, nodeRegistry, capabilities, store } = useCanvasServices('Canvas.Properties');
   const selection = useAtomValue(useCanvasSelection('Canvas.Properties').atoms.selection);
   const path = useAtomValue(useCanvasNavigation('Canvas.Properties').atoms.path);
   const scenes = useAtomValue(store.views);
   const options = useMemo(() => viewOptions(scenes, path, sceneFilter), [scenes, path, sceneFilter]);
 
-  // With nothing selected there is nothing to edit, so the section goes, docked or floating.
+  // Docked, the section keeps its place in the panel so the panes do not shift; floating, it goes with nothing to edit.
+  const docked = InspectorPanel.useDocked();
   if (selection.size === 0) {
-    return null;
+    return docked ? (
+      <InspectorSection section={PROPERTIES_INSPECTOR}>
+        <p className='p-2 text-sm text-fg-subtle' data-testid='properties-empty'>
+          Nothing selected
+        </p>
+      </InspectorSection>
+    ) : null;
   }
   return (
     <InspectorSection section={PROPERTIES_INSPECTOR}>
@@ -88,6 +104,8 @@ export const CanvasProperties = ({ fields, db, getOptions, overrides, sceneFilte
         overrides={overrides}
         viewOptions={options}
         styles={store.styles}
+        groups={groups}
+        onGroupsChange={onGroupsChange}
         readonly={!capabilities.update}
       />
     </InspectorSection>
@@ -193,13 +211,6 @@ const OBJECTS_INSPECTOR: InspectorSectionDef = {
   title: 'Objects',
   icon: 'ph--cube--regular',
   order: 2,
-};
-
-const ABOUT_INSPECTOR: InspectorSectionDef = {
-  id: 'about',
-  title: 'About',
-  icon: 'ph--info--regular',
-  order: 4,
 };
 
 //
@@ -408,30 +419,3 @@ export const CanvasObjects = () => {
 };
 
 CanvasObjects.displayName = 'Canvas.Objects';
-
-//
-// About
-//
-
-/** Counts of the scene's objects and the drawing's scenes: an inspector that never floats. */
-export const CanvasAbout = () => {
-  const { store, projection } = useCanvasDocument('Canvas.About');
-  const scene = useAtomValue(projection.scene);
-  const scenes = useAtomValue(store.views);
-  const stats = useMemo<AboutStat[]>(
-    () => [
-      { id: 'nodes', label: 'Nodes', value: Object.keys(scene.nodes).length },
-      { id: 'links', label: 'Links', value: Object.keys(scene.links).length },
-      { id: 'layers', label: 'Layers', value: Object.keys(scene.layers ?? {}).length },
-      { id: 'views', label: 'Views', value: Object.keys(scenes).length },
-    ],
-    [scene, scenes],
-  );
-  return (
-    <InspectorSection section={ABOUT_INSPECTOR}>
-      <AboutInspector stats={stats} />
-    </InspectorSection>
-  );
-};
-
-CanvasAbout.displayName = 'Canvas.About';

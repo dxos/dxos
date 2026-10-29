@@ -1,0 +1,13 @@
+---
+id: org.dxos.fixture.bad-decision
+name: Bad decision
+version: 0.1.0
+---
+
+## Changelog
+
+```mdl
+decision D-1: An agent decision that names nobody it acted for.
+  date: 2026-10-23
+  by: agent:claude-code
+```

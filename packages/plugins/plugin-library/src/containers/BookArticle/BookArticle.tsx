@@ -11,9 +11,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
 import { Book } from '#types';
 
+import { LibraryNamespace } from '../../namespace.ts';
 import { BookInfo } from './BookInfo.tsx';
 import { BookReader } from './BookReader.tsx';
 import { type EpubReaderHandle } from './EpubReader.tsx';
@@ -27,7 +27,7 @@ type ViewMode = 'info' | 'read';
  * (Info) and the inline content reader (Read). Private notes live in a separate markdown companion.
  */
 export const BookArticle = ({ subject, role }: BookArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LibraryNamespace.key);
   const [viewMode, setViewMode] = useState<ViewMode>('info');
   const readerRef = useRef<EpubReaderHandle>(null);
 

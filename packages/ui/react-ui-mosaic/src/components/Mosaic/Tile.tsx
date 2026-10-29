@@ -37,6 +37,7 @@ import {
   resizeAttributes,
   sizeStyle,
 } from '@dxos/react-ui-dnd';
+import * as Focus from '@dxos/react-ui/Focus';
 import * as Util from '@dxos/react-ui/Util';
 
 import { useMosaicContainerContext } from './MosaicContainerContext.ts';
@@ -62,6 +63,8 @@ type MosaicTileProps<TData = any, TLocation = DndLocation> = Util.ThemedClassNam
     current?: boolean;
     /** Whether this tile is selected (aria-selected). */
     selected?: boolean;
+    /** The tile's selection and activation from its container's `itemProps` (`Focus.ItemBinding`). */
+    binding?: Focus.ItemBinding;
     /**
      * Initial extent in rem (width when the container is horizontal, height when vertical).
      * Pair with a child `Mosaic.ResizeHandle` to make the tile user-resizable; the consumer
@@ -90,7 +93,8 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
       data: dataProp,
       draggable: draggableProp,
       current,
-      selected,
+      selected: selectedProp,
+      binding,
       size: sizeProp,
       onSizeChange,
       minSize,
@@ -102,6 +106,8 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
   ) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
+    const { 'aria-selected': boundSelected, ...bindingHandlers } = binding ? Focus.bindItem(binding) : {};
+    const selected = selectedProp ?? boundSelected;
 
     // State.
     const {
@@ -281,19 +287,18 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
         <ark.div
           asChild={asChild}
           {...rest}
+          {...bindingHandlers}
           {...(bounded && resizeAttributes)}
           {...(bounded && { style: { ...rest.style, ...sizeStyles } })}
           {...{
             'data-object-id': id,
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
-          role='listitem'
-          // Pair `current` / `selected` props with `aria-current` / `aria-selected`
-          // so the `dx-current` / `dx-selected` / `dx-hover` utilities (which key
-          // off those attributes) actually fire. Without this the props are purely
-          // advisory and the corresponding styling silently no-ops.
+          // A tile in a selection is an option, the role that carries `aria-selected`; the `current` / `selected` props
+          // pair with `aria-current` / `aria-selected` so the `dx-current` / `dx-selected` / `dx-hover` utilities fire.
+          role={selected === undefined ? 'listitem' : 'option'}
           aria-current={current ? 'true' : undefined}
-          aria-selected={selected ? 'true' : undefined}
+          aria-selected={selected}
           className={className}
           ref={composedRef}
         >

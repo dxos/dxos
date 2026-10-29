@@ -44,6 +44,29 @@ loopback port in place of the desktop app's helper relay, and bind the chat's sp
 workspace's `.agents/projects/space.yml`, as a project's code folder does: the project skill reads
 that binding before any call, and Composer's surface has no `whoami` to find the space otherwise.
 
+### Local agent host: the desktop sidecar and `vite dev`
+
+Three suites drive Claude Code through the agent server that the desktop app and the dev server host, each with the real
+`claude` CLI on the Anthropic API. They are opt-in with `DX_E2E_CLAUDE=1` (they skip without it, and without `claude` or a
+credential), and the first two need the bundled agent and sidecar built:
+
+```bash
+moon run plugin-claude:compile-agent plugin-claude:compile-agent-helper
+DX_E2E_CLAUDE=1 DX_ANTHROPIC_API_KEY=<key> moon run plugin-claude:test -- src/agents/claude-code.e2e.test.ts src/agent-helper/sidecar.e2e.test.ts
+DX_E2E_CLAUDE=1 DX_ANTHROPIC_API_KEY=<key> moon run plugin-dev-shell:test -- src/vite-plugin/agent-host.e2e.test.ts
+```
+
+| Suite                                                          | Path under test                                                                                       |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `src/agents/claude-code.e2e.test.ts`                           | The agent server in process with the real adapter: edits with and without asking, refusal, resume.    |
+| `src/agent-helper/sidecar.e2e.test.ts`                         | The compiled `dx-agent` sidecar the desktop app bundles, started as the Tauri launcher starts it.     |
+| `plugin-dev-shell/src/vite-plugin/agent-host.e2e.test.ts`      | The dev shell's agent-host route with its defaults (the bundled agent under `bun`), as `vite dev` runs it. |
+
+Each runs a turn through the page's `HelperClient` and `AcpAgent`, as `CodeAgent` wires Claude Code, and checks the file
+the agent wrote. `DX_CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) replaces the key, and `DX_E2E_CLAUDE_MODEL`
+picks the model (Haiku by default). What they leave to a person: the Tauri webview itself and the macOS descriptor limit
+the dev server starts the agent server early to avoid.
+
 `src/e2e/ClaudeCodeEdge.e2e.test.ts` runs the same kind of chat on Claude Code (cloud): its turns go
 through `EdgeAgent` to an EDGE stack started locally (edge's `dev.mts` with sandbox-service added, so
 the sandbox's container runs on local Docker), and each turn lends the space's subscription token as

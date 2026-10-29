@@ -9,7 +9,7 @@ keep what they build.
 
 It also contributes the **Composer Plugin (Sandbox)** project template: a project whose agent builds a
 TypeScript Composer plugin in an EDGE sandbox, serves the build from the container, and offers the exposed
-URL back to load — the Coding (Dev) template's demo without a locally served Composer.
+URL back to load — the Dev Shell template's demo without a locally served Composer.
 
 ## Exposed ports
 
@@ -51,11 +51,18 @@ macOS) via `@carderne/sandbox-runtime`:
 
 ## Repositories
 
-Sandboxes are ephemeral; a `Repository` is durable. Each is a git repository hosted by EDGE on
-[Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/), named after its space and object
-id, so the space is part of its identity. The ECHO object is created locally and the repository on
-EDGE by the first read of it (or by attaching it), so a repository made offline, or on another
-device, is backed as soon as anything uses it.
+Sandboxes are ephemeral; a repository is durable. An EDGE repository is a type:Repo (from `@dxos/types`,
+the same type a GitHub repository is) carrying an `edge.dxos.network` foreign key: a git repository
+hosted by EDGE on [Cloudflare Artifacts](https://developers.cloudflare.com/artifacts/), named after
+its space and that key's id, so the space is part of its identity and stands in as the `Repo`'s
+owner. The ECHO object is created locally and the repository on EDGE by the first read of it (or by
+attaching it), so a repository made offline, or on another device, is backed as soon as anything
+uses it.
+
+- **One type, host as provenance.** A project lists GitHub and EDGE repositories side by side; what
+  this plugin does with one (attach, read) needs the EDGE key and fails for a `Repo` without it.
+  Spaces made before the fold hold `org.dxos.type.repository` objects, which a migration turns into
+  `Repo`s in place, keeping the object id and carrying it over as the EDGE key.
 
 - **Attached, not driven.** A sandbox's `repositories` are part of its configuration, like its
   `credentials`: set when the sandbox is created or by `attachRepository`, and held by EDGE with the
@@ -81,6 +88,7 @@ The following extension dialects are used in this document.
 |--------|---------------------------|
 | `test` | `org.dxos.mdl.test@1.0`   |
 | `op`   | `org.dxos.mdl.op@1.1`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Types
 
@@ -91,13 +99,14 @@ type Sandbox
     baseImage?: string
     createdAt?: string
     expiresAt?: string
-    repositories?: Ref<Repository>[]   # git remotes in every command; see Repositories
+    repositories?: Ref<Repo>[]   # git remotes in every command; see Repositories
 ```
 
 ```mdl
-type Repository
+type Repo                             # from @dxos/types; EDGE-hosted when keyed edge.dxos.network
   fields:
-    name?: string
+    name: string
+    owner: string                      # the space id, for an EDGE repository
     description?: string
     defaultBranch?: string
 ```
@@ -111,7 +120,7 @@ op createSandbox
   input:
     name?: string
     baseImage?: string
-    repositories?: Ref<Repository>[]   # attached as git remotes
+    repositories?: Ref<Repo>[]   # attached as git remotes
   output:
     sandboxId: string    # ECHO object URI of the created sandbox
   effects: [echo:write, sandbox:create]
@@ -203,7 +212,7 @@ op attachRepository
   desc: Attaches a repository to a sandbox; every later command has it as a git remote.
   input:
     sandbox: Ref<Sandbox>
-    repository: Ref<Repository>
+    repository: Ref<Repo>
   output:
     remote: string           # the git remote name commands address the repository by
   effects: [echo:write, sandbox:configure, repository:create]
@@ -228,7 +237,7 @@ op listRepositoryBranches
   key: org.dxos.operation.sandbox.listRepositoryBranches
   desc: Lists a repository's branches and the commit each points at.
   input:
-    repository: Ref<Repository>
+    repository: Ref<Repo>
   output:
     defaultBranch: string
     branches: { name: string, commit: string }[]
@@ -240,7 +249,7 @@ op getRepositoryLog
   key: org.dxos.operation.sandbox.getRepositoryLog
   desc: Lists commits newest first.
   input:
-    repository: Ref<Repository>
+    repository: Ref<Repo>
     ref?: string             # branch or full commit hash
     limit?: number           # at most 100, default 30
     offset?: number
@@ -254,7 +263,7 @@ op listRepositoryFiles
   key: org.dxos.operation.sandbox.listRepositoryFiles
   desc: Lists a directory of a repository at a branch or commit.
   input:
-    repository: Ref<Repository>
+    repository: Ref<Repo>
     ref?: string
     path?: string            # the root when omitted
   output:
@@ -268,7 +277,7 @@ op readRepositoryFile
   key: org.dxos.operation.sandbox.readRepositoryFile
   desc: Reads a file of a repository at a branch or commit; binary content is base64.
   input:
-    repository: Ref<Repository>
+    repository: Ref<Repo>
     ref?: string
     path: string
   output:
@@ -328,7 +337,7 @@ test QA-2: Build in a sandbox, push to a repository with git, pick it up in anot
     - no Sandbox or Repository named "QA Repo" exists — ABORT rather than reusing one this test did not create
   steps:
     - name: Create the repository
-      do: From the create menu, add a Repository named "QA Repo".
+      do: Ask the assistant to create a repository named "QA Repo".
       invoke: [op:createRepository] { name: "QA Repo" }
       capture: repository
       expect: a Repository named "QA Repo" appears; opening it says nothing has been pushed yet
@@ -359,4 +368,42 @@ test QA-2: Build in a sandbox, push to a repository with git, pick it up in anot
     - name: Delete the sandbox and the repository
       do: Delete "QA Repo" (both) from the navtree.
       invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandbox.sandboxId }, { "/": $repository.repositoryId }], target: $given.space }
+```
+
+## Changelog
+
+```mdl
+decision D-1: An EDGE repository is a `Repo` from `@dxos/types`, marked as hosted by EDGE, not a type of its own, so GitHub and EDGE repositories are one type.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [Repo, Sandbox]
+  source: https://github.com/dxos/dxos/pull/14104
+```
+
+```mdl
+decision D-2: The EDGE mark is a foreign key with source `edge.dxos.network` whose id is the repository's id on EDGE; the space id stands in as the owner, and existing `org.dxos.type.repository` objects migrate in place, keeping their object id as that key. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Repo]
+  why: The object id was already the EDGE id, so carrying it into the key keeps every remote resolving without a request to EDGE.
+  rejected:
+    - A `host` field on `Repo`: the type says provenance belongs in foreign keys, which the GitHub connector already uses.
+```
+
+```mdl
+decision D-3: This plugin contributes no create entry for repositories; the `Repo` entry belongs to plugin-projects, and an EDGE repository is made with `createRepository`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Repo, createRepository]
+  why: Create entries are keyed by typename, so two plugins cannot both offer one for `Repo`.
+```
+
+```mdl
+decision D-4: QA-2 creates its repository through `createRepository`, asked of the assistant, since no create-menu entry offers one. Fills in [D-3].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2, createRepository]
 ```

@@ -20,7 +20,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { MagazinePlugin } from '#plugin';
+import * as MagazinePlugin from '#meta';
 import { MagazineSkill } from '#skills';
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
@@ -77,9 +77,9 @@ const buildMeta = (options: {
           types: [Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpace(options),
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        MagazinePlugin(),
+        MagazinePlugin.make(),
       ],
     }),
   ],
@@ -180,13 +180,8 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.db.flush());
   });
 
-// TODO(jdw): Re-enable on jdw/identifiers — the seed path now uses
-// `space.db.appendToFeed(echoFeed, posts)` but the storybook story still loses
-// queue contents between the seed promise resolving and `magazine.posts` being
-// read inside the `CurateMagazine` operation. The unit tests drive
-// `curateMagazine` directly against an `EchoTestBuilder` database and pass;
-// the fully-wired plugin container in this story does not. Default story is
-// unaffected (it never touches the feed path).
+// TODO(wittjosiah): Curation runs an agent, so this needs an AiService and cannot run in CI without a scripted
+//   model. `curate-magazine.test.ts` covers the deterministic path.
 export const CurateFlow: Story = {
   tags: ['!test'],
   decorators: [
@@ -198,9 +193,9 @@ export const CurateFlow: Story = {
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpaceWithQueueItems,
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        MagazinePlugin(),
+        MagazinePlugin.make(),
       ],
     }),
   ],

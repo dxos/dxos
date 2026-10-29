@@ -15,10 +15,10 @@ describe('ideogram connector', () => {
   test('builds an AccessToken + Connection from the API key', ({ expect }) => {
     const result = Effect.runSync(entry.credentialForm.onSubmit({ values: { token: '  sk-abc  ' }, connector }));
     expect(result.kind).toBe('complete');
-    expect(result.accessToken.source).toBe(IDEOGRAM_SOURCE);
-    expect(result.accessToken.token).toBe('sk-abc');
+    expect(result.accessToken?.source).toBe(IDEOGRAM_SOURCE);
+    expect(result.accessToken?.token).toBe('sk-abc');
     expect(result.connection.connectorId).toBe(IDEOGRAM_CONNECTOR_ID);
-    expect(result.connection.accessToken.target?.token).toBe('sk-abc');
+    expect(result.connection.accessToken?.target?.token).toBe('sk-abc');
   });
 
   test('rejects an empty API key', ({ expect }) => {

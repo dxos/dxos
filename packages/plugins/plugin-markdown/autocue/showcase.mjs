@@ -5,10 +5,10 @@
 /**
  * Showcase clip (20s): Comment on the DXOS Architecture guide, ask @kai for a diagram, and embed a Canvas drawing inline.
  *
- * @mdl packages/plugins/plugin-markdown/PLUGIN.mdl test QA-5
+ * @mdl packages/plugins/plugin-markdown/autocue/AUTOCUE.mdl test QA-5
  * @app composer-app via `DX_PWA=false moon run composer-app:serve -- --port 4173`
  *
- * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/SHOWCASE.md.
+ * Recorded by `tools/autocue/showcase/overnight.mjs`; rules in tools/autocue/showcase/docs/SHOWCASE.md.
  */
 
 import { LONG_MS, comment, fromTemplate, reveal, showcase } from '../../../../tools/autocue/showcase/steps.mjs';

@@ -8,5 +8,3 @@ export * as CodeOperation from './CodeOperation.ts';
 export * as CodeProject from './CodeProject.ts';
 export * as Settings from './Settings.ts';
 export * as SourceFile from './SourceFile.ts';
-export * as Spec from './Spec.ts';
-export * as State from './State.ts';

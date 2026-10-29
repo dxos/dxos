@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useEffect, useRef } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -32,9 +32,11 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
-import { NavTreePlugin } from '#plugin';
+import * as NavTreePlugin from '#meta';
 import { type StorybookGraphOptions, storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
+
+import { ContextMenuRoot } from '../../containers/ContextMenuRoot/index.ts';
 
 random.seed(1234);
 
@@ -154,7 +156,7 @@ const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
         initialState: { sidebarState: 'expanded' },
       }),
 
-      NavTreePlugin(),
+      NavTreePlugin.make(),
     ],
     capabilities: () => {
       const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
@@ -247,6 +249,26 @@ export const Default: Story = {
 };
 
 /** Opening a row's action menu is not choosing the row: the menu stays open and the selection stays put. */
+/** Right-clicking a row opens the app's context menu: the row's node's actions, as its "…" menu lists them. */
+export const ContextMenu: Story = {
+  render: () => (
+    <>
+      <DefaultStory />
+      <ContextMenuRoot />
+    </>
+  ),
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const tree = await canvas.findByRole('tree', {}, { timeout: 10000 });
+    const heading = await within(tree).findByText('Object 2', {}, { timeout: 10000 });
+    const { left, top } = heading.getBoundingClientRect();
+    await fireEvent.contextMenu(heading, { clientX: left + 4, clientY: top + 4 });
+    const menu = await within(document.body).findByRole('menu', {}, { timeout: 5000 });
+    await expect(menu).toBeVisible();
+    await expect(within(menu).getAllByRole('menuitem').length).toBeGreaterThan(0);
+  },
+};
+
 export const RowMenu: Story = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);

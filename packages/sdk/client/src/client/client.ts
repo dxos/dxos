@@ -7,7 +7,15 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
+import {
+  Event,
+  MulticastObservable,
+  Trigger,
+  asyncTimeout,
+  scheduleTask,
+  scheduleTaskInterval,
+  synchronized,
+} from '@dxos/async';
 import { createEdgeBlobBackend } from '@dxos/blob/hosted';
 import {
   type ClientServicesProvider,
@@ -20,7 +28,7 @@ import {
   serveClientServicesOverIFrame,
 } from '@dxos/client-protocol';
 import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
-import { Context } from '@dxos/context';
+import { Context, ContextDisposedError } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import { type EdgeHttpClient } from '@dxos/edge-client/http';
@@ -40,10 +48,11 @@ import {
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { type JsonKeyOptions, type MaybePromise, markMilestone } from '@dxos/util';
 
 import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge/index.ts';
 import { type MeshProxy } from '../mesh/mesh-proxy.ts';
+import type { BootCacheOptions, BootCacheServices } from '../services/boot-cache/index.ts';
 import type { IFrameManager, Shell, ShellManager } from '../services/index.ts';
 import { DXOS_VERSION } from '../version.ts';
 import { ClientRuntime } from './client-runtime.ts';
@@ -77,7 +86,17 @@ export type ClientOptions = {
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
+
+  /**
+   * Opens from what the last session persisted to IndexedDB — the startup streams and each space's working
+   * set — instead of waiting for the services, which bring it current once reachable. Off when unset.
+   */
+  bootCache?: BootCacheOptions;
 };
+
+/** The first boot-cache write waits this long after initialization, so it holds what the app settled on. */
+const BOOT_CACHE_FIRST_WRITE_MS = 5_000;
+const BOOT_CACHE_WRITE_INTERVAL_MS = 60_000;
 
 /**
  * The Client class encapsulates the core client-side API of DXOS.
@@ -116,11 +135,17 @@ export class Client {
   readonly version = DXOS_VERSION;
 
   private _services?: ClientServicesProvider;
+  private _bootCache?: BootCacheServices;
 
   private _initialized = false;
 
   /** Resolves when `initialize()` completes, so consumers can suspend on a forked init. */
   private readonly _initializedTrigger = new Trigger();
+
+  private _servicesReady = false;
+
+  /** Resolves when the services answer, which a boot-cached client reaches after `initialize()` completes. */
+  private readonly _servicesReadyTrigger = new Trigger();
 
   private _resetting = false;
 
@@ -208,22 +233,50 @@ export class Client {
   }
 
   /**
-   * Returns true if the client has been initialized. Initialize by calling `.initialize()`.
+   * Whether the client is ready: `initialize()` has completed and the client can be used.
+   * With {@link ClientOptions.bootCache} that can be from the cache, before the services answer;
+   * see {@link servicesReady}.
    */
   get initialized() {
     return this._initialized;
   }
 
   /**
-   * Resolves once `initialize()` has completed. Waits indefinitely unless `timeout` is given, in
-   * which case it rejects with `TimeoutError` — opt-in because most consumers only want the
-   * completion signal, and bounding the session is the caller's job (see the app entry point).
+   * Whether the client services are open and answering. Implies {@link initialized}.
+   */
+  get servicesReady() {
+    return this._servicesReady;
+  }
+
+  /**
+   * Resolves once the client is ready (milestone `client.ready`): `initialize()` has completed, and
+   * identity, spaces and queries can be used. With {@link ClientOptions.bootCache} that can be from
+   * the cache, before the services answer. An app waits on this to render.
+   *
+   * Waits indefinitely unless `timeout` is given, in which case it rejects with `TimeoutError` —
+   * opt-in because most consumers only want the completion signal, and bounding the session is the
+   * caller's job (see the app entry point).
    *
    * This is the completion signal, not the error channel: a failing `initialize()` rejects at its
    * own call site, and this promise stays pending.
    */
   waitUntilInitialized({ timeout }: { timeout?: number } = {}): Promise<void> {
     return this._initializedTrigger.wait({ timeout });
+  }
+
+  /**
+   * Resolves once the client services are open and answering (milestone `client.services-ready`),
+   * never before {@link waitUntilInitialized}. Without {@link ClientOptions.bootCache} both resolve
+   * together; with it, this can come well after. Wait on this only for what the cache cannot stand in
+   * for: observability, releasing a resource the services take over, or acting on a result only the
+   * services can report.
+   *
+   * Rejects when services the client opened from the cache fail to open, since `initialize()` has
+   * already returned and cannot report it, and with `ContextDisposedError` when the client is destroyed
+   * first; `timeout` behaves as in {@link waitUntilInitialized}.
+   */
+  waitUntilServicesReady({ timeout }: { timeout?: number } = {}): Promise<void> {
+    return this._servicesReadyTrigger.wait({ timeout });
   }
 
   /**
@@ -404,6 +457,7 @@ export class Client {
     }
 
     performance.mark('client.initialize:called');
+    markMilestone('client.initializing');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services/index.ts');
     const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
@@ -444,11 +498,19 @@ export class Client {
       hasCreateOpfsWorker: !!this._options.createOpfsWorker,
       sqlitePath: this._options.sqlitePath,
     });
-    this._services = await (this._options.services ??
+    const provider = await (this._options.services ??
       createClientServices(this._config, {
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
+    if (this._options.bootCache) {
+      // Loaded only when asked for, so a client without it carries none of it at boot.
+      const { BootCacheServices, BootCacheStore } = await import('../services/boot-cache/index.ts');
+      if (BootCacheStore.isAvailable()) {
+        this._bootCache = new BootCacheServices(provider, this._options.bootCache);
+      }
+    }
+    this._services = this._bootCache ?? provider;
     performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
     // Once, not per `_open`: the provider outlives a reopen and keeps every callback it is given.
@@ -484,10 +546,60 @@ export class Client {
 
     this._initialized = true;
     this._initializedTrigger.wake();
+    if (this._bootCache) {
+      this._persistBootCache(this._bootCache);
+    }
     performance.mark('client.initialize:completed');
+    markMilestone('client.ready');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
+    this._signalServicesReady(this._ctx, this._bootCache);
     return this;
+  }
+
+  /** Wakes {@link waitUntilServicesReady} once the services answer, unless the client was destroyed first. */
+  private _signalServicesReady(ctx: Context, bootCache: BootCacheServices | undefined): void {
+    const ready = () => {
+      if (ctx.disposed) {
+        return;
+      }
+      this._servicesReady = true;
+      this._servicesReadyTrigger.wake();
+      markMilestone('client.services-ready');
+    };
+    if (!bootCache) {
+      ready();
+      return;
+    }
+    bootCache.whenServicesOpen().then(ready, (error) => {
+      if (!ctx.disposed) {
+        this._servicesReadyTrigger.throw(
+          error instanceof Error ? error : new Error('client services failed to open', { cause: error }),
+        );
+      }
+    });
+  }
+
+  /** Writes the boot cache once the app has settled, then periodically and whenever the page is hidden. */
+  private _persistBootCache(bootCache: BootCacheServices): void {
+    const persist = async () => {
+      const spaces = this._runtime?.spaces;
+      if (spaces) {
+        await bootCache.persist(spaces._workingSetSources());
+      }
+    };
+    const ctx = this._ctx;
+    scheduleTask(ctx, persist, BOOT_CACHE_FIRST_WRITE_MS);
+    scheduleTaskInterval(ctx, persist, BOOT_CACHE_WRITE_INTERVAL_MS);
+    if (typeof document !== 'undefined') {
+      const onVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') {
+          void persist();
+        }
+      };
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      ctx.onDispose(() => document.removeEventListener('visibilitychange', onVisibilityChange));
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
@@ -550,7 +662,14 @@ export class Client {
 
     const mesh = new MeshProxy(this._services, this._effectRuntime);
     const halo = new HaloProxy(this._services, this._effectRuntime);
-    const spaces = new SpaceList(this._config, this._services, this._echoClient, this._effectRuntime);
+    const bootCache = this._bootCache;
+    const spaces = new SpaceList(
+      this._config,
+      this._services,
+      this._echoClient,
+      this._effectRuntime,
+      bootCache && ((spaceId) => bootCache.takeWorkingSet(spaceId)),
+    );
 
     const shell = this._shellManager
       ? new Shell({
@@ -594,8 +713,9 @@ export class Client {
     // Registered with or without an edge endpoint: a write is confirmed once the host stores it
     // locally, and the host replicates to the edge, when configured, on its own.
     const edgeHttpClient = this._edgeHttpClient;
+    const services = this._services;
     const blobBackend = createEdgeBlobBackend({
-      store: createRpcBlobStore(this._services.rpc, this._effectRuntime),
+      store: createRpcBlobStore(() => services.rpc, this._effectRuntime),
       finalizeUpload: edgeHttpClient && ((uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId)),
     });
     const unregisterBlobBackend = this._echoClient.graph.registerBlobBackend(Blob.Storage.edge, blobBackend, {
@@ -714,6 +834,10 @@ export class Client {
     // `waitUntilInitialized()` resolve for a client that is not initialized, which spins
     // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
     this._initializedTrigger.reset();
+    this._servicesReady = false;
+    // A waiter on services that never opened would otherwise hang on a promise nothing settles.
+    this._servicesReadyTrigger.throw(new ContextDisposedError());
+    this._servicesReadyTrigger.reset();
   }
 
   async [Symbol.asyncDispose]() {
@@ -778,6 +902,7 @@ export class Client {
 
     log('resetting...');
     this._resetting = true;
+    await this._bootCache?.clear().catch((err) => log.warn('boot cache not cleared', { err }));
     invariant(this._services, 'Client not initialized.');
     await runServiceCall(this._effectRuntime, this._services.rpc, 'SystemService.reset', undefined).catch((err) => {
       if (!isHostShutDownByReset(err)) {

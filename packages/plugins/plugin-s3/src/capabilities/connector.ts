@@ -84,6 +84,7 @@ export const createS3ConnectorEntry = (): ConnectorSpec.ConnectorEntry => ({
   id: S3_CONNECTOR_ID,
   source: S3_SOURCE,
   label: 'S3 Storage',
+  kind: 'custom',
   credentialForm: {
     schema: S3CredentialForm,
     defaultValues: {

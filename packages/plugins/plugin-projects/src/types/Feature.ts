@@ -6,49 +6,89 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Relation, Type } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { Annotation, DXN, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Task } from '@dxos/types';
+
+import * as Spec from './Spec.ts';
 
 //
 // Status
 //
 
-/** Where the feature is now; authored by whoever knows, never derived. */
-export const Status = Schema.Literals(['planned', 'in-progress', 'prototype', 'operational', 'failing']);
+/**
+ * How far the feature has come; authored by whoever knows, never derived. Whether someone is working on it is a
+ * separate axis, derived from its linked tasks, so an operational feature can be under work as well as a planned one.
+ */
+export const Status = Schema.Literals(['planned', 'prototype', 'operational', 'failing']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
 export const StatusOptions: Task.Option<Status>[] = [
   { id: 'planned', title: 'Planned', color: 'neutral', icon: 'ph--circle-dashed--regular' },
-  { id: 'in-progress', title: 'In progress', color: 'sky', icon: 'ph--circle-half--regular' },
   { id: 'prototype', title: 'Prototype', color: 'amber', icon: 'ph--flask--regular' },
   { id: 'operational', title: 'Operational', color: 'emerald', icon: 'ph--seal-check--regular' },
   { id: 'failing', title: 'Failing', color: 'rose', icon: 'ph--warning-octagon--regular' },
 ];
 
 //
+// Code links
+//
+
+/** What a `@feature` tag documents: a `describe` block, a single test, or any other symbol. */
+export const CodeLinkKind = Schema.Literals(['suite', 'test', 'code']);
+export type CodeLinkKind = Schema.Schema.Type<typeof CodeLinkKind>;
+
+/** A place in the repository whose JSDoc cites the feature with a `@feature` tag. */
+export const CodeLink = Schema.Struct({
+  /** Repo path of the file. */
+  path: Schema.String,
+  /** 1-based line of the tag. */
+  line: Schema.Number,
+  /** The symbol the comment documents: a test or suite title, or a declaration name. */
+  symbol: Schema.optional(Schema.String),
+  kind: CodeLinkKind,
+});
+export type CodeLink = Schema.Schema.Type<typeof CodeLink>;
+
+//
 // Feature
 //
 
-/** A part of a feature with its own status; specs, dependencies and tasks belong to the feature. */
-export const Subfeature = Schema.Struct({
-  name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
-  status: Status.pipe(Schema.annotate({ title: 'Status' })),
+/** One thing the feature must do, as stated in its spec; `id` is the spec's own (`F-3.2`) when it came from one. */
+export const Requirement = Schema.Struct({
+  id: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Id' }))),
+  text: Schema.String.pipe(Schema.annotate({ title: 'Requirement' })),
 });
-export type Subfeature = Schema.Schema.Type<typeof Subfeature>;
+export type Requirement = Schema.Schema.Type<typeof Requirement>;
 
 /**
- * A goal state: something the product should do. Authored in ECHO; the repo specs that describe how
- * it is met stay in git and are referenced by path.
+ * A goal state: something the product should do, with the requirements that define it. A feature belongs to one
+ * spec (its ECHO parent, which lists it in `features`), and nests by owning a spec of its own that breaks it down. A
+ * spec block (`feat F-3` and its `req` lines) is the unstructured source a feature's requirements are extracted from.
  */
-export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.1.0'))(
+export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.3.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
+    name: Schema.String.pipe(Schema.annotate({ title: 'Name', description: 'A noun phrase of two to five words.' })),
 
     description: Schema.optional(
       Schema.String.pipe(
         Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-        Schema.annotate({ title: 'Description' }),
+        Schema.annotate({
+          title: 'Description',
+          description:
+            'One or two short sentences: the ideal, what the feature does when complete, in the present tense. Not its current state.',
+        }),
+      ),
+    ),
+
+    requirements: Schema.optional(
+      Schema.Array(Requirement).pipe(
+        Schema.annotate({
+          title: 'Requirements',
+          description:
+            'What the feature must do: one short, testable sentence each, extracted from its spec block (its req lines) where there is one.',
+        }),
       ),
     ),
 
@@ -60,23 +100,41 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
       }),
     ),
 
-    /** Repo paths of the specs that describe this feature, e.g. `packages/plugins/plugin-inbox/PLUGIN.mdl#F-3`. */
-    specs: Schema.optional(Schema.Array(Schema.String).pipe(Schema.annotate({ title: 'Specs' }))),
+    /**
+     * The spec blocks the requirements were extracted from, e.g. `packages/plugins/plugin-inbox/PLUGIN.mdl#F-3`;
+     * provenance, so a re-import updates the feature rather than adding another.
+     */
+    specs: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
-     * The parts this feature breaks down into, in display order. Records rather than features: the map is
-     * two levels deep, a part has a status but no specs, dependencies or tasks of its own.
+     * The spec that breaks this feature down into features of its own; owned, so deleting the feature deletes it.
+     * Suspended because the spec module refers back to this one.
      */
-    subfeatures: Schema.optional(Schema.Array(Subfeature).pipe(Schema.annotate({ title: 'Subfeatures' }))),
+    spec: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Spec.Spec> => Ref.Ref(Spec.Spec)).pipe(
+        Annotation.SetParent.set(),
+        Annotation.FormInputAnnotation.set(false),
+      ),
+    ),
+
+    /**
+     * The code that cites this feature with a `@feature` tag, as last imported from a scan of the repository; held
+     * here so the feature map reads it without the repository.
+     */
+    code: Schema.optional(Schema.Array(CodeLink).pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--puzzle-piece--regular', hue: 'violet' }),
+    // The project skill carries the feature operations (linking tasks, dependencies); a chat about a
+    // feature needs them. Plain dotted key, so the type does not import the skill.
+    Skill.SkillsAnnotation.set(['org.dxos.skill.project']),
     Annotation.UserType.set(),
   ),
 ) {}
 
-/** `subfeatures` starts as an empty list so two peers lazily creating it cannot each write a fresh one. */
-export const make = (props: Obj.MakeProps<typeof Feature>): Feature => Obj.make(Feature, { subfeatures: [], ...props });
+/** `requirements` starts as an empty list so two peers lazily creating it cannot each write a fresh one. */
+export const make = (props: Obj.MakeProps<typeof Feature>): Feature =>
+  Obj.make(Feature, { requirements: [], ...props });
 
 export const instanceOf = (value: unknown): value is Feature => Obj.instanceOf(Feature, value);
 
@@ -110,6 +168,16 @@ export const findDependencyCycle = (
   return visit(target, [target]);
 };
 
+/**
+ * The DXN that names the feature in code: its `meta.key` with its mnemonic, e.g.
+ * `dxn:network.dxos.team.features.mcp.codeMode#ABC123`. Undefined when the feature has no valid `meta.key`.
+ */
+export const getLink = (feature: Feature | Obj.Snapshot<Feature>): DXN.DXN | undefined => {
+  const key = Obj.getMeta(feature).key;
+  const name = key ? DXN.tryMake(`dxn:${key}`) : undefined;
+  return name && DXN.withMnemonic(DXN.withoutMnemonic(name), Obj.getMnemonic(feature));
+};
+
 /** Repository that relative spec paths resolve against. */
 export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
 
@@ -118,7 +186,35 @@ export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
  * default branch, without the block anchor, which GitHub cannot resolve inside an `.mdl` file.
  */
 export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): string =>
-  /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${spec.replace(/#.*$/, '').replace(/^\/+/, '')}`;
+  /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${getSpecPath(spec)}`;
+
+/** Where a code link opens on GitHub: its file on the default branch, at its line. */
+export const getCodeUrl = (link: Pick<CodeLink, 'path' | 'line'>, repository = DEFAULT_SPEC_REPOSITORY): string =>
+  `${repository}/blob/main/${link.path.replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/')}#L${link.line}`;
+
+/** A repo spec path without its block anchor or leading slashes. */
+export const getSpecPath = (spec: string): string => spec.replace(/#.*$/, '').replace(/^\/+/, '');
+
+/** The parts of a plugin's profile that say where its bundled spec comes from. */
+export type SpecSource = { key: string; source?: string; spec?: string };
+
+/**
+ * The key of the plugin that bundles the spec a repo path names: the path is the plugin's source directory joined
+ * with its spec file (`packages/plugins/plugin-inbox/PLUGIN.mdl`), so the app can open the spec without GitHub.
+ */
+export const findSpecPlugin = (spec: string, plugins: readonly SpecSource[]): string | undefined => {
+  if (/^https?:\/\//.test(spec)) {
+    return undefined;
+  }
+  const path = getSpecPath(spec);
+  return plugins.find(({ source, spec: file }) => {
+    const directory = source?.match(/\/tree\/[^/]+\/(.+?)\/?$/)?.[1];
+    return !!directory && !!file && path === `${directory}/${file}`;
+  })?.key;
+};
+
+/** Foreign-key source of a spec imported into a space, whose key id is its repo path. */
+export const SPEC_KEY_SOURCE = 'github.com/dxos/dxos';
 
 //
 // Relations

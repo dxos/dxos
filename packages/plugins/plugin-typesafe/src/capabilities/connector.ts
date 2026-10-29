@@ -59,12 +59,14 @@ export const typeSafeCredentialForm = {
  * Builds the TypeSafe connector entry: stores the API key as `AccessToken.token` (source
  * `typesafe.ai`) so the decision-model layer can resolve it via `CredentialsService`.
  */
-export const createTypeSafeConnectorEntry = () => ({
-  id: TYPESAFE_CONNECTOR_ID,
-  source: TYPESAFE_SOURCE,
-  label: 'TypeSafe',
-  credentialForm: typeSafeCredentialForm,
-});
+export const createTypeSafeConnectorEntry = () =>
+  ({
+    id: TYPESAFE_CONNECTOR_ID,
+    source: TYPESAFE_SOURCE,
+    label: 'TypeSafe',
+    kind: 'custom',
+    credentialForm: typeSafeCredentialForm,
+  }) satisfies ConnectorSpec.ConnectorEntry;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

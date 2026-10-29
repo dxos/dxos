@@ -1,8 +1,9 @@
 # Synchronous query propagation
 
-Status: phase 1 implemented for flat queries on the owning space (§8 lists what landed and how it
-differs from the design); later phases are design. Revised once after an adversarial review against the
-code; the review's findings are folded in and the ones that changed the design are called out in §7.
+Status: phases 1 to 4 implemented. §8 covers phase 1 and §9 the later phases, each with where it
+differs from the design. §1 describes the pipeline as it was before phase 1. Revised once after an
+adversarial review against the code; the review's findings are folded in and the ones that changed the
+design are called out in §7.
 
 Tests: `echo-client-e2e/src/sync-query.test.ts` counts subscriber notifications per write.
 
@@ -792,7 +793,7 @@ notifications because of the gap below, so it is a floor rather than a like-for-
 a subscriber that had not read yet missed every write until some later event computed the results. It now
 signals a relevant write either way.
 
-**Not done in phase 1**: the typename map in the working set (window admission and non-delta shapes
+**Not done in phase 1** (§9 covers all but the typename map and the progress stream): the typename map in the working set (window admission and non-delta shapes
 still scan all cores), heads on the wire, paths, manifests, `RemoteQuerySource`, the progress stream,
 and skipping the remote stream for a by-id query whose ids are all loaded. A by-id query reports
 `complete` once its ids are loaded, but the index stream still opens.
@@ -800,3 +801,88 @@ and skipping the remote stream for a by-id query whose ids are all loaded. A by-
 **Initial notification.** The first recompute after subscribe still notifies even when the result
 equals what an earlier read returned; this predates the change and the suite counts from a baseline
 taken after it.
+
+## 9. Phases 2 to 4 as implemented
+
+### 9.1 The engine
+
+```
+Query API ──► QueryResultImpl ──► LocalQueryEngine ──┬─► WorkingSetView (per db: cores + feed tail, sync)
+                                   (merge, verdicts)  ├─► RegistryView (sync)
+                                                      └─► RemoteQuerySource ─┬─► index (host QueryService)
+                                                                             └─► EDGE
+```
+
+`LocalQueryEngine` (`local-query-engine.ts`) replaces `GraphQueryContext`. It owns one
+`WorkingSetView` per database and the `RegistryView`; neither is a query source any more. Only
+`RemoteQuerySource`s (the index and EDGE, both through `QueryService`) are remote, and the engine judges
+each of their entries `drop`, `verified` or `trusted` (`judgeRemoteEntry` in `merge-plan.ts`).
+`resolution.verified` is true for a `verified` entry.
+
+**By id.** When every id of a by-id query is held, the remote stream is closed. When it is open, `run()`
+answers local ids first, then takes the remote answer, then loads only the ids no remote answered. The
+working set no longer loads documents itself.
+
+### 9.2 Versions
+
+Every row carries `version`: `{automerge, documentId, heads}` for a document object, `{feed,
+insertionId}` for a feed item. A new `objectSnapshot.version` column (migration 0004) holds the heads
+each copy was read at; `heads` still marks a copy at the document's saved heads that can back the row, and a
+row indexed before the column reads its version from `heads`. A remote entry whose object is loaded at
+exactly its version is verified without re-evaluation.
+
+The host answers from index copies before it loads documents. The memory executor uses a copy whenever
+its heads equal the document's current heads (the in-memory heads if loaded, else the stored heads), and
+counts `echo.querySnapshotHits` and `echo.queryDocumentLoads`. The SQL executor never loads documents.
+
+### 9.3 Paths (phase 2)
+
+A traversal hit carries `paths`, one per derivation: an ordered list of `PathEdge {from, to, kind,
+property?, holder, holderHeads?}`. The holder is the object whose document records the edge. Both
+executors produce them. The memory executor extends the paths of each anchor at each hop. The SQL
+compiler keeps an edge relation per hop of the query's own chain and walks back from each final row
+through a recursive CTE.
+
+The client revalidates a hit against every path (`path-revalidation.ts`). It checks each level's filter
+on each loaded object and checks each edge against its loaded holder. An edge whose holder is held at
+`holderHeads` stands without a read. The hit survives when any path holds.
+
+Limits: 16 paths per item and 512 edges per compiled row; an item past either limit ships no paths and is
+trusted. One answer carries at most 256 KiB of paths. Past that the response sets `truncated: 'paths'`,
+and completeness reads `merged`.
+
+### 9.4 Manifests and local ordering (phase 3)
+
+A collapsed group (scalar aggregates, no `items`) carries a `manifest`: each member's id, version and
+share of `count`, `sum`, `min` and `max`. The client (`manifest-merge.ts`) subtracts the share of each
+member it holds and adds its local members, which the working set lists by evaluating the query with an
+appended `items` aggregate. `min` and `max` can only widen: removing a held extreme marks the group
+unverified. The same 256 KiB budget applies (`truncated: 'manifest'`). A count-only group ships a manifest
+without reading member values.
+
+A property or natural order without `limit` or `skip` is applied by the engine over the merged entries,
+so `characteristics` no longer classes it as a window.
+
+### 9.5 Feeds (phase 4)
+
+A feed write made through the handle (`FeedHandle.localWrites`) joins the working set as the feed tail
+of a simple selection over that feed or over all feeds. It appears before the write returns and stays
+past the feed service's acknowledgement, so it does not vanish before the index catches up. The handle's
+`localWrite` event names the objects each write appended, edited or deleted, and the tail re-checks only
+those. A feed opened after the query starts joins through `_feedHandleCreated`. A remote feed
+entry is dropped when a local write of the same id no longer matches. `characteristics` classes a simple
+feed selection as `local-partial`; a feed window stays remote-only.
+
+### 9.6 Startup milestones
+
+`markMilestone` (`@dxos/util`) writes `performance.mark('dxos:<name>')` with DevTools' `marker` data type,
+which draws a vertical line on the Performance timeline. Marks: `worker.spawned`, `worker.started`,
+`worker.services-ready`, `worker.session-ready`, `worker.connected`, `client.initializing`, `client.ready`, `client.services-ready`,
+`identity.ready`, `network.started`, `network.connected`, `spaces.opening`, `spaces.loaded`, `spaces.ready`,
+`replication.connected` (per space), `indexing.started` and `indexing.caught-up`.
+
+### 9.7 Not done
+
+- EDGE's executor does not yet send versions, paths or manifests. EDGE rows stay `trusted`.
+- The typename map in the working set and the progress stream of §3.9.
+- Paths for traversals inside a union branch or a subquery: such rows ship without paths.

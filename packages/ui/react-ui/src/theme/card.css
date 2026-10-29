@@ -169,7 +169,7 @@
     border-start-end-radius: 0;
   }
   .dx-card[data-selected] {
-    border-color: var(--color-accent-bg);
+    border-color: var(--dx-selected-color);
   }
   /* In a stack the focus ring already marks the keyboard's card, so the chosen one reads as current, not a second edge. */
   .dx-focus-item.dx-card[data-selected] {

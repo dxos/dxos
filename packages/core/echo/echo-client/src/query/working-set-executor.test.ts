@@ -3,13 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
 import { Aggregate, Annotation, Filter, Obj, Order, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
 
+import { ObjectCore } from '../core-db/index.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
 import { type WorkingSetDataProvider, WorkingSetQueryExecutor } from './working-set-executor.ts';
@@ -555,6 +556,26 @@ describe('WorkingSetQueryExecutor', () => {
     expect(new Set(results.map((item) => item.groupKey?.category))).toEqual(new Set(['b', 'c']));
     expect(results).toHaveLength(3);
   });
+
+  // Regression: the deletion check ran before the type filter, walking the dependencies of every loaded
+  // object on each recompute of a type query (UI lag trace, 2026-10-26).
+  test('checks deletion only on objects the filters keep', async ({ expect }) => {
+    const tasks = [Obj.make(TestSchema.Task, { title: 'kept' }), Obj.make(TestSchema.Task, { title: 'deleted' })];
+    for (const task of tasks) {
+      db.add(task);
+    }
+    for (let index = 0; index < 50; index++) {
+      db.add(Obj.make(TestSchema.Person, { name: `person-${index}` }));
+    }
+    await db.flush();
+    db.remove(tasks[1]);
+
+    const isDeleted = vi.spyOn(ObjectCore.prototype, 'isDeleted');
+    const results = planAndExecute(db, Query.select(Filter.type(TestSchema.Task)));
+
+    expect(results.map((item) => item.objectId)).toEqual([tasks[0].id]);
+    expect(isDeleted.mock.calls.length).toBeLessThanOrEqual(tasks.length);
+  });
 });
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -564,7 +585,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
     return db.spaceId;
   },
   allCores: () => db.allObjectCores(),
-  getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
+  getCoreById: (id) => db.getObjectCoreById(id, { load: false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
   areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),
 });

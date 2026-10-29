@@ -26,7 +26,7 @@ import {
   type ViewId,
   createClock,
 } from '../model/index.ts';
-import { type Clipboard, type PartKey, type UndoState, emptyUndo } from '../utils/index.ts';
+import { type Clipboard, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
 
@@ -60,6 +60,13 @@ export type Drag =
    * draggable, which previews as its frame alone: the pointer already carries the drag's own preview.
    */
   | { kind: 'create'; type: NodeType; from: Point; to: Point; dropped?: boolean }
+  /**
+   * Drawing a node vertex by vertex (`NodeDef.createFromPoints`): `points` are those placed, in scene coordinates, and
+   * `to` the pointer, where the next segment runs. It outlasts each press, ending when the line is finished or dropped.
+   */
+  | { kind: 'vertices'; type: NodeType; points: Point[]; to: Point }
+  /** Moving one vertex of a node in vertex edit mode; `points` are all its vertices, in scene coordinates. */
+  | { kind: 'vertex'; id: NodeId; index: number; points: Point[] }
   /** Moving one control point of a spline; `points` is the transient list. */
   | { kind: 'point'; id: LinkId; index: number; points: Point[] }
   /** Re-attaching one end of a link; `fixed` is the other end's resolved port for the rubber band. */
@@ -82,8 +89,11 @@ export type Isolation = { composite: ViewId; back: HistoryEntry };
 
 export type ControlPointRef = { link: LinkId; index: number };
 
-/** The text part being edited in place (`parts.ts`). */
-export type EditingPart = { id: NodeId; part: PartKey };
+/**
+ * The node in edit mode, one at a time (`NodeDef.editor`): a text part edited in place (`parts.ts`), or its vertices
+ * shown as points to drag, `vertex` the one last pressed. Enter, Escape or a press outside the node leaves it.
+ */
+export type Editing = { id: NodeId; kind: 'label'; part: PartKey } | { id: NodeId; kind: 'vertices'; vertex?: number };
 
 /** Where the inspectors (properties, layers, about) sit: floating over the canvas, or docked in a column beside it. */
 export type InspectorMode = 'floating' | 'docked';
@@ -106,15 +116,11 @@ export type CanvasAtoms = {
   snap: Atom.Writable<boolean>;
   /** Guides shown: on a lattice, its cells. */
   guides: Atom.Writable<boolean>;
-  /** On a lattice scene, snap lands on the lattice's cells rather than the basic grid. */
-  lattice: Atom.Writable<boolean>;
   drag: Atom.Writable<Drag | undefined>;
   history: Atom.Writable<{ entries: HistoryEntry[]; index: number }>;
-  /** Projection snapshots for undo and redo (`undo.ts`). */
-  undo: Atom.Writable<UndoState>;
   /** The last cut or copied fragment (`clipboard.ts`). */
   clipboard: Atom.Writable<Clipboard | undefined>;
-  editing: Atom.Writable<EditingPart | undefined>;
+  editing: Atom.Writable<Editing | undefined>;
   /**
    * The node whose embedded content takes input (an editor in a frame), entered by clicking the node; any other
    * node's embedded content is inert, so a press anywhere on it selects and moves it.
@@ -146,12 +152,10 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   linkType: Atom.keepAlive(Atom.make<LinkType>('smart')),
   snap: Atom.keepAlive(Atom.make<boolean>(true)),
   guides: Atom.keepAlive(Atom.make<boolean>(true)),
-  lattice: Atom.keepAlive(Atom.make<boolean>(true)),
   drag: Atom.keepAlive(Atom.make<Drag | undefined>(undefined)),
   history: Atom.keepAlive(Atom.make<{ entries: HistoryEntry[]; index: number }>({ entries: [], index: -1 })),
-  undo: Atom.keepAlive(Atom.make<UndoState>(emptyUndo())),
   clipboard: Atom.keepAlive(Atom.make<Clipboard | undefined>(undefined)),
-  editing: Atom.keepAlive(Atom.make<EditingPart | undefined>(undefined)),
+  editing: Atom.keepAlive(Atom.make<Editing | undefined>(undefined)),
   active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
   clock: createClock(),

@@ -28,6 +28,8 @@ const VERSION_RE = /^\d{8}-\d{6}$/;
 export type FixtureOptions = {
   /** Pin an exact version (`20260804-181500`); defaults to the newest available. */
   readonly version?: string;
+  /** File extension of the fixture (`wav`); defaults to `json`. */
+  readonly extension?: string;
 };
 
 /** The shared fixture directory (git-ignored). Overridable for a scratch corpus. */
@@ -37,15 +39,19 @@ export const FIXTURES_DIR = process.env.DX_FIXTURES_DIR ?? join(REPO_ROOT, 'test
  * Versions of a fixture present locally, newest first. The stamp is lexicographically sortable, so
  * a plain string sort is chronological.
  */
-export const fixtureVersions = (name: string): string[] => {
+export const fixtureVersions = (
+  name: string,
+  { extension = 'json' }: Pick<FixtureOptions, 'extension'> = {},
+): string[] => {
   if (!existsSync(FIXTURES_DIR)) {
     return [];
   }
 
   const prefix = `${name}-`;
+  const suffix = `.${extension}`;
   return readdirSync(FIXTURES_DIR)
-    .filter((entry) => entry.startsWith(prefix) && entry.endsWith('.json'))
-    .map((entry) => entry.slice(prefix.length, -'.json'.length))
+    .filter((entry) => entry.startsWith(prefix) && entry.endsWith(suffix))
+    .map((entry) => entry.slice(prefix.length, -suffix.length))
     .filter((version) => VERSION_RE.test(version))
     .sort()
     .reverse();
@@ -57,12 +63,13 @@ export const fixtureVersions = (name: string): string[] => {
  * that does not exist.
  */
 export const fixturePath = (name: string, options: FixtureOptions = {}): string | undefined => {
-  const version = options.version ?? fixtureVersions(name)[0];
+  const extension = options.extension ?? 'json';
+  const version = options.version ?? fixtureVersions(name, { extension })[0];
   if (!version) {
     return undefined;
   }
 
-  const path = join(FIXTURES_DIR, `${name}-${version}.json`);
+  const path = join(FIXTURES_DIR, `${name}-${version}.${extension}`);
   return existsSync(path) ? path : undefined;
 };
 

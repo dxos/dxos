@@ -32,7 +32,8 @@ export const resolveVariant = (
     const canvas = yield* Database.load(drawing.canvas);
     const schema = canvas.schema ?? '';
     const variants = yield* Capability.getAll(IllustratorCapabilities.VariantProvider);
-    const variant = variants.find((entry) => entry.id === schema);
+    // By format: a canvas stored at an older revision stays with its variant until migrated.
+    const variant = variants.find((entry) => Drawing.isSameFormat(entry.id, schema));
     if (!variant) {
       return yield* Effect.fail(new UnknownDrawingVariantError(schema));
     }
@@ -43,4 +44,5 @@ export const resolveVariant = (
 export const findVariant = (
   variants: readonly IllustratorCapabilities.DrawingVariant[],
   canvas: Pick<Drawing.Canvas, 'schema'> | undefined,
-): IllustratorCapabilities.DrawingVariant | undefined => variants.find((entry) => entry.id === (canvas?.schema ?? ''));
+): IllustratorCapabilities.DrawingVariant | undefined =>
+  variants.find((entry) => Drawing.isSameFormat(entry.id, canvas?.schema ?? ''));

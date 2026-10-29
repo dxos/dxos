@@ -383,6 +383,8 @@ export const Request = Schema.TaggedStruct('request', {
   title: Schema.String,
   toolCallId: Schema.optional(Schema.String),
   options: Schema.Array(RequestOption),
+  /** What the call would send or write (an email's body), shown collapsed under the request. */
+  preview: Schema.optional(Schema.Struct({ label: Schema.String, text: Schema.String })),
   /** Set once answered, or `cancelled` when the turn that asked ended first. */
   resolution: Schema.optional(
     Schema.Struct({

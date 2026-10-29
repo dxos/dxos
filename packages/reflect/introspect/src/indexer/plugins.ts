@@ -91,8 +91,11 @@ export const extractPlugins = (rootPath: string, packages: readonly PackageLike[
 };
 
 const tryExtract = (rootPath: string, pkg: PackageLike): PluginRecord | null => {
-  const metaPath = join(rootPath, pkg.path, 'src', 'meta.ts');
-  if (!existsSync(metaPath)) {
+  // A plugin defined by `Plugin.config` has no `src/meta.ts`; its `dx.config.ts` carries the metadata.
+  const metaPath = [join(rootPath, pkg.path, 'src', 'meta.ts'), join(rootPath, pkg.path, 'dx.config.ts')].find(
+    (candidate) => existsSync(candidate),
+  );
+  if (!metaPath) {
     return null;
   }
 
@@ -265,8 +268,13 @@ const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: P
     return null;
   }
 
-  const exportAssignment = configSource.getExportAssignment((decl) => !decl.isExportEquals());
-  const makeCall = exportAssignment?.getExpressionIfKind(SyntaxKind.CallExpression);
+  // `export default Config2.make({...})`, or `export default config` naming a `const config = Plugin.config({...})`.
+  const exportExpression = configSource.getExportAssignment((decl) => !decl.isExportEquals())?.getExpression();
+  const makeCall =
+    exportExpression?.asKind(SyntaxKind.CallExpression) ??
+    (exportExpression?.isKind(SyntaxKind.Identifier)
+      ? configSource.getVariableDeclaration(exportExpression.getText())?.getInitializerIfKind(SyntaxKind.CallExpression)
+      : undefined);
   const configArg = makeCall?.getArguments()[0];
   if (!configArg || configArg.getKind() !== SyntaxKind.ObjectLiteralExpression) {
     return null;
@@ -280,7 +288,7 @@ const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: P
     return null;
   }
 
-  const id = readStringProperty(pluginObj, 'key');
+  const id = readStringProperty(pluginObj, 'key') ?? readNamespaceKey(configSource, pluginObj, project);
   if (!id) {
     return null;
   }
@@ -297,6 +305,39 @@ const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: P
     dependsOn: [],
     metaLocation: locationOf(configSource, pluginObj.getStart()),
   };
+};
+
+/**
+ * Resolve `key: XNamespace.key`, the `Plugin.config` form: follow `XNamespace` to its declaration
+ * (`export const XNamespace = Plugin.namespace('org.dxos.plugin.x')`) and read the literal.
+ */
+const readNamespaceKey = (
+  configSource: SourceFile,
+  pluginObj: ObjectLiteralExpression,
+  project: Project,
+): string | undefined => {
+  const access = pluginObj
+    .getProperty('key')
+    ?.asKind(SyntaxKind.PropertyAssignment)
+    ?.getInitializerIfKind(SyntaxKind.PropertyAccessExpression);
+  if (!access || access.getName() !== 'key') {
+    return undefined;
+  }
+  const name = access.getExpression().getText();
+  const specifier = configSource
+    .getImportDeclarations()
+    .find((decl) => decl.getNamedImports().some((named) => named.getName() === name))
+    ?.getModuleSpecifierValue();
+  if (!specifier?.startsWith('.')) {
+    return undefined;
+  }
+  const namespacePath = join(configSource.getDirectoryPath(), specifier);
+  if (!existsSync(namespacePath)) {
+    return undefined;
+  }
+  const namespaceSource = project.getSourceFile(namespacePath) ?? project.addSourceFileAtPath(namespacePath);
+  const call = namespaceSource.getVariableDeclaration(name)?.getInitializerIfKind(SyntaxKind.CallExpression);
+  return call?.getArguments()[0]?.asKind(SyntaxKind.StringLiteral)?.getLiteralValue();
 };
 
 /** Read `obj.<name>.<key>` when `<name>` is an object-literal property (e.g. `icon: { key, hue }`). */
@@ -381,7 +422,7 @@ const readSurface = (call: CallExpression, pluginId: PluginId, file: SourceFile)
 };
 
 const readSchemas = (call: CallExpression, pluginId: PluginId, file: SourceFile, into: Schema[]): void => {
-  // `AppCapability.schema([Spec.Spec, CodeProject.CodeProject, ...])`
+  // `AppCapability.schema([SpecDocument.SpecDocument, CodeProject.CodeProject, ...])`
   const arg = call.getArguments()[0];
   if (!arg || arg.getKind() !== SyntaxKind.ArrayLiteralExpression) {
     return;

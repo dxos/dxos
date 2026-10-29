@@ -1,0 +1,327 @@
+---
+id: org.dxos.review.ui-containers
+name: Ui Containers
+version: 0.1.0
+---
+
+The container/node model for Composer UI. Every collection of objects renders in one of a few
+standard **containers**, and every object inside one renders as a **node**:
+
+| Kind      | Primitive                         | Package                                                   |
+| --------- | --------------------------------- | --------------------------------------------------------- |
+| container | list (`Listbox`, `OrderedList`, `Tree`, Mosaic `Stack`) | `@dxos/react-ui-list`, `@dxos/react-ui-mosaic` |
+| container | masonry (`Masonry.Root`)          | `@dxos/react-ui-masonry`                                  |
+| container | kanban (Mosaic `Board`)           | `@dxos/react-ui-mosaic`                                   |
+| container | canvas / spatial board (`Board`)  | `@dxos/react-ui-canvas`, `@dxos/react-ui-board`           |
+| node      | card (`Card.*`, `CardTile`)       | `@dxos/react-ui` `Card`, `@dxos/react-ui-card`            |
+| node      | article (the object's main view)  | `AppSurface.ObjectArticleProps` surfaces                  |
+
+The containers share one set of hooks (Mosaic `Container`/`Tile`, `Focus.Item`,
+`useListNavigation`, `useListSelection`), so navigation, selection, focus, highlighting, scrolling
+and reactivity behave the same everywhere. Every card has the same header (icon, title, menu at the
+end) and the same three-column layout (start rail, content, end rail), so a user who has learned
+one card has learned them all. Content inside a card is not restricted: a card can hold a large text
+section. Use these rules unless the user explicitly asks for something else; then say why in a
+comment next to the exception.
+
+## Extensions
+
+| Term   | URI                   |
+| ------ | --------------------- |
+| `rule` | org.dxos.mdl.rule@1.0 |
+
+## Rules
+
+```mdl
+rule collections-use-standard-containers: A collection of objects renders in a standard container — list, masonry, kanban, or canvas
+  A plugin that lays out its own tiles (a `grid grid-cols-*` of mapped
+  objects, a row of mapped `<section>` columns, a hand-placed flex wrap)
+  gets none of the shared navigation, selection, focus, scrolling, or mobile
+  behaviour, and looks and acts differently from every other collection in
+  the app. Pick the container that fits: list (`Listbox` / `OrderedList` /
+  `Tree`, or the Mosaic `Stack` for reorderable surfaces), masonry
+  (`Masonry.Root` from `@dxos/react-ui-masonry`), kanban (the Mosaic `Board`
+  from `@dxos/react-ui-mosaic`), or canvas (`@dxos/react-ui-canvas`, or the
+  spatial `Board` from `@dxos/react-ui-board`). Flag a `map()` over objects
+  that produces tiles, cards or columns inside a hand-rolled grid, flex wrap
+  or column layout, and a plugin component that re-creates one of these
+  containers. `no-hand-rolled-lists` already covers plain rows; this rule
+  covers tiles, columns and grids. Do NOT flag a layout the user explicitly
+  asked for when a comment says so, or a `map()` producing non-object
+  content (chips, grid cells of a table, chart marks).
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+  grep: grid-cols|flex-wrap|columns-[0-9]|cols=\{
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule containers-share-core-hooks: A container builds on the shared container hooks, never its own navigation, selection or focus
+  The standard containers are interchangeable only because they all route
+  keyboard navigation, selection, focus, highlighting and scrolling through
+  the same core: Mosaic `Container` / `Tile`, `Focus.Item`,
+  `useListNavigation`, `useListSelection`, `useVisibleItems`. A container
+  that tracks its own `selectedId` in `useState`, handles arrow keys in its
+  own `onKeyDown`, calls `scrollIntoView` itself, or sets `dx-current` /
+  `dx-selected` by hand behaves subtly differently from the others and
+  breaks when its cards move to another container. New container primitives
+  are not wanted: extend an existing container, or the shared hooks, instead.
+  Flag a component that renders a collection of tiles and implements any of
+  selection state, arrow-key navigation, focus management or scroll-to-item
+  itself, and a new container component added outside the container
+  packages. Do NOT flag code inside the shared hooks and containers
+  themselves (`react-ui-list`, `react-ui-mosaic`, `react-ui-masonry`,
+  `react-ui-board`, `react-ui-canvas`, `react-ui` `Focus`), or app-level
+  keyboard shortcuts that are not collection navigation.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: ArrowDown|ArrowUp|scrollIntoView|setSelectedId|'dx-current'|'dx-selected'
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule leaf-objects-render-as-cards: Every object inside a container is a card with the standard header
+  Users recognise a card by its frame: the icon, the title, and the menu at
+  the top right, with content rows below in the three-column layout (start
+  rail, content, end rail). A leaf rendered as a bespoke `<section>`, `Panel`,
+  or styled `<div>` drops that frame, so each plugin teaches the user a new
+  shape for the same idea. Render each leaf with `Card.Root` and a
+  `Card.Header` holding the icon, `Card.Title` and `Card.Menu`, and put
+  content in `Card.Row` / `Card.Body` / `Card.Section`; inside a Mosaic
+  container use `CardTile.Root` + `CardTile.Header` from
+  `@dxos/react-ui-card`. Content has no restrictions — a card may hold a
+  large text section or a form — only the frame is fixed. Flag a tile or
+  item component rendered inside a container that is not built on `Card.*`
+  or `CardTile.*`, and a card header assembled from raw elements, or missing
+  the title or menu. Do NOT flag the object's main article view, which is a
+  node of its own; a section of a document stack (`plugin-stack` sections,
+  notebook cells), which shows a whole document and is an article node too;
+  or a cell in a table.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+  grep: Masonry\.|Mosaic\.|<Board|Listbox\.|OrderedList\.|Stack\b.*Tile|Tile=\{
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule cards-are-container-agnostic: A card renders the same in every container and does not know which one holds it
+  A card exists so one object can appear in a list, a masonry, a kanban
+  column or on a canvas without being rewritten. A card that reads its
+  container's context, takes container-specific props (`column`, `lane`,
+  `gridArea`), or exists in several copies per container (`KanbanFooCard`,
+  `MasonryFooCard`, `ListFooRow`) breaks that, and the copies drift. Write
+  one card per object type, contribute it as the `card--content` surface,
+  and let each container supply position, drag handles and selection
+  through its own tile wrapper. Flag a card component that imports or reads
+  a container's context or props, and two card components for the same
+  object type that differ only by the container they are used in. Do NOT
+  flag a container-level tile wrapper (Mosaic `Tile`, `Board` item) that
+  hosts the shared card.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+  grep: Card\.Root|CardTile\.|card--content
+  unit: file
+  context: imports, siblings
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule object-fields-render-as-form: An object's plain properties render as one compact form, not a stack of cards or sections
+  Simple properties of one object — an id, a status, some notes — read
+  clearest as a standard form: label, value, one row each. Giving each
+  property its own card, section or heading spreads three fields over a
+  screen, and invents a layout the user has to learn. Render them with the
+  schema-driven `Form` from `@dxos/react-ui-form` (inside the card's body or
+  the article), or as `Card.Row`s when they are read-only on a card. Flag a
+  component that renders one `Card`, `Panel`, `<section>` or heading per
+  scalar property of a single object. Do NOT flag properties that are
+  themselves objects or collections (those are nodes in a container), or a
+  property whose content is large enough to need its own region, such as a
+  document body.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+  grep: <section|Card\.Section|<h[2-4]\b
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule collection-views-share-one-container: Several views of one collection are tabs of one view container over the same cards
+  When a plugin offers the same objects as a board, a kanban and a table,
+  each tab written as its own component fetches, sorts and renders the
+  objects its own way, so selection and highlighting are lost when the user
+  switches, and each view drifts. Use one view container that owns the
+  query and the selection, shows sub-tabs for the layouts, and hands the
+  same cards to each standard container. Flag sibling tab components that
+  each query and render the same collection with their own layout or their
+  own item component. Do NOT flag views of different collections, or a
+  single view with no alternative layouts.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+  grep: Tabs\.Root|Tabs\.Tab
+  unit: file
+  context: siblings, imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule container-story-with-fixtures: Every container has a story driven by realistic fixtures and the standard cards
+  A container story is how a reviewer sees navigation, selection, scrolling
+  and reflow work; a story with three hard-coded `{ id: '1', title: 'a' }`
+  items, or one that renders placeholder boxes instead of cards, shows none
+  of that, and hides the cases (long titles, many items, empty columns) where
+  containers break. Give each container a story with a motivating scenario,
+  built from shared fixtures or generators (the package's `testing` entry,
+  such as `@dxos/react-ui-mosaic/testing`, or a schema generator) and
+  rendering real cards. Flag a container component with no story, and a
+  container story whose items are a short inline literal or whose tiles are
+  not cards. `story-for-new-ui-component` covers stories in general; this
+  rule covers what a container story must contain. Do NOT flag stories of
+  non-container components.
+  scope: repo
+  files:
+    - packages/ui/**/*.stories.tsx
+    - packages/plugins/**/*.stories.tsx
+  grep: Board|Masonry|Stack|Listbox|Kanban|Canvas|Mosaic
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule scroll-list-pads-and-gaps: A scrolling list of cards is padded by its viewport and spaced by its list, so no card touches another or the edge
+  Cards stacked flush against each other and against the panel edge read as
+  one striped block: the borders merge, the current card's highlight bleeds
+  into its neighbours, and the scrollbar overlaps the cards. The spacing has
+  one owner per axis: the `ScrollArea.Viewport` pads the content (`p-2`), and
+  the list between the cards (`gap-2` on the Mosaic `Stack`, the `gap` of a
+  `Layout.Flex` or virtual stack). A card never adds its own outer margin to
+  make room. Flag a `ScrollArea.Viewport` with no padding that holds a stack
+  or list of cards, a non-draggable Mosaic `Stack` of cards with no gap, and
+  a card or tile that sets an outer margin (`m-*`, `my-*`, `mb-*`) to space
+  itself from its siblings. Do NOT flag a draggable Mosaic `Stack`, whose
+  placeholders already space the tiles; a `Listbox` or `Form`, which own
+  their padding (see the composer-ui skill); or rows that are not cards.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: ScrollArea\.Viewport|Mosaic\.Stack|Card\.Root|CardTile\.
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule card-content-in-middle-column: A card whose header uses the rails is a `grid` card, so its rows start in the middle column under the title
+  A `Card.Header` that puts an icon in `Layout.Block rail='start'` and a menu
+  in `rail='end'` starts its title in the middle column. Without `grid` on
+  `Card.Root`, the card is a plain padded column: its `Card.Row`s start at the
+  left edge, under the icon instead of under the title, so the body text and
+  the title do not line up. `grid` makes the card a rail container and every
+  Header, Row and Section a subgrid of it, so all text starts at one content
+  edge. Flag a `Card.Root` without `grid` whose `Card.Header` uses
+  `rail='start'` or `rail='end'` blocks and which also has `Card.Row` or
+  `Card.Section` content. Do NOT flag a card with only a header, or a card
+  whose rows set their own `icon` and so already align with the header.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: rail='(start|end)'
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule empty-container-uses-empty: A container with nothing to show renders `Status.Empty`, not a hand-styled message
+  Every empty state in the app (no items, no selection, no result, nothing
+  opened yet) should look the same: a centred message in the secondary text
+  colour, with an optional icon, announced as a status. A hand-rolled
+  `<Layout.Flex center classNames='text-description'>` or
+  `<div className='p-4 text-description'>` picks its own padding, colour,
+  alignment and size, so each panel's empty state looks different, and none
+  of them is announced to assistive tech. Render
+  `<Status.Empty icon=… classNames='dx-fill'>{t('…empty…')}</Status.Empty>`
+  from `@dxos/react-ui/Status` instead (a composite's own `Empty` part is
+  built on it). Flag an early return or branch that renders only a
+  translated "empty", "no …", "nothing …" or "select/click … to …" message in
+  a `Layout.Flex`, `div` or `span` styled by hand. Do NOT flag a `Banner`
+  that carries an action, an error message, a loading indicator, or an
+  `emptyMessage` prop passed to a component that renders its own empty state.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: \.empty|empty\.|Empty|no-.*\.(label|message)
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule diagram-links-are-smart: A diagram built in code draws its connectors as `smart` links
+  A `line`, `curve` or `spline` link runs straight from port to port, so in
+  a laid-out diagram it crosses the cards between its ends and hides their
+  text. A `smart` link routes through the lattice gutters (or around the
+  boxes when there is no lattice) and picks the ports that bend least, so
+  arrows never cross a card. Flag a `link: { type: 'line' | 'curve' |
+  'spline' }` passed to `createDynamicProjection` or to a dynamic layout's
+  options, and a link created by code for a generated diagram with one of
+  those types. Do NOT flag a link a user drew on a free canvas, the link-type
+  picker itself, or tests of the other link types.
+  scope: repo
+  files:
+    - packages/plugins/**/*.ts
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.ts
+    - packages/ui/**/*.tsx
+  grep: type:\s*'(line|curve|spline)'
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+## Appendix
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent or the System One checker.
+  inline-prose: true
+  fields:
+    files:       Glob | Glob[]     # paths this rule reviews, relative to `scope`
+    grep?:       Prose             # optional regex pre-filter over file contents
+    severity?:   warn | error      # defaults to warn
+    scope?:      dir | repo        # glob base: this file's dir (default) or repo root
+    unit?:       file | pr         # one verdict per file (default) or per change set
+    context?:    ContextKind[]     # diff | imports | importers | siblings | package | public-api | similar | test | pr
+    system-one?: on | off          # off when no fetcher can supply what the rule needs
+    question?:   Prose             # literal yes/no question for the System One checker
+```

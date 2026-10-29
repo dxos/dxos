@@ -70,6 +70,13 @@
   .dx-fieldset-legend > .dx-button:not([data-variant='primary']) {
     color: var(--color-fg);
   }
+  /*
+   * A nested group's legend is a row of its own above the bordered fields: one block tall, so its disclosure fits with
+   * room above the border; the disclosure stays in the form's trailing column, with every other trailing control.
+   */
+  .dx-fieldset-legend[data-nested] {
+    min-height: var(--dx-block-size);
+  }
   /* A legend given its own size is a heading row: one block tall, in that size's text. */
   .dx-fieldset-legend[data-size] {
     min-height: var(--dx-block-size);

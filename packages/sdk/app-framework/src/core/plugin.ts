@@ -15,8 +15,11 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
+import * as Environment from '#environment';
+
 import * as ActivationEvent from './activation-event.ts';
 import * as Capability from './capability.ts';
+import * as HotModules from './hot-modules.ts';
 import type * as PluginManager from './plugin-manager/index.ts';
 
 //
@@ -111,7 +114,7 @@ export type ModuleActivateResult = Capability.ModuleReturn | readonly Capability
  * order: a module declares the capabilities it `provides` and `requires`, and the plugin
  * manager activates providers before consumers (topological order). Runtime-event modules
  * (`activatesOn`) activate only when their event fires. See
- * `plugin-client/src/ClientPlugin.ts` for a worked example.
+ * `plugin-client/dx.config.ts` for a worked example.
  *
  * @idiom org.dxos.app-framework.moduleActivationOrdering
  *   applies: sequencing one plugin module's activation before or after another
@@ -140,6 +143,9 @@ export interface PluginModule {
   activate: (
     props?: any,
   ) => Effect.Effect<ModuleActivateResult, Error, Capability.Service | Service | Scope.Scope | never>;
+
+  /** Imports a lazy module's body without activating it; absent on inline modules. */
+  readonly load?: () => Promise<unknown>;
 }
 
 /**
@@ -212,6 +218,9 @@ export type ModuleEntry = {
   readonly requires?: readonly Capability.AnyTag[];
   readonly provides?: readonly Capability.AnyTag[];
   readonly activate: (props?: any) => Effect.Effect<any, Error, any>;
+  readonly load?: () => Promise<unknown>;
+  /** What the module was authored from, when `activate` wraps it; defaults to `activate`. */
+  readonly source?: unknown;
 };
 
 class PluginModuleImpl implements PluginModule {
@@ -219,13 +228,34 @@ class PluginModuleImpl implements PluginModule {
   readonly id: string;
   readonly activation: ActivationSpec;
   readonly activate: PluginModule['activate'];
+  readonly load: PluginModule['load'];
+  readonly source: unknown;
 
-  constructor(options: { id: string; activation: ActivationSpec; activate: PluginModule['activate'] }) {
+  constructor(options: {
+    id: string;
+    activation: ActivationSpec;
+    activate: PluginModule['activate'];
+    load: PluginModule['load'];
+    source: unknown;
+  }) {
     this.id = options.id;
     this.activation = options.activation;
     this.activate = options.activate;
+    this.load = options.load;
+    this.source = options.source;
   }
 }
+
+/**
+ * Whether two modules come from the same authored definition — the same module object, as when a
+ * re-created plugin reuses it. Re-creating a plugin keeps such a module running rather than repeating
+ * its activation's side effects.
+ */
+export const isSameDefinition = (left: PluginModule, right: PluginModule): boolean =>
+  left instanceof PluginModuleImpl &&
+  right instanceof PluginModuleImpl &&
+  left.id === right.id &&
+  left.source === right.source;
 
 /**
  * Runtime plugin metadata, derived from the `@dxos/protocols` registry schemas (protocols owns the
@@ -285,6 +315,34 @@ export const getMetaFromConfig = ({ plugin }: Config2.Config): Meta => {
   const { key, ...rest } = plugin;
   return makeMeta({ key: DXN.make(key), ...rest });
 };
+
+/**
+ * A plugin's identity as a leaf module: its config and its capability tags both derive from it, so
+ * the config can list the tags its modules provide without the tags importing the config.
+ *
+ * @example
+ * ```ts
+ * // src/namespace.ts
+ * export const MarkdownNamespace = Plugin.namespace('org.dxos.plugin.markdown');
+ * // src/types/MarkdownCapabilities.ts
+ * export const Settings = MarkdownNamespace.makeSingleton<Atom.Writable<Settings>>()('settings');
+ * // dx.config.ts
+ * Plugin.config({ plugin: { key: MarkdownNamespace.key, … }, modules: [ … ] });
+ * ```
+ */
+export const namespace = <const K extends string>(key: K) => ({
+  key,
+  /** A multi capability with identifier `<key>.capability.<name>`. */
+  make:
+    <T>() =>
+    <const N extends string>(name: N) =>
+      Capability.makeTag<T, `${K}.capability.${N}`, 'multi'>(`${key}.capability.${name}`, 'multi'),
+  /** A singleton capability with identifier `<key>.capability.<name>`. */
+  makeSingleton:
+    <T>() =>
+    <const N extends string>(name: N) =>
+      Capability.makeTag<T, `${K}.capability.${N}`, 'single'>(`${key}.capability.${name}`, 'single'),
+});
 
 /**
  * Identifier denoting a Plugin.
@@ -428,6 +486,8 @@ export function addModule<T>(
         requires: module.requires,
         provides: module.provides,
         activate: () => module(pluginOptions),
+        load: module.load,
+        source: module,
       }));
   }
   // Direct-call style: addModule(builder, moduleOptions).
@@ -494,6 +554,8 @@ const resolveModule = (
     // Erasure boundary: the authoring layer constrained the effect's environment to the
     // declared requires; the manager supplies exactly those services plus the ambient ones.
     activate: moduleOptions.activate as PluginModule['activate'],
+    load: moduleOptions.load,
+    source: moduleOptions.source ?? moduleOptions.activate,
   });
 };
 
@@ -598,6 +660,138 @@ export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): ((options: T)
 export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
 
 /**
+ * Builds a plugin from its module list, keeping only the modules that run in this build's
+ * {@link Environment.current}; a module with no `environments` runs everywhere.
+ */
+export const fromModules = <T = void>(
+  meta: Meta,
+  modules: ReadonlyArray<Capability.Module<any> | undefined>,
+): PluginFactory<T> =>
+  make(
+    modules
+      .filter((module) => module !== undefined)
+      .filter((module) => module.environments?.includes(Environment.current) ?? true)
+      .reduce((builder, module) => addModule<T>(module)(builder), define<T>(meta)),
+  );
+
+/** Authoring input for {@link config}: the `dx.config.ts` data plus the plugin's modules. */
+export type ConfigOptions = Config2.Config & {
+  /** Module specs only; each body is a dynamic import, so reading the config loads no plugin code. */
+  modules: ReadonlyArray<Capability.Module<any> | undefined>;
+};
+
+/** A plugin's `dx.config.ts` default export: its config data, runtime {@link Meta} and factory. */
+export type PluginConfig<T = void> = Config2.Config & {
+  meta: Meta;
+  make: PluginFactory<T>;
+  /** The authored module list, read by build tools to emit the plugin's {@link Manifest}. */
+  modules: ReadonlyArray<Capability.Module<any> | undefined>;
+};
+
+/**
+ * Defines a plugin entirely from its `dx.config.ts`.
+ *
+ * @example
+ * ```ts
+ * // dx.config.ts
+ * export default Plugin.config({
+ *   plugin: { key: 'org.dxos.plugin.markdown', name: 'Markdown' },
+ *   modules: [AppCapability.schema(() => import('./src/capabilities/schema.ts'))],
+ * });
+ * ```
+ */
+export const config = <T = void>({ modules, ...data }: ConfigOptions): PluginConfig<T> => {
+  const meta = getMetaFromConfig(data);
+  return { ...data, meta, make: fromModules<T>(meta, modules), modules };
+};
+
+/**
+ * The module named `name` in a plugin's config, for tests and stories that compose a plugin from a
+ * subset of another plugin's modules.
+ */
+export const getModule = <T>({ modules }: Pick<PluginConfig<T>, 'modules'>, name: string): Capability.Module<T> => {
+  const module = modules.find((candidate) => candidate && Capability.getModuleTag(candidate) === name);
+  invariant(module, `No module named ${name}.`);
+  return module;
+};
+
+/** A capability tag as serialized in a {@link Manifest}: the identity the plugin manager matches on. */
+export type ManifestTag = { identifier: string; arity: Capability.Arity };
+
+/** One module of a {@link Manifest}: its activation spec as data and the URL of its body. */
+export type ManifestModule = {
+  id: string;
+  url: string;
+  activatesOn?: ActivationEvent.Events;
+  requires: readonly ManifestTag[];
+  provides: readonly ManifestTag[];
+  /** Transform applied to what `url` exports, when the module's maker adapts a data module. */
+  adapter?: { url: string; args?: unknown };
+  /** Runtimes the module loads in; present only in a library build, which serves every runtime. */
+  environments?: readonly Capability.Environment[];
+};
+
+/**
+ * Static loaders for a manifest's URLs, keyed by URL. A library build passes them so downstream
+ * bundlers (e.g. a worker's) can follow each body; an app build omits them and loads by URL.
+ */
+export type ManifestLoaders = Readonly<Record<string, () => Promise<unknown>>>;
+
+/**
+ * Static description of a plugin, emitted at build time from its `dx.config.ts` for one target
+ * environment, so the app loads only data plus the module bodies it activates.
+ */
+export type Manifest = Config2.Config & { modules: readonly ManifestModule[] };
+
+type ModuleBody = { default: (props: unknown) => Effect.Effect<any, Error, any> };
+type ModuleAdapter = { default: (loaded: unknown, args: unknown) => unknown };
+
+// Loaded by URL, so the module's shape is only known at runtime.
+const hasDefaultFunction = (value: unknown): boolean =>
+  typeof value === 'object' && value !== null && 'default' in value && typeof value.default === 'function';
+const isModuleBody = (value: unknown): value is ModuleBody => hasDefaultFunction(value);
+const isModuleAdapter = (value: unknown): value is ModuleAdapter => hasDefaultFunction(value);
+
+/**
+ * Builds a plugin from a build-time {@link Manifest}. Each module body loads on activation, through
+ * `loaders` when the build supplied static imports, otherwise from its URL.
+ */
+export const fromManifest = <T = void>(
+  { modules, ...data }: Manifest,
+  loaders: ManifestLoaders = {},
+): Pick<PluginConfig<T>, 'plugin' | 'meta' | 'make'> => {
+  const meta = getMetaFromConfig(data);
+  const toTags = (tags: readonly ManifestTag[]) =>
+    tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
+  const load = (url: string) => loaders[url]?.() ?? import(/* @vite-ignore */ url);
+  return {
+    plugin: data.plugin,
+    meta,
+    make: fromModules<T>(
+      meta,
+      modules.map(({ id, url, activatesOn, requires, provides, adapter, environments }) =>
+        Capability.lazyModule(
+          id,
+          { activatesOn, requires: toTags(requires), provides: toTags(provides), environments },
+          async () => {
+            const loaded = await load(url);
+            if (!adapter) {
+              invariant(isModuleBody(loaded), `Module ${id} at ${url} has no default export.`);
+              return loaded;
+            }
+            const adapterModule = await load(adapter.url);
+            invariant(isModuleAdapter(adapterModule), `Adapter at ${adapter.url} has no default export.`);
+            const adapted = adapterModule.default(loaded, adapter.args);
+            invariant(isModuleBody(adapted), `Adapter at ${adapter.url} returned no module body.`);
+            return adapted;
+          },
+        ),
+      ),
+    ),
+  };
+};
+
+/**
  * Tagged error for failures during lazy plugin resolution. `context.id` is
  * the lazy plugin's `meta.profile.key`; `context.reason` discriminates the failure
  * mode (`'load-failed' | 'missing-default' | 'invalid-plugin' |
@@ -643,6 +837,7 @@ export const resolveLazy = (plugin: Plugin): Effect.Effect<Plugin, LazyPluginErr
     if (!mod || typeof mod.default !== 'function') {
       return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'missing-default' } }));
     }
+    HotModules.trackPlugin(mod, id);
     const result = mod.default(options);
     if (!isPlugin(result)) {
       return yield* Effect.fail(new LazyPluginError({ context: { id, reason: 'invalid-plugin' } }));

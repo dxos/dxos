@@ -1,0 +1,718 @@
+> ---
+  "---" punctuation.definition.begin.frontmatter
+> id: org.dxos.plugin.thread
+  "i" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "d" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "o" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+  "rg.dxos.plugin.thread" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+> name: ThreadPlugin
+  "n" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "ame" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "T" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+  "hreadPlugin" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+> version: 0.1.0
+  "v" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "ersion" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "0.1.0" meta.embedded.block.frontmatter constant.numeric.float.yaml
+> ---
+  "---" punctuation.definition.end.frontmatter
+> 
+> ThreadPlugin provides chat: channels backed by an ECHO feed and free-standing message threads.
+> It renders the channel article + companion surfaces and a thread surface, and contributes the
+> operations that create a channel and append messages. Shared message/thread UI comes from
+> `@dxos/react-ui-thread`, and the `Channel`/`Message`/`Thread` schema comes from `@dxos/types`.
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "@dxos/react-ui-thread" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "Channel" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "Message" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "Thread" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "@dxos/types" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+> Document comments and the comment-thread AI agent live in `@dxos/plugin-comments`.
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "@dxos/plugin-comments" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+> 
+> ## Extensions
+  "##" markup.heading.markdown heading.2.markdown punctuation.definition.heading.markdown
+  "Extensions" markup.heading.markdown heading.2.markdown entity.name.section.markdown
+> 
+> The following extension dialects are used in this document.
+> 
+> | Term        | URI                            |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "Term" markup.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "URI" markup.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> |-------------|--------------------------------|
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "-------------" markup.table.markdown punctuation.separator.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "--------------------------------" markup.table.markdown punctuation.separator.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> | `type`      | `org.dxos.mdl.type@1.0`        |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "type" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "org.dxos.mdl.type@1.0" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> | `feat`      | `org.dxos.mdl.feat@1.0`        |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "feat" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "org.dxos.mdl.feat@1.0" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> | `op`        | `org.dxos.mdl.op@1.1`          |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "op" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "org.dxos.mdl.op@1.1" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> | `test`      | `org.dxos.mdl.test@1.0`        |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "test" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "org.dxos.mdl.test@1.0" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> 
+> ## Types
+  "##" markup.heading.markdown heading.2.markdown punctuation.definition.heading.markdown
+  "Types" markup.heading.markdown heading.2.markdown entity.name.section.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> type Channel
+  "type" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.type.mdl
+  "Channel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   desc: |
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>     A chat channel. Defined in @dxos/types. Carries an optional `feed` Ref whose
+  "A chat channel. Defined in @dxos/types. Carries an optional " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "feed" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  " Ref whose" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>     queue holds the channel's Message objects in order.
+  "queue holds the channel's Message objects in order." markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ## Operations
+  "##" markup.heading.markdown heading.2.markdown punctuation.definition.heading.markdown
+  "Operations" markup.heading.markdown heading.2.markdown entity.name.section.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> op OnCreateSpace
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.op.mdl
+  "OnCreateSpace" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   key: org.dxos.plugin.thread.operation.onCreateSpace
+  "key" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.plugin.thread.operation.onCreateSpace" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+>   desc: On space creation, create a default "General" channel in the root collection.
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"General\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> op CreateChannel
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.op.mdl
+  "CreateChannel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   key: org.dxos.operation.thread.createChannel
+  "key" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.thread.createChannel" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+>   desc: Create a new Channel in the given space.
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>   in:
+  "in" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     spaceId: SpaceId
+  "spaceId" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "SpaceId" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+>     name?: String
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+>   out:
+  "out" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     object: Channel
+  "object" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Channel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> op AppendChannelMessage
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.op.mdl
+  "AppendChannelMessage" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   key: org.dxos.operation.thread.appendChannelMessage
+  "key" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.thread.appendChannelMessage" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+>   desc: Append a Message authored by `sender` to the channel's feed.
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "sender" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   in:
+  "in" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     channel: Channel
+  "channel" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Channel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+>     sender: Actor
+  "sender" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Actor" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+>     text: String
+  "text" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> op SendToChannel
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.op.mdl
+  "SendToChannel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   key: org.dxos.operation.thread.sendToChannel
+  "key" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.thread.sendToChannel" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+>   desc: |
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>     Send text to a channel, or to a backend thread inside it, through the provider resolved by
+  "Send text to a channel, or to a backend thread inside it, through the provider resolved by" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>     `channel.backend.kind`. A backend refusal returns `delivered: false` with a reason; a missing
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "channel.backend.kind" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  ". A backend refusal returns " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "delivered: false" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  " with a reason; a missing" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>     provider or a backend without threads fails with a typed error.
+  "provider or a backend without threads fails with a typed error." markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>   in:
+  "in" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     channel: Ref<Channel>
+  "channel" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Ref" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  "<" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+  "Channel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  ">" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+>     thread?: String
+  "thread" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+>     text: String
+  "text" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+>   out:
+  "out" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     delivered: Boolean
+  "delivered" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Boolean" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+>     messageIds?: String[]
+  "messageIds" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+  "[]" markup.fenced_code.block.markdown meta.embedded.block.mdl storage.modifier.array.mdl
+>     properties?: Record
+  "properties" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Record" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+>     reason?: String
+  "reason" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> op OpenDirect
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.op.mdl
+  "OpenDirect" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   key: org.dxos.operation.thread.openDirect
+  "key" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.thread.openDirect" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+>   desc: |
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>     Open a direct conversation (a DM) with a Person through the channel's account, via the
+  "Open a direct conversation (a DM) with a Person through the channel's account, via the" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>     backend's optional `openDirect`; returns a thread id for SendToChannel.
+  "backend's optional " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "openDirect" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "; returns a thread id for SendToChannel." markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>   in:
+  "in" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     channel: Ref<Channel>
+  "channel" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Ref" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  "<" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+  "Channel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  ">" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+>     person: Ref<Person>
+  "person" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Ref" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  "<" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+  "Person" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  ">" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+>   out:
+  "out" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     thread?: String
+  "thread" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+>     reason?: String
+  "reason" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "String" markup.fenced_code.block.markdown meta.embedded.block.mdl support.type.primitive.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> op ConnectChannel
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.op.mdl
+  "ConnectChannel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   key: org.dxos.operation.thread.connectChannel
+  "key" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.thread.connectChannel" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+>   desc: Start the backend's optional connection (a bot gateway); DisconnectChannel and GetChannelStatus stop and report it.
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>   in:
+  "in" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     channel: Ref<Channel>
+  "channel" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Ref" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  "<" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+  "Channel" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  ">" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+>   out:
+  "out" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     status: ConnectionStatus
+  "status" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "ConnectionStatus" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ## Features
+  "##" markup.heading.markdown heading.2.markdown punctuation.definition.heading.markdown
+  "Features" markup.heading.markdown heading.2.markdown entity.name.section.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> feat F-1: Channel chat
+  "feat" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.feat.mdl
+  "F-1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Channel chat" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   req F-1.1: A Channel article MUST render its feed messages newest-last with a
+  "req" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "F-1.1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     pinned composer; sending invokes AppendChannelMessage.
+>   req F-1.2: Externally-synced channels (those carrying foreign-key Obj.Meta) MUST
+  "req" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "F-1.2" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     render read-only — the composer is suppressed.
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> feat F-2: Thread chat
+  "feat" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.feat.mdl
+  "F-2" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Thread chat" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   req F-2.1: A Thread article MUST render the thread's messages and append new
+  "req" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "F-2.1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     messages by pushing onto `thread.messages`.
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "thread.messages" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ## QA
+  "##" markup.heading.markdown heading.2.markdown punctuation.definition.heading.markdown
+  "QA" markup.heading.markdown heading.2.markdown entity.name.section.markdown
+> 
+> Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "do" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+> invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "invoke" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> test QA-1: Create a channel and send a message
+  "test" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.test.mdl
+  "QA-1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Create a channel and send a message" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   desc: The core thread round-trip — create a Channel, send a message, read it back from the feed.
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>   actors: both
+  "actors" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "both" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>   covers: [F-1.1]
+  "covers" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "F-1.1" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.end.mdl
+>   status: unverified
+  "status" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "unverified" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>   given:
+  "given" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - identityDid: an identity exists, its DID used as the message `sender`
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "identityDid" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "sender" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>     - space: a space is open
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "space" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - no Channel named "QA Channel" exists — ABORT rather than deleting one this test did not create
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "\"QA Channel\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>   steps:
+  "steps" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - name: Create the channel
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       do: In the navtree, click + on the space and choose Channel. Name it "QA Channel".
+  "do" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"QA Channel\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       invoke: [op:CreateChannel] { spaceId: $given.space.id, name: "QA Channel" }
+  "invoke" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl storage.type.reference.op.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.reference.mdl
+  "CreateChannel" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.end.mdl
+  "$given.space.id" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+  "\"QA Channel\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       capture: created
+  "capture" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "created" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>       expect: a Channel named "QA Channel" now exists and opens in the channel article
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"QA Channel\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       assert: return !!$created.object
+  "assert" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "$created.object" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+>     - name: Place it in the space
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       do: (no separate gesture — the navtree create action places it)
+  "do" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       invoke: org.dxos.operation.space.addObject { object: $created.object, target: $given.space }
+  "invoke" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.space.addObject" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+  "$created.object" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+  "$given.space" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+>       expect: "QA Channel" appears as a row in the navtree
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"QA Channel\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>     - name: Send a message
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       do: In the composer at the bottom of the channel article, type "Hello QA" and press Enter.
+  "do" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"Hello QA\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       invoke: |
+  "invoke" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>         org.dxos.operation.thread.appendChannelMessage {
+  "org.dxos.operation.thread.appendChannelMessage" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl support.constant.reference.mdl
+  " {" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>           channel: $created.object,
+  "channel: " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "$created.object" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl variable.other.capture.mdl
+  "," markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>           sender: { identityDid: $given.identityDid },
+  "sender: { identityDid: " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "$given.identityDid" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl variable.other.capture.mdl
+  " }," markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>           text: "Hello QA"
+  "text: " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "\"Hello QA\"" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl string.quoted.double.mdl
+>         }
+  "}" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>       expect: "Hello QA" appears as the newest (bottom-most) message in the feed
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"Hello QA\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       note: |
+  "note" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>         `output: void` — Rule 3 applies: verify the effect, not the return value. Reading the
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "output: void" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  " — Rule 3 applies: verify the effect, not the return value. Reading the" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>         feed's queue is not expressible as a synchronous DOM/db snippet here, so this step is
+  "feed's queue is not expressible as a synchronous DOM/db snippet here, so this step is" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>         judged by `expect` alone.
+  "judged by " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  " alone." markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>   after:
+  "after" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - name: Delete the channel
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       do: Right-click "QA Channel" in the navtree and choose Delete.
+  "do" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"QA Channel\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.space }
+  "invoke" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.space.removeObjects" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+  "$created.object" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+  "$given.space" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+>       expect: the row leaves the navtree and its plank closes if it was open
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> test QA-2: Default "General" channel on space creation
+  "test" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.test.mdl
+  "QA-2" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Default " markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+  "\"General\"" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl string.quoted.double.mdl
+  " channel on space creation" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   desc: The lifecycle hook that seeds every new space with a channel — no user gesture involved.
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>   actors: agent
+  "actors" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "agent" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>   covers: []
+  "covers" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "[]" markup.fenced_code.block.markdown meta.embedded.block.mdl storage.modifier.array.mdl
+>   status: unverified
+  "status" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "unverified" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>   given:
+  "given" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - an identity exists
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+>   steps:
+  "steps" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - name: Create a new space
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       do: Click "Create space" (or invoke the equivalent action).
+  "do" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"Create space\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       invoke: org.dxos.operation.space.create {}
+  "invoke" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.space.create" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+>       capture: created
+  "capture" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "created" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>       expect: a new space is created
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       assert: return !!$created.space
+  "assert" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "$created.space" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+>     - name: Confirm the default channel exists
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       do: Open the new space's navtree and look for a "General" channel.
+  "do" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"General\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       expect: a Channel named "General" exists in the root collection of the new space
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"General\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+>       note: |
+  "note" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>         NO separate `invoke` — `org.dxos.plugin.thread.operation.onCreateSpace` is a lifecycle
+  "NO separate " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "invoke" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  " — " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "org.dxos.plugin.thread.operation.onCreateSpace" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  " is a lifecycle" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>         hook the space-creation pipeline runs itself, not something this test calls directly; this
+  "hook the space-creation pipeline runs itself, not something this test calls directly; this" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>         step only verifies the effect.
+  "step only verifies the effect." markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>       assert: |
+  "assert" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>         return (await $created.space.db.query(dxos.Filter.type(Channel)).run())
+  "return (await " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "$created.space.db.query" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl variable.other.capture.mdl
+  "(dxos.Filter.type(Channel)).run())" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>           .objects.some((c) => c.name === 'General');
+  ".objects.some((c) => c.name === 'General');" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>   after:
+  "after" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - name: Delete the space
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "name" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       do: Right-click the new space in the navtree and choose Delete space.
+  "do" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>       invoke: org.dxos.operation.space.delete { space: $created.space }
+  "invoke" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.space.delete" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+  "$created.space" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+>       expect: the space leaves the navtree
+  "expect" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 

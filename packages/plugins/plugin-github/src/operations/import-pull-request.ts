@@ -7,7 +7,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { PullRequest } from '@dxos/types';
@@ -18,8 +18,9 @@ import { GitHubPullRequestReferenceError, GitHubRepoInaccessibleError } from '..
 import { type PullRequestReference, parsePullRequestReference } from '../github-link.ts';
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
-import { githubToken } from './pull-request.ts';
+import { type GitHubAccess, githubAccess } from './pull-request.ts';
 import { ensureRefreshTrigger } from './refresh.ts';
+import { ensureRepo, findRepo, toRepoDescriptor } from './repo.ts';
 
 /**
  * Statuses that may report the token's reach rather than the repository's absence, and so are worth
@@ -50,7 +51,7 @@ const MAY_REFLECT_TOKEN_SCOPE = new Set([401, 403, 404]);
  */
 export const fetchPullRequestWithFallback = (
   { owner, repo, number }: PullRequestReference,
-  token: string,
+  { token, connected }: GitHubAccess,
   fetch: (
     owner: string,
     repo: string,
@@ -92,7 +93,9 @@ export const fetchPullRequestWithFallback = (
                 repo,
                 number,
                 status: GitHubApi.responseStatus(error),
-                connected: token !== '',
+                connected,
+                // A connection with no token to try, which reconnecting fixes like a rejected one.
+                tokenUnavailable: connected && token === '',
                 tokenStatus,
               },
             }),
@@ -121,10 +124,11 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
         Effect.orDie,
       );
       if (existing) {
-        return { pullRequest: Ref.make(existing), imported: false };
+        const known = yield* findRepo(owner, repo).pipe(Effect.orDie);
+        return { pullRequest: Ref.make(existing), ...(known && { repo: Ref.make(known) }), imported: false };
       }
 
-      const pull = yield* fetchPullRequestWithFallback(parsed, yield* githubToken());
+      const pull = yield* fetchPullRequestWithFallback(parsed, yield* githubAccess());
 
       const { object } = yield* Operation.invoke(SpaceOperation.AddObject, {
         object: PullRequest.make(toPullRequestProps(parsed, pull)),
@@ -141,7 +145,15 @@ const handler: Operation.WithHandler<typeof GitHubOperation.ImportPullRequest> =
         Effect.catchDefect((defect) => Effect.sync(() => log.warn('refresh trigger setup failed', { defect }))),
       );
 
-      return { pullRequest: Ref.make(object), imported: true };
+      const filed = pull.base?.repo
+        ? yield* ensureRepo(toRepoDescriptor(pull.base.repo)).pipe(Effect.orDie)
+        : undefined;
+      if (filed) {
+        Obj.update(object, (object) => {
+          object.repository = Ref.make(filed);
+        });
+      }
+      return { pullRequest: Ref.make(object), ...(filed && { repo: Ref.make(filed) }), imported: true };
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

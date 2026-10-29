@@ -12,11 +12,12 @@ import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import { Message } from '@dxos/types';
 
 import type { PermissionAgent } from '../modules/PermissionContext.tsx';
-import { PERMISSION_OPTIONS } from '../testing/index.ts';
+import { PERMISSION_OPTIONS, type PermissionId } from '../testing/index.ts';
 
 const EMPTY_TREE = Atom.make<readonly Process.Process[]>([]);
 
@@ -56,15 +57,16 @@ const useConversationProcesses = ({ processTreeAtom, conversation }: ProcessesPr
   }, [tree, conversation]);
 };
 
-type Line =
+/** One line of an agent's transcript as its card shows it. */
+export type PermissionLine =
   | { kind: 'prompt'; id: string; text: string }
   | { kind: 'answer'; id: string; text: string }
   | { kind: 'call'; id: string; name: string; input: string }
   | { kind: 'result'; id: string; name: string; text: string; refused: boolean; failed: boolean };
 
-const toLines = (messages: readonly Message.Message[]): Line[] =>
+const toLines = (messages: readonly Message.Message[]): PermissionLine[] =>
   messages.flatMap((message) =>
-    message.blocks.flatMap((block, index): Line[] => {
+    message.blocks.flatMap((block, index): PermissionLine[] => {
       const id = `${message.id}-${index}`;
       switch (block._tag) {
         case 'text':
@@ -95,7 +97,7 @@ const toLines = (messages: readonly Message.Message[]): Line[] =>
     }),
   );
 
-const TranscriptLine = ({ line }: { line: Line }) => {
+const TranscriptLine = ({ line }: { line: PermissionLine }) => {
   switch (line.kind) {
     case 'prompt':
       return (
@@ -136,51 +138,67 @@ const TranscriptLine = ({ line }: { line: Line }) => {
   }
 };
 
-export type PermissionAgentTileProps = {
-  agent: PermissionAgent;
-  db?: Database.Database;
-  processTreeAtom?: Atom.Atom<readonly Process.Process[]>;
-  onRemove?: (id: string) => void;
+/** A tool process the agent spawned, as its card lists it. */
+export type PermissionToolProcess = {
+  pid: string;
+  key: string;
+  state: Process.State;
+  /** The guard's denial, when the process failed because of one. */
+  refusal?: string;
+};
+
+export type PermissionAgentCardProps = {
+  index: number;
+  location: Process.Location['kind'];
+  /** The permission ids the agent's guard holds. */
+  granted: readonly PermissionId[];
+  /** The agent's own process, once spawned. */
+  pid?: string;
+  state?: Process.State;
+  /** Why the agent could not be spawned. */
+  error?: string;
+  lines: readonly PermissionLine[];
+  tools: readonly PermissionToolProcess[];
+  onRemove?: () => void;
 };
 
 /**
- * A spawned agent: the grants its process holds, its live transcript, and the tool processes it
- * spawned, where a refusal shows as a FAILED process carrying the guard's denial.
+ * An agent's card from plain values: the grants its process holds, its transcript, and the tool processes it
+ * spawned, each with its state at the row's end, where a refusal shows as a FAILED process and the guard's denial.
  */
-export const PermissionAgentTile = ({ agent, db, processTreeAtom, onRemove }: PermissionAgentTileProps) => {
-  const feed = agent.session?.feed;
-  const conversation = feed ? Obj.getURI(feed) : undefined;
-  const { agent: agentProcess, tools } = useConversationProcesses({ processTreeAtom, conversation });
-  const messages = useQuery(
-    db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  );
-  const lines = useMemo(() => toLines(messages), [messages]);
-  const refusals = tools.flatMap((process) => {
-    const reason = process.state === Process.State.FAILED ? refusalOf(process.error?.message) : undefined;
-    return reason ? [{ pid: process.pid, key: process.key, reason }] : [];
-  });
-
+export const PermissionAgentCard = ({
+  index,
+  location,
+  granted,
+  pid,
+  state,
+  error,
+  lines,
+  tools,
+  onRemove,
+}: PermissionAgentCardProps) => {
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
   }, [lines.length]);
 
-  const state = agentProcess?.state;
   const terminal = state !== undefined && Process.isTerminal(state);
+  const refusals = tools.filter((tool) => tool.refusal !== undefined);
   return (
     <Card.Root grid data-testid='permission-agent'>
       <Card.Header>
-        <Icon.Icon icon={agent.location.kind === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'} />
+        <Layout.Block rail='start'>
+          <Icon.Icon icon={location === 'edge' ? 'ph--cloud--regular' : 'ph--laptop--regular'} />
+        </Layout.Block>
         <Card.Title truncate>
-          Agent {agent.index} · {agent.location.kind}
+          Agent {index} · {location}
         </Card.Title>
-        {(terminal || agent.error) && <Card.Action system='delete' onClick={() => onRemove?.(agent.id)} />}
+        {(terminal || error) && <Card.Action system='delete' onClick={onRemove} />}
       </Card.Header>
       <Card.Row icon='ph--key--regular' data-testid='permission-agent-grants'>
-        <div className='flex flex-wrap gap-1'>
+        <Layout.Flex wrap gap='xs'>
           {PERMISSION_OPTIONS.map(({ id, label }) =>
-            agent.config.permissions.includes(id) ? (
+            granted.includes(id) ? (
               <Tag.Tag key={id} hue='success'>
                 {label}
               </Tag.Tag>
@@ -190,20 +208,23 @@ export const PermissionAgentTile = ({ agent, db, processTreeAtom, onRemove }: Pe
               </Tag.Tag>
             ),
           )}
-        </div>
+        </Layout.Flex>
       </Card.Row>
-      {agent.location.kind === 'edge' && (
+      {location === 'edge' && (
         <Card.Row icon='ph--warning--regular' data-testid='permission-agent-unguarded'>
-          <span className='text-sm text-warning-text whitespace-normal'>
+          <Card.Text lines={2} classNames='text-warning-text'>
             No guard on EDGE: these grants are not enforced.
-          </span>
+          </Card.Text>
         </Card.Row>
       )}
-      <Card.Row icon='ph--cpu--regular' data-testid='permission-agent-state'>
-        <div className='flex items-center gap-2 min-w-0'>
-          <span className='font-mono truncate'>{agentProcess?.pid ?? (agent.error ? 'not spawned' : 'spawning…')}</span>
-          {state && <Tag.Tag hue={STATE_HUE[state]}>{state}</Tag.Tag>}
-        </div>
+      <Card.Row
+        icon='ph--cpu--regular'
+        trailing={state ? <Tag.Tag hue={STATE_HUE[state]}>{state}</Tag.Tag> : undefined}
+        data-testid='permission-agent-state'
+      >
+        <Card.Text truncate classNames='font-mono'>
+          {pid ?? (error ? 'not spawned' : 'spawning…')}
+        </Card.Text>
       </Card.Row>
       <Card.Row span='full'>
         <div
@@ -214,37 +235,83 @@ export const PermissionAgentTile = ({ agent, db, processTreeAtom, onRemove }: Pe
           {lines.map((line) => (
             <TranscriptLine key={line.id} line={line} />
           ))}
-          {agent.error && (
+          {error && (
             <pre className='text-error-text text-xs whitespace-pre-wrap' data-testid='permission-agent-error'>
-              {agent.error}
+              {error}
             </pre>
           )}
         </div>
       </Card.Row>
       {tools.length > 0 && (
-        <Card.Row span='full'>
-          <div className='flex flex-col gap-1 w-full text-sm' data-testid='permission-agent-tools'>
-            {tools.map((process) => (
-              <div key={process.pid} className='flex items-center gap-2 min-w-0' data-testid='permission-tool-process'>
-                <Icon.Icon icon='ph--git-branch--regular' classNames='shrink-0' />
-                <span className='font-mono truncate'>{shortName(process.key)}</span>
-                <Tag.Tag hue={STATE_HUE[process.state]}>{process.state}</Tag.Tag>
-              </div>
-            ))}
-          </div>
-        </Card.Row>
+        <Card.Section title='Tool processes' data-testid='permission-agent-tools'>
+          {tools.map((tool) => (
+            <Card.Row
+              key={tool.pid}
+              icon='ph--git-branch--regular'
+              trailing={<Tag.Tag hue={STATE_HUE[tool.state]}>{tool.state}</Tag.Tag>}
+              data-testid='permission-tool-process'
+            >
+              <Card.Text truncate classNames='font-mono'>
+                {shortName(tool.key)}
+              </Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
       )}
       {refusals.length > 0 && (
-        <Card.Row icon='ph--shield-warning--regular' data-testid='permission-agent-refusals'>
-          <div className='flex flex-col gap-1 text-sm text-error-text whitespace-normal [overflow-wrap:anywhere]'>
-            {refusals.map(({ pid, key, reason }) => (
-              <span key={pid}>
-                {shortName(key)} refused: {reason.replace(/^denied: /, '')}
-              </span>
-            ))}
-          </div>
-        </Card.Row>
+        <Card.Section title='Refused' data-testid='permission-agent-refusals'>
+          {refusals.map((tool) => (
+            <Card.Row key={tool.pid} icon='ph--shield-warning--regular'>
+              <Card.Text lines={3} classNames='text-error-text [overflow-wrap:anywhere]'>
+                {shortName(tool.key)}: {tool.refusal?.replace(/^denied: /, '')}
+              </Card.Text>
+            </Card.Row>
+          ))}
+        </Card.Section>
       )}
     </Card.Root>
+  );
+};
+
+export type PermissionAgentTileProps = {
+  agent: PermissionAgent;
+  db?: Database.Database;
+  processTreeAtom?: Atom.Atom<readonly Process.Process[]>;
+  onRemove?: (id: string) => void;
+};
+
+/** A spawned agent's card, following its feed and the process tree. */
+export const PermissionAgentTile = ({ agent, db, processTreeAtom, onRemove }: PermissionAgentTileProps) => {
+  const feed = agent.session?.feed;
+  const conversation = feed ? Obj.getURI(feed) : undefined;
+  const { agent: agentProcess, tools } = useConversationProcesses({ processTreeAtom, conversation });
+  const messages = useQuery(
+    db,
+    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+  );
+  const lines = useMemo(() => toLines(messages), [messages]);
+  const toolProcesses = useMemo(
+    () =>
+      tools.map(({ pid, key, state, error }) => ({
+        pid,
+        key,
+        state,
+        refusal: state === Process.State.FAILED ? refusalOf(error?.message) : undefined,
+      })),
+    [tools],
+  );
+
+  return (
+    <PermissionAgentCard
+      index={agent.index}
+      location={agent.location.kind}
+      granted={agent.config.permissions}
+      pid={agentProcess?.pid}
+      state={agentProcess?.state}
+      error={agent.error}
+      lines={lines}
+      tools={toolProcesses}
+      onRemove={() => onRemove?.(agent.id)}
+    />
   );
 };

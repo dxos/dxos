@@ -3,7 +3,9 @@
 //
 
 export * from './useCanvasController.ts';
+export * from './useCanvasHistory.ts';
 export * from './useDocumentCommands.ts';
+export * from './useEditMode.ts';
 export * from './useElementHandlers.ts';
 export * from './useExposedClock.ts';
 export * from './useGesturePreview.ts';

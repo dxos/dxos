@@ -11,9 +11,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
+import { CallsNamespace } from '../../namespace.ts';
 import { Toolbar, type ToolbarProps } from '../Call/index.ts';
 import { VideoObject } from '../Media/index.ts';
 import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
@@ -46,7 +46,7 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CallsNamespace.key);
   const call = Hooks.useCapability(CallsCapabilities.Manager);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const videoStream = useAtomValue(call.localVideoStreamAtom);
@@ -93,26 +93,31 @@ LobbyPreview.displayName = 'LobbyPreview';
 type LobbyToolbarProps = Util.ThemedClassName<
   {
     roomId: string;
-  } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled'>
+  } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled' | 'participants'>
 >;
 
-const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
+const LobbyToolbar = ({ roomId, participants, ...props }: LobbyToolbarProps) => {
   const call = Hooks.useCapability(CallsCapabilities.Manager);
   const [count, setCount] = useState<number>(0);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
   useEffect(() => {
+    // A known count (a simulated call has no swarm to ask) needs no polling.
+    if (participants !== undefined) {
+      return;
+    }
+
     void call.peek(roomId).then((count) => setCount(count));
     const interval = setInterval(() => {
       void call.peek(roomId).then((count) => setCount(count));
     }, SWARM_PEEK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [call, roomId]);
+  }, [call, roomId, participants]);
 
   return (
     <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
-      <Toolbar participants={count} isInRoom={false} {...props} />
+      <Toolbar participants={participants ?? count} isInRoom={false} {...props} />
     </Layout.Flex>
   );
 };

@@ -14,7 +14,6 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset, Ollama } from '#types';
 
 import {
@@ -25,18 +24,22 @@ import {
   providerForModel,
   resolveProvider,
 } from '../chat-model/index.ts';
+import { AssistantNamespace } from '../namespace.ts';
+import { modelIcon } from '../util/model-icon.ts';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;
 } & Pick<AssistantPreset.ChatPresetProps, 'presets' | 'onPresetChange'>;
 
 /**
- * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}).
- * The selection is the chat's own (`Chat.session.model`), written back to it when the user picks; a chat that
- * has not selected one shows the configured per-provider model.
+ * Resolves the chat model presets: every EDGE model, then the models this device serves (the bundled
+ * sidecar's installed models, a reachable LM Studio, or the external server settings name). Each preset
+ * carries its own provider, so the model picked decides where inference runs. The selection is the chat's
+ * own (`Chat.session.model`), written back to it when the user picks; a chat that has not selected one
+ * shows the configured default.
  */
 export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
   // same chat, and the stamp the chat model writes before the first request.
   const [session] = useObject(chat, 'session');
@@ -52,33 +55,30 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
   // Installed models reported by the bundled sidecar; used to offer only models actually present.
   const localModels = useAtomValue(ollamaManager?.state ?? Ollama.emptyState);
 
-  // When the bundled sidecar is the active provider, list installed models in the background so the
-  // chat selector is populated without first opening settings. Idempotent: kicks off only from the
-  // idle state, so it spawns the sidecar once when local models are in use (not on every launch);
-  // settings remains the explicit path for retrying after a failure.
   useEffect(() => {
     if (provider === Provider.builtIn.id && ollamaManager && localModels.kind === 'idle') {
       void EffectEx.runPromise(ollamaManager.refresh);
     }
   }, [provider, ollamaManager, localModels.kind]);
 
-  // Probe the external LM Studio server only when that provider is selected on desktop.
   const lmStudioProbeUrl =
     provider === Provider.lmStudio.id && ollamaManager ? `${Provider.lmStudio.endpoint}/v1/models` : undefined;
   const lmStudioReachable = useEndpointReachable(lmStudioProbeUrl);
 
-  const presets = useMemo(() => {
-    const base = presetsForProvider(provider);
-    // Desktop LM Studio: only offer presets when the external server responds.
-    if (provider === Provider.lmStudio.id && ollamaManager) {
-      return lmStudioReachable ? base : [];
+  const { presets, fallbackPresets } = useMemo(() => {
+    const edge = presetsForProvider(Provider.edge.id);
+    if (provider === Provider.edge.id) {
+      return { presets: edge, fallbackPresets: edge };
     }
-    // Bundled sidecar: only offer models that are actually installed (matched by back-end pull tag).
-    if (provider === Provider.builtIn.id && ollamaManager) {
+    let local = presetsForProvider(provider);
+    if (provider === Provider.lmStudio.id && ollamaManager && !lmStudioReachable) {
+      local = [];
+    } else if (provider === Provider.builtIn.id && ollamaManager) {
       const installed = new Set(localModels.models.map((model) => model.name));
-      return base.filter((preset) => installed.has(preset.backend));
+      local = local.filter((preset) => installed.has(preset.backend));
     }
-    return base;
+    const runtime = local.map((preset) => ({ ...preset, local: true }));
+    return { presets: [...edge, ...runtime], fallbackPresets: runtime };
   }, [provider, ollamaManager, lmStudioReachable, localModels]);
 
   // The chat's selection when the active provider serves it, else the provider's configured model.
@@ -86,7 +86,8 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
   // still what the process will run, so it is shown as an unavailable entry rather than silently
   // displayed as the fallback — the picker and the request must agree.
   const unavailable = useMemo<AiServicePreset | undefined>(() => {
-    if (!chatModel || presets.length === 0 || presets.some((preset) => preset.model === chatModel)) {
+    const unlisted = provider !== Provider.edge.id && fallbackPresets.length === 0;
+    if (!chatModel || unlisted || presets.some((preset) => preset.model === chatModel)) {
       return undefined;
     }
     // Carries the provider that actually serves the model rather than the active one, which by
@@ -99,18 +100,21 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
       backend: catalog?.backend ?? '',
       label: t('model-unavailable.label', { label: catalog?.label ?? DXN.getName(chatModel) }),
     };
-  }, [chatModel, presets, provider, t]);
+  }, [chatModel, presets, fallbackPresets, provider, t]);
 
   const preset = useMemo(
-    () => presets.find((preset) => preset.model === chatModel) ?? unavailable ?? pickPreset(presets, defaultModel),
-    [presets, chatModel, unavailable, defaultModel],
+    () =>
+      presets.find((preset) => preset.model === chatModel) ?? unavailable ?? pickPreset(fallbackPresets, defaultModel),
+    [presets, fallbackPresets, chatModel, unavailable, defaultModel],
   );
 
   const presetOptions = useMemo(
     () =>
-      [...presets, ...(unavailable ? [unavailable] : [])].map(({ id, model, label }) => ({
-        id,
-        label: label ?? model,
+      [...presets, ...(unavailable ? [unavailable] : [])].map((preset) => ({
+        id: preset.id,
+        label: preset.label ?? preset.model,
+        local: 'local' in preset && preset.local === true,
+        icon: modelIcon(preset.model),
       })),
     [presets, unavailable],
   );

@@ -55,6 +55,9 @@ export type NodeViewProps = {
 
 export type CreateProps = { id: string; z: string; center: Point; size: Size };
 
+/** What a node's edit mode edits (`NodeDef.editor`). */
+export type NodeEditor = 'label' | 'vertices';
+
 export type NodeDef = {
   type: NodeType;
   name: string;
@@ -83,9 +86,25 @@ export type NodeDef = {
   ellipse?: boolean;
   /**
    * The frame's fill and border take this outline (SVG path data in the frame's px, kept `inset` px inside it) rather
-   * than the box: a cloud is a box drawn as a cloud.
+   * than the box: a cloud is a box drawn as a cloud. `radius` is the look's corner radius in px, for an outline with
+   * corners of its own to round.
    */
-  silhouette?: (node: Node, inset: number) => string;
+  silhouette?: (node: Node, inset: number, radius: number) => string;
+  /** Whether the silhouette's fill is drawn; unset, it is. An open outline (a line of segments) is its border alone. */
+  filled?: (node: Node) => boolean;
+  /**
+   * Makes the type drawn vertex by vertex: its palette tool places points click by click, and this makes the node from
+   * them, `points` in the unit space of the frame `props` gives (0..1, origin top-left).
+   */
+  createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
+  /**
+   * What the node's edit mode (a double-click on it, or Enter with it selected alone) edits: `'label'`, the default, its
+   * text part in place; `'vertices'`, the unit-space `points` of a type drawn vertex by vertex, each shown as a point to
+   * drag, with its move and resize handles hidden. Enter, Escape or a press outside the node leaves either.
+   */
+  editor?: NodeEditor;
+  /** The outline drawn while the node is moved or drawn: its frame unless the shape fits a `circle` inside it. */
+  bounds?: (node: Node) => 'frame' | 'circle';
   /**
    * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
    * opening calls it instead of drilling in, and auto-drill passes the node by.

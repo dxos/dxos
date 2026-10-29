@@ -1,0 +1,11 @@
+diagram kind=dataflow
+node Customer "Customer" role=external
+node Place "Place order"
+node Bill "Bill customer"
+node Orders "Orders" role=store
+node Bank "Bank" role=external
+edge Customer -> Place "order details"
+edge Place -> Orders "new order"
+edge Orders -> Bill "open orders"
+edge Bill -> Customer "invoice"
+edge Bill -> Bank "payment request"

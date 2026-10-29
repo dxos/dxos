@@ -15,11 +15,37 @@ import { FrameStack } from './FrameStack.tsx';
 
 type Item = { id: string; name: string; src?: string };
 
-const ITEMS: Item[] = [
+/** The opening frames the play test addresses by name and position. */
+const NAMED_ITEMS: Item[] = [
   { id: 'a', name: 'Establishing shot', src: 'https://picsum.photos/seed/a/640/360' },
   { id: 'b', name: 'The reveal' },
   { id: 'c', name: 'Closing', src: 'https://picsum.photos/seed/c/640/360' },
 ];
+
+const SHOTS = ['Wide shot', 'Close-up', 'Over-the-shoulder', 'Tracking shot', 'Aerial', 'Insert', 'Dutch angle'];
+const SUBJECTS = [
+  'harbour at dawn',
+  'the detective studies the map pinned above the cluttered desk while rain streaks the window',
+  'crowd gathers in the square',
+  'hands on the steering wheel',
+  'empty corridor',
+  'the letter',
+  'skyline at dusk, lights flickering on one floor at a time across the financial district',
+];
+
+const GENERATED_COUNT = 27;
+
+/** Deterministic frames after the named ones: varied name lengths, and every third frame still a placeholder. */
+const GENERATED_ITEMS: Item[] = Array.from({ length: GENERATED_COUNT }, (_, index) => {
+  const id = `g${index}`;
+  return {
+    id,
+    name: `${SHOTS[index % SHOTS.length]} — ${SUBJECTS[(index * 3) % SUBJECTS.length]}`,
+    src: index % 3 === 2 ? undefined : `https://picsum.photos/seed/studio-${id}/640/360`,
+  };
+});
+
+const ITEMS: Item[] = [...NAMED_ITEMS, ...GENERATED_ITEMS];
 
 const DefaultStory = () => {
   const [items, setItems] = useState(ITEMS);

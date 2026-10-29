@@ -22,15 +22,24 @@ export class DocumentUnavailableError extends BaseError.extend(
 }
 
 /**
+ * `Context` attribute naming why a client is closing, read from the context passed to `close()` and carried as the
+ * `closeReason` of every later {@link RepoClosedError}.
+ */
+export const CLOSE_REASON_ATTRIBUTE = 'echo-client.closeReason';
+
+/**
  * The repo proxy is no longer able to reach the host: the client is closing or has closed, so the
  * document can never be produced. Expected during teardown — work started while the proxy was open
  * routinely lands after it, and callers that can abandon quietly should.
+ *
+ * `closeReason` and the `cause` say what stopped the proxy: a close (the cause's stack is the call site) or the
+ * error that put it in its error state.
  */
 export class RepoClosedError extends BaseError.extend(
   'RepoClosedError',
   'Repo proxy is closed; the client is going away.',
 ) {
-  constructor(context: { spaceId: string; documentId?: string }, options?: BaseErrorOptions) {
+  constructor(context: { spaceId: string; documentId?: string; closeReason?: string }, options?: BaseErrorOptions) {
     super({ context, ...options });
   }
 }

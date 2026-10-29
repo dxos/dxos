@@ -1,0 +1,184 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "DEUS MDL block",
+  "scopeName": "source.mdl-block",
+  "patterns": [{ "include": "#comment-line" }, { "include": "#block" }],
+  "repository": {
+    "block": {
+      "comment": "The header is the begin of a rule that runs to the closing fence, so only the first line of the block is read as `<type> [<id>][: <title>]`.",
+      "begin": "^[ \\t]*(?:(ext|type|op|feat|scenario|test|component|service|db|module|suite|decision)|([A-Za-z_][\\w-]*))(?![\\w-])(?:[ \\t]+([\\w][\\w.-]*))?(?:[ \\t]*(:)[ \\t]*(.*?))?[ \\t]*$",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.block.$1.mdl" },
+        "2": { "name": "entity.name.type.block.mdl" },
+        "3": { "name": "entity.name.function.id.mdl" },
+        "4": { "name": "punctuation.separator.key-value.mdl" },
+        "5": { "name": "entity.name.section.title.mdl", "patterns": [{ "include": "#inline" }] }
+      },
+      "end": "(?=^[ \\t]*(?:`{3,}|~{3,})[ \\t]*$)",
+      "patterns": [
+        { "include": "#comment-line" },
+        { "include": "#block-scalar" },
+        { "include": "#list-item" },
+        { "include": "#field" },
+        { "include": "#inline" }
+      ]
+    },
+    "comment-line": {
+      "match": "^[ \\t]*((#).*)$",
+      "captures": {
+        "1": { "name": "comment.line.number-sign.mdl" },
+        "2": { "name": "punctuation.definition.comment.mdl" }
+      }
+    },
+    "comment-trailing": {
+      "comment": "Only after whitespace, matching the CodeMirror extension, so `#` inside a word or URL is not a comment.",
+      "match": "(?<=[ \\t])((#).*)$",
+      "captures": {
+        "1": { "name": "comment.line.number-sign.mdl" },
+        "2": { "name": "punctuation.definition.comment.mdl" }
+      }
+    },
+    "block-scalar": {
+      "comment": "`key: |` — every following line indented deeper than the key is prose, never a field.",
+      "begin": "^([ \\t]+)(?:(-)[ \\t]+)?([A-Za-z_][\\w-]*)(?:[ \\t]+([\\w][\\w.-]*))?(\\??)([ \\t]*:)[ \\t]*([|>][-+]?)[ \\t]*$",
+      "beginCaptures": {
+        "2": { "name": "punctuation.definition.list.begin.mdl" },
+        "3": { "name": "variable.other.property.mdl" },
+        "4": { "name": "entity.name.function.id.mdl" },
+        "5": { "name": "keyword.operator.optional.mdl" },
+        "6": { "name": "punctuation.separator.key-value.mdl" },
+        "7": { "name": "keyword.operator.block-scalar.mdl" }
+      },
+      "while": "^(?:\\1[ \\t]+(?=\\S)|[ \\t]*$)",
+      "contentName": "meta.block-scalar.mdl",
+      "patterns": [{ "include": "#inline-no-comment" }]
+    },
+    "list-item": {
+      "comment": "A `- ` item; its value may itself be `key: value` (a step in a stage).",
+      "begin": "^[ \\t]+(-)(?=[ \\t])",
+      "beginCaptures": { "1": { "name": "punctuation.definition.list.begin.mdl" } },
+      "end": "$",
+      "patterns": [{ "include": "#field-inline" }, { "include": "#inline" }]
+    },
+    "field": {
+      "begin": "^[ \\t]+(?=[A-Za-z_][\\w-]*(?:[ \\t]+[\\w][\\w.-]*)?\\??[ \\t]*:(?:[ \\t]|$))",
+      "end": "$",
+      "patterns": [{ "include": "#field-inline" }]
+    },
+    "field-inline": {
+      "comment": "key[?]: value. The optional second word is a nested id (`req F-1.1:`).",
+      "begin": "\\G[ \\t]*([A-Za-z_][\\w-]*)(?:[ \\t]+([\\w][\\w.-]*))?(\\??)([ \\t]*:)(?=[ \\t]|$)",
+      "beginCaptures": {
+        "1": { "name": "variable.other.property.mdl" },
+        "2": { "name": "entity.name.function.id.mdl" },
+        "3": { "name": "keyword.operator.optional.mdl" },
+        "4": { "name": "punctuation.separator.key-value.mdl" }
+      },
+      "end": "$",
+      "patterns": [{ "include": "#type-expression" }, { "include": "#inline" }]
+    },
+    "type-expression": {
+      "comment": "A value made only of type atoms joined by `|` is a type expression; anything else is prose, so capitalised words in a sentence are not painted as types.",
+      "begin": "\\G(?=[ \\t]*(?:[\\w.-]+(?:<[^>\\n]*>)?(?:\\[\\])?\\??|\\[[^\\]\\n]*\\]|\"[^\"\\n]*\")(?:[ \\t]*\\|[ \\t]*(?:[\\w.-]+(?:<[^>\\n]*>)?(?:\\[\\])?\\??|\\[[^\\]\\n]*\\]|\"[^\"\\n]*\"))*[ \\t]*(?:(?<=[ \\t])#.*)?$)",
+      "end": "(?=$)",
+      "patterns": [
+        { "include": "#comment-trailing" },
+        { "match": "\\[\\]", "name": "storage.modifier.array.mdl" },
+        { "include": "#list" },
+        { "match": "\\|", "name": "keyword.operator.union.mdl" },
+        { "match": "\\?", "name": "keyword.operator.optional.mdl" },
+        { "match": "\\.\\.", "name": "keyword.operator.range.mdl" },
+        { "match": "[<>]", "name": "punctuation.definition.generic.mdl" },
+        { "include": "#string" },
+        {
+          "match": "\\b(?:Prose|Identifier|URI|NSID|SemVer|Boolean|TypeExpr|FieldMap|UnionList|ProseList|GivenList|StepList|CodeBlock|ExtRef|TagList|RefList|Date|ActorRef|UserRef|String|Number|Expr|OpInvocation)\\b",
+          "name": "support.type.primitive.mdl"
+        },
+        { "match": "\\b(?:true|false)\\b", "name": "constant.language.boolean.mdl" },
+        { "include": "#uri" },
+        { "match": "\\b\\d{4}-\\d{2}-\\d{2}\\b", "name": "constant.other.date.mdl" },
+        { "match": "\\b\\d+(?:\\.\\d+)*\\b", "name": "constant.numeric.mdl" },
+        { "match": "\\b[A-Z][\\w]*\\b", "name": "entity.name.type.mdl" },
+        { "match": "[a-z][\\w.-]*", "name": "constant.other.literal.mdl" }
+      ]
+    },
+    "list": {
+      "comment": "`[A, B]` in a type expression, or an id list in prose (`[F-1.1, T-1]`). An empty `[]` is still a list.",
+      "begin": "(\\[)(?=[ \\t]*(?:[\\w][\\w.:-]*(?:[ \\t]*,[ \\t]*[\\w][\\w.:-]*)*)?[ \\t]*\\](?!\\())",
+      "beginCaptures": { "1": { "name": "punctuation.definition.list.begin.mdl" } },
+      "end": "\\]",
+      "endCaptures": { "0": { "name": "punctuation.definition.list.end.mdl" } },
+      "patterns": [
+        { "match": ",", "name": "punctuation.separator.comma.mdl" },
+        { "include": "#reference-kind" },
+        { "match": "[\\w][\\w.-]*", "name": "variable.other.reference.mdl" }
+      ]
+    },
+    "inline": {
+      "patterns": [{ "include": "#comment-trailing" }, { "include": "#inline-no-comment" }]
+    },
+    "inline-no-comment": {
+      "patterns": [
+        { "include": "#code" },
+        { "include": "#string" },
+        { "include": "#actor" },
+        { "include": "#list" },
+        { "include": "#reference-kind" },
+        { "include": "#capture" },
+        { "include": "#uri" }
+      ]
+    },
+    "code": {
+      "match": "(`)[^`\\n]+(`)",
+      "name": "markup.inline.raw.string.mdl",
+      "captures": {
+        "1": { "name": "punctuation.definition.raw.mdl" },
+        "2": { "name": "punctuation.definition.raw.mdl" }
+      }
+    },
+    "string": {
+      "match": "\"[^\"\\n]*\"",
+      "name": "string.quoted.double.mdl"
+    },
+    "actor": {
+      "comment": "The decider of a `decision`: a person (`user:`) and an agent (`agent:`) carry different authority, so they get different scopes.",
+      "patterns": [
+        {
+          "match": "\\b(user)(:)([^\\s,\\])]+)",
+          "name": "meta.actor.user.mdl",
+          "captures": {
+            "1": { "name": "support.class.actor.user.mdl" },
+            "2": { "name": "punctuation.separator.actor.mdl" },
+            "3": { "name": "string.unquoted.actor.user.mdl" }
+          }
+        },
+        {
+          "match": "\\b(agent)(:)([^\\s,\\])]+)",
+          "name": "meta.actor.agent.mdl",
+          "captures": {
+            "1": { "name": "support.function.actor.agent.mdl" },
+            "2": { "name": "punctuation.separator.actor.mdl" },
+            "3": { "name": "string.unquoted.actor.agent.mdl" }
+          }
+        }
+      ]
+    },
+    "reference-kind": {
+      "match": "\\b(op|type)(:)([A-Za-z_][\\w-]*(?:\\.[\\w-]+)*)",
+      "captures": {
+        "1": { "name": "storage.type.reference.$1.mdl" },
+        "2": { "name": "punctuation.separator.reference.mdl" },
+        "3": { "name": "variable.other.reference.mdl" }
+      }
+    },
+    "capture": {
+      "match": "\\$\\w+(?:\\.\\w+)*",
+      "name": "variable.other.capture.mdl"
+    },
+    "uri": {
+      "comment": "A DXN or a dotted NSID reads as a constant, not prose.",
+      "match": "\\b(?:(?:dxn|echo):[^\\s,\\])]+|org\\.[\\w-]+(?:\\.[\\w-]+)+(?:@[\\d.]+)?)",
+      "name": "support.constant.reference.mdl"
+    }
+  }
+}

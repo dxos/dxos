@@ -3,114 +3,53 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { useControls } from 'leva';
-import React, { useMemo } from 'react';
+import { levaStore, useControls } from 'leva';
+import React, { useEffect } from 'react';
 
+import { useAudioStream } from '@dxos/react-ui-audio';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { defaultConfig } from './kube-config.ts';
-import { Kube } from './Kube.tsx';
+import { applyValues, levaControls, levaPaths, toConfig } from '../Avatar/stories/tuner.ts';
+import { kube } from '../Avatar/visualizations/kube.ts';
+import { defaultKubeOptions } from './kube-presets.ts';
+import { Kube, type KubeProps } from './Kube.tsx';
 
-const StoryKube = () => {
-  const {
-    radius,
-    minDistance,
-    particleCount,
-    maxConnections,
-    limitConnections,
-    showLines,
-    velocityX,
-    velocityY,
-    velocityZ,
-  } = useControls({
-    radius: {
-      label: 'Radius',
-      value: defaultConfig.radius,
-      min: 200,
-      max: 1600,
-      step: 50,
-    },
-    minDistance: {
-      label: 'Min distance',
-      value: defaultConfig.minDistance,
-      min: 20,
-      max: 400,
-      step: 10,
-    },
-    particleCount: {
-      label: 'Particles',
-      value: defaultConfig.particleCount,
-      min: 50,
-      max: 600,
-      step: 10,
-    },
-    maxConnections: {
-      label: 'Max connections',
-      value: defaultConfig.maxConnections,
-      min: 1,
-      max: 50,
-      step: 1,
-    },
-    limitConnections: {
-      label: 'Limit connections',
-      value: defaultConfig.limitConnections,
-    },
-    showLines: {
-      label: 'Show lines',
-      value: defaultConfig.showLines,
-    },
-    velocityX: {
-      label: 'Velocity X',
-      value: defaultConfig.velocityX,
-      min: -1,
-      max: 1,
-      step: 0.05,
-    },
-    velocityY: {
-      label: 'Velocity Y',
-      value: defaultConfig.velocityY,
-      min: -1,
-      max: 1,
-      step: 0.05,
-    },
-    velocityZ: {
-      label: 'Velocity Z',
-      value: defaultConfig.velocityZ,
-      min: -1,
-      max: 1,
-      step: 0.05,
-    },
-  });
+type StoryProps = KubeProps & {
+  /** Drives the particles from the microphone. */
+  microphone?: boolean;
+};
 
-  const config = useMemo(
-    () => ({
-      radius,
-      minDistance,
-      particleCount,
-      maxConnections,
-      limitConnections,
-      showLines,
-      velocityX,
-      velocityY,
-      velocityZ,
-    }),
-    [radius, minDistance, particleCount, maxConnections, limitConnections, showLines, velocityX, velocityY, velocityZ],
+const FOLDER = 'Kube';
+
+const DefaultStory = ({ microphone = false, ...props }: StoryProps) => {
+  const values = toConfig(useControls(FOLDER, levaControls(kube.params, defaultKubeOptions)));
+  // Leva's store outlives a story, so each story writes its own starting values rather than inheriting the last one's.
+  useEffect(() => levaStore.set(levaPaths(FOLDER, defaultKubeOptions), false), []);
+  const { getAverage } = useAudioStream(microphone);
+
+  return (
+    <Kube {...props} options={applyValues(defaultKubeOptions, values)} getValue={microphone ? getAverage : undefined} />
   );
-
-  return <Kube config={config} />;
 };
 
 const meta = {
   title: 'ui/react-ui-experimental/Kube',
-  component: StoryKube,
+  component: Kube,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof StoryKube>;
+} satisfies Meta<StoryProps>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {};
+
+export const Microphone: Story = {
+  args: {
+    microphone: true,
+  },
+};

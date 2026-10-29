@@ -1,0 +1,406 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-crx/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: CrxPlugin
+
+The page-actions bridge is complete and well tested. `handleListEvent` and `handleInvokeEvent` implement every
+ack code in the spec, including `disabled`, and `page-actions.test.ts` covers each failure path with a stub
+invoker. The Composer e2e `crx.spec.ts` drives the real list and invoke events against a running app, using
+plugin-github's action. The snapshot mappers match F-6 field by field and are unit-tested. The gaps are the
+parts that touch the app shell: the success and error toasts, the auto-open after a clip, the settings form
+and the three contributed picker actions have no test. QA-1 and QA-2 are not automated.
+
+One prose divergence: the spec says the extension keeps a hand-validated mirror of the wire types at
+`packages/apps/composer-crx/src/page-actions/types.ts`. That file no longer exists. Both sides import the
+schemas from `@dxos/crx-protocol` (`PageAction.ts`), which plugin-crx re-exports from `src/types/PageAction.ts`.
+The invoke handler also checks the `enabled` toggle before the version check, so a disabled bridge answers
+`disabled` even to a version-2 request.
+
+Of 51 items: 35 done, 8 untested, 5 partial, 0 diverged, 3 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Settings: The schema has all six fields and withDefaults applies the documented defaults.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.ts#defaults, github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.ts#withDefaults]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.test.ts]
+```
+
+```mdl
+verdict Source: The shared protocol declares Source with url, title, favicon and clippedAt.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Source]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+```
+
+```mdl
+verdict Selection: The shared protocol declares Selection with text, html, htmlTruncated and rect.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Selection, github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Rect]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+```
+
+```mdl
+verdict Hints: The shared protocol declares Hints with the six page signals.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Hints]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+```
+
+```mdl
+verdict Snapshot: The shared protocol declares Snapshot with source, selection, hints, imageData and html.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Snapshot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+```
+
+```mdl
+verdict PageActionDescriptor: The shared Descriptor schema has every field, and the contexts literal lists the five surfaces.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Descriptor, github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Context]
+  tests: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.test.ts, github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict PageAction: PageAction is the descriptor with the live operation, serialized to its key by toDescriptor.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/types/PageAction.ts#toDescriptor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict ListRequest: ListRequest is version 1 plus a correlation id.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#ListRequest]
+  tests: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.test.ts, github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict ListAck: ListAck is a union of the ok acks with actions and the error acks.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#ListAck]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict InvokeRequest: InvokeRequest has the six fields, decoded after a loose Envelope pass.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#InvokeRequest, github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#Envelope]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict InvokeAck: InvokeAck is a union of the ok acks with objectId and the error acks with a string code.
+  status: done
+  evidence: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.ts#InvokeAck]
+  tests: [github:dxos/dxos/packages/common/crx-protocol/src/PageAction.test.ts, github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+  note: |
+    The error field is a free string; the codes, including `disabled` from F-2c.1, are fixed only by the handler.
+```
+
+```mdl
+verdict F-1.1: The settings module contributes one KvsStore atom to CrxCapabilities.Settings and AppCapabilities.Settings.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/settings.ts, github:dxos/dxos/packages/plugins/plugin-crx/dx.config.ts]
+  note: No test activates the plugin and reads either capability.
+```
+
+```mdl
+verdict F-1.2: The atom defaults to Settings.defaults and readers merge with withDefaults.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.ts#withDefaults, github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/settings.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.test.ts]
+```
+
+```mdl
+verdict F-2.1: CrxSettings renders a schema form over the atom with a Test connection section.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/containers/CrxSettings/CrxSettings.tsx#CrxSettings, github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/react-surface.ts]
+  note: The CrxSettings story has no play function, and no test changes a field and reads the atom.
+```
+
+```mdl
+verdict F-2.2: pingExtension round-trips a ping and reports the extension identity or the failure.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/util/pingExtension.ts#pingExtension, github:dxos/dxos/packages/plugins/plugin-crx/src/containers/CrxSettings/CrxSettings.tsx#CrxSettings]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/util/pingExtension.test.ts]
+  note: The test stands in for the content script with a mock ack; the extension half is in composer-crx.
+```
+
+```mdl
+verdict F-2c.1: A disabled bridge acks with error disabled and invokes nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict F-2c.2: On success with autoOpenAfterClip on, the object is resolved and opened with LayoutOperation.Open.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/install-page-actions.ts]
+  note: The `onResult` callback in `install-page-actions.ts` does this; no test covers it.
+```
+
+```mdl
+verdict F-2c.3: With autoOpenAfterClip off only the success toast is invoked.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/install-page-actions.ts]
+  note: No test checks that focus stays put.
+```
+
+```mdl
+verdict F-3.1: Three picker-only actions (Person, Organization, Note) with http(s) patterns and the snapshot extractor are contributed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/page-action-provider.ts, github:dxos/dxos/packages/plugins/plugin-crx/dx.config.ts]
+  note: |
+    No test lists the plugin's own three actions; the unit and e2e tests use a stub action and plugin-github's.
+```
+
+```mdl
+verdict F-3.2: Listeners resolve actions with getAll on every event, so later plugins' actions are listed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#installPageActionListeners]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts]
+  note: The e2e enables plugin-github after boot and polls until its action is listed.
+```
+
+```mdl
+verdict F-4.1: Both window listeners are installed and the ready event is dispatched.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#installPageActionListeners, github:dxos/dxos/packages/plugins/plugin-crx/dx.config.ts]
+  tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts]
+  note: The e2e exercises both listeners; no test asserts the `composer:page-actions:ready` event.
+```
+
+```mdl
+verdict F-4.2: A valid list request is acked with descriptors whose operation is the key string.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleListEvent, github:dxos/dxos/packages/plugins/plugin-crx/src/types/PageAction.ts#toDescriptor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts]
+```
+
+```mdl
+verdict F-4.3: A malformed list request is acked invalidPayload with a best-effort id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleListEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict F-5.1: An envelope that fails decoding is acked invalidPayload with an empty id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  note: |
+    No test sends a detail that fails the loose `Envelope` decode; the invalid-payload test fails the strict pass.
+```
+
+```mdl
+verdict F-5.2: A version other than 1 is acked unsupportedVersion with the id echoed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict F-5.3: A strict-payload failure is acked invalidPayload with the envelope id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict F-5.4: An unknown actionId is acked unknownAction.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict F-5.5: No active space acks noSpace and invokes nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict F-5.6: The operation is invoked with snapshot and target, and success acks the object id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent, github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#installPageActionListeners]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts]
+```
+
+```mdl
+verdict F-5.7: An operation error or a rejection acks operationFailed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict F-6.1: toPerson maps fullName, image, notes (4000 chars) and the source URL, added via SpaceOperation.AddObject.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.ts#toPerson, github:dxos/dxos/packages/plugins/plugin-crx/src/operations/add-person-from-snapshot.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+```
+
+```mdl
+verdict F-6.2: toOrganization maps name, description, image and website.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.ts#toOrganization, github:dxos/dxos/packages/plugins/plugin-crx/src/operations/add-organization-from-snapshot.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+```
+
+```mdl
+verdict F-6.3: toNote writes a title, source and timestamp prelude over the selection text (50000 chars).
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.ts#toNote, github:dxos/dxos/packages/plugins/plugin-crx/src/operations/add-note-from-snapshot.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+  note: The test checks the title fallback chain; the prelude and the truncation are not asserted.
+```
+
+```mdl
+verdict F-6.4: A snapshot with no name candidate still yields an object with an empty name.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.ts#toPerson]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+```
+
+```mdl
+verdict F-7.1: An ok ack invokes LayoutOperation.AddToast with the success title.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/install-page-actions.ts]
+  note: No test covers the toast callback.
+```
+
+```mdl
+verdict F-7.2: A failed ack invokes an error toast whose description names the code.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/install-page-actions.ts, github:dxos/dxos/packages/plugins/plugin-crx/src/translations.ts#translations]
+  note: No test covers the toast callback; translations exist for every code.
+```
+
+```mdl
+verdict F-8: The bridge lists descriptors, invokes actions with snapshot and target, acks stable codes and toasts the outcome.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#installPageActionListeners, github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleListEvent, github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent, github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/install-page-actions.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts, github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/crx.spec.ts]
+  walkthrough:
+    - The listeners answer list and invoke CustomEvents and dispatch the acks. github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#installPageActionListeners
+    - The list handler serializes the contributed actions. github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleListEvent
+    - The invoke handler validates, resolves the action and space, and invokes the operation. github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent
+    - The capability module toasts each outcome and opens the object when configured. github:dxos/dxos/packages/plugins/plugin-crx/src/capabilities/install-page-actions.ts
+```
+
+```mdl
+verdict T-1: The defaults are tested; registering the capability is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.ts#defaults]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/types/Settings.test.ts]
+  note: `Settings.test.ts` checks the default values; no test activates the plugin and gets the capability.
+```
+
+```mdl
+verdict T-2: No test toggles enabled in the settings surface.
+  status: missing
+  note: The CrxSettings story has no play function.
+```
+
+```mdl
+verdict T-3: A list test checks descriptors for a stub action, not the three picker actions.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleListEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+  note: The given (Person, Organization, Note contributed) is not set up; the test lists one stub action.
+```
+
+```mdl
+verdict T-4: A unit test sends a malformed list request and gets invalidPayload.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleListEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict T-5: The invoke happy path and the h1 mapping are tested apart; no test checks the toast.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent, github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.ts#toPerson]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts, github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+  note: |
+    The invoke test uses a stub operation; `mapping.test.ts` checks fullName from h1. No test runs
+    AddPersonFromSnapshot through the handler or checks the toast.
+```
+
+```mdl
+verdict T-6: A unit test checks og:title as name and the source URL as website.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.ts#toOrganization]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+  note: It calls `toOrganization` rather than the operation.
+```
+
+```mdl
+verdict T-7: The empty-name mapping is tested; the ack for that case is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.ts#toPerson]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/mapping.test.ts]
+  note: No test invokes the add-person action with an empty snapshot and checks the ack.
+```
+
+```mdl
+verdict T-8: A unit test sends version 2 and gets unsupportedVersion with the id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict T-9: A unit test sends a payload missing actionId and gets invalidPayload with the id.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict T-10: A unit test sends an unknown actionId and gets unknownAction.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict T-11: A unit test with no target gets noSpace.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+```
+
+```mdl
+verdict T-12: Error and rejection acks are tested; the error toast is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.ts#handleInvokeEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crx/src/page-actions.test.ts]
+  note: No test covers the toast in `install-page-actions.ts`.
+```
+
+```mdl
+verdict QA-1: Nothing invokes AddPersonFromSnapshot in a running app.
+  status: missing
+  note: The Composer e2e `crx.spec.ts` invokes only plugin-github's action; no test runs the person action.
+```
+
+```mdl
+verdict QA-2: Nothing toggles Accept extension actions in a running app.
+  status: missing
+  note: No e2e or story drives the toggle and then an invoke.
+```

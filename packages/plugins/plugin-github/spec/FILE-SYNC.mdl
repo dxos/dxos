@@ -1,0 +1,650 @@
+---
+id: org.dxos.plugin.github.file-sync
+name: GitHub two-way file sync
+version: 0.1.0
+---
+
+Two-way sync between files in a GitHub repository and ECHO objects, where the mapping from a file to
+an object is contributed by another plugin. Deus specs (`*.mdl` → plugin-code's `Spec`) are the
+first mapping and the case study.
+
+This is part 2 of three (see [SYNC.mdl](SYNC.mdl)). It needs part 1's binding on `Repo`; it does
+not need part 3, which only makes it react sooner.
+
+plugin-github owns change detection, sync markers, merging and commits. The mapping plugin owns the
+file format, and nothing else: it never imports plugin-github and never calls GitHub.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
+
+## Diagram
+
+A plugin-illustrator render. The `diagram` block is the source; regenerate the image with
+`moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/p2-sync.dx`.
+
+![The branch head differs from the marker's commit; compare lists changed paths; matching mappings invoke plugin-code's ImportSpec, which applies the change at the marker's heads; local edits since those heads go through ExportSpec to a commit on the write branch, whose parents are its tip and the read head.](diagrams/p2-sync.dx.svg)
+
+```diagram
+diagram flow=right
+group api "api.github.com" {
+  node Head "branch head sha"
+  node Compare "compare old...new"
+  node Commit "commit on branch"
+}
+group github "plugin-github" {
+  node Filter "match mappings" ref="packages/plugins/plugin-github/src/types/GitHubCapabilities.ts"
+  node Marker "FileMarker" ref="packages/core/compute/link/src/Cursor.ts"
+  node Diff "diff since heads"
+}
+group code "plugin-code" {
+  node Import "ImportSpecFile op" ref="packages/plugins/plugin-code/src/operations/index.ts"
+  node Export "ExportSpecFile op" ref="packages/plugins/plugin-code/src/operations/index.ts"
+  node Spec "Spec (Text)" ref="packages/plugins/plugin-code/src/types/Spec.ts"
+}
+edge Head -> Compare "≠ marker commit"
+edge Compare -> Filter "changed paths"
+edge Filter -> Import "invoke"
+edge Import -> Spec "changeAt(heads)"
+edge Import -> Marker "blob, commit, heads"
+edge Marker -> Diff "base heads"
+edge Spec -> Diff
+edge Diff -> Export "local edits"
+edge Export -> Commit "write tip + read head"
+```
+
+## Extension point
+
+### `GitHubCapabilities.FileMapping`
+
+A plugin contributes one entry per file kind. The entry names two operations; plugin-github invokes
+them, so they run wherever the sync runs (EDGE) and are tested without GitHub.
+
+```ts
+// packages/plugins/plugin-github/src/types/GitHubCapabilities.ts
+import * as Schema from 'effect/Schema';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as Operation from '@dxos/compute/Operation';
+import { Obj, Ref, type Type } from '@dxos/echo';
+import { Repo } from '@dxos/types';
+
+import { meta } from '#meta';
+
+/** How one kind of repository file becomes an ECHO object and back. */
+export type FileMapping = {
+  /** Stable id, recorded on every marker the mapping writes, e.g. `org.dxos.plugin.code.spec`. */
+  readonly id: string;
+  /** Repository-relative globs the mapping claims, e.g. `['**\/*.mdl']`: `**` spans directories, `*` and `?` stay within one. */
+  readonly match: readonly string[];
+  /** The ECHO type a matched file becomes. */
+  readonly type: Type.AnyObj;
+  /** Pull: create the object, or apply a remote change to it. */
+  readonly import: Operation.Definition<FileImportInput, FileImportOutput>;
+  /** Push: render the object as file content. Absent → the mapping is pull-only. */
+  readonly export?: Operation.Definition<FileExportInput, FileExportOutput>;
+  /** Largest file the engine imports for this mapping; larger files are skipped and reported. Default 1 MiB. */
+  readonly maxBytes?: number;
+};
+
+export const FileImportInput = Schema.Struct({
+  repository: Ref.Ref(Repo.Repo),
+  path: Schema.String,
+  /** The file as the new commit has it (UTF-8). */
+  content: Schema.String,
+  /** The file as the marker's commit had it; absent on first import. */
+  base: Schema.optional(Schema.String),
+  /** The object the marker binds; absent on first import. */
+  object: Schema.optional(Ref.Ref(Obj.Unknown)),
+  /** The object's Automerge heads at the last sync: apply the base → content change as of these. */
+  heads: Schema.optional(Schema.Array(Schema.String)),
+});
+export interface FileImportInput extends Schema.Schema.Type<typeof FileImportInput> {}
+
+export const FileImportOutput = Schema.Struct({
+  object: Ref.Ref(Obj.Unknown),
+  /** The heads at which the object holds exactly `content`, recorded on the marker. */
+  heads: Schema.Array(Schema.String),
+});
+export interface FileImportOutput extends Schema.Schema.Type<typeof FileImportOutput> {}
+
+export const FileExportInput = Schema.Struct({
+  object: Ref.Ref(Obj.Unknown),
+  path: Schema.String,
+});
+export interface FileExportInput extends Schema.Schema.Type<typeof FileExportInput> {}
+
+export const FileExportOutput = Schema.Struct({
+  content: Schema.String,
+  /** The heads the content was rendered from, recorded on the marker after the commit lands. */
+  heads: Schema.Array(Schema.String),
+});
+export interface FileExportOutput extends Schema.Schema.Type<typeof FileExportOutput> {}
+
+// One contribution per mapping; plugin-github reads them with `Capability.getAll`.
+export const FileMapping = Capability.make<FileMapping>()(`${meta.profile.key}.capability.fileMapping`);
+```
+
+```mdl
+service FileMapping
+  desc: Capability contributed by a plugin that owns a file format. plugin-github calls its operations; it never calls GitHub.
+  ops:
+    import(repository: Ref<Repo>, path: string, content: string, base?: string, object?: Ref<Obj>, heads?: string[]) → { object: Ref<Obj>, heads: string[] }
+    export(object: Ref<Obj>, path: string) → { content: string, heads: string[] }
+  errors:
+    MappingParseError: the file does not parse as the mapping's format; the file is skipped and reported, the object is untouched
+```
+
+### `TextMerge` helper
+
+Most mappings hold the file body as `Text`. plugin-github exports the merge they share, so a mapping's
+`import` is a few lines.
+
+```ts
+// packages/plugins/plugin-github/src/file-sync/TextMerge.ts (exported as @dxos/plugin-github/TextMerge)
+/**
+ * Apply the `base` → `next` change to `text` as of `heads`, so Automerge merges it with every local
+ * edit made since. Returns the heads at which `text` holds exactly `next` (the change's own heads).
+ */
+export const applyAt: (
+  text: Text.Text,
+  change: { readonly base: string; readonly next: string; readonly heads: readonly string[] },
+) => Effect.Effect<readonly string[], TextMergeError>;
+
+/** True when `text` differs from its content at `heads`: the object has local edits to push. */
+export const changedSince: (text: Text.Text, heads: readonly string[]) => Effect.Effect<boolean>;
+```
+
+```mdl
+service TextMerge
+  desc: Helpers shared by Text-backed mappings.
+  ops:
+    applyAt(text: Text, base: string, next: string, heads: string[]) → string[]
+    changedSince(text: Text, heads: string[]) → boolean
+  errors:
+    TextMergeError: the heads are not in the object's history (the object was replaced)
+```
+
+## Types
+
+### File binding
+
+File sync is its own `Cursor`, separate from part 1's item cursor, bound to the same `Repo`. Its
+`token` is a commit SHA, not an ETag, which is why it cannot share part 1's cursor.
+
+```ts
+// How the file binding reads Cursor (packages/core/compute/link/src/Cursor.ts).
+type FileBinding = Cursor.ExternalCursor & {
+  spec: {
+    kind: 'external';
+    source: Ref.Ref<AccessToken.AccessToken>;
+    target: Ref.Ref<Repo.Repo>;
+    externalId: string;                     // GitHub numeric repository id
+    /** The last commit fully synced on `options.branch`. */
+    token?: string;
+    options: FileSyncOptions;
+    /** `file:<path>` → FileMarker; `history:<path>` → VersionLink[]. */
+    snapshots?: Record<string, FileMarker | readonly VersionLink[]>;
+  };
+};
+```
+
+```mdl
+type FileSyncOptions
+  desc: Per-binding options for file sync.
+  fields:
+    stream: files                 # tells the sync handler this cursor is a file binding
+    branch: string                # branch read from, e.g. main
+    writeBranch: string           # branch written to; default composer/<spaceId>; never equal to branch
+    mappings?: string[]           # FileMapping ids to run; omit for every contributed mapping
+    paths?: string[]              # extra globs that narrow every mapping, e.g. packages/plugins/**
+```
+
+```mdl
+type FileMarker
+  desc: Sync state for one file. Stored at Cursor.spec.snapshots["file:<path>"].
+  fields:
+    mapping: string               # FileMapping.id that owns the file
+    path: string
+    blob: string                  # git blob SHA last synced
+    commit: string                # commit the blob was read from or written to
+    heads: string[]               # the object's heads at which it holds exactly the blob
+    object: Ref<Obj>
+    pushed?: { blob: string, heads: string[], commit: string }   # what this space last committed for the file, until the read branch carries it
+```
+
+The binding's write state sits beside the markers at `snapshots.state`: the read branch's ETag, the
+newest commit this space wrote (`lastWritten`), the read head that commit merged in, and the pull
+request.
+
+```mdl
+type VersionLink
+  desc: One synced version: a commit and the object heads that hold the same content. Capped at 50 per file, oldest dropped.
+  fields:
+    commit: string
+    heads: string[]
+    at: string                    # ISO time the sync recorded it
+    direction: pull | push
+```
+
+The object itself carries a foreign key, so a file renamed on either side is re-keyed rather than
+duplicated:
+
+```ts
+// Meta key on every object a mapping imports.
+{ source: 'github.com', id: `${repoId}:${path}` }
+```
+
+### GitHub payloads
+
+```mdl
+type CompareFile
+  desc: One entry of GET /repos/{o}/{r}/compare/{base}...{head} → files[].
+  fields:
+    filename: string
+    previous_filename?: string    # set when status is renamed
+    status: added | modified | removed | renamed | copied | changed
+    sha: string                   # new blob SHA
+```
+
+## Services
+
+`GitHubApi` gains git reads and writes.
+
+```ts
+// Added to packages/plugins/plugin-github/src/services/github-api.ts.
+/** GET /repos/{o}/{r}/git/ref/heads/{branch} with If-None-Match. */
+export const fetchBranchHead: (owner: string, repo: string, branch: string, etag?: string) =>
+  GitHubEffect<Conditional<{ sha: string }>>;
+
+/** GET /repos/{o}/{r}/compare/{base}...{head}; `truncated` when GitHub listed more than 300 files. */
+export const compareCommits: (owner: string, repo: string, base: string, head: string) =>
+  GitHubEffect<{ files: readonly CompareFile[]; truncated: boolean }>;
+
+/** GET /repos/{o}/{r}/git/trees/{sha}?recursive=1, the fallback when compare is truncated. */
+export const fetchTree: (owner: string, repo: string, sha: string) =>
+  GitHubEffect<readonly { path: string; sha: string; type: 'blob' | 'tree'; size?: number }[]>;
+
+/** GET /repos/{o}/{r}/git/blobs/{sha}, decoded to UTF-8. */
+export const fetchBlob: (owner: string, repo: string, sha: string) => GitHubEffect<string>;
+
+/** Blob → tree (on `baseTree`) → commit (on `parents`, in order) → ref update, never forced. */
+export const commitFiles: (
+  owner: string,
+  repo: string,
+  input: {
+    branch: string;
+    parents: readonly string[];   // the write branch's tip, then the read head when it is merged in
+    baseTree: string;
+    message: string;
+    files: readonly { path: string; content: string | null }[];   // null deletes
+  },
+) => GitHubEffect<{ commit: string; blobs: Record<string, string> }, RefMovedError>;
+
+/** Open the write branch's pull request, or return the open one. */
+export const ensurePullRequest: (
+  owner: string,
+  repo: string,
+  input: { head: string; base: string; title: string; body: string },
+) => GitHubEffect<{ number: number; url: string }>;
+```
+
+```mdl
+service GitHubApi
+  desc: Git reads and writes added for file sync.
+  ops:
+    fetchBranchHead(owner: string, repo: string, branch: string, etag?: string) → Conditional<{ sha: string }>
+    compareCommits(owner: string, repo: string, base: string, head: string) → { files: CompareFile[], truncated: boolean }
+    fetchTree(owner: string, repo: string, sha: string) → TreeEntry[]
+    fetchBlob(owner: string, repo: string, sha: string) → string
+    commitFiles(owner: string, repo: string, branch: string, parents: string[], baseTree: string, message: string, files: FileChange[]) → { commit: string, blobs: Record<string, string> }
+    ensurePullRequest(owner: string, repo: string, head: string, base: string, title: string, body: string) → { number: number, url: string }
+  errors:
+    RefMovedError: the branch moved after it was read; pull again and retry
+```
+
+## Operations
+
+```mdl
+op EnableGitHubFileSync
+  key: org.dxos.operation.github.enableFileSync
+  desc: |
+    Adds a file binding next to a repository's item binding, with the same credential and repository
+    id. Returns the existing file binding when there is one.
+  input:
+    repository: Ref<Repo>
+    branch?: string               # default: the repository's default branch
+    writeBranch?: string
+    mappings?: string[]
+    paths?: string[]
+  output: { binding: string, created: boolean }
+  effects: [echo:read, echo:write]
+```
+
+One pass over a file binding runs inside `SyncGitHubRepositories`, which hands every cursor whose
+`options.stream` is `files` to the file-sync engine (`syncFileBinding`) and every other cursor to part
+1's poll. Its output gains `files: { pulled, pushed, skipped }`. A pass fails with
+`GitHubRefMovedError` when the write branch moved three times in a row; the next pass retries.
+
+```mdl
+type FileSyncResult
+  fields:
+    requests: number
+    pulled: number
+    pushed: number
+    skipped: { path: string, reason: string }[]
+    pullRequest?: { number: number, url: string }
+```
+
+plugin-code contributes the Deus mapping:
+
+```mdl
+op ImportSpecFile
+  key: org.dxos.operation.code.importSpecFile
+  desc: FileMapping.import for `**/*.mdl`. Creates a Spec, or applies the change to Spec.content with TextMerge.applyAt.
+  input: FileImportInput
+  output: FileImportOutput
+  effects: [echo:read, echo:write]
+```
+
+```mdl
+op ExportSpecFile
+  key: org.dxos.operation.code.exportSpecFile
+  desc: FileMapping.export for `**/*.mdl`. Returns Spec.content as it stands, with the heads it read.
+  input: FileExportInput
+  output: FileExportOutput
+  effects: [echo:read]
+```
+
+## Features
+
+```mdl
+feat F-1: Mapping contract
+
+  req F-1.1: A plugin adds a file kind by contributing a GitHubCapabilities.FileMapping entry; plugin-github has no code for any file format.
+
+  req F-1.2: When two mappings match one path, the one contributed first wins and the conflict is logged once per pass.
+
+  req F-1.3: A mapping without `export` is pull-only; local edits to its objects are never pushed and are overwritten only where the remote changed the same text.
+```
+
+```mdl
+feat F-2: Change detection
+
+  req F-2.1:
+    when: a file binding is synced
+    then: the first request is fetchBranchHead with the stored ETag
+
+  req F-2.2:
+    when: the branch head equals Cursor.spec.token, no bound object changed since its marker's heads, and the write branch (when it exists) is still at the commit this space last wrote
+    then: the pass ends; that is one request, or two while a write branch exists
+
+  req F-2.3:
+    when: the head moved
+    then: compareCommits(token, head) lists the changed paths in one request; when it reports truncated, two fetchTree calls are diffed instead, and a removed path and an added path with the same blob SHA count as a rename
+
+  req F-2.4: Only blobs for paths a mapping matches, and that are at most maxBytes, are fetched.
+```
+
+```mdl
+feat F-3: Pull
+
+  req F-3.1:
+    when: a matched path is added
+    then: import runs without base, object or heads, and a FileMarker is written
+
+  req F-3.2:
+    when: a matched path is modified
+    then: import runs with base = the blob at marker.blob, the marker's object and heads; the change lands as of those heads and Automerge merges it with local edits made since
+
+  req F-3.3:
+    when: a path is renamed
+    then: the object's foreign key and the marker move to the new path; no object is created
+
+  req F-3.4:
+    when: a path is removed
+    then: the marker is dropped and the object is kept, without its foreign key; deleting a remote file never deletes local content
+```
+
+```mdl
+feat F-4: Push
+
+  req F-4.1:
+    when: a bound object's content differs from its content at marker.heads
+    then: export renders it, after this pass's pulls, so the pushed content contains both sides
+
+  req F-4.2: Every changed file in a pass goes into one commit on options.writeBranch. Its first parent is the write branch's tip; when the head just pulled from options.branch is not in the write branch's history, that head is the second parent, so the commit both fast-forwards the write branch and merges the read branch into it. A missing write branch is created at the pulled head. The commit's tree is the read head's tree with the current export of every bound object whose content differs from its blob there, so it carries both the read branch's changes and every Composer edit not yet merged; the two cannot conflict, because the pull has already merged them in each object. The ref update is never forced.
+
+  req F-4.3:
+    when: the ref update fails with RefMovedError
+    then: the pass reads the write branch's tip again, re-exports and retries, at most three times
+
+  req F-4.4: The write branch has one open pull request into options.branch; the pass opens it or reuses it. Nothing is written to options.branch.
+
+  req F-4.5: Pushed edits are attributed to the connection's GitHub account; the commit message names the space and the Composer users whose edits it carries.
+
+  req F-4.6:
+    when: the write branch's tip is not a commit this space wrote (the newest push VersionLink)
+    then: the paths changed since that commit are pulled before anything is exported: a modified path as in F-3.2 with base = the blob this space last pushed, an added path as in F-3.1, a renamed path as in F-3.3 (with any content change applied as in F-3.2), and a removed path as in F-3.4. A removed path, and a renamed path's old name, are also removed from the push tree, so F-4.2 does not restore them from the read head; a person's commit on the pull request is merged, never overwritten. The space's own commits are never pulled, since they carry edits it already holds
+```
+
+```mdl
+feat F-5: Markers and version tracking
+
+  req F-5.1: Cursor.spec.token and every FileMarker the pass wrote advance in one Obj.update, so a crash leaves either the old state or the new one.
+
+  req F-5.2: Each pull and push appends a VersionLink pairing the commit with the object's heads; the newest 50 are kept per file.
+
+  req F-5.3: Given a commit, the object version is the heads of its VersionLink; given heads, the commit is the newest VersionLink whose heads they contain.
+```
+
+```mdl
+feat F-6: Deus specs
+
+  req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpecFile and ExportSpecFile.
+
+  req F-6.2: Spec.content is Text, so specs merge character by character; no `.mdl` parser runs during sync.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Nothing changed
+  given: a file binding whose token equals the branch head; no Spec changed locally; no write branch exists
+  when: SyncGitHubFiles runs
+  then:
+    - one request is made and GitHub answers 304
+    - no object, marker or token changes
+```
+
+```mdl
+scenario T-2: Remote edit
+  given: a synced PLUGIN.mdl; a commit on main changes one requirement line
+  when: SyncGitHubFiles runs
+  then:
+    - requests are fetchBranchHead, compareCommits and two fetchBlob calls (new and base)
+    - Spec.content shows the new line; FileMarker.blob, commit and heads advance
+```
+
+```mdl
+scenario T-3: Concurrent edits
+  given: a synced PLUGIN.mdl; a Composer user edits F-1 while a commit on main edits F-3
+  when: SyncGitHubFiles runs
+  then:
+    - Spec.content holds both edits
+    - one commit on composer/<spaceId> carries the F-1 edit, with parents = the write branch's tip and the new main head
+    - the write branch's pull request is opened or updated
+```
+
+```mdl
+scenario T-4: Write branch moved
+  given: local edits to push; another client pushes to the write branch between read and write
+  when: SyncGitHubFiles runs
+  then:
+    - the first ref update fails with RefMovedError
+    - the pass reads the write branch's tip again, re-exports, and the second update succeeds
+```
+
+```mdl
+scenario T-5: File removed upstream
+  given: a synced spec whose file is deleted on main
+  when: SyncGitHubFiles runs
+  then:
+    - the marker is gone and the Spec still exists without its github.com key
+```
+
+## Open questions
+
+Both questions this section held are settled; see D-14.
+
+## Changelog
+
+```mdl
+decision D-1: Part 2 of the GitHub sync design is extensible two-way sync. Another plugin defines how to sync its files (specs) into ECHO, and plugin-github schedules it by calling that plugin's operation. It has an ontology for sync markers, uses Automerge heads and GitHub commits for version tracking, and merges and rebases changes with Automerge `changeAt`. It is extensible, takes Deus specs as the case study, and must be efficient.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [F-1, F-2, F-3, F-4, F-5, F-6]
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-2: A mapping is a FileMapping capability entry naming an import and an optional export operation; TextMerge is the shared helper for Text-backed mappings. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileMapping, TextMerge, F-1]
+  why: Operations run on EDGE wherever the sync runs and are testable without GitHub, and the mapping plugin needs no dependency on plugin-github beyond the capability type.
+  rejected:
+    - A plain function on the capability: cannot be invoked on EDGE through the operation registry.
+```
+
+```mdl
+decision D-3: Markers live on a separate file Cursor (token = commit SHA) as snapshots `file:<path>`, with up to 50 VersionLinks per file. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileMarker, VersionLink, FileSyncOptions, F-5]
+  why: Part 1's cursor uses token for an ETag; one token per cursor keeps Cursor.writeSyncState's paired update.
+  rejected:
+    - A SyncMarker relation object per file: one more ECHO object per file for state only the sync reads.
+```
+
+```mdl
+decision D-4: Detection is one branch-head request, then one compare; pushes go to a write branch with a pull request, never to the read branch, with a non-forced ref update retried at most three times. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2, F-4]
+  why: A quiet repository costs one request that GitHub answers 304; a branch and pull request keep a review step between Composer edits and main.
+```
+
+```mdl
+decision D-5: A file deleted upstream keeps its local object and drops only the marker and foreign key. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.4]
+  why: A sync must never delete content a user may still be editing; removing it stays a user action.
+```
+
+```mdl
+decision D-6: A push commit's first parent is the write branch's tip, and the read branch's pulled head is a second parent when the write branch does not already contain it. The write branch's own commits are never pulled. Narrows [D-4], whose parent was the pulled head.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2, F-4.3, T-3, T-4]
+  why: The write branch lives across passes, so a commit parented only on the read branch's head stops descending from it once the read branch moves, and a non-forced update would be rejected on every retry.
+  rejected:
+    - Force-resetting the write branch to each new commit: drops commits a reviewer may have pushed onto the pull request.
+```
+
+```mdl
+decision D-7: When compareCommits is truncated and two trees are diffed instead, a removed and an added path with the same blob SHA are paired as a rename; anything unpaired is a removal plus an addition.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-3.3]
+  why: A tree diff carries no rename information, and without pairing F-3.3 would duplicate a renamed file as a new object.
+```
+
+```mdl
+decision D-8: A push commit's tree is the read head's tree plus the export of every bound object that differs from it; `commitFiles` takes ordered parents. Commits on the write branch that this space did not write are pulled before export. Fills in [D-6].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [commitFiles, F-4.2, F-4.6]
+  why: Two parents alone do not combine trees, and a tree built from either side alone dropped the other's changes; exporting from ECHO, where the pull has already merged both sides, gives one tree with no conflicts. A reviewer's commit on the pull request is the one write-branch change ECHO does not already hold, so it is pulled rather than overwritten.
+```
+
+```mdl
+decision D-9: The quiet-pass check also reads the write branch's head, and F-4.6 routes a person's added, modified and removed paths through F-3.1, F-3.2 and F-3.4. Fills in [D-8].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-4.6]
+  why: Without the second read a reviewer's commit waited for some unrelated change to be noticed, and treating every path as a modification left added files without an object and let removed files come back from the read head's tree.
+```
+
+```mdl
+decision D-10: F-4.6 also routes a person's renamed path through F-3.3, applying any content change in the same step. Fills in [D-9].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.6]
+  why: compareCommits reports a rename as its own status, and without a rule for it the pass would neither re-key the object nor keep the old path from returning.
+```
+
+```mdl
+decision D-11: A person's rename on the write branch removes the old name from the push tree, as a removal does. Fills in [D-10].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.6]
+  why: F-4.2 starts the push tree from the read head, which still holds the old name until the pull request merges, so the next push would otherwise bring the file back beside its new name.
+```
+
+```mdl
+decision D-12: plugin-code's operations are ImportSpecFile and ExportSpecFile, and FileMapping is one capability contribution per mapping, read with `Capability.getAll`. Narrows [D-2].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileMapping, ImportSpecFile, ExportSpecFile, F-1, F-6.1]
+  why: `org.dxos.operation.code.importSpec` already names plugin-code's import from a local checkout, and every other multi-plugin capability contributes one entry per plugin. `Type.Obj.Any` does not exist; `Type.AnyObj` is the same type. Globs use a small matcher in plugin-github (`**`, `*`, `?`), because no shipped package depends on picomatch.
+```
+
+```mdl
+decision D-13: There is no SyncGitHubFiles operation; SyncGitHubRepositories runs a file binding's pass in process, and EnableGitHubFileSync creates the binding. Narrows [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [EnableGitHubFileSync, FileSyncResult, F-2]
+  why: The sync Routine already invokes SyncGitHubRepositories with the connection, and `Binding.syncAll` fans out over every cursor of it; a second operation would need its own invocation per binding for no gain. Without an operation that adds the cursor, nothing could turn file sync on.
+```
+
+```mdl
+decision D-14: A marker keeps what this space pushed (`pushed`) until the read branch carries it. A pull whose blob equals it adopts it without an import; once the write branch's commit is in the read head, a pull's base is the pushed content at the pushed heads. Local changes are found by exporting each object and comparing its git blob SHA with `pushed ?? blob`. This settles both open questions: `changeAt` is reachable through `Doc.createAccessor(...).handle`, and `Binding.syncAll` runs both cursors of one Repo. Fills in [D-8].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileMarker, TextMerge, F-2.2, F-3.2, F-4.1]
+  why: After a merge, the read branch holds this space's own edits; applying old-base → new at the old heads would insert them a second time. Comparing SHAs works for any mapping and costs no request. Telling whether the write branch was merged costs one compare per pass, only while a write is outstanding and the read head moved.
+```
+
+```mdl
+decision D-15: F-4.5's per-user attribution and F-4.6's pull from the write branch are not built yet. A pass whose write-branch tip is not the commit it last wrote holds its push back and reports each file as skipped; a commit names the space only. F-4.3's retry re-parents on the re-read tip. F-5.3's lookups are left to the first caller; the VersionLinks they read are recorded. Defers part of [D-9].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3, F-4.5, F-4.6, F-5.3, T-4]
+  why: Holding the push back cannot overwrite a reviewer's commit, which is what F-4.6 protects, and keeps the first version small; the skipped entries show the user why nothing was pushed. compareCommits does not report sizes, so F-2.4's limit is checked after the fetch when the change came from a compare.
+```

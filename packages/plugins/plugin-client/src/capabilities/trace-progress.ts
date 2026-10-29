@@ -70,6 +70,13 @@ export default Capability.makeModule(
       },
     });
 
+    // TODO(mykola): EDGE progress reaches this client only as swarm broadcasts, which are best effort:
+    //  the swarm keeps a message for 30 s, a socket can close mid-send, and this subscription is not
+    //  restarted if its stream ends. A run's `progress.complete` can be lost after the run finished,
+    //  leaving its meter to the sink's stall timeout ("Stopped reporting"), and a pending meter no update
+    //  reached fails with `PENDING_SYNC_TIMEOUT_ERROR` (plugin-inbox). Meters still treat the terminal
+    //  as reliable so we see how often that happens when deployed; end them from a reliable signal (e.g.
+    //  the trace feed's `operation.end`) instead.
     // TODO(mykola): Possible bug source. Use `Effect.forkDetach`.
     const fiber = processManagerRuntime.runFork(
       monitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(

@@ -24,6 +24,8 @@ export type Container = {
   /** Which objects the list takes; any object when absent. */
   readonly accepts?: (object: Obj.Unknown) => boolean;
   readonly removeLabel?: Translations.Label;
+  /** Whether members the container owns are deleted only with it, so {@link isRemovable} refuses them. */
+  readonly deleteOwned?: boolean;
 };
 
 type RefArrayKeys<T> = {
@@ -34,7 +36,7 @@ type RefArrayKeys<T> = {
 export const make = <T extends Obj.Unknown>(
   object: T,
   property: RefArrayKeys<T>,
-  options: Pick<Container, 'moveScope' | 'accepts' | 'removeLabel'> = {},
+  options: Pick<Container, 'moveScope' | 'accepts' | 'removeLabel' | 'deleteOwned'> = {},
 ): Container => ({ object, property, ...options });
 
 const refs = (container: Container): Ref.Ref<Obj.Unknown>[] => {
@@ -142,6 +144,10 @@ export const release = ({ container, object, to }: Omit<LinkProps, 'index'> & { 
     Obj.setParent(object, to?.object);
   }
 };
+
+/** Whether the user may {@link release} the object from the container; owned members of a `deleteOwned` container may not. */
+export const isRemovable = (container: Container, object: Obj.Unknown): boolean =>
+  !(container.deleteOwned && Obj.getParent(object)?.id === container.object.id);
 
 type AddProps = {
   object: Obj.Unknown;

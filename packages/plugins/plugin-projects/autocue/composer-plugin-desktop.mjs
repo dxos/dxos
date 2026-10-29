@@ -16,7 +16,7 @@ const {
   LINGER,
   PLUGIN_NAME,
   TWENTY_MIN,
-} = await import(`../../plugin-computer/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`);
+} = await import(`../../plugin-dev-shell/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`);
 
 /** The browser flow's step with this name, so the desktop take picks steps by name rather than position. */
 const at = (name) => {
@@ -28,7 +28,7 @@ const at = (name) => {
 };
 
 /**
- * The Composer Plugin demo in the native desktop app: the same take as plugin-computer's browser flow, but the
+ * The Composer Plugin demo in the native desktop app: the same take as plugin-dev-shell's browser flow, but the
  * template is plugin-projects' own, and the agent builds World Clock in a local sandbox that holds nothing but
  * the bun runtime the app ships. It fetches the guide from GitHub and the packages from pkg.pr.new and npm, all
  * pinned to the commit the app was built from, and the plugin loads from the URL Publish Files returns.

@@ -1,0 +1,90 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-s3/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: S3Plugin
+
+The plugin is thin: the connector lives in `src/capabilities/connector.ts`, and the backend, URI
+handling and SigV4 signer moved to `@dxos/blob/s3` (`packages/core/echo/blob/src/s3`) with the
+database bindings in `@dxos/compute-runtime` (`createS3Host`), so EDGE can register the same
+backend. Addressing and signing are solid and tested against AWS's published vectors. The two
+divergences: the credential form asks for bucket and endpoint separately and rejects empty fields
+in the schema and `onValidate` rather than in `onSubmit`; and an unsigned read treats any 4xx as
+a miss (R2 answers 400 for a private bucket), not only 404 and 403. The backend wiring
+(`createS3BlobBackend`, `createS3Host`) has no test of its own.
+
+Of 6 items: 3 done, 0 untested, 1 partial, 2 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict S3Uri: Blobs are addressed s3://<host>/<spaceId>/<contentHash>, and the host is the credential's source.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/blob/src/s3/s3-uri.ts#S3Uri, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-uri.ts#objectKey, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-uri.ts#parseUri]
+  tests: [github:dxos/dxos/packages/core/echo/blob/src/s3/s3-uri.test.ts]
+```
+
+```mdl
+verdict S3Connector: The credential-form connector exists, but the form splits bucket from endpoint and validates before submit.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#createS3ConnectorEntry, github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#composeHost, github:dxos/dxos/packages/plugins/plugin-s3/dx.config.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.test.ts, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.test.ts]
+  walkthrough:
+    - The lazy module activates the connector on ConnectorEvents.Start. github:dxos/dxos/packages/plugins/plugin-s3/dx.config.ts
+    - The entry joins bucket and endpoint into a bare lowercase host and builds the AccessToken and Connection. github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/connector.ts#createS3ConnectorEntry
+    - testConnection probes a missing key with a signed HEAD and tells 404 from 403. github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.ts#probeAccess
+  note: |
+    The form is `{ name?, bucket, endpoint, accessKeyId, secretAccessKey }`, not `{ endpoint, accessKeyId, secretAccessKey }`;
+    `composeHost` joins bucket and endpoint. Empty fields are rejected by `Schema.NonEmptyString` and `onValidate`,
+    so `onSubmit` never fails. Connector source, label, AccessToken mapping and the HEAD probe match the spec.
+    `connector.test.ts` covers only host normalization; the probe is tested in `s3-client.test.ts`.
+```
+
+```mdl
+verdict S3BlobBackend: The backend registers under s3 on FileEvents.Start and signs put/get/has/getUrl, but unsigned reads treat any 4xx as a miss.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/blob-backend.ts, github:dxos/dxos/packages/core/echo/blob/src/s3/blob-backend.ts#createS3BlobBackend, github:dxos/dxos/packages/core/compute/compute-runtime/src/services/s3-host.ts#createS3Host, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.ts#getObjectUrl]
+  tests: [github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.test.ts]
+  walkthrough:
+    - The plugin module registers the backend on the client graph and contributes FileCapabilities.Backend. github:dxos/dxos/packages/plugins/plugin-s3/src/capabilities/blob-backend.ts
+    - The host resolves the space's S3 Connection for writes and a credential per URI host for reads. github:dxos/dxos/packages/core/compute/compute-runtime/src/services/s3-host.ts#createS3Host
+    - The backend PUTs to <spaceId>/<contentHash>, reusing the content hash as the payload hash. github:dxos/dxos/packages/core/echo/blob/src/s3/blob-backend.ts#createS3BlobBackend
+    - getUrl presigns when a credential exists and returns the public URL otherwise. github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.ts#getObjectUrl
+  note: |
+    A signed read treats only 404 and 403 as a miss, as specified, but `isMiss` treats every 4xx on an unsigned read
+    as a miss (R2 returns 400 for a private bucket), so get/has do not reject on other client errors there. The put
+    path uses the first S3 Connection with a resolvable credential. No test exercises `createS3BlobBackend` or
+    `createS3Host`; only the s3-client read primitives are tested.
+```
+
+```mdl
+verdict SigV4: A hand-rolled WebCrypto SigV4 signer derives the region from the host and leaves content-length unsigned.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/blob/src/s3/sigv4.ts#signRequest, github:dxos/dxos/packages/core/echo/blob/src/s3/sigv4.ts#presignUrl, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-uri.ts#regionFromHost, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.ts#putObject]
+  tests: [github:dxos/dxos/packages/core/echo/blob/src/s3/sigv4.test.ts, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-uri.test.ts]
+  note: The legacy global endpoint (s3.amazonaws.com) signs as us-east-1 rather than auto, a refinement the spec does not mention.
+```
+
+```mdl
+verdict SigV4AwsVectors: Both AWS example signatures are asserted verbatim.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/blob/src/s3/sigv4.ts#signRequest, github:dxos/dxos/packages/core/echo/blob/src/s3/sigv4.ts#presignUrl]
+  tests: [github:dxos/dxos/packages/core/echo/blob/src/s3/sigv4.test.ts]
+```
+
+```mdl
+verdict BucketConfiguration: Operator requirements; a CORS block is diagnosed as such by the connection test.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.ts#probeAccess, github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.ts#S3NetworkError]
+  tests: [github:dxos/dxos/packages/core/echo/blob/src/s3/s3-client.test.ts]
+  note: Operator-side configuration; the code's part is naming the CORS policy when a request is blocked. No EDGE presigning exists, as the spec expects.
+```

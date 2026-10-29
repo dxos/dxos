@@ -263,7 +263,7 @@ desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk 
 in a sandbox on your computer, from fetching this guide to the load prompt; assign them to the agent to start
 it.
 
-In a browser, the template comes from the Coding (Dev) plugin and needs a Composer served locally by
+In a browser, the template comes from the Dev Shell plugin and needs a Composer served locally by
 `vite preview`. There the chat writes the files and checks them against the plugin's dev server. The assistant
 cannot keep a dev server running, so start it yourself once the chat asks, from the Composer app directory:
 
@@ -482,6 +482,11 @@ in the manifest comes from a `package.json` next to `dx.config.ts`, or `0.0.0` w
 
 Things to know:
 
+- A plugin can also be defined entirely in `dx.config.ts` with `Plugin.config({ plugin, modules })`, the way
+  plugins inside the DXOS repository are, naming each module body with
+  `import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`. When `dx.config.ts` defines the plugin,
+  `composerPlugin` builds from it instead of `src/plugin.tsx` and turns it into a static manifest whose module
+  bodies are chunks of the bundle; the `Plugin.define(meta).pipe(...)` layout shown here keeps working.
 - Import only packages the host shares through its import map — the `@dxos/*` libraries and `react`,
   `react-dom` and `effect`; the build leaves those as bare imports. `@dxos/plugin-*` packages are not shared,
   so the build bundles whatever you use from them.

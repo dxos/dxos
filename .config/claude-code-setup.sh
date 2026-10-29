@@ -41,26 +41,7 @@ if ! command -v op >/dev/null 2>&1 && [ "$(uname -s)" = Linux ] && [ -w /usr/loc
   ) || log "1Password CLI install failed; continuing without it"
 fi
 
-# 3. Depot CLI (`depot`) — reads `Check` logs and retries jobs with DEPOT_TOKEN (see the
-#    `depot-ci` skill). Best-effort, same constraints as `op`. The published installer pipes
-#    curl into sh, so resolve the release redirect and untar the binary directly.
-if ! command -v depot >/dev/null 2>&1 && [ "$(uname -s)" = Linux ] && [ -w /usr/local/bin ]; then
-  log "Installing Depot CLI"
-  (
-    set -e
-    tmp="$(mktemp -d)"
-    trap 'rm -rf "$tmp"' EXIT
-    case "$(uname -m)" in aarch64 | arm64) arch=arm64 ;; *) arch=amd64 ;; esac
-    rel="$(curl -fsS --no-location --write-out '%{redirect_url}' --output /dev/null \
-      "https://dl.depot.dev/cli/download/linux/${arch}/latest")"
-    [ -n "$rel" ]
-    curl -fsSLo "$tmp/depot.tar.gz" "$rel"
-    tar xzf "$tmp/depot.tar.gz" -C "$tmp"
-    install -m755 "$tmp/bin/depot" /usr/local/bin/depot
-  ) || log "Depot CLI install failed; continuing without it"
-fi
-
-# 4. GitHub CLI (`gh`) ≥ 2.99 — the first release with `--attach`, which the `hosting-artifacts`
+# 3. GitHub CLI (`gh`) ≥ 2.99 — the first release with `--attach`, which the `hosting-artifacts`
 #    skill uses to embed images and videos in PR bodies. The container image ships an older `gh`,
 #    so upgrade in place rather than only installing when missing. Best-effort, same as `op`.
 GH_VERSION=2.99.0
@@ -80,7 +61,7 @@ if [ "$(printf '%s\n' "$GH_VERSION" "${gh_current:-0}" | sort -V | head -1)" != 
   ) || log "GitHub CLI install failed; continuing with ${gh_current:-no gh}"
 fi
 
-# 5. proto — installs everything pinned in .prototools (auto-install is enabled).
+# 4. proto — installs everything pinned in .prototools (auto-install is enabled).
 if ! command -v proto >/dev/null 2>&1; then
   log "Installing proto"
   curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- --yes >/dev/null
@@ -88,11 +69,11 @@ fi
 log "proto install"
 proto install
 
-# 6. moon workspace setup.
+# 5. moon workspace setup.
 log "moon setup"
 moon setup
 
-# 7. Workspace deps (non-interactive; skip husky hooks).
+# 6. Workspace deps (non-interactive; skip husky hooks).
 log "pnpm install"
 CI=true HUSKY=0 pnpm install --prefer-offline
 

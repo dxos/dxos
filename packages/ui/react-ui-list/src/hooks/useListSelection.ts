@@ -4,6 +4,8 @@
 
 import { type FocusEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
 
+import { FOCUS_MOVER_ATTR } from '@dxos/react-focus';
+
 export type ListSelectionMode = 'single' | 'multi';
 
 type SingleValue = string | undefined;
@@ -174,7 +176,10 @@ export const useListSelection: {
               // not change selection, or it would clobber the controlled value when entry focus
               // lands on a non-selected option. Detect entry via `relatedTarget`: a synthetic event
               // without DOM context (unit tests) falls through to the original follow-focus path.
-              const container = event.currentTarget?.closest?.('[role="listbox"],[role="list"],[role="grid"]');
+              // The collection is the arrow-key group when there is one, so a board's columns (each a listbox) count as one.
+              const container =
+                event.currentTarget?.closest?.(`[${FOCUS_MOVER_ATTR}]`) ??
+                event.currentTarget?.closest?.('[role="listbox"],[role="list"],[role="grid"]');
               if (container && !container.contains(event.relatedTarget)) {
                 return;
               }

@@ -25,6 +25,7 @@ export type {
 export { command } from './command.ts';
 export { useThreadContext } from './context.ts';
 export type {
+  Mention,
   MessageCallbacks,
   MessageMetadata,
   ObjectTileComponent,

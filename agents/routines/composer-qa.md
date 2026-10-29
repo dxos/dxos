@@ -38,8 +38,8 @@ You are in the Claude Code cloud sandbox: read `.agents/skills/cloud-sandbox/SKI
 and this prompt does not restate it — and `packages/apps/composer-app/testing/README.md`. The
 tests are `test QA-n` blocks in `packages/apps/composer-app/spec/APP.mdl` and in the plugins'
 `PLUGIN.mdl`; the suites and their tags are enumerated by
-`node tools/claude/plugins/dxos/scripts/list-tests.mjs --suites`, and the selection for this run by
-`node tools/claude/plugins/dxos/scripts/list-tests.mjs --tag nightly` (a `--tag` or `--suite` on
+`pnpm deus qa list --suites`, and the selection for this run by
+`pnpm deus qa list --tag nightly` (a `--tag` or `--suite` on
 the message that fired you overrides the tag in this prompt).
 
 Branch, first:

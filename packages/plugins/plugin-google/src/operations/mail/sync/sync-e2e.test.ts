@@ -206,7 +206,9 @@ const setup = async () => {
       accessToken: Ref.make(accessToken),
     }),
   );
-  const binding = space.db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }));
+  const binding = space.db.add(
+    Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(mailbox) }),
+  );
 
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
   return { client, space, mailbox, binding, feed, functionsServiceClient };

@@ -86,11 +86,6 @@ export const parseProcessEnvironments = (selected: readonly string[] | undefined
     : ALL_PROCESS_ENVIRONMENTS.filter((environment) => selected.includes(environment));
 
 /**
- * Narrows trace messages to the selected processes and their descendants: a tool call or sub-agent
- * runs as a child of the process it serves, so its events are that process's work. An empty
- * selection is no filter.
- */
-/**
  * Narrows the process tree to the selected processes and their descendants, the process-side twin of
  * {@link filterTraceMessages}: a running child of a picked process is that process's live work.
  */
@@ -114,6 +109,11 @@ export const filterProcessesBySelection = (
   return processes.filter((process) => isSelected(process.pid));
 };
 
+/**
+ * Narrows trace messages to the selected processes and their descendants: a tool call or sub-agent
+ * runs as a child of the process it serves, so its events are that process's work, and a run-again
+ * continuation is the rest of the run it continues. An empty selection is no filter.
+ */
 export const filterTraceMessages = (
   messages: readonly Trace.Message[],
   selected: readonly string[],
@@ -124,7 +124,8 @@ export const filterTraceMessages = (
   const parentByPid = new Map<string, string | undefined>();
   for (const message of messages) {
     if (message.meta.pid !== undefined) {
-      parentByPid.set(message.meta.pid, message.meta.parentPid);
+      // A run-again continuation has no parent process but belongs to its run's first invocation.
+      parentByPid.set(message.meta.pid, message.meta.parentPid ?? message.meta.runId);
     }
   }
   const selection = new Set(selected);

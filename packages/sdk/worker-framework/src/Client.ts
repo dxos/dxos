@@ -7,7 +7,7 @@ import { type Context, ContextDisposedError, Resource } from '@dxos/context';
 import { withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { MaybePromise } from '@dxos/util';
+import { type MaybePromise, markMilestone } from '@dxos/util';
 
 import { WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
 import { DisplaceChannel, type TerminateRequest } from './internal/displace-channel.ts';
@@ -60,6 +60,21 @@ export type ConnectionDiagnostics = {
   workerMsSinceLeaderHeartbeat?: number;
   /** The coordinator link's own failure, when it reported one. */
   workerCoordinatorError?: string;
+  /** The last shutdown a worker this tab led reported, e.g. `displaced by <id> (dxos-client-worker)`. */
+  workerLastShutdown?: string;
+};
+
+/** One-line form of a worker's shutdown report, for diagnostics attached to errors. */
+const formatWorkerShutdown = ({
+  workerId,
+  reason,
+  detail,
+  displacedBy,
+}: WorkerProtocol.DedicatedWorkerShuttingDownMessage): string => {
+  const issuer = displacedBy
+    ? ` by ${displacedBy.workerId ?? 'unnamed worker'}${displacedBy.name ? ` (${displacedBy.name})` : ''}`
+    : '';
+  return `worker ${workerId}: ${reason}${issuer}${detail ? `: ${detail}` : ''}`;
 };
 
 export interface LeaderTimeouts {
@@ -196,6 +211,8 @@ export class Connection extends Resource {
   // Set once the coordinator reports its link dead: no message will ever arrive, so a steal can only
   // destroy a healthy leader's worker, and a connection still booting cannot complete.
   #coordinatorError: Error | undefined;
+  // See `ConnectionDiagnostics.workerLastShutdown`.
+  #lastWorkerShutdown: string | undefined;
   // Whether the wedged-tab escalation has already fired for the current steal streak.
   #stealEscalated = false;
   // True while a `#watchLeader` chain holds the leader lock or is queued for it; a tab whose chain
@@ -223,7 +240,11 @@ export class Connection extends Resource {
   readonly #reconnectCallbacks: Array<() => Promise<void>> = [];
 
   readonly closed = new Event<Error | undefined>();
-  readonly reconnected = new Event<void>();
+  /**
+   * Fires when a connection after the first is established; `isOwner` is true when this tab just became
+   * leader and spawned the worker it reconnected to.
+   */
+  readonly reconnected = new Event<{ isOwner: boolean }>();
 
   constructor(options: Options) {
     super();
@@ -337,6 +358,7 @@ export class Connection extends Resource {
       workerPortTimeouts: this.#portTimeoutCount,
       workerMsSinceLeaderHeartbeat: this.#peerLeaderHeartbeat ? Date.now() - this.#peerLeaderHeartbeat : undefined,
       workerCoordinatorError: this.#coordinatorError?.message,
+      workerLastShutdown: this.#lastWorkerShutdown,
     };
   }
 
@@ -404,6 +426,9 @@ export class Connection extends Resource {
 
             this.#leaderSession = session;
             const unsubscribeStatus = session.onStatus.on((status) => this.workerStatus.emit(status));
+            const unsubscribeShutdown = session.onWorkerShutdown.on((report) => {
+              this.#lastWorkerShutdown = formatWorkerShutdown(report);
+            });
             const done = new Trigger();
             this.#leaderDone = done;
             // Removed in the `finally` below: election re-enters on every steal/failure, so a
@@ -436,6 +461,7 @@ export class Connection extends Resource {
             } finally {
               removeDoneDisposer();
               unsubscribeStatus();
+              unsubscribeShutdown();
               clearInterval(heartbeat);
               if (this.#leaderDone === done) {
                 this.#leaderDone = undefined;
@@ -725,13 +751,14 @@ export class Connection extends Resource {
 
       if (this.#isInitialConnection) {
         performance.mark('worker-connection:session-ready');
+        markMilestone('worker.connected');
         this.#isInitialConnection = false;
         this.#initialConnection.wake();
       } else {
         log('worker-connection: reconnecting, calling callbacks', { count: this.#reconnectCallbacks.length });
         // Isolated: a caller's failing callback must not fail the reconnection it is reacting to.
         await Promise.all(this.#reconnectCallbacks.map((cb) => cb().catch((err) => log.catch(err))));
-        this.reconnected.emit();
+        this.reconnected.emit({ isOwner });
       }
     } catch (caught: any) {
       if (ctx.disposed && !sessionFailure) {
@@ -898,6 +925,9 @@ class LeaderSession extends Resource {
 
   readonly onStatus = new Event<unknown>();
 
+  /** Fires when the worker reports it is shutting down, and why. */
+  readonly onWorkerShutdown = new Event<WorkerProtocol.DedicatedWorkerShuttingDownMessage>();
+
   /** The error the worker reported when its runtime failed to start. */
   get startFailure(): Error | undefined {
     return this.#startFailure;
@@ -907,16 +937,54 @@ class LeaderSession extends Resource {
     log('leader-session: creating worker');
     this.#worker = this.#createWorker();
     performance.mark('worker-connection:spawned');
+    markMilestone('worker.spawned');
     const listening = new Trigger();
     const ready = new Trigger<WorkerProtocol.DedicatedWorkerMessage & { type: 'ready' }>();
+    // Handshake progress, attached to the error when the session fails to open.
+    const spawnedAt = Date.now();
+    let listeningWorkerId: string | undefined;
+    let listeningAfterMs: number | undefined;
+    let initSentAfterMs: number | undefined;
+    let workerShutdown: WorkerProtocol.DedicatedWorkerShuttingDownMessage | undefined;
     this.#worker.onmessage = (event: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => {
       switch (event.data.type) {
         case 'listening':
+          listeningWorkerId = event.data.workerId;
+          listeningAfterMs = Date.now() - spawnedAt;
+          log('leader-session: worker listening', {
+            leaderId: this.#leaderId,
+            workerId: listeningWorkerId,
+            afterMs: listeningAfterMs,
+          });
           listening.wake();
           break;
         case 'ready':
+          log('leader-session: worker ready', {
+            leaderId: this.#leaderId,
+            workerId: event.data.workerId,
+            afterMs: Date.now() - spawnedAt,
+          });
           ready.wake(event.data);
           break;
+        case 'shutting-down': {
+          workerShutdown = event.data;
+          // The worker's own logs end with it; this line is what survives in the tab's log store.
+          const context = {
+            leaderId: this.#leaderId,
+            workerId: event.data.workerId,
+            reason: event.data.reason,
+            detail: event.data.detail,
+            displacedBy: event.data.displacedBy,
+            afterMs: Date.now() - spawnedAt,
+          };
+          if (event.data.reason === 'requested') {
+            log.info('leader-session: worker shutting down', context);
+          } else {
+            log.warn('leader-session: worker shutting down', context);
+          }
+          this.onWorkerShutdown.emit(event.data);
+          break;
+        }
         case 'pong':
           this.#probeReplies.emit(event.data.nonce);
           break;
@@ -963,6 +1031,7 @@ class LeaderSession extends Resource {
 
     const handshake = async () => {
       await listening.wait();
+      initSentAfterMs = Date.now() - spawnedAt;
       this.#sendMessage({
         type: 'init',
         clientId: this.#leaderId,
@@ -980,7 +1049,12 @@ class LeaderSession extends Resource {
       lockOrRpcTimeoutError('opening worker leader session'),
     ).catch((error) => {
       this.#closeWorker();
-      throw error;
+      throw withContext(error, {
+        workerHandshakeListeningAfterMs: listeningAfterMs,
+        workerHandshakeInitSentAfterMs: initSentAfterMs,
+        workerHandshakeWorkerId: listeningWorkerId,
+        workerHandshakeShutdown: workerShutdown && formatWorkerShutdown(workerShutdown),
+      });
     });
     this.#livenessLockKey = readyMessage.livenessLockKey;
     this.#workerId = readyMessage.workerId;

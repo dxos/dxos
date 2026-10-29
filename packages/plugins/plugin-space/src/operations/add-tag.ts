@@ -13,7 +13,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddTag> = SpaceOperat
   Operation.withHandler(
     Effect.fnUntraced(function* ({ tag, object }) {
       const resolved = yield* Database.load(object);
-      Entity.update(resolved, (resolved) => Entity.addTag(resolved, tag));
+      const resolvedTag = yield* Database.load(tag);
+      Entity.update(resolved, (resolved) => Entity.addTag(resolved, resolvedTag));
       return { object: resolved };
     }),
   ),

@@ -8,7 +8,7 @@ import * as Order from 'effect/Order';
 import { type Alarm, isConsumed, isInFlight, isQueued } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
 import { DeliveryAnnotation, type DeliveryStatus } from '@dxos/react-ui-assistant/types';
-import { type ContentBlock, Message } from '@dxos/types';
+import { type Actor, type ContentBlock, Message } from '@dxos/types';
 
 import { type OutboxEntry } from './outbox.ts';
 
@@ -79,6 +79,7 @@ export const projectThread = ({
   pendingMessages = [],
   rewindFrom,
   outbox = [],
+  sender,
 }: {
   feedMessages: readonly Message.Message[];
   /** Messages produced by the current turn that are not in the feed yet. */
@@ -87,6 +88,8 @@ export const projectThread = ({
   rewindFrom?: string;
   /** Prompts sent from this chat, in submit order. */
   outbox?: readonly OutboxEntry[];
+  /** Who this chat's prompts are from, for an outbox row no feed copy attributes yet. */
+  sender?: Actor.Actor;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
   // A turn's messages that the feed has not caught up with yet continue from the thread's head, so
@@ -142,7 +145,7 @@ export const projectThread = ({
             ? 'failed'
             : 'sent';
 
-    const row = deliveryRow(entry.id, turn ?? queueEntry ?? entry, entry.created, status);
+    const row = deliveryRow(entry.id, turn ?? queueEntry ?? entry, entry.created, status, sender);
     delivery.set(entry.id, { status, outboxId: entry.id, entryId: queueEntry?.id, turnId: turn?.id });
     if (turn) {
       turns.set(turn.id, row);
@@ -155,7 +158,7 @@ export const projectThread = ({
   // Waiting entries this chat did not send (another device, or a reload) — they predate the outbox.
   for (const entry of entries) {
     if (!claimed.has(entry.id) && !isConsumed(entry) && !isInFlight(entry)) {
-      tail.push(deliveryRow(entry.id, entry, entry.created, 'delivered'));
+      tail.push(deliveryRow(entry.id, entry, entry.created, 'delivered', undefined));
       delivery.set(entry.id, { status: 'delivered', entryId: entry.id });
     }
   }
@@ -210,7 +213,10 @@ const carries = (message: Message.Message, blocks: readonly ContentBlock.Any[]):
 const textKey = (block: ContentBlock.Text): string => `${block.disposition ?? ''}:${block.text}`;
 
 /** The row last built for a source, reused while its status holds so an unchanged row is not re-rendered. */
-const deliveryRows = new WeakMap<object, { id: string; status: DeliveryStatus; row: Message.Message }>();
+const deliveryRows = new WeakMap<
+  object,
+  { id: string; status: DeliveryStatus; sender: Actor.Actor; row: Message.Message }
+>();
 
 /**
  * The row a prompt renders as: its content from the latest copy of it, under the row's own id, marked
@@ -218,18 +224,21 @@ const deliveryRows = new WeakMap<object, { id: string; status: DeliveryStatus; r
  */
 const deliveryRow = (
   id: string,
-  source: Pick<Message.Message, 'blocks'>,
+  source: Pick<Message.Message, 'blocks'> & Partial<Pick<Message.Message, 'sender'>>,
   created: string,
   status: DeliveryStatus,
+  fallbackSender: Actor.Actor | undefined,
 ): Message.Message => {
+  // The author's DID must survive the swap: the thread shows who wrote each prompt from it.
+  const sender: Actor.Actor = { ...(source.sender ?? fallbackSender), role: 'user' };
   const cached = deliveryRows.get(source);
-  if (cached && cached.id === id && cached.status === status) {
+  if (cached && cached.id === id && cached.status === status && cached.sender.identityDid === sender.identityDid) {
     return cached.row;
   }
 
-  const row = Message.make({ id, created, sender: { role: 'user' }, blocks: [...source.blocks] });
+  const row = Message.make({ id, created, sender, blocks: [...source.blocks] });
   Obj.update(row, (row) => Annotation.set(row, DeliveryAnnotation, status));
-  deliveryRows.set(source, { id, status, row });
+  deliveryRows.set(source, { id, status, sender, row });
   return row;
 };
 

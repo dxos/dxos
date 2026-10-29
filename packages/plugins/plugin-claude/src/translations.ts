@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { ClaudeAgentSession, ClaudeManagedAgent } from '#types';
+
+import { ClaudeNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -30,8 +31,15 @@ export const translations = [
         'rename-object.label': 'Rename session',
         'delete-object.label': 'Delete session',
       },
-      [meta.profile.key]: {
+      [ClaudeNamespace.key]: {
         'plugin.name': 'Claude',
+        'project-folder.label': 'Code folder on this device',
+        'project-folder.description':
+          'Where Claude Code on this computer works; each delegated task gets its own git worktree of it. Cloud sessions check out the repositories above instead.',
+        'project-folder.empty.label': 'Not set',
+        'project-folder.path.placeholder': '/Users/me/code/project',
+        'project-folder.choose.label': 'Choose folder…',
+        'project-folder.clear.label': 'Clear',
       },
     },
   },

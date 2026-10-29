@@ -154,7 +154,7 @@ const blockToMarkdown = (
         return isPrompt(message) ? undefined : tag('synthetic', block.text, block);
       }
       if (message.sender.role === 'user') {
-        return tag('prompt', block.text, block);
+        return tag('prompt', block.text, block, mentionNames);
       }
       return linkBareObjectUris(block.text, getObjectLabel).trim() || undefined;
     }
@@ -264,8 +264,13 @@ const expandJsonStrings = (key: string, value: unknown): unknown => {
  * Paragraph breaks inside tag content are collapsed, since a blank line would end the enclosing
  * markdown block and leave the rest of the tag parsing as prose.
  */
-const tag = (name: string, content: string, block: ContentBlock.Any): string => {
-  const text = escapeXml(content.replace(/\n\n+/g, ' ').trim());
+const tag = (
+  name: string,
+  content: string,
+  block: ContentBlock.Any,
+  escape: (raw: string) => string = escapeXml,
+): string => {
+  const text = escape(content.replace(/\n\n+/g, ' ').trim());
   if (!text.length && !block.pending) {
     return '';
   }
@@ -276,6 +281,17 @@ const tag = (name: string, content: string, block: ContentBlock.Any): string => 
 
 const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const escapeAttribute = (raw: string): string => escapeXml(raw).replace(/"/g, '&quot;');
+
+const MENTION = /\[((?:\\.|[^\]\\\n])*)\]\(((?:echo|dxn):[^)\s]+)\)/g;
+
+const unescapeLabel = (label: string): string => label.replace(/\\(.)/g, '$1');
+
+/** The objects a prompt mentions, in order; what sending it adds to the conversation's context. */
+export const parseMentions = (text: string): { label: string; uri: string }[] =>
+  [...text.matchAll(MENTION)].map(([, label, uri]) => ({ label: unescapeLabel(label), uri }));
+
+const mentionNames = (raw: string): string =>
+  escapeXml(raw.replace(MENTION, (_whole, label: string) => unescapeLabel(label)));
 
 //
 // Estimates

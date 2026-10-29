@@ -1,0 +1,49 @@
+name: Boot trend
+
+# Charts main's boot graph in PostHog (`ci.boot-budget`). A new run cancels the one in progress, so a
+# burst of pushes is charted once rather than per commit. `Check` does not run on pushes to main, since
+# the merge queue already tested the commit, so the measurement it trended from there runs here, under
+# its own workflow name so it never replaces the queue's checks.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: boot-trend
+  cancel-in-progress: true
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+jobs:
+  trend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # A breached budget still writes the report, and the trend should show the breach.
+      - name: Measure the boot graph
+        run: moon run composer-app:check-boot-budget || true
+
+      - name: Trend the boot graph
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          node scripts/ci-event.mjs \
+            --event ci.boot-budget \
+            --properties packages/apps/composer-app/out/boot-budget.json \
+            --property app=composer

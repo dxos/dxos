@@ -96,9 +96,9 @@ export const getRootFormProperties = (
  * Without this, fields like `Routine.input` (a JsonSchema struct) annotated
  * `FormInputAnnotation.set(false)` would still render in the form.
  *
- * For optional fields, `prop.type` is the union `T | undefined` — the annotation
- * lives on the inner `T`. Unwrap before reading so that the conventional pattern
- * `Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional)` works.
+ * For optional fields, `prop.type` is the union `T | undefined`, and the annotation may live on the inner `T`
+ * (`Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional)`) or on that union
+ * (`Schema.optional(Schema.String).pipe(FormInputAnnotation.set(false))`); either hides the field.
  *
  * Container properties (nested structs, unions, arrays) keep their *raw* AST rather than
  * the `encodedBoundAST` produced by `SchemaEx.getProperties`. `encodedBoundAST` strips annotations
@@ -110,13 +110,11 @@ export const getRootFormProperties = (
 export const getFormProperties = (ast: SchemaAST.AST): SchemaEx.SchemaProperty[] => {
   const signatures = SchemaAST.getPropertySignatures(ast);
   const rawByName = new Map<PropertyKey, SchemaAST.AST>(signatures.map((prop) => [prop.name, unwrapOptional(prop)]));
+  // Hidden whether the annotation is on the inner type or on the `optional` wrapper (`Schema.optional(T).pipe(...)`).
+  const isHidden = (ast: SchemaAST.AST) =>
+    Annotation.FormInputAnnotation.getFromAst(ast).pipe(Option.getOrElse(() => true)) === false;
   const hidden = new Set(
-    signatures
-      .filter(
-        (prop) =>
-          Annotation.FormInputAnnotation.getFromAst(unwrapOptional(prop)).pipe(Option.getOrElse(() => true)) === false,
-      )
-      .map((prop) => prop.name),
+    signatures.filter((prop) => isHidden(unwrapOptional(prop)) || isHidden(prop.type)).map((prop) => prop.name),
   );
   return SchemaEx.getProperties(ast)
     .filter((prop) => !hidden.has(prop.name))

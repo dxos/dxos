@@ -9,6 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { loadMcpServers } from '@dxos/agent-runtime';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AiSession,
@@ -17,10 +18,11 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -121,11 +123,17 @@ export default AgentOperation.RunInstructions.pipe(
           }),
         );
 
+        // The space's MCP connections, re-read each iteration so one the run adds connects on its next turn.
+        const mcpServers = loadMcpServers({ feed }).pipe(
+          Effect.provide(yield* Effect.context<Database.Service | Registry.Service | Credential.CredentialsService>()),
+        );
+
         yield* session
           .createRequest({
             prompt: promptText,
             system: systemText,
             toolkit: promptToolkit,
+            mcpServers,
           })
           .pipe(
             Effect.provide(
@@ -143,6 +151,7 @@ export default AgentOperation.RunInstructions.pipe(
                   prompt: 'You must signal task completion by calling [completeJob] with the output or failure reason.',
                   system: systemText,
                   toolkit: promptToolkit,
+                  mcpServers,
                 })
                 .pipe(
                   Effect.provide(

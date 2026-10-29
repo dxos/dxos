@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ConductorPlugin } from '#plugin';
+import * as ConductorPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { ConductorNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), ConductorPlugin.make()] });
+
+const moduleId = (name: string) => `${ConductorNamespace.key}.module.${name}`;
 
 describe('ConductorPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ConductorPlugin()],
+      plugins: [ClientPlugin.make({}), ConductorPlugin.make()],
     });
 
     // Modules expected to be active after a normal startup.

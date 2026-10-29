@@ -7,16 +7,16 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { SpecDocument } from '@dxos/types';
 
 import { meta } from '#meta';
 
 import * as SourceFile from './SourceFile.ts';
-import * as Spec from './Spec.ts';
 
 export class CodeProject extends Type.makeObject<CodeProject>(DXN.make('org.dxos.type.codeProject', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    spec: Ref.Ref(Spec.Spec),
+    spec: Ref.Ref(SpecDocument.SpecDocument),
     files: Schema.optional(Schema.Array(Ref.Ref(SourceFile.SourceFile))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
@@ -25,7 +25,15 @@ export class CodeProject extends Type.makeObject<CodeProject>(DXN.make('org.dxos
   ),
 ) {}
 
-export const make = ({ name, spec, files = [] }: { name?: string; spec: Spec.Spec; files?: SourceFile.SourceFile[] }) =>
+export const make = ({
+  name,
+  spec,
+  files = [],
+}: {
+  name?: string;
+  spec: SpecDocument.SpecDocument;
+  files?: SourceFile.SourceFile[];
+}) =>
   Obj.make(CodeProject, {
     name,
     spec: Ref.make(spec),

@@ -25,16 +25,11 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
 import { PluginList, type PluginListProps } from '#components';
-import { meta } from '#meta';
 
-import { registryFilterAtom } from '../../filter.ts';
+import { matchesFilter, registryFilterAtom } from '../../filter.ts';
 import { useDisableConfirmation } from '../../hooks/index.ts';
+import { RegistryNamespace } from '../../namespace.ts';
 import { getPluginPath } from '../../paths.ts';
-
-const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
-  const haystack = `${plugin.meta.profile.name ?? ''} ${plugin.meta.profile.key}`.toLowerCase();
-  return haystack.includes(query);
-};
 
 export type BaseRegistryArticleProps = {
   contextId: string;
@@ -80,7 +75,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
     },
     forwardedRef,
   ) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(RegistryNamespace.key);
     const manager = PluginManagerProvider.usePluginManager();
     const { invoke, invokePromise } = Hooks.useOperationInvoker();
     const allSettings = Hooks.useCapabilities(AppCapabilities.Settings);

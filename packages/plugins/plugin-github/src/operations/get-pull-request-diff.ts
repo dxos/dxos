@@ -6,17 +6,19 @@ import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
+import { Database } from '@dxos/echo';
 
 import { GitHubOperation } from '#types';
 
 import { GitHubApi } from '../services/index.ts';
-import { resolvePullRequest } from './pull-request.ts';
+import { githubReadCredentials, resolvePullRequest } from './pull-request.ts';
 
 const handler: Operation.WithHandler<typeof GitHubOperation.GetPullRequestDiff> =
   GitHubOperation.GetPullRequestDiff.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ pullRequest: ref }) {
-        const { pullRequest, credentials } = yield* resolvePullRequest(ref);
+        const { pullRequest, db } = yield* resolvePullRequest(ref);
+        const credentials = yield* githubReadCredentials().pipe(Effect.provide(Database.layer(db)));
         const { owner, repo, number } = pullRequest;
         const [before, diff, after] = yield* Effect.all(
           [

@@ -1,0 +1,23 @@
+---
+id: org.dxos.fixture.review
+name: Review fixture
+version: 0.1.0
+---
+
+A fixture spec for `deus review`.
+
+```mdl
+feat F-1: Listing
+  req F-1.1: The CLI lists review items.
+  req F-1.2: The CLI checks reviews.
+```
+
+```mdl
+op Greet: Says hello
+```
+
+```mdl
+test QA-1: Lists the items
+  steps:
+    - do: run the command
+```

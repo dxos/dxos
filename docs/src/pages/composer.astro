@@ -818,12 +818,8 @@ import IconX from '../components/svg/IconX.astro';
             body: JSON.stringify({ email: email }),
           });
           if (!res.ok) throw new Error('request-access failed');
-          block.querySelector('.w-form-done').style.display = 'block';
-          form.style.display = 'none';
-          const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
-          document.cookie = 'user_subscribed=true; expires=' + expires + '; path=/';
-          document.querySelectorAll('[show-subscribe]').forEach(function (el) { el.style.display = 'none'; });
-          document.querySelectorAll('[show-welcome]').forEach(function (el) { el.style.display = 'block'; });
+          // The welcome page sets the subscribed cookie.
+          location.assign('/composer-welcome/');
         } catch (_) {
           block.querySelector('.w-form-fail').style.display = 'block';
           form.style.display = 'none';

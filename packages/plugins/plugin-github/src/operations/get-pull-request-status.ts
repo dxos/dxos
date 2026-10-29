@@ -6,12 +6,19 @@ import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
+import { Database } from '@dxos/echo';
 import { type PullRequest } from '@dxos/types';
 
 import { GitHubOperation } from '#types';
 
 import { GitHubApi } from '../services/index.ts';
-import { resolvePullRequest, summarizeCheckRuns, summarizeReviews, toCheckRun } from './pull-request.ts';
+import {
+  githubReadCredentials,
+  resolvePullRequest,
+  summarizeCheckRuns,
+  summarizeReviews,
+  toCheckRun,
+} from './pull-request.ts';
 
 const toState = (pull: GitHubApi.GitHubPull): PullRequest.State =>
   pull.merged || pull.merged_at ? 'merged' : pull.draft ? 'draft' : pull.state === 'closed' ? 'closed' : 'open';
@@ -20,7 +27,8 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetPullRequestStatus
   GitHubOperation.GetPullRequestStatus.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ pullRequest: ref }) {
-        const { pullRequest, credentials } = yield* resolvePullRequest(ref);
+        const { pullRequest, db } = yield* resolvePullRequest(ref);
+        const credentials = yield* githubReadCredentials().pipe(Effect.provide(Database.layer(db)));
         const { owner, repo, number } = pullRequest;
         const pull = yield* GitHubApi.fetchPullRequest(owner, repo, number).pipe(Effect.provide(credentials));
         const commit = pull.head?.sha;

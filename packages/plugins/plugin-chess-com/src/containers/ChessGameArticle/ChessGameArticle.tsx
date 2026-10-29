@@ -20,13 +20,14 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';
+
+import { ChessComNamespace } from '../../namespace.ts';
 
 export type ChessGameArticleProps = AppSurface.ObjectArticleProps<ChessComAccount.Account>;
 
 export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ChessComNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [account] = useObject(subject);
   const [gamesFeed] = useObject(account?.games);
@@ -50,7 +51,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
       { account: Ref.make(subject) },
       {
         spaceId: db?.spaceId,
-        notify: { error: ['sync-games-error.title', { ns: meta.profile.key }] },
+        notify: { error: ['sync-games-error.title', { ns: ChessComNamespace.key }] },
       },
     );
   }, [subject, db?.spaceId, invokePromise]);
@@ -61,14 +62,22 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
         .action(
           'sync',
           {
-            label: ['sync-games.button', { ns: meta.profile.key }],
+            label: ['sync-games.button', { ns: ChessComNamespace.key }],
             icon: 'ph--arrows-clockwise--regular',
             iconOnly: false,
           },
           handleSync,
         )
+        .subgraph(
+          !!account?.username &&
+            ((builder) =>
+              builder.text('account', {
+                label: account.league ? `${account.username} · ${account.league}` : account.username,
+                classNames: 'text-fg-subtle text-sm',
+              })),
+        )
         .build(),
-    [handleSync],
+    [handleSync, account?.username, account?.league],
   );
 
   const empty = sortedGames.length === 0;
@@ -76,15 +85,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId}>
-          {account?.username && (
-            <span className='text-fg-subtle text-sm px-2'>
-              {account.username}
-              {account.league ? ` · ${account.league}` : ''}
-            </span>
-          )}
-          <div className='grow' />
-        </ActionToolbar>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body>
         {empty ? (
@@ -105,7 +106,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
 };
 
 const GameTile = ({ data: game }: { data: Game.Game }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ChessComNamespace.key);
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
   const objectMenuItems = ToolkitHooks.useObjectMenuItems(game, pivotId);

@@ -14,10 +14,11 @@ import {
   isInstanceNode,
   isViewNode,
   keyTimes,
+  storeVersions,
 } from '../model/index.ts';
-import { redo, undo, withUndo } from '../utils/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { type LookHandlers, createCanvasController } from './controller.ts';
+import { createLocalHistory, withHistory } from './history.ts';
 import { createFreehandProjection } from './projection.ts';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
@@ -59,12 +60,13 @@ const setup = ({
   const registry = Registry.make();
   const store = createMemoryStore(tree.views);
   const atoms = createCanvasAtoms(tree.root);
-  const projection = withUndo(
-    createFreehandProjection({ registry, store, sceneId: tree.root }),
+  const history = createLocalHistory()({
     registry,
-    atoms.undo,
-    tree.root,
-  );
+    store: storeVersions(registry, store),
+    context: () => ({ path: registry.get(atoms.path), selection: [...registry.get(atoms.selection)] }),
+    view: {},
+  });
+  const projection = withHistory(createFreehandProjection({ registry, store, sceneId: tree.root }), history);
   let next = 0;
   const controller = createCanvasController({
     registry,
@@ -78,14 +80,27 @@ const setup = ({
     viewport: () => VIEWPORT,
     inset: () => 0,
     look: () => look,
+    history: () => history,
     createId: (prefix) => `${prefix}-${next++}`,
   });
+  history.view.restore = ({ path, selection }) =>
+    controller.navigation.openView(path, { animate: false, select: selection });
   const scene = () => registry.get(projection.scene);
   const linkId = Object.keys(scene().links)[0];
   const views = () => registry.get(store.views);
-  const undoStep = () => undo(projection, registry, atoms.undo, tree.root, store);
-  const redoStep = () => redo(projection, registry, atoms.undo, tree.root, store);
-  return { registry, store, atoms, controller, scene, views, linkId, projection, undoStep, redoStep };
+  return {
+    registry,
+    store,
+    atoms,
+    controller,
+    scene,
+    views,
+    linkId,
+    projection,
+    history,
+    undoStep: history.undo,
+    redoStep: history.redo,
+  };
 };
 
 /** The Object the one Instance in the open View draws. */
@@ -237,7 +252,7 @@ describe('CanvasController', () => {
           .name('Child')
           .at({ x: 512, y: 0, width: 512, height: 256 }),
       ]).build();
-      const { registry, store, atoms, controller, projection } = setup({ tree });
+      const { registry, store, controller, history } = setup({ tree });
       const order = () =>
         Object.values(registry.get(store.views).child.nodes)
           .sort((left, right) => (left.z < right.z ? -1 : 1))
@@ -245,7 +260,7 @@ describe('CanvasController', () => {
       expect(order()).toEqual(['c', 'd']);
       expect(controller.document.restack('child', 'd', 'c', 'before')).toBe(true);
       expect(order()).toEqual(['d', 'c']);
-      undo(projection, registry, atoms.undo, tree.root, store);
+      history.undo();
       expect(order()).toEqual(['c', 'd']);
     });
 
@@ -324,6 +339,14 @@ describe('CanvasController', () => {
       controller.selection.select([linkId]);
       expect(controller.selection.group()).toBeUndefined();
       expect(Object.keys(views())).toEqual(['root']);
+    });
+
+    test('group refuses a selection holding a view node, since an Object cannot contain a View', ({ expect }) => {
+      const { controller, scene, views } = setup({ tree: nested() });
+      controller.selection.select(['a', 'child']);
+      expect(controller.selection.group()).toBeUndefined();
+      expect(scene().nodes.child).toBeDefined();
+      expect(Object.values(views()).some((view) => view.kind === 'composite')).toBe(false);
     });
 
     test("ungroup puts an anonymous Object's contents back where they were and deletes its definition", ({

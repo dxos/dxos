@@ -121,9 +121,10 @@ Every interaction lives behind a page-object so specs read as intent, not select
   (`e2ePreset`, `vite preview` on port 4173, pre-built bundle).
 - `PLAYWRIGHT_BROWSER=chromium|firefox|webkit|all` selects projects; many tests are chromium-only
   via `test.skip(browserName !== 'chromium')`.
-- CI: the `Check` `e2e` job runs on every trigger, scoped to affected projects except on main, the
+- CI: the `Check` `e2e-composer` and `e2e-rest` jobs run on ready PRs, the merge queue, the nightly
+  schedule and a dispatch; a draft PR skips them. They are scoped to affected projects except on the
   schedule and a dispatch. A dispatch forces every suite to run rather than replay; `only=e2e` skips
-  the other jobs. From `main` the job also publishes every test's outcome to PostHog as
+  the other jobs. The schedule and a dispatch also publish every test's outcome to PostHog as
   `ci.e2e-test` (`DASHBOARD.md`).
 - `DX_HARNESS_THROTTLED=1` enables the startup harness's throttled cold start (chromium-only, CDP).
   Its profile defaults to Fast 3G + 2x CPU and each field is overridable via `DX_HARNESS_LATENCY_MS`,

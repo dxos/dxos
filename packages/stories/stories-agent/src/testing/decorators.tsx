@@ -3,6 +3,7 @@
 //
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { type Database, type Type } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
@@ -24,7 +25,7 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { type Config } from '@dxos/react-client';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
+import { type StoryDecoratorsProps, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { moduleSurfaces } from '../modules/index.ts';
@@ -60,26 +61,48 @@ const TYPES: Type.AnyEntity[] = [
 export type DecoratorsProps = {
   /** The client config; the live stories use {@link storyConfig}. */
   config?: Config;
-  /** Seeds the space through plugin operations once it is available. */
-  onReady: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
+  /**
+   * Includes the agent stack (assistant, threads, agents, connectors, routines, Discord). Off for a story whose plugins
+   * stand alone, e.g. one that fakes the assistant.
+   *
+   * @default true
+   */
+  agents?: boolean;
+  /** Plugins a story adds to the agent stack (e.g. the objects it comments on). */
+  plugins?: Plugin.Plugin[];
+  /** Types a story's objects need beyond the agent stack's. */
+  types?: Type.AnyEntity[];
+  /** Creates the story's objects during client init and returns the module layout that shows them. */
+  onInit?: StoryDecoratorsProps['onInit'];
+  /** Seeds the space through plugin operations once it is available; a returned function runs on teardown. */
+  onReady: (props: {
+    db: Database.Database;
+    invoker: Capabilities.OperationInvoker;
+  }) => Promise<void | (() => Promise<void>)>;
 };
 
 /** Props, or a function of the story's args, so a story's config (e.g. `persistent`) can follow its Controls. */
 export type DecoratorsInput<Args> = DecoratorsProps | ((context: { args: Args }) => DecoratorsProps);
 
-const makeDecoratorProps = ({ config, onReady }: DecoratorsProps) => ({
+const agentPlugins = () => [
+  AssistantPlugin.make(),
+  ThreadPlugin.make(),
+  AgentPlugin.make(),
+  ConnectorPlugin.make(),
+  // Copies the plugins' skill definitions into the client registry, which resolves an agent's bound skills.
+  RoutinePlugin.make(),
+  DiscordPlugin.make(),
+];
+
+const makeDecoratorProps = ({ config, agents = true, plugins = [], types = [], onInit, onReady }: DecoratorsProps) => ({
   ...(config ? { config } : {}),
+  ...(onInit ? { onInit } : {}),
   // Skill definitions ride the assistant's start event; without it the agent's skill rows render blank labels.
-  setupEvents: [AppActivationEvents.AssistantStart],
-  types: TYPES,
+  ...(agents ? { setupEvents: [AppActivationEvents.AssistantStart] } : {}),
+  types: [...(agents ? TYPES : []), ...types],
   plugins: [
-    AssistantPlugin.make(),
-    ThreadPlugin.make(),
-    AgentPlugin.make(),
-    ConnectorPlugin.make(),
-    // Copies the plugins' skill definitions into the client registry, which resolves an agent's bound skills.
-    RoutinePlugin.make(),
-    DiscordPlugin.make(),
+    ...(agents ? agentPlugins() : []),
+    ...plugins,
     makeModuleSurfacesPlugin('org.dxos.plugin.stories-agent.modules', moduleSurfaces),
     StorySetupPlugin({ onReady }),
   ],

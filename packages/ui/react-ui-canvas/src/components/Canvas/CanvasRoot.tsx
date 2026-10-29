@@ -11,17 +11,19 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { animate, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
+import { animate, createCanvasAtoms, noHistory, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
   SceneLookContext,
   useCanvasController,
+  useCanvasHistory,
   useClock,
   useDocumentCommands,
+  useEditMode,
   useElementHandlers,
   useExposedClock,
   useGeneratorFrames,
@@ -66,6 +68,7 @@ export const CanvasRoot = ({
   links: linkRegistry = defaultLinkRegistry,
   createProjection,
   projection: projectionProp,
+  history: historyProp,
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
@@ -73,8 +76,10 @@ export const CanvasRoot = ({
   onDisplayChange,
   grid = DEFAULT_GRID,
   margin = DEFAULT_MARGIN,
+  fitZoom,
   readonly = false,
   onReadonlyChange,
+  transparent = false,
   inspectors = 'floating',
   onInspectorsChange,
   themes = defaultThemeRegistry,
@@ -103,7 +108,16 @@ export const CanvasRoot = ({
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp });
+  // A host-owned projection given no history owns its side effects, so its edits are not undone here.
+  const ownHistory = useCanvasHistory({
+    registry,
+    atoms,
+    store,
+    history: typeof historyProp === 'function' ? historyProp : projectionProp ? noHistory : undefined,
+  });
+  const history = historyProp === undefined || typeof historyProp === 'function' ? ownHistory : historyProp;
+  const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp, history });
+  history.view.projection = baseProjection;
   // Sampled at the view's clock; an edit away from the start becomes keys (ANIMATION.md §5.3, §5.4).
   const projection = useMemo(
     () =>
@@ -184,6 +198,7 @@ export const CanvasRoot = ({
     time,
     fitTarget,
     inset,
+    fitZoom,
     initialCamera,
     initialDisplay,
     onDisplayChange,
@@ -213,9 +228,16 @@ export const CanvasRoot = ({
       camera: { animateTo, target: cameraTarget, setOpening },
       fit: { enterFit, exitFit, takeOver: () => (interactedRef.current = true) },
       look: { onThemeChange, onBackgroundGridChange },
+      history,
     },
   });
   const { navigation } = controller;
+  // Undo and redo return to the View the edit was made in and select what is left of its selection.
+  history.view.restore = ({ path, selection, isolate }) => {
+    const view = registry.get(store.views)[path.at(-1) ?? ''];
+    const select = selection.filter((id) => view?.nodes[id] !== undefined || view?.links[id] !== undefined);
+    navigation.openPlace({ path, isolate }, { animate: false, select });
+  };
 
   // Read-only, nothing is selected: a selection only exists to be edited.
   const select = controller.selection.select;
@@ -271,13 +293,14 @@ export const CanvasRoot = ({
     atoms,
     store,
     baseProjection,
-    root,
+    commit: history.commit,
     select,
     navigation,
     viewport,
   });
 
-  const { setTool, toggleSnap, toggleGuides, toggleLattice, toggleDebug } = controller.tools;
+  const { setTool, toggleSnap, toggleGuides, toggleDebug } = controller.tools;
+  const { editNode, exitEdit } = useEditMode({ registry, atoms, nodeRegistry, capabilities, select });
   const {
     onBackgroundPointerDown,
     onPointerMove,
@@ -295,9 +318,14 @@ export const CanvasRoot = ({
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onVertexPointerDown,
+    onVertexMidpointPointerDown,
+    deleteVertex,
     setDrag,
     toScene,
     removePoint,
+    finishVertices,
+    removeVertex,
     createdNode,
     commitCreated,
     menu,
@@ -328,6 +356,7 @@ export const CanvasRoot = ({
     snapMinor,
     isClick,
     moveDelta,
+    exitEdit,
   });
 
   // A gesture begun before the view turned read-only is dropped, not committed on release, and a drawing tool gives way
@@ -335,21 +364,20 @@ export const CanvasRoot = ({
   useEffect(() => {
     if (readonly) {
       cancelDrag();
+      exitEdit();
       if (registry.get(atoms.tool).kind !== 'hand') {
         setTool({ kind: 'select' });
       }
     }
-  }, [readonly, cancelDrag, registry, atoms.tool, setTool]);
+  }, [readonly, cancelDrag, exitEdit, registry, atoms.tool, setTool]);
 
   const { copy, cut, paste } = controller.editing;
   const documentCommands = useDocumentCommands({
     registry,
     atoms,
-    store,
     projection,
+    history,
     readonly,
-    sceneId,
-    select,
     nodeRegistry,
     capabilities,
     cell,
@@ -372,10 +400,10 @@ export const CanvasRoot = ({
     select,
     toggleSnap,
     toggleGuides,
-    toggleLattice,
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,
+    commit: history.commit,
     major,
     copy,
     cut,
@@ -385,8 +413,13 @@ export const CanvasRoot = ({
     ungroup: controller.selection.ungroup,
     cancelDrag,
     removePoint,
+    finishVertices,
+    removeVertex,
+    deleteVertex,
     setTool,
     timeline: timelineKeys,
+    editNode,
+    exitEdit,
   });
 
   // Shortcuts belong to the canvas itself: keys typed into a control the view hosts (the properties
@@ -412,7 +445,7 @@ export const CanvasRoot = ({
     createdNode,
   });
 
-  const { handlers, onDoubleClick } = useElementHandlers({
+  const { handlers, onDoubleClick: onElementDoubleClick } = useElementHandlers({
     registry,
     atoms,
     nodeRegistry,
@@ -420,13 +453,25 @@ export const CanvasRoot = ({
     capabilities,
     navigation,
     scene,
-    select,
     toScene,
+    editNode,
     onNodePointerDown,
     onLinkPointerDown,
     onLinkDoubleClick,
     onLinkContextMenu,
   });
+
+  // A double-click ends a line drawn vertex by vertex, rather than opening what lies under it.
+  const onDoubleClick = useCallback(
+    (event: MouseEvent) => {
+      if (registry.get(atoms.drag)?.kind === 'vertices') {
+        finishVertices(false);
+      } else {
+        onElementDoubleClick(event);
+      }
+    },
+    [registry, atoms.drag, finishVertices, onElementDoubleClick],
+  );
 
   useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
 
@@ -453,6 +498,7 @@ export const CanvasRoot = ({
       baseProjection={baseProjection}
       capabilities={capabilities}
       readonly={readonly}
+      transparent={transparent}
       onReadonlyChange={onReadonlyChange}
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
@@ -490,6 +536,8 @@ export const CanvasRoot = ({
               onPointPointerDown={onPointPointerDown}
               onMidpointPointerDown={onMidpointPointerDown}
               onPointContextMenu={onPointContextMenu}
+              onVertexPointerDown={onVertexPointerDown}
+              onVertexMidpointPointerDown={onVertexMidpointPointerDown}
               removePoint={removePoint}
               menu={menu}
               closeMenu={closeMenu}
@@ -507,12 +555,15 @@ export const CanvasRoot = ({
                   {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-                  <div className={mx('relative flex dx-fill overflow-clip bg-base-surface', classNames)}>
+                  <div
+                    className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}
+                  >
                     <div
                       ref={rootRef}
                       tabIndex={0}
                       className={mx(
-                        'relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
+                        '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
+                        !transparent && 'bg-base-surface',
                         // A theme with a mode takes it over the app's, for everything over the canvas.
                         look.tone === 'dark' && 'dark',
                         tool.kind === 'hand' && 'cursor-grab',

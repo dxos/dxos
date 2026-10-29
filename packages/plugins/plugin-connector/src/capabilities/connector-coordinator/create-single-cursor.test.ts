@@ -49,7 +49,7 @@ describe('createSingleCursor', () => {
         invariant(connectionObj, 'connection ref must be hydrated');
         const db = Obj.getDatabase(connectionObj);
         invariant(db, 'connection must live in a database');
-        const accessToken = yield* Database.load(connectionObj.accessToken);
+        const accessToken = yield* Database.load(Connection.getAccessToken(connectionObj));
         const created = db.add(Obj.make(Expando.Expando, { name: accessToken.account ?? 'Inbox' }));
         return { target: Ref.make(created) };
       }),
@@ -72,6 +72,7 @@ describe('createSingleCursor', () => {
   const makeConnector = (overrides: Partial<ConnectorSpec.ConnectorEntry> = {}): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
     ...overrides,
   });
@@ -109,7 +110,7 @@ describe('createSingleCursor', () => {
     const cursors = await queryCursors(db);
     expect(cursors).toHaveLength(1);
     invariant(Cursor.isExternal(cursors[0]));
-    expect(cursors[0].spec.source.uri).toBe(connection.accessToken.uri);
+    expect(cursors[0].spec.source.uri).toBe(Connection.getAccessToken(connection).uri);
   });
 
   test('binding an existingTarget renames it after the connection account', async ({ expect }) => {

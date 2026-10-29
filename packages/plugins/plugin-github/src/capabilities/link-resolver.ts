@@ -6,7 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Filter } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -15,7 +18,7 @@ import { Issue, PullRequest, Repo } from '@dxos/types';
 
 import { GitHubCapabilities } from '#types';
 
-import { GITHUB_PROVIDER_ID } from '../constants.ts';
+import { GITHUB_CONNECTOR_IDS } from '../constants.ts';
 import { type GitHubLink, githubLinkIcon, parseGitHubLink } from '../extensions/index.ts';
 import { toPullRequestProps } from '../pull-request.ts';
 import { GitHubApi } from '../services/index.ts';
@@ -43,7 +46,8 @@ export default Capability.makeModule(
             if (!link) {
               return undefined;
             }
-            const [source = fetchFromGitHub] = capabilities.getAll(GitHubCapabilities.LinkSource);
+            const [serviceResolver] = capabilities.getAll(Capabilities.ServiceResolver);
+            const [source = fetchFromGitHub(serviceResolver)] = capabilities.getAll(GitHubCapabilities.LinkSource);
             const object = yield* source(link, context);
             return (
               object && { label: Repo.instanceOf(object) ? Repo.fullName(object) : Issue.reference(object), object }
@@ -58,39 +62,74 @@ export default Capability.makeModule(
  * The default source: each of the space's GitHub connection tokens in turn — a space can hold
  * several, and only some may reach a private repository — then anonymous, which reaches a public one.
  */
-const fetchFromGitHub: GitHubCapabilities.GitHubLinkSource = (link, { db }) =>
-  Effect.gen(function* () {
-    const tokens = db ? yield* connectionTokens(db) : [];
-    for (const token of [...tokens, '']) {
-      const object = yield* fetchLink(link).pipe(
-        Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
-        Effect.tapError((error) => Effect.sync(() => log.warn('github link preview failed', { url: link.url, error }))),
-        Effect.catch(() => Effect.succeed(undefined)),
-      );
-      if (object) {
-        return object;
+const fetchFromGitHub =
+  (serviceResolver: ServiceResolver.ServiceResolver | undefined): GitHubCapabilities.GitHubLinkSource =>
+  (link, { db }) =>
+    Effect.gen(function* () {
+      const tokens = db ? yield* connectionTokens(db, serviceResolver) : [];
+      for (const token of [...tokens, '']) {
+        const object = yield* fetchLink(link).pipe(
+          Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
+          Effect.tapError((error) =>
+            Effect.sync(() => log.warn('github link preview failed', { url: link.url, error })),
+          ),
+          Effect.catch(() => Effect.succeed(undefined)),
+        );
+        if (object) {
+          return object;
+        }
       }
-    }
-    return undefined;
-  }).pipe(
-    Effect.provide(FetchHttpClient.layer),
-    Effect.catch(() => Effect.succeed(undefined)),
-  );
+      return undefined;
+    }).pipe(
+      Effect.provide(FetchHttpClient.layer),
+      Effect.catch(() => Effect.succeed(undefined)),
+    );
 
-/** The tokens of the space's GitHub connections, in query order. */
-const connectionTokens = (db: NonNullable<PreviewCapabilities.PreviewLinkContext['db']>) =>
+/**
+ * The tokens of the space's GitHub connections, in query order, skipping one whose token cannot be
+ * resolved (an app connection EDGE will not mint for, or with no credentials service to ask).
+ */
+export const connectionTokens = (
+  db: NonNullable<PreviewCapabilities.PreviewLinkContext['db']>,
+  serviceResolver: ServiceResolver.ServiceResolver | undefined,
+) =>
   Effect.gen(function* () {
+    const credentials = serviceResolver
+      ? ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+          Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+          Layer.catchCause(() => NO_CREDENTIALS),
+        )
+      : NO_CREDENTIALS;
     const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
     const tokens: string[] = [];
     for (const connection of connections) {
-      if (connection.connectorId !== GITHUB_PROVIDER_ID) {
+      if (!connection.connectorId || !GITHUB_CONNECTOR_IDS.includes(connection.connectorId)) {
         continue;
       }
-      const accessToken = yield* Database.load(connection.accessToken);
-      tokens.push(accessToken.token);
+      const accessToken = yield* Database.load(Connection.getAccessToken(connection));
+      const token = yield* GitHubApi.resolveToken(accessToken).pipe(
+        Effect.provide(credentials),
+        Effect.catchTag('GitHubConnectionUnavailableError', (error) =>
+          Effect.sync(() => {
+            log.info('github preview skipping a connection with no usable token', { error });
+            return '';
+          }),
+        ),
+      );
+      if (token) {
+        tokens.push(token);
+      }
     }
     return tokens;
   }).pipe(Effect.provide(Database.layer(db)));
+
+/** Answers no credential, so a custodied token cannot be resolved where no credentials service is reachable. */
+const NO_CREDENTIALS = Layer.succeed(Credential.CredentialsService, {
+  queryCredentials: async () => [],
+  getCredential: async () => {
+    throw new Error('No credentials service.');
+  },
+});
 
 const fetchLink = (link: GitHubLink) =>
   Effect.gen(function* () {

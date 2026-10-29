@@ -257,6 +257,12 @@ Pick the collection primitive by decision order:
 **Do NOT use `@dxos/react-ui-stack` — it is deprecated.** (Some plugins still import it; don't copy them.)
 The live Stack is the Mosaic one.
 
+**A collapsible header over rows is an `Accordion` item, not a `Collapsible`.** `Accordion.ItemTrigger`
+puts its icon and caret in `Block`s, the same columns as a `Listbox` row's icon and trailing control, so
+the caret sits over the rows' trailing buttons. `Collapsible.Trigger` puts the caret before the label,
+in no column the rows share. One `Accordion.Root` per section is fine when each opens on its own. See
+react-ui-canvas's `InspectorPanel` and plugin-assistant's `ChatDetailsSection`.
+
 **`dx-current` / `dx-selected` are automatic.** `Listbox` and `Stack` drive current-item and selection state
 themselves (via react-tabster keyboard navigation) — you don't set those classes or wire focus by hand.
 Like `Form`, both **own their own padding and spacing**, so drop them straight into a `ScrollArea.Viewport`

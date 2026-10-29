@@ -11,7 +11,6 @@ export * as Credential from './Credential.ts';
 export * as FunctionsAiError from './FunctionsAiError.ts';
 export * as Header from './Header.ts';
 export * as LayerSpec from './LayerSpec.ts';
-export * as McpServer from './McpServer.ts';
 export * as Operation from './Operation.ts';
 export * as OperationHandlerSet from './OperationHandlerSet.ts';
 export * as OperationRegistry from './OperationRegistry.ts';

@@ -20,6 +20,9 @@ import { DocumentsSynchronizer } from './documents-synchronizer.ts';
 import { type IndexStatusTracker } from './index-status.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
 
+/** Space sync-state recomputations per second; the scheduler still runs a trailing pass, so the last state lands. */
+const SYNC_STATE_MAX_FREQ = 2;
+
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
@@ -139,7 +142,14 @@ export class DataServiceImpl implements DataService.Handlers {
   ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
     return Effect.tryPromise({
       try: async () => {
-        const created = await this._automergeHost.createDoc(request.initialValue);
+        if (request.initialValue && !request.initialDocument) {
+          log.warn('document created from deprecated `initialValue`; send `initialDocument` bytes', {
+            spaceId: request.spaceId,
+          });
+        }
+        const created = request.initialDocument
+          ? await this._automergeHost.createDoc(request.initialDocument, { preserveHistory: true })
+          : await this._automergeHost.createDoc(request.initialValue);
         this._pendingCreations.set(created.documentId, created);
         return { documentId: created.documentId };
       },
@@ -299,11 +309,17 @@ export class DataServiceImpl implements DataService.Handlers {
         }
       });
 
-      const scheduler = new UpdateScheduler(ctx, async () => {
-        const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
+      // Every local save fires `collectionStateUpdated`, and each run diffs every document against every
+      // peer, so an unthrottled stream re-diffs the whole space per keystroke for a status indicator.
+      const scheduler = new UpdateScheduler(
+        ctx,
+        async () => {
+          const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
 
-        void emit.single({ peers: state.peers });
-      });
+          void emit.single({ peers: state.peers });
+        },
+        { maxFrequency: SYNC_STATE_MAX_FREQ },
+      );
 
       this._automergeHost.collectionStateUpdated.on(ctx, (e) => {
         if (e.collectionId === collectionId) {

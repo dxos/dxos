@@ -11,6 +11,8 @@
     isolation: isolate;
     border-radius: var(--radius-sm, 0.25rem);
     cursor: default;
+    /* The current row (the one the keys act on) is neutral; orange is the selection's, so a row that is both is orange. */
+    --dx-row-ring-color: var(--color-neutral-border);
   }
   /* Rows that run edge to edge would show their rounding against the container's own edges. */
   .dx-container[data-gutter='none'] > .dx-row {
@@ -26,6 +28,7 @@
   }
   /* `data-selected` too: a tree branch's `aria-selected` lands on its `display: contents` wrapper, not the row. */
   .dx-row:is([aria-selected='true'], [data-selected]) {
+    --dx-row-ring-color: var(--dx-focus-ring-color);
     background: var(--color-selected-surface);
   }
   .dx-row:is([aria-selected='true'], [data-selected]):hover {
@@ -50,22 +53,34 @@
   .dx-row:focus-visible::before,
   [role='listbox']:focus-visible > .dx-row[data-highlighted]::before,
   [role='listbox']:focus-visible > * > .dx-row[data-highlighted]::before,
-  /* The current row is the one the list's keys act on, so it is ringed whenever the list has focus, a click included. */
-  [role='listbox']:focus-within > .dx-row[aria-current='true']::before,
-  [role='listbox']:focus-within > * > .dx-row[aria-current='true']::before {
+  /*
+   * The current row is ringed whenever the list has focus, a click included, until the keys move to another row: the
+   * ring marks one row, the one the keys act on.
+   */
+  [role='listbox']:focus-within:not(:has(.dx-row[data-highlighted]:not([aria-current='true'])))
+    > .dx-row[aria-current='true']::before,
+  [role='listbox']:focus-within:not(:has(.dx-row[data-highlighted]:not([aria-current='true'])))
+    > *
+    > .dx-row[aria-current='true']::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 1;
     border-radius: inherit;
-    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-row-ring-color);
     pointer-events: none;
   }
 
   /* The source row stays in place, dimmed, while its preview is dragged. Not the parts of zag controls whose drag is a
-     gesture rather than a moved row: zag marks every part `data-dragging` while a splitter seam or slider thumb is
-     pulled, and they must stay as they are. */
-  [data-dragging]:not([data-scope='splitter'], [data-scope='slider'], [data-scope='angle-slider']) {
+     gesture rather than a moved row: zag marks every part `data-dragging` while a splitter seam, slider thumb or
+     floating panel is pulled, and they must stay as they are. */
+  [data-dragging]:not(
+    [data-scope='splitter'],
+    [data-scope='slider'],
+    [data-scope='angle-slider'],
+    [data-scope='floating-panel'],
+    [data-floating-panel-trigger]
+  ) {
     opacity: 0.5;
   }
 
@@ -87,6 +102,21 @@
   }
   [data-drop-target='bottom']::after {
     bottom: calc(var(--dx-drop-indicator-width) / -2);
+  }
+  /* A horizontal list or a grid of tiles lands beside the target, so its indicator is vertical. */
+  :is([data-drop-target='left'], [data-drop-target='right'])::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    width: var(--dx-drop-indicator-width);
+    background: var(--dx-drop-indicator-color);
+    pointer-events: none;
+  }
+  [data-drop-target='left']::after {
+    left: calc((var(--dx-drop-indicator-width) + var(--dx-gap-size, 0px)) / -2);
+  }
+  [data-drop-target='right']::after {
+    right: calc((var(--dx-drop-indicator-width) + var(--dx-gap-size, 0px)) / -2);
   }
 
   /* `virtual='variable'`: every row mounts, and the browser skips the layout of rows out of view. */

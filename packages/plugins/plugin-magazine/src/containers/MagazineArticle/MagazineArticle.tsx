@@ -21,16 +21,16 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { useVisibleMagazinePosts } from '#atoms';
-import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
+import { MagazineNamespace } from '../../namespace.ts';
 import { MagazineTile } from './MagazineTile.tsx';
 import { useToolbar } from './useToolbar.tsx';
 
 export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazine>;
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MagazineNamespace.key);
   const invoker = Hooks.useOperationInvoker();
   const [magazine] = useObject(subject);
   const curateProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
@@ -87,9 +87,21 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         magazine: subject,
         current: currentId === post.id,
         onToggleStar: handleToggleStar,
-        onOpen: handleOpen,
       })),
-    [posts, currentId, handleOpen, handleToggleStar],
+    [posts, currentId, handleToggleStar],
+  );
+
+  // The masonry item is the tile's focusable unit, so it opens the post on click and on Enter.
+  const itemProps = useCallback(
+    (id: string) => ({
+      onActivate: () => {
+        const post = posts.find((post) => post.id === id);
+        if (post) {
+          void handleOpen(post);
+        }
+      },
+    }),
+    [posts, handleOpen],
   );
 
   return (
@@ -108,7 +120,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content padding>
               {/* TODO(burdon): Move items into Root. */}
-              <Masonry.Viewport classNames='py-2' items={tileItems} />
+              <Masonry.Viewport classNames='py-2' items={tileItems} itemProps={itemProps} />
             </Masonry.Content>
           </Masonry.Root>
         )}
@@ -126,7 +138,6 @@ type TileData = {
   magazine: Magazine.Magazine;
   current: boolean;
   onToggleStar?: (post: Subscription.Post, starred: boolean) => void;
-  onOpen?: (post: Subscription.Post) => void;
 };
 
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
@@ -135,13 +146,7 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   }
 
   return (
-    <MagazineTile
-      post={data.post}
-      magazine={data.magazine}
-      current={data.current}
-      onOpen={data.onOpen}
-      onToggleStar={data.onToggleStar}
-    />
+    <MagazineTile post={data.post} magazine={data.magazine} current={data.current} onToggleStar={data.onToggleStar} />
   );
 };
 

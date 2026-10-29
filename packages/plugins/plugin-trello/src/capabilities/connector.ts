@@ -77,6 +77,7 @@ export default Capability.makeModule(
         id: 'trello',
         source: TRELLO_SOURCE,
         label: 'Trello',
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.TRELLO,
           scopes: [],

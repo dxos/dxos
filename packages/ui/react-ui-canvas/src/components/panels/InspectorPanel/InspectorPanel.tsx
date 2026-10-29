@@ -254,9 +254,8 @@ const InspectorPanelContent = () => {
           : // The docked panel's surface, so the inspectors look the same wherever the panel sits. Clipped rather than
             // hidden: a hidden box still scrolls, so focusing a control (a switch's input) would scroll the whole panel.
             mx(
-              // A set height, as the splitter divides one rather than sizing to its sections; it stops above the bottom
-              // toolbars so they stay reachable.
-              'absolute top-2 right-2 z-10 w-80 h-[calc(100%-4.25rem)] overflow-clip',
+              // As tall as its sections, and never past the bottom toolbars, so they stay reachable.
+              'absolute top-2 right-2 z-10 w-80 h-auto max-h-[calc(100%-4.25rem)] overflow-clip',
               FLOATING_PANEL,
               'bg-base-surface',
             )
@@ -291,20 +290,25 @@ const InspectorPanelContent = () => {
           </Toolbar.Root>
         </Panel.Header>
       )}
-      {/* Split even while a half is empty, so the halves keep their place and size as the selection comes and goes. */}
+      {/* Docked, the panel splits, even while a half is empty, so the halves keep their place and size as the selection
+          comes and goes; floating, it is one scrolling list as tall as its sections. */}
       <Panel.Body asChild>
-        <Splitter.Root
-          ref={splitterRef}
-          orientation='vertical'
-          resizable
-          minSize={MIN_PANE_SIZE}
-          size={size}
-          onSizeChange={setSize}
-        >
-          <Splitter.Panel position='start'>{list(upper)}</Splitter.Panel>
-          <Splitter.ResizeTrigger classNames={SEAM} aria-label='Resize the inspectors' data-testid='dock-splitter' />
-          <Splitter.Panel position='end'>{list(lower)}</Splitter.Panel>
-        </Splitter.Root>
+        {docked ? (
+          <Splitter.Root
+            ref={splitterRef}
+            orientation='vertical'
+            resizable
+            minSize={MIN_PANE_SIZE}
+            size={size}
+            onSizeChange={setSize}
+          >
+            <Splitter.Panel position='start'>{list(upper)}</Splitter.Panel>
+            <Splitter.ResizeTrigger classNames={SEAM} aria-label='Resize the inspectors' data-testid='dock-splitter' />
+            <Splitter.Panel position='end'>{list(lower)}</Splitter.Panel>
+          </Splitter.Root>
+        ) : (
+          list(visible)
+        )}
       </Panel.Body>
     </Panel.Root>
   );
@@ -312,9 +316,13 @@ const InspectorPanelContent = () => {
 
 InspectorPanelContent.displayName = 'InspectorPanel.Content';
 
+/** Whether the enclosing panel is docked; outside a panel, false. */
+const useInspectorPanelDocked = (): boolean => usePanelState(useContext(InspectorPanelContext))?.docked ?? false;
+
 export const InspectorPanel = {
   Root: InspectorPanelRoot,
   Content: InspectorPanelContent,
+  useDocked: useInspectorPanelDocked,
 };
 
 //

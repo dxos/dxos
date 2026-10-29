@@ -5,6 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
+import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -39,7 +40,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
+    withClientProvider({ types: [Sheet.Sheet, Sheet.Chart], createSpace: true }),
     withComputeGraphDecorator({ registry }),
     withPluginManager({
       plugins: [...CorePlugins.make()],
@@ -100,4 +101,36 @@ export const Spec = () => {
       </div>
     </AttendableContainer>
   );
+};
+
+/** On a slide: the used range only, scaled down to fit its box (never past 1:1), with no status bar. */
+export const Slide = {
+  render: () => {
+    const [space] = useSpaces();
+    const graph = useComputeGraph(space);
+    const sheet = useTestSheet(space, graph, { cells: createTestCells() });
+    if (!sheet || !space) {
+      return null;
+    }
+
+    return (
+      <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
+        <div className='relative flex' style={{ width: 480, height: 270 }} data-testid='slide'>
+          <SheetArticle role={AppSurface.Slide.role} subject={sheet} attendableId='test' ignoreAttention />
+        </div>
+      </AttendableContainer>
+    );
+  },
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const slide = await within(canvasElement).findByTestId('slide', undefined, { timeout: 10_000 });
+    await waitFor(
+      async () => {
+        const scale = Number(slide.querySelector('[data-fit-scale]')?.getAttribute('data-fit-scale'));
+        await expect(scale).toBeGreaterThan(0);
+        await expect(scale).toBeLessThan(1);
+      },
+      { timeout: 10_000 },
+    );
+    await expect(slide.querySelector('.dx-toolbar-surface')).toBeNull();
+  },
 };

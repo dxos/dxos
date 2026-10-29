@@ -80,7 +80,7 @@ const tableProperties: TablePropertyDefinition[] = [
 export const SignalStatusTable = () => {
   const devtoolsHost = useDevtools();
   const { servers } = useStream(() => devtoolsHost.subscribeToSignalStatus(), { servers: [] });
-  const status = servers!.map(getSignalStatus);
+  const status = useMemo(() => (servers ?? []).map(getSignalStatus), [servers]);
 
   const [time, setTime] = useState(new Date());
   useEffect(() => {
@@ -96,10 +96,6 @@ export const SignalStatusTable = () => {
       void ctx.dispose();
     };
   }, []);
-
-  if (!servers) {
-    return null;
-  }
 
   const properties = useMemo(() => tableProperties, []);
   const rows = useMemo(() => {

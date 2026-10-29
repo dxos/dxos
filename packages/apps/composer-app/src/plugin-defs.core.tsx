@@ -15,6 +15,7 @@ import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as DeckPlugin from '@dxos/plugin-deck/DeckPlugin';
+import * as DevShellPlugin from '@dxos/plugin-dev-shell/DevShellPlugin';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 import * as MessengerPlugin from '@dxos/plugin-messenger/MessengerPlugin';
 import * as MobilePlugin from '@dxos/plugin-mobile/MobilePlugin';
@@ -125,6 +126,9 @@ export const getCorePlugins = ({
     // Connection/AccessToken/Cursor schema, and runs the coordinator that materializes and binds
     // targets. Without it a plugin like Inbox contributes connectors nobody ever asks for.
     ConnectorPlugin.make(),
+    // Only `vite dev` serves the routes its tools and its agent host need (vite.config.ts); the constant drops it from
+    // every build.
+    import.meta.env.DEV && DevShellPlugin.make(),
     GraphPlugin.make(),
     ...layoutPlugins,
     // Core because invitations reach the user only through its inbox materializer.

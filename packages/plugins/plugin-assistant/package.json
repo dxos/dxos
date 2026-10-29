@@ -13,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -42,19 +29,16 @@
       "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/AssistantPlugin.workerd.mjs",
+      "node": "./dist/lib/AssistantPlugin.node.mjs",
+      "default": "./dist/lib/AssistantPlugin.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -110,8 +94,10 @@
       "import": "./dist/lib/AssistantOptions.mjs"
     },
     "./AssistantPlugin": {
-      "source": "./src/AssistantPlugin.ts",
-      "types": "./dist/types/src/AssistantPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/AssistantPlugin.workerd.mjs",
+      "node": "./dist/lib/AssistantPlugin.node.mjs",
       "import": "./dist/lib/AssistantPlugin.mjs"
     },
     "./AssistantPreset": {
@@ -265,11 +251,13 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
+    "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
@@ -281,12 +269,12 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-chat": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-experimental": "workspace:*",
     "@dxos/react-ui-feed": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",
     "@dxos/react-ui-transcription": "workspace:*",
@@ -315,7 +303,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

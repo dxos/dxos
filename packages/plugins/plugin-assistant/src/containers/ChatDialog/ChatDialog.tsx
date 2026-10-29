@@ -15,15 +15,16 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Chat, type ChatRootProps } from '#components';
 import { useChatModel, useChatServices, usePresets } from '#hooks';
-import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
+
+import { AssistantNamespace } from '../../namespace.ts';
 
 export type ChatDialogProps = {
   chat?: AssistantChat.Chat;
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
 
   const db = chat && Obj.getDatabase(chat);
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
@@ -31,7 +32,6 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { preset, ...chatProps } = usePresets(settings, chat);
   const registry = useRegistry();
   const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
-  // Subscribe via `useObject` so the thread re-renders when ChatOptions changes the view type.
   const [chatViewType] = useObject(chat, 'viewType');
 
   // TODO(burdon): Refocus when open.

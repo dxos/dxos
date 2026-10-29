@@ -9,15 +9,20 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ChessComPlugin } from '#plugin';
+import * as ChessComPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { ChessComNamespace } from './namespace.ts';
+
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), GamePlugin.make(), ChessPlugin.make(), ChessComPlugin.make()],
+});
+
+const moduleId = (name: string) => `${ChessComNamespace.key}.module.${name}`;
 
 describe('ChessComPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), GamePlugin.make(), ChessPlugin.make(), ChessComPlugin()],
+      plugins: [ClientPlugin.make({}), GamePlugin.make(), ChessPlugin.make(), ChessComPlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(

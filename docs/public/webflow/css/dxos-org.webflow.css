@@ -6229,8 +6229,8 @@ figcaption {
   grid-area: span 1 / span 2 / span 1 / span 2;
 }
 
-#w-node-_17dde100-223f-3887-dbaf-c0eb73df3dc4-4a5da064 {
-  grid-area: span 1 / span 4 / span 1 / span 4;
+#w-node-welcome-discord-4a5da064, #w-node-_17dde100-223f-3887-dbaf-c0eb73df3dc4-4a5da064 {
+  grid-area: span 1 / span 2 / span 1 / span 2;
 }
 
 #w-node-_41ff00a5-9182-9034-bd98-ff119bab0bab-4a5da064 {
@@ -6309,8 +6309,12 @@ figcaption {
     grid-area: span 1 / span 2 / span 1 / span 2;
   }
 
-  #w-node-e7ce91bb-b9ba-c9c9-d22c-4038690104b8-4a5da064, #w-node-_17dde100-223f-3887-dbaf-c0eb73df3dc4-4a5da064 {
+  #w-node-e7ce91bb-b9ba-c9c9-d22c-4038690104b8-4a5da064, #w-node-welcome-discord-4a5da064 {
     grid-area: span 1 / span 3 / span 1 / span 3;
+  }
+
+  #w-node-_17dde100-223f-3887-dbaf-c0eb73df3dc4-4a5da064 {
+    grid-area: span 1 / span 6 / span 1 / span 6;
   }
 
   #w-node-_1974f4e0-d5c0-95e3-a8b5-053bd8cd1fd9-e873f953, #w-node-_9775c792-841e-988f-3e32-d568dda93474-e873f953, #w-node-_6037ec8b-0e7c-b6a8-9ef3-03d5414cd67d-29af9425 {
@@ -6319,6 +6323,10 @@ figcaption {
 }
 
 @media screen and (max-width: 767px) {
+  #w-node-e7ce91bb-b9ba-c9c9-d22c-4038690104b8-4a5da064, #w-node-welcome-discord-4a5da064 {
+    grid-area: span 1 / span 6 / span 1 / span 6;
+  }
+
   #w-node-_708c4443-22fe-5a5e-7f19-03b6f4d92650-06f1a634, #w-node-bef6dd1e-5036-f528-6e26-3037473736a6-06f1a634, #w-node-edc741ff-2bf3-89c2-ac9a-e1556f5789d9-06f1a634, #w-node-_5ca0447c-cac4-9b48-c914-6a76b077f5fe-06f1a634, #w-node-c4764957-c20a-136e-596e-bfbe9030c67b-06f1a634, #w-node-_313f8ca1-1c04-9c1c-1dc1-734dfc174eee-06f1a634 {
     grid-area: span 1 / span 2 / span 1 / span 2;
   }

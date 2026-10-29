@@ -73,7 +73,9 @@ type FloatingPanelTriggerProps = FloatingPanelPrimitive.TriggerProps;
 
 /** Use `asChild` to open the panel from a `Button`. */
 const FloatingPanelTrigger = forwardRef<HTMLButtonElement, FloatingPanelTriggerProps>((props, forwardedRef) => (
-  <FloatingPanelPrimitive.Trigger {...props} ref={forwardedRef} />
+  // zag marks the trigger `data-dragging` while the panel moves; an `asChild` Button replaces the `data-scope` the
+  // row-drag rule exempts, so this marker exempts it instead.
+  <FloatingPanelPrimitive.Trigger {...props} data-floating-panel-trigger='' ref={forwardedRef} />
 ));
 
 FloatingPanelTrigger.displayName = 'FloatingPanel.Trigger';

@@ -25,6 +25,7 @@ import React, {
 } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
@@ -43,8 +44,8 @@ import { getHashHue, mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { useNavTreeState } from '#hooks';
-import { meta } from '#meta';
 
+import { NavTreeNamespace } from '../../namespace.ts';
 import { l0ItemType } from '../../util.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { UserAccountAvatar } from '../UserAccountAvatar/index.ts';
@@ -122,7 +123,7 @@ const l0Breakpoints: Record<string, string> = {
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
     ({ item, parent, path, dragging, dropTarget, onMouseEnter, children }, forwardedRef) => {
-      const { t } = Hooks.useTranslation(meta.profile.key);
+      const { t } = Hooks.useTranslation(NavTreeNamespace.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
@@ -172,7 +173,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: Util.ThemedClassName<{}
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -276,12 +277,18 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 const isWorkspaceTab = (item: L0ItemProps['item']): boolean =>
   l0ItemType(item) === 'tab' && item.properties.disposition !== 'pin-end';
 
-/** The item's own hue; a workspace without one takes a stable hue from its id, so every space avatar is coloured. */
+/**
+ * The item's own hue; a workspace without one takes a stable hue hashed from its workspace token (a space's id), the
+ * same hash as the space's pills in the contact list.
+ */
 const itemHue = (item: L0ItemProps['item']): string | undefined =>
-  item.properties.hue ?? (isWorkspaceTab(item) && item.properties.pending !== true ? getHashHue(item.id) : undefined);
+  item.properties.hue ??
+  (isWorkspaceTab(item) && item.properties.pending !== true
+    ? getHashHue(GraphPath.getWorkspaceToken(item.id))
+    : undefined);
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
 
   if (item.properties.pending === true) {
     return <L0PendingAvatar />;
@@ -326,7 +333,7 @@ export const L0Menu = ({
   path,
   onItemHover,
 }: L0MenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   const runAction = GraphHooks.useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {

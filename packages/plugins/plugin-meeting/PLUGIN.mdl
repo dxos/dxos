@@ -20,6 +20,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0` |
 
 ## Types
 
@@ -363,7 +364,124 @@ test QA-1: Create a meeting, set it active, and generate a summary
       expect: the meeting leaves the MeetingsList and any open plank closes
 ```
 
+```mdl
+test QA-2: A four-person meeting call, with notes taken during it
+  desc: |
+    The local user joins a Meeting's call after three colleagues have started, is greeted, they talk, and the local user
+    writes the action items into the meeting's notes. The colleagues are simulated participants
+    (plugin-calls `SetSimulatedParticipants`) played from pre-recorded avatar videos, and the
+    local camera and microphone are a fourth video, so the test needs no camera and no EDGE. The
+    seam also carries the script's lines, which stand in for live transcription.
+  actors: agent
+  covers: [F-1.1, F-1.2, T-1]
+  status: passing             # 2026-10-17, recorded by autocue/four-person-call.mjs with Higgsfield characters voiced by HeyGen, light mode; outline and transcript entry on each line's speaker
+  given:
+    - an identity exists, with display name "Astrid Holm"
+    - space: the Alien Labs sample space (plugin-debug template) is open
+    - plugin-calls and plugin-meeting are enabled — both default ON only in dev builds
+    - the runtime config names an EDGE calls endpoint (the Call tab and Join need one configured,
+      not reachable)
+    - tracks: one equal-length WebM per participant (astrid, lucia, ben, tomas), made by
+      `.agents/skills/autocue/scripts/conversation.mjs` from
+      `autocue/fieldstone-dashboard.conversation.json`; the browser's camera and microphone play
+      astrid's (`fake-media.mjs`), and the other three are served to the page, with
+      `lucia-screen.webm` (the screen Lucía shares); its `timeline.json` gives each line's speaker
+      id, start and text, and the screenshare's start
+    - transcript: `timeline.json`'s `lines` as `{ speaker, start, text }`, each `speaker` id mapped to the
+      participant's display name (`four-person-call.mjs` does this)
+    - screen: `{ src: <lucia-screen.webm URL>, start: <timeline.json screenshares[0].start> }`
+  steps:
+    - name: Create and open the meeting
+      do: Create a Meeting named "Cairn dashboard plugin: scoping" in the space and open it.
+      invoke: [op:Create] { name: "Cairn dashboard plugin: scoping", db: $given.space.db }
+      capture: created
+      expect: MeetingArticle opens with the Notes, Transcript, Summary and Call tabs
+    - name: Make the meeting active
+      do: (no UI — test seam) Make the new meeting the active one, so the call's lines reach its transcript.
+      invoke: [op:SetActive] { object: $created }
+      expect: nothing visible
+    - name: Add the colleagues
+      do: (no UI — test seam) Fill the call with Lucía Ferreira, Ben Achterberg and Tomás Vidal, with Lucía's screenshare and the script's timed lines.
+      invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [{ name: "Lucía Ferreira", src: $given.tracks.lucia, screenshare: $given.screen }, { name: "Ben Achterberg", src: $given.tracks.ben }, { name: "Tomás Vidal", src: $given.tracks.tomas }], transcript: $given.transcript }
+      expect: nothing visible yet — the participants appear on join
+    - name: Join with camera and microphone on
+      do: Open the Call tab, turn the camera on, unmute, and click Join.
+      expect: |
+        the grid shows four tiles named Astrid Holm, Lucía Ferreira, Ben Achterberg and Tomás Vidal,
+        each playing its video; the toolbar's participant count reads 4
+    - name: Open the transcript beside the call
+      do: Open the companion side-by-side, choose the meeting companion, then its Transcript tab.
+      expect: the call stays in the plank and the meeting's transcript shows in the companion
+    - name: Greeted on arrival
+      do: Watch the first seconds after joining.
+      expect: |
+        the local tile waves, Ben and Tomás acknowledge it (a small wave, a nod), and Lucía says
+        "Hi. We just got started."
+    - name: Lucía shares her screen
+      do: When Lucía's screenshare tile appears, a couple of seconds into her opening line, click its expand button.
+      expect: |
+        the shared DXOS Architecture "Plugin metrics" sheet fills the call view, and its chart switches from
+        horizontal to vertical bars as Lucía edits it
+    - name: The conversation runs
+      do: Watch the call until the last line ("… Thanks, everyone.").
+      expect: |
+        each speaker's tile shows the speaking outline while they talk and only then, in the
+        script's order: Lucía, Lucía, Ben, Tomás, Lucía, Ben, Tomás, Lucía; each line appears
+        once in the transcript, under its speaker's name, as it starts
+      note: |
+        Remote speaking state comes from each simulated participant's own audio, as a real
+        participant's comes from their microphone; the local tile's comes from the fake microphone.
+    - name: Write the action items
+      do: Open the companion's Notes tab and type the three action items Lucía names.
+      expect: the notes hold "Ben: share the sketch", "Tomás: build the plank", "Lucía: check it with Okapi"
+    - name: Leave
+      do: Click Leave.
+      expect: the call returns to the lobby and the simulated participants leave the grid
+  after:
+    - name: Remove the simulated participants and the meeting
+      invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [] }
+      expect: the call manager has no simulated participants
+```
+
 ---
+
+## Changelog
+
+```mdl
+decision D-1: In QA-2 the local user joins after the others have started and waves; the colleagues acknowledge it, and the leader says "Hi. We just got started."
+  date: 2026-10-18
+  by: user:richburdon
+  affects: [QA-2]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-2: In QA-2 the leader shares the DXOS Architecture "Plugin metrics" sheet, which is maximised with the call view's expand control, and edits its chart to switch off horizontal bars.
+  date: 2026-10-19
+  by: user:richburdon
+  affects: [QA-2]
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-3: A simulated call's scripted lines are written to the active meeting's transcript as live transcription would write them. Fills in [D-1].
+  date: 2026-10-18
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-2]
+  why: Without live transcription in a simulated call, the transcript would stay empty and QA-2 could not check it.
+  source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-4: QA-2 makes the meeting active before adding the colleagues, and binds the seam's transcript to the script's lines under display names, with the leader's screenshare. Fills in [D-2] and [D-3].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-2]
+  why: An agent runs QA-2's invoke literally, so it must match the operation's input and the active meeting.
+  source: https://github.com/dxos/dxos/pull/14040
+```
 
 ## Appendix: Extension Definitions
 
@@ -430,4 +548,22 @@ ext op
     effects?: EffectList        # echo:read | echo:write | http | fs | ai:inference | calls:activity
     requires?: ServiceList      # injected service dependencies
     note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true, not as the edit that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
 ```

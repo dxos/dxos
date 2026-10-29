@@ -5,7 +5,7 @@
 /**
  * Shared steps and gestures for per-plugin showcase flows (`packages/{apps,plugins}/<pkg>/autocue/showcase.mjs`).
  * Each flow is a prep step, an off-camera setup step, and one `clip: <name>` step padded to a fixed length, so
- * `overnight.mjs` beside it can cut exactly that span out of the take. Recording rules: SHOWCASE.md beside it.
+ * `overnight.mjs` beside it can cut exactly that span out of the take. Recording rules: docs/SHOWCASE.md.
  */
 
 /** A grid cell's clip. */

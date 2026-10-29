@@ -3,7 +3,6 @@
 //
 
 export * from './commands.ts';
-export * from './references.ts';
 
 export * from './useChatExtensions.ts';
 

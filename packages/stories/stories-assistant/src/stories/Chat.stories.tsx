@@ -29,6 +29,7 @@ import {
   ModuleContainer,
   config,
   createDecorators,
+  findPromptEditor,
   seedBlankSpace,
   seedBusySpace,
   storyParameters,
@@ -170,11 +171,7 @@ const waitForCount = async (
 /** Types a prompt into the chat editor and submits it. */
 const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
   const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
+  const editor = await findPromptEditor(canvasElement, 30_000);
 
   await userEvent.click(editor);
   await userEvent.type(editor, text);
@@ -457,12 +454,7 @@ export const TestDelegation: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The chat prompt is a CodeMirror editor; locate it via its placeholder.
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    if (!editor) {
-      throw new Error('Chat editor not found.');
-    }
+    const editor = await findPromptEditor(canvasElement, 30_000);
 
     // Enter a prompt that delegates work to a sub-agent and submit it.
     await userEvent.click(editor);
@@ -540,6 +532,18 @@ export const TestPlanningScripted: Story = {
   },
 };
 
+// Released by the delegation play once it has seen the delegated item unchecked; a scripted sub-agent would
+// otherwise finish before the checklist could be read.
+let releaseSubAgent: () => void = () => {};
+let subAgentReleased = Promise.resolve();
+
+const holdSubAgent = async ({ space }: { space: Space }) => {
+  await captureSpace({ space });
+  subAgentReleased = new Promise((resolve) => {
+    releaseSubAgent = resolve;
+  });
+};
+
 /**
  * Deterministic end-to-end delegation over a scripted (offline) model — the storybook analog of
  * `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`, sharing the same routed turn
@@ -560,12 +564,15 @@ export const TestDelegationScripted: Story = {
       };
     },
     skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
-    onInit: captureSpace,
+    onInit: holdSubAgent,
     scripted: [
       {
         name: 'sub-agent',
         match: promptIncludes('non-interactive mode'),
-        turns: [{ parts: [toolCall('completeJob', { success: '3628800' })] }, { parts: [text('Done.')] }],
+        turns: [
+          { gate: () => subAgentReleased, parts: [toolCall('completeJob', { success: '3628800' })] },
+          { parts: [text('Done.')] },
+        ],
       },
       {
         name: 'chat-name',
@@ -593,11 +600,7 @@ export const TestDelegationScripted: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-    const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    if (!editor) {
-      throw new Error('Chat editor not found.');
-    }
+    const editor = await findPromptEditor(canvasElement, 30_000);
 
     await userEvent.click(editor);
     await userEvent.type(editor, 'Delegate a task to a sub-agent to compute 10 factorial.');
@@ -609,6 +612,7 @@ export const TestDelegationScripted: Story = {
     // Delegation is the promotion moment: the durable task it creates is mirrored into the
     // conversation's checklist, unchecked while the sub-agent works.
     await waitForChecklist((items) => items.some(({ title, done }) => title === TASK_TITLE && !done));
+    releaseSubAgent();
 
     // The supervisor spawns the sub-agent after the turn and folds its result back.
     await canvas.findByText(/sub-agent completed/i, {}, { timeout: 60_000 });

@@ -54,7 +54,6 @@ import {
   showsContents,
 } from '../../../model/index.ts';
 import {
-  MAX_PORTS_PER_SIDE,
   type ViewOption,
   classedLink,
   classedNode,
@@ -73,9 +72,12 @@ import { OutlineStyleField, StyleGridField } from '../../StyleGrid/index.ts';
 import { type InspectorProps } from '../types.ts';
 import { AlignField } from './AlignField.tsx';
 import { StyleClassesContext } from './ClassField.tsx';
-import { FontField } from './FontField.tsx';
+import { FontField, FontSizeField } from './FontField.tsx';
+import { FrameField } from './FrameField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
+import { MarkerField } from './MarkerField.tsx';
+import { PolygonFitField } from './PolygonFitField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
 /** Identity, ordering and geometry lists are the surface's, not the user's; so is a diagram shape's DSL form. */
@@ -129,6 +131,10 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'style.lineStyle': LineStyleField,
+  'ends.start': MarkerField,
+  'ends.end': MarkerField,
+  'rotation': FrameField,
+  'params.fit': PolygonFitField,
   'scene': ViewField,
   'layer': LayerClassField,
 };
@@ -181,7 +187,8 @@ const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
   'style.tone': { hidden: true },
   'style.alignVertical': { hidden: true },
   'style.fontSize': { hidden: true },
-  'portsPerSide': { min: 1, max: MAX_PORTS_PER_SIDE, step: 1 },
+  // Drawn beside the rotation by `FrameField`.
+  'portsPerSide': { hidden: true },
   'scene': { label: 'View' },
   'layer': { label: 'Layer' },
 };
@@ -210,6 +217,9 @@ export type PropertiesInspectorProps = InspectorProps & {
   viewOptions?: readonly ViewOption[];
   /** The drawing's style classes (`ViewStore.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
+  /** Whether each group (`style`, `center`, …) is open, by path, for a host that keeps it; unset, a group is open. */
+  groups?: Readonly<Record<string, boolean>>;
+  onGroupsChange?: (groups: Record<string, boolean>) => void;
 };
 
 /** The selection's properties, as one form; read-only too where the projection cannot `update`. */
@@ -225,6 +235,8 @@ export const PropertiesInspector = ({
   overrides,
   viewOptions,
   styles,
+  groups,
+  onGroupsChange,
 }: PropertiesInspectorProps) => {
   const registry = useRegistry();
   const scene = useAtomValue(projection.scene);
@@ -260,13 +272,25 @@ export const PropertiesInspector = ({
       ...(viewOptions ? {} : { scene: { hidden: true } }),
       // The class is edited in the layer's row (`LayerClassField`).
       class: { hidden: true },
+      // A link has no font face, so its size is not drawn by `FontField` and needs its own row.
+      ...(elements.some(isLink) ? { 'style.fontSize': {} } : {}),
       ...overrides?.(elements),
     };
     for (const path of mixed) {
       fieldOverrides[path] = { ...fieldOverrides[path], indeterminate: true };
     }
+    // Only a group reads these, so every top-level field may carry them.
+    if (onGroupsChange) {
+      for (const path of Object.keys(values)) {
+        fieldOverrides[path] = {
+          ...fieldOverrides[path],
+          open: groups?.[path],
+          onOpenChange: (open) => onGroupsChange({ ...groups, [path]: open }),
+        };
+      }
+    }
     return { values, fieldOverrides };
-  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers]);
+  }, [elements, nodes, overrides, viewOptions, styles, styleMap, layers, groups, onGroupsChange]);
 
   const onSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -275,7 +299,8 @@ export const PropertiesInspector = ({
       const classes: Record<string, StyleClass> = {};
       const intents = elements.map((element) => {
         const shown = formValues(nodes, element, styleMap, layers);
-        const patch = patchValues(shown, values, paths);
+        // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
+        const patch = patchValues({ ...shown, style: element.style }, values, paths);
         const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
         if (typeof patch.class === 'string') {
@@ -316,7 +341,7 @@ export const PropertiesInspector = ({
   const fieldMap = useMemo(
     () => ({
       ...DEFAULT_FIELDS,
-      ...(elements.some(isLink) ? { 'style.hue': OutlineStyleField } : {}),
+      ...(elements.some(isLink) ? { 'style.hue': OutlineStyleField, 'style.fontSize': FontSizeField } : {}),
       ...Object.assign(
         {},
         ...elements.map((element) => (isLink(element) ? {} : (nodeDef(nodes, element)?.fields ?? {}))),

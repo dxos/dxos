@@ -217,7 +217,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
             const { token: capturedToken, createdIds, updatedIds, hasMoreDelta } = yield* resolveDelta;
 
             const source: MailSync.MailSyncSource = {
-              buildSource: ({ windows, filter, tagIndex, onEnumerated, onRetrieved }) => {
+              buildSource: ({ windows, filter, tagIndex, onEnumerated, onEstimate, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
                 // is set, the delta's account-wide created ids would bypass it — so fall back to the
@@ -226,19 +226,24 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
                 }
-                return {
-                  additions: jmapEmails(target, folders, {
-                    windows,
+                const fetchItems = (fetchWindows: Cursor.Windows, ids: readonly string[] | undefined) =>
+                  jmapEmails(target, folders, {
+                    windows: fetchWindows,
                     filter,
                     now,
                     onEnumerated,
+                    onEstimate,
                     onRetrieved,
-                    forwardIds,
+                    forwardIds: ids,
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(JmapMailApi, providerApi),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
-                  ),
+                  );
+                // The delta's ids and the backward window are fetched apart, so the harness reads the delta first.
+                return {
+                  deltaAdditions: forwardIds ? fetchItems({}, forwardIds) : undefined,
+                  windowAdditions: fetchItems(forwardIds ? { backward: windows.backward } : windows, undefined),
                   // Empty on non-incremental runs; `jmapReconcile` re-fetches + diffs each `updated` id
                   // and resolves it to a `Change` itself (it needs the entityId to read local tags).
                   reconciles: jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(
@@ -369,6 +374,12 @@ const jmapIds = (
     now: Date;
     /** Called with each query page's enumerated id count, to accumulate the retrieval total. */
     onEnumerated?: (count: number) => void;
+    /**
+     * Called once with the window's exact size (`calculateTotal`), which then reports no page counts: the
+     * size covers the whole window, where pages stop at the run's cap. Servers may omit `total`, in
+     * which case page counts are reported as before.
+     */
+    onEstimate?: (count: number) => void;
   },
 ): Stream.Stream<string, JmapApiError, JmapMailApi> =>
   Stream.unwrap(
@@ -408,17 +419,26 @@ const jmapIds = (
         conditions: conditions.length,
       });
 
+      // Set once the first page reports the window's size, which then stands in for page counts.
+      let sized = false;
       return Stream.paginate(0, (position: number) =>
         Effect.gen(function* () {
-          const { ids } = yield* api.emailQuery(target, {
+          const { ids, total } = yield* api.emailQuery(target, {
             filter,
             sort: [{ property: 'receivedAt', isAscending: window.direction === 'forward' }],
             position,
             limit: JMAP_SYNC_CONFIG.listPageSize,
+            calculateTotal: position === 0 && options.onEstimate !== undefined ? true : undefined,
           });
-          log('jmap sync: queried page', { position, total: ids.length });
-          // Report each page's count as it arrives so the meter's retrieval total leads the fetch.
-          options.onEnumerated?.(ids.length);
+          log('jmap sync: queried page', { position, count: ids.length, total });
+          if (position === 0 && total !== undefined && options.onEstimate) {
+            sized = true;
+            options.onEstimate(total);
+          }
+          // Otherwise report each page's count as it arrives so the meter's retrieval total leads the fetch.
+          if (!sized) {
+            options.onEnumerated?.(ids.length);
+          }
           const next =
             ids.length < JMAP_SYNC_CONFIG.listPageSize ? Option.none<number>() : Option.some(position + ids.length);
           return [ids, next] as const;
@@ -475,6 +495,7 @@ const jmapEmails = (
     filter?: string;
     now: Date;
     onEnumerated?: (count: number) => void;
+    onEstimate?: (count: number) => void;
     onRetrieved?: () => void;
     /** Incremental delta's created ids; when set, replaces the forward window (backward still runs). */
     forwardIds?: readonly string[];
@@ -482,7 +503,12 @@ const jmapEmails = (
 ): Stream.Stream<JmapMail.Email, JmapApiError, JmapMailApi | Cursor.Service> => {
   const idsFor = (window: Cursor.Window | undefined) =>
     window
-      ? jmapIds(target, folders, window, { filter: config.filter, now: config.now, onEnumerated: config.onEnumerated })
+      ? jmapIds(target, folders, window, {
+          filter: config.filter,
+          now: config.now,
+          onEnumerated: config.onEnumerated,
+          onEstimate: config.onEstimate,
+        })
       : Stream.empty;
   const forward = config.forwardIds ? Stream.fromIterable(config.forwardIds) : idsFor(config.windows.forward);
 

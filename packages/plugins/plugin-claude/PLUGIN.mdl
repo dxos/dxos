@@ -14,10 +14,12 @@ locally and pushed to Anthropic by an explicit deploy step, so a half-configured
 agent never reaches the API. Session events are not mirrored into the space; the
 transcript is fetched on demand from the session id.
 
-In the desktop app the plugin also offers Claude Code on this computer as an
-agent a project's tasks can be assigned to. plugin-code's agent helper runs it
-through the Claude Code ACP adapter this plugin ships, against the user's own
-`claude`, and the chat holds its session.
+The plugin also offers Claude Code on this computer as an agent a project's
+tasks can be assigned to. An `AgentHelper` host runs it through the Claude Code
+ACP adapter this plugin ships, against the user's own `claude`, and the chat
+holds its session. The plugin owns that host's interface and the agent server
+behind it; its Tauri-only module runs the server as the desktop app's `dx-agent`
+sidecar, and plugin-dev-shell runs the same server inside a Vite dev server.
 
 ## Extensions
 
@@ -30,6 +32,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `feat` | `org.dxos.mdl.feat@1.0`        |
 | `scenario` | `org.dxos.mdl.scenario@1.0`    |
 | `test` | `org.dxos.mdl.test@1.0`        |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## Types
 
@@ -279,6 +282,13 @@ feat F-8: Claude Code on this computer
     then: |
       Composer's operations are offered as the `composer` MCP server, scoped to
       the chat's space; its read-only tools run without asking
+
+  req F-8.5:
+    when: Claude Code runs a turn in a chat with MCP connections switched on
+    then: |
+      each connection's MCP server is offered to the session, a connection's
+      credential never appearing in Claude Code's configuration; switching
+      one on or off reloads the session from the next turn
 ```
 
 ```mdl
@@ -287,23 +297,38 @@ feat F-9: Claude Code (cloud)
   req F-9.1:
     when: the plugin is enabled
     then: |
-      "Claude Code (cloud)" is offered as a chat's agent and in a task's menu,
-      and runs Claude Code in an EDGE sandbox rather than on this computer
+      Claude Code is offered on EDGE in a chat's agent picker and as
+      "Assign to Claude Code (EDGE)" in a task's menu, and runs Claude Code in
+      an EDGE sandbox rather than on this computer
 
   req F-9.2:
     when: a turn runs on Claude Code (cloud)
     then: |
-      the agent runs with the space's Claude subscription token (or Anthropic
-      API key), and with its GitHub token as `GITHUB_TOKEN`/`GH_TOKEN`, so
-      `git` and `gh` can clone, push and open pull requests
+      the agent runs with the space's Claude subscription OAuth token as
+      `CLAUDE_CODE_OAUTH_TOKEN`, never with an Anthropic API key, and with its
+      GitHub token as `GITHUB_TOKEN`/`GH_TOKEN`, so `git` and `gh` can clone,
+      push and open pull requests; a space holding only an API key lends no
+      Claude credential and logs a warning
 
   req F-9.3:
     when: the chat belongs to a project with repositories
-    then: the sandbox checks them out before the agent's first turn
+    then: |
+      the sandbox checks them out before the agent's first turn, and the agent
+      works in the first one, with the others as additional directories, so it
+      reads the CLAUDE.md, skills and settings of every one of them
 
   req F-9.4:
     when: a chat is switched to Claude Code (cloud) before its first message
     then: that first message runs on Claude Code (cloud), not on the default assistant
+
+  req F-9.5:
+    when: a chat runs on Claude Code, on this computer or on EDGE, before its first message
+    then: |
+      the agent picker offers the chat's model (Opus, Sonnet, Haiku), effort
+      (Low to Max) and permissions (Ask before acting, Accept edits, Auto,
+      Bypass permissions), each defaulting to Claude Code's default and the
+      plugin's permission setting; the choices are fixed once the chat has
+      started, and EDGE reports the mode and model the agent actually runs with
 ```
 
 ## Acceptance
@@ -500,7 +525,7 @@ test QA-4: A standalone chat on Claude Code (cloud) opens a pull request
     `packages/plugins/plugin-claude/autocue/claude-code-cloud-pr.mjs`.
   actors: human
   covers: [F-9.1, F-9.2, F-9.4]
-  status: verified
+  status: unverified        # 2026-10-21, the chat's options became the agent picker; re-run its flow
   given:
     - Composer against an EDGE that runs the coding agent
     - space: holds a Claude subscription token and a GitHub token that can push to dxos/dxos
@@ -509,8 +534,8 @@ test QA-4: A standalone chat on Claude Code (cloud) opens a pull request
       do: Click + on the space and choose Chat.
       expect: an empty chat opens
     - name: Run the chat on Claude Code (cloud)
-      do: Open the chat's options, choose the agent "Claude Code (cloud)", and close the options.
-      expect: the prompt is labelled Claude Code (cloud)
+      do: Open the prompt's agent picker and choose Claude Code, then open it again and choose EDGE.
+      expect: the picker reads Claude Code with the EDGE (cloud) icon
     - name: Ask it to clone dxos/dxos and open a pull request
       do: |
         Ask it to clone dxos/dxos, commit a one-line file on a new branch, push
@@ -535,7 +560,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
     autocue flow `packages/plugins/plugin-claude/autocue/claude-code-cloud-task.mjs`.
   actors: human
   covers: [F-9.1, F-9.2, F-9.3]
-  status: verified
+  status: unverified        # 2026-10-21, the task menu now reads "Assign to Claude Code (EDGE)"; re-run its flow
   given:
     - as QA-4
   steps:
@@ -551,7 +576,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
         pushed, with a draft pull request opened by `gh pr create --draft`.
       expect: the task is listed
     - name: Assign the task to Claude Code (cloud)
-      do: Open the task's menu and choose "Assign to Claude Code (cloud)".
+      do: Open the task's menu and choose "Assign to Claude Code (EDGE)".
       expect: the task is started and the project's chat opens on Claude Code (cloud)
     - name: Watch it open the pull request
       do: Open the Assistant companion.
@@ -559,6 +584,121 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
     - name: Ask it to close the pull request
       do: Ask it in the same chat to close the pull request with `gh pr close --delete-branch`.
       expect: the pull request is closed and its branch deleted
+```
+
+```mdl
+test QA-6: A chat chooses the model, effort and permissions of Claude Code
+  desc: |
+    The agent picker of a chat on Claude Code offers the model, effort and
+    permissions the chat's session runs with. Walked by the autocue flow
+    `packages/plugins/plugin-claude/autocue/claude-code-choices.mjs`.
+  actors: human
+  covers: [F-9.5]
+  status: passing           # 2026-10-26, its autocue flow against a composer-app bundle on EDGE dev
+  given:
+    - Composer with the Claude plugin enabled
+  steps:
+    - name: Create a chat
+      do: Click + on the space and choose Chat.
+      expect: an empty chat opens
+    - name: Run the chat on Claude Code
+      do: Open the prompt's agent picker and choose Claude Code.
+      expect: the picker reads Claude Code and offers Model, Effort and Permissions, each on Default
+    - name: Choose Opus
+      do: Open the agent picker and choose Opus under Model.
+      expect: the picker reads Claude Code · Opus
+    - name: Choose High effort
+      do: Open the agent picker and choose High under Effort.
+      expect: High is checked under Effort
+    - name: Choose Bypass permissions
+      do: Open the agent picker and choose Bypass permissions under Permissions.
+      expect: Bypass permissions is checked under Permissions
+```
+
+---
+
+## Changelog
+
+```mdl
+decision D-1: Claude Code (cloud) always runs with a Claude subscription OAuth token; an Anthropic API key is never lent to it.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-9.2]
+```
+
+```mdl
+decision D-2: An OAuth token stored under the Anthropic source is still lent, and a space holding only an API key lends no Claude credential and logs a warning. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.2]
+  why: The token's kind, not where it is stored, decides what it costs; a subscription token pasted into the Anthropic connector is still a subscription token.
+  rejected:
+    - Fail the turn when only an API key is connected: the agent already reports a missing credential when Claude Code starts without one.
+```
+
+```mdl
+decision D-3: The local coding-agent runtime lives in this plugin, not plugin-code: the agent entry, the `AgentHelper` host interface, the agent server and worktrees, the project's code folder, and a Tauri-only module that runs the server as the `dx-agent` sidecar. Any `AgentHelper` makes the agent available, so plugin-dev-shell can host it in a Vite dev server.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [AgentHelper]
+  why: Only Claude Code uses the runtime, and plugin-code is the plugin-authoring workbench; a dev server should run the same agent without the desktop app.
+  rejected:
+    - The host interface in plugin-assistant or a shared types package: the runtime is Claude-specific, so dev-shell depends on this plugin instead.
+```
+
+```mdl
+decision D-4: A chat's agent, where it runs and its model are chosen in one picker in the prompt, which replaces the chat's options popover; Claude Code and Claude Code (cloud) are one agent that runs on this device or on EDGE.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-5: QA-4 and QA-5 describe the agent picker and the "Assign to Claude Code (EDGE)" task action, and are unverified until their flows run again. Fills in [D-4].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, QA-4, QA-5]
+  why: The steps used the removed options popover and the old "(cloud)" label of the task action.
+```
+
+```mdl
+decision D-6: Claude Code gets the chat's MCP connections, the same servers a chat run by Composer's own agent connects.
+  date: 2026-10-22
+  by: user:wittjosiah
+  affects: [F-8.5]
+```
+
+```mdl
+decision D-7: A connection with no credential is offered to Claude Code by its URL; one with a credential is served through the agent helper's relay, where the page adds the credential to each request, and the agent presents the session's Composer token. A credentialed server that streams over SSE is not offered, since the relay answers with whole bodies. A changed set of servers reloads the session; a refreshed credential does not. Fills in [D-6].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.5]
+  why: Claude Code's MCP config travels on its command line, which any user on the machine can read, and an agent takes its MCP servers only when a session opens or reloads.
+  rejected:
+    - Put the credential in the server's headers: it would be readable on the command line.
+    - Give each credential its own environment variable: the helper passes the agent one token, and a credential refreshed mid-session would still be stale.
+```
+
+```mdl
+decision D-8: A chat on Claude Code chooses its model, effort and permission mode in the agent picker, beside the agent and where it runs; a chat that chooses none runs Claude Code's default model and effort and the plugin's permission setting.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-9.5, QA-6]
+  why: The auto mode's classifier refuses too much for some work, and a chat should not need the global setting changed to run differently.
+```
+
+```mdl
+decision D-9: The EDGE sandbox runs the agent in the first repository it checked out, with the others as additional directories whose CLAUDE.md it reads, and reports the mode, model and effort the agent says it runs with. Fills in [D-8].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.3, F-9.5]
+  why: Claude Code reads CLAUDE.md, skills and settings from its working directory and the directories above it, never below, so an agent started in the checkout root saw none of the repositories' instructions; and Claude Code falls back from a mode it cannot run without failing the request.
+  rejected:
+    - A CLAUDE.md in the checkout root that imports each repository's: it brings in neither skills nor settings.
 ```
 
 ---

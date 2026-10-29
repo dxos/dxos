@@ -41,3 +41,13 @@ export const getEdgeEnvironment = (): EdgeEnvironment => {
 };
 
 export const setEdgeEnvironment = (environment: EdgeEnvironment): boolean => write(EDGE_KEY, environment);
+
+/**
+ * Records `environment` unless one was already chosen, so a story that needs a reachable EDGE can default to it while
+ * the toolbar still shows (and can change) the choice.
+ */
+export const defaultEdgeEnvironment = (environment: EdgeEnvironment): void => {
+  if (!isEdgeEnvironment(read(EDGE_KEY))) {
+    write(EDGE_KEY, environment);
+  }
+};

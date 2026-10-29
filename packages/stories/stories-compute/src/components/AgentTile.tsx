@@ -88,6 +88,38 @@ const TranscriptLine = ({ entry, done }: { entry: TranscriptEntry; done: boolean
   }
 };
 
+export type AgentTranscriptProps = {
+  entries: readonly TranscriptEntry[];
+};
+
+/** A read-only transcript that follows its newest entry. */
+export const AgentTranscript = ({ entries }: AgentTranscriptProps) => {
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
+  }, [entries.length]);
+
+  // A call is done once anything follows it.
+  const settled = (index: number) => index < entries.length - 1;
+  return (
+    <div
+      ref={scroller}
+      className='flex flex-col gap-1.5 w-full h-56 overflow-y-auto p-2 rounded-sm border border-separator text-sm whitespace-normal break-words'
+      data-testid='agent-transcript'
+    >
+      {entries.map((entry, index) => (
+        <TranscriptLine key={entry.seq} entry={entry} done={settled(index)} />
+      ))}
+    </div>
+  );
+};
+
+/** The progress an agent card shows beside its elapsed time. */
+export const toolCallProgress = (entries: readonly TranscriptEntry[]): string => {
+  const toolCalls = entries.filter(({ kind }) => kind === 'tool-call').length;
+  return `${toolCalls} tool ${toolCalls === 1 ? 'call' : 'calls'}`;
+};
+
 export type AgentTileProps = {
   data: AgentItem;
   /** Removes the card once its process has ended. */
@@ -97,30 +129,14 @@ export type AgentTileProps = {
 /** A spawned agent's card: the process status above a read-only, live transcript of its work. */
 export const AgentTile = ({ data: item, onRemove }: AgentTileProps) => {
   const entries = useTranscript(item);
-  const scroller = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' });
-  }, [entries.length]);
-
-  const toolCalls = entries.filter(({ kind }) => kind === 'tool-call').length;
-  // A call is done once anything follows it.
-  const settled = (index: number) => index < entries.length - 1;
   return (
     <ProcessCard
       location={item.location}
       handle={item.handle}
-      progress={`${toolCalls} tool ${toolCalls === 1 ? 'call' : 'calls'}`}
+      progress={toolCallProgress(entries)}
       onRemove={() => onRemove?.(item)}
     >
-      <div
-        ref={scroller}
-        className='flex flex-col gap-1.5 w-full h-56 overflow-y-auto p-2 rounded-sm border border-separator text-sm whitespace-normal break-words'
-        data-testid='agent-transcript'
-      >
-        {entries.map((entry, index) => (
-          <TranscriptLine key={entry.seq} entry={entry} done={settled(index)} />
-        ))}
-      </div>
+      <AgentTranscript entries={entries} />
     </ProcessCard>
   );
 };

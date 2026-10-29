@@ -5,7 +5,7 @@
 // Re-imported with the driver's cache-busting query, which reaches only the file it loads, so an edit to the
 // browser flow is picked up by the next `run` too.
 const { prepare, steps: browserSteps } = await import(
-  `../../plugin-computer/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`
+  `../../plugin-dev-shell/autocue/composer-plugin.mjs${new URL(import.meta.url).search}`
 );
 
 /**
@@ -71,7 +71,7 @@ const SPACE_TAB = '[data-testid="spacePlugin.space"]';
 const step = (name) => {
   const found = browserSteps.find((candidate) => candidate.name === name);
   if (!found) {
-    throw new Error(`plugin-computer's flow has no step "${name}"`);
+    throw new Error(`plugin-dev-shell's flow has no step "${name}"`);
   }
   return found;
 };

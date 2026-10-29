@@ -240,6 +240,34 @@ describe('HistoryTracker', () => {
     }),
   );
 
+  it.effect('a mapping with toast off marks its undoable events so the UI raises no toast', () =>
+    Effect.gen(function* () {
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
+      const tracker = HistoryTracker.make(
+        invoker,
+        UndoRegistry.make(() => [
+          UndoMapping.make({
+            operation: Compute,
+            inverse: HalveCompute,
+            deriveContext: (_input, output) => ({ value: output.value }),
+            toast: false,
+          }),
+        ]),
+      );
+
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const undoables = yield* PubSub.subscribe(tracker.undoable);
+          const fiber = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
+          yield* TestClock.adjust('20 millis');
+          yield* Fiber.join(fiber);
+          expect((yield* PubSub.take(undoables)).toast).toBe(false);
+        }),
+      );
+      expect(tracker.canUndo()).toBe(true);
+    }),
+  );
+
   it.effect('undo message can be derived from input and output', () =>
     Effect.gen(function* () {
       // Dynamic message that depends on input/output.
@@ -890,6 +918,56 @@ describe('HistoryTracker merging', () => {
       yield* tracker.undo();
       expect(get('a', 'x')).toBe(0);
       expect(tracker.canUndo()).toBe(false);
+    }),
+  );
+
+  it.effect('a mapping with merge folds relative edits into one forward and derives its inverse from it', () =>
+    Effect.gen(function* () {
+      const AddField = Operation.make({
+        input: Schema.Struct({ field: Schema.String, delta: Schema.Number }),
+        output: Schema.Void,
+        meta: { key: DXN.make('com.example.operation.test.addField') },
+      });
+      const store = new Map<string, number>();
+      let processed = 0;
+      const addHandler = Operation.withHandler(AddField, ({ field, delta }) =>
+        Effect.sync(() => void store.set(field, (store.get(field) ?? 0) + delta)),
+      );
+      const invoker = OperationInvoker.make(() => Effect.succeed([addHandler]), testRuntime);
+      const tracker = HistoryTracker.make(
+        invoker,
+        UndoRegistry.make(() => [
+          UndoMapping.make({
+            operation: AddField,
+            inverse: AddField,
+            deriveContext: (input) => {
+              processed++;
+              return { field: input.field, delta: -input.delta };
+            },
+            mergeKey: (input) => input.field,
+            merge: (earlier, later) => ({
+              input: { ...later.input, delta: earlier.input.delta + later.input.delta },
+              output: later.output,
+            }),
+          }),
+        ]),
+      );
+      const add = (delta: number) =>
+        Effect.gen(function* () {
+          const before = processed;
+          yield* invoker.invoke(AddField, { field: 'x', delta });
+          yield* waitUntil(() => processed > before);
+        });
+
+      yield* add(1);
+      vi.setSystemTime(100);
+      yield* add(2);
+
+      yield* tracker.undo();
+      expect(store.get('x')).toBe(0);
+      expect(tracker.canUndo()).toBe(false);
+      yield* tracker.redo();
+      expect(store.get('x')).toBe(3);
     }),
   );
 

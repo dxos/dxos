@@ -13,33 +13,12 @@ import dofVert from './glsl/gen/dof.vert?raw';
 import simFrag from './glsl/gen/sim.frag?raw';
 import simVert from './glsl/gen/sim.vert?raw';
 
-export type ShaderOptions = {
-  // Camera.
-  fov: number;
-  /** Max 5.6 (sharper). */
-  aperture: number;
-  zoom: number;
-  distance: number;
-  focus: number;
-  rotation: number;
-
-  // Object.
-  size: number;
-  speed: number;
-  /** Higher values are more diffuse. */
-  curl: number;
-  chaos: number;
-  alpha: number;
-  gain: number;
-  color: [number, number, number];
-};
-
 /**
- * Depth of field.
+ * Points sized and faded by their distance from a focal plane, read from the simulation's position texture.
  * https://threejs.org/docs/#api/en/materials/ShaderMaterial
  */
 export class DofPointsMaterial extends THREE.ShaderMaterial {
-  constructor({ distance, focus, color, fov }: ShaderOptions) {
+  constructor({ focus, fov }: { focus: number; fov: number }) {
     super({
       fragmentShader: dofFrag,
       vertexShader: dofVert,
@@ -48,64 +27,68 @@ export class DofPointsMaterial extends THREE.ShaderMaterial {
         positions: { value: null },
         uTime: { value: 0 },
         uBlur: { value: 0 },
-        uFocus: { value: distance + focus },
+        uFocus: { value: focus },
         uFov: { value: fov },
-        uColor: { value: color },
+        uColor: { value: new THREE.Color() },
       },
       transparent: true,
-      // blending: THREE.NormalBlending,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     });
   }
 }
 
-const n = 512;
-const r = 128;
+/** Side of the seed texture of points on a sphere. */
+const SEED_SIZE = 512;
+const SEED_RADIUS = 128;
 
+/** Curl-noise flow: writes each particle's position, as a function of its seed point and time, into a texture. */
 export class SimulationMaterial extends THREE.ShaderMaterial {
-  constructor({ curl, chaos, alpha }: ShaderOptions) {
-    const positionsTexture = new THREE.DataTexture(getSphere(n * n, r), n, n, THREE.RGBAFormat, THREE.FloatType);
-    positionsTexture.needsUpdate = true;
+  readonly #seed: THREE.DataTexture;
+
+  constructor({ curl, chaos, alpha }: { curl: number; chaos: number; alpha: number }) {
+    const seed = new THREE.DataTexture(
+      getSphere(SEED_SIZE * SEED_SIZE, SEED_RADIUS),
+      SEED_SIZE,
+      SEED_SIZE,
+      THREE.RGBAFormat,
+      THREE.FloatType,
+    );
+    seed.needsUpdate = true;
     super({
       fragmentShader: simFrag,
       vertexShader: simVert,
       uniforms: {
-        positions: { value: positionsTexture },
+        positions: { value: seed },
         uTime: { value: 0 },
         uCurl: { value: curl },
         uCurls: { value: [2.0, 4.0, 8.0, 16.0, 32.0] },
-        // uCurls: { value: [32.0, 16.0, 8.0, 4.0, 2.0] },
         uChaos: { value: chaos },
         uAlpha: { value: alpha },
         uPerturbation: { value: 0.0 },
       },
     });
+    this.#seed = seed;
+  }
+
+  override dispose(): void {
+    this.#seed.dispose();
+    super.dispose();
   }
 }
 
-/**
- * Generates a random points on the surface a sphere.
- */
-const getSphere = (count: number, radius: number, p = new THREE.Vector4()) => {
+/** Random points on the surface of a sphere, as RGBA texels. */
+const getSphere = (count: number, radius: number) => {
   const data = new Float32Array(count * 4);
-  for (let i = 0; i < count * 4; i += 4) {
-    getPoint(p, radius, data, i);
+  const point = new THREE.Vector4();
+  for (let offset = 0; offset < count * 4; offset += 4) {
+    // Rejection sampling: a uniform point in the cube, kept only inside the unit ball, is uniform on the sphere once
+    // normalized.
+    do {
+      point.set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, 0);
+    } while (point.length() > 1 || point.length() === 0);
+    point.normalize().multiplyScalar(radius).toArray(data, offset);
   }
 
   return data;
-};
-
-/**
- * Generates a random point on the surface a sphere and writes it to the data array at offset.
- */
-const getPoint = (p: THREE.Vector4, radius: number, data: Float32Array, offset: number): any => {
-  // Generate random point in cube, recursively try again if outside unit sphere
-  p.set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1, 0);
-  if (p.length() > 1) {
-    return getPoint(p, radius, data, offset);
-  }
-
-  // Scale point to sphere surface and write to array.
-  return p.normalize().multiplyScalar(radius).toArray(data, offset);
 };

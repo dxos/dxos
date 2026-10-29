@@ -18,6 +18,16 @@ export class GitHubRepoInaccessibleError extends BaseError.extend(
   'Repository is not accessible to the connection token.',
 ) {}
 
+/** The space has a GitHub connection whose token cannot be read, e.g. an App EDGE no longer mints for. */
+export class GitHubConnectionUnavailableError extends BaseError.extend(
+  'GitHubConnectionUnavailableError',
+  'GitHub connection has no usable token.',
+) {}
+
+/** Carries status 401, which connection UIs read as a connection to reauthenticate. */
+export const connectionUnavailable = (cause?: unknown) =>
+  new GitHubConnectionUnavailableError({ context: { status: 401 }, cause });
+
 /** The pull request is not stored: a preview card mints one in memory, and it has no database. */
 export class GitHubPullRequestUnstoredError extends BaseError.extend(
   'GitHubPullRequestUnstoredError',
@@ -30,10 +40,16 @@ export class GitHubPullRequestReferenceError extends BaseError.extend(
   'Not a pull request reference.',
 ) {}
 
-/** The local Project could not be re-resolved after its upsert. */
-export class GitHubProjectMissingError extends BaseError.extend(
-  'GitHubProjectMissingError',
-  'Local project missing after upsert.',
+/** A branch moved between reading its tip and updating it: the ref update was not a fast-forward. */
+/** A file marker names an object the space no longer holds. */
+export class GitHubFileObjectMissingError extends BaseError.extend(
+  'GitHubFileObjectMissingError',
+  'The object a synced file is bound to is gone.',
+) {}
+
+export class GitHubRefMovedError extends BaseError.extend(
+  'GitHubRefMovedError',
+  'The branch moved after it was read; pull again and retry.',
 ) {}
 
 /**

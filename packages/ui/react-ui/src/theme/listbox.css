@@ -17,6 +17,10 @@
   .dx-scroll-root.dx-listbox-scroll {
     flex: 1 1 auto;
   }
+  /* An empty list's viewport would take the space ahead of the Empty message and push it to the bottom. */
+  .dx-listbox:has(> .dx-empty) > .dx-scroll-root.dx-listbox-scroll {
+    flex: 0 0 auto;
+  }
 
   /* Content without its own ScrollArea: the Root passes its host's rails through to the rows, as ScrollArea.Root does. */
   .dx-listbox:has(> .dx-container[data-gutter='inherit']) {
@@ -30,6 +34,57 @@
   }
 
   .dx-listbox-content:focus {
+    outline: none;
+  }
+
+  /*
+   * Tiles (Root `tiles`; `data-tiles`, since the Container owns `data-layout`): equal columns inside the content's
+   * gutters, the count from zag's `--column-count`; each tile
+   * stacks its parts and keeps `.dx-row`'s states.
+   */
+  .dx-listbox-content.dx-container[data-tiles] {
+    /* Important: container.css gives a Content without a Viewport one track through a long selector chain. */
+    grid-template-columns: repeat(var(--column-count), minmax(0, 1fr)) !important;
+    padding-inline: var(--dx-gutter, 0px);
+    /* Room above the first row and below the last for the tiles' outline, which is drawn outside them. */
+    padding-block: var(--dx-gap-size);
+    gap: var(--dx-gap-size);
+  }
+  /*
+   * Root `tileWidth`: the column count fitted at the minimum width (set by the content as it resizes), each column as
+   * wide as the row allows up to the maximum; a row narrower than its columns' maximum leaves its slack at the end.
+   */
+  .dx-listbox-content.dx-container[data-tiles='auto'] {
+    grid-template-columns: repeat(var(--dx-tile-count, 1), minmax(0, var(--dx-tile-max, 1fr))) !important;
+    justify-content: start;
+  }
+  .dx-listbox-content[data-tiles] > * {
+    grid-column: auto;
+  }
+  .dx-listbox-tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--dx-gap-size);
+    min-width: 0;
+    padding: var(--dx-gap-size);
+  }
+  /*
+   * A tile is a card, so its states are one outline around it rather than a fill or the rows' inset ring: neutral when
+   * current (the keys' tile) or under the pointer, the focus colour when selected.
+   */
+  .dx-row.dx-listbox-tile {
+    --dx-row-ring-color: transparent;
+    /* Scrolling a tile into view stops at its box, which would clip the outline drawn outside it. */
+    scroll-margin: calc(2px + var(--dx-gap-size));
+  }
+  .dx-listbox-tile:is(:hover, [data-highlighted]) {
+    outline: 2px solid var(--color-neutral-border);
+  }
+  .dx-listbox-tile:is([aria-selected='true'], [data-selected]) {
+    outline: 2px solid var(--color-focus);
+  }
+  /* A drag preview is a picture of the tile, which the snapshot would clip its outline to. */
+  [data-drag-preview] .dx-listbox-tile {
     outline: none;
   }
 
@@ -64,6 +119,10 @@
   .dx-listbox-item.dx-container > * {
     grid-column: auto;
     grid-row: 1 / -1;
+  }
+  /* A Container packs its tracks to the start; a row of custom cells shorter than the block would sit at its top. */
+  .dx-listbox-item.dx-container {
+    align-content: center;
   }
   .dx-listbox-item.dx-container > .dx-listbox-item-text {
     grid-column: var(--dx-item-text-column);
@@ -144,6 +203,17 @@
     grid-column: auto;
     grid-row: auto;
     align-self: center;
+  }
+  /* Custom end cells keep a gap from the row's edges, as the text part does, so its highlight ring frames them. */
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > :first-child:not(.dx-listbox-item-icon, .dx-listbox-item-text, .dx-button, .dx-block) {
+    padding-inline-start: var(--dx-gap-size);
+  }
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > :last-child:not(.dx-listbox-item-icon, .dx-listbox-item-indicator, .dx-button, .dx-block) {
+    padding-inline-end: var(--dx-gap-size);
   }
   /* A description here is a track on the title's line, not a line under it, so neither keeps the stacked padding. */
   :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)

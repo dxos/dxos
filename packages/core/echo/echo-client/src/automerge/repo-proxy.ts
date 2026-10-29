@@ -5,15 +5,16 @@
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
+import * as Schema from 'effect/Schema';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type Context as DxosContext, LifecycleState, Resource } from '@dxos/context';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { RepoClosedError } from '../errors.ts';
+import { CLOSE_REASON_ATTRIBUTE, RepoClosedError } from '../errors.ts';
 import { type ChangeEvent, DocHandleProxy, type PassiveDocument } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 import { sameHeads } from './heads.ts';
@@ -67,10 +68,13 @@ export class RepoProxy extends Resource {
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
 
-  /** Creations the host did not take; the handle stays unready until {@link flushCreations} lands one. */
+  /**
+   * Creations the host did not take; the handle stays unready until {@link flushCreations} lands one.
+   * An entry without `retry` was refused permanently: it is never requested again, and the next flush reports it.
+   */
   private readonly _failedCreations = new Map<
     string,
-    { handle: DocHandleProxy<any>; error: Error; retry: () => void }
+    { handle: DocHandleProxy<any>; error: Error; attempts: number; retry?: () => void }
   >();
 
   /**
@@ -150,6 +154,12 @@ export class RepoProxy extends Resource {
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
+
+  /**
+   * What stopped the proxy taking work, recorded once when it does: a close, whose error's stack is the call site,
+   * or the error that put it in the ERROR state. Carried by every later {@link RepoClosedError}.
+   */
+  #stoppedBy: { reason: string; error: Error } | undefined = undefined;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
   private _lastSaveStateKey = '';
@@ -371,6 +381,13 @@ export class RepoProxy extends Resource {
       if (!failed || this._lifecycleState === LifecycleState.CLOSED) {
         return;
       }
+      // Reported to one flush only, since a document that can never be created would fail every later one.
+      const rejected = [...this._failedCreations].find(([, { retry }]) => retry === undefined);
+      if (rejected) {
+        this._failedCreations.delete(rejected[0]);
+        this._emitSaveStateEvent();
+        throw rejected[1].error;
+      }
       if (attempt >= FLUSH_ATTEMPTS) {
         throw failed.error;
       }
@@ -380,12 +397,47 @@ export class RepoProxy extends Resource {
 
   private _retryFailedCreations(): void {
     for (const [id, { retry }] of this._failedCreations) {
+      if (retry === undefined) {
+        continue;
+      }
       this._failedCreations.delete(id);
       retry();
     }
   }
 
+  /** @param ctx A {@link CLOSE_REASON_ATTRIBUTE} on it names why the proxy is closing. */
+  override async close(ctx?: DxosContext): Promise<this> {
+    if (this.isOpen && !this.#stoppedBy) {
+      const given: string | undefined = ctx?.getAttribute(CLOSE_REASON_ATTRIBUTE);
+      const reason = given ?? 'closed';
+      this.#stoppedBy = { reason, error: new Error(`Repo proxy closed: ${reason}`) };
+      // A close with no reason is routine teardown, too frequent to log above debug.
+      if (given) {
+        log.info('repo proxy closing', { spaceId: this._spaceId, reason });
+      } else {
+        log('repo proxy closing', { spaceId: this._spaceId, reason });
+      }
+    }
+    return super.close(ctx);
+  }
+
+  protected override async _catch(err: Error): Promise<void> {
+    if (!this.#stoppedBy) {
+      this.#stoppedBy = { reason: 'error', error: err };
+      log.warn('repo proxy stopped by an error', { spaceId: this._spaceId, error: err });
+    }
+    return super._catch(err);
+  }
+
+  #closedError(documentId?: DocumentId): RepoClosedError {
+    return new RepoClosedError(
+      { spaceId: this._spaceId, documentId, closeReason: this.#stoppedBy?.reason },
+      { cause: this.#stoppedBy?.error },
+    );
+  }
+
   protected override async _open(): Promise<void> {
+    this.#stoppedBy = undefined;
     // A close during the resubscribe or retry delay cancels the task that clears these flags.
     this._isReconnecting = false;
     this._sendRetryScheduled = false;
@@ -404,7 +456,7 @@ export class RepoProxy extends Resource {
       handle.off('change');
       // A load in flight can never complete now; `Trigger` already marks its own promise handled, since a close
       // may fail a load nobody is awaiting.
-      handle._failReady(new RepoClosedError({ spaceId: this._spaceId, documentId: handle.documentId }));
+      handle._failReady(this.#closedError(handle.documentId));
     }
 
     this._handles = {};
@@ -612,7 +664,7 @@ export class RepoProxy extends Resource {
    */
   #requireOpen(documentId?: DocumentId): UpdateScheduler {
     if (!this.isOpen || !this._sendUpdatesJob) {
-      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
+      throw this.#closedError(documentId);
     }
     return this._sendUpdatesJob;
   }
@@ -736,16 +788,16 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
     handle.on('change', onChange);
-    const request = () => {
+    const request = (attempt: number) => {
       const creation: Promise<void> = runServiceCall(
         this._runtime,
         this._dataService,
         'DataService.createDocument',
         {
           spaceId: this._spaceId,
-          // A doc's declared type is an interface without an index signature, which the Struct
-          // field's `Record` type does not accept; the value is a plain JSON object at runtime.
-          initialValue: initialValue as Record<string, unknown>,
+          // Bytes of the handle's own doc, so the host takes its history rather than building a second copy
+          // of the initial state, and Automerge values (`RawString`, bytes) need no JSON encoding.
+          ...(initialValue === undefined ? {} : { initialDocument: A.save(handle.doc()) }),
         },
         { timeout: RPC_TIMEOUT },
       )
@@ -771,14 +823,27 @@ export class RepoProxy extends Resource {
               cleanup();
               return;
             }
-            if (!(err instanceof RpcClosedError)) {
-              log.catch(err);
-            }
             if (deleted) {
               return;
             }
-            this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
-            this._scheduleSendRetry();
+            // A payload the transport cannot encode is refused identically on every attempt.
+            const permanent = Schema.isSchemaError(err);
+            if (attempt === 1 && !(err instanceof RpcClosedError)) {
+              log.catch(err);
+            } else {
+              log('document creation failed again', { attempt, err });
+            }
+            this._failedCreations.set(handle._internalId, {
+              handle,
+              error: err,
+              attempts: attempt,
+              retry: permanent ? undefined : () => request(attempt + 1),
+            });
+            if (permanent) {
+              handle._failReady(err);
+            } else {
+              this._scheduleSendRetry();
+            }
             this._emitSaveStateEvent();
           },
         )
@@ -792,7 +857,7 @@ export class RepoProxy extends Resource {
       this._pendingCreations.set(handle._internalId, creation);
       this._emitSaveStateEvent();
     };
-    request();
+    request(1);
 
     return handle;
   }
@@ -1044,7 +1109,12 @@ export class RepoProxy extends Resource {
       return;
     }
     this._sendRetryScheduled = true;
-    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this._sendRetryAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
+    // A successful update pass resets `_sendRetryAttempts`, so a creation the host keeps refusing backs off on its own count.
+    const creationAttempts = Math.max(0, ...Array.from(this._failedCreations.values(), ({ attempts }) => attempts));
+    const delay = Math.min(
+      RESUBSCRIBE_DELAY_MS * 2 ** Math.max(this._sendRetryAttempts++, creationAttempts - 1),
+      RESUBSCRIBE_MAX_DELAY_MS,
+    );
     scheduleTask(
       this._ctx,
       () => {

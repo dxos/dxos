@@ -17,11 +17,13 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { SandboxPlugin } from '#plugin';
+import * as SandboxPlugin from '#meta';
 import { Sandbox, SandboxOperation } from '#types';
 
 import { SANDBOX_BACKEND_ENV } from './services/layer.ts';
 import { canRunLocalSandboxes } from './testing/probe.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), SandboxPlugin.make()] });
 
 const unavailable = !(await canRunLocalSandboxes());
 
@@ -35,7 +37,7 @@ describe.skipIf(unavailable)('SandboxPlugin (composer harness, local backend)', 
 
   test('serves the operations from the contributed layer spec', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SandboxPlugin()],
+      plugins: [ClientPlugin.make({}), SandboxPlugin.make()],
     });
 
     const { defaultSpace } = await EffectEx.runAndForwardErrors(

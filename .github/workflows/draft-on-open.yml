@@ -1,0 +1,75 @@
+name: Draft on open
+
+# Converts a PR opened ready into a draft when its branch starts with one of DRAFT_PREFIXES, so the
+# browser and e2e suites wait until someone marks it ready. The conversion triggers each PR workflow's
+# `converted_to_draft` run, which drops those suites and cancels the run in flight. A PR that conflicts
+# with main when it opens gets no `opened` run at all (there is no merge commit to read workflows from),
+# so its first push that runs converts it instead. Marking a PR ready is never undone: a push converts
+# only a PR opened in the last day that has never been marked ready or converted.
+#
+# The conversion uses dxos-bot's PAT: an event caused by `GITHUB_TOKEN` starts no workflow run, so with
+# it there would be no `converted_to_draft` run to cancel the full suite the `opened` run started. Only a
+# matching branch reaches the PAT step: a Dependabot PR gets no secrets, and github-script fails on an
+# empty token.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  # Agents' branches and the Changesets Version PR's.
+  DRAFT_PREFIXES: claude/ dm/ changeset-release/
+
+concurrency:
+  group: draft-on-open-${{ github.event.pull_request.number }}
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Match branch prefix
+        id: match
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          match=false
+          for prefix in $DRAFT_PREFIXES; do
+            case "$HEAD_REF" in "$prefix"*) match=true ;; esac
+          done
+          echo "match=$match" >> "$GITHUB_OUTPUT"
+
+      - if: steps.match.outputs.match == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_DXOS_BOT_PAT }}
+          script: |
+            const pr = context.payload.pull_request;
+            if (context.payload.action === 'synchronize') {
+              if (Date.now() - Date.parse(pr.created_at) > 24 * 60 * 60 * 1000) {
+                return;
+              }
+              const events = await github.paginate(github.rest.issues.listEventsForTimeline, {
+                ...context.repo,
+                issue_number: pr.number,
+                per_page: 100,
+              });
+              if (events.some((event) => event.event === 'ready_for_review' || event.event === 'convert_to_draft')) {
+                return;
+              }
+            }
+            await github.graphql(
+              'mutation($id: ID!) { convertPullRequestToDraft(input: { pullRequestId: $id }) { pullRequest { isDraft } } }',
+              { id: pr.node_id },
+            );
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: pr.number,
+              body: 'Converted to a draft: CI runs `check` and the node tests until this is marked ready for review (`gh pr ready`), then every suite.',
+            });

@@ -1,7 +1,7 @@
 {
   // Cloudflare Workers (Static Assets) config for Composer. Migrated from Pages advanced mode: `_worker.js`
   // is the Worker entry (main), static assets are served via the ASSETS binding, and the `run_worker_first`
-  // paths run the Worker first (feedback-logs, RSS proxy, OTel -> SigNoz, the domain-verification
+  // paths run the Worker first (feedback-logs, RSS proxy, OTel -> PostHog, the domain-verification
   // documents) while every other route is asset-first with SPA fallback.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // `_worker.js` lives in the asset dir (the PR preview deploy — a `versions upload` against `env.dev` —
@@ -22,7 +22,7 @@
   "vars": {
     "APPLE_TEAM_ID": "9428WC5MR8",
     "ENVIRONMENT": "local",
-    "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+    "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
   },
   "r2_buckets": [
     { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
@@ -39,15 +39,17 @@
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
   // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker
-  // needs its R2 bucket + the SIGNOZ_INGESTION_KEY secret (`wrangler secret put --env <env>`).
+  // needs its R2 bucket + the POSTHOG_PROJECT_TOKEN secret (see ENV.md), which `secrets.required` makes
+  // `wrangler deploy` and `versions upload` refuse to ship without.
   "env": {
     "production": {
       "name": "composer",
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
         "ENVIRONMENT": "production",
-        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+        "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets" },
@@ -58,8 +60,9 @@
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
         "ENVIRONMENT": "staging",
-        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+        "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-staging" },
@@ -72,8 +75,9 @@
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
         "ENVIRONMENT": "preview",
-        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+        "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-preview" },
@@ -85,8 +89,9 @@
       "vars": {
         "APPLE_TEAM_ID": "9428WC5MR8",
         "ENVIRONMENT": "dev",
-        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+        "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },

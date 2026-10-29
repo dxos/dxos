@@ -17,6 +17,8 @@ export type PluginSpecSubject = {
   readonly pluginId: string;
   readonly name: string;
   readonly content: string;
+  /** `github:` key of the spec in the plugin's repository, from its profile's `source`; links reviews and refs. */
+  readonly sourceKey?: string;
 };
 
 export const makePluginSpecSubject = (input: Omit<PluginSpecSubject, '__brand'>): PluginSpecSubject => ({

@@ -10,3 +10,4 @@ export * from '../clickable.ts';
 export * from '../recipes.ts';
 export * from '../sizes.ts';
 export * from './slots.ts';
+export * from './animation.ts';

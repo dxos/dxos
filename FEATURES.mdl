@@ -1,0 +1,949 @@
+---
+id: org.dxos.features
+name: DXOS feature map
+version: 0.1.0
+---
+
+The feature map is the top of the chain that turns intent into working code:
+feature map > spec > review > tasks > code > result. Each `feature` states a goal and cites the spec
+items that describe it; the format is `packages/reflect/deus/lang/features.mdl`.
+
+- `pnpm deus features check` shows each feature's status beside the status its spec reviews support.
+- To add or change a feature, edit its block here with a `## Changelog` decision, then carry it down
+  the layers with the `feature-waterfall` skill (`agents/routines/feature-waterfall.md`).
+
+The map was seeded with one feature per spec, its status taken from that spec's review. Split a
+feature into narrower ones (citing `#F-n` items) as the work on it gets specific.
+
+## Extensions
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feature`  | `org.dxos.mdl.feature@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Features
+
+### Apps
+
+```mdl
+feature composer-app.app: Composer
+  status: in-progress
+  specs: [packages/apps/composer-app/spec/APP.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 3 partial, 1 diverged, 3 missing.
+```
+
+```mdl
+feature composer-app.perf: Composer Performance
+  status: operational
+  specs: [packages/apps/composer-app/spec/PERF.mdl]
+  note: Seeded from its review of 2026-10-27: 1 done.
+```
+
+### ECHO and HALO
+
+```mdl
+feature echo.echo-client.query: ECHO queries
+  status: in-progress
+  specs: [packages/core/echo/echo-client/spec/QUERY.mdl]
+  note: Seeded from its review of 2026-10-27: 49 done, 11 untested, 1 partial.
+```
+
+```mdl
+feature echo.echo-sqlite: EchoSqlite
+  status: in-progress
+  specs: [packages/core/echo/echo-sqlite/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 42 done, 2 untested, 3 partial.
+```
+
+```mdl
+feature echo.echo: Echo
+  status: in-progress
+  specs: [packages/core/echo/echo/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 40 done, 5 untested, 7 partial, 1 diverged, 1 missing.
+```
+
+```mdl
+feature echo.feed: Feed
+  status: in-progress
+  specs: [packages/core/echo/feed/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 16 done, 2 untested, 1 partial.
+```
+
+```mdl
+feature echo.index-core: IndexCore
+  status: in-progress
+  specs: [packages/core/echo/index-core/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 19 done, 2 untested, 1 partial, 1 diverged.
+```
+
+```mdl
+feature halo.halo: Halo
+  status: in-progress
+  specs: [packages/core/halo/halo/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 1 done, 2 partial.
+```
+
+### Composer plugins
+
+```mdl
+feature plugin-agent: AgentPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-agent/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 67 done, 6 untested, 4 partial, 7 diverged, 1 missing.
+```
+
+```mdl
+feature plugin-assistant: AssistantPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-assistant/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 17 done, 17 untested, 4 partial, 7 diverged, 10 missing.
+```
+
+```mdl
+feature plugin-atproto: AtprotoPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-atproto/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 5 done, 7 untested, 2 partial, 3 diverged, 3 missing.
+```
+
+```mdl
+feature plugin-blogger: BloggerPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-blogger/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 23 done, 9 untested, 4 partial, 2 missing.
+```
+
+```mdl
+feature plugin-bluesky: BlueskyPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-bluesky/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 34 untested, 3 partial, 3 diverged, 11 missing.
+```
+
+```mdl
+feature plugin-board: BoardPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-board/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 3 done, 16 untested, 1 partial, 4 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-bookmarks: BookmarksPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-bookmarks/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 7 untested, 2 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-brain: BrainPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-brain/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 12 done, 4 untested, 4 partial, 4 diverged, 1 missing.
+```
+
+```mdl
+feature plugin-calls: CallsPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-calls/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 15 untested, 3 partial, 27 diverged, 30 missing.
+```
+
+```mdl
+feature plugin-canvas: CanvasPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-canvas/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 partial.
+```
+
+```mdl
+feature plugin-chess-com: ChessComPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-chess-com/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 6 done, 6 untested, 2 missing.
+```
+
+```mdl
+feature plugin-chess: ChessPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-chess/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 8 untested, 2 partial, 18 diverged, 21 missing.
+```
+
+```mdl
+feature plugin-claude: ClaudePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-claude/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 14 done, 24 untested, 4 partial, 3 diverged, 1 missing.
+```
+
+```mdl
+feature plugin-cloudflare: CloudflarePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-cloudflare/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 1 untested, 2 partial, 1 missing.
+```
+
+```mdl
+feature plugin-code-graph: CodeGraphPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-code-graph/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 9 untested, 2 partial, 1 missing.
+```
+
+```mdl
+feature plugin-code: CodePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-code/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 29 done, 67 untested, 11 partial, 11 diverged, 18 missing.
+```
+
+```mdl
+feature plugin-commerce: CommercePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-commerce/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 13 done, 9 untested, 8 partial, 11 diverged, 8 missing.
+```
+
+```mdl
+feature plugin-conductor: ConductorPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-conductor/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 16 done, 11 untested, 15 partial, 2 diverged, 9 missing.
+```
+
+```mdl
+feature plugin-connector: ConnectorPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-connector/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 8 done, 26 untested, 7 partial, 7 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-connector.events: Connector event dispatch
+  status: in-progress
+  specs: [packages/plugins/plugin-connector/spec/EVENTS.mdl]
+  note: Seeded from its review of 2026-10-27: 1 partial, 26 missing.
+```
+
+```mdl
+feature plugin-crm: CrmPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-crm/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 17 done, 18 untested, 9 partial, 3 diverged, 12 missing.
+```
+
+```mdl
+feature plugin-crx: CrxPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-crx/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 35 done, 8 untested, 5 partial, 3 missing.
+```
+
+```mdl
+feature plugin-debug: DebugPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-debug/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 4 done, 7 untested, 7 partial, 2 missing.
+```
+
+```mdl
+feature plugin-debug.timeline: Timeline
+  status: in-progress
+  specs: [packages/plugins/plugin-debug/assets/timeline/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 6 done, 4 untested, 2 partial, 3 missing.
+```
+
+```mdl
+feature plugin-debug.hello-worker: Hello Worker
+  status: planned
+  specs: [packages/plugins/plugin-debug/src/samples/worker/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 4 missing.
+```
+
+```mdl
+feature plugin-deck: DeckPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-deck/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 18 done, 29 untested, 7 partial, 10 diverged, 15 missing.
+```
+
+```mdl
+feature plugin-deepseek: DeepSeekPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-deepseek/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 4 done, 3 untested, 3 missing.
+```
+
+```mdl
+feature plugin-dev-shell: DevShellPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-dev-shell/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 2 partial.
+```
+
+```mdl
+feature plugin-devtools: DevtoolsPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-devtools/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 19 untested, 1 partial, 7 diverged, 9 missing.
+```
+
+```mdl
+feature plugin-discord: DiscordPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-discord/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 23 untested, 1 partial, 2 diverged, 14 missing.
+```
+
+```mdl
+feature plugin-doctor: DoctorPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-doctor/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 9 done, 1 untested, 2 partial, 1 missing.
+```
+
+```mdl
+feature plugin-explorer: ExplorerPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-explorer/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 4 done, 15 untested, 2 partial, 2 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-file-system: FileSystemPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-file-system/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 8 done, 13 untested, 10 partial, 3 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-file: FilePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-file/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 13 done, 9 untested, 10 partial, 3 diverged, 1 missing.
+```
+
+```mdl
+feature plugin-freeq: FreeqPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-freeq/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 1 partial.
+```
+
+```mdl
+feature plugin-game: GamePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-game/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 14 untested, 2 partial, 1 diverged, 8 missing.
+```
+
+```mdl
+feature plugin-github: GitHubPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-github/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 35 done, 26 untested, 6 partial, 2 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-github.file-sync: GitHub two-way file sync
+  status: in-progress
+  specs: [packages/plugins/plugin-github/spec/FILE-SYNC.mdl]
+  note: Seeded from its review of 2026-10-27: 1 partial, 1 diverged, 36 missing.
+```
+
+```mdl
+feature plugin-github.sync: GitHub polling sync
+  status: in-progress
+  specs: [packages/plugins/plugin-github/spec/SYNC.mdl]
+  note: Seeded from its review of 2026-10-27: 26 done, 3 untested, 3 partial, 1 missing.
+```
+
+```mdl
+feature plugin-handpan: HandpanPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-handpan/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 22 done, 4 untested, 1 missing.
+```
+
+```mdl
+feature plugin-heygen: HeyGenPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-heygen/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 1 untested, 1 missing.
+```
+
+```mdl
+feature plugin-higgsfield: HiggsfieldPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-higgsfield/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 1 partial.
+```
+
+```mdl
+feature plugin-ibkr: IbkrPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-ibkr/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 35 done, 19 untested, 15 partial, 1 diverged, 2 missing.
+```
+
+```mdl
+feature plugin-ideogram: IdeogramPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-ideogram/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 4 done, 3 partial.
+```
+
+```mdl
+feature plugin-illustrator: IllustratorPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-illustrator/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 6 done, 1 untested, 3 partial.
+```
+
+```mdl
+feature plugin-inbox: InboxPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-inbox/PLUGIN.mdl, packages/plugins/plugin-inbox/docs/TRIAGE.mdl]
+  note: Seeded from its review of 2026-10-27: 26 done, 17 untested, 7 partial, 2 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-kanban: KanbanPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-kanban/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 15 done, 14 untested, 8 partial, 5 missing.
+```
+
+```mdl
+feature plugin-lametric: LaMetricPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-lametric/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 22 done, 7 untested, 4 partial, 1 missing.
+```
+
+```mdl
+feature plugin-library: LibraryPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-library/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 2 untested, 4 partial, 1 diverged, 2 missing.
+```
+
+```mdl
+feature plugin-linear: LinearPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-linear/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 11 done, 20 untested, 8 partial, 5 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-lingo: LingoPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-lingo/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 14 done, 27 untested, 4 partial, 6 missing.
+```
+
+```mdl
+feature plugin-magazine: MagazinePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-magazine/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 21 untested, 9 partial, 23 diverged, 14 missing.
+```
+
+```mdl
+feature plugin-map-solid: MapSolidPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-map-solid/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 15 untested, 1 partial, 1 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-map: MapPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-map/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 25 untested, 8 partial, 3 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-markdown: MarkdownPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-markdown/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 13 done, 18 untested, 3 partial, 3 diverged, 3 missing.
+```
+
+```mdl
+feature plugin-markdown.autocue.autocue: MarkdownPlugin autocue flows
+  status: in-progress
+  specs: [packages/plugins/plugin-markdown/autocue/AUTOCUE.mdl]
+  note: Seeded from its review of 2026-10-27: 1 partial.
+```
+
+```mdl
+feature plugin-meeting-recorder: MeetingRecorderPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-meeting-recorder/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 3 done, 18 untested, 2 partial, 2 missing.
+```
+
+```mdl
+feature plugin-meeting: MeetingPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-meeting/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 15 untested, 9 partial, 1 diverged, 11 missing.
+```
+
+```mdl
+feature plugin-mermaid: MermaidPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-mermaid/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 4 done, 6 untested, 2 partial, 3 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-messenger: MessengerPlugin
+  status: prototype
+  specs: [packages/plugins/plugin-messenger/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 13 done, 7 untested.
+```
+
+```mdl
+feature plugin-native: NativePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-native/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 16 untested, 1 partial, 3 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-navtree: NavTreePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-navtree/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 12 done, 20 untested, 8 partial, 1 diverged, 2 missing.
+```
+
+```mdl
+feature plugin-osrm: OsrmPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-osrm/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 3 untested, 1 diverged, 3 missing.
+```
+
+```mdl
+feature plugin-pipeline: PipelinePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-pipeline/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 14 untested, 3 partial, 6 diverged, 11 missing.
+```
+
+```mdl
+feature plugin-presenter: PresenterPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-presenter/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 81 done, 12 untested, 8 partial, 5 diverged, 1 missing.
+```
+
+```mdl
+feature plugin-projects: ProjectsPlugin
+  status: planned
+  specs: [packages/plugins/plugin-projects/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 1 missing.
+```
+
+```mdl
+feature plugin-projects.feature-links: Feature links
+  status: in-progress
+  specs: [packages/plugins/plugin-projects/spec/FEATURE-LINKS.mdl]
+  note: Seeded from its review of 2026-10-27: 22 done, 2 untested, 3 partial, 1 missing.
+```
+
+```mdl
+feature plugin-qa: QaPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-qa/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 3 done, 22 untested, 11 partial, 4 missing.
+```
+
+```mdl
+feature plugin-recorder: RecorderPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-recorder/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 17 untested, 1 missing.
+```
+
+```mdl
+feature plugin-review: ReviewPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-review/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 36 done, 6 untested, 2 partial.
+```
+
+```mdl
+feature plugin-routine: AutomationPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-routine/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 9 done, 12 untested, 4 partial, 8 diverged, 12 missing.
+```
+
+```mdl
+feature plugin-s3: S3Plugin
+  status: in-progress
+  specs: [packages/plugins/plugin-s3/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 4 done, 1 partial, 1 diverged.
+```
+
+```mdl
+feature plugin-sample: SamplePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-sample/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 8 done, 15 untested, 3 partial, 4 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-sandbox: SandboxPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-sandbox/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 9 done, 3 untested, 2 partial, 1 missing.
+```
+
+```mdl
+feature plugin-script: ScriptPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-script/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 26 untested, 10 partial, 11 diverged, 9 missing.
+```
+
+```mdl
+feature plugin-search: SearchPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-search/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 7 untested, 2 partial, 5 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-sequencer: SequencerPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-sequencer/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 18 untested, 2 partial, 3 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-sheet: SheetPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-sheet/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 12 done, 15 untested, 9 partial, 3 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-sidekick: SidekickPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-sidekick/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 6 untested, 10 partial, 4 diverged, 30 missing.
+```
+
+```mdl
+feature plugin-slack: SlackPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-slack/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 12 done, 18 untested, 7 partial, 3 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-space: SpacePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-space/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 17 done, 28 untested, 13 partial, 9 diverged, 9 missing.
+```
+
+```mdl
+feature plugin-spacetime: SpacetimePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-spacetime/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 13 done, 39 untested, 8 partial, 5 missing.
+```
+
+```mdl
+feature plugin-spacetime.design: SpacetimePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-spacetime/docs/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 8 done, 37 untested, 7 partial, 2 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-spotlight: SpotlightPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-spotlight/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 16 untested, 7 missing.
+```
+
+```mdl
+feature plugin-stack: StackPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-stack/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 6 untested, 5 partial, 5 diverged, 17 missing.
+```
+
+```mdl
+feature plugin-ste: StePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-ste/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 8 done, 1 untested, 1 missing.
+```
+
+```mdl
+feature plugin-stream-deck: StreamDeckPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-stream-deck/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 24 done, 8 untested, 4 partial, 2 missing.
+```
+
+```mdl
+feature plugin-studio: StudioPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-studio/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 6 done, 8 untested, 4 partial, 1 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-support: SupportPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-support/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 6 done, 23 untested, 2 partial, 2 diverged, 11 missing.
+```
+
+```mdl
+feature plugin-table: TablePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-table/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 16 untested, 5 partial, 3 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-tasks: OutlinerPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-tasks/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 11 done, 12 untested, 3 partial, 1 diverged, 7 missing.
+```
+
+```mdl
+feature plugin-terra: TerraPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-terra/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 1 partial.
+```
+
+```mdl
+feature plugin-thread: ThreadPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-thread/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 3 done, 4 untested, 2 diverged, 3 missing.
+```
+
+```mdl
+feature plugin-tldraw: TldrawPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-tldraw/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 16 done, 11 untested, 6 partial, 6 diverged, 8 missing.
+```
+
+```mdl
+feature plugin-transcription: TranscriptionPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-transcription/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 11 done, 38 untested, 4 partial, 3 diverged, 9 missing.
+```
+
+```mdl
+feature plugin-transformer: TransformerPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-transformer/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 17 untested, 2 partial, 4 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-trello: TrelloPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-trello/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 20 done, 6 untested, 2 partial, 1 diverged, 2 missing.
+```
+
+```mdl
+feature plugin-trip: TripPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-trip/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 5 done, 3 untested, 2 partial, 11 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-typefully: TypefullyPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-typefully/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 6 done, 4 untested, 15 diverged, 4 missing.
+```
+
+```mdl
+feature plugin-typesafe: TypeSafePlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-typesafe/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 7 done, 1 partial, 1 missing.
+```
+
+```mdl
+feature plugin-uml: UmlPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-uml/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 2 done, 5 untested, 1 diverged, 1 missing.
+```
+
+```mdl
+feature plugin-video: VideoPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-video/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 4 done, 8 untested, 7 partial, 3 diverged, 6 missing.
+```
+
+```mdl
+feature plugin-voxel: VoxelPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-voxel/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 37 untested, 1 partial, 1 diverged, 11 missing.
+```
+
+```mdl
+feature plugin-wnfs: WnfsPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-wnfs/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 8 done, 20 untested, 5 partial, 6 missing.
+```
+
+```mdl
+feature plugin-zen: ZenPlugin
+  status: in-progress
+  specs: [packages/plugins/plugin-zen/PLUGIN.mdl]
+  note: Seeded from its review of 2026-10-27: 25 untested, 2 diverged, 9 missing.
+```
+
+### UI
+
+```mdl
+feature react-ui-canvas.post-m4: SceneEnginePostM4
+  status: in-progress
+  specs: [packages/ui/react-ui-canvas/POST-M4.mdl]
+  note: Seeded from its review of 2026-10-27: 4 partial, 1 diverged, 2 missing.
+```
+
+```mdl
+feature react-ui-canvas: SceneEngine
+  status: in-progress
+  specs: [packages/ui/react-ui-canvas/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 46 done, 15 untested, 9 partial, 13 diverged.
+```
+
+```mdl
+feature react-ui-feed: FeedSpec
+  status: in-progress
+  specs: [packages/ui/react-ui-feed/docs/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 35 done, 6 untested, 9 partial, 2 missing.
+```
+
+```mdl
+feature ui-editor.structure.outliner: Outliner
+  status: in-progress
+  specs: [packages/ui/ui-editor/src/extensions/structure/outliner/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 21 done, 6 untested, 3 partial, 1 diverged.
+```
+
+### SDK and tools
+
+```mdl
+feature diagram: DiagramStack
+  status: prototype
+  specs: [packages/common/diagram/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 36 done, 6 untested.
+```
+
+```mdl
+feature drawing.drawing: drawing.sh
+  status: in-progress
+  specs: [packages/devtools/drawing/DRAWING.mdl]
+  note: Seeded from its review of 2026-10-27: 1 partial.
+```
+
+```mdl
+feature deus: Deus
+  status: in-progress
+  specs: [packages/reflect/deus/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 15 done, 17 untested, 1 partial.
+```
+
+```mdl
+feature worker-framework: WorkerFramework
+  status: in-progress
+  specs: [packages/sdk/worker-framework/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 35 done, 1 untested, 3 partial, 2 diverged.
+```
+
+```mdl
+feature code-index: CodeIndex
+  status: in-progress
+  specs: [tools/code-index/SPEC.mdl]
+  note: Seeded from its review of 2026-10-27: 56 done, 6 untested, 2 partial, 1 diverged.
+```
+
+### New features
+
+```mdl
+feature plugin-zen.sleep-fade: Timed Dreams fade out instead of stopping
+  status: operational
+  specs: [packages/plugins/plugin-zen/PLUGIN.mdl#F-6]
+  depends: [plugin-zen]
+  note: |
+    A timed Dream is for falling asleep, and an abrupt stop when the timer runs out wakes the listener.
+    Over the last 30 seconds of a timed Dream (the whole Dream when it is shorter), the master volume
+    ramps down to silence, then playback stops as it does today. Stopping by hand and untimed Dreams
+    are unaffected.
+```
+
+## Changelog
+
+```mdl
+decision D-1: The feature map starts with one feature per reviewed spec, each marked with the status its review supports.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The spec reviews of 2026-10-27 judged every spec in the repo, so a status derived from them is the most accurate starting point; per-spec features can be split later.
+```
+
+```mdl
+decision D-2: Add plugin-zen.sleep-fade — a timed Dream fades its master volume to silence over its last 30 seconds before it stops.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The first new feature to carry down the waterfall end to end; small, user-facing, and checkable by a unit test.
+```
+
+```mdl
+decision D-3: plugin-zen.sleep-fade moves to in-progress.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [plugin-zen.sleep-fade]
+  why: Its spec items now exist (PLUGIN.mdl F-6, commit a1525e46) and the review (commit 91bea605) finds the fade partly built; the remaining work is in the plugin-zen TASKS.md.
+```
+
+```mdl
+decision D-4: plugin-zen.sleep-fade moves to operational.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [plugin-zen.sleep-fade]
+  why: The code (commit 859c2f38) fades a timed Dream over its last 30 s, and the re-run review judges F-6.1, F-6.2 and F-6.3 done, each held by a unit test. It is marked operational ahead of its dependency plugin-zen, which stays in-progress: the fade does not rely on the untested parts of that spec.
+  rejected:
+    - Keep in-progress until plugin-zen is operational — the status would contradict the reviews of the items it cites.
+```
+
+```mdl
+decision D-5: plugin-labeler is merged into plugin-inbox; its spec moves to plugin-inbox/docs/TRIAGE.mdl under the plugin-inbox feature, and the plugin-labeler feature is removed.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [plugin-inbox, plugin-labeler]
+  why: Triage only ever acts on a mailbox, and as a separate opt-in plugin it was off wherever inbox was on.
+```

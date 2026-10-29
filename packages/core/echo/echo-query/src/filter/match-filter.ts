@@ -167,7 +167,7 @@ const canonicalTag = (uri: string): string => {
 
 const metaTags = (object: Entity.Unknown): string[] => {
   try {
-    return Entity.getMeta(object).tags.map((tag) => tag.uri);
+    return Entity.getMeta(object).tags.map((tag) => tag.id);
   } catch {
     // An object outside a database carries no meta; a tag term then matches nothing rather than throwing.
     return [];

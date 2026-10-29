@@ -37,7 +37,11 @@ export type FocusGroupTabBehavior =
   /** As `limited`, but `Tab` inside cycles rather than leaving; only `Escape` gets out. */
   | 'limited-trap-focus';
 
-/** Arrow-key axes. `grid` and `both` move through items in DOM order on all four arrows. */
+/**
+ * Arrow-key axes, as tabster's movers: `both` steps through items in DOM order on all four arrows; `grid` moves to the
+ * item on screen in the arrow's direction; `grid-linear` does that for up and down, while left and right step in DOM
+ * order, running on from one row's end to the next row's start.
+ */
 export type FocusGroupAxis = 'vertical' | 'horizontal' | 'grid' | 'grid-linear' | 'both';
 
 /** Things that are controls in their own right, whatever their `tabindex`. */
@@ -185,9 +189,17 @@ export const findLastFocusable = (container: HTMLElement | null | undefined): HT
 /**
  * Top-level arrow-navigation targets within `container`: tabbable elements and nested group
  * containers, without descending into either. A nested group is one stop, which is what makes a
- * row holding its own controls a single arrow step rather than several.
+ * row holding its own controls a single arrow step rather than several. A `selector` names the
+ * targets outright instead, at any depth — a board's cards across its columns, but not the
+ * columns' own header controls.
  */
-export const getFocusItems = (container: HTMLElement): HTMLElement[] => {
+export const getFocusItems = (container: HTMLElement, selector?: string): HTMLElement[] => {
+  if (selector) {
+    return Array.from(container.querySelectorAll<HTMLElement>(selector)).filter(
+      (element) =>
+        !isSentinel(element) && !element.closest('[inert],[hidden],[aria-hidden="true"]') && isRendered(element),
+    );
+  }
   const items: HTMLElement[] = [];
   const collect = (parent: Element) => {
     for (const child of Array.from(parent.children) as HTMLElement[]) {

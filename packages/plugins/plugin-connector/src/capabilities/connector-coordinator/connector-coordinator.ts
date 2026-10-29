@@ -24,14 +24,15 @@ import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { OAuthProvider } from '@dxos/protocols';
 
-import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from '../../Binding.ts';
 import { ConnectorCommandError } from '../../commands/errors.ts';
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants.ts';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors.ts';
+import { ConnectorNamespace } from '../../namespace.ts';
 import * as SyncTemplate from '../../SyncTemplate.ts';
 import { autoSyncConnection } from './auto-sync.ts';
 import { createSingleCursor } from './create-single-cursor.ts';
@@ -54,6 +55,9 @@ type Pending = {
   connector: ConnectorSpec.ConnectorEntry;
   existingTarget?: Ref.Ref<Obj.Any>;
 };
+
+/** A connection ready to persist; `token` is absent for a service that needs no auth. */
+type Finalize = Omit<Pending, 'token'> & { token?: AccessToken.AccessToken };
 
 const resolveConnector = (
   getEntries: () => ConnectorSpec.ConnectorEntry[],
@@ -133,10 +137,10 @@ const runOnTokenCreated = (
 const reportOAuthRejected = (invoker: Operation.OperationService, descriptionKey: string): Effect.Effect<void, never> =>
   Effect.ignore(
     invoker.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}.oauth-rejected`,
+      id: `${ConnectorNamespace.key}.oauth-rejected`,
       icon: 'ph--warning--regular',
-      title: ['oauth-rejected.title', { ns: meta.profile.key }],
-      description: [descriptionKey, { ns: meta.profile.key }],
+      title: ['oauth-rejected.title', { ns: ConnectorNamespace.key }],
+      description: [descriptionKey, { ns: ConnectorNamespace.key }],
     }),
   );
 
@@ -144,9 +148,9 @@ const reportOAuthRejected = (invoker: Operation.OperationService, descriptionKey
 const reportOAuthFailed = (invoker: Operation.OperationService, reason: string): Effect.Effect<void, never> =>
   Effect.ignore(
     invoker.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}.oauth-failed`,
+      id: `${ConnectorNamespace.key}.oauth-failed`,
       icon: 'ph--warning--regular',
-      title: ['oauth-failed.title', { ns: meta.profile.key }],
+      title: ['oauth-failed.title', { ns: ConnectorNamespace.key }],
       description: reason,
     }),
   );
@@ -160,6 +164,9 @@ const navigateToNewConnection = (
     .invoke(LayoutOperation.Open, {
       subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
+      // Beside the plank the flow started from when the deck already holds several (Connections opened
+      // from a chat), so creating one does not close the chat; on its own, it navigates.
+      disposition: 'auto',
     })
     .pipe(Effect.catch((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
@@ -175,6 +182,7 @@ const openCreateSyncRoutineDialog = (
   connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
   subject: Obj.Unknown,
+  { priority }: { priority?: string } = {},
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const result = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
@@ -189,7 +197,7 @@ const openCreateSyncRoutineDialog = (
     const created = result?.target;
     if (created) {
       Effect.runFork(
-        Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+        Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
           Effect.provideService(Capability.Service, capabilities),
           Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
           // A force-run EDGE fails other than as switched off arrives as a defect, which the typed
@@ -209,9 +217,12 @@ const openSyncTargetsDialogAfterConnectionCreated = (
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { targets } = yield* invoker.invoke(getTargets, {
-      connection: Ref.make(persistedConnection),
-    });
+    // The space carries the services a connector's targets lookup may need, such as credentials.
+    const { targets } = yield* invoker.invoke(
+      getTargets,
+      { connection: Ref.make(persistedConnection) },
+      { spaceId: Obj.getDatabase(persistedConnection)?.spaceId },
+    );
     yield* invoker.invoke(LayoutOperation.UpdateDialog, {
       subject: SYNC_TARGETS_DIALOG,
       state: true,
@@ -229,21 +240,27 @@ const finalizePendingEntry = (
   invoker: Operation.OperationService,
   capabilities: CapabilityManager.CapabilityManager,
   serviceResolver: ServiceResolver.ServiceResolver,
-  entry: Pending,
+  entry: Finalize,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, connection, db, connector, existingTarget } = entry;
-    const persistedToken = db.add(token);
     const persistedConnection = db.add(connection);
-    Obj.setParent(persistedToken, persistedConnection);
+    if (token) {
+      const persistedToken = db.add(token);
+      Obj.setParent(persistedToken, persistedConnection);
+      yield* runOnTokenCreated(connector, serviceResolver, db, {
+        accessToken: persistedToken,
+        connection: persistedConnection,
+        existingTarget,
+      });
+    }
 
-    yield* runOnTokenCreated(connector, serviceResolver, db, {
-      accessToken: persistedToken,
-      connection: persistedConnection,
-      existingTarget,
-    });
-
-    if (connector.sync?.getTargets) {
+    if (!connector.sync) {
+      // Nothing to bind: the connection is the whole result (an API key, an MCP server).
+      if (!existingTarget) {
+        yield* navigateToNewConnection(invoker, db, persistedConnection.id);
+      }
+    } else if (connector.sync.getTargets) {
       // Multi-target: let the user pick which remote targets to bind.
       yield* Effect.all(
         [
@@ -267,10 +284,12 @@ const finalizePendingEntry = (
       }
       if (bound?.needsSyncRoutine) {
         // Ordered after navigation so the dialog opens over the surface the user lands on.
-        yield* openCreateSyncRoutineDialog(invoker, capabilities, db, connector, persistedConnection, bound.target);
+        yield* openCreateSyncRoutineDialog(invoker, capabilities, db, connector, persistedConnection, bound.target, {
+          priority: bound.cursor.id,
+        });
       } else {
         // Ordered after navigation so the user lands on the target while the first sync fills it in.
-        yield* autoSyncConnection(invoker, capabilities, db, connector, persistedConnection);
+        yield* autoSyncConnection(invoker, capabilities, db, connector, persistedConnection, bound?.cursor.id);
       }
     }
   });
@@ -378,6 +397,82 @@ export default Capability.makeModule(
 
     const mapCoordinatorError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
 
+    /**
+     * Draft the connection and its token, record the flow for the callback (and for redirect
+     * recovery), and send the user to the authorization server. `mcp` marks a custom MCP server,
+     * whose authorization server EDGE discovers from the endpoint's URL.
+     */
+    const startOAuth = ({
+      db,
+      spaceId,
+      connector,
+      oauth,
+      source,
+      account,
+      loginHint,
+      existingTarget,
+      mcp,
+    }: {
+      db: Database.Database;
+      spaceId: Key.SpaceId;
+      connector: ConnectorSpec.ConnectorEntry;
+      oauth: ConnectorSpec.ConnectorOAuthSpec;
+      source: string;
+      account?: string;
+      loginHint?: string;
+      existingTarget?: Ref.Ref<Obj.Any>;
+      mcp?: Connection.McpEndpoint;
+    }) =>
+      Effect.gen(function* () {
+        const label = connector.label ?? connector.id;
+        const token = Obj.make(AccessToken.AccessToken, {
+          source,
+          ...(account ? { account } : {}),
+          scopes: [...oauth.scopes],
+          token: '',
+        });
+        const connection = Obj.make(Connection.Connection, {
+          name: mcp ? source : label,
+          connectorId: connector.id,
+          accessToken: Ref.make(token),
+          ...(mcp ? { mcp } : {}),
+        });
+
+        pending.set(token.id, { mode: 'create', token, connection, db, connector, existingTarget });
+
+        // Written for all connectors: if window.opener is lost during auth, Edge
+        // redirects the popup to /redirect/oauth and this snapshot is the only
+        // recovery path.
+        writePendingSnapshot(token.id, {
+          mode: 'create',
+          spaceId,
+          connectorId: connector.id,
+          tokenSnapshot: { source, account, scopes: oauth.scopes },
+          connectionSnapshot: { name: connection.name ?? label, connectorId: connector.id, ...(mcp ? { mcp } : {}) },
+          ...(existingTarget ? { existingTargetUri: existingTarget.uri } : {}),
+        });
+
+        const edge = getEdgeClient();
+        edgeOrigin = new URL(edge.baseUrl).origin;
+
+        yield* beginOAuthFlow(
+          edge,
+          spaceId,
+          { kind: connector.kind, oauth, ...(mcp ? { resource: mcp.url } : {}) },
+          token.id,
+          loginHint,
+        ).pipe(
+          Effect.tapError(() =>
+            Effect.sync(() => {
+              pending.delete(token.id);
+              deletePendingSnapshot(token.id);
+            }),
+          ),
+        );
+
+        return { kind: 'oauth-started', draftConnectionId: connection.id } as const;
+      });
+
     const createConnection: ConnectorCoordination.ConnectorCoordinator['createConnection'] = ({
       db,
       spaceId,
@@ -405,53 +500,20 @@ export default Capability.makeModule(
           return { kind: 'dialog-opened' } as const;
         }
 
-        const oauth = connector.oauth;
-        const label = connector.label ?? connector.id;
         // Pre-flight forms (atproto handle, …) supply a `loginHint` that
         // is meaningful as the account label too — store it so the
         // resulting Connection shows e.g. `user.bsky.social` rather than
         // just `bsky.app`.
-        const account = loginHint;
-
-        const token = Obj.make(AccessToken.AccessToken, {
-          source: connector.source,
-          ...(account ? { account } : {}),
-          scopes: [...oauth.scopes],
-          token: '',
-        });
-        const connection = Obj.make(Connection.Connection, {
-          name: label,
-          connectorId: connector.id,
-          accessToken: Ref.make(token),
-        });
-
-        pending.set(token.id, { mode: 'create', token, connection, db, connector, existingTarget });
-
-        // Written for all connectors: if window.opener is lost during auth, Edge
-        // redirects the popup to /redirect/oauth and this snapshot is the only
-        // recovery path.
-        writePendingSnapshot(token.id, {
-          mode: 'create',
+        return yield* startOAuth({
+          db,
           spaceId,
-          connectorId: connector.id,
-          tokenSnapshot: { source: connector.source, account, scopes: oauth.scopes },
-          connectionSnapshot: { name: label, connectorId: connector.id },
-          ...(existingTarget ? { existingTargetUri: existingTarget.uri } : {}),
+          connector,
+          oauth: connector.oauth,
+          source: connector.source,
+          account: loginHint,
+          loginHint,
+          existingTarget,
         });
-
-        const edge = getEdgeClient();
-        edgeOrigin = new URL(edge.baseUrl).origin;
-
-        yield* beginOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
-          Effect.tapError(() =>
-            Effect.sync(() => {
-              pending.delete(token.id);
-              deletePendingSnapshot(token.id);
-            }),
-          ),
-        );
-
-        return { kind: 'oauth-started', draftConnectionId: connection.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     const reauthenticate: ConnectorCoordination.ConnectorCoordinator['reauthenticate'] = ({
@@ -464,7 +526,7 @@ export default Capability.makeModule(
         if (!connector.oauth) {
           return yield* Effect.fail(new ConnectionNotReauthenticatableError(connector.id));
         }
-        const accessToken = yield* Database.load(connection.accessToken);
+        const accessToken = yield* Database.load(Connection.getAccessToken(connection));
 
         const oauth = connector.oauth;
         const spaceId = db.spaceId;
@@ -485,13 +547,13 @@ export default Capability.makeModule(
             name: connection.name ?? connector.label ?? connector.id,
             connectorId: connector.id,
           },
-          reauthAccessTokenUri: connection.accessToken.uri,
+          reauthAccessTokenUri: Connection.getAccessToken(connection).uri,
         });
 
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        yield* beginOAuthFlow(edge, spaceId, oauth, accessToken.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, { kind: connector.kind, oauth }, accessToken.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(accessToken.id);
@@ -575,6 +637,7 @@ export default Capability.makeModule(
         const connection = Obj.make(Connection.Connection, {
           name: snapshot.connectionSnapshot.name,
           connectorId: snapshot.connectionSnapshot.connectorId,
+          ...(snapshot.connectionSnapshot.mcp ? { mcp: snapshot.connectionSnapshot.mcp } : {}),
           accessToken: Ref.make(token),
         });
 
@@ -661,6 +724,18 @@ export default Capability.makeModule(
             existingTarget,
           });
           return { kind: 'connection-created', connectionId: result.connection.id } as const;
+        }
+
+        if (result.kind === 'mcp-oauth') {
+          return yield* startOAuth({
+            db,
+            spaceId,
+            connector,
+            oauth: { provider: OAuthProvider.MCP, scopes: [] },
+            source: new URL(result.endpoint.url).host,
+            existingTarget,
+            mcp: result.endpoint,
+          });
         }
 
         // OAuth pre-flight: re-enter createConnection with the captured loginHint.

@@ -205,6 +205,7 @@ const TestLayer = (
     failureCooldown?: Duration.Duration;
     livePollInterval?: Duration.Duration;
     spaceAwareResolver?: boolean;
+    traceSink?: Trace.Sink;
   } = {},
 ) =>
   Layer.empty.pipe(
@@ -238,7 +239,7 @@ const TestLayer = (
       ),
     ),
     Layer.provideMerge(Registry.layer),
-    Layer.provideMerge(Trace.layerNoop),
+    Layer.provideMerge(options.traceSink ? Layer.succeed(Trace.TraceSink, options.traceSink) : Trace.layerNoop),
   );
 
 /**
@@ -1612,6 +1613,37 @@ describe('TriggerDispatcher', () => {
         const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
         expect(triggerStatus?.retryPending).toBe(false);
       }, Effect.provide(TestLayer())),
+    );
+
+    // Each retry is a new process. Its trace names the first invocation's pid as `runId`, so the trace
+    // shows the invocations as one run.
+    const traced: Trace.Message[] = [];
+    it.effect(
+      'a retry traces as a continuation of the run that requested it',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
+          const op = yield* registerOperation(RetryOp);
+          const trigger = Trigger.make({ runnable: Ref.make(op), enabled: true, spec: Trigger.specDirect() });
+          yield* Database.add(trigger);
+          yield* dispatcher.invokeTrigger({ trigger, event: {} });
+          yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
+
+          const starts = traced
+            .filter((message) => !message.meta.parentPid)
+            .filter((message) => message.events.some((event) => event.type === Trace.OperationStart.key))
+            .map((message) => message.meta);
+          expect(starts.length).toBeGreaterThanOrEqual(3);
+          const [first, ...retries] = starts;
+          expect(first.runId).toBeUndefined();
+          expect(first.pid).toBeDefined();
+          for (const retry of retries) {
+            expect(retry.pid).not.toBe(first.pid);
+            expect(retry.runId).toBe(first.pid);
+          }
+        },
+        Effect.provide(TestLayer({ traceSink: { write: (message) => traced.push(message) } })),
+      ),
     );
 
     it.effect(

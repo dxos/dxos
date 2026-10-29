@@ -15,3 +15,9 @@ export class ConnectorKeyInvalidError extends BaseError.extend(
   'ConnectorKeyInvalidError',
   'The provider rejected this API key.',
 ) {}
+
+/** A custom MCP server could not be reached, or failed for a reason other than its credentials. */
+export class McpServerUnavailableError extends BaseError.extend(
+  'McpServerUnavailableError',
+  'The MCP server could not be reached.',
+) {}

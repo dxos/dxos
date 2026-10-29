@@ -14,7 +14,8 @@ tasks:
     inputs:
       - /tsconfig.base.json
       - tsconfig.json
-      - '@group(production)'
+      # Not `production`: `tsc` type-checks the tests too, and nothing else in CI does.
+      - '@group(sources)'
     outputs:
       - dist/
     options:

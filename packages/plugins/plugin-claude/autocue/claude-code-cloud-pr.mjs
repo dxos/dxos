@@ -208,15 +208,12 @@ export const steps = [
         value: 'Run it on Claude Code (cloud)',
         subtitle: 'An EDGE sandbox, on your Claude subscription',
       });
-      await demo.click({ selector: `${PLANK} [data-testid="assistant.options"]`, label: 'Chat options' });
-      const agentTab = page.locator('[data-testid="assistant.options.agent"]').first();
-      if ((await agentTab.getAttribute('aria-selected')) !== 'true') {
-        await demo.click({ selector: '[data-testid="assistant.options.agent"]', label: 'Agent' });
-      }
-      await demo.click({ selector: '[data-testid="assistant.agents.claude-code-edge"]', label: 'Claude Code (cloud)' });
-      await page.waitForTimeout(1_000);
-      await demo.press({ key: 'Escape' });
-      await page.locator(`${PLANK} [data-testid="assistant.agent"]:has-text("Claude Code (cloud)")`).waitFor();
+      const picker = `${PLANK} [data-testid="assistant.agent-picker"]`;
+      await demo.click({ selector: picker, label: 'Agent' });
+      await demo.click({ selector: '[data-testid="assistant.agents.claude-code"]', label: 'Claude Code' });
+      await demo.click({ selector: picker, label: 'Agent' });
+      await demo.click({ selector: '[data-testid="assistant.environment.edge"]', label: 'EDGE' });
+      await page.locator(`${picker}[data-location="edge"]:has-text("Claude Code")`).waitFor();
       await page.waitForTimeout(LINGER);
     },
   },

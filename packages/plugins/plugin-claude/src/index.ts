@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as ClaudePlugin from './ClaudePlugin.ts';
+export * from './agents/index.ts';
+export * as ClaudePlugin from '#meta';
 export * from '#skills';
 export * from '#types';

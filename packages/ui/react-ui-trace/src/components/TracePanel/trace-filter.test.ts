@@ -134,6 +134,13 @@ describe('filterTraceMessages', () => {
     const messages = [message('a', 'b'), message('b', 'a')];
     expect(filterTraceMessages(messages, ['z'])).toEqual([]);
   });
+
+  test("a selected run keeps its run-again continuations and their descendants'", ({ expect }) => {
+    const continuation = (pid: string, runId: string): Trace.Message =>
+      Obj.make(Trace.Message, { meta: { pid, runId }, isEphemeral: false, events: [] });
+    const messages = [message('first'), continuation('second', 'first'), message('tool', 'second'), message('other')];
+    expect(filterTraceMessages(messages, ['first']).map((m) => m.meta.pid)).toEqual(['first', 'second', 'tool']);
+  });
 });
 
 describe('filterProcessesBySelection', () => {

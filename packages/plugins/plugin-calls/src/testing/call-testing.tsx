@@ -11,7 +11,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 
-import { CallsPlugin } from '#plugin';
+import * as CallsPlugin from '#meta';
 import { CallsCapabilities } from '#types';
 
 import { type CallManager, type GlobalState, type MediaState, type UserState } from '../calls/index.ts';
@@ -31,7 +31,7 @@ const storyConfig = new Config({
  * Story decorator providing a live (but unconnected) `CallManager` via the real `CallsPlugin`.
  * Pair with `useSeedCallManager` to present deterministic participants without a swarm.
  */
-export const withCallManager = () =>
+export const withCallManager = ({ displayName }: { displayName?: string } = {}) =>
   withPluginManager({
     plugins: [
       ...CorePlugins.make(),
@@ -39,10 +39,10 @@ export const withCallManager = () =>
         config: storyConfig,
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            yield* initializeIdentity(client);
+            yield* initializeIdentity(client, { displayName });
           }),
       }),
-      CallsPlugin(),
+      CallsPlugin.make(),
     ],
   });
 

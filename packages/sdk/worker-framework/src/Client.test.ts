@@ -551,6 +551,50 @@ describe('Connection multi-client', () => {
     expect(second.failures).toEqual([]);
   });
 
+  test('on leader handover the new leader reconnects as owner and the remaining guest as guest', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const leader = makeConnection(hub, keys);
+    await asyncTimeout(leader.connection.open(), 5_000);
+    expect((await asyncTimeout(leader.connected, 5_000)).isOwner).toBe(true);
+
+    // Queued on the leader lock in this order, so the first follower is the one elected next.
+    const successor = makeConnection(hub, keys);
+    const guest = makeConnection(hub, keys);
+    for (const tab of [successor, guest]) {
+      await asyncTimeout(tab.connection.open(), 5_000);
+      onTestFinished(async () => {
+        await tab.connection.close();
+      });
+      expect((await asyncTimeout(tab.connected, 5_000)).isOwner).toBe(false);
+    }
+
+    const successorReconnected = new Trigger<{ isOwner: boolean }>();
+    const guestReconnected = new Trigger<{ isOwner: boolean }>();
+    successor.connection.reconnected.on((event) => {
+      successorReconnected.wake(event);
+    });
+    guest.connection.reconnected.on((event) => {
+      guestReconnected.wake(event);
+    });
+
+    // The leader tab reloading: its lock and worker go away with it.
+    await leader.connection.close();
+
+    // A reload keyed on this event would release the lock again and restart the handover in the other tab.
+    expect(await asyncTimeout(successorReconnected.wait(), 10_000)).toEqual({ isOwner: true });
+    expect(await asyncTimeout(guestReconnected.wait(), 10_000)).toEqual({ isOwner: false });
+
+    // The reloaded tab joins as a guest of the new leader on its initial connection, which fires no reconnect.
+    const reloaded = makeConnection(hub, keys);
+    await asyncTimeout(reloaded.connection.open(), 5_000);
+    onTestFinished(async () => {
+      await reloaded.connection.close();
+    });
+    expect((await asyncTimeout(reloaded.connected, 5_000)).isOwner).toBe(false);
+  });
+
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -670,6 +714,38 @@ describe('Worker displacement', () => {
 
     const successor = startBareWorker(storageLockKey);
     await asyncTimeout(successor.listening, 5_000);
+    await asyncTimeout(incumbent.closed, 5_000);
+  }, 20_000);
+
+  test('a displaced worker tells its tab which worker displaced it', async () => {
+    const { storageLockKey } = uniqueKeys();
+
+    const incumbent = startBareWorker(storageLockKey);
+    await asyncTimeout(incumbent.listening, 5_000);
+
+    const successor = startBareWorker(storageLockKey);
+    const successorId = await asyncTimeout(successor.listening, 5_000);
+    const report = await asyncTimeout(incumbent.shutdownReport, 5_000);
+
+    expect(successorId).toBeDefined();
+    expect(report.reason).toBe('displaced');
+    expect(report.displacedBy?.workerId).toBe(successorId);
+    await asyncTimeout(incumbent.closed, 5_000);
+  }, 20_000);
+
+  test('a stop from a worker that predates the issuer fields still displaces, reported without an issuer', async () => {
+    const { storageLockKey } = uniqueKeys();
+
+    const incumbent = startBareWorker(storageLockKey);
+    await asyncTimeout(incumbent.listening, 5_000);
+
+    const legacy = new BroadcastChannel(displaceChannelFor(storageLockKey));
+    onTestFinished(() => legacy.close());
+    legacy.postMessage({ action: 'stop' });
+
+    const report = await asyncTimeout(incumbent.shutdownReport, 5_000);
+    expect(report.reason).toBe('displaced');
+    expect(report.displacedBy).toEqual({ workerId: undefined, name: undefined });
     await asyncTimeout(incumbent.closed, 5_000);
   }, 20_000);
 
@@ -1003,11 +1079,15 @@ const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { dis
   const channel = new MessageChannel();
   channel.port1.start();
   channel.port2.start();
-  const listening = new Trigger();
+  const listening = new Trigger<string | undefined>();
   const closed = new Trigger();
+  const shutdownReport = new Trigger<WorkerProtocol.DedicatedWorkerShuttingDownMessage>();
   channel.port2.addEventListener('message', (event) => {
-    if ((event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data.type === 'listening') {
-      listening.wake();
+    const message = (event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data;
+    if (message.type === 'listening') {
+      listening.wake(message.workerId);
+    } else if (message.type === 'shutting-down') {
+      shutdownReport.wake(message);
     }
   });
   Worker.run({
@@ -1024,7 +1104,7 @@ const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { dis
     displaceGraceTimeout,
     createRuntime: () => Effect.succeed({ createSession: () => Effect.never }),
   });
-  return { listening: listening.wait(), closed: closed.wait() };
+  return { listening: listening.wait(), closed: closed.wait(), shutdownReport: shutdownReport.wait() };
 };
 
 /**

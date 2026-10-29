@@ -8,8 +8,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
-
+import { SandboxNamespace } from '../../namespace.ts';
 import type { BranchInfo, CommitInfo, RepositoryFile, TreeEntry } from '../../services/RepositoryClient.ts';
 import { RepositoryFileTree } from './RepositoryFileTree.tsx';
 import { RepositoryFileView } from './RepositoryFileView.tsx';
@@ -64,7 +63,7 @@ export const RepositoryViewer = ({
   onSelectCommit,
   onLoadMoreCommits,
 }: RepositoryViewerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SandboxNamespace.key);
   const empty = !loading && !error && branches.length === 0;
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
 

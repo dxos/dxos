@@ -55,6 +55,7 @@ const CONTENT_TYPES = {
   '.json': 'application/json',
   '.ndjson': 'application/x-ndjson',
   '.txt': 'text/plain',
+  '.html': 'text/html; charset=utf-8',
   '.md': 'text/markdown',
   '.log': 'text/plain',
   '.zip': 'application/zip',
@@ -175,7 +176,13 @@ const main = async () => {
   // Verify with a GET through the public URL rather than trusting the PUT: a HEAD can answer from a different
   // cache entry than the body a viewer downloads, and a wrong type or truncated body is invisible until then.
   const head = await fetch(url, { method: 'GET' });
-  await head.body?.cancel();
+  // The CDN compresses text (HTML, JSON, SVG) on the way out, dropping its length, ETag and ranges, so text is checked
+  // by its decoded body; media and archives, which can be large, are checked by headers without downloading them.
+  const text = /^(text\/|application\/(json|x-ndjson)|image\/svg\+xml)/.test(contentType);
+  const downloaded = text ? Buffer.from(await head.arrayBuffer()) : undefined;
+  if (!text) {
+    await head.body?.cancel();
+  }
   const served = {
     status: head.status,
     type: head.headers.get('content-type'),
@@ -187,9 +194,13 @@ const main = async () => {
   const problems = [
     served.status !== 200 && `public URL returned ${served.status}`,
     served.type !== contentType && `served content-type is ${served.type}, expected ${contentType}`,
-    served.length !== body.length && `served ${served.length} bytes, uploaded ${body.length}`,
-    served.etag !== localMd5 && `ETag ${served.etag} does not match local md5 ${localMd5}`,
-    served.ranges !== 'bytes' && 'no Accept-Ranges: bytes — a viewer will not be able to seek',
+    ...(text
+      ? [createHash('md5').update(downloaded).digest('hex') !== localMd5 && 'served body does not match the upload']
+      : [
+          served.length !== body.length && `served ${served.length} bytes, uploaded ${body.length}`,
+          served.etag !== localMd5 && `ETag ${served.etag} does not match local md5 ${localMd5}`,
+          served.ranges !== 'bytes' && 'no Accept-Ranges: bytes — a viewer will not be able to seek',
+        ]),
   ].filter(Boolean);
 
   if (problems.length > 0) {

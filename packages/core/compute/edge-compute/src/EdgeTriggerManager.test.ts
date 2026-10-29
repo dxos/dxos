@@ -14,6 +14,7 @@ import { vi } from 'vitest';
 
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
 import * as Trigger from '@dxos/compute/Trigger';
+import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { SpaceId } from '@dxos/keys';
 import { EdgeCallFailedError } from '@dxos/protocols';
@@ -40,6 +41,18 @@ describe('EdgeTriggerManager', () => {
 
       expect(Exit.isSuccess(yield* Effect.exit(Fiber.join(fiber)))).toBe(true);
       expect(forceRun).toHaveBeenCalledTimes(3);
+    }),
+  );
+
+  it.effect('carries the fire event data to edge', () =>
+    Effect.gen(function* () {
+      const edgeClient = new EdgeHttpClient('https://edge.example.com');
+      vi.spyOn(edgeClient, 'getSpaceTriggers').mockResolvedValue({ isActive: true, triggers: [] });
+      const forceRun = vi.spyOn(edgeClient, 'forceRunCronTrigger').mockResolvedValue(undefined);
+
+      yield* Fiber.join(yield* forkInvoke(edgeClient, { data: { priority: 'binding' } }));
+
+      expect(forceRun.mock.calls[0][3]).toEqual({ data: { priority: 'binding' } });
     }),
   );
 
@@ -177,11 +190,11 @@ const identityNotAssociatedError = () =>
  * Force-runs a trigger through a manager backed by `edgeClient`, on a forked fiber so the caller
  * can advance the `TestClock` across the retry backoff.
  */
-const forkInvoke = (edgeClient: EdgeHttpClient) =>
+const forkInvoke = (edgeClient: EdgeHttpClient, event: TriggerEvent.TriggerEvent = { tick: 0 }) =>
   Effect.gen(function* () {
     const manager = yield* RemoteTriggerManager.Service;
     const trigger = Trigger.make({ enabled: true, remote: true, spec: Trigger.specTimer('*/5 * * * *') });
-    yield* manager.invokeTrigger({ trigger, event: { tick: 0 } });
+    yield* manager.invokeTrigger({ trigger, event });
   }).pipe(
     Effect.provide(
       Layer.provideMerge(

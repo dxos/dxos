@@ -8,6 +8,8 @@
   :root {
     --dx-focus-ring-color: var(--color-focus, oklch(70.5% 0.213 47.604));
     --dx-focus-ring-width: 2px;
+    /* The selected item's edge in every collection; neutral, so a selection that has lost focus never reads as focus. */
+    --dx-selected-color: var(--color-focus-ring-subtle);
     /* One timing for every open/close: content arriving decelerates, content leaving accelerates away. */
     --dx-disclosure-duration: var(--duration-tree-disclosure, 200ms);
     --dx-disclosure-ease-open: ease-out;
@@ -462,7 +464,7 @@
     max-width: 100%;
   }
   /* A scrolling block (a log, a list) has no width of its own to keep, so it fills the row under the title. */
-  .dx-field[data-layout='row'] > .dx-scroll-root {
+  .dx-field[data-layout='row'] > :is(.dx-scroll-root, .dx-listbox) {
     justify-self: stretch;
   }
   /* The space under the title is the header's own, so the description and control below it still share a top. */
@@ -488,10 +490,11 @@
       grid-column: content-start / control;
       margin-block-end: 0;
     }
-    .dx-field[data-layout='row'] > :is(.dx-field-header, .dx-field-error, .dx-scroll-root) {
+    .dx-field[data-layout='row'] > :is(.dx-field-header, .dx-field-error, .dx-scroll-root, .dx-listbox) {
       grid-column: content;
     }
-    .dx-field[data-layout='row'] > .dx-field-error {
+    /* Full-width blocks take the next free row, below the description rather than over it. */
+    .dx-field[data-layout='row'] > :is(.dx-field-error, .dx-scroll-root, .dx-listbox) {
       grid-row: auto;
     }
   }
@@ -832,13 +835,9 @@
       var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
     --dx-arrow-border: var(--color-separator);
   }
-  /* An outline, not the shared inset ring: outlines paint after descendants, so item highlights cannot cover it. */
+  /* No focus ring: the highlighted item shows where focus is, and a ringed popup reads as an error. */
   .dx-popup:focus {
     outline: none;
-  }
-  .dx-popup:focus-visible {
-    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
-    outline-offset: calc(-1 * var(--dx-focus-ring-width));
   }
   /*
    * A scrolling popup (Menu, Select, Combobox): the ScrollArea frame is the surface and the Ark content its viewport,
@@ -850,7 +849,7 @@
     max-width: var(--available-width, none);
     max-height: min(var(--available-height, 20rem), 20rem);
     padding-block: 0;
-    /* The viewport's focus ring is inset at the frame's edge, so the overlay thumb sits inside it. */
+    /* Keeps the overlay thumb clear of the frame's rounded edge. */
     --scroll-thumb-inset: var(--dx-focus-ring-width);
   }
   /* A menu grows to the space available on its side (the viewport less the safe area) before it scrolls. */
@@ -872,22 +871,6 @@
   }
   .dx-popup > .dx-scroll-viewport:focus {
     outline: none;
-  }
-  .dx-popup > .dx-scroll-viewport:focus-visible {
-    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
-    outline-offset: calc(-1 * var(--dx-focus-ring-width));
-  }
-  /* The arrow continues the focus ring, so the ring outlines the popup and its arrow as one shape. */
-  .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) {
-    --dx-arrow-border: var(--dx-focus-ring-color);
-    --dx-arrow-border-width: var(--dx-focus-ring-width);
-  }
-  /*
-   * The ring is inset, so it crosses the arrow's base: the arrow rises above it, clipped to its outer half plus the
-   * ring's band, so its fill opens the ring under the base without covering an item's highlight further in.
-   */
-  .dx-popup:is(:focus-visible, :has(> .dx-scroll-viewport:focus-visible)) > .dx-arrow {
-    z-index: 1;
   }
   .dx-popup:has(> [data-placement^='bottom']) > .dx-arrow {
     clip-path: inset(0 0 calc(50% - var(--dx-focus-ring-width)) 0);
@@ -1005,9 +988,11 @@
     line-height: var(--dx-line-height);
   }
   /* The toolbar's ScrollArea frame takes the place the toolbar would, and never sizes it without its items. */
+  /* Fills its container; beside siblings in a row it shrinks to what is left, but a column cannot squeeze its height. */
   .dx-scroll-root.dx-toolbar-scroll {
-    flex-shrink: 0;
     width: 100%;
+    min-width: 0;
+    min-height: fit-content;
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),
@@ -1016,13 +1001,14 @@
     margin-inline: var(--dx-control-inset);
   }
   /*
-   * A visible edge at either end of the toolbar starts one gap in, on a list's icon column; an icon-only Button's icon
-   * already sits there in its square cell, so only its hover fill reaches the inset.
+   * A visible edge at either end of the toolbar starts one gap in, whether it is a labelled control or a square icon
+   * button, so the two ends match. A Block is a cell of its own, even when empty (a Board column's place for a drag
+   * handle it does not have).
    */
-  .dx-toolbar:has(> :first-child:not([data-square], .dx-toolbar-text, .dx-toolbar-gap)) {
+  .dx-toolbar:has(> :first-child:not(.dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
     padding-inline-start: calc(var(--dx-gap-size) - var(--dx-control-inset));
   }
-  .dx-toolbar:has(> :last-child:not([data-square], .dx-toolbar-text, .dx-toolbar-gap)) {
+  .dx-toolbar:has(> :last-child:not(.dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
     padding-inline-end: calc(var(--dx-gap-size) - var(--dx-control-inset));
   }
   .dx-toolbar > .dx-input {

@@ -1,0 +1,33 @@
+diagram flow=down
+group echo "ECHO" {
+  node Subject "Subject (any Obj)" ref="packages/core/echo/echo/src/Obj.ts"
+  node RootFeed "Root feed (stage 2)" stroke=dashed ref="packages/core/echo/echo/src/Feed.ts"
+  node Feed "Feed" ref="packages/core/echo/echo/src/Feed.ts"
+  node Message "Message" ref="packages/sdk/types/src/types/Message.ts"
+}
+group review "plugin-review" {
+  node Thread "Thread" ref="packages/sdk/types/src/types/Thread.ts"
+  node AnchoredTo "AnchoredTo" ref="packages/sdk/types/src/types/AnchoredTo.ts"
+  node Settings "Review Settings" ref="packages/plugins/plugin-review/src/types/Settings.ts"
+  node Runner "Runner (toolkit)" ref="packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts"
+}
+group assistant "plugin-assistant" {
+  node CommentRunner "Comment runner" ref="packages/plugins/plugin-assistant/src/capabilities/index.ts"
+  node Chat "Chat" ref="packages/core/compute/assistant/src/types/Chat.ts"
+  node Context "SubjectContext" ref="packages/plugins/plugin-assistant/src/types/AssistantCapabilities.ts"
+  node AgentSvc "AgentService" ref="packages/core/compute/compute/src/AgentService.ts"
+}
+edge AnchoredTo -> Thread "source"
+edge AnchoredTo -> Subject "target"
+edge Thread composes Feed "feed"
+edge Feed one-to-many Message "items"
+edge Thread:bottom composes Chat:right "hidden chat"
+edge Chat:bottom -> Feed:right "not owned" stroke=dashed
+edge Chat -> Subject "bound subject"
+edge Settings -> Thread "agent mode"
+edge CommentRunner implements Runner
+edge CommentRunner -> Chat "run turn"
+edge Context -> Chat "binds skills"
+edge AgentSvc -> Feed "appends replies"
+edge Subject composes RootFeed stroke=dashed
+edge RootFeed composes Feed "branch" stroke=dashed

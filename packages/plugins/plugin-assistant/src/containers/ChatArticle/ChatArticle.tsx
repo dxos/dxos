@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -16,13 +14,12 @@ import { useIdentity } from '@dxos/halo-react';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { useRegistry } from '@dxos/react-client/echo';
 import { type ChatView } from '@dxos/react-ui-assistant';
-import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatModel, useChatServices, usePlatform, usePresets, useSelectionContext } from '#hooks';
+import { useChatModel, useChatServices, usePlatform, usePresets, usePromptActions, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
@@ -60,8 +57,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender });
     const getContext = useSelectionContext(companionTo);
 
-    // Subscribe to the view type via `useObject` so the thread re-renders when ChatOptions changes it;
-    // a direct `chat.viewType` read in render does not establish a reactive dependency.
     const [chatViewType] = useObject(chat, 'viewType');
     const viewType = (chatViewType as ChatView | undefined) ?? settings.chatView;
 
@@ -70,22 +65,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
 
-    // Actions other plugins filed on this chat's node — the microphone among them — so a contributor
-    // reaches the prompt without plugin-assistant importing it (or knowing it exists).
-    //
-    // Sourced from this surface's own node rather than `attendableId`: a companion shares the host
-    // plank's attention id (`CompanionPlank`), so reading actions from it hands a chat attached to a
-    // document that document's toolbar — its comment action, and a second copy of its microphone
-    // keyed to the document. `nodeId` is the companion node itself, which is where a contributor
-    // matching on the chat files them; it falls back to the object for a surface rendered outside a
-    // plank. Filtered to the prompt surface for the same reason the id is: an action on the chat
-    // acts on the chat, and only some of those belong beside the text being composed.
-    const { graph } = ToolkitHooks.useAppGraph();
-    const actionNodeId = nodeId ?? (chat && Obj.getURI(chat));
-    const customActions = useMemo(
-      () => Atom.make((get) => graphActions(graph, get, actionNodeId, { filter: isPromptAction })),
-      [graph, actionNodeId],
-    );
+    // Hosted by this surface's own graph node, which every host passes as `nodeId`; a companion's
+    // `attendableId` is its host plank's.
+    const prompt = usePromptActions(nodeId);
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.
@@ -157,15 +139,14 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   </Layout.Grid>
                 )}
 
-                {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
                   autoFocus={!companionTo}
                   attendableId={attendableId}
                   companionTo={companionTo}
-                  customActions={customActions}
-                  nodeId={actionNodeId}
+                  customActions={prompt.actions}
+                  nodeId={prompt.nodeId}
                   preset={preset?.id}
                 />
               </Layout.Flex>

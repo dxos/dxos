@@ -16,7 +16,9 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
-import { SpacePlugin } from '#plugin';
+import * as SpacePlugin from '#meta';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin.make({})] });
 
 /**
  * Creating an identity must provision the spaces every profile starts with, wherever it happens:
@@ -30,7 +32,7 @@ describe('identity creation', () => {
 
   test('provisions the default and settings spaces', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SpacePlugin({})],
+      plugins: [ClientPlugin.make({}), SpacePlugin.make({})],
     });
 
     const client = harness.get(ClientCapabilities.Client);

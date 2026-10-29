@@ -4,6 +4,8 @@
 // TODO(wittjosiah): Factor hooks out of plugin-assistant into a standalone package.
 
 export * from './useSkillRegistry.ts';
+export * from './useAttachFile.ts';
+export * from './useChatAgent.ts';
 export * from './useChatKeymap.ts';
 export * from './useChatModel.ts';
 export * from './useChatServices.ts';
@@ -12,11 +14,13 @@ export * from './useContextBinder.ts';
 export * from './useContextObjects.ts';
 export { useDebug } from './useDebug.ts';
 export * from './useFilteredTypes.ts';
-export * from './useMcpServer.ts';
+export * from './useMcpConnections.ts';
+export * from './useObjectMentions.ts';
 export * from './usePlatform.ts';
 export * from './usePresets.ts';
-export * from './useReferencesProvider.ts';
+export * from './usePromptActions.ts';
 export * from './useSelectionContext.ts';
+export * from './useSlashCommands.ts';
 export * from './useHomeSuggestions.ts';
 export * from './useProcessEphemeralStatus.ts';
 export * from './useSessionTimeline.ts';

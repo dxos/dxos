@@ -33,7 +33,7 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
-import { InboxPlugin } from '#plugin';
+import * as InboxPlugin from '#meta';
 import { initializeMailbox, seedSummaries } from '#testing';
 import { InboxCapabilities, Mailbox } from '#types';
 
@@ -220,7 +220,7 @@ const meta = {
                     Connection.make({ name: 'Story Mail', accessToken: Ref.make(accessToken) }),
                   );
                   defaultSpace.db.add(
-                    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }),
+                    Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(mailbox) }),
                   );
                 }
               }
@@ -231,7 +231,7 @@ const meta = {
 
         StorybookPlugin.make({}),
         ProgressPlugin.make(),
-        InboxPlugin(),
+        InboxPlugin.make(),
         PreviewPlugin.make(),
         MockDeckOperationsPlugin(),
       ],

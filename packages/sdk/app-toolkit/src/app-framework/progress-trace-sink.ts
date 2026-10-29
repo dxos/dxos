@@ -64,6 +64,15 @@ type MonitorEntry = {
   ended?: boolean;
   /** Last phase index seen, so a change of phase can clear the count belonging to the old one. */
   phase?: number;
+  /** Count and total the meter shows, so a continuation's numbers can be placed after them. */
+  shown: { current?: number; total?: number };
+  /**
+   * What the chain had shown when a new pid took over, held until that pid's first count says whether
+   * it restarted from zero; see {@link applyCounts}.
+   */
+  handover?: { current?: number; total?: number };
+  /** Added to the count and total the current pid reports, once it turns out to count from zero. */
+  offset?: number;
 };
 
 /**
@@ -79,6 +88,12 @@ type Tombstone = { scope: 'pid'; pid: string } | { scope: 'run'; at: number };
  * rather than a permanently suppressed one. Well under a sync trigger's schedule.
  */
 const RUN_TOMBSTONE_TTL_MS = 60_000;
+
+/**
+ * How long after a pid's terminal its own non-terminal updates are taken as stragglers. Reordered
+ * broadcasts trail by milliseconds; past this, a long-lived process reporting the same key again is a new run.
+ */
+const FINISHED_REORDER_WINDOW_MS = 10_000;
 
 /**
  * How long a monitor may go without a status update before the sink stops believing in it.
@@ -136,6 +151,9 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
   // process/edge abort lands) cannot resurrect the removed monitor. Release is scoped so a genuinely
   // later run still shows — see {@link TraceSinkOptions.cancelScope}.
   const cancelled = new Map<string, Tombstone>();
+  // The pid that last reported a terminal, per key: broadcasts can arrive out of order, so an update the
+  // run sent before its terminal can land after it and must not reopen a meter nothing will close.
+  const finished = new Map<string, { pid: string; at: number }>();
 
   const stallTimeout = options.stallTimeout ?? DEFAULT_STALL_TIMEOUT_MS;
   const stallBounded = Number.isFinite(stallTimeout) && stallTimeout > 0;
@@ -217,6 +235,9 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       // total this run already reported would go with it: the meter falls back to a sweep mid-run,
       // having counted moments earlier. Keep the handle and re-point the target instead. The stall
       // timer carries over untouched — a continuation is the same run, so its clock keeps running.
+      if (target.pid !== undefined && existing.target.pid !== undefined && target.pid !== existing.target.pid) {
+        existing.handover = { ...existing.shown };
+      }
       existing.target = target;
       return existing.handle;
     }
@@ -231,8 +252,55 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
     // an edge trigger (trigger); the handler routes local vs edge by runtime.
     const onCancel = options.cancelProcess && (target.pid || target.trigger) ? makeOnCancel(key) : undefined;
     const handle = registry.register(key, { label, onCancel });
-    monitors.set(key, { handle, target });
+    monitors.set(key, { handle, target, shown: {} });
     return handle;
+  };
+
+  /**
+   * Applies an update's count and total, placed after the count earlier runs of the chain reached.
+   *
+   * A run that yields `Operation.runAgain()` continues under a new pid, and the meter is one meter for
+   * the whole chain. A continuation that keeps counting where the last one stopped needs nothing. One
+   * that restarts from zero (mail sync: each run counts the messages it fetches) would drag the bar back
+   * to the start, so the count the chain reached is added to its count and its total. The first count
+   * from the new pid tells the two apart. A run's total covers its own work and, when the producer can
+   * estimate it, the work left after it, so the offset makes it the chain's total.
+   *
+   * On a restart the old total stays until the new run reports its own, so the bar holds its place
+   * between runs. Unless the chain had reached it: a total that only covered the finished batch would
+   * read as complete, so it goes back to unknown instead.
+   */
+  const applyCounts = (entry: MonitorEntry, progress: { current?: number; total?: number }) => {
+    const { handover } = entry;
+    if (handover && progress.current !== undefined) {
+      entry.handover = undefined;
+      const reached = handover.current ?? 0;
+      if (progress.current < reached) {
+        entry.offset = reached;
+        if (handover.total === undefined || reached >= handover.total) {
+          entry.shown.total = undefined;
+          entry.handle.total(undefined);
+        }
+      } else {
+        entry.offset = undefined;
+      }
+    }
+
+    const offset = entry.offset ?? 0;
+    const current = progress.current === undefined ? undefined : offset + progress.current;
+    // Broadcasts arrive unordered, so a count below the one shown is a stale update, not the run going back;
+    // its total is as stale as its count, so neither is applied.
+    if (current !== undefined && entry.shown.current !== undefined && current < entry.shown.current) {
+      return;
+    }
+    if (progress.total !== undefined) {
+      entry.shown.total = offset + progress.total;
+      entry.handle.total(entry.shown.total);
+    }
+    if (current !== undefined) {
+      entry.shown.current = current;
+      entry.handle.set(current);
+    }
   };
 
   const applyStatusUpdate = (data: StatusPayload, target: CancelTarget) => {
@@ -268,6 +336,20 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       }
     }
 
+    const terminal = isTerminalMessage(data.message);
+    const ended = finished.get(key);
+    if (
+      !terminal &&
+      ended !== undefined &&
+      ended.pid === target.pid &&
+      Date.now() - ended.at <= FINISHED_REORDER_WINDOW_MS
+    ) {
+      return;
+    }
+    if (terminal && target.pid !== undefined) {
+      finished.set(key, { pid: target.pid, at: Date.now() });
+    }
+
     const handle = monitorFor(registry, key, data.message, target);
 
     if (data.message === STATUS_FAILED) {
@@ -296,6 +378,8 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       return;
     }
 
+    const entry = monitors.get(key);
+
     // The plan first: a phase change resets the item count, so applying it after `set` would discard
     // the very total/current this update carries.
     if (data.progress.phases !== undefined || data.progress.phase !== undefined) {
@@ -306,18 +390,18 @@ export const makeTraceSink = (progressRegistry: RegistrySource, options: TraceSi
       // an explicit `undefined` and an absent one are the same bytes on the wire, so the phase change
       // is the only signal that survives. `plan` deliberately does not reset (it must not discard the
       // numbers THIS update carries), which is why the reset is here — before they are applied.
-      const entry = monitors.get(key);
       if (entry && data.progress.phase !== undefined && data.progress.phase !== entry.phase) {
         entry.phase = data.progress.phase;
+        // The chain offset is a count too, and it belongs to the phase that is ending.
+        entry.shown = {};
+        entry.offset = undefined;
+        entry.handover = undefined;
         handle.total(undefined);
         handle.set(0);
       }
     }
-    if (data.progress.total !== undefined) {
-      handle.total(data.progress.total);
-    }
-    if (data.progress.current !== undefined) {
-      handle.set(data.progress.current);
+    if (entry) {
+      applyCounts(entry, data.progress);
     }
     if (data.progress.estimate !== undefined) {
       handle.estimate(data.progress.estimate);

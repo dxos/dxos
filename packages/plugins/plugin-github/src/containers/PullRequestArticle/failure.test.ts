@@ -7,6 +7,7 @@ import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import { describe, test } from 'vitest';
 
+import { GitHubConnectionUnavailableError } from '../../errors.ts';
 import { pullRequestFailureKey } from './failure.ts';
 
 const FALLBACK = 'walkthrough-failed.title';
@@ -27,6 +28,11 @@ describe('pullRequestFailureKey', () => {
   // reached the toast as the raw `StatusCode: non 2xx status code (401 GET …)` (DX-1301).
   test('a rejected credential names the reconnect message', ({ expect }) => {
     expect(pullRequestFailureKey(statusError(401), FALLBACK)).toBe('github-token-rejected.title');
+  });
+
+  // An App connection EDGE will no longer mint for is fixed the same way as a rejected token.
+  test('a connection with no usable token names the reconnect message', ({ expect }) => {
+    expect(pullRequestFailureKey(new GitHubConnectionUnavailableError(), FALLBACK)).toBe('github-token-rejected.title');
   });
 
   test('any other status keeps the caller-supplied message', ({ expect }) => {

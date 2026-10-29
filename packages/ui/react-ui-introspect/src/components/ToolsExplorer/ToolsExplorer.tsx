@@ -174,14 +174,31 @@ export const ToolsExplorer = Util.composable<HTMLDivElement, ToolsExplorerProps>
       );
     }
 
+    // The tool list is only usable once connected; drawing it earlier showed a list that a failure then replaced.
+    if (!client) {
+      return (
+        <div {...Util.composableProps(props, { role: 'status' })} ref={forwardedRef}>
+          <Banner.Root valence='info'>
+            <Banner.Body>{t('connecting.message')}</Banner.Body>
+          </Banner.Root>
+        </div>
+      );
+    }
+
+    // `minmax(0, …)` rows: an implicit `auto` row grows to the whole list, which then never scrolls.
     return (
       <div
         {...Util.composableProps(props, {
-          classNames: 'dx-expand grid grid-cols-[30rem_1fr] divide-x divide-separator',
+          classNames: 'dx-expand grid grid-cols-[30rem_1fr] grid-rows-[minmax(0,1fr)] divide-x divide-separator',
         })}
         ref={forwardedRef}
       >
-        <div className={mx('dx-expand grid divide-y divide-separator-subtle', selectedTool && 'grid-rows-[2fr_3fr]')}>
+        <div
+          className={mx(
+            'dx-expand grid divide-y divide-separator-subtle',
+            selectedTool ? 'grid-rows-[minmax(0,2fr)_minmax(0,3fr)]' : 'grid-rows-[minmax(0,1fr)]',
+          )}
+        >
           <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} />
           {selectedTool && <ToolForm tool={selectedTool} onSubmit={handleSubmit} pickerOptions={pickerOptions} />}
         </div>

@@ -26,7 +26,8 @@ import { SyncRoutineMissingError } from '../../errors.ts';
  * Forked: a first sync walks the whole remote history, and the setup flows it hangs off (the OAuth
  * finalize handler, the sync-targets dialog submit) must return before it finishes. Failures are
  * surfaced by the sync process itself — the auth-expired toast rides on `Process.Process.error` — so
- * nothing propagates back to the caller.
+ * nothing propagates back to the caller. `priority` names a binding just created, so the sync waits for
+ * it to replicate and runs it first.
  */
 export const autoSyncConnection = (
   invoker: Operation.OperationService,
@@ -34,12 +35,13 @@ export const autoSyncConnection = (
   db: Database.Database,
   connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
+  priority?: string,
 ): Effect.Effect<void, never> => {
   if (!connector.sync?.auto) {
     return Effect.void;
   }
 
-  return Binding.runSync({ connection, connector, spaceId: db.spaceId }).pipe(
+  return Binding.runSync({ connection, connector, spaceId: db.spaceId, priority }).pipe(
     Effect.provide(Database.layer(db)),
     Effect.provideService(Operation.Service, invoker),
     Effect.provideService(Capability.Service, capabilities),

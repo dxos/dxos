@@ -22,7 +22,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import { SearchPlugin } from '#plugin';
+import * as SearchPlugin from '#meta';
+
+await Harness.preload({ plugins: [SearchPlugin.make()] });
 
 const makeUninitializedClientHostPlugin = (client: Client) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.host'), name: 'Host' })).pipe(
@@ -55,7 +57,7 @@ describe('SearchPlugin', () => {
   test('contributes the search deck companion before the client initializes', async ({ expect }) => {
     const client = new Client();
     await using harness = await Harness.createComposerTestApp({
-      plugins: [makeUninitializedClientHostPlugin(client)(), SearchPlugin()],
+      plugins: [makeUninitializedClientHostPlugin(client)(), SearchPlugin.make()],
     });
 
     const builder = await harness.waitForCapability(AppCapabilities.AppGraph);

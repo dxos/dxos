@@ -11,7 +11,15 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { decorateMarkdown, image, join, linkTooltip, table } from '@dxos/ui-editor';
 
-import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, text } from './testing/index.ts';
+import {
+  EditorStory,
+  content,
+  defaultExtensions,
+  headings,
+  renderLinkButton,
+  renderLinkTooltip,
+  text,
+} from './testing/index.ts';
 
 const meta = {
   title: 'ui/react-ui-editor/Markdown',
@@ -50,7 +58,10 @@ export const Headings: Story = {
 
 export const Links: Story = {
   render: () => (
-    <EditorStory text={join(content.links, content.footer)} extensions={[linkTooltip({ render: renderLinkTooltip })]} />
+    <EditorStory
+      text={join(content.links, content.footer)}
+      extensions={[decorateMarkdown({ renderLinkButton }), linkTooltip({ render: renderLinkTooltip })]}
+    />
   ),
 };
 

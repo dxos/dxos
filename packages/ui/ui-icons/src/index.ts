@@ -27,6 +27,7 @@ export const PxIcons = {
   'bar-high': 'px--bar-high--regular',
   'bar-low': 'px--bar-low--regular',
   'bar-medium': 'px--bar-medium--regular',
+  'context-panel': 'px--context-panel--regular',
 } as const;
 
 export type PxIconName = keyof typeof PxIcons;

@@ -32,6 +32,7 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",

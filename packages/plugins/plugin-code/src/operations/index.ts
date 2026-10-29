@@ -19,4 +19,8 @@ export const CodeOperationHandlerSet = OperationHandlerSet.lazy([
   CodeOperation.ResetProject.pipe(Operation.lazyHandler(() => import('./reset-project.ts'))),
   CodeOperation.BuildProject.pipe(Operation.lazyHandler(() => import('./build-project.ts'))),
   CodeOperation.RunBuild.pipe(Operation.lazyHandler(() => import('./run-build.ts'))),
+  CodeOperation.ImportSpec.pipe(Operation.lazyHandler(() => import('./import-spec.ts'))),
+  CodeOperation.ImportSpecFile.pipe(Operation.lazyHandler(() => import('./import-spec-file.ts'))),
+  CodeOperation.ExportSpecFile.pipe(Operation.lazyHandler(() => import('./export-spec-file.ts'))),
+  CodeOperation.ListLocalSpecs.pipe(Operation.lazyHandler(() => import('./list-local-specs.ts'))),
 ]);

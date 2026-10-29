@@ -7,6 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
@@ -16,7 +18,7 @@ import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as PageAction from '@dxos/plugin-crx/PageAction';
-import { PullRequest } from '@dxos/types';
+import { PullRequest, Repo } from '@dxos/types';
 
 import * as Walkthrough from './Walkthrough.ts';
 
@@ -38,18 +40,19 @@ export const GetGitHubRepositories = Operation.make({
   },
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
+  services: [Credential.CredentialsService],
 });
 
 /**
- * Find-or-create the empty local root Project for a selected GitHub repo so a
- * cursor can reference it as its `spec.target`. Keyed by the repo's
- * GitHub foreign id (`remoteTarget.id`), so it is idempotent across re-selection.
+ * Find or create the `Repo` a cursor binds as its `spec.target`, and the `TaskSet` that mirrors the
+ * repository's issues. Both carry the repo's GitHub foreign id (`remoteTarget.id`), so it is
+ * idempotent across re-selection.
  */
 export const MaterializeGitHubTarget = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.materializeTarget'),
     name: 'Materialize GitHub Target',
-    description: 'Create the empty local root Project bound to a selected GitHub repository.',
+    description: 'Find or create the Repo bound to a selected GitHub repository, and the TaskSet mirroring its issues.',
     icon: 'ph--github-logo--regular',
   },
   input: ConnectorSpec.MaterializeTargetInput,
@@ -70,39 +73,74 @@ export const SyncOptions = Schema.Struct({
 
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
+/** What one run of {@link SyncGitHubRepositories} did, across the connection's bindings. */
+export const SyncResult = Schema.Struct({
+  bindings: Schema.Number,
+  /** Bindings whose delta answered 304. */
+  notModified: Schema.Number,
+  /** GitHub requests made, across bindings. */
+  requests: Schema.Number,
+  pulled: Schema.Struct({ issues: Schema.Number, pullRequests: Schema.Number }),
+  pushed: Schema.Struct({ issues: Schema.Number, repos: Schema.Number }),
+  /** File bindings (spec/FILE-SYNC.mdl): files pulled into objects, objects pushed as files, files skipped. */
+  files: Schema.Struct({ pulled: Schema.Number, pushed: Schema.Number, skipped: Schema.Number }).pipe(Schema.optional),
+});
+
+export interface SyncResult extends Schema.Schema.Type<typeof SyncResult> {}
+
 /**
- * Reconcile GitHub data for every repo bound to a connection (one cursor per repo).
- *
- * Pull-then-push per bound repo: auto-upsert its owning org + members,
- * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting
- * `maxDaysBack` if set), then push diverged Project/Task fields back to GitHub.
- * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto each binding.
+ * Poll every repository bound to a connection (one cursor per repo), as spec/SYNC.mdl describes:
+ * one conditional delta of issues and pull requests updated since the binding's watermark, one
+ * GraphQL batch for the pull requests among them (and open ones whose checks are pending), the
+ * three-way merge and push for issues, and the cursor advance. A quiet repository costs one request.
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.syncRepositories'),
     name: 'Sync GitHub Repositories',
-    description: 'Reconcile every bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
+    description: 'Poll every bound GitHub repository for changed issues and pull requests.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: ConnectorSpec.SyncInput,
-  output: Schema.Struct({
-    pulled: Schema.Struct({
-      organizations: Schema.Number,
-      people: Schema.Number,
-      projects: Schema.Number,
-      tasks: Schema.Number,
-      comments: Schema.Number,
-    }),
-  }),
+  output: SyncResult,
+  // Capabilities carry the contributed file mappings a file binding runs.
+  services: [Trace.TraceService, Credential.CredentialsService, Capability.Service],
 }).pipe(Operation.visible);
 
 /**
+ * Turn on two-way file sync (spec/FILE-SYNC.mdl) for a repository the connection already syncs: adds
+ * a file binding next to its item binding. Files a contributed mapping claims (Deus specs, say) become
+ * objects, and Composer edits to them are committed to a write branch with one pull request.
+ */
+export const EnableGitHubFileSync = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.enableFileSync'),
+    name: 'Enable GitHub File Sync',
+    description: 'Sync files of a bound GitHub repository (such as .mdl specs) with objects in the space, both ways.',
+    icon: 'ph--files--regular',
+  },
+  input: Schema.Struct({
+    repository: Ref.Ref(Repo.Repo),
+    /** Branch read from; the repository's default branch when absent. */
+    branch: Schema.String.pipe(Schema.optional),
+    /** Branch written to; `composer/<spaceId>` when absent. */
+    writeBranch: Schema.String.pipe(Schema.optional),
+    /** FileMapping ids to run; every contributed mapping when absent. */
+    mappings: Schema.Array(Schema.String).pipe(Schema.optional),
+    /** Globs that narrow every mapping, e.g. `packages/plugins/**`. */
+    paths: Schema.Array(Schema.String).pipe(Schema.optional),
+  }),
+  output: Schema.Struct({ binding: Schema.String, created: Schema.Boolean }),
+  services: [Database.Service],
+});
+
+/**
  * Import a pull request named by a github.com URL or `owner/repo#123` into the space, so it can be
- * opened, reviewed and walked through without waiting for a sync of the whole repository.
+ * opened, reviewed and walked through without waiting for a sync of the whole repository. Its
+ * repository comes in with it as a `Repo`, which a project or chat can then name to have it checked out.
  *
- * Idempotent by coordinates — a pull request the space already holds is returned as it stands
- * rather than duplicated.
+ * Idempotent by coordinates — a pull request or repository the space already holds is returned as it
+ * stands rather than duplicated.
  */
 export const ImportPullRequest = Operation.make({
   meta: {
@@ -111,17 +149,19 @@ export const ImportPullRequest = Operation.make({
     description: 'Add a pull request to the space, named by its URL or as owner/repo#number.',
     icon: 'ph--git-pull-request--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Credential.CredentialsService],
   input: Schema.Struct({
     /** A github.com pull request URL, or `owner/repo#123`. */
     reference: Schema.String,
   }),
   output: Schema.Struct({
     pullRequest: Ref.Ref(PullRequest.PullRequest),
+    /** The repository the pull request belongs to; absent where GitHub did not describe it. */
+    repo: Schema.optional(Ref.Ref(Repo.Repo)),
     /** False where the space already held the pull request, which is then returned unchanged. */
     imported: Schema.Boolean,
   }),
-  types: [PullRequest.PullRequest],
+  types: [PullRequest.PullRequest, Repo.Repo],
 }).pipe(Operation.visible, Operation.mutation('write'));
 
 /**
@@ -179,7 +219,7 @@ export const GenerateWalkthrough = Operation.make({
   types: [Walkthrough.Walkthrough, PullRequest.PullRequest],
   // `AiService` must be declared, not merely provided: the invoker builds the runtime from THIS list
   // and `Layer.orDie` clears a layer's error channel, never its requirement.
-  services: [Trace.TraceService, AiService.AiService],
+  services: [Trace.TraceService, AiService.AiService, Credential.CredentialsService],
 }).pipe(Operation.visible);
 
 /**
@@ -211,6 +251,7 @@ export const SubmitPullRequestApproval = Operation.make({
     commented: Schema.Boolean,
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /** Post a conversation comment on a pull request, as the space's GitHub connection. */
@@ -230,6 +271,7 @@ export const AddPullRequestComment = Operation.make({
     url: Schema.String.pipe(Schema.optional),
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /** Post a review comment on one line of a pull request's diff, as the space's GitHub connection. */
@@ -255,6 +297,7 @@ export const AddPullRequestReviewComment = Operation.make({
     url: Schema.String.pipe(Schema.optional),
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /**
@@ -276,6 +319,7 @@ export const SyncPullRequest = Operation.make({
     updated: Schema.Array(Schema.String),
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 }).pipe(Operation.mutation('write'));
 
 /**
@@ -291,7 +335,7 @@ export const RefreshPullRequests = Operation.make({
     description: 'Refresh every open pull request in the space from GitHub.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Credential.CredentialsService],
   input: Schema.Struct({}),
   output: Schema.Struct({
     /** Open pull requests read from GitHub. */
@@ -367,6 +411,7 @@ export const GetPullRequestStatus = Operation.make({
     approvals: Schema.Number,
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /**
@@ -388,6 +433,7 @@ export const GetPullRequestDiff = Operation.make({
     diff: Schema.String,
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /**

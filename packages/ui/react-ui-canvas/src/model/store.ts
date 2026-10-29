@@ -9,9 +9,11 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 
 import { withoutOrphans } from './orphans.ts';
-import { type StyleMap, type View, type ViewId, withLegacyView } from './types.ts';
+import { OpenView, type StyleMap, type View, type ViewId, withLegacyView } from './types.ts';
+import { type VersionedSource, atomSource } from './versioned.ts';
 
 export type ViewMap = Readonly<Record<ViewId, View>>;
 
@@ -27,6 +29,11 @@ export type ViewStore = {
    * always kept, so a store without other roots leaves this out.
    */
   readonly isRoot?: (id: ViewId) => boolean;
+  /**
+   * How undo reads the store's past (VIEWS.md §8.4), as paths into `views`; absent, the atom's own values are the
+   * heads, which is what an in-memory store has.
+   */
+  readonly versions?: VersionedSource;
 };
 
 /** A store held in memory, which always keeps style classes; Views saved under legacy node types read as current. */
@@ -81,6 +88,16 @@ export const updateView = (
 export const putView = (registry: Registry.AtomRegistry, store: ViewStore, scene: View): void => {
   registry.set(store.views, { ...registry.get(store.views), [scene.id]: scene });
 };
+
+const isView = Schema.is(OpenView);
+
+/** Whether `value` is a map of Views, as a patch must leave the store. */
+export const isViewMap = (value: unknown): value is ViewMap =>
+  typeof value === 'object' && value !== null && !Array.isArray(value) && Object.values(value).every(isView);
+
+/** The store as a versioned source: its own when it has one, else its atom, whose snapshots are its heads. */
+export const storeVersions = (registry: Registry.AtomRegistry, store: ViewStore): VersionedSource =>
+  store.versions ?? atomSource(registry, store.views, isViewMap);
 
 /** No classes: what a store without `styles` reads as. */
 export const NO_STYLES: Atom.Atom<StyleMap> = Atom.keepAlive(Atom.make<StyleMap>({}));

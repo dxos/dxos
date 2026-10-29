@@ -67,7 +67,7 @@ const interruptOnDispose = (ctx: Context): Effect.Effect<never> =>
  * The two halves of a `ctx` that the Effect world otherwise drops on the floor. Without the first,
  * an effect launched from a `@trace.span()` method starts its own root trace instead of nesting
  * under the caller -- which is why work dispatched through `RuntimeProvider.runPromise` shows up in
- * SigNoz as thousands of parentless traces. Without the second, the fiber outlives the resource
+ * PostHog as thousands of parentless traces. Without the second, the fiber outlives the resource
  * that scheduled it.
  *
  * Apply it before `RuntimeProvider.runPromise`/`provide`: those fill the *remaining* requirements,

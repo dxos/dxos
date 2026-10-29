@@ -100,13 +100,22 @@
       "path": "../../ui/react-ui-canvas"
     },
     {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-masonry"
     },
     {
       "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-search"
@@ -119,6 +128,9 @@
     },
     {
       "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
@@ -134,6 +146,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-registry"
     },
     {
       "path": "../plugin-routine"

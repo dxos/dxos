@@ -328,6 +328,8 @@ export enum OAuthProvider {
   GITHUB = 'github',
   GOOGLE = 'google',
   LINEAR = 'linear',
+  /** An arbitrary MCP server signed in to with MCP authorization; the request's `resource` names it. */
+  MCP = 'mcp',
   NOTION = 'notion',
   SLACK = 'slack',
   TRELLO = 'trello',
@@ -350,6 +352,12 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   spaceId: Schema.String.pipe(Schema.refine(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
+  // Whose identity the grant acts as: the authorizing user (default) or DXOS's registered app. For
+  // GitHub an app grant is an App installation rather than an OAuth grant.
+  kind: Schema.optional(Schema.Literals(['user', 'app'])),
+  // The MCP server URL a `provider: 'mcp'` grant is for. EDGE discovers its authorization server
+  // from it, and the token is issued for that server alone (RFC 8707 resource indicator).
+  resource: Schema.optional(Schema.String),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect
   noRefresh: Schema.optional(Schema.Boolean),
   // Provider-specific (user handle or did for atproto) hint for auth server resolution

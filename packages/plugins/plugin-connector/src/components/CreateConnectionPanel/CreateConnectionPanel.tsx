@@ -7,16 +7,21 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { useMembers } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { ConnectorNamespace } from '../../namespace.ts';
+import { Connector, type ConnectorEntry, type ConnectorKind } from '../../types/ConnectorSpec.ts';
 
-import { Connector, type ConnectorEntry } from '../../types/ConnectorSpec.ts';
+/** Picker order: connecting as Composer first, then as yourself, then your own credentials. */
+const KIND_ORDER: readonly ConnectorKind[] = ['app', 'user', 'custom'];
 
 const ConnectorSelection = Schema.Struct({ connectorId: Schema.String });
 
@@ -39,11 +44,12 @@ export type CreateConnectionPanelProps = SpaceCapabilities.CreateObjectCustomPan
  * returns to the picker.
  */
 export const CreateConnectionPanel = ({
+  target,
   onCreateObject,
   onCancel,
   connectors: connectorsProp,
 }: CreateConnectionPanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ConnectorNamespace.key);
   const capabilityConnectors = Hooks.useCapabilities(Connector).flat();
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();
@@ -64,13 +70,43 @@ export const CreateConnectionPanel = ({
   });
 
   const [selectedId, setSelectedId] = useState<string>();
-  // Preselected so Continue is ready without a pick; kept among the visible results so a filter
-  // never leaves Continue acting on a row it hid.
-  const pickedId = results.some(({ id }) => id === selectedId) ? selectedId : results[0]?.id;
+  const groups = useMemo(
+    () =>
+      KIND_ORDER.map((kind) => ({ kind, entries: results.filter((entry) => entry.kind === kind) })).filter(
+        ({ entries }) => entries.length > 0,
+      ),
+    [results],
+  );
+
+  // Preselected so Continue is ready without a pick: the first row shown, and kept among the visible
+  // results so a filter never leaves Continue acting on a row it hid.
+  const pickedId = results.some(({ id }) => id === selectedId) ? selectedId : groups[0]?.entries[0]?.id;
   const selection = useMemo(() => ({ connectorId: pickedId }), [pickedId]);
 
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
+
+  // Every member of a space can use its connections, so a user-kind one lends the connecting
+  // person's account to all of them. Read from the highlighted row too: an OAuth connector starts
+  // its flow on Continue, so the warning has to show before it.
+  const spaceId = Database.isDatabase(target) ? target.spaceId : Obj.getDatabase(target)?.spaceId;
+  const members = useMembers(spaceId);
+  // A space's member list always includes the current identity, so an empty one is still loading;
+  // a user connection waits for it, or it could start before the warning has a chance to show.
+  const membersPending = spaceId !== undefined && members.length === 0;
+  const considered = connector ?? connectors.find(({ id }) => id === pickedId);
+  const holdBack = considered?.kind === 'user' && membersPending;
+  const sharedAccountNote = considered?.kind === 'user' && members.length > 1 && (
+    <Banner.Root valence='warning' data-testid='create-connection-panel.shared-account'>
+      <Banner.Title>{t('user-connection-shared.title')}</Banner.Title>
+      {/* An MCP server lets every member's agent write as this account, not just sync through it. */}
+      <Banner.Body>
+        {considered.mcp
+          ? t('user-connection-shared-mcp.message', { service: considered.label ?? considered.id })
+          : t('user-connection-shared.message')}
+      </Banner.Body>
+    </Banner.Root>
+  );
 
   // Takes its connector as an argument: `connectorId` is not applied yet in the tick it is chosen.
   const submit = useCallback(
@@ -101,7 +137,7 @@ export const CreateConnectionPanel = ({
   const handleContinue = useCallback(
     ({ connectorId }: ConnectorSelection) => {
       const entry = connectors.find(({ id }) => id === connectorId);
-      if (!entry) {
+      if (!entry || (entry.kind === 'user' && membersPending)) {
         return;
       }
       setConnectorId(entry.id);
@@ -110,7 +146,7 @@ export const CreateConnectionPanel = ({
         void submit(entry).finally(() => setPending(false));
       }
     },
-    [connectors, submit],
+    [connectors, membersPending, submit],
   );
 
   const handleBack = useCallback(() => {
@@ -130,19 +166,28 @@ export const CreateConnectionPanel = ({
               placeholder={t('create-connection.service.placeholder')}
             />
             <SearchList.Viewport>
-              {results.map((entry) => (
-                <SearchList.Item
-                  key={entry.id}
-                  value={entry.id}
-                  label={entry.label ?? entry.id}
-                  icon='ph--plugs-connected--regular'
-                  checked={entry.id === pickedId}
-                  onSelect={() => setSelectedId(entry.id)}
-                />
+              {groups.map(({ kind, entries }) => (
+                <SearchList.Group key={kind} heading={t(`connector-kind.${kind}.label`)}>
+                  {entries.map((entry) => (
+                    <SearchList.Item
+                      key={entry.id}
+                      value={entry.id}
+                      label={entry.label ?? entry.id}
+                      icon='ph--plugs-connected--regular'
+                      checked={entry.id === pickedId}
+                      onSelect={() => setSelectedId(entry.id)}
+                    />
+                  ))}
+                </SearchList.Group>
               ))}
             </SearchList.Viewport>
           </SearchList.Root>
-          <Form.Actions submitLabel={t('continue.label')} submitIcon='ph--arrow-right--regular' />
+          {sharedAccountNote}
+          <Form.Actions
+            submitLabel={t('continue.label')}
+            submitIcon='ph--arrow-right--regular'
+            submitDisabled={holdBack}
+          />
         </Form.Content>
       </Form.Root>
     );
@@ -152,6 +197,7 @@ export const CreateConnectionPanel = ({
   // second inset the whole form inside it.
   return (
     <>
+      {sharedAccountNote}
       {credentialForm ? (
         <Form.Root
           autoFocus

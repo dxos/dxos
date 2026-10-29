@@ -4,6 +4,7 @@
 
 import { type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -52,6 +53,7 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -65,8 +67,10 @@ import {
   type BranchStore,
   type DocumentRetention,
   EntityManager,
+  type ExportWorkingSetOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
+  type WorkingSetRow,
 } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
@@ -132,6 +136,8 @@ export interface EchoDatabase extends Database.Database {
 
   /**
    * Returns the number of objects stored inline in the space root document.
+   *
+   * @deprecated Inline directory objects are migrated into linked documents; this counts the ones not migrated yet.
    */
   getNumberOfInlineObjects(): number;
 
@@ -144,18 +150,6 @@ export interface EchoDatabase extends Database.Database {
    * Returns the loaded automerge document handles.
    */
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
-
-  /**
-   * Migration-scoped accessor to the automerge repo.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
-   */
-  readonly _repo: RepoProxy;
-
-  /**
-   * Returns the space root document handle for migration tools.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
-   */
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
 
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
@@ -225,6 +219,9 @@ export type EchoDatabaseProps = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+
+  /** Starts a new space epoch whose root is the given document; enables `beginMigration({ root: 'replace' })`. */
+  createEpoch?: (rootUrl: string) => Promise<void>;
 };
 
 /**
@@ -294,6 +291,62 @@ const combineSyncState = (
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta> };
 
+/** Structural equality of plain JSON data, independent of key order. */
+const isJsonEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => isJsonEqual(value, right[index]))
+    );
+  }
+  if (isPlainRecord(left) && isPlainRecord(right)) {
+    const keys = Object.keys(left);
+    return (
+      keys.length === Object.keys(right).length &&
+      keys.every((key) => key in right && isJsonEqual(left[key], right[key]))
+    );
+  }
+  return false;
+};
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Writes a migrated content field: a record field key by key, so concurrent edits to other records
+ * survive the merge; any other field whole, and only when it changed.
+ */
+const writeContentField = (target: object, field: string, before: unknown, after: unknown, record: boolean): void => {
+  if (after === undefined) {
+    if (before !== undefined) {
+      Reflect.deleteProperty(target, field);
+    }
+    return;
+  }
+  const current: unknown = Reflect.get(target, field);
+  if (!record || !isPlainRecord(after) || !isPlainRecord(before) || !isPlainRecord(current)) {
+    if (!isJsonEqual(before, after)) {
+      Reflect.set(target, field, after);
+    }
+    return;
+  }
+  for (const key of Object.keys(before)) {
+    if (!(key in after)) {
+      Reflect.deleteProperty(current, key);
+    }
+  }
+  for (const [key, value] of Object.entries(after)) {
+    if (!isJsonEqual(before[key], value)) {
+      Reflect.set(current, key, value);
+    }
+  }
+};
+
 /**
  * User-facing API for the space database.
  * Implements EchoDatabase interface; delegates all document and core-object
@@ -313,6 +366,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
+  #seed?: readonly WorkingSetRow[];
 
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
@@ -321,6 +375,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
   readonly #runtime: EffectContext.Context<never>;
+  readonly #createEpoch?: (rootUrl: string) => Promise<void>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -340,6 +395,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._hypergraph = params.graph;
     this.#feedService = params.feedService;
     this.#runtime = params.runtime;
+    this.#createEpoch = params.createEpoch;
 
     this._entityManager = new EntityManager({
       graph: params.graph,
@@ -419,14 +475,27 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   protected override async _open(): Promise<void> {
     await this._entityManager.open(this._ctx);
 
+    const seed = this.#seed;
+    this.#seed = undefined;
+    if (seed) {
+      this._entityManager.seedDocuments(seed);
+    }
+
     if (this._rootUrl !== undefined) {
       await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
+      if (seed) {
+        this._entityManager.placeSeededObjects(seed);
+      }
     }
 
     if (this._preloadSchemaOnOpen) {
-      await this.query(Filter.type(PersistentSchema))
+      const preload = this.query(Filter.type(PersistentSchema))
         .run()
         .catch((err) => log.warn('schema preload failed', { spaceId: this.spaceId, err }));
+      // A seeded open is usable from its seed; the preload's answer comes from the host, which may still be starting.
+      if (!seed) {
+        await preload;
+      }
     }
 
     if (this._reactiveSchemaQuery) {
@@ -436,7 +505,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
     for (const disposal of disposals) {
       if (disposal.status === 'rejected') {
@@ -446,7 +515,23 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#feeds.clear();
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
-    await this._entityManager.close();
+    await this._entityManager.close(ctx);
+  }
+
+  // ── Working set persistence ─────────────────────────────────────────────
+
+  /**
+   * Rows the next {@link open} shows and edits the working set from, before the host delivers anything;
+   * the host's later updates bring them current.
+   */
+  seedWorkingSet(rows: readonly WorkingSetRow[]): void {
+    assertState(this._lifecycleState !== LifecycleState.OPEN, 'Seed the working set before the database opens.');
+    this.#seed = rows;
+  }
+
+  /** The working set as rows to {@link seedWorkingSet} a later session with; empty until the space root is loaded. */
+  exportWorkingSet(options: ExportWorkingSetOptions): WorkingSetRow[] {
+    return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
   }
 
   // ── Space state ─────────────────────────────────────────────────────────
@@ -681,7 +766,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // endpoints become absolute, same-space relative, and unpersisted endpoints are added here.
     EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._entityManager.addCore(getObjectCore(obj), opts);
+    this._entityManager.addCore(getObjectCore(obj));
     if (created) {
       trace.events.emit(Database.TraceEvents.objectAdd, this.#entityAttributes(obj, opts?.origin));
     }
@@ -772,6 +857,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       namespace,
     );
     this.#feeds.set(feedUri, handle);
+    this._feedHandleCreated.emit(handle);
     return handle;
   }
 
@@ -803,6 +889,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   _knownFeedHandles(): Iterable<FeedHandle> {
     return this.#feeds.values();
   }
+
+  /**
+   * @internal
+   * Fires when a feed handle is instantiated, so a live query over all feeds can watch a feed first written
+   * after it started.
+   */
+  readonly _feedHandleCreated = new Event<FeedHandle>();
 
   /**
    * Disposes and drops the cached feed handle for a feed (its live working-set / core cache). A
@@ -880,14 +973,61 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }
     }
 
+    const contentTypes = new Set<URI.URI>();
     for (const migration of migrations) {
       if (Migration.isObjectMigration(migration)) {
         await this.#runObjectMigration(migration);
       } else if (Migration.isRenameMigration(migration)) {
         await this.#runRenameMigration(migration);
+      } else if (Migration.isContentMigration(migration)) {
+        contentTypes.add(migration.type);
+      } else if (Migration.isTransactionMigration(migration)) {
+        const transaction = await this.beginMigration(migration.options);
+        await EffectEx.runPromise(migration.run(transaction, { db: this }).pipe(Effect.andThen(transaction.commit())));
       }
     }
+    // Content steps run per type, after object migrations have moved objects onto the types they name.
+    for (const type of contentTypes) {
+      await this.#runContentMigrations(type, Migration.getContentSteps(migrations, type));
+    }
     await this._entityManager.flush();
+  }
+
+  /**
+   * Upgrades the content of every object of `type` whose version starts a chain of `steps`, writing
+   * only the changed records and the new version in one change.
+   */
+  async #runContentMigrations(type: URI.URI, steps: ReadonlyMap<string, Migration.ContentMigration>): Promise<void> {
+    const [first] = steps.values();
+    if (!first) {
+      return;
+    }
+    const { versionField, fields, recordFields } = first;
+    const objects = await this._hypergraph.query(Query.select(Filter.type(type)).from(this)).run();
+    let migrated = 0;
+    for (const object of objects) {
+      const version: unknown = Reflect.get(object, versionField);
+      if (typeof version !== 'string' || !steps.has(version)) {
+        continue;
+      }
+      const before: Record<string, unknown> = {};
+      for (const field of fields) {
+        const value: unknown = Reflect.get(object, field);
+        if (value !== undefined) {
+          before[field] = JSON.parse(JSON.stringify(value));
+        }
+      }
+      // A separate copy, so a transform that edits its input in place still diffs against the stored data.
+      const upgraded = Migration.applyContentSteps(steps, version, JSON.parse(JSON.stringify(before)));
+      Obj.update(object, (object) => {
+        for (const field of fields) {
+          writeContentField(object, field, before[field], upgraded.content[field], recordFields.includes(field));
+        }
+        Reflect.set(object, versionField, upgraded.version);
+      });
+      migrated++;
+    }
+    log.verbose('migrate content', { type, objects: objects.length, migrated });
   }
 
   async #runObjectMigration(migration: Migration.ObjectMigration): Promise<void> {
@@ -1069,6 +1209,28 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[] {
     return this._entityManager.getLoadedDocumentHandles();
+  }
+
+  async beginMigration(options: Migration.TransactionOptions = {}): Promise<Migration.Transaction> {
+    invariant(options.root === 'update' || this.#createEpoch, 'Database cannot create epochs.');
+    // Loaded on demand: migrations never run during boot.
+    const { MigrationTransaction } = await import('./migration-transaction.ts');
+    return new MigrationTransaction({
+      repo: this._repo,
+      rootHandle: this._entityManager.getSpaceRootDocHandle(),
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId: this.spaceId, spaceKey: this.spaceKey.toHex() },
+      flush: () => this.flush(),
+      createEpoch: this.#createEpoch && this.#createEpochAndAwaitRoot.bind(this, this.#createEpoch),
+      options,
+    });
+  }
+
+  /** The epoch can be applied before this database loads its root; a following transaction must read the new root. */
+  async #createEpochAndAwaitRoot(createEpoch: (rootUrl: string) => Promise<void>, rootUrl: string): Promise<void> {
+    const switched = this.rootChanged.waitFor(() => this._entityManager.getSpaceRootDocHandle().url === rootUrl);
+    await createEpoch(rootUrl);
+    await switched;
   }
 
   get _repo(): RepoProxy {

@@ -4,8 +4,10 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schedule from 'effect/Schedule';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -17,7 +19,7 @@ import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
-import { Database, EID, Filter, type Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, type Error as EchoError, EID, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -25,7 +27,6 @@ import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
 import * as Wire from '@dxos/plugin-routine/Wire';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { meta } from '#meta';
 import { ConnectorSpec } from '#types';
 
 import { connectionDeckSubject } from './constants.ts';
@@ -36,6 +37,7 @@ import {
   TargetAccountMismatchError,
   isUnauthorizedError,
 } from './errors.ts';
+import { ConnectorNamespace } from './namespace.ts';
 import * as SyncTemplate from './SyncTemplate.ts';
 
 /**
@@ -87,7 +89,7 @@ export const isForConnection = (
     return false;
   }
   const source = refEntityId(cursor.spec.source);
-  return source !== undefined && source === refEntityId(connection.accessToken);
+  return source !== undefined && connection.accessToken !== undefined && source === refEntityId(connection.accessToken);
 };
 
 /** True when `cursor`'s `spec.target` is the given object. */
@@ -96,7 +98,7 @@ export const targets = (cursor: Cursor.Cursor, target: Obj.Unknown): boolean =>
 
 /** True when `accessToken` is the credential `connection` authenticates with. */
 export const isTokenFor = (accessToken: AccessToken.AccessToken, connection: Connection.Connection): boolean =>
-  refEntityId(connection.accessToken) === accessToken.id;
+  connection.accessToken !== undefined && refEntityId(connection.accessToken) === accessToken.id;
 
 //
 // Lookup.
@@ -297,12 +299,7 @@ export const triggerMonitorLayer = (
  * Force-runs a sync trigger through the monitor, which routes a `remote` trigger to EDGE and a local
  * one to the trigger dispatcher — the dispatcher being what carries the run's durable execution, so
  * a batched sync continues past its first capped run. The synthetic tick stands in for the timer
- * event a scheduled fire would have supplied.
- *
- * `data` only reaches a *local* run: EDGE's force-run endpoint takes a trigger id and nothing else
- * (`EdgeTriggerManager.invokeTrigger` -> `forceRunCronTrigger(ctx, spaceId, triggerId)`), so a remote
- * trigger's run sees no event and resolves its `{{event.data.*}}` input templates to `undefined`.
- * TODO(wittjosiah): Carry the fire event to EDGE so a remote sync honours pressed-first ordering.
+ * event a scheduled fire would have supplied. `data` reaches a remote run too, through EDGE's force-run.
  */
 export const fireTrigger = (
   trigger: Trigger.Trigger,
@@ -328,9 +325,7 @@ export const fireTrigger = (
  * without touching the Routine.
  *
  * `priority` is an event template: a manual sync from one target's button carries that binding on the
- * fire event for pressed-first ordering, while a scheduled fire resolves it to nothing. It is inert
- * for a `remote` trigger, whose fire event EDGE's force-run endpoint cannot accept — see
- * {@link fireTrigger}.
+ * fire event for pressed-first ordering, while a scheduled fire resolves it to nothing.
  *
  * Nothing is written here. The draft is shown editable in the create-routine form and persisted on
  * Save, so a sync Routine is never created behind the user's back — which is also why there is no
@@ -412,10 +407,11 @@ export const syncAll = <A, E, R>({
   sync: (binding: Cursor.ExternalCursor) => Effect.Effect<A, E, R>;
 }): Effect.Effect<{ synced: number; outputs: A[] }, E | ConnectionAuthExpiredError, Exclude<R, Database.Service>> =>
   Effect.gen(function* () {
-    // `Database.load` resolves through the ref's own resolver, so a trigger-delivered input whose
-    // target is not yet in the working set still loads; only a ref with no resolver at all cannot.
+    // Loads through the ref's own resolver, so a trigger-delivered input whose target is not yet in the
+    // working set still loads; only a ref with no resolver at all cannot. A connection created just
+    // before the sync fired may not have replicated yet, so the load waits for it.
     const connection = connectionRef.isAvailable
-      ? yield* Database.load(connectionRef).pipe(
+      ? yield* loadReplicated(connectionRef).pipe(
           Effect.orElseSucceed((): Connection.Connection | undefined => undefined),
         )
       : undefined;
@@ -431,7 +427,9 @@ export const syncAll = <A, E, R>({
       ),
       Effect.orElseSucceed((): Cursor.ExternalCursor[] => []),
     );
-    const live = yield* Effect.filter(cursors, hasTarget);
+    const expected = priority ? yield* loadExpectedBinding(db, connection, priority) : undefined;
+    const known = expected && !cursors.some((cursor) => cursor.id === expected.id) ? [...cursors, expected] : cursors;
+    const live = yield* Effect.filter(known, hasTarget);
 
     const ordered = priority ? [...live].sort((a, b) => rank(a, priority) - rank(b, priority)) : live;
 
@@ -502,6 +500,68 @@ export const syncAll = <A, E, R>({
       outputs: outcomes.flatMap((outcome) => (outcome.kind === 'output' ? [outcome.output] : [])),
     };
   });
+
+/** In-run retries before {@link loadReplicated} hands a missing object to a continuation (about 7.5 s). */
+const REPLICATION_RETRIES = Schedule.exponential(Duration.millis(500), 2).pipe(Schedule.upTo({ times: 4 }));
+
+/** How long after an object's creation a miss is still put down to replication lag. */
+const REPLICATION_MAX_AGE = Duration.minutes(5);
+
+export interface LoadReplicatedOptions extends Ref.LoadOptions {
+  /** Retries within this run before `Operation.runAgain()`. */
+  readonly retries?: Schedule.Schedule<unknown, unknown>;
+  /** Age (from the object's id) past which a miss is final. */
+  readonly maxAge?: Duration.Input;
+}
+
+/**
+ * Loads an object a sync may start before it has replicated, such as a binding the client created just
+ * before firing the sync. Retries briefly within the run, then calls `Operation.runAgain()` so a
+ * continuation tries again. Fails with `EntityNotFoundError` once the object is older than `maxAge`.
+ */
+export const loadReplicated = <T>(
+  ref: Ref.Ref<T>,
+  { retries = REPLICATION_RETRIES, maxAge = REPLICATION_MAX_AGE, ...options }: LoadReplicatedOptions = {},
+): Effect.Effect<T, EchoError.EntityNotFoundError> =>
+  Effect.suspend(() => {
+    const eid = EID.tryParse(ref.uri);
+    const entityId = eid && EID.getEntityId(eid);
+    const age = entityId ? Date.now() - Key.EntityId.getTimestamp(entityId) : Infinity;
+    // An object already past `maxAge` is not coming, so its miss is final without waiting.
+    if (age >= Duration.toMillis(maxAge)) {
+      return Database.load(ref, options);
+    }
+    return Database.load(ref, options).pipe(
+      Effect.retry({ schedule: retries }),
+      Effect.catchTag('EntityNotFoundError', () => {
+        log.info('object not replicated yet; running again', { uri: ref.uri, age });
+        // `runAgain` raises a defect; `orDie` collapses its phantom `void` error type.
+        return Operation.runAgain().pipe(Effect.orDie);
+      }),
+    );
+  });
+
+/**
+ * The binding a sync was fired for (`priority`), once it and its target have replicated: a target
+ * bound and synced straight away can reach the runtime after the run starts, and the cursor query
+ * can miss a binding the index has not caught up with.
+ */
+const loadExpectedBinding = (
+  db: Database.Database,
+  connection: Connection.Connection,
+  cursorId: string,
+): Effect.Effect<Cursor.ExternalCursor | undefined> =>
+  Effect.gen(function* () {
+    if (!Key.EntityId.isValid(cursorId)) {
+      return undefined;
+    }
+    const cursor = yield* loadReplicated(db.makeRef(EID.make({ entityId: cursorId })));
+    if (!Obj.instanceOf(Cursor.Cursor, cursor) || !isForConnection(cursor, connection)) {
+      return undefined;
+    }
+    yield* loadReplicated(cursor.spec.target, { deleted: 'include' });
+    return cursor;
+  }).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
 
 /**
  * Whether a binding's target still exists. Deleting a target (a Mailbox, a Calendar) leaves its cursor
@@ -671,12 +731,12 @@ const reportSyncRoutineDisabled = (spaceId: Key.SpaceId): Effect.Effect<void, ne
   Effect.gen(function* () {
     const invoker = yield* Operation.Service;
     yield* Operation.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}.sync-routine-disabled`,
+      id: `${ConnectorNamespace.key}.sync-routine-disabled`,
       icon: 'ph--warning--regular',
-      title: ['sync-routine-disabled.title', { ns: meta.profile.key }],
-      description: ['sync-routine-disabled.description', { ns: meta.profile.key }],
-      actionLabel: ['open-routines.label', { ns: meta.profile.key }],
-      actionAlt: ['open-routines.label', { ns: meta.profile.key }],
+      title: ['sync-routine-disabled.title', { ns: ConnectorNamespace.key }],
+      description: ['sync-routine-disabled.description', { ns: ConnectorNamespace.key }],
+      actionLabel: ['open-routines.label', { ns: ConnectorNamespace.key }],
+      actionAlt: ['open-routines.label', { ns: ConnectorNamespace.key }],
       onAction: () =>
         void invoker.invokePromise(LayoutOperation.Open, {
           subject: [RoutinePath.getRoutinesSettingsPath(spaceId)],
@@ -860,10 +920,10 @@ export const prepare = ({
  */
 export const reportAccountMismatch: Effect.Effect<void, never, Operation.Service> = Effect.ignore(
   Operation.invoke(LayoutOperation.AddToast, {
-    id: `${meta.profile.key}.account-mismatch`,
+    id: `${ConnectorNamespace.key}.account-mismatch`,
     icon: 'ph--warning--regular',
-    title: ['account-mismatch.title', { ns: meta.profile.key }],
-    description: ['account-mismatch.description', { ns: meta.profile.key }],
+    title: ['account-mismatch.title', { ns: ConnectorNamespace.key }],
+    description: ['account-mismatch.description', { ns: ConnectorNamespace.key }],
   }),
 );
 
@@ -884,12 +944,12 @@ export const bind = ({
 }): Effect.Effect<Cursor.ExternalCursor, TargetAccountMismatchError, Database.Service> =>
   Effect.gen(function* () {
     const object = yield* Database.load(target).pipe(Effect.orDie);
-    const accessToken = yield* Database.load(connection.accessToken).pipe(Effect.orDie);
+    const accessToken = yield* Database.load(Connection.getAccessToken(connection)).pipe(Effect.orDie);
     // Settled first: a target that syncs another account is refused before anything is written.
     const adopted = yield* prepare({
       target: object,
       accessToken,
-      source: connection.accessToken,
+      source: Connection.getAccessToken(connection),
     });
     const name = accessToken.account;
     if (name) {
@@ -898,7 +958,7 @@ export const bind = ({
     if (adopted) {
       return adopted;
     }
-    const cursor = yield* Database.add(Cursor.makeExternal({ source: connection.accessToken, target }));
+    const cursor = yield* Database.add(Cursor.makeExternal({ source: Connection.getAccessToken(connection), target }));
     invariant(Cursor.isExternal(cursor));
     return cursor;
   });

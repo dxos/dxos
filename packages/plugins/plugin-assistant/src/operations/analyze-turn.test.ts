@@ -96,7 +96,7 @@ manager.contribute({
 });
 
 const setup = ({ reportStruggles, telemetry }: { reportStruggles: boolean; telemetry: boolean }) => {
-  registry.set(settingsAtom, { reportStruggles, codeMode: true });
+  registry.set(settingsAtom, { reportStruggles });
   telemetryEnabled = telemetry;
 };
 
@@ -155,7 +155,8 @@ describe('AnalyzeTurn', () => {
         expect(captured.events[0].event).toBe(STRUGGLE_EVENT);
         expect(captured.events[0].attributes).toMatchObject({
           model: 'dxn:com.anthropic.model.claude-sonnet-5.default',
-          code_mode: true,
+          // No host engine is contributed, so the turn ran without code mode although it is not disabled.
+          code_mode: false,
           cause: 'tool_faulty',
           cause_group: 'tooling',
           trajectory_key: 'trajectories/2026-10-06/test.ndjson.gz',

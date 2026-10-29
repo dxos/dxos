@@ -23,33 +23,35 @@ type HeyGenTokenFormValues = Schema.Schema.Type<typeof HeyGenTokenForm>;
  * `heygen.com`) so `plugin-studio`'s generate operation can resolve it via `CredentialsService`.
  * Mirrors plugin-ibkr's non-OAuth `credentialForm` connector.
  */
-export const createHeyGenConnectorEntry = () => ({
-  id: HEYGEN_CONNECTOR_ID,
-  source: HEYGEN_SOURCE,
-  label: 'HeyGen',
-  credentialForm: {
-    schema: HeyGenTokenForm,
-    defaultValues: { token: '' } satisfies Partial<HeyGenTokenFormValues>,
-    onSubmit: ({ values, connector }: { values: HeyGenTokenFormValues; connector: { id: string; label?: string } }) =>
-      Effect.sync(() => {
-        const token = values.token.trim();
-        if (!token) {
-          throw new Error('HeyGen connection requires an API key.');
-        }
+export const createHeyGenConnectorEntry = () =>
+  ({
+    id: HEYGEN_CONNECTOR_ID,
+    source: HEYGEN_SOURCE,
+    label: 'HeyGen',
+    kind: 'custom',
+    credentialForm: {
+      schema: HeyGenTokenForm,
+      defaultValues: { token: '' } satisfies Partial<HeyGenTokenFormValues>,
+      onSubmit: ({ values, connector }: { values: HeyGenTokenFormValues; connector: { id: string; label?: string } }) =>
+        Effect.sync(() => {
+          const token = values.token.trim();
+          if (!token) {
+            throw new Error('HeyGen connection requires an API key.');
+          }
 
-        const accessToken = Obj.make(AccessToken.AccessToken, {
-          source: HEYGEN_SOURCE,
-          token,
-        });
-        const connection = Obj.make(Connection.Connection, {
-          name: connector.label ?? 'HeyGen',
-          connectorId: connector.id,
-          accessToken: Ref.make(accessToken),
-        });
-        return { kind: 'complete' as const, accessToken, connection };
-      }),
-  },
-});
+          const accessToken = Obj.make(AccessToken.AccessToken, {
+            source: HEYGEN_SOURCE,
+            token,
+          });
+          const connection = Obj.make(Connection.Connection, {
+            name: connector.label ?? 'HeyGen',
+            connectorId: connector.id,
+            accessToken: Ref.make(accessToken),
+          });
+          return { kind: 'complete' as const, accessToken, connection };
+        }),
+    },
+  }) satisfies ConnectorSpec.ConnectorEntry;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

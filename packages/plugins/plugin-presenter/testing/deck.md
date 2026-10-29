@@ -1,16 +1,16 @@
-<!--
-.slide: data-background-video="https://media.dxos.network/DXOS.mp4" data-background-video-loop="true"
--->
+---
+backgroundVideo: 'https://media.dxos.network/DXOS.mp4'
+---
 
 ---
 
-<!--
-.slide: data-background="#151515"
--->
+layout: center
+background: '#151515'
+---
 
-![img](https://media.dxos.network/dxos-logotype-blue.png)
+![DXOS](https://media.dxos.network/dxos-logotype-blue.png)
 
-Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
+Join us on 𝕏 and Discord
 <br>
 [x.com/dxos_org](https://x.com/dxos_org)
 <br>
@@ -18,21 +18,18 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 
 ---
 
-<!--
-.slide: data-background="#151515"
--->
+layout: center
+background: '#151515'
+---
 
 ## Mission Statement
-
-<!-- .element: class="!text-center !p-0" -->
 
 > To enable open source developers to build «&nbsp;commercially-competitive&nbsp;» privacy-preserving applications.
 
 ---
 
-<!--
-.slide: data-background="#151515"
--->
+background: '#151515'
+---
 
 > What is a Decentralized Operating System?
 
@@ -41,20 +38,21 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 3. Networking
 4. Compute
 
-notes:
-
+<!--
 - more difficult when decentralized; online/offline
 - some form of user management; permissions; collaboration
 - irony of the cloud internet has become centralized; client/server
 - real power of the cloud; new compute paradigms; AI; but moving to the edge; offline/latency
 - interaction model; terminal; windows
+-->
 
 ---
 
-<!--
-ECHO
-.slide: data-background="#96254F" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-echo.svg" data-background-position="100% 50%"
--->
+layout: image
+image: 'https://media.dxos.network/bg-echo.svg'
+backgroundOpacity: 0.5
+backgroundPosition: '100% 50%'
+---
 
 # ECHO
 
@@ -68,10 +66,11 @@ ECHO
 
 ---
 
-<!--
-HALO
-.slide: data-background="#D95B3C" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-halo.svg" data-background-position="100% 50%"
--->
+layout: image
+image: 'https://media.dxos.network/bg-halo.svg'
+backgroundOpacity: 0.5
+backgroundPosition: '100% 50%'
+---
 
 # HALO
 
@@ -85,10 +84,11 @@ HALO
 
 ---
 
-<!--
-MESH
-.slide: data-background="#3A2862" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-mesh.svg" data-background-position="100% 50%"
--->
+layout: image
+image: 'https://media.dxos.network/bg-mesh.svg'
+backgroundOpacity: 0.5
+backgroundPosition: '100% 50%'
+---
 
 # MESH
 
@@ -102,10 +102,11 @@ MESH
 
 ---
 
-<!--
-KUBE
-.slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-kube.svg" data-background-position="100% 50%"
--->
+layout: image
+image: 'https://media.dxos.network/bg-kube.svg'
+backgroundOpacity: 0.5
+backgroundPosition: '100% 50%'
+---
 
 # EDGE
 
@@ -119,28 +120,9 @@ KUBE
 
 ---
 
-<!--
-.slide: data-visibility="hidden"
--->
-
-# FADE
-
-1. Federated Agent Deployment Environment
-2. Functionally Autonomous Distributed Ecosystem
-3. Flexible Autonomous Decentralized Engine
-4. Fault-tolerant Agent-driven Decentralized Execution
-5. Fully Autonomous Decentralized Entity
-6. Function Agent Decentralized Environment
-7. Federated Autonomous Distributed Execution
-8. Federated Adaptive Decentralized Engine
-
-## Decentralized Compute
-
+background: '#111111'
+backgroundOpacity: 0.5
 ---
-
-<!--
-.slide: data-background="#111111" data-background-opacity="0.5"
--->
 
 # Code
 
@@ -154,18 +136,14 @@ const Component = ({ str }: { str?: string }) => {
 
 ---
 
-<!--
-.slide: data-background-transition="zoom"
--->
+layout: center
+---
 
 # Composer
-
-<!-- .element: class="!text-center !p-0" -->
 
 > _Super App_: n. A mobile or web application that integrates a wide variety of services and functions into a single platform.
 
 ---
 
-<!--
-.slide: data-background-video="https://media.dxos.network/DXOS.mp4"
--->
+backgroundVideo: 'https://media.dxos.network/DXOS.mp4'
+---

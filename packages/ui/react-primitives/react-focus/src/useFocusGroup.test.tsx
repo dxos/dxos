@@ -127,6 +127,49 @@ describe('useFocusGroup', () => {
     fireEvent.keyDown(getByTestId('field'), { key: 'ArrowDown' });
     expect(document.activeElement).toBe(getByTestId('field'));
   });
+  test('a grid moves to the item on screen in the arrow direction, among the selected items', () => {
+    // Two columns, the left one with a header button that is not a target; DOM order is column-first.
+    const Grid = () => {
+      const { ref, ...props } = useFocusGroup({ axis: 'grid', itemSelector: '[data-card]' });
+      return (
+        <div {...props} data-testid='group' ref={ref}>
+          <div>
+            <button data-testid='header'>header</button>
+            <button data-card data-testid='a1' />
+            <button data-card data-testid='a2' />
+          </div>
+          <div>
+            <button data-card data-testid='b1' />
+          </div>
+        </div>
+      );
+    };
+    const { getByTestId } = render(<Grid />);
+    const place = (id: string, left: number, top: number) => {
+      getByTestId(id).getBoundingClientRect = () => DOMRect.fromRect({ x: left, y: top, width: 100, height: 50 });
+    };
+    place('header', 0, 0);
+    place('a1', 0, 60);
+    place('a2', 0, 120);
+    place('b1', 120, 110);
+
+    getByTestId('a2').focus();
+    // In DOM order ArrowRight would step to `b1` only by luck of order; here it is level with `a2`.
+    fireEvent.keyDown(getByTestId('a2'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(getByTestId('b1'));
+    fireEvent.keyDown(getByTestId('b1'), { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(getByTestId('a2'));
+    fireEvent.keyDown(getByTestId('a2'), { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(getByTestId('a1'));
+    // The header is not a card, so up from the first card goes nowhere.
+    fireEvent.keyDown(getByTestId('a1'), { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(getByTestId('a1'));
+    // Nothing below `b1` in its column: the end of a column is an end.
+    fireEvent.keyDown(getByTestId('a1'), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(getByTestId('b1'));
+    fireEvent.keyDown(getByTestId('b1'), { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(getByTestId('b1'));
+  });
 });
 
 const TextGroup = () => {

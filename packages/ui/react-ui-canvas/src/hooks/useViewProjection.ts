@@ -7,12 +7,13 @@ import { useMemo } from 'react';
 
 import {
   type CanvasAtoms,
+  type CanvasHistory,
   type FreehandProjectionOptions,
   type Projection,
   createFreehandProjection,
+  withHistory,
 } from '../engine/index.ts';
 import { type ViewStore } from '../model/index.ts';
-import { withUndo } from '../utils/index.ts';
 import { useRegistry } from './useRegistry.ts';
 
 export type UseViewProjectionOptions = {
@@ -24,17 +25,20 @@ export type UseViewProjectionOptions = {
    * that owns one scene and its side effects and shares the projection with the view.
    */
   projection?: Projection;
+  /** Each intent is one of its undo steps. */
+  history: Pick<CanvasHistory, 'commit'>;
 };
 
 /**
- * The projection of the scene at the head of the view's path, recording into the view's undo log;
- * shared by the view and its panels so every edit is undoable.
+ * The projection of the scene at the head of the view's path, each intent a commit of the view's history; shared by
+ * the view and its panels so every edit is undoable. A host-owned projection is used as given.
  */
 export const useViewProjection = ({
   store,
   atoms,
   createProjection = createFreehandProjection,
   projection,
+  history,
 }: UseViewProjectionOptions): Projection => {
   const registry = useRegistry();
   const path = useAtomValue(atoms.path);
@@ -42,18 +46,16 @@ export const useViewProjection = ({
   return useMemo(
     () =>
       projection ??
-      withUndo(
+      withHistory(
         createProjection({
           registry,
           store,
           sceneId,
-          // Snap lands on the lattice only while both snap and the lattice toggle are on.
-          constrained: () => registry.get(atoms.snap) && registry.get(atoms.lattice),
+          // On a lattice scene, snap lands on the lattice's cells.
+          constrained: () => registry.get(atoms.snap),
         }),
-        registry,
-        atoms.undo,
-        sceneId,
+        history,
       ),
-    [projection, createProjection, registry, store, sceneId, atoms.undo, atoms.snap, atoms.lattice],
+    [projection, createProjection, registry, store, sceneId, history, atoms.snap],
   );
 };

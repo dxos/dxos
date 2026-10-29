@@ -1,0 +1,132 @@
+---
+id: org.dxos.spec.changelog
+name: DSL.Changelog
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The changelog dialect. Adds a `## Changelog` section to a spec: an append-only log of every
+decision that changed it, each one attributed to the person or the agent that made it. The body of
+a spec says what is true now; the changelog says who decided it, when, and why.
+
+A spec is written by people and agents together. Typically the person gives coarse direction and
+the agent fills in the gaps. The two carry different authority, so the log keeps their knowledge
+in separate entries: every entry names exactly one decider, typed as `user:` or `agent:`, and
+"which parts of this spec did a person choose?" is a filter, not an archaeology project.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Actors
+
+Every actor reference carries one of two prefixes. The prefix is the point of the dialect: the
+linter rejects a `by:` without one.
+
+| Form              | Who                                                   | Example                       |
+| ----------------- | ----------------------------------------------------- | ----------------------------- |
+| `user:<handle>`   | A person, by GitHub username or email.                | `user:alice`, `user:a@b.org` |
+| `agent:<name>`    | An agent, by harness or product name — never a model. | `agent:claude-code`           |
+
+Name an agent by what ran it (`agent:claude-code`, `agent:composer-assistant`), not by the model
+that served it: models change mid-session and the name must stay stable across the log.
+
+## Rules
+
+1. **Every change to a spec adds a decision.** A change to anything outside `## Changelog` comes
+   with at least one new entry in the same change. The check in
+   `packages/reflect/deus/scripts/check-changelog.ts` enforces this in CI.
+2. **One decider per entry.** An entry is `by:` exactly one `user:` or `agent:`. Knowledge from
+   two sources is two entries, even when they land in the same edit.
+3. **A person's input is recorded faithfully, first.** When a person gives direction, the first
+   entry is `by: user:<them>` and says what they said — nothing more. `quote:` carries their words
+   verbatim. `context:` may add facts that make the entry readable on its own (what a name refers
+   to, where it was said); it adds no requirement, no rationale they did not give, and no
+   assumption. The decider is who chose, not who typed: an agent writes this entry, the person
+   made it.
+4. **What the agent adds is a separate entry.** Gaps the agent filled — shapes, names, edge cases,
+   a reading of an ambiguous instruction — go in later `by: agent:<name>` entries, one per
+   independent choice, referring to the entry they build on (`Fills in [D-1]`).
+5. **An agent entry names its principal.** `for:` is the person whose instruction the agent was
+   acting under. It is required on `agent:` entries and forbidden on `user:` entries.
+6. **Approval is a decision.** A person who reviews and accepts agent entries makes a new
+   `user:` entry saying so ("Approve [D-2] and [D-3]."). Nothing in the approved entry changes.
+7. **Append-only.** Never edit or delete an entry. To reverse or refine one, append a new entry
+   with `supersedes: D-n`. The superseded entry stays — it is the trace.
+8. **Identifiers are monotonic, newest last.** `D-1`, `D-2`, … in the order appended. Never reuse
+   or renumber.
+
+## Definitions
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true ("Bounds are derived, never stored."), not as the edit
+    that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    quote?: Prose               # user entries only: the person's words, verbatim
+    context?: Prose             # facts added for readability; never a requirement or assumption
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
+```
+
+## Example
+
+A person asks for a feature in one line; the agent records it, then fills it in; the person
+approves part of it and overrides the rest.
+
+```mdl
+decision D-1: The canvas grows to fit its content.
+  date: 2026-10-02
+  by: user:alice
+  quote: "canvas should just grow when stuff goes past the edge"
+  context: "The canvas" is the `Scene` surface; said in review of the M3 demo.
+  affects: [Scene]
+  source: https://github.com/dxos/dxos/pull/<n>
+```
+
+```mdl
+decision D-2: Bounds are derived from content, never stored. Fills in [D-1].
+  date: 2026-10-02
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene]
+  why: Stored bounds drift from the content whenever a node moves outside an edit path.
+```
+
+```mdl
+decision D-3: Bounds grow to the major grid. Fills in [D-1].
+  date: 2026-10-02
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene, F-2.1]
+  why: Growing to the minor grid re-lays the canvas on every drag step.
+  rejected:
+    - Fixed padding: clips large nodes at the edge.
+```
+
+```mdl
+decision D-4: Approve [D-2].
+  date: 2026-10-05
+  by: user:alice
+```
+
+```mdl
+decision D-5: Bounds grow to the minor grid while dragging and snap to the major grid on drop.
+  date: 2026-10-05
+  by: user:alice
+  supersedes: D-3
+  quote: "major grid feels laggy, snap on drop instead"
+```

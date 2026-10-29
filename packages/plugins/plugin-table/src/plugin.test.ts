@@ -7,16 +7,19 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { TablePlugin } from '#plugin';
+import * as TablePlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { TableNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), TablePlugin.make()] });
+
+const moduleId = (name: string) => `${TableNamespace.key}.module.${name}`;
 
 describe('TablePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     // on-type-added needs SpaceEvents (not fired in tests).
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), TablePlugin()],
+      plugins: [ClientPlugin.make({}), TablePlugin.make()],
     });
 
     // After autoStart: OperationHandler, schema, and SkillDefinition are dependency-mode roots and

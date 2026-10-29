@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { MeetingPlugin } from '#plugin';
+import * as MeetingPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { MeetingNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), MeetingPlugin.make()] });
+
+const moduleId = (name: string) => `${MeetingNamespace.key}.module.${name}`;
 
 describe('MeetingPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), MeetingPlugin()],
+      plugins: [ClientPlugin.make({}), MeetingPlugin.make()],
     });
 
     // AppGraphBuilder requires CallsCapabilities.Manager, which the headless (node) variant of

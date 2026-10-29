@@ -7,7 +7,8 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Type } from '@dxos/echo';
+import { Database, Feed, Obj, Type } from '@dxos/echo';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type * as CallManager from '@dxos/plugin-calls/CallManager';
@@ -16,7 +17,7 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
-import { type Channel } from '@dxos/types';
+import { type Channel, Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
 
@@ -30,6 +31,32 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const store = yield* MeetingCapabilities.State;
+
+    /** A simulated call's scripted lines go to the active meeting's transcript, as live transcription would write them. */
+    const writeUtterance = async ({ speaker, text }: CallManager.SimulatedUtterance) => {
+      const meeting = store.state.activeMeeting;
+      const db = meeting && Obj.getDatabase(meeting);
+      if (!meeting || !db) {
+        return;
+      }
+
+      const transcript = await meeting.transcript.load();
+      const feed = await transcript.feed.load();
+      const created = new Date().toISOString();
+      const message = Obj.make(Message.Message, {
+        created,
+        blocks: [{ _tag: 'transcript', started: created, text }],
+        sender: { name: speaker },
+      });
+      await Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+    };
+    // Subscribed here rather than in `onJoin`, which plugin-calls never invokes; utterances only flow in a simulated call.
+    const callManager = yield* Capability.get(CallsCapabilities.Manager);
+    const unsubscribe = callManager.simulatedUtterance.on(
+      (utterance) => void writeUtterance(utterance).catch((err) => log.catch(err)),
+    );
+    // The manager outlives this module, so a reactivation would otherwise write every line twice.
+    yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
 
     return Capability.contribute(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {

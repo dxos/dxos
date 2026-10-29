@@ -1,7 +1,6 @@
 FROM ubuntu:24.04
 
-# System packages, Node, pnpm and Playwright's native dependencies: `ci-packages.sh`, which the Depot CI
-# image (`.depot/workflows/ci-image.yml`) runs too.
+# System packages, Node, pnpm and Playwright's native dependencies: `ci-packages.sh`.
 ARG NODE_VERSION=24.11.1
 COPY ci-packages.sh /tmp/ci-packages.sh
 RUN NODE_VERSION=${NODE_VERSION} bash /tmp/ci-packages.sh \

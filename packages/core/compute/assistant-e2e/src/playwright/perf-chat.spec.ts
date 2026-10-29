@@ -132,10 +132,7 @@ const readQueuedProbe = async (page: Page): Promise<number | undefined> => {
     : undefined;
 };
 
-const chatPrompt = (page: Page): Locator =>
-  page
-    .getByText(/enter question or command/i)
-    .locator('xpath=ancestor::*[contains(@class,"cm-editor")]//*[contains(@class,"cm-content")]');
+const chatPrompt = (page: Page): Locator => page.getByTestId('assistant.prompt').locator('.cm-content');
 
 /**
  * Seeds the space, then reopens it and measures the returning profile: a busy space is one somebody

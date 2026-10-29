@@ -1,0 +1,206 @@
+> ---
+  "---" punctuation.definition.begin.frontmatter
+> id: org.dxos.review.echo
+  "i" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "d" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "o" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+  "rg.dxos.review.echo" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+> name: Echo
+  "n" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "ame" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "E" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+  "cho" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+> version: 0.1.0
+  "v" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "ersion" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "0.1.0" meta.embedded.block.frontmatter constant.numeric.float.yaml
+> ---
+  "---" punctuation.definition.end.frontmatter
+> 
+> ECHO object-graph conventions a linter cannot express. Each `rule` block below
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "rule" meta.paragraph.markdown markup.inline.raw.string.markdown
+  "`" meta.paragraph.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+> is discovered by the agentic-review harness.
+> 
+> ## Extensions
+  "##" markup.heading.markdown heading.2.markdown punctuation.definition.heading.markdown
+  "Extensions" markup.heading.markdown heading.2.markdown entity.name.section.markdown
+> 
+> | Term   | URI                   |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "Term" markup.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "URI" markup.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> | ------ | --------------------- |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "------" markup.table.markdown punctuation.separator.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "---------------------" markup.table.markdown punctuation.separator.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> | `rule` | org.dxos.mdl.rule@1.0 |
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "rule" markup.table.markdown markup.inline.raw.string.markdown
+  "`" markup.table.markdown markup.inline.raw.string.markdown punctuation.definition.raw.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+  "org.dxos.mdl.rule@1.0" markup.table.markdown
+  "|" markup.table.markdown punctuation.definition.table.markdown
+> 
+> ## Rules
+  "##" markup.heading.markdown heading.2.markdown punctuation.definition.heading.markdown
+  "Rules" markup.heading.markdown heading.2.markdown entity.name.section.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> rule inline-obj-parent: Set parent at make time with [Obj.Parent]
+  "rule" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.block.mdl
+  "inline-obj-parent" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Set parent at make time with " markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.begin.mdl
+  "Obj.Parent" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.end.mdl
+>   When the parent is already known at construction, pass it inline as
+>   `[Obj.Parent]: parent` on `Obj.make` (or a type factory that forwards to it)
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "[Obj.Parent]: parent" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.make" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   rather than `Obj.make(...)` followed by `Obj.setParent(obj, parent)`. Inline
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.make(...)" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.setParent(obj, parent)" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   parent is the supported make-time API and keeps the cascade edge on the same
+>   statement as the object. Flag a newly created object that is then immediately
+>   parented with `Obj.setParent` when that parent was in scope at `make`. Do not
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.setParent" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "make" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   flag `Obj.setParent` used to reparent or unparent an *existing* object, to
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.setParent" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   set parent to `undefined`, or when the parent is only determined after
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "undefined" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   construction (conditional, async lookup). Do not flag comments or docs that
+>   mention `Obj.setParent`.
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.setParent" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   scope: repo
+  "scope" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "repo" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>   files:
+  "files" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - packages/**/*.ts
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+>     - packages/**/*.tsx
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+>   grep: Obj\.setParent
+  "grep" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>   severity: warn
+  "severity" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "warn" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> rule obj-update-push: Append inside Obj.update with push, not spread
+  "rule" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.block.mdl
+  "obj-update-push" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Append inside Obj.update with push, not spread" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   Inside `Obj.update`, append to an object array with `.push` (or `.unshift` /
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.update" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  ".push" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  ".unshift" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   `.splice` for insert-at-index). Do not assign a spread copy
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  ".splice" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   (`arr = [...arr, item]`, `arr = [...arr, ...items]`, `arr = arr.concat(...)`)
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "arr = [...arr, item]" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "arr = [...arr, ...items]" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "arr = arr.concat(...)" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   — Automerge array spread is O(n) per append; `push` is O(1). Canonical
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "push" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   example: `Obj.update(set, (set) => { set.tasks.push(Ref.make(task)); })`.
+  "example" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.update(set, (set) => { set.tasks.push(Ref.make(task)); })" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   Flag a spread/concat assign of an object's own array field inside an
+>   `Obj.update` callback (or an equivalent in-place mutation block on a live
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.update" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   proxy). Do not flag replacing the array with a *different* sequence
+>   (`filter`, `map`, reorder, slice-out) — that is not an append. Do not flag
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "filter" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "map" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   spreads of local non-proxy arrays, or spreads outside `Obj.update`.
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "Obj.update" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+>   scope: repo
+  "scope" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "repo" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+>   files:
+  "files" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - packages/**/*.ts
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+>     - packages/**/*.tsx
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+>   grep: Obj\.update
+  "grep" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>   severity: warn
+  "severity" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "warn" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 

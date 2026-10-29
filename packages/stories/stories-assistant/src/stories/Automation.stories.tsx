@@ -15,10 +15,10 @@ import { Filter, Query, Ref } from '@dxos/echo';
 import * as ChessOperation from '@dxos/plugin-chess/ChessOperation';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { Text } from '@dxos/schema';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Automation',
   render: ModuleContainer,

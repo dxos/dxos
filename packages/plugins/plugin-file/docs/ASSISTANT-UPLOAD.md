@@ -333,7 +333,7 @@ Three separate questions, three different answers:
    holding a file and want to know where it came from. A tag also leaves a released type unchanged
    for a concern that is not intrinsic to files.
 
-   Implementation detail that is not free: `Obj.addTag` takes a `Ref.Ref<Tag.Tag>`, not a string
+   Implementation detail that is not free: `Obj.addTag` takes a `Tag.Tag` object, not a string
    (`core/echo/echo/src/Obj.ts:671`), so the tag is an object needing stable identity per space — and
    there is **no find-or-create helper in the repo** (nothing matches `findOrCreateTag`/`ensureTag`).
    The operation must resolve or create it, and two concurrent uploads into a fresh space must not
@@ -343,7 +343,7 @@ Three separate questions, three different answers:
 ## Tracked, not decided in this pass
 
 - **Attribution of assistant uploads** (was question 4). Deferred deliberately, not dropped. When it
-  is picked up, note that `Obj.addTag` takes a `Ref.Ref<Tag.Tag>` rather than a string
+  is picked up, note that `Obj.addTag` takes a `Tag.Tag` object rather than a string
   (`core/echo/echo/src/Obj.ts:671`), there is no find-or-create helper in the repo, and two
   concurrent uploads into a fresh space must not each mint a tag object.
 

@@ -51,7 +51,7 @@ export const ToolResults = Util.composable<HTMLDivElement, ToolResultsProps>(
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
       <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
-        {state === 'loading' && <p className='p-3 text-sm text-fg-muted'>{t('calling-tool.message')}</p>}
+        {state === 'loading' && <p className='p-trim-md text-sm text-fg-muted'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
           <Banner.Root valence='error'>
             {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}

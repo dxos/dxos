@@ -14,7 +14,8 @@ if (result._tag === 'Success') {
 ```
 
 The value is `{ _tag: 'Success', success }` or `{ _tag: 'Failure', failure }`. There is no `value`
-field.
+field: read `result.success`, never `result.value` or `result.success.value`. `print(result)` shows
+these same fields.
 
 ## Effect.exit
 
@@ -39,3 +40,6 @@ Use `Effect.exit` around `Operation.invoke`, and `Effect.result` around `Databas
 - Loading a ref as `yield* ref.load` or `yield* Database.get(ref)`: neither exists, and the failure
   reads as `is not iterable`. Use `yield* Database.load(ref)`.
 - Resolving a DXN the system prompt does not list.
+- Guessing the shape of a value: print it first, since `print` shows its real fields (`printing.md`).
+- Printing an object with `JSON.stringify`: it hides the object's relations and referrers. Print the
+  object itself.

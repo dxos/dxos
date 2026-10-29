@@ -35,11 +35,6 @@ export type ToolbarActions = {
   zoomReset: () => void;
   zoomIn: () => void;
   zoomOut: () => void;
-  snap: boolean;
-  toggleSnap: () => void;
-  /** On a lattice scene: whether snap lands on the lattice rather than the basic grid; absent elsewhere. */
-  lattice?: boolean;
-  toggleLattice?: () => void;
   debug: boolean;
   toggleDebug: () => void;
   canUndo: boolean;
@@ -151,31 +146,10 @@ export type ActionToolbarProps = Util.ThemedClassName<{
   capabilities: Capabilities;
 }>;
 
-/** Everything that changes the scene, plus snap, history, clipboard, creation and debug. */
+/** Everything that changes the scene, plus history, clipboard, creation and debug. */
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
     <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
-      <Button.Toggle
-        variant='ghost'
-        iconOnly
-        icon='ph--grid-four--regular'
-        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
-        pressed={actions.snap}
-        data-testid='toolbar-snap'
-        onPressedChange={actions.toggleSnap}
-      />
-      {actions.toggleLattice && (
-        <Button.Toggle
-          variant='ghost'
-          iconOnly
-          icon='ph--squares-four--regular'
-          label={`Lattice (${shortcutFor('lattice')}): snap to the lattice's cells rather than the basic grid`}
-          pressed={actions.lattice}
-          data-testid='toolbar-lattice'
-          onPressedChange={actions.toggleLattice}
-        />
-      )}
-      <Toolbar.Separator variant='line' />
       <Button.Root
         variant='ghost'
         iconOnly

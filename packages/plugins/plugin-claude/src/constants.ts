@@ -57,3 +57,6 @@ export const CLAUDE_CODE_AGENT = 'claude-code';
 
 /** Harness id of Claude Code run by EDGE in a sandbox container (`chat.session.harness`). */
 export const CLAUDE_CODE_EDGE_AGENT = 'claude-code-edge';
+
+/** Prefix of the keys coding agents write to chats and to this device's storage; changing it would orphan them. */
+export const AGENT_KEY_PREFIX = 'org.dxos.plugin.code';

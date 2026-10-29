@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
+import { File } from '@dxos/types';
 
 import * as DiscordBot from './DiscordBot.ts';
 
@@ -43,6 +44,12 @@ export const Reply = Operation.make({
     replyTo: Schema.optional(
       Schema.String.annotate({ description: 'A message id (`message` in the header) to reply to.' }),
     ),
+    files: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).check(Schema.isMaxLength(DiscordBot.MAX_ATTACHMENTS)).annotate({
+        description:
+          'Files to attach (at most 10, images, videos, documents up to 10 MB each), as references to File objects in the space.',
+      }),
+    ),
   }),
   output: Posted,
 });
@@ -62,6 +69,12 @@ export const DirectMessage = Operation.make({
       description: 'The person: their Discord user id (`from` in the header), @username, or name as you know them.',
     }),
     text: Schema.String.annotate({ description: 'The message, in Discord markdown.' }),
+    files: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).check(Schema.isMaxLength(DiscordBot.MAX_ATTACHMENTS)).annotate({
+        description:
+          'Files to attach (at most 10, images, videos, documents up to 10 MB each), as references to File objects in the space.',
+      }),
+    ),
   }),
   output: Posted,
 });

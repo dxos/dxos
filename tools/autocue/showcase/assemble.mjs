@@ -7,7 +7,7 @@
  * Assembles hand-recorded clips (Screen Studio exports) into the Grid composite: `tour-1`..`tour-<n>` become the tour
  * cells in order, every other video or screenshot a grid cell. Inputs are normalized to 1920x1080 at 60 fps (a screenshot
  * becomes a still clip), laid out by `layout.mjs` so a repeated clip is never near itself, and rendered frame by frame
- * by `render.mjs`. The composite is written back beside the clips as `composite.mp4`. Recording steps: SHOWCASE.md.
+ * by `render.mjs`. The composite is written back beside the clips as `composite.mp4`. Recording steps: docs/SHOWCASE.md.
  *
  *   node tools/autocue/showcase/assemble.mjs --clips /Volumes/SSD1/Media/Showcase/2026-10-17 [--hold 20000] [--still 3]
  *     [--full] [--overlap 12000] [--zoom 15000] [--reuse-tours] [--once map,spacetime] [--min 3] [--theme light]
@@ -89,7 +89,7 @@ const tours = inputs.filter((file) => /^tour-\d+$/.test(name(file))).sort((a, b)
 const cells = inputs.filter((file) => !tours.includes(file));
 log(`${tours.length} tour clips, ${cells.length} grid clips in ${SOURCE}`);
 if (tours.length < 1 || tours.some((file, index) => step(file) !== index + 1)) {
-  console.error('need tour-1 … tour-<n>, numbered from 1 without gaps; see SHOWCASE.md');
+  console.error('need tour-1 … tour-<n>, numbered from 1 without gaps; see docs/SHOWCASE.md');
   process.exit(1);
 }
 

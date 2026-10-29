@@ -17,6 +17,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
@@ -37,6 +38,17 @@ export class Binding extends Type.makeObject<Binding>(DXN.make('org.dxos.type.co
       added: Schema.Array(Ref.Ref(Obj.Unknown)),
       removed: Schema.Array(Ref.Ref(Obj.Unknown)),
     }),
+
+    /**
+     * Connections whose MCP server the conversation turns on or off. A connection never named here
+     * follows the space default, which is on.
+     */
+    connections: Schema.optional(
+      Schema.Struct({
+        added: Schema.Array(Ref.Ref(Obj.Unknown)),
+        removed: Schema.Array(Ref.Ref(Obj.Unknown)),
+      }),
+    ),
   }),
 ) {}
 export type BindingProps = Partial<{
@@ -48,10 +60,7 @@ export class Bindings {
   readonly skills = new ComplexSet<Ref.Ref<Skill.Skill>>((ref) => ref.uri);
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
-    const echoUri = EID.tryParse(ref.uri);
-    return echoUri ? EID.getEntityId(echoUri) : undefined;
-  });
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => entityIdOf(ref.uri) ?? ref.uri);
 
   toJSON(): { skills: URI.URI[]; objects: URI.URI[] } {
     return {
@@ -70,7 +79,23 @@ export class Bindings {
  */
 const bindingWrites = new Map<string, number>();
 
-const bindingWriteCount = (feed: Feed.Feed): number => bindingWrites.get(feed.id) ?? 0;
+/** Writes another process may have made to any feed's bindings; see {@link noteExternalBindingWrite}. */
+let externalBindingWrites = 0;
+
+const bindingWriteCount = (feed: Feed.Feed): number => (bindingWrites.get(feed.id) ?? 0) + externalBindingWrites;
+
+/**
+ * Tells this realm's binders that bindings may have been written outside it, so their next {@link Binder.sync}
+ * re-reads. For a host whose tools run in another process and whose live query does not carry their writes back
+ * (an EDGE agent: `enable-skills` binds in operation-service while the turn runs in compute-service).
+ */
+export const noteExternalBindingWrite = (): void => {
+  externalBindingWrites++;
+};
+
+/** How long a sync after an external write waits for the index to return it: EDGE indexes a feed append asynchronously. */
+const EXTERNAL_WRITE_WAIT_MS = 5_000;
+const EXTERNAL_WRITE_POLL_MS = 250;
 
 const countBindingWrite = (feed: Feed.Feed): void => {
   bindingWrites.set(feed.id, (bindingWrites.get(feed.id) ?? 0) + 1);
@@ -91,6 +116,7 @@ export type BinderOptions = {
 export class Binder extends Resource {
   private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
+  private readonly _connections = Atom.make<ReadonlyMap<URI.URI, boolean>>(new Map()).pipe(Atom.keepAlive);
   private readonly _registry: AtomRegistry.AtomRegistry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Context.Context<Database.Service>;
@@ -100,6 +126,11 @@ export class Binder extends Resource {
 
   /** {@link bindingWriteCount} at the last read of the bindings query. */
   #readWrites = 0;
+
+  /** `externalBindingWrites`, this realm's writes to the feed, and the binding items at the last read of the query. */
+  #readExternal = 0;
+  #readLocal = 0;
+  #readItems = 0;
 
   /**
    * Keys of the refs the feed already binds, whether or not their targets resolve here: a registry
@@ -137,6 +168,18 @@ export class Binder extends Resource {
   }
 
   /**
+   * Connections the conversation has turned on (`true`) or off (`false`), keyed by local ECHO URI.
+   * One absent from the map follows the space default.
+   */
+  get connections(): Atom.Atom<ReadonlyMap<URI.URI, boolean>> {
+    return this._connections;
+  }
+
+  getConnections(): ReadonlyMap<URI.URI, boolean> {
+    return this._registry.get(this._connections);
+  }
+
+  /**
    * Gets the current skills value.
    */
   getSkills(): Skill.Skill[] {
@@ -164,6 +207,13 @@ export class Binder extends Resource {
     return this._registry.subscribe(this._objects, () => cb(this._registry.get(this._objects)));
   }
 
+  /**
+   * Subscribe to changes in connection states.
+   */
+  subscribeConnections(cb: (connections: ReadonlyMap<URI.URI, boolean>) => void): () => void {
+    return this._registry.subscribe(this._connections, () => cb(this._registry.get(this._connections)));
+  }
+
   protected override async _open(): Promise<void> {
     if (this._hold) {
       this.#pending = [];
@@ -183,12 +233,14 @@ export class Binder extends Resource {
     }
     invariant(Obj.getDatabase(this._feed), 'The feed must be stored before its bindings are flushed.');
     this.#pending = undefined;
-    const { skills, objects } = this._reduce(held);
-    if (skills.size > 0 || objects.size > 0) {
+    const { skills, objects } = reduce(held);
+    const connections = connectionChanges(held);
+    if (skills.size > 0 || objects.size > 0 || connections.added.length > 0 || connections.removed.length > 0) {
       await this._append(
         Obj.make(Binding, {
           skills: { added: [...skills], removed: [] },
           objects: { added: [...objects], removed: [] },
+          connections,
         }),
       );
     }
@@ -202,7 +254,10 @@ export class Binder extends Resource {
 
     // Process initial state before returning.
     this.#readWrites = bindingWriteCount(this._feed);
+    this.#readExternal = externalBindingWrites;
+    this.#readLocal = bindingWrites.get(this._feed.id) ?? 0;
     const initialResults = await bindingsQuery.run();
+    this.#readItems = initialResults.length;
     await this._updateBindings(initialResults);
 
     // Subscribe to future changes.
@@ -219,7 +274,12 @@ export class Binder extends Resource {
    */
   async sync(): Promise<void> {
     const writes = bindingWriteCount(this._feed);
+    const external = externalBindingWrites;
     if (this.#bindingsQuery && writes !== this.#readWrites) {
+      // A write noted from another process is in the feed but may not be indexed yet, so a read that returns no
+      // new item is retried until it does or the wait runs out.
+      const awaitingExternal = external !== this.#readExternal;
+      const deadline = Date.now() + (awaitingExternal ? EXTERNAL_WRITE_WAIT_MS : 0);
       let results: Binding[];
       try {
         results = await this.#bindingsQuery.run();
@@ -230,10 +290,40 @@ export class Binder extends Resource {
         log.warn('bindings sync failed; keeping the current bindings', { error });
         return;
       }
+      // Every write appends one item, so the read holds a noted external write once it has grown past this realm's
+      // own writes that no earlier read has returned.
+      const local = bindingWrites.get(this._feed.id) ?? 0;
+      const pendingLocal = local - this.#readLocal;
+      const expected = this.#readItems + pendingLocal + (awaitingExternal ? 1 : 0);
+      while (results.length < expected && Date.now() < deadline) {
+        await EffectEx.runPromise(Effect.sleep(EXTERNAL_WRITE_POLL_MS));
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
+          break;
+        }
+        // A retry gets only the time left, so a slow index cannot hold the sync past the deadline; one that fails
+        // keeps what the first read returned and leaves the writes unread, so the next sync retries them.
+        const retry = await this.#bindingsQuery.run({ timeout: remaining }).catch((error) => {
+          log.warn('bindings retry failed; keeping the write pending', { error });
+          return undefined;
+        });
+        if (!retry) {
+          await this._updateBindings(results);
+          return;
+        }
+        results = retry;
+      }
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
-      // Only after the update lands, so one that fails is retried by the next sync.
-      this.#readWrites = writes;
+      // Only after the update lands, so one that fails is retried by the next sync. A local write counts as read
+      // only once the read has grown to hold it; one still unindexed keeps the next sync reading.
+      const creditedLocal = Math.min(pendingLocal, Math.max(0, results.length - this.#readItems));
+      this.#readLocal += creditedLocal;
+      if (creditedLocal === pendingLocal) {
+        this.#readWrites = writes;
+      }
+      this.#readExternal = external;
+      this.#readItems = results.length;
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
         // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
@@ -249,7 +339,9 @@ export class Binder extends Resource {
       return;
     }
 
-    const bindings = this._reduce(inAppendOrder(items));
+    const ordered = inAppendOrder(items);
+    this._registry.set(this._connections, connectionStates(ordered));
+    const bindings = reduce(ordered);
     this.#bound = {
       skills: new Set([...bindings.skills].map((ref) => refKey(ref.uri))),
       objects: new Set([...bindings.objects].map((ref) => refKey(ref.uri))),
@@ -299,6 +391,7 @@ export class Binder extends Resource {
     // Reset atoms to empty state.
     this._registry.set(this._skills, []);
     this._registry.set(this._objects, []);
+    this._registry.set(this._connections, new Map());
   }
 
   async bind({ skills, objects }: BindingProps): Promise<void> {
@@ -377,6 +470,22 @@ export class Binder extends Resource {
     );
   }
 
+  /** Turns a connection's MCP server on or off for this conversation. */
+  async setConnection(connection: Ref.Ref<Obj.Unknown>, enabled: boolean): Promise<void> {
+    const key = refKey(connection.uri);
+    if (this.getConnections().get(key) === enabled) {
+      return;
+    }
+    this._registry.set(this._connections, new Map([...this.getConnections(), [key, enabled]]));
+    await this._write(
+      Obj.make(Binding, {
+        skills: { added: [], removed: [] },
+        objects: { added: [], removed: [] },
+        connections: enabled ? { added: [connection], removed: [] } : { added: [], removed: [connection] },
+      }),
+    );
+  }
+
   private async _write(binding: Binding): Promise<void> {
     if (this.#pending) {
       this.#pending.push(binding);
@@ -393,7 +502,7 @@ export class Binder extends Resource {
   private async _resolveHeld(held: Binding[]): Promise<void> {
     const generation = ++this.#heldGeneration;
     const { db } = Context.get(this._runtime, Database.Service);
-    const { skills, objects } = this._reduce(held);
+    const { skills, objects } = reduce(held);
     const hydrate = <T extends Obj.Unknown>(refs: Iterable<Ref.Ref<T>>): Ref.Ref<T>[] =>
       [...refs].map((ref) => (ref.isAvailable ? ref : db.makeRef<T>(ref.uri)));
     const [resolvedSkills, resolvedObjects] = await Promise.all([
@@ -403,6 +512,7 @@ export class Binder extends Resource {
     if (generation !== this.#heldGeneration) {
       return;
     }
+    this._registry.set(this._connections, connectionStates(held));
     this._registry.set(this._skills, resolvedSkills);
     this._registry.set(this._objects, resolvedObjects);
   }
@@ -446,38 +556,6 @@ export class Binder extends Resource {
     }
 
     return { added, next };
-  }
-
-  /**
-   * Reduce results into sets of skills and objects.
-   *
-   * Order-sensitive: a later removal must fold after the addition it undoes, so callers pass items
-   * in append order (see {@link inAppendOrder}).
-   */
-  private _reduce(items: Binding[]): Bindings {
-    return Function.pipe(
-      items,
-      EArray.reduce(new Bindings(), (context, { skills, objects }) => {
-        skills.added.forEach((ref) => context.skills.add(ref));
-        skills.removed.forEach((ref) => context.skills.delete(ref));
-
-        objects.added.forEach((ref) => context.objects.add(ref));
-        objects.removed.forEach((ref) => {
-          for (const obj of context.objects) {
-            if (
-              obj.uri === ref.uri ||
-              (EID.tryParse(obj.uri) &&
-                EID.tryParse(ref.uri) &&
-                EID.getEntityId(EID.tryParse(obj.uri)!) === EID.getEntityId(EID.tryParse(ref.uri)!))
-            ) {
-              context.objects.delete(obj);
-            }
-          }
-        });
-
-        return context;
-      }),
-    );
   }
 
   /**
@@ -527,6 +605,101 @@ export class Binder extends Resource {
       .filter(isNonNullable);
   }
 }
+
+/**
+ * Reduces bindings into the sets of skills and objects they leave bound.
+ *
+ * Order-sensitive: a later removal must fold after the addition it undoes, so callers pass items
+ * in append order (see {@link inAppendOrder}).
+ */
+const reduce = (items: Binding[]): Bindings =>
+  Function.pipe(
+    items,
+    EArray.reduce(new Bindings(), (context, { skills, objects }) => {
+      skills.added.forEach((ref) => context.skills.add(ref));
+      skills.removed.forEach((ref) => context.skills.delete(ref));
+
+      objects.added.forEach((ref) => context.objects.add(ref));
+      objects.removed.forEach((ref) => {
+        const removedId = entityIdOf(ref.uri);
+        for (const obj of context.objects) {
+          if (obj.uri === ref.uri || (removedId !== undefined && entityIdOf(obj.uri) === removedId)) {
+            context.objects.delete(obj);
+          }
+        }
+      });
+
+      return context;
+    }),
+  );
+
+/**
+ * Each connection a conversation has turned on or off, keyed by local ECHO URI; the latest binding
+ * that names it wins. Callers pass items in append order (see {@link inAppendOrder}).
+ */
+export const connectionStates = (items: readonly Binding[]): ReadonlyMap<URI.URI, boolean> => {
+  const states = new Map<URI.URI, boolean>();
+  for (const { connections } of items) {
+    connections?.added.forEach((ref) => states.set(refKey(ref.uri), true));
+    connections?.removed.forEach((ref) => states.set(refKey(ref.uri), false));
+  }
+  return states;
+};
+
+/**
+ * Whether a connection's MCP server is on in a conversation with these states. A space's connection
+ * is on unless turned off; a built-in server (keyed in the registry) is off unless turned on.
+ */
+export const isConnectionOn = (states: ReadonlyMap<URI.URI, boolean>, connection: Obj.Unknown): boolean =>
+  states.get(connectionKey(connection)) ?? Obj.getMeta(connection).key === undefined;
+
+/**
+ * The ref a binding records a connection by. A built-in server is a registry object made afresh in
+ * each process, so it is named by its key, which every process shares.
+ */
+export const connectionRef = (connection: Obj.Unknown): Ref.Ref<Obj.Unknown> =>
+  Obj.getMeta(connection).key !== undefined
+    ? Ref.fromURI(Obj.getURI(connection, { prefer: 'named' }))
+    : Ref.make(connection);
+
+const connectionKey = (connection: Obj.Unknown): URI.URI => refKey(connectionRef(connection).uri);
+
+/** The net connection changes of held bindings, as one binding writes them. */
+const connectionChanges = (
+  items: readonly Binding[],
+): { added: Ref.Ref<Obj.Unknown>[]; removed: Ref.Ref<Obj.Unknown>[] } => {
+  const latest = new Map<URI.URI, { ref: Ref.Ref<Obj.Unknown>; enabled: boolean }>();
+  for (const { connections } of items) {
+    connections?.added.forEach((ref) => latest.set(refKey(ref.uri), { ref, enabled: true }));
+    connections?.removed.forEach((ref) => latest.set(refKey(ref.uri), { ref, enabled: false }));
+  }
+  const changes = [...latest.values()];
+  return {
+    added: changes.filter(({ enabled }) => enabled).map(({ ref }) => ref),
+    removed: changes.filter(({ enabled }) => !enabled).map(({ ref }) => ref),
+  };
+};
+
+/**
+ * The connections a conversation's feed has turned on or off, read once (see {@link connectionStates}).
+ */
+export const boundConnections = (
+  feed: Feed.Feed,
+): Effect.Effect<ReadonlyMap<URI.URI, boolean>, never, Database.Service> =>
+  Feed.query(feed, Query.type(Binding)).run.pipe(Effect.map((items) => connectionStates(inAppendOrder(items))));
+
+/**
+ * The objects a conversation's feed currently binds, read once: for a reader that needs the bound
+ * set at one moment without holding a {@link Binder} open.
+ */
+export const boundObjects = (feed: Feed.Feed): Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service> =>
+  Feed.query(feed, Query.type(Binding)).run.pipe(Effect.map((items) => [...reduce(inAppendOrder(items)).objects]));
+
+/** The entity id an ECHO URI names; none for any other URI. */
+const entityIdOf = (uri: URI.URI): string | undefined => {
+  const echoUri = EID.tryParse(uri);
+  return echoUri ? EID.getEntityId(echoUri) : undefined;
+};
 
 /**
  * Identity of a bound ref: an ECHO URI compares in its local form, since some carry the space and some do not.

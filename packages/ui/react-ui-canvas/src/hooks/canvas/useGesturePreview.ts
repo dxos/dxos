@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { type Drag, type Projection, reduceIntent } from '../../engine/index.ts';
 import { type Bounds, type Endpoint, type Intent, type Point, type View, isPointEndpoint } from '../../model/index.ts';
-import { createLink, duplicateSelection, nodeBounds, topZ } from '../../utils/index.ts';
+import { createLink, duplicateSelection, hasVertices, nodeBounds, refitPolyline, topZ } from '../../utils/index.ts';
 import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
 
 /** How long a move's pointer rests before the shapes snap to where they will land. */
@@ -109,6 +109,16 @@ export const useGesturePreview = ({
     if (drag?.kind === 'point') {
       return {
         displayScene: reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } }),
+        blocked: false,
+      };
+    }
+    if (drag?.kind === 'vertex') {
+      // Refitted as the release will land it, so the frame and its outline follow the vertex.
+      const node = scene.nodes[drag.id];
+      // A locked node previews as it is, since the release will not move it.
+      const values = node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor) : undefined;
+      return {
+        displayScene: values ? reduceIntent(scene, { kind: 'update', id: drag.id, values }) : scene,
         blocked: false,
       };
     }

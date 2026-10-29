@@ -14,6 +14,7 @@ export const addImageUpload =
       'image',
       {
         label: ['image.label', { ns: translationKey }],
+        placement: { collapse: 3 },
         testId: 'editor.toolbar.image',
         icon: 'ph--image-square--regular',
       },

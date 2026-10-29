@@ -2,6 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import * as Feed from './Feed.ts';
@@ -9,6 +13,54 @@ import * as Obj from './Obj.ts';
 import { TestSchema } from './testing/index.ts';
 
 describe('Feed', () => {
+  describe('options', () => {
+    test('RetentionOptions accepts either limit, both, or neither', ({ expect }) => {
+      const decode = Schema.decodeUnknownExit(Feed.RetentionOptions);
+      expect(Exit.isSuccess(decode({}))).toBe(true);
+      expect(Exit.isSuccess(decode({ maxLength: 1 }))).toBe(true);
+      expect(Exit.isSuccess(decode({ maxAge: 1_000 }))).toBe(true);
+      expect(Exit.isSuccess(decode({ maxLength: 100, maxAge: 1_000 }))).toBe(true);
+    });
+
+    test('RetentionOptions rejects a length below 1, a fractional length, and a non-positive age', ({ expect }) => {
+      const decode = Schema.decodeUnknownExit(Feed.RetentionOptions);
+      expect(Exit.isFailure(decode({ maxLength: 0 }))).toBe(true);
+      expect(Exit.isFailure(decode({ maxLength: 1.5 }))).toBe(true);
+      expect(Exit.isFailure(decode({ maxAge: 0 }))).toBe(true);
+      expect(Exit.isFailure(decode({ maxAge: -1 }))).toBe(true);
+      expect(Exit.isFailure(decode({ maxAge: Number.POSITIVE_INFINITY }))).toBe(true);
+    });
+
+    test('FeedOptions round-trips through JSON', ({ expect }) => {
+      const options: Feed.FeedOptions = { indexing: { enabled: false }, retention: { maxLength: 5 } };
+      const codec = Schema.fromJsonString(Feed.FeedOptions);
+      expect(Schema.decodeUnknownSync(codec)(Schema.encodeSync(codec)(options))).toEqual(options);
+    });
+
+    test('setRetention stores maxAge in milliseconds', ({ expect }) => {
+      const feed = Feed.make({ name: 'log' });
+      Effect.runSync(Feed.setRetention(feed, { maxLength: 100, maxAge: Duration.days(7) }));
+      expect(feed.retention).toEqual({ maxLength: 100, maxAge: Duration.toMillis(Duration.days(7)) });
+    });
+
+    test('setRetention with an invalid value fails and leaves the object unchanged', ({ expect }) => {
+      const feed = Feed.make({ name: 'log' });
+      Effect.runSync(Feed.setRetention(feed, { maxLength: 10 }));
+      expect(Exit.isFailure(Effect.runSyncExit(Feed.setRetention(feed, { maxLength: 0 })))).toBe(true);
+      expect(Exit.isFailure(Effect.runSyncExit(Feed.setRetention(feed, { maxAge: Duration.millis(-1) })))).toBe(true);
+      expect(Exit.isFailure(Effect.runSyncExit(Feed.setRetention(feed, { maxAge: Duration.infinity })))).toBe(true);
+      expect(feed.retention).toEqual({ maxLength: 10 });
+    });
+
+    test('setIndexing writes the indexing field', ({ expect }) => {
+      const feed = Feed.make({ name: 'log' });
+      expect(feed.indexing).toBeUndefined();
+      Effect.runSync(Feed.setIndexing(feed, { enabled: false }));
+      expect(feed.indexing).toEqual({ enabled: false });
+      expect(Obj.toJSON(feed)).toMatchObject({ indexing: { enabled: false } });
+    });
+  });
+
   describe('getParent / setParent', () => {
     test('an item has no explicit parent by default', ({ expect }) => {
       expect(Feed.getParent(Obj.make(TestSchema.Task, { title: 'm1' }))).toBeUndefined();

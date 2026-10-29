@@ -4,17 +4,19 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { CanvasNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [CanvasNamespace.key]: {
         'plugin.name': 'Canvas',
         'variant.label': 'Canvas',
         'lock-drawing.label': 'Read only',
         'unlock-drawing.label': 'Edit drawing',
-        'import-tldraw.label': 'Copy as canvas',
+        'newer-format.title': 'Read only',
+        'newer-format.message':
+          'A newer version of the Canvas plugin saved this drawing. Update the plugin to edit it.',
       },
     },
   },

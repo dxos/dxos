@@ -16,9 +16,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
 import { Result, Search } from '#types';
 
+import { CommerceNamespace } from '../../namespace.ts';
 import { ResultDetail } from './ResultDetail.tsx';
 import { ResultTile } from './ResultTile.tsx';
 
@@ -30,7 +30,7 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  * companion (see {@link SearchProperties}).
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CommerceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
   // the view re-renders when results/tags change.
@@ -97,11 +97,12 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         result,
         current: Obj.getURI(result) === currentId,
         starred: starredOf(result),
-        onSelect: handleSelect,
         onToggleStar: handleToggleStar,
       })),
-    [visibleResults, currentId, handleSelect, starredOf, handleToggleStar],
+    [visibleResults, currentId, starredOf, handleToggleStar],
   );
+  // The masonry item is the tile's focusable unit, so it selects the result on click and on Enter.
+  const itemProps = useCallback((id: string) => ({ onActivate: () => handleSelect(id) }), [handleSelect]);
 
   const selectedResult = useMemo(
     () => results.find((result) => Obj.getURI(result) === currentId),
@@ -116,7 +117,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         .group(
           'view',
           {
-            label: ['view-filter.label', { ns: meta.profile.key }],
+            label: ['view-filter.label', { ns: CommerceNamespace.key }],
             variant: 'toggleGroup',
             selectCardinality: 'single',
             value: view,
@@ -124,13 +125,13 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           (group) => {
             group.action(
               'all',
-              { label: ['view-all.label', { ns: meta.profile.key }], icon: 'ph--list--regular' },
+              { label: ['view-all.label', { ns: CommerceNamespace.key }], icon: 'ph--list--regular' },
               () => setView('all'),
             );
             group.action(
               'starred',
               {
-                label: ['view-starred.label', { ns: meta.profile.key }],
+                label: ['view-starred.label', { ns: CommerceNamespace.key }],
                 icon: view === 'starred' ? 'ph--star--fill' : 'ph--star--regular',
               },
               () => setView('starred'),
@@ -163,7 +164,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content padding>
-                <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
+                <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} itemProps={itemProps} />
               </Masonry.Content>
             </Masonry.Root>
           ))}
@@ -176,7 +177,6 @@ type TileData = {
   result: Result.Result;
   current: boolean;
   starred: boolean;
-  onSelect: (id: string) => void;
   onToggleStar: (result: Result.Result) => void;
 };
 
@@ -186,13 +186,7 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   }
 
   return (
-    <ResultTile
-      result={data.result}
-      current={data.current}
-      starred={data.starred}
-      onSelect={data.onSelect}
-      onToggleStar={data.onToggleStar}
-    />
+    <ResultTile result={data.result} current={data.current} starred={data.starred} onToggleStar={data.onToggleStar} />
   );
 };
 

@@ -16,8 +16,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Segment } from '#types';
+
+import { TripNamespace } from '../../namespace.ts';
 
 /**
  * Read-only layout for a flight `Segment.FlightDetails`. Rendered inside the tile
@@ -49,7 +50,7 @@ type SegmentTileData = {
   onAction?: SegmentCardActionHandler;
 };
 
-type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'location' | 'current'>;
+type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
 /**
  * Mosaic tile for a Segment. Follows the Card primitives:
@@ -61,85 +62,93 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
  * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`
  * states uniformly across the stack.
  */
-export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
-  const { segment, onAction } = data;
-  const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
-  const { t } = Hooks.useTranslation(meta.profile.key);
+export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(
+  ({ data, location, current, binding }, forwardedRef) => {
+    const { segment, onAction } = data;
+    const { setCurrentId } = useMosaicContainer('SegmentTile');
+    const { t } = Hooks.useTranslation(TripNamespace.key);
 
-  const handleCurrentChange = useCallback(() => {
-    setCurrentId(segment.id);
-    setSelected(segment.id, true);
-  }, [segment.id, setCurrentId, setSelected]);
+    const handleCurrentChange = useCallback(() => {
+      setCurrentId(segment.id);
+    }, [segment.id, setCurrentId]);
 
-  const handleDelete = useCallback(
-    (event: MouseEvent<HTMLButtonElement>) => {
-      // Don't let the delete button propagate as a select / current change.
-      event.stopPropagation();
-      onAction?.({ type: 'delete', segmentId: segment.id });
-    },
-    [onAction, segment.id],
-  );
+    const handleDelete = useCallback(
+      (event: MouseEvent<HTMLButtonElement>) => {
+        // Don't let the delete button propagate as a select / current change.
+        event.stopPropagation();
+        onAction?.({ type: 'delete', segmentId: segment.id });
+      },
+      [onAction, segment.id],
+    );
 
-  const title = Segment.getTitle(segment);
-  const route = Segment.getRoute(segment);
-  const date = Segment.getPrimaryDate(segment);
-  const kind = Segment.getKind(segment);
-  const icon = Segment.kindIcon(kind);
-  // Tint the kind glyph with the object's type-level hue (Segment.IconAnnotation).
-  const hue = Obj.getIcon(segment)?.hue;
-  const iconStyles = hue ? getStyles(hue) : undefined;
-  const flightDetails = segment.details._tag === 'flight' ? segment.details : undefined;
+    const title = Segment.getTitle(segment);
+    const route = Segment.getRoute(segment);
+    const date = Segment.getPrimaryDate(segment);
+    const kind = Segment.getKind(segment);
+    const icon = Segment.kindIcon(kind);
+    // Tint the kind glyph with the object's type-level hue (Segment.IconAnnotation).
+    const hue = Obj.getIcon(segment)?.hue;
+    const iconStyles = hue ? getStyles(hue) : undefined;
+    const flightDetails = segment.details._tag === 'flight' ? segment.details : undefined;
 
-  return (
-    <Mosaic.Tile
-      asChild
-      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-separator-subtle'
-      id={segment.id}
-      data={data}
-      location={location}
-    >
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root border={false} ref={forwardedRef}>
-          <Card.Header>
-            <Layout.Block>
-              <Icon.Icon icon={icon} classNames={iconStyles?.text} />
-            </Layout.Block>
-            <Card.Title>{title}</Card.Title>
-            <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
-          </Card.Header>
-          {flightDetails ? (
-            <Card.Body>
-              <Form.Root schema={Segment.FlightDetails} defaultValues={flightDetails} layout='static' readonly>
-                <Form.Viewport>
-                  <Form.Content>
-                    <Form.Layout template={FLIGHT_LAYOUT} />
-                  </Form.Content>
-                </Form.Viewport>
-              </Form.Root>
-            </Card.Body>
-          ) : (
-            (route || date) && (
+    return (
+      <Mosaic.Tile
+        asChild
+        classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-separator-subtle'
+        id={segment.id}
+        data={data}
+        location={location}
+        binding={binding}
+      >
+        {/* Selected here too: the item would otherwise override the tile's `aria-selected` with its own unset one. */}
+        <Focus.Item
+          asChild
+          current={current}
+          selected={binding?.['aria-selected']}
+          onCurrentChange={handleCurrentChange}
+        >
+          <Card.Root border={false} ref={forwardedRef}>
+            <Card.Header>
+              <Layout.Block>
+                <Icon.Icon icon={icon} classNames={iconStyles?.text} />
+              </Layout.Block>
+              <Card.Title>{title}</Card.Title>
+              <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+            </Card.Header>
+            {flightDetails ? (
               <Card.Body>
-                {route && (
-                  <Card.Row>
-                    <Card.Text variant='muted'>{route}</Card.Text>
-                  </Card.Row>
-                )}
-                {date && (
-                  <Card.Row>
-                    <Layout.Block>
-                      <Icon.Icon icon='ph--calendar--regular' />
-                    </Layout.Block>
-                    <Card.Text variant='muted'>{format(date, 'PPp')}</Card.Text>
-                  </Card.Row>
-                )}
+                <Form.Root schema={Segment.FlightDetails} defaultValues={flightDetails} layout='static' readonly>
+                  <Form.Viewport>
+                    <Form.Content>
+                      <Form.Layout template={FLIGHT_LAYOUT} />
+                    </Form.Content>
+                  </Form.Viewport>
+                </Form.Root>
               </Card.Body>
-            )
-          )}
-        </Card.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
-  );
-});
+            ) : (
+              (route || date) && (
+                <Card.Body>
+                  {route && (
+                    <Card.Row>
+                      <Card.Text variant='muted'>{route}</Card.Text>
+                    </Card.Row>
+                  )}
+                  {date && (
+                    <Card.Row>
+                      <Layout.Block>
+                        <Icon.Icon icon='ph--calendar--regular' />
+                      </Layout.Block>
+                      <Card.Text variant='muted'>{format(date, 'PPp')}</Card.Text>
+                    </Card.Row>
+                  )}
+                </Card.Body>
+              )
+            )}
+          </Card.Root>
+        </Focus.Item>
+      </Mosaic.Tile>
+    );
+  },
+);
 
 SegmentTile.displayName = 'SegmentTile';

@@ -1,0 +1,643 @@
+---
+id: org.dxos.spec.deus
+name: Deus
+version: 0.1.0
+---
+
+The spec for `@dxos/deus` itself: the tooling around the `.mdl` language. The language is defined
+in `lang/` and motivated in `docs/DESIGN.md`. This document covers what the package must do, so far
+only for the spec changelog.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Features
+
+```mdl
+feat F-1: Attributed decision log
+  A spec carries a `## Changelog` of `decision` blocks (`lang/changelog.mdl`) that traces how it
+  came to say what it says, with decisions made by people kept apart from decisions made by agents.
+
+  req F-1.1: Each decision names exactly one decider in `by:`, typed `user:<handle>` (GitHub username or email) or `agent:<name>`.
+  req F-1.2: An agent is named by its harness, never by the model that served it.
+  req F-1.3: An `agent:` decision names the person it acted for in `for:`; a `user:` decision has no `for:`.
+  req F-1.4: A `user:` decision restates what the person said: references resolved, context included and wording fixed, with no information added or removed.
+  req F-1.5: The log is append-only. A reversal is a new decision with `supersedes: D-n`.
+  req F-1.6: Decision ids are `D-1`, `D-2`, … in the order appended, newest last.
+  req F-1.7: Approval of agent decisions is a new `user:` decision whose prose says what it approves.
+  req F-1.8: A decision records a choice about the specified system. How the authors worked on the spec or its code (which tool or skill, how the spec is shared, which PR a change goes in, that the document exists or has diagrams) is not a decision.
+```
+
+```mdl
+feat F-2: Every spec change adds a decision
+  req F-2.1: A change to a spec outside `## Changelog` adds at least one new decision.
+  req F-2.2: A new spec starts with at least one decision.
+  req F-2.3: `deus changelog check` enforces F-1.5, F-1.6, F-2.1 and F-2.2 by comparing each changed `.mdl` file with the merge base, and runs in CI as "Check spec changelogs".
+  req F-2.4: Language definitions (`lang/`), review rules (`rules/`) and test fixtures are not specs and are exempt.
+  req F-2.5: Only `decision` blocks under `## Changelog` form the log; examples elsewhere are ignored.
+  req F-2.6: A trivial edit needs no decision: whitespace, or at most 3 words each fixed by an edit distance of at most a third of the word, where no changed word has a digit or is a normative word.
+  req F-2.7: A `Spec-Changelog-Skip: <reason>` trailer on any branch commit waives F-2.1 for that branch; the append-only rules still apply.
+  req F-2.8: A change with no spec decision behind it, such as adding a diagram or reorganizing sections, carries the F-2.7 trailer instead of a process decision.
+```
+
+```mdl
+feat F-3: Linting
+  req F-3.1: The editor linter and `deus lint` report decisions that break F-1.1 or F-1.3.
+  req F-3.2: `deus lint --only <source>` restricts output to one check, so the block-type check (which knows only built-in types) does not hide decision errors.
+  req F-3.3: `.agents/skills/mdl/scripts/check-decisions.ts` asks TypeSafe System One whether each decision a branch adds breaks F-1.8, giving it the spec's name and introduction so a spec whose system is itself a process is judged on that system. A probability of 0.8 or more fails. It runs in CI as "Check spec decisions" and passes with a notice when `TYPESAFE_API_KEY` is not set.
+  req F-3.4: Each block has its own ```` ```mdl ```` fence. The editor linter and `deus lint` report a second block header inside one fence as an `mdl/block` error: a line after the fence's first line, at column 0, whose first word is a built-in block type or a term in the document's `## Extensions` table.
+```
+
+```mdl
+feat F-4: Agent guidance
+  req F-4.1: The repo has an `mdl` skill (`.agents/skills/mdl/SKILL.md`) for writing specs and recording decisions.
+  req F-4.2: The skill tells an agent to record a person's input first, faithfully — adding context, never assumptions — and its own additions as separate decisions.
+  req F-4.3: The skill tells an agent where to read the person's handle from the environment, so it never asks or guesses.
+  req F-4.4: The skill tells an agent to leave process out of the changelog (F-1.8), including a person's process instructions, and to run `check-decisions.ts` before committing.
+```
+
+```mdl
+feat F-5: Command-line interface
+  req F-5.1: `@dxos/deus` ships one `deus` CLI, built with Effect CLI, and every `.mdl` tool in the repo that belongs to Deus is a subcommand of it: `changelog check`, `lint`, `qa list`, `qa lint` and `review items|check`.
+  req F-5.2: The command tree is exported from `@dxos/deus/cli`, and the `dx` CLI mounts it as `dx deus`.
+  req F-5.3: `pnpm deus` runs the CLI from source with plain `node` at the repo root, so CI and agents need no build.
+  req F-5.4: `qa list` prints the numbered `test` and `suite` blocks that `/dxos:qa` addresses; `qa lint` reports references a test never binds and teardowns that could remove an object the run did not create.
+  req F-5.5: `review items` lists every item a spec review must judge; `review check` validates a `.review.mdl` against its spec and the checkout.
+```
+
+```mdl
+feat F-6: SQL tables
+  req F-6.1: The `table` block (`lang/sql.mdl`, `org.dxos.mdl.table@1.0`) declares a SQL table a component owns: its columns with SQLite storage classes and SQL constraints, its keys and indexes, and the migration set it lives in.
+  req F-6.2: A `table` states the schema after the spec's changes; `new:` marks the table or the columns the spec adds.
+  req F-6.3: A `table` is a spec item that requirements cite as `table:<name>` or `table:<name>.<column>`, and `deus lint` knows the block type.
+  req F-6.4: A spec refers to code by component or symbol name and to another spec by its frontmatter `id`, never by file path; a `table` names its store and migration-history table, not a migrations directory.
+  req F-6.5: A `table` is part of the spec's data model: the viewer's Data model view shows it as a stored root with its columns as fields, its store as a tag, and a `REFERENCES <table>(<column>)` column as a reference to that table.
+```
+
+```mdl
+feat F-7: Spec dependencies
+  req F-7.1: A spec declares each spec it builds on in its body, never its frontmatter: one core `uses` block per spec under `## Dependencies`, after the opening prose and before `## Extensions`, whose required one-line prose says what it takes from that spec.
+  req F-7.2: A plugin spec's `plugin` block lists the plugin's runtime dependencies in `dependsOn` (plugin dialect 1.1), exactly as `dx.config.ts` declares them. An id in `dependsOn` is never repeated under `uses`; a spec's dependencies are the union of both.
+  req F-7.3: A reference into another spec is `<spec id>#<item>`, where the item is a block id or `req` id of that spec. It is recognised in prose and anywhere in an `mdl` block; other code fences are not scanned. A `github:` key into a `.mdl` file is not a reference.
+  req F-7.4: `deus index` maps every tracked `.mdl` spec's frontmatter id to its path and items, leaving out spec reviews, test fixtures and the illustrative `lang/examples/`. Two files with one id is an error reported on both.
+  req F-7.5: The editor linter and `deus lint` report, as `mdl/ref` and `mdl/uses` errors: a reference to an unknown spec or item, a reference to a spec outside the dependencies, a `github:` key into a `.mdl` file outside `## Changelog`, an unknown, repeated or self dependency, and an id in both `dependsOn` and `uses`. Dependency cycles are allowed, and dependencies are not transitive.
+  req F-7.6: `deus review check` judges a `plugin` block's `dependsOn` against `dx.config.ts`; a plugin in one and not the other is valid only under a `diverged` verdict.
+  req F-7.7: The spec index of the dxos repository is generated at build time and bundled with plugin-code. The spec viewer opens a referenced spec scrolled to the item (to the top for a bare id), and draws a reference it cannot resolve as a broken link with the lint message on hover.
+```
+
+## Changelog
+
+Backfilled on 2026-10-20 from the session that built the changelog,
+https://github.com/dxos/dxos/pull/14093.
+
+```mdl
+decision D-1: `.mdl` specs get a changelog section: a log of authoritative decisions, each tagged with the person (by username or email) or the agent that made it. Its goal is to trace how decisions were made, and to keep decisions by people separate from decisions by agents.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-1]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-2: The repo has an `mdl` skill.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-4.1]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-3: The changelog is a `decision` block type in a new dialect, `lang/changelog.mdl`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: Every other construct in the language is an `ext`-defined block in a dialect file; a dialect keeps the changelog opt-in per document.
+```
+
+```mdl
+decision D-4: A decider is `user:<handle>` or `agent:<name>`, and an agent is named by its harness, not its model. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.2]
+  why: A typed prefix makes "which decisions did a person make" a filter, and the linter can reject untyped entries. Models change mid-session; the name must stay stable across the log.
+```
+
+```mdl
+decision D-5: An agent decision names the person it acted for in `for:`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: An agent decides within latitude a person gave it; the trace is incomplete without whose.
+```
+
+```mdl
+decision D-6: The log is append-only with monotonic `D-n` ids; reversals use `supersedes:`. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.5, F-1.6]
+  why: An edited entry erases the trace the log exists to keep.
+```
+
+```mdl
+decision D-7: A person endorsing an agent decision is recorded as `ratified-by:` on that entry, the only edit an entry admits. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-8: Only decisions that change what the spec requires are logged; edits, renames and reformatting are not. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: Read from "authoritative decisions" in [D-1]; git already records edits.
+```
+
+```mdl
+decision D-9: Decision attribution is linted in the editor and by `scripts/lint-mdl.ts`, whose `--only` flag isolates one check.
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3]
+  why: The existing block-type check knows only built-in types and flags valid dialect blocks, so a CLI without a filter is unusable on real specs.
+```
+
+```mdl
+decision D-10: Specs are usually written by people and agents together: the person gives coarse ideas and the agent fills in the gaps. Knowledge from each goes in separate decision entries. The agent first records a faithful representation of what the person wrote, adding only context and no assumptions, then records its own additions as separate decisions. A person approving an agent's design is a decision of its own. These rules go in the `mdl` skill.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-1.7, F-4.2]
+  supersedes: D-7
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-11: Every change to a spec adds a decision. How to enforce this mechanically is to be worked out.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-2]
+  supersedes: D-8
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-12: Approval is not a separate kind of entry, as the proposed `approves:` field would have made it; an approval is the same entry as any other decision, and its prose says what it approves.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-1.7]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-13: A `user:` decision may carry `quote:` (verbatim words) and `context:` (added facts); an agent decision may not carry `quote:`. Fills in [D-10].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4]
+  why: Separate fields keep the person's words apart from what the recording agent added, so "faithful" can be checked by reading.
+```
+
+```mdl
+decision D-14: `scripts/check-changelog.ts` enforces [D-11] in CI by diffing each changed `.mdl` against the merge base, and also rejects edited, removed, reordered or out-of-sequence entries. Fills in [D-11].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, F-2.2, F-2.3]
+  why: A diff against the base is the only place "this change added no decision" is visible; the same diff checks append-only for free. Placed beside the changesets check, which works the same way.
+  rejected:
+    - A Claude Stop hook alone: only covers agent sessions on the Claude harness, not human edits or other harnesses.
+    - A husky pre-commit hook: skippable, and not run in the cloud sandbox.
+```
+
+```mdl
+decision D-15: Language definitions, review rules and test fixtures are exempt from [D-11], and only decisions under `## Changelog` count as the log. Fills in [D-11].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.4, F-2.5]
+  why: These `.mdl` files are not specs of a component; `lang/changelog.mdl` itself shows example decisions that must not be read as its log.
+```
+
+```mdl
+decision D-16: If Deus has no spec of its own, it gets one, backfilled from the session that built the changelog.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-17: An agent should know from the environment who it is speaking to. The `mdl` skill says how to find the person's identity, so the next agent does not stumble on it.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-4.3]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-18: Read the handle from the session's GitHub account first, then the harness's stated user, then local `git config`. Fills in [D-17].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3]
+  why: The GitHub login is the preferred handle form (F-1.1). In the cloud sandbox `git config` names the agent, not the person.
+```
+
+```mdl
+decision D-19: The changelog check tolerates small "type" changes, so they can go through without a decision.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-2.6]
+  supersedes: D-11
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-20: The mdl skill documents an escape hatch from the every-change-adds-a-decision rule.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-2.7, F-4]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-21: "Small type changes" in [D-19] means typo fixes. A trivial edit is whitespace, or at most 3 changed words, each within an edit distance of a third of its length (adjacent swaps count once), with no digits and no normative word on either side. Fills in [D-19].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.6]
+  why: Typos are short, local, and leave the word count unchanged. Ids, numbers and words like must/most or can/can't change meaning in one letter. Existing decisions get no tolerance, because the log is append-only.
+  rejected:
+    - A fixed distance of 2 for every word: lets one-letter words such as X and Y swap.
+```
+
+```mdl
+decision D-22: The escape hatch is a `Spec-Changelog-Skip: <reason>` commit trailer that lifts only the missing-decision rule for the branch. Fills in [D-20].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.7]
+  why: Same shape as the changesets waiver; the reason is kept in git history, and append-only stays enforced.
+  rejected:
+    - A PR label: not visible to a local run of the script, and leaves no reason in history.
+```
+
+```mdl
+decision D-23: An unclosed `decision` block, as while typing, ends at the next fence or at the end of the text.
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1]
+  why: The editor linter otherwise reported a missing `by:`, or read the next block's fields. Raised by the CodeRabbit review.
+  source: https://github.com/dxos/dxos/pull/14093#discussion_r4321642968
+```
+
+```mdl
+decision D-24: A person's input is not quoted verbatim, because prompts are messy and lack context. The agent restates it and may resolve references, include context and fix wording, but must not add or remove information.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-1.4, F-4.2]
+  supersedes: D-13
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-25: Drop the `quote:` and `context:` fields and their lint rule; the restatement lives in the entry's prose. Fills in [D-24].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, F-3.1]
+  why: With no verbatim quote, a separate context field only splits one restatement in two.
+```
+
+```mdl
+decision D-26: Just this once, the earlier decisions are cleaned up: D-1, D-2, D-10, D-11, D-12, D-16 and D-17 were rewritten to the restated form of [D-24], without `quote:` or `context:`. The log is append-only again from here.
+  date: 2026-10-20
+  by: user:dmaretskyi
+  affects: [F-1.5]
+  source: https://github.com/dxos/dxos/pull/14093
+```
+
+```mdl
+decision D-27: Decisions about process rather than the spec do not belong in a changelog. The `mdl` skill says so, and the mdl lint tooling enforces it mechanically with a System One check.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-1.8, F-3.3, F-4.4]
+```
+
+```mdl
+decision D-28: `check-decisions.ts` judges only the decisions a branch adds, one System One `noul` question each, with the spec's name and introduction in the state; 0.8 or more fails, and a missing key skips with a notice. Fills in [D-27].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.3]
+  why: Calibrated on the 84 decisions in the repo's specs and an EDGE spec with two known process entries (0.95, 0.96). Without the introduction, 26 of the 84 were flagged, most in this spec, whose system is the changelog process; with it, 6 score 0.7 or more and 3 score 0.8 or more. Judging only new decisions keeps the log append-only.
+  rejected:
+    - A keyword or regex rule (process wording varies too much to match).
+    - Re-judging every existing decision in CI (it would demand edits to append-only entries).
+```
+
+```mdl
+decision D-29: A spec change with no spec decision behind it carries the `Spec-Changelog-Skip` trailer rather than a process decision. Fills in [D-27].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.8]
+  why: F-2.1 otherwise forces a decision for a diagram or a reorganized section, and the only decision available would be a process one.
+```
+
+```mdl
+decision D-30: All `.mdl` tooling is grouped under one formal `deus` CLI built with Effect CLI, in `@dxos/deus`. The standalone scripts become its subcommands and keep their behaviour and flags. The command tree is exported from a package subpath so that the `dx` CLI mounts it as `dx deus`. Every caller moves to the new commands, with no compatibility shims.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-5, F-2.3, F-3.1, F-3.2]
+```
+
+```mdl
+decision D-31: The subcommands are `changelog check` (was `scripts/check-changelog.ts`), `lint` (was `scripts/lint-mdl.ts`), `qa list` (was the dxos plugin's `scripts/list-tests.mjs`), `qa lint` (was `tools/qa-lint/*`) and `review items|check` (was the spec-review skill's `scripts/review.mts`). The agentic-review scripts and the mdl skill's `check-decisions.ts` stay in their skills. Fills in [D-30].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.4, F-5.5]
+  why: The five tools parse only Deus documents and need nothing beyond node; agentic-review and `check-decisions.ts` call the System One API, and agentic-review owns a review store.
+```
+
+```mdl
+decision D-32: `pnpm deus` runs `bin/deus.ts` with `node --conditions=source`, and `deus qa list` skips `__fixtures__` directories. Fills in [D-30].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3, F-5.4]
+  why: CI runs the changelog check before anything is built. Grammar fixtures carry example tests that are not runnable plans, the same trap the dialect exclusion already avoids.
+```
+
+```mdl
+decision D-33: Deus has a block type for SQL tables.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-34: The block is `table` in a new `lang/sql.mdl` dialect, with `store`, `columns`, `key`, `unique`, `indexes` and `new`; columns use SQLite storage classes, `?` for nullable, and SQL constraints. Fills in [D-33].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1, F-6.2, F-6.3]
+  why: Every SQL store in the repo is SQLite with numbered migrations, so the storage classes and the migration directory say exactly what the DDL says; `new:` lets a review check that a migration adds what the spec promises.
+  rejected:
+    - "Extend `db` from the standard dialect: it describes a whole persistence layer and has no field definition to extend."
+```
+
+```mdl
+decision D-35: Specs do not specify file paths.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-6.4]
+```
+
+```mdl
+decision D-36: A spec names a component or symbol for code and a frontmatter `id` for another spec; a `table`'s `store:` is the database and its migration-history table. Diagram `ref=` attributes keep their paths, since they are checking metadata for the renderer, not prose. Fills in [D-35].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1, F-6.4]
+  why: Names survive a move and are what a reader searches for; the migration-history table identifies a migration set as exactly as its directory.
+```
+
+```mdl
+decision D-37: A `table` contributes to the data model.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-6.5]
+```
+
+```mdl
+decision D-38: A table is always a stored root; its columns are its fields and a `REFERENCES` column is a reference edge to the named table. Fills in [D-37].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.5]
+  why: A table is persisted by definition, and a foreign key is the SQL form of the `Ref<…>` field that makes a `type` reference another.
+```
+
+```mdl
+decision D-39: A spec's dependencies on other specs are declared in its body, not in its frontmatter.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.1]
+```
+
+```mdl
+decision D-40: A plugin spec lists the plugins it depends on in a field of the plugin dialect, and any spec lists the specs it builds on in a core Dependencies section.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.1, F-7.2]
+```
+
+```mdl
+decision D-41: A dependency is never declared twice: a plugin listed in the plugin dialect's field is not repeated in the Dependencies section.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.2]
+```
+
+```mdl
+decision D-42: A reference into another spec is fully qualified as `<spec id>#<item>`.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.3]
+```
+
+```mdl
+decision D-43: A reference to a spec that is not among the spec's dependencies is a lint error.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.5]
+```
+
+```mdl
+decision D-44: The spec viewer opens a referenced spec scrolled to the referenced item.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.7]
+```
+
+```mdl
+decision D-45: Existing `github:` keys into `.mdl` files are converted to `<spec id>#<item>` references, and lint rejects such keys.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.3, F-7.5]
+```
+
+```mdl
+decision D-46: A plugin's `dependsOn` is exactly its runtime dependencies as `dx.config.ts` declares them, and every other spec it builds on goes under `uses`. A review that finds a plugin in one and not the other judges it `diverged`.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.2, F-7.6]
+```
+
+```mdl
+decision D-47: The viewer's spec index is generated at build time and bundled with plugin-code. It covers the dxos repository only; another repository gets its own index later, and until then its specs cannot reference dxos specs.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.7]
+```
+
+```mdl
+decision D-48: The spec index leaves out `*.review.mdl` files and test fixtures. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.4]
+  why: A review and a fixture are not specs a reference can name, and fixtures reuse ids on purpose.
+```
+
+```mdl
+decision D-49: Deus owns the spec index: lint builds it from the checkout and the build emits the same index for the viewer. Fills in [D-43] and [D-47].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.4, F-7.7]
+  why: One builder means lint and the viewer cannot disagree about what an id resolves to.
+```
+
+```mdl
+decision D-50: The core block is `uses`, one per dependency, and `## Dependencies` sits after the opening prose and before `## Extensions`. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.1]
+  why: A reader learns what the spec is before what it builds on, and the declarations precede the block types they may need.
+```
+
+```mdl
+decision D-51: A `uses` block's one-line prose, saying why the dependency exists, is required. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.1]
+  why: An id alone does not tell a reader what this spec takes from the other.
+```
+
+```mdl
+decision D-52: The plugin dialect's field is `dependsOn`, named as in `dx.config.ts`. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2]
+  why: One name for one concept in the config and the spec makes the review comparison obvious.
+```
+
+```mdl
+decision D-53: The plugin dialect moves to version 1.1 for `dependsOn`. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2]
+  why: The field is optional and additive, so existing plugin blocks stay valid: a minor bump.
+```
+
+```mdl
+decision D-54: The editor linter and `deus lint` share the reference diagnostics, under the sources `mdl/ref` (references and keys) and `mdl/uses` (declarations). Fills in [D-43] and [D-45].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.5]
+  why: Shared checks keep the editor and CI in step, and two sources let `--only` select either.
+```
+
+```mdl
+decision D-55: A dependency cycle is allowed. Fills in [D-43].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.5]
+  why: Specs can legitimately describe each other, as a host and the engine it embeds do.
+```
+
+```mdl
+decision D-56: The viewer draws an unresolvable reference as a broken link, with the lint message on hover. Fills in [D-44].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.7]
+  why: The reader sees the break where it is, with the same explanation lint gives.
+```
+
+```mdl
+decision D-57: References are recognised in prose and anywhere inside an `mdl` block, `#` comments included; any other code fence is not scanned. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.3]
+  why: An ASCII diagram or a code example can show a reference without declaring a dependency, while spec text is always checked.
+```
+
+```mdl
+decision D-58: Approve [D-48], [D-49], [D-50], [D-51], [D-52], [D-53], [D-54], [D-55], [D-56] and [D-57].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-59: The spec index also leaves out `lang/examples/`. Fills in [D-48].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.4]
+  why: The examples are successive versions of one illustrative chess spec and share its id, so indexing them reports a duplicate on every file.
+```
+
+```mdl
+decision D-60: A `github:` key into a `.mdl` file inside `## Changelog` is not reported. Fills in [D-45].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.5]
+  why: The changelog is append-only, so a decision written before references existed cannot be rewritten to satisfy the rule.
+  rejected:
+    - Rewriting such decisions, which `deus changelog check` rejects as an edit to the log.
+```
+
+```mdl
+decision D-61: In a reference, the spec id's segments after the first may be camelCase. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.3]
+  why: Plugin ids such as `org.dxos.plugin.fileSystem` are camelCase, and a lowercase-only grammar never recognised a reference into them.
+```
+
+```mdl
+decision D-62: Approve [D-59], [D-60] and [D-61].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-63: Each block gets its own ```` ```mdl ```` fence, and a second block header inside one fence is a lint error. Every existing multi-block fence in the repo's specs is split into one block per fence.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-3.4]
+```
+
+```mdl
+decision D-64: A block header inside a fence is a line after the fence's first line, at column 0, of the form `<type> [<id>][: <title>]`, whose type is a built-in block type or a term in the document's `## Extensions` table. Fills in [D-63].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.4]
+  why: A block body is always indented, so a column-0 line of a known type is never body text; on the repo's specs this finds exactly the hidden headers and no prose line.
+  rejected:
+    - Any column-0 line of the header form, which would also flag undeclared types such as `surface` lines that list surfaces.
+```

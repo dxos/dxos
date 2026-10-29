@@ -5,4 +5,5 @@
 // @import-as-namespace
 
 export * from './progress-registry.ts';
+export * from './progress-reporter.ts';
 export * from './progress-trace-sink.ts';

@@ -190,17 +190,18 @@ New predicates need no engine change; a rule over them is just another file.
 
 ## Building and CI
 
-The addon is built by `moon run code-index-native:cargo-build` (`scripts/build.sh`: a release build
+The addon is built by `moon run code-index-native:build-native` (`scripts/build.sh`: a release build
 with the `napi` feature, copied to `code-index-native.node`, which `internal/native.ts` loads).
-`code-index:test` depends on it, so the TS suite always runs against a current addon, and
-`code-index-native:test` runs the crate's own `cargo test` in the `:test` sweep. The toolchain is
+`code-index:test-native` depends on it, so the TS suite always runs against a current addon, and
+`code-index-native:test-native` runs the crate's own `cargo test`. Neither is in the `:test` sweep: Check
+runs every `:test-native` in its own `native` job, so a RocksDB compile never shares a node test cell. The toolchain is
 pinned by the crate's `rust-toolchain.toml` (kept equal to `rust` in `.prototools`); RocksDB is
 compiled from source, which needs a C++ compiler and libclang for its bindgen step.
 
-CI installs both in `.depot/actions/setup`: the pinned toolchain with rustup's minimal profile, and
+CI installs both in `.github/actions/setup`: the pinned toolchain with rustup's minimal profile, and
 libclang from apt where it is missing. The cargo registry is cached on `Cargo.lock`. The crate's
 `target/` is not: moon's remote cache already restores `code-index-native.node` and skips
-`cargo-test` when the crate's inputs are unchanged, so only a job whose crate inputs changed
+`test-native` when the crate's inputs are unchanged, so only a job whose crate inputs changed
 compiles, and restoring gigabytes of build output into every job would cost more than it saves.
 
 ## Benchmarks

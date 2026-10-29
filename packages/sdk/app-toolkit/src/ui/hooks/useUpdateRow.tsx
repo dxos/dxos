@@ -7,6 +7,7 @@ import * as Match from 'effect/Match';
 import React, { type ReactNode, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Typography from '@dxos/react-ui/Typography';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate from '../../app/AppUpdate.ts';
@@ -23,25 +24,6 @@ export type UpdateRowProps = {
 export type UpdateRowContent = {
   description: string;
   button: ReactNode;
-};
-
-/**
- * "5 minutes ago" without pulling `date-fns` into app-toolkit, which nearly every package depends on.
- * `Intl.RelativeTimeFormat` is built in and good enough for a single settings line.
- */
-const relativeTime = (timestamp: number): string => {
-  const seconds = Math.round((timestamp - Date.now()) / 1000);
-  const format = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
-  const [unit, perUnit] =
-    Math.abs(seconds) < 60
-      ? (['second', 1] as const)
-      : Math.abs(seconds) < 3600
-        ? (['minute', 60] as const)
-        : Math.abs(seconds) < 86_400
-          ? (['hour', 3600] as const)
-          : (['day', 86_400] as const);
-  // Truncated so 59m30s reads "59 minutes ago", not "60 minutes ago".
-  return format.format(Math.trunc(seconds / perUnit), unit);
 };
 
 /** Which action the user last triggered, so the button can show a busy state the status alone cannot. */
@@ -116,7 +98,7 @@ export const useUpdateRow = ({ manager, t }: UpdateRowProps): UpdateRowContent =
       description: isChecking
         ? t('settings.updates.checking.message')
         : t('settings.updates.up-to-date.message', {
-            checkedAt: relativeTime(s.checkedAt),
+            checkedAt: Typography.formatRelative(s.checkedAt),
           }),
       button: checkButton(),
     })),

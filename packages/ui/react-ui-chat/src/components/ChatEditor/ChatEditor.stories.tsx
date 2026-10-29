@@ -13,7 +13,6 @@ import { translations } from '#translations';
 
 import { ChatEditor, type ChatEditorProps } from './ChatEditor.tsx';
 import { type CommandData, commands } from './commands.ts';
-import { type ReferenceData } from './references.ts';
 
 const meta = {
   title: 'ui/react-ui-chat/ChatEditor',
@@ -71,38 +70,37 @@ export const WithSuggestions: Story = {
   },
 };
 
-// TODO(burdon): Replace.
-const references: ReferenceData[] = [
-  {
-    uri: 'echo:///AAAAAAAA',
-    label: 'Meeting Notes',
-  },
-  {
-    uri: 'echo:///BBBBBBBB',
-    label: 'Project Plan',
-  },
-  {
-    uri: 'echo:///CCCCCCCC',
-    label: 'Meeting Plan',
-  },
+const objects = [
+  { id: 'echo:///AAAAAAAA', label: 'Meeting Notes', icon: 'ph--note--regular' },
+  { id: 'echo:///BBBBBBBB', label: 'Project Plan', icon: 'ph--kanban--regular' },
+  { id: 'echo:///CCCCCCCC', label: 'Meeting Plan', icon: 'ph--calendar--regular' },
 ];
 
-export const WithReferences: Story = {
+export const WithMentions: Story = {
   args: {
     classNames,
-    references: {
-      provider: {
-        getReferences: async ({ query }) => {
-          const res = references.filter((i) => i.label.toLowerCase().startsWith(query.toLowerCase()));
-          log('getReferences', { query, res });
-          return res;
+    placeholder: 'Type @ to mention an object...',
+    menu: {
+      trigger: ['@'],
+      multiWordTriggers: ['@'],
+      filter: false,
+      getMenu: ({ text }) => [
+        {
+          id: 'objects',
+          items: objects
+            .filter(({ label }) => label.toLowerCase().includes(text.trim().toLowerCase()))
+            .map(({ id, label, icon }) => ({
+              id,
+              label,
+              icon,
+              onSelect: ({ view, head }) => {
+                const insert = `[${label}](${id}) `;
+                view.dispatch({ changes: { from: head, insert }, selection: { anchor: head + insert.length } });
+                log('mention', { id });
+              },
+            })),
         },
-        resolveReference: async ({ uri }) => {
-          const res = references.find((i) => i.uri === uri);
-          log('resolveReference', { uri, res });
-          return res ?? null;
-        },
-      },
+      ],
     },
   },
 };
@@ -110,6 +108,16 @@ export const WithReferences: Story = {
 const projectCommands: CommandData[] = [
   { sentinel: '$track', description: 'Record a follow-up task' },
   { sentinel: '$hydrate', description: 'Checkpoint project state' },
+  // Enough rows to overflow the popover's fixed height, so it scrolls.
+  { sentinel: '$plan', description: 'Draft a plan for the current task' },
+  { sentinel: '$review', description: 'Review the changes made so far' },
+  { sentinel: '$summarize', description: 'Summarize the conversation' },
+  { sentinel: '$explain', description: 'Explain the selected code in detail, step by step' },
+  { sentinel: '$refactor', description: 'Refactor for clarity' },
+  { sentinel: '$search', description: 'Search the workspace' },
+  { sentinel: '$notes', description: 'Open the project notes' },
+  { sentinel: '$lint', description: 'Lint and fix the changed files' },
+  { sentinel: '$branch', description: 'Show the current branch' },
 ];
 
 // Reset per play run (module re-imports fresh on a vitest retry, so this doesn't leak across tests).
@@ -151,10 +159,12 @@ export const WithCommands: Story = {
     await userEvent.click(content);
     await userEvent.type(content, '$t');
 
-    // The sentinel-command popover lists only prefix matches for the typed token. The matched
-    // prefix renders in its own span, so read the option label's full text rather than matching text nodes.
+    // The sentinel-command popover lists only prefix matches for the typed token; it is portalled, so
+    // read its options from the document rather than the canvas.
     const optionLabels = () =>
-      Array.from(canvasElement.querySelectorAll('.cm-completionLabel')).map((node) => node.textContent);
+      Array.from(document.querySelectorAll('[role="listbox"][aria-label="Commands"] [data-part="item-text"]')).map(
+        (node) => node.textContent,
+      );
     await waitFor(() => expect(optionLabels()).toEqual(['$track']));
 
     // `acceptCompletion` ignores Enter within `interactionDelay` (75ms, default) of the popover

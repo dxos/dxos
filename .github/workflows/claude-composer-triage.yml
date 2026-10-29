@@ -39,7 +39,7 @@ jobs:
       !contains(github.event.issue.labels.*.name, 'needs-info') &&
       !contains(github.event.issue.labels.*.name, 'claude-implementing') &&
       github.event.sender.type != 'Bot'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout repository

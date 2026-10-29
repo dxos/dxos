@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { type Database, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { useObject, useQuery, useType } from '@dxos/echo-react';
+import { type Database, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { useObject, useType } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import * as Util from '@dxos/react-ui/Util';
@@ -21,7 +21,7 @@ import { omitId } from '../util/index.ts';
 import { HueField } from './fields/index.ts';
 import { Form } from './Form.tsx';
 import { FormField } from './FormField.tsx';
-import { META_TAGS_KEY, partitionMetaTags, withMetaTags } from './meta-tags.ts';
+import { META_TAGS_KEY, partitionMetaTags, resolveMetaTags, withMetaTags } from './meta-tags.ts';
 
 /** The tags row's create option: `Add tag “{query}”`. */
 const CREATE_TAG_LABEL: CreateOptions['createOptionLabel'] = ['add-tag-query.label', { ns: translationKey }];
@@ -53,12 +53,9 @@ type ObjectFormModelOptions = {
 const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) => {
   const storedTags = useAtomValue(Obj.tagsAtom(object));
   // Provider-owned tags are held out of the form and written back untouched (see `partitionMetaTags`).
-  const spaceTags = useQuery(db, Filter.type(Tag.Tag));
-  const { editable: tags, preserved: preservedTags } = useMemo(
-    () => partitionMetaTags(storedTags, spaceTags),
-    [storedTags, spaceTags],
-  );
-  const values = useMemo(() => ({ [META_TAGS_KEY]: tags, ...snapshot }), [snapshot, tags]);
+  const { editable: tags, preserved: preservedTags } = useMemo(() => partitionMetaTags(storedTags), [storedTags]);
+  // The picker edits refs; the tags themselves are what meta holds.
+  const values = useMemo(() => ({ [META_TAGS_KEY]: tags.map((tag) => Ref.make(tag)), ...snapshot }), [snapshot, tags]);
 
   // A type whose structure `Obj.make` alone cannot produce (a required backing ref) declares a `FactoryAnnotation`.
   const handleCreate = useCallback(
@@ -90,8 +87,8 @@ const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) =>
       const isTagPath = (path: SchemaEx.JsonPath) => SchemaEx.splitJsonPath(path)[0] === META_TAGS_KEY;
       if (changedPaths.some(isTagPath)) {
         Obj.update(object, (object) => {
-          // A copy, so later in-place form edits stay outside `Obj.update`; this replaces `tags`, so restore the rest.
-          Obj.getMeta(object).tags = [...preservedTags, ...(metaTags ?? [])];
+          // This replaces `tags`, so restore the provider-owned ones held out of the form.
+          Obj.getMeta(object).tags = [...preservedTags, ...resolveMetaTags(metaTags ?? [], db, tags)];
         });
       }
 
@@ -104,7 +101,7 @@ const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) =>
         });
       }
     },
-    [object, preservedTags],
+    [object, preservedTags, db, tags],
   );
 
   return { values, handleCreate, handleChange };

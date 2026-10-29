@@ -191,7 +191,7 @@ should stay deterministic.
 ## Running Evals
 
 Requires a real `DX_ANTHROPIC_API_KEY`. Not part of `Check`: the whole suite runs nightly in the
-`Assistant evals` workflow (`.depot/workflows/assistant-evals.yml`), which trends every score in
+`Assistant evals` workflow (`.github/workflows/assistant-evals.yml`), which trends every score in
 the "Assistant evals" PostHog dashboard. On a PR, run the scenario you touched by hand.
 
 ```bash

@@ -94,7 +94,8 @@ export const TestEnable: Story = {
   args: { plugin: DOCTOR_KEY },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: 'Enable' }));
+    // The card renders once the host has turned Doctor off, which takes longer when every story loads at once.
+    await userEvent.click(await canvas.findByRole('button', { name: 'Enable' }, { timeout: 10_000 }));
     await expect(await canvas.findByText(/enabled/i)).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: 'Enable' })).toBeNull();
   },

@@ -58,6 +58,11 @@ export type BindingsContext = {
    */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /**
+   * Keys of the skills the conversation has bound, so a printed object can say which of the skills its
+   * type declares are missing. Absent where the host did not say, in which case none is called missing.
+   */
+  readonly skills?: readonly string[];
   /** Appends a line to this call's output — the only channel back to the model. */
   readonly print: (...values: unknown[]) => void;
 };

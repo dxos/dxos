@@ -23,6 +23,8 @@ export const VideoObject = memo(
       const video = internalRef.current;
       if (video && videoStream) {
         video.srcObject = videoStream;
+        // Call audio plays through `AudioStream`; an unmuted element is held back by the browser's autoplay policy.
+        video.muted = true;
         video.setAttribute('autoplay', 'true');
         video.setAttribute('playsinline', 'true');
       }

@@ -11,10 +11,9 @@ import { Database, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
-import { type SkillResult } from './skill.ts';
 import { type TasksResult } from './tasks.ts';
 
-export type ProjectInput = { tasks: TasksResult; skill: SkillResult };
+export type ProjectInput = { tasks: TasksResult };
 
 export type ProjectResult = { project: Project.Project; instructions: Instructions.Instructions };
 
@@ -34,28 +33,26 @@ every response — without them the tool silently never connects. Deploy with \`
 claim URL. The container is not durable, so file the Worker URL and the tool's response on this \
 project in the turn you produce them.
 
-Configure the server by setting its URL on the Weather MCP skill's \`mcpServers\` with the Database \
-skill; that skill is already bound here, so the tool is available on your next turn.
+Add the server to the space with the Skill Manager's \`add-mcp-connection\` tool; the connection is \
+on in this chat, so the tool is available on your next turn.
 
 This project needs no Cloudflare login and no API keys. If a step seems to need either, that is the \
 wrong step.`;
 
 /**
- * The work-stream. It adopts the task set the tasks partial built and binds the Weather MCP skill
- * through `instructions.skills` — the only path a seeded skill reaches a chat by — so the run can
- * configure the server with one update and no enable step.
+ * The work-stream. It adopts the task set the tasks partial built. The run needs no seeded skill: it
+ * adds its server with the Skill Manager, which every chat carries.
  */
 export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = SampleSpace.partial('project', {
   // `Project.make` builds an outline for the project and the instructions' prose is stored as a
   // Text; a partial has to declare every type it persists or the space cannot register it.
   schemas: [Project.Project, Instructions.Instructions, Outline.Outline, Text.Text],
-  run: ({ tasks, skill }: ProjectInput) =>
+  run: ({ tasks }: ProjectInput) =>
     Effect.gen(function* () {
       const instructions = yield* Database.add(
         Instructions.make({
           name: 'Weather MCP',
           text: INSTRUCTIONS,
-          skills: [Ref.make(skill.skill)],
           objects: [Ref.make(tasks.taskSet)],
         }),
       );

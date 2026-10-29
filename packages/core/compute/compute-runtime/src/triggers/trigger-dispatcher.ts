@@ -109,6 +109,8 @@ export interface TriggerDispatcherOptions {
 export interface InvokeTriggerOptions {
   trigger: Trigger.Trigger;
   event: TriggerEvent.TriggerEvent;
+  /** Run this invocation continues, set when it replays an `Operation.runAgain()` request; see `Trace.Meta.runId`. */
+  runId?: string;
 }
 export interface TriggerExecutionResult {
   triggerId: string;
@@ -157,6 +159,11 @@ interface RuntimeTriggerState {
      * Monotonic sequence number used to order pending retries FIFO at the tail of the queue.
      */
     enqueuedAt: number;
+
+    /**
+     * Pid of the run's first invocation, stamped on the retry's trace so it shows as the same run.
+     */
+    runId?: string;
   };
 
   /**
@@ -628,8 +635,10 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
   invokeTrigger = (options: InvokeTriggerOptions): Effect.Effect<TriggerExecutionResult> =>
     Effect.gen({ self: this }, function* () {
-      const { trigger, event } = options;
+      const { trigger, event, runId } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
+      // Pid of the process this invocation spawns; a run-again retry continues the run it started.
+      let spawnedPid: string | undefined;
 
       const invocationId = EntityId.random();
       const invocation: InvocationsState = {
@@ -691,8 +700,9 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           environment: { space: db.spaceId },
           // A trigger fires on its own, so what it writes is not a person's action.
           origin: 'system',
-          traceMeta: { trigger: Ref.make(trigger) },
+          traceMeta: { trigger: Ref.make(trigger), runId },
         });
+        spawnedPid = handle.pid;
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
           Stream.runCollect,
@@ -720,7 +730,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         // `RunAgainError` is a request to re-invoke the trigger, not a genuine failure: skip the
         // cooldown and enqueue a pending retry at the tail of the queue.
         runtimeState.cooldownUntil = undefined;
-        runtimeState.retry = { event, enqueuedAt: this._retrySequence++ };
+        runtimeState.retry = { event, enqueuedAt: this._retrySequence++, runId: runId ?? spawnedPid };
         log('trigger requested re-invocation', { triggerId: trigger.id });
       } else if (isStaleReferenceCause(result.cause)) {
         // The reference, not the run, is broken: re-running cannot repair it, so park the trigger
@@ -1037,10 +1047,11 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
     Effect.gen({ self: this }, function* () {
       const invocations: TriggerExecutionResult[] = [];
       while (true) {
-        const pending: { trigger: Trigger.Trigger; enqueuedAt: number; event: TriggerEvent.TriggerEvent }[] = [];
+        const pending: (InvokeTriggerOptions & { enqueuedAt: number })[] = [];
         for (const entry of this._runtimeState.values()) {
           if (entry.retry) {
-            pending.push({ trigger: entry.trigger, enqueuedAt: entry.retry.enqueuedAt, event: entry.retry.event });
+            const { enqueuedAt, event, runId } = entry.retry;
+            pending.push({ trigger: entry.trigger, enqueuedAt, event, runId });
           }
         }
         if (pending.length === 0) {
@@ -1055,16 +1066,16 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
 
         // Clear the pending flags before invoking; `invokeTrigger` re-sets `retry` (with a fresh
         // sequence number) if the trigger requests yet another re-run.
-        const batch = pending.map(({ trigger, event }) => {
+        const batch = pending.map(({ trigger, event, runId }): InvokeTriggerOptions => {
           const entry = this._runtimeState.get(trigger.id);
           if (entry) {
             entry.retry = undefined;
           }
-          return { trigger, event };
+          return { trigger, event, runId };
         });
 
         invocations.push(
-          ...(yield* Effect.forEach(batch, ({ trigger, event }) => this.invokeTrigger({ trigger, event }), {
+          ...(yield* Effect.forEach(batch, (options) => this.invokeTrigger(options), {
             concurrency: 'unbounded',
           })),
         );

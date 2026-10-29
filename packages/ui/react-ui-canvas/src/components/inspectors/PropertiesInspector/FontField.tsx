@@ -8,7 +8,7 @@ import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { DEFAULT_FONT_SIZE, FONT_FAMILIES, type FontFamily, NodeStyle } from '../../../model/index.ts';
+import { DEFAULT_FONT_SIZE, FONT_FAMILIES, type FontFamily, LINK_FONT_SIZE, NodeStyle } from '../../../model/index.ts';
 
 const FAMILY_LABELS: Record<FontFamily, string> = { default: 'Default', monospace: 'Monospace' };
 
@@ -24,9 +24,7 @@ const FONT_SIZE = { min: 8, max: 80, step: 1 };
 export const FontField: FormFieldRenderer = ({ jsonPath, readonly }) => {
   const stylePath = (jsonPath ?? 'style.fontFamily').split('.').slice(0, -1);
   const familyField = useFormFieldState('FontField', [...stylePath, 'fontFamily']);
-  const sizeField = useFormFieldState('FontField', [...stylePath, 'fontSize']);
   const family: unknown = familyField.getValue();
-  const size: unknown = sizeField.getValue();
   return (
     <Layout.Container
       layout='row'
@@ -53,22 +51,37 @@ export const FontField: FormFieldRenderer = ({ jsonPath, readonly }) => {
           }}
         />
       </Form.Field>
-      <Form.Field path={[...stylePath, 'fontSize'].join('.')} label='Font size' readonly={readonly}>
-        <Input.Number
-          disabled={!!readonly}
-          {...FONT_SIZE}
-          formatOptions={{ maximumFractionDigits: 0 }}
-          // Unset shows the size the shape draws at.
-          value={String(typeof size === 'number' ? size : DEFAULT_FONT_SIZE)}
-          onValueChange={(_, fontSize) => {
-            if (!Number.isNaN(fontSize)) {
-              // A stepper press never blurs, so each value commits itself.
-              sizeField.onValueChange(NodeStyle.fields.fontSize.ast, fontSize);
-              sizeField.onBlur();
-            }
-          }}
-        />
-      </Form.Field>
+      <FontSizeControl path={[...stylePath, 'fontSize']} fallback={DEFAULT_FONT_SIZE} readonly={readonly} />
     </Layout.Container>
   );
 };
+
+type FontSizeControlProps = { path: string[]; fallback: number; readonly?: boolean };
+
+/** A text size stepper; unset shows `fallback`, the size the element draws at. */
+const FontSizeControl = ({ path, fallback, readonly }: FontSizeControlProps) => {
+  const sizeField = useFormFieldState('FontSizeControl', path);
+  const size: unknown = sizeField.getValue();
+  return (
+    <Form.Field path={path.join('.')} label='Font size' readonly={readonly}>
+      <Input.Number
+        disabled={!!readonly}
+        {...FONT_SIZE}
+        formatOptions={{ maximumFractionDigits: 0 }}
+        value={String(typeof size === 'number' ? size : fallback)}
+        onValueChange={(_, fontSize) => {
+          if (!Number.isNaN(fontSize)) {
+            // A stepper press never blurs, so each value commits itself.
+            sizeField.onValueChange(NodeStyle.fields.fontSize.ast, fontSize);
+            sizeField.onBlur();
+          }
+        }}
+      />
+    </Form.Field>
+  );
+};
+
+/** The caption size alone, rendered at `style.fontSize` when a link is selected, since a link has no font face. */
+export const FontSizeField: FormFieldRenderer = ({ jsonPath, readonly }) => (
+  <FontSizeControl path={(jsonPath ?? 'style.fontSize').split('.')} fallback={LINK_FONT_SIZE} readonly={readonly} />
+);

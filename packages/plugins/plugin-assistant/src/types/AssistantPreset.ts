@@ -6,9 +6,12 @@
 export type AiPreset = {
   id: string;
   label: string;
+  /** Served on this device (a local runtime), so an agent running on EDGE cannot use it. */
+  local?: boolean;
+  /** The model vendor's logo. */
+  icon?: string;
 };
 
-/** Props shared between the ChatPresets component and the usePresets hook. */
 export type ChatPresetProps = {
   presets?: AiPreset[];
   preset?: string;

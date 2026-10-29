@@ -41,7 +41,9 @@ component UmlSkill
   desc: UML class diagrams from source code (bound documents or a fetched GitHub reference):
         the agent extracts the class model, emits a mermaid classDiagram, and plugin-illustrator's
         generate operation compiles and lays it out.
+```
 
+```mdl
 component ClassNodeView
   desc: The class shape: a name compartment over attribute and method compartments, each edited in place.
 ```
@@ -104,7 +106,9 @@ test QA-1: Draw a class and an inheritance link on the canvas
     - name: Delete the drawing
       do: Right-click "QA UML Canvas" in the navtree and choose Delete.
       expect: the row leaves the navtree and its plank closes
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Draw class shapes on a canvas. Recorded light at 60 fps with no ident, captions or

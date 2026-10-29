@@ -36,8 +36,8 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    exclusion with the user.
 7. **Push**, then verify `git status` shows a clean working tree. If anything
    remains, commit it or confirm before proceeding.
-8. **Open the PR as a draft** with `gh pr create --draft`. CI skips draft PRs,
-   so iterate on the draft freely; a PR opened ready from a `claude/` or `dm/`
+8. **Open the PR as a draft** with `gh pr create --draft`. A draft runs only `check` and
+   the node tests, so iterate on the draft freely; a PR opened ready from a `claude/` or `dm/`
    branch is converted to a draft anyway (`draft-on-open.yml`). Add the `preview` label only when the
    user asks for a preview deploy: each push to a labeled PR builds one. Title uses `scope: description`. Write the
    description with the `pr-description` skill: pick every template that
@@ -46,13 +46,11 @@ runs in. To land (merge) an existing PR, use the `land` skill.
    (`risk: …` always, plus any `breaking:`/`api:`/`tests:`/`revert:`/`perf:`).
    If this work builds on another open PR (or the user asked for a stack), see
    **Stacked PRs** below instead of `gh pr create`.
-9. **Mark it ready.** Run `moon run :lint :build :test-types` locally, and the browser and
-   storybook tests of the projects you changed:
-   `MOON_BASE=origin/main moon run :test-browser :test-storybook --affected`. CI runs those only
-   in the merge queue, which drops the PR when they fail. Then `gh pr ready`, which starts CI.
+9. **Mark it ready.** Run `moon run :lint :build :test-types` locally, then `gh pr ready`, which
+   starts the full Check: a draft runs `check` and the node tests, a ready PR every suite.
    Every push after this runs Check, so batch fixes into one push rather than pushing each one, and merge
    `main` in only to resolve a conflict. To keep iterating, convert it back to a
-   draft first (`gh pr ready --undo`). Drafts never run CI.
+   draft first (`gh pr ready --undo`).
 10. **Monitor CI every 5 minutes:**
     `gh run list --branch <branch> --limit 3 --workflow "Check"` and
     `pnpm -w gh-action --verify --watch`. Diagnose and, where possible, fix ALL

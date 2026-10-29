@@ -237,6 +237,7 @@ export type CompileOptions = {
 /**
  * Compile a mermaid flowchart into scene commands: one world object per node (element `box`),
  * one per subgraph frame, and an `edges` object holding the connectors as bound arrows.
+ * @deprecated Mermaid input is deprecated; write the semantic DSL and use `Dsl.compile`.
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const graph = parse(source);

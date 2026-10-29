@@ -35,37 +35,39 @@ type IbkrTokenFormValues = Schema.Schema.Type<typeof IbkrTokenForm>;
  * and the Flex query ID to AccessToken.account so downstream AI tools can
  * retrieve it via CredentialsService.account without exposing the secret.
  */
-export const createIbkrConnectorEntry = () => ({
-  id: IBKR_CONNECTOR_ID,
-  source: IBKR_SOURCE,
-  label: 'Interactive Brokers',
-  credentialForm: {
-    schema: IbkrTokenForm,
-    defaultValues: { token: '', queryId: '' } satisfies Partial<IbkrTokenFormValues>,
-    onSubmit: ({ values, connector }: { values: IbkrTokenFormValues; connector: { id: string; label?: string } }) =>
-      Effect.sync(() => {
-        const token = values.token.trim();
-        const queryId = values.queryId.trim();
-        if (!token || !queryId) {
-          throw new Error('Interactive Brokers connection requires both Flex token and Flex query ID.');
-        }
+export const createIbkrConnectorEntry = () =>
+  ({
+    id: IBKR_CONNECTOR_ID,
+    source: IBKR_SOURCE,
+    label: 'Interactive Brokers',
+    kind: 'user',
+    credentialForm: {
+      schema: IbkrTokenForm,
+      defaultValues: { token: '', queryId: '' } satisfies Partial<IbkrTokenFormValues>,
+      onSubmit: ({ values, connector }: { values: IbkrTokenFormValues; connector: { id: string; label?: string } }) =>
+        Effect.sync(() => {
+          const token = values.token.trim();
+          const queryId = values.queryId.trim();
+          if (!token || !queryId) {
+            throw new Error('Interactive Brokers connection requires both Flex token and Flex query ID.');
+          }
 
-        // The Flex query ID is non-secret and stored in account;
-        // it reaches AI tools via CredentialsService.account.
-        const accessToken = Obj.make(AccessToken.AccessToken, {
-          source: IBKR_SOURCE,
-          account: queryId,
-          token,
-        });
-        const connection = Obj.make(Connection.Connection, {
-          name: connector.label ?? 'Interactive Brokers',
-          connectorId: connector.id,
-          accessToken: Ref.make(accessToken),
-        });
-        return { kind: 'complete' as const, accessToken, connection };
-      }),
-  },
-});
+          // The Flex query ID is non-secret and stored in account;
+          // it reaches AI tools via CredentialsService.account.
+          const accessToken = Obj.make(AccessToken.AccessToken, {
+            source: IBKR_SOURCE,
+            account: queryId,
+            token,
+          });
+          const connection = Obj.make(Connection.Connection, {
+            name: connector.label ?? 'Interactive Brokers',
+            connectorId: connector.id,
+            accessToken: Ref.make(accessToken),
+          });
+          return { kind: 'complete' as const, accessToken, connection };
+        }),
+    },
+  }) satisfies ConnectorSpec.ConnectorEntry;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

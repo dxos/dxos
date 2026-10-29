@@ -23,24 +23,15 @@ export const useFeedModelAdapter = <T extends Obj.Unknown>(
 ): TranscriptModel<T> => {
   const model = useMemo(() => new TranscriptModel<T>(renderer, initialChunks), [renderer]);
 
-  // Seed the model with the current snapshot on first render and whenever the
-  // identity of `objects` changes (e.g. feed swapped).
+  // A query result changes identity and length together as it grows, so append by id rather than by position.
   useEffect(() => {
+    const known = new Set(model.chunks.map((chunk) => chunk.id));
     for (const chunk of objects) {
-      model.appendChunk(chunk);
+      if (!known.has(chunk.id)) {
+        model.appendChunk(chunk);
+      }
     }
   }, [model, objects]);
-
-  // Append new tail items as the array grows.
-  useEffect(() => {
-    if (model.chunks.length === objects.length) {
-      return;
-    }
-    const chunk = objects.at(-1);
-    if (chunk) {
-      model.appendChunk(chunk);
-    }
-  }, [model, objects.length]);
 
   return model;
 };

@@ -15,8 +15,12 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { SandboxPlugin } from '#plugin';
+import * as SandboxPlugin from '#meta';
 import { Sandbox, SandboxOperation } from '#types';
+
+await Harness.preload({
+  plugins: [ClientPlugin.make({ config: configPreset({ sandbox: 'local' }) }), SandboxPlugin.make()],
+});
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (routes served at its root).
@@ -30,7 +34,7 @@ describe('SandboxPlugin (composer harness)', { tags: ['functions-e2e'] }, () => 
         ClientPlugin.make({
           config: configPreset({ sandbox: 'local' }),
         }),
-        SandboxPlugin(),
+        SandboxPlugin.make(),
       ],
     });
 

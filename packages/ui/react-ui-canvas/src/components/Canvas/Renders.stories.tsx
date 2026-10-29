@@ -27,13 +27,13 @@ const Counted = ({ id, children }: { id: string; children: ReactNode }) => (
 );
 
 /** The panels a pan must not re-render; the Viewport (and the zoom readout) draw the camera, so they may. */
-const PANELS = ['navigation', 'actions', 'theme', 'tools', 'properties', 'layers', 'about'] as const;
+const PANELS = ['navigation', 'actions', 'theme', 'tools', 'properties', 'layers'] as const;
 
 /**
  * The panels a selection must not re-render (DESIGN.md §13.1): the Actions read it, the Properties and Layers take
  * turns in the floating inspector by it, and the rest do not read it.
  */
-const UNSELECTED = ['navigation', 'theme', 'tools', 'about'] as const;
+const UNSELECTED = ['navigation', 'theme', 'tools'] as const;
 
 /** Commits per panel since `before`. */
 const grownSince = (before: Map<string, number>, ids: readonly string[]) =>
@@ -74,9 +74,6 @@ const DefaultStory = () => {
       </Counted>
       <Counted id='layers'>
         <Canvas.Layers />
-      </Counted>
-      <Counted id='about'>
-        <Canvas.About />
       </Counted>
     </Canvas.Root>
   );

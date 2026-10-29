@@ -28,6 +28,8 @@ import {
   type ViewMap,
   endpointNode,
   isInstanceNode,
+  isViewNode,
+  pruneOrphaned,
 } from '../model/index.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
@@ -84,6 +86,44 @@ export const instanceCounts = (scenes: ViewMap): Record<ViewId, number> => {
     }
   }
   return counts;
+};
+
+/**
+ * `views` without the composite `composite` and, with `instances`, without every Instance of it and the links on them;
+ * the records only those Instances pointed at (an anonymous Object or a View inside one) go too. Undefined when the
+ * composite is still placed and `instances` is off, as deleting it would leave Instances drawing nothing.
+ */
+export const removeComposite = (
+  views: ViewMap,
+  composite: ViewId,
+  { instances, roots }: { instances: boolean; roots: readonly ViewId[] },
+): ViewMap | undefined => {
+  if (!instances && (instanceCounts(views)[composite] ?? 0) > 0) {
+    return undefined;
+  }
+  const { [composite]: _, ...rest } = views;
+  const next = Object.fromEntries(
+    Object.entries(rest).map(([id, view]): [ViewId, View] => {
+      const gone = new Set(
+        Object.values(view.nodes).flatMap((node) =>
+          isInstanceNode(node) && node.composite === composite ? [node.id] : [],
+        ),
+      );
+      if (gone.size === 0) {
+        return [id, view];
+      }
+      const touches = (link: Link) => [link.source, link.target].some((end) => gone.has(endpointNode(end) ?? ''));
+      return [
+        id,
+        {
+          ...view,
+          nodes: Object.fromEntries(Object.entries(view.nodes).filter(([nodeId]) => !gone.has(nodeId))),
+          links: Object.fromEntries(Object.entries(view.links).filter(([, link]) => !touches(link))),
+        },
+      ];
+    }),
+  );
+  return pruneOrphaned(views, next, roots);
 };
 
 /** The box a composite's nodes fill, unpadded: what an instance scales into its frame. */
@@ -220,7 +260,8 @@ export const composeSelection = (
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
   const bounds = unionBounds(nodes.map(nodeBounds));
-  if (nodes.length === 0 || !bounds || nodes.some((node) => node.locked)) {
+  // A View moved into an Object would be repeated at every placement (SPEC.mdl F-9.9).
+  if (nodes.length === 0 || !bounds || nodes.some((node) => node.locked || isViewNode(node))) {
     return undefined;
   }
   const inside = new Set(nodes.map((node) => node.id));
@@ -350,8 +391,52 @@ export const ungroupInstance = (
       id: link.id,
       values: { source: onInstance(link.source), target: onInstance(link.target) },
     }));
-  return [...created, ...linked, ...reattached, { kind: 'delete', ids: [instance.id] }];
+  // The Object's animation comes back out with its nodes: renamed to them, and placed and sized as the Instance drew it.
+  const mapValue = (property: string, value: unknown): unknown =>
+    property === 'center' && isPointValue(value)
+      ? map(value)
+      : property === 'size' && isSizeValue(value)
+        ? { width: value.width * transform.scale, height: value.height * transform.scale }
+        : value;
+  const tracks = Object.values(composite.timeline?.tracks ?? {}).map((track): [string, Track] => {
+    const target = ids.get(track.target) ?? track.target;
+    return [
+      `${target}:${track.property}`,
+      { ...track, target, keys: track.keys.map((key) => ({ ...key, value: mapValue(track.property, key.value) })) },
+    ];
+  });
+  const timed: Intent[] =
+    tracks.length === 0 || !composite.timeline
+      ? []
+      : [
+          {
+            kind: 'timeline',
+            timeline: {
+              ...(scene.timeline ?? { duration: composite.timeline.duration }),
+              tracks: {
+                // The Instance's own tracks go with it.
+                ...Object.fromEntries(
+                  Object.entries(scene.timeline?.tracks ?? {}).filter(([, track]) => track.target !== instance.id),
+                ),
+                ...Object.fromEntries(tracks),
+              },
+            },
+          },
+        ];
+  return [...created, ...linked, ...reattached, ...timed, { kind: 'delete', ids: [instance.id] }];
 };
+
+const isPointValue = (value: unknown): value is Point =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof Reflect.get(value, 'x') === 'number' &&
+  typeof Reflect.get(value, 'y') === 'number';
+
+const isSizeValue = (value: unknown): value is { width: number; height: number } =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof Reflect.get(value, 'width') === 'number' &&
+  typeof Reflect.get(value, 'height') === 'number';
 
 /**
  * A copy of `composite` under `compositeId` with fresh node and link ids (a drawing keys nodes by id across scenes), and

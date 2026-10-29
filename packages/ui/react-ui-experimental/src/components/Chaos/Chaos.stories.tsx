@@ -3,62 +3,35 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { useControls } from 'leva';
-import defaultsDeep from 'lodash.defaultsdeep';
+import { levaStore, useControls } from 'leva';
 import React, { useEffect } from 'react';
 
 import { useAudioStream } from '@dxos/react-ui-audio';
-import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { type ShaderOptions } from '../../shaders/index.ts';
+import { applyValues, levaControls, levaPaths, toConfig } from '../Avatar/stories/tuner.ts';
+import { chaos } from '../Avatar/visualizations/chaos.ts';
+import { chaosPresets, defaultChaosOptions } from './chaos-presets.ts';
 import { Chaos, type ChaosProps } from './Chaos.tsx';
-import { defaultShaderOptions, shaderPresets } from './shader-presets.ts';
 
-type ControlsOptions = ShaderOptions & { preset: string; audio: boolean };
+type StoryProps = ChaosProps & {
+  /** Drives the cloud from the microphone. */
+  microphone?: boolean;
+  preset?: string;
+};
 
-const DefaultStory = (props: ChaosProps) => {
-  const [{ preset, audio, ...options }, setProps] = useControls<ControlsOptions, () => ControlsOptions, any>(
-    () =>
-      defaultsDeep(
-        {
-          preset: { value: Object.keys(shaderPresets)[0], options: Object.keys(shaderPresets) },
-          audio: { value: true },
-        },
-        {
-          ...defaultShaderOptions,
+const FOLDER = 'Chaos';
 
-          // Camera.
-          aperture: { value: defaultShaderOptions.aperture, min: 0, max: 5.6 },
-          fov: { value: defaultShaderOptions.fov, min: 30, max: 150 },
-          zoom: { value: defaultShaderOptions.zoom, min: 0, max: 10 },
-          distance: { value: defaultShaderOptions.distance, min: 0, max: 10 },
-          focus: { value: defaultShaderOptions.focus, min: -1, max: 1 },
-          rotation: { value: defaultShaderOptions.rotation, min: -20, max: 20 },
-
-          // Object.
-          size: { value: defaultShaderOptions.size, min: 1, max: 500 },
-          speed: { value: defaultShaderOptions.speed, min: 0, max: 100 },
-          curl: { value: defaultShaderOptions.curl, min: 0.01, max: 5 },
-          chaos: { value: defaultShaderOptions.chaos, min: 1, max: 5, step: 1 },
-          alpha: { value: defaultShaderOptions.alpha, min: 0, max: 1 },
-          gain: { value: defaultShaderOptions.gain, min: 0, max: 1 },
-        },
-      ),
-    [],
-  );
-  useEffect(() => {
-    setProps(shaderPresets[preset]);
-  }, [preset]);
-
-  const { getAverage } = useAudioStream(audio);
+const DefaultStory = ({ microphone = false, preset, ...props }: StoryProps) => {
+  const start = (preset && chaosPresets[preset]) || defaultChaosOptions;
+  const values = toConfig(useControls(FOLDER, levaControls(chaos.params, start)));
+  // Leva's store outlives a story, so each story writes its own starting values rather than inheriting the last one's.
+  useEffect(() => levaStore.set(levaPaths(FOLDER, start), false), [start]);
+  const { getAverage } = useAudioStream(microphone);
 
   return (
     <div className='flex grow items-center justify-center'>
-      <div className='z-[10] absolute right-2 bottom-2'>
-        <Button.Root onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Button.Root>
-      </div>
-      <Chaos {...props} options={options} getValue={getAverage} />
+      <Chaos {...props} options={applyValues(start, values)} getValue={microphone ? getAverage : undefined} />
     </div>
   );
 };
@@ -71,23 +44,34 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof Chaos>;
+} satisfies Meta<StoryProps>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   args: {
-    active: true,
-    debug: true,
     classNames: 'w-[256px] h-[256px]',
   },
 };
 
 export const Large: Story = {
   args: {
-    active: true,
+    classNames: 'w-[512px] h-[512px]',
+  },
+};
+
+export const Droplet: Story = {
+  args: {
+    preset: 'droplet',
+    classNames: 'w-[512px] h-[512px]',
+  },
+};
+
+export const Microphone: Story = {
+  args: {
+    microphone: true,
     classNames: 'w-[512px] h-[512px]',
   },
 };

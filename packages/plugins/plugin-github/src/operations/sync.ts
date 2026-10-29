@@ -2,64 +2,50 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Semaphore from 'effect/Semaphore';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
+import { Milestone, Organization, Person, PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 
-import { meta } from '#meta';
-import { GitHubOperation } from '#types';
+import { GitHubCapabilities, GitHubOperation } from '#types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
-import {
-  GitHubProjectMissingError,
-  GitHubRepoInaccessibleError,
-  GitHubRepoUnresolvedError,
-  formatGitHubSyncFailure,
-} from '../errors.ts';
+import { GitHubRepoInaccessibleError, GitHubRepoUnresolvedError, formatGitHubSyncFailure } from '../errors.ts';
+import { type FileSyncResult, isFileBinding, syncFileBinding } from '../file-sync/sync-files.ts';
+import { GitHubNamespace } from '../namespace.ts';
 import { GitHubApi } from '../services/index.ts';
+import { ensureRepo, toRepoDescriptor } from './repo.ts';
 
 const { mergeField, snapshotField } = ConnectorSync;
 
 //
-// Direction: bidirectional (pull-then-push) for projects and tasks.
+// Polling sync of one bound repository (spec/SYNC.mdl).
 //
-// Each sync pass syncs one binding (one repo). It first pulls every reachable
-// Organization, Person, Project, and Task from GitHub into ECHO, then walks the
-// local mirrors and pushes any field that diverged from the snapshot taken at
-// the end of the previous pull. Snapshots live on the `Cursor` object's
-// `spec.snapshots[<github id>]` (where ids are the GitHub-issued numeric ids,
-// stringified for stable foreign-key matching).
+// A binding is a `Cursor` whose target is a `Repo`. Each poll reads one delta — the repository's
+// issues and pull requests updated since `Cursor.max`, newest first, sent with the ETag of the last
+// delta in `Cursor.spec.token` — so a quiet repository costs a single `304`. Pull requests in the
+// delta, plus open ones whose checks are still pending (a CI result does not move `updated_at`), are
+// then read in one GraphQL batch. Issues keep the snapshot-driven three-way merge and push of title,
+// description and status; pull requests are pull-only.
 //
-// Mapped fields per object:
-//   Project (repo): description (description-only — see updateRepo for why
-//                   `name` is intentionally not pushed)
-//   Task (issue):   title, description, status (open/closed)
+// Snapshots live on `Cursor.spec.snapshots[<github id>]`. The repository's entry also records when
+// the repository and its organization were last read, since those are read hourly and daily rather
+// than on every poll.
 //
-// Conflict policy is remote-wins (mirrors Trello/Linear). Comments are NOT
-// synced (the chunked-yield rewrite is still pending; see TODO below).
-//
-// Attribution caveat: pushed edits are attributed to the GitHub App / OAuth
-// user that owns the connection token, not to the local user who made the
-// edit. This is unavoidable with the current token model — a write from
-// "Person A in space" appears on GitHub as a write from the App. Document
-// before enabling for shared spaces.
-//
-// New local objects (no GitHub foreign key) are NOT pushed in this pass —
-// creating a new GitHub issue requires (owner, repo) which we currently
-// don't surface from local Tasks unambiguously.
-//
-// Sync target shape: each binding's target is the local root Project for one
-// REPOSITORY. The repo's owning org (and org members) are auto-pulled.
+// Attribution caveat: pushed edits are attributed to the GitHub App / OAuth user that owns the
+// connection token, not to the local user who made the edit.
 //
 
 //
@@ -69,19 +55,42 @@ const { mergeField, snapshotField } = ConnectorSync;
 /** Per-repo issue parallelism. */
 const ISSUE_CONCURRENCY = 4;
 
+/** How often a binding re-reads its repository's metadata and milestones. */
+const REPO_READ_INTERVAL_MS = 60 * 60 * 1000;
+
+/**
+ * Pages of 100 one backfill run reads, oldest first, before it saves its watermark and runs again, so a
+ * large repository's first sync advances in resumable chunks.
+ */
+const BACKFILL_PAGES = 10;
+
+/** How often a binding re-reads its organization and members. */
+const MEMBERS_READ_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Subtracted from the newest `updated_at` before it becomes the watermark: GitHub's `since` has
+ * second precision, so an item updated in the same second as the watermark is read again rather
+ * than missed. Snapshots make that re-read a no-op.
+ */
+const WATERMARK_OVERLAP_MS = 5_000;
+
 //
 // Snapshot field shapes (stored on Cursor's `spec.snapshots`)
 //
 
 /**
- * Snapshot shapes. Fields are required (not `?`) because every snapshot is
- * written in one shot via {@link Cursor.writeSnapshot} after a pull; absence-of-
- * snapshot is modeled by `Cursor.readSnapshot` returning `undefined`. `name` on a
- * Project is recorded but not pushed — see {@link GitHubApi.updateRepo}.
+ * Last-pulled repository fields, plus when the repository and its organization were last read.
+ * `name` is recorded but not pushed — see {@link GitHubApi.updateRepo}.
  */
-type ProjectSnapshot = {
+type RepoSnapshot = {
   name: string;
   description: string;
+  /** ETag of the last repository read; sent as `If-None-Match`. */
+  etag?: string;
+  /** Epoch milliseconds of the last repository read. */
+  readAt?: number;
+  /** Epoch milliseconds of the last organization and members read. */
+  membersReadAt?: number;
 };
 
 type TaskSnapshot = {
@@ -107,6 +116,18 @@ const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
     return results.length > 0 ? (results[0] as T) : undefined;
   });
 
+/**
+ * The `TaskSet` that mirrors a repository's issues: the one carrying the repository's github.com
+ * foreign key, created when the space holds none. It has no field naming the repository.
+ */
+export const ensureIssueSet = Effect.fn('ensureIssueSet')(function* (repo: Repo.Repo, repoId: string) {
+  const existing = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, repoId);
+  if (existing) {
+    return existing;
+  }
+  return yield* Database.add(TaskSet.make({ [Obj.Meta]: { keys: [fkFor(repoId)] }, name: Repo.fullName(repo) }));
+});
+
 //
 // Field mappers (GitHub ↔ DXOS)
 //
@@ -114,8 +135,7 @@ const findByForeignId = <T>(type: Type.AnyEntity, id: string | number) =>
 /**
  * Maps GitHub issue state to a Task status. GitHub issues only have `open` /
  * `closed` — there's no "in progress" concept, so we collapse open→`todo` and
- * closed→`done`. PRs use the same mapping; merged PRs are reported as `closed`
- * by GitHub plus a non-null `pull_request.merged_at`.
+ * closed→`done`.
  */
 const issueStateToTaskStatus = (state: string): 'todo' | 'done' => (state === 'closed' ? 'done' : 'todo');
 
@@ -136,16 +156,64 @@ const taskStatusToIssueState = (status: string | undefined): 'open' | 'closed' |
   }
 };
 
-const sinceFromOptions = (options: GitHubOperation.SyncOptions | undefined): string | undefined => {
+const sinceFromOptions = (options: GitHubOperation.SyncOptions | undefined, now: number): string | undefined => {
   const days = options?.maxDaysBack;
   if (typeof days !== 'number' || days <= 0) {
     return undefined;
   }
-  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  return new Date(now - days * 24 * 60 * 60 * 1000).toISOString();
 };
 
 /** GitHub reports `due_on` as an ISO datetime; `Milestone.targetDate` is date-only. */
 const dueOnToTargetDate = (dueOn: string | null | undefined): string | undefined => dueOn?.slice(0, 10) ?? undefined;
+
+/** GitHub's check rollup; `undefined` when the commit has no checks, so it never counts as pending. */
+const toCheckState = (detail: GitHubApi.PullRequestDetail): PullRequest.CheckState | undefined => {
+  switch (detail.statusCheckRollup?.state) {
+    case 'SUCCESS':
+      return 'success';
+    case 'FAILURE':
+    case 'ERROR':
+      return 'failure';
+    case 'PENDING':
+    case 'EXPECTED':
+      return 'pending';
+    default:
+      return undefined;
+  }
+};
+
+const toReviewDecision = (detail: GitHubApi.PullRequestDetail): PullRequest.ReviewDecision | undefined => {
+  switch (detail.reviewDecision) {
+    case 'APPROVED':
+      return 'approved';
+    case 'CHANGES_REQUESTED':
+      return 'changes_requested';
+    case 'REVIEW_REQUIRED':
+      return 'review_required';
+    default:
+      return undefined;
+  }
+};
+
+/** A pull request's state from the delta item, refined by the GraphQL detail when there is one. */
+const toPullRequestState = (
+  item: GitHubApi.DeltaItem | undefined,
+  detail: GitHubApi.PullRequestDetail | undefined,
+  previous: PullRequest.State | undefined,
+): PullRequest.State => {
+  if (detail?.merged || item?.pull_request?.merged_at) {
+    return 'merged';
+  }
+  const closed = item ? item.state === 'closed' : previous === 'closed';
+  if (closed) {
+    return 'closed';
+  }
+  if (detail) {
+    return detail.isDraft ? 'draft' : 'open';
+  }
+  return previous === 'draft' ? 'draft' : 'open';
+};
 
 /**
  * Move a task into `container`. Idempotent — sync runs repeatedly and must never append a second
@@ -157,13 +225,25 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
   if (listed && Obj.getParent(task)?.id === container.id) {
     return;
   }
+  yield* removeFromContainers(task, container);
+  if (!listed) {
+    Obj.update(container, (container) => {
+      container.tasks.push(Ref.make(task));
+    });
+  }
+  // `tasks` claims only an unparented task, so a move between sets moves the edge itself.
+  Obj.setParent(task, container);
+});
+
+/** Drops `task` from every set and parent task that lists it, except `keep`. */
+const removeFromContainers = Effect.fn('removeFromContainers')(function* (task: Task.Task, keep?: TaskSet.TaskSet) {
   // The reverse-ref index, not `Obj.getParent`: legacy sets may hold refs to tasks whose parent
   // edge has not yet been healed to the set, and every holder must drop its stale entry.
   const previous = yield* Database.query(
     Query.select(Filter.id(task.id)).referencedBy(TaskSet.TaskSet, 'tasks'),
   ).run.pipe(Effect.orElseSucceed(() => []));
   for (const set of previous) {
-    if (set.id === container.id) {
+    if (set.id === keep?.id) {
       continue;
     }
     Obj.update(set, (set) => {
@@ -177,17 +257,10 @@ export const setTaskContainer = Effect.fn('setTaskContainer')(function* (task: T
       TaskSet.removeRefsInPlace(parent.subtasks ?? [], new Set([task.id]));
     });
   }
-  if (!listed) {
-    Obj.update(container, (container) => {
-      container.tasks.push(Ref.make(task));
-    });
-  }
-  // `tasks` claims only an unparented task, so a move between sets moves the edge itself.
-  Obj.setParent(task, container);
 });
 
 //
-// Pull (snapshot-driven three-way merge for Project + Task; simple upsert for Org/Person)
+// Pull (snapshot-driven three-way merge for Repo + Task; simple upsert for Org/Person/PullRequest)
 //
 
 const upsertOrganization = Effect.fn('upsertOrganization')(function* (org: GitHubApi.GitHubOrg) {
@@ -250,60 +323,41 @@ const upsertPerson = Effect.fn('upsertPerson')(function* (
 });
 
 /**
- * Pull a GitHub repo into ECHO as a Project. Mapped fields go through
- * three-way merge against `binding.snapshots[<repo id>]`; the snapshot
- * is then refreshed to remote-current so the next push pass sees only
- * fields the user has edited locally. `name` is recorded in the snapshot
- * (so we can detect divergence) but is not pushed back — see
- * {@link GitHubApi.updateRepo}.
+ * Merge a repository read into the bound `Repo`. `name` and `description` go through the three-way
+ * merge against the snapshot; the URL and default branch are GitHub's alone, so they are copied.
  */
-const upsertProject = Effect.fn('upsertProject')(function* (
+const upsertRepo = Effect.fn('upsertRepo')(function* (
   binding: Cursor.ExternalCursor,
-  repo: GitHubApi.GitHubRepo,
+  local: Repo.Repo,
+  remote: GitHubApi.GitHubRepo,
+  read: Pick<RepoSnapshot, 'etag' | 'readAt'>,
 ) {
-  const remoteFields: Required<ProjectSnapshot> = {
-    name: repo.full_name,
-    description: repo.description ?? '',
-  };
-  const fid = String(repo.id);
-  const existing = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, repo.id);
-
-  if (existing) {
-    const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
-    const nameResult = mergeField<string | undefined>(
-      existing.name,
-      remoteFields.name,
-      snapshotField(snapshot, 'name'),
-    );
-    const descriptionResult = mergeField<string | undefined>(
-      existing.description,
-      remoteFields.description,
-      snapshotField(snapshot, 'description'),
-    );
-    const writeName = nameResult.source === 'remote' && existing.name !== nameResult.value;
-    const writeDescription = descriptionResult.source === 'remote' && existing.description !== descriptionResult.value;
-    if (writeName || writeDescription) {
-      Obj.update(existing, (existing) => {
-        if (writeName) {
-          existing.name = nameResult.value;
-        }
-        if (writeDescription) {
-          existing.description = descriptionResult.value;
-        }
-      });
+  const fid = String(remote.id);
+  const snapshot = Cursor.readSnapshot<RepoSnapshot>(binding, fid);
+  const remoteFields = { name: remote.name, description: remote.description ?? '' };
+  const nameResult = mergeField<string>(local.name, remoteFields.name, snapshotField(snapshot, 'name'));
+  const descriptionResult = mergeField<string | undefined>(
+    local.description,
+    remoteFields.description,
+    snapshotField(snapshot, 'description'),
+  );
+  const url = remote.html_url ?? undefined;
+  const defaultBranch = remote.default_branch ?? undefined;
+  Obj.update(local, (local) => {
+    if (nameResult.source === 'remote' && local.name !== nameResult.value) {
+      local.name = nameResult.value;
     }
-    Cursor.writeSnapshot(binding, fid, remoteFields);
-    return existing;
-  }
-
-  const created = TaskSet.make({
-    [Obj.Meta]: { keys: [fkFor(repo.id)] },
-    name: repo.full_name,
-    description: repo.description ?? undefined,
+    if (descriptionResult.source === 'remote' && local.description !== descriptionResult.value) {
+      local.description = descriptionResult.value || undefined;
+    }
+    if (url !== undefined && local.url !== url) {
+      local.url = url;
+    }
+    if (defaultBranch !== undefined && local.defaultBranch !== defaultBranch) {
+      local.defaultBranch = defaultBranch;
+    }
   });
-  const persisted = yield* Database.add(created);
-  Cursor.writeSnapshot(binding, fid, remoteFields);
-  return persisted;
+  Cursor.writeSnapshot(binding, fid, { ...snapshot, ...remoteFields, ...read });
 });
 
 /**
@@ -324,7 +378,10 @@ export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
   const milestone =
     existing ??
     (yield* Database.add(Milestone.make({ [Obj.Meta]: { keys: [fkFor(remote.id)] }, name, description, targetDate })));
-  if (existing) {
+  if (
+    existing &&
+    (existing.name !== name || existing.description !== description || existing.targetDate !== targetDate)
+  ) {
     Obj.update(existing, (existing) => {
       existing.name = name;
       existing.description = description;
@@ -342,9 +399,8 @@ export const upsertMilestone = Effect.fn('upsertMilestone')(function* (
 });
 
 /**
- * Pull a GitHub issue into ECHO as a Task. Same merge shape as
- * {@link upsertProject}, against snapshot fields {title, description, status}.
- * Non-mapped fields (`Task.priority`, `Task.estimate`, etc.) are preserved.
+ * Pull a GitHub issue into ECHO as a Task, three-way merging {title, description, status} against
+ * the binding's snapshot. Non-mapped fields (`Task.priority`, `Task.estimate`, etc.) are preserved.
  *
  * Set membership is NOT wired here: this runs concurrently per issue and `TaskSet.tasks` is a
  * shared array, so the caller applies {@link setTaskContainer} sequentially afterwards.
@@ -426,23 +482,187 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
   return { task: persisted, created: true };
 });
 
+/** Scalar fields a poll writes; the coordinates name the pull request and never drift. */
+const PULL_REQUEST_FIELDS = [
+  'title',
+  'url',
+  'state',
+  'author',
+  'description',
+  'createdAt',
+  'updatedAt',
+  'baseBranch',
+  'headBranch',
+  'headSha',
+  'additions',
+  'deletions',
+  'checks',
+  'reviewDecision',
+] as const;
+
+type PullRequestFields = Partial<Pick<PullRequest.PullRequest, (typeof PULL_REQUEST_FIELDS)[number]>>;
+
+/** Scalar fields that differ from the stored pull request; an absent value is unknown, never a clear. */
+const changedFields = (pullRequest: PullRequest.PullRequest, next: PullRequestFields): PullRequestFields => {
+  const changes: PullRequestFields = {};
+  const copy = <Field extends (typeof PULL_REQUEST_FIELDS)[number]>(field: Field) => {
+    const value = next[field];
+    if (value !== undefined && value !== pullRequest[field]) {
+      changes[field] = value;
+    }
+  };
+  PULL_REQUEST_FIELDS.forEach(copy);
+  return changes;
+};
+
+const sameRefs = (left: readonly Ref.Ref<Task.Task>[] | undefined, right: readonly Ref.Ref<Task.Task>[]): boolean =>
+  (left ?? []).length === right.length && right.every((ref, index) => left?.[index]?.uri === ref.uri);
+
+/**
+ * Write a pull request's delta item and GraphQL detail onto its `PullRequest`, found by its GitHub
+ * id, else by coordinates (an import or a refresh made it before it was synced), else created.
+ * A `Task` the earlier sync made for it is replaced (spec F-1.5). Only changed fields are written.
+ */
+const upsertPullRequest = Effect.fn('upsertPullRequest')(function* (
+  repo: Repo.Repo,
+  number: number,
+  item: GitHubApi.DeltaItem | undefined,
+  detail: GitHubApi.PullRequestDetail | undefined,
+  existing: PullRequest.PullRequest | undefined,
+) {
+  const closes: Ref.Ref<Task.Task>[] = [];
+  for (const reference of detail?.closingIssuesReferences?.nodes ?? []) {
+    if (reference?.databaseId != null) {
+      const task = yield* findByForeignId<Task.Task>(Task.Task, reference.databaseId);
+      if (task) {
+        closes.push(Ref.make(task));
+      }
+    }
+  }
+
+  const fields: PullRequestFields = {
+    title: item?.title,
+    url: item?.html_url ?? undefined,
+    state: toPullRequestState(item, detail, existing?.state),
+    author: item?.user?.login,
+    description: item?.body ?? undefined,
+    createdAt: item?.created_at ?? undefined,
+    updatedAt: item?.updated_at ?? undefined,
+    baseBranch: detail?.baseRefName,
+    headBranch: detail?.headRefName,
+    headSha: detail?.headRefOid,
+    additions: detail?.additions,
+    deletions: detail?.deletions,
+    checks: detail ? toCheckState(detail) : undefined,
+    reviewDecision: detail ? toReviewDecision(detail) : undefined,
+  };
+
+  if (existing) {
+    const changes = changedFields(existing, fields);
+    // A detail with no checks or no review decision clears the stale one, since a new commit has none yet.
+    const clearChecks = detail !== undefined && fields.checks === undefined && existing.checks !== undefined;
+    const clearReview =
+      detail !== undefined && fields.reviewDecision === undefined && existing.reviewDecision !== undefined;
+    const writeRepository = existing.repository?.target?.id !== repo.id;
+    const writeCloses = detail !== undefined && !sameRefs(existing.closes, closes);
+    const writeKey =
+      item !== undefined && !Obj.getKeys(existing, GITHUB_SOURCE).some((key) => key.id === String(item.id));
+    if (Object.keys(changes).length > 0 || clearChecks || clearReview || writeRepository || writeCloses || writeKey) {
+      Obj.update(existing, (existing) => {
+        Object.assign(existing, changes);
+        if (clearChecks) {
+          existing.checks = undefined;
+        }
+        if (clearReview) {
+          existing.reviewDecision = undefined;
+        }
+        if (writeRepository) {
+          existing.repository = Ref.make(repo);
+        }
+        if (writeCloses) {
+          existing.closes = closes;
+        }
+        if (writeKey && item) {
+          Obj.getMeta(existing).keys.push(fkFor(item.id));
+        }
+      });
+    }
+    return existing;
+  }
+
+  if (!item) {
+    return undefined;
+  }
+
+  // The earlier sync mirrored pull requests as Tasks; the PullRequest replaces it under the same key.
+  const legacy = yield* findByForeignId<Task.Task>(Task.Task, item.id);
+  if (legacy) {
+    yield* removeFromContainers(legacy);
+    yield* Database.remove(legacy);
+  }
+
+  return yield* Database.add(
+    PullRequest.make({
+      ...fields,
+      owner: repo.owner,
+      repo: repo.name,
+      number,
+      title: item.title,
+      state: fields.state ?? 'open',
+      repository: Ref.make(repo),
+      ...(detail && { closes }),
+      [Obj.Meta]: { keys: [fkFor(item.id)] },
+    }),
+  );
+});
+
+/**
+ * The repository's open pull requests whose checks have not settled, or every open one when `settled`:
+ * a re-run moves settled checks without moving `updated_at`, so those are re-read on the hourly schedule.
+ */
+const queryOpenPullRequests = (repo: Repo.Repo, { settled }: { settled: boolean }) =>
+  Database.query(Filter.type(PullRequest.PullRequest, { owner: repo.owner, repo: repo.name })).run.pipe(
+    Effect.map((pullRequests) =>
+      pullRequests.filter(
+        (pullRequest) =>
+          (pullRequest.state === 'open' || pullRequest.state === 'draft') &&
+          (settled || pullRequest.checks === 'pending'),
+      ),
+    ),
+  );
+
+const findPullRequest = (repo: Repo.Repo, number: number, id: number | undefined) =>
+  Effect.gen(function* () {
+    const byKey =
+      id === undefined ? undefined : yield* findByForeignId<PullRequest.PullRequest>(PullRequest.PullRequest, id);
+    if (byKey) {
+      return byKey;
+    }
+    const [byCoordinates] = yield* Database.query(
+      Filter.type(PullRequest.PullRequest, { owner: repo.owner, repo: repo.name, number }),
+    ).run;
+    return byCoordinates;
+  });
+
 //
 // Push (snapshot diff → GitHub mutations)
 //
 
 export type GitHubPushResult = {
-  projects: number;
-  tasks: number;
+  repos: number;
+  issues: number;
 };
 
+/** What a push needs to address a repository. */
+export type RepoCoordinates = { id: string; owner: string; name: string };
+
 /**
- * Push reconciler for one repo. Walks the locally-mirrored Project for the
- * given repo plus every Task whose foreign key matches one of the issues we
- * just pulled, diffs against the binding's snapshot, and PATCHes any diverged
- * field back to GitHub.
+ * Push reconciler for one repo. Walks the bound `Repo` plus every Task whose
+ * foreign key matches one of the issues we just pulled, diffs against the
+ * binding's snapshot, and PATCHes any diverged field back to GitHub.
  *
  * Behaviour:
- *   - Project description divergence → PATCH /repos/{owner}/{repo}.
+ *   - Repo description divergence → PATCH /repos/{owner}/{repo}.
  *     `name` divergence is logged but NOT pushed (rename is destructive and
  *     almost never desired from a sync mirror).
  *   - Task title / description / status divergence → PATCH the issue.
@@ -458,7 +678,7 @@ export type GitHubPushResult = {
  */
 export const pushRepoUpdates: <E, R>(
   binding: Cursor.ExternalCursor,
-  repo: GitHubApi.GitHubRepo,
+  repo: RepoCoordinates,
   remoteIssuesById: ReadonlyMap<string, GitHubApi.GitHubIssue>,
   push: {
     /** Wraps `GitHubApi.updateIssue`. */
@@ -473,15 +693,15 @@ export const pushRepoUpdates: <E, R>(
   },
 ) => Effect.Effect<GitHubPushResult, E, Database.Service | R> = Effect.fn('pushRepoUpdates')(
   function* (binding, repo, remoteIssuesById, push) {
-    let projects = 0;
-    let tasks = 0;
+    let repos = 0;
+    let issues = 0;
 
-    // Project (repo) push — description only.
+    // Repo push — description only.
     {
-      const fid = String(repo.id);
-      const local = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, repo.id);
+      const fid = repo.id;
+      const local = yield* findByForeignId<Repo.Repo>(Repo.Repo, repo.id);
       if (local && !Obj.isDeleted(local)) {
-        const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
+        const snapshot = Cursor.readSnapshot<RepoSnapshot>(binding, fid);
         if (snapshot) {
           const localName = local.name ?? '';
           const localDescription = local.description ?? '';
@@ -501,12 +721,12 @@ export const pushRepoUpdates: <E, R>(
             });
           }
           if (diverged) {
-            yield* push.updateRepo(repo.owner.login, repo.name, input);
+            yield* push.updateRepo(repo.owner, repo.name, input);
             Cursor.writeSnapshot(binding, fid, {
               ...snapshot,
               description: localDescription,
             });
-            projects++;
+            repos++;
           }
         }
       }
@@ -573,7 +793,7 @@ export const pushRepoUpdates: <E, R>(
         continue;
       }
 
-      yield* push.updateIssue(repo.owner.login, repo.name, remoteIssue.number, input);
+      yield* push.updateIssue(repo.owner, repo.name, remoteIssue.number, input);
       // Refresh the snapshot: title / description / status sent. Status only
       // gets refreshed when we actually pushed a state change (issues only) —
       // for PRs we keep the snapshot's previous status, so the warning above
@@ -585,10 +805,10 @@ export const pushRepoUpdates: <E, R>(
         description: localDescription,
         status: input.state !== undefined ? (desiredStatusForSnapshot ?? snapshot.status) : snapshot.status,
       });
-      tasks++;
+      issues++;
     }
 
-    return { projects, tasks };
+    return { repos, issues };
   },
 );
 
@@ -596,183 +816,351 @@ export const pushRepoUpdates: <E, R>(
 // Main handler
 //
 
+/** Epoch milliseconds of the newest `updated_at` among `items`; `-Infinity` when none carries one. */
+const newestUpdate = (items: readonly GitHubApi.DeltaItem[]): number =>
+  Math.max(
+    ...items.map((item) => (item.updated_at ? Date.parse(item.updated_at) : Number.NaN)).filter(Number.isFinite),
+  );
+
+/** One binding's poll, as reported in {@link GitHubOperation.SyncResult}. */
+type BindingSyncResult = {
+  /** The delta answered 304. */
+  notModified: boolean;
+  /** GitHub requests made. */
+  requests: number;
+  pulled: { issues: number; pullRequests: number };
+  pushed: GitHubPushResult;
+};
+
 /**
- * Per-binding sync body run by the account-level fan-out: reconcile the one repo the
- * binding targets, stamping success/failure onto the binding and toasting either way.
+ * The `Repo` a binding targets. A binding made before bindings targeted a `Repo` targets its issue
+ * `TaskSet`; that one is pointed at the `Repo` once, found among the repositories the token reaches.
  */
-const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.ExternalCursor) {
-  const project = yield* Database.load(binding.spec.target);
-  const db = Obj.getDatabase(binding) ?? Obj.getDatabase(project);
+const resolveBoundRepo = Effect.fn('resolveBoundRepo')(function* (
+  binding: Cursor.ExternalCursor,
+  target: Obj.Unknown,
+  externalId: string,
+) {
+  if (Repo.instanceOf(target)) {
+    return { repo: target, requests: 0 };
+  }
+  const reachable = yield* GitHubApi.fetchReachableRepos();
+  const remote = reachable.find((candidate) => String(candidate.id) === externalId);
+  if (!remote) {
+    return yield* Effect.fail(new GitHubRepoInaccessibleError());
+  }
+  const repo = yield* ensureRepo(toRepoDescriptor(remote));
+  Obj.update(binding, (binding) => {
+    if (binding.spec.kind === 'external') {
+      binding.spec.target = Ref.make(repo);
+    }
+  });
+  return { repo, requests: 1 };
+});
+
+/**
+ * Re-read the repository (hourly) and its organization (daily). Neither is part of the one-request
+ * quiet poll: each is due only once its interval has passed since the time recorded in the
+ * repository's snapshot.
+ */
+const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
+  binding: Cursor.ExternalCursor,
+  repo: Repo.Repo,
+  externalId: string,
+  issueSet: TaskSet.TaskSet,
+  ensurePerson: (
+    user: GitHubApi.GitHubUser,
+    organization: Organization.Organization | undefined,
+  ) => Effect.Effect<Person.Person, unknown, Database.Service>,
+  now: number,
+) {
+  let requests = 0;
+  const snapshot = Cursor.readSnapshot<RepoSnapshot>(binding, externalId);
+
+  const hourly = snapshot?.readAt === undefined || now - snapshot.readAt >= REPO_READ_INTERVAL_MS;
+  // A pending local description edit is merged against a fresh read, or the push could overwrite a newer GitHub edit.
+  const localEdit = snapshot?.description !== undefined && snapshot.description !== (repo.description ?? '');
+  if (hourly || localEdit) {
+    const result = yield* GitHubApi.fetchRepoConditional(repo.owner, repo.name, snapshot?.etag).pipe(
+      Effect.catchIf(
+        (error) => {
+          const status = GitHubApi.responseStatus(error);
+          return status === 403 || status === 404;
+        },
+        () => Effect.fail(new GitHubRepoInaccessibleError({ context: { owner: repo.owner, name: repo.name } })),
+      ),
+    );
+    requests++;
+    if (result.status === 'ok') {
+      // Coordinates that now name a different repository (a rename freed the name) bind to nothing.
+      if (String(result.value.id) !== externalId) {
+        return yield* Effect.fail(new GitHubRepoInaccessibleError({ context: { owner: repo.owner, name: repo.name } }));
+      }
+      yield* upsertRepo(binding, repo, result.value, { etag: result.etag, readAt: now });
+    } else if (snapshot) {
+      Cursor.writeSnapshot(binding, externalId, { ...snapshot, readAt: now });
+    }
+  }
+  // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
+  // carries only the milestones its issues name.
+  if (hourly) {
+    const milestones = yield* GitHubApi.fetchRepoMilestones(repo.owner, repo.name);
+    requests++;
+    for (const milestone of milestones) {
+      yield* upsertMilestone(issueSet, milestone);
+    }
+  }
+
+  const current = Cursor.readSnapshot<RepoSnapshot>(binding, externalId);
+  if (current && (current.membersReadAt === undefined || now - current.membersReadAt >= MEMBERS_READ_INTERVAL_MS)) {
+    const org = yield* Effect.result(GitHubApi.fetchOrg(repo.owner));
+    requests++;
+    // `/orgs/{owner}` answers 404 for a user-owned repository; any other failure is retried next poll.
+    const notAnOrg = org._tag === 'Failure' && GitHubApi.responseStatus(org.failure) === 404;
+    if (org._tag === 'Failure' && !notAnOrg) {
+      log.warn('github sync: organization read failed; retrying next poll', { owner: repo.owner, error: org.failure });
+      return { requests, hourly };
+    }
+    if (org._tag === 'Success') {
+      const organization = yield* upsertOrganization(org.success);
+      if (!repo.organization) {
+        Obj.update(repo, (repo) => {
+          repo.organization = Ref.make(organization);
+        });
+      }
+      const members = yield* GitHubApi.fetchOrgMembers(repo.owner);
+      requests++;
+      for (const member of members) {
+        yield* ensurePerson(member, organization);
+      }
+    } else {
+      log.info('github sync: owner is not an org, skipping org/member pull', { owner: repo.owner });
+    }
+    Cursor.writeSnapshot(binding, externalId, { ...current, membersReadAt: now });
+  }
+
+  return { requests, hourly };
+});
+
+/**
+ * One poll of one binding (spec/SYNC.mdl F-2): the delta, the pull-request batch, the three-way
+ * merge and push for issues, then the cursor advance. Stamps success or failure onto the binding.
+ */
+export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.ExternalCursor) {
+  const target = yield* Database.load(binding.spec.target);
+  const db = Obj.getDatabase(binding) ?? Obj.getDatabase(target);
   if (!db) {
     return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());
   }
 
-  // The repo's foreign id: prefer the binding's `externalId`, falling back
-  // to the GitHub foreign key on the target object.
+  // The repo's foreign id: prefer the binding's `externalId`, falling back to the GitHub foreign key on the target.
   const externalId =
-    binding.spec.externalId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
+    binding.spec.externalId ?? Obj.getMeta(target).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
 
   const outcome = yield* Effect.result(
-    Effect.gen(function* () {
-      if (externalId === undefined) {
-        return yield* Effect.fail(new GitHubRepoUnresolvedError());
-      }
+    Progress.withReporter(
+      { key: Progress.createSyncKey(target), label: `Syncing ${Obj.getLabel(target) ?? 'repository'}` },
+      (reporter) =>
+        Effect.gen(function* () {
+          if (externalId === undefined) {
+            return yield* Effect.fail(new GitHubRepoUnresolvedError());
+          }
+          const now = yield* Clock.currentTimeMillis;
+          let requests = 0;
 
-      // Fetch all repos visible to the token once so the binding can
-      // resolve its remote `GitHubRepo`. The binding stores the numeric
-      // repo id as `externalId` (a stringified integer).
-      // TODO(wittjosiah): Switch to `fetchRepo(owner, name)` once the
-      //   binding carries `owner`/`name`. `fetchUserRepos()` walks every
-      //   repo the token can see and dominates large-account syncs.
-      const allRepos = yield* GitHubApi.fetchUserRepos();
-      const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
-      if (!remoteRepo) {
-        return yield* Effect.fail(new GitHubRepoInaccessibleError());
-      }
+          const resolved = yield* resolveBoundRepo(binding, target, externalId);
+          const repo = resolved.repo;
+          requests += resolved.requests;
+          const issueSet = yield* ensureIssueSet(repo, externalId);
 
-      const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
+          // Cross-issue dedup for Person upserts: parallel per-issue work can race two upserts for the
+          // same login. The semaphore + cache pair gives a single in-flight upsert per login.
+          const personByLogin = new Map<string, Person.Person>();
+          const personSemaphore = yield* Semaphore.make(1);
+          const ensurePerson = (user: GitHubApi.GitHubUser, organization: Organization.Organization | undefined) =>
+            personSemaphore.withPermits(1)(
+              Effect.gen(function* () {
+                const cached = personByLogin.get(user.login);
+                if (cached) {
+                  return cached;
+                }
+                const person = yield* upsertPerson(user, organization);
+                personByLogin.set(user.login, person);
+                return person;
+              }),
+            );
 
-      // Upsert the local Project for this repo (three-way merge).
-      yield* upsertProject(binding, remoteRepo);
+          const metadata = yield* readRepoMetadata(binding, repo, externalId, issueSet, ensurePerson, now);
+          requests += metadata.requests;
 
-      // Cross-issue dedup for Person upserts: parallel per-issue work can
-      // race two upserts for the same login (same assignee on multiple
-      // issues, or org members). Without serialization both fibers find no
-      // foreign-key match, both insert, leaving duplicate Person rows. The
-      // semaphore + cache pair gives us a single in-flight upsert per login;
-      // subsequent callers read from `personByLogin`.
-      const personByLogin = new Map<string, Person.Person>();
-      const personSemaphore = yield* Semaphore.make(1);
-      const ensurePerson = (user: GitHubApi.GitHubUser, organization: Organization.Organization | undefined) =>
-        personSemaphore.withPermits(1)(
-          Effect.gen(function* () {
-            const cached = personByLogin.get(user.login);
-            if (cached) {
-              return cached;
+          // The delta: one request when nothing changed. Until a complete read has stored an ETag, the
+          // binding backfills oldest first in capped chunks, each advancing the watermark. The ETag only
+          // describes the URL the watermark built, so it is sent only alongside one.
+          const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
+          const since = binding.max
+            ? new Date(Cursor.parseKey(binding.max)).toISOString()
+            : sinceFromOptions(options, now);
+          const etag = binding.max ? Cursor.readToken(binding) : undefined;
+          let delta = yield* GitHubApi.listIssuesSince(
+            repo.owner,
+            repo.name,
+            etag ? { since, etag } : { since, direction: 'asc', maxPages: BACKFILL_PAGES },
+          );
+          requests += delta.status === 'ok' ? delta.requests : 1;
+          // A capped chunk whose items all fall within the overlap of the watermark (more than ten pages
+          // updated in the same few seconds) cannot advance it, so that backlog is read to its end at once.
+          if (
+            delta.status === 'ok' &&
+            delta.truncated &&
+            newestUpdate(delta.value) - WATERMARK_OVERLAP_MS <= Cursor.parseKey(binding.max)
+          ) {
+            delta = yield* GitHubApi.listIssuesSince(repo.owner, repo.name, { since, direction: 'asc' });
+            requests += delta.status === 'ok' ? delta.requests : 1;
+          }
+          const items = delta.status === 'ok' ? delta.value : [];
+          const issueItems = items.filter((item) => item.pull_request == null);
+          const pullItems = items.filter((item) => item.pull_request != null);
+
+          // Check results do not move `updated_at`, so pending pull requests join every batch until they settle.
+          const deltaNumbers = new Set(pullItems.map((item) => item.number));
+          const pending = (yield* queryOpenPullRequests(repo, { settled: metadata.hourly })).filter(
+            (pullRequest) => !deltaNumbers.has(pullRequest.number),
+          );
+          const pushCallbacks = {
+            updateIssue: (owner: string, repoName: string, issueNumber: number, input: GitHubApi.IssueUpdateInput) =>
+              GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.asVoid),
+            updateRepo: (owner: string, repoName: string, input: GitHubApi.RepoUpdateInput) =>
+              GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.asVoid),
+          };
+          const coordinates = { id: externalId, owner: repo.owner, name: repo.name };
+
+          if (delta.status === 'not-modified' && pending.length === 0) {
+            // A local repository edit is pushed even when GitHub reports nothing new; it costs no request unless diverged.
+            const pushed = yield* pushRepoUpdates(binding, coordinates, new Map(), pushCallbacks);
+            requests += pushed.repos;
+            return {
+              result: { notModified: true, requests, pulled: { issues: 0, pullRequests: 0 }, pushed },
+              watermark: undefined,
+            };
+          }
+
+          reporter.total(items.length + pending.length);
+
+          // Issues: milestones they name first, so each resolves to a local mirror.
+          const milestoneByRemoteId = new Map<number, Milestone.Milestone>();
+          for (const item of issueItems) {
+            if (item.milestone && !milestoneByRemoteId.has(item.milestone.id)) {
+              milestoneByRemoteId.set(item.milestone.id, yield* upsertMilestone(issueSet, item.milestone));
             }
-            const person = yield* upsertPerson(user, organization);
-            personByLogin.set(user.login, person);
-            return person;
-          }),
-        );
+          }
+          const remoteIssuesById = new Map<string, GitHubApi.GitHubIssue>();
+          const pulledTasks = yield* Effect.forEach(
+            issueItems,
+            (issue) =>
+              Effect.gen(function* () {
+                // First assignee only; the semaphored `ensurePerson` dedups across fibers.
+                const assigneeUser = issue.assignees?.[0];
+                const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
+                const milestone = issue.milestone ? milestoneByRemoteId.get(issue.milestone.id) : undefined;
+                const { task } = yield* upsertTask(binding, issue, assignedPerson, milestone);
+                remoteIssuesById.set(String(issue.id), issue);
+                reporter.advance();
+                return task;
+              }),
+            { concurrency: ISSUE_CONCURRENCY },
+          );
+          // Sequential: `TaskSet.tasks` is one shared array, so concurrent appends would drop entries.
+          for (const task of pulledTasks) {
+            yield* setTaskContainer(task, issueSet);
+          }
 
-      // Auto-pull the owning org + members for this repo's owner.
-      // `/orgs/{owner}` returns 404 for user-owned repos (personal
-      // accounts are not orgs). Treat that as "no org to sync" and
-      // continue — the Project just won't have a parent organization.
-      let pulledOrganizations = 0;
-      const owner = remoteRepo.owner.login;
-      const orgResult = yield* Effect.result(GitHubApi.fetchOrg(owner));
-      if (orgResult._tag === 'Success') {
-        const organization = yield* upsertOrganization(orgResult.success);
-        pulledOrganizations++;
-        const members = yield* GitHubApi.fetchOrgMembers(owner);
-        for (const member of members) {
-          yield* ensurePerson(member, organization);
-        }
-      } else {
-        log.info('github sync: owner is not an org, skipping org/member pull', { owner });
-      }
-
-      // Re-resolve the local Project after upsert so issue upserts and
-      // pushes operate on the persisted record.
-      const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
-      if (!localProject) {
-        return yield* Effect.fail(new GitHubProjectMissingError());
-      }
-
-      // Milestones before issues: an issue's `milestone` has to resolve to a local mirror, and the
-      // repo endpoint also surfaces milestones no open issue points at yet.
-      const milestoneByRemoteId = new Map<number, Milestone.Milestone>();
-      const remoteMilestones = yield* GitHubApi.fetchRepoMilestones(remoteRepo.owner.login, remoteRepo.name);
-      for (const remoteMilestone of remoteMilestones) {
-        milestoneByRemoteId.set(remoteMilestone.id, yield* upsertMilestone(localProject, remoteMilestone));
-      }
-
-      let pulledTasks = 0;
-      const since = sinceFromOptions(options);
-      const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, { since });
-      const remoteIssuesById = new Map<string, GitHubApi.GitHubIssue>();
-      const pulled = yield* Effect.forEach(
-        issues,
-        (issue) =>
-          Effect.gen(function* () {
-            // Resolve assignee — first assignee only for v1. External
-            // (non-org) assignees are upserted lazily; the semaphored
-            // `ensurePerson` dedups across fibers.
-            const assigneeUser = issue.assignees?.[0];
-            const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
-            const milestone = issue.milestone ? milestoneByRemoteId.get(issue.milestone.id) : undefined;
-
-            const { task, created } = yield* upsertTask(binding, issue, assignedPerson, milestone);
-            remoteIssuesById.set(String(issue.id), issue);
-            if (created) {
-              pulledTasks++;
+          // Pull requests: one GraphQL request per batch, after the issues, so `closes` resolves them.
+          const numbers = [
+            ...pullItems.map((item) => item.number),
+            ...pending.map((pullRequest) => pullRequest.number),
+          ];
+          const details = new Map<number, GitHubApi.PullRequestDetail>();
+          for (let offset = 0; offset < numbers.length; offset += GitHubApi.PULL_REQUEST_BATCH_SIZE) {
+            const batch = numbers.slice(offset, offset + GitHubApi.PULL_REQUEST_BATCH_SIZE);
+            for (const detail of yield* GitHubApi.fetchPullRequestDetails(repo.owner, repo.name, batch)) {
+              details.set(detail.number, detail);
             }
+            requests++;
+          }
+          for (const item of pullItems) {
+            const existing = yield* findPullRequest(repo, item.number, item.id);
+            yield* upsertPullRequest(repo, item.number, item, details.get(item.number), existing);
+            reporter.advance();
+          }
+          for (const pullRequest of pending) {
+            yield* upsertPullRequest(repo, pullRequest.number, undefined, details.get(pullRequest.number), pullRequest);
+            reporter.advance();
+          }
 
-            // TODO(wittjosiah): Comments sync disabled — re-enable once
-            // chunked/yielded to avoid automerge_wasm crash when upserting
-            // many comments in one tick.
-            return task;
-          }),
-        { concurrency: ISSUE_CONCURRENCY },
-      );
+          // Push: snapshot-diff the bound Repo and the pulled issues, PATCHing only diverged fields.
+          // TODO(wittjosiah): the candidate set is this poll's delta, so a local edit to an issue
+          //   GitHub has not touched since is pushed only once GitHub next reports it.
+          const pushed = yield* pushRepoUpdates(binding, coordinates, remoteIssuesById, pushCallbacks);
+          requests += pushed.issues + pushed.repos;
 
-      // Sequential: `TaskSet.tasks` is one shared array, so concurrent appends would drop entries.
-      // `Effect.forEach` preserves input order, so the set's order mirrors GitHub's.
-      for (const task of pulled) {
-        yield* setTaskContainer(task, localProject);
-      }
+          // The watermark moves only once every page is applied, and never backwards.
+          const newest = newestUpdate(items);
+          // A truncated backfill stores no ETag, so the next run continues oldest first from the watermark.
+          const truncated = delta.status === 'ok' && delta.truncated === true;
+          const watermark =
+            delta.status === 'ok'
+              ? {
+                  max: Number.isFinite(newest)
+                    ? Cursor.formatKey(Math.max(newest - WATERMARK_OVERLAP_MS, Cursor.parseKey(binding.max)))
+                    : undefined,
+                  etag: truncated ? undefined : delta.etag,
+                  truncated,
+                }
+              : undefined;
 
-      // Push: snapshot-diff the local Project + Tasks for this repo and
-      // PATCH only the diverged fields.
-      //
-      // TODO(wittjosiah): `remoteIssuesById` is built from
-      //   `fetchRepoIssues(..., { since })`, so when `maxDaysBack` is set
-      //   this push pass cannot see locally-edited tasks whose remote issue
-      //   is older than the window. Switch the candidate set to the local
-      //   mirror (every Task with a GITHUB_SOURCE fk under this repo) once
-      //   we store `number` per task so we don't need the remote payload to PATCH.
-      const pushResult = yield* pushRepoUpdates(binding, remoteRepo, remoteIssuesById, {
-        updateIssue: (owner, repoName, issueNumber, input) =>
-          GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.map(() => undefined)),
-        updateRepo: (owner, repoName, input) =>
-          GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.map(() => undefined)),
-      });
-
-      return {
-        pulled: {
-          organizations: pulledOrganizations,
-          people: personByLogin.size,
-          projects: 1,
-          tasks: pulledTasks,
-          comments: 0,
-        },
-        pushed: pushResult,
-      };
-    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromAccessToken(binding.spec.source)))),
+          return {
+            result: {
+              notModified: delta.status === 'not-modified',
+              requests,
+              pulled: { issues: issueItems.length, pullRequests: pullItems.length + pending.length },
+              pushed,
+            },
+            watermark,
+          };
+        }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromAccessToken(binding.spec.source)))),
+    ),
   );
 
   // Write sync state onto the binding.
   if (outcome._tag === 'Success') {
-    Cursor.advance(binding);
-    yield* Effect.ignore(
-      Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-success`,
-        icon: 'ph--check--regular',
-        title: ['sync-toast.success.label', { ns: meta.profile.key }],
-      }),
-    );
-    return { pulled: outcome.success.pulled };
+    const { result, watermark } = outcome.success;
+    if (watermark?.etag !== undefined) {
+      Cursor.writeToken(binding, watermark.etag);
+    }
+    Cursor.advance(binding, watermark?.max);
+    if (watermark?.truncated) {
+      // The backlog is not read to its end: the dispatcher re-runs the sync, which resumes from the watermark.
+      return yield* Operation.runAgain().pipe(Effect.orDie);
+    }
+    if (!result.notModified) {
+      yield* Effect.ignore(
+        Operation.invoke(LayoutOperation.AddToast, {
+          id: `${GitHubNamespace.key}.sync-success`,
+          icon: 'ph--check--regular',
+          title: ['sync-toast.success.label', { ns: GitHubNamespace.key }],
+        }),
+      );
+    }
+    return result;
   } else {
     const message = formatGitHubSyncFailure(outcome.failure);
     Cursor.recordError(binding, message);
     log.warn('github sync: binding failed', { error: outcome.failure });
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-error`,
+        id: `${GitHubNamespace.key}.sync-error`,
         icon: 'ph--warning--regular',
-        title: ['sync-toast.error.label', { ns: meta.profile.key }],
+        title: ['sync-toast.error.label', { ns: GitHubNamespace.key }],
         description: message,
       }),
     );
@@ -780,27 +1168,59 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
   }
 }, Effect.provide(FetchHttpClient.layer));
 
+type BindingOutcome =
+  | { readonly kind: 'items'; readonly items: BindingSyncResult }
+  | { readonly kind: 'files'; readonly files: FileSyncResult };
+
+/** Folds per-binding results into the operation's {@link GitHubOperation.SyncResult}. */
+const foldResults = (outcomes: readonly BindingOutcome[]): GitHubOperation.SyncResult => {
+  const results = outcomes.flatMap((outcome) => (outcome.kind === 'items' ? [outcome.items] : []));
+  const files = outcomes.flatMap((outcome) => (outcome.kind === 'files' ? [outcome.files] : []));
+  return {
+    bindings: outcomes.length,
+    notModified: results.filter((result) => result.notModified).length,
+    requests:
+      results.reduce((total, result) => total + result.requests, 0) +
+      files.reduce((total, result) => total + result.requests, 0),
+    pulled: {
+      issues: results.reduce((total, result) => total + result.pulled.issues, 0),
+      pullRequests: results.reduce((total, result) => total + result.pulled.pullRequests, 0),
+    },
+    pushed: {
+      issues: results.reduce((total, result) => total + result.pushed.issues, 0),
+      repos: results.reduce((total, result) => total + result.pushed.repos, 0),
+    },
+    ...(files.length > 0
+      ? {
+          files: {
+            pulled: files.reduce((total, result) => total + result.pulled, 0),
+            pushed: files.reduce((total, result) => total + result.pushed, 0),
+            skipped: files.reduce((total, result) => total + result.skipped.length, 0),
+          },
+        }
+      : {}),
+  };
+};
+
 const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositories> =
   GitHubOperation.SyncGitHubRepositories.pipe(
     Operation.withHandler(({ connection, priority }) =>
-      Binding.syncAll({
-        connection,
-        priority,
-        sync: (binding) => syncRepoBinding(binding),
-      }).pipe(
-        Effect.map(({ outputs }) => ({
-          pulled: outputs.reduce(
-            (total, { pulled }) => ({
-              organizations: total.organizations + pulled.organizations,
-              people: total.people + pulled.people,
-              projects: total.projects + pulled.projects,
-              tasks: total.tasks + pulled.tasks,
-              comments: total.comments + pulled.comments,
+      Effect.gen(function* () {
+        const mappings = yield* Capability.getAll(GitHubCapabilities.FileMapping);
+        const { outputs } = yield* Binding.syncAll({
+          connection,
+          priority,
+          // A repository's file binding shares its target with the item binding; `options.stream` tells them apart.
+          sync: (binding) =>
+            Effect.gen(function* () {
+              const outcome: BindingOutcome = isFileBinding(binding)
+                ? { kind: 'files', files: yield* syncFileBinding(binding, mappings) }
+                : { kind: 'items', items: yield* syncRepoBinding(binding) };
+              return outcome;
             }),
-            { organizations: 0, people: 0, projects: 0, tasks: 0, comments: 0 },
-          ),
-        })),
-      ),
+        });
+        return foldResults(outputs);
+      }),
     ),
   );
 

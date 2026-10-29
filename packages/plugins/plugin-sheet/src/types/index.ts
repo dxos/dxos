@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * as LegacySheet from './LegacySheet.ts';
 export * as Sheet from './Sheet.ts';
 export * as SheetCapabilities from './SheetCapabilities.ts';
 export * as SheetEvents from './SheetEvents.ts';

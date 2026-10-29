@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
@@ -79,11 +78,6 @@ export class InviteRefusedError extends BaseError.extend(
 /** The identity EDGE minted for an agent's brain. */
 type AgentIdentity = { identityDid: IdentityDid; label: string };
 
-/** `GET /compute/brain/:agent`, as far as the invitation reads it. */
-const BrainInfo = Schema.Struct({
-  identity: Schema.Struct({ identityDid: IdentityDid, label: Schema.String }),
-});
-
 /**
  * The identity EDGE minted for the agent with this DID, which EDGE answers only to the agent's admins and contacts:
  * never taken from a space that claims to be the agent's, since a client chooses its own space's tags and owner.
@@ -95,19 +89,17 @@ const identityOf = Effect.fnUntraced(function* (did: IdentityDid | undefined) {
     return undefined;
   }
   return yield* Effect.tryPromise({
-    try: () => edge.value.request(Context.default(), `/compute/brain/${encodeURIComponent(did)}`, { method: 'GET' }),
+    try: () => edge.value.getBrain(Context.default(), did),
     catch: (cause) => new InviteRefusedError({ cause }),
   }).pipe(
-    Effect.flatMap((answer) =>
-      Schema.decodeUnknownEffect(BrainInfo)(answer).pipe(Effect.mapError((cause) => new InviteRefusedError({ cause }))),
-    ),
-    Effect.map(({ identity }): AgentIdentity => identity),
     Effect.catchIf(
       (error) => error.cause instanceof EdgeCallFailedError && error.cause.status === 404,
       () => Effect.succeed(undefined),
     ),
     // EDGE's answer must name the identity asked for, so a forged DID resolves to nothing.
-    Effect.map((identity) => (identity?.identityDid === did ? identity : undefined)),
+    Effect.map((info): AgentIdentity | undefined =>
+      info?.identity.identityDid === did ? { identityDid: did, label: info.identity.label } : undefined,
+    ),
   );
 });
 
@@ -147,11 +139,7 @@ const registerSpace = Effect.fnUntraced(function* (did: IdentityDid | undefined,
     return yield* Effect.fail(new InviteRefusedError());
   }
   yield* Effect.tryPromise({
-    try: () =>
-      edge.value.request(Context.default(), `/compute/brain/${encodeURIComponent(did)}/spaces`, {
-        method: 'POST',
-        body: { spaceId },
-      }),
+    try: () => edge.value.addBrainSpace(Context.default(), did, spaceId),
     catch: (cause) => new InviteRefusedError({ cause }),
   });
 });

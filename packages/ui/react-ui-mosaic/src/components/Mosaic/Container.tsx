@@ -72,10 +72,11 @@ type MosaicContainerProps = PropsWithChildren<
     currentId?: string;
     /** Called when a tile requests to become current. */
     onCurrentChange?: (id: string | undefined) => void;
-    /** Controlled set of selected item IDs. */
-    selectedIds?: ReadonlySet<string>;
-    /** Called when a tile requests to toggle selection. */
-    onSelectionChange?: (id: string, selected: boolean) => void;
+    /**
+     * Each item's selection and activation, as `useListSelection`'s `bind(id).rowProps` gives them; a container whose
+     * items carry `aria-selected` is a listbox of options.
+     */
+    itemProps?: (id: string) => Focus.ItemBinding | undefined;
     debug?: () => ReactNode;
     /** Toggles the `group` target that Placeholder's debug-highlight selectors read (see styles.ts). */
     placeholderDebug?: boolean;
@@ -98,8 +99,7 @@ const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
       controllerRef,
       currentId,
       onCurrentChange,
-      selectedIds,
-      onSelectionChange,
+      itemProps,
       debug,
       placeholderDebug,
       ...props
@@ -124,10 +124,6 @@ const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
     const [activeLocation, setActiveLocation] = useState<DndLocation | undefined>();
     const [scrolling, setScrolling] = useState(false);
     const setCurrentId = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
-    const setSelected = useCallback(
-      (id: string, selected: boolean) => onSelectionChange?.(id, selected),
-      [onSelectionChange],
-    );
 
     // Scroll-to-item: Stack/VirtualStack registers its implementation.
     const scrollToRef = useRef<((id: string) => void) | undefined>(undefined);
@@ -286,8 +282,7 @@ const MosaicContainer = Util.composable<HTMLDivElement, MosaicContainerProps>(
         setActiveLocation={setActiveLocation}
         currentId={currentId}
         setCurrentId={setCurrentId}
-        selectedIds={selectedIds}
-        setSelected={setSelected}
+        itemProps={itemProps}
         registerScrollTo={registerScrollTo}
       >
         <ark.div

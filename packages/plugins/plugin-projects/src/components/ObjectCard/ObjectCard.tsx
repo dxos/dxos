@@ -15,12 +15,13 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type ObjectCardProps = {
-  object: Obj.Unknown;
-  onClick?: () => void;
-  onDelete?: () => void;
+  'object': Obj.Unknown;
+  'onClick'?: () => void;
+  'onDelete'?: () => void;
+  'data-testid'?: string;
 };
 
 /**
@@ -29,8 +30,8 @@ export type ObjectCardProps = {
  * delegates to the object's own `CardContent` surface, so a document previews as a document.
  * Reactive via {@link useObject} so a rename shows without navigating away and back.
  */
-export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+export const ObjectCard = ({ object: objectProp, onClick, onDelete, 'data-testid': testId }: ObjectCardProps) => {
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
   const { archived, item: archiveItem } = SpaceHooks.useArchiveMenuItem(objectProp);
@@ -58,6 +59,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
 
   return (
     <ToolkitObjectCard.Root
+      data-testid={testId}
       classNames={onClick && 'dx-hover'}
       onClick={onClick}
       onKeyDown={onClick ? handleKeyDown : undefined}

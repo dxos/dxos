@@ -8,7 +8,7 @@ import { translations as componentsTranslations } from '@dxos/react-ui-component
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { RoutineNamespace } from './namespace.ts';
 
 export const translations: Theme.Resource[] = [
   ...componentsTranslations,
@@ -25,7 +25,7 @@ export const translations: Theme.Resource[] = [
         'rename-object.label': 'Rename routine',
         'delete-object.label': 'Delete routine',
       },
-      [meta.profile.key]: {
+      [RoutineNamespace.key]: {
         'plugin.name': 'Routine',
         'automation-panel.label': 'Routines',
         'create-panel.template.placeholder': 'Search templates...',
@@ -99,6 +99,7 @@ export const translations: Theme.Resource[] = [
         'history.status.success.label': 'Success',
         'history.status.failure.label': 'Failed',
         'history.status.pending.label': 'Running',
+        'history.status.incomplete.label': 'Continuing',
         'disabled.label': 'Disabled',
         'delete.label': 'Delete',
         'continue.label': 'Continue',

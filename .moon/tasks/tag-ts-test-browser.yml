@@ -24,6 +24,8 @@ tasks:
       - $DX_RUN_MANUAL_TESTS
       - $DX_RUN_MODEL_FIXTURE_TESTS
       - $DX_UPDATE_MODEL_FIXTURES
+      # Set per run on the nightly, so its tests execute instead of replaying a cache hit.
+      - $DX_TEST_RUN_ID
     outputs:
       - /coverage/$project/browser/**
       - /test-results/$project/browser/**

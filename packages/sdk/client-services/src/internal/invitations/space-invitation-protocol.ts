@@ -4,7 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 
-import { type Context } from '@dxos/context';
+import { type Context, cancelWithContext } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
@@ -78,6 +78,13 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       return new AuthorizationError({ message: 'No member management permission.' });
     }
     return undefined;
+  }
+
+  async waitUntilReady(ctx: Context): Promise<void> {
+    if (this._spaceKey == null) {
+      return;
+    }
+    await cancelWithContext(ctx, this._spaceManager.waitUntilSpaceReady(this._spaceKey));
   }
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {

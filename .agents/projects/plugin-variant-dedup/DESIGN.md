@@ -291,7 +291,7 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    "guarded" are not the same population. Measured at `eaf9c7e3fa`: **97** plugins carry a
    capabilities barrel, **96** carry the `composer-plugin` tag, **88** define a
    `check-module-structure` task, and **85** declare a `capabilities.workerd` condition. Of
-   those 88 tasks, 87 are the dual-condition React guard; plugin-computer's is a different
+   those 88 tasks, 87 are the dual-condition React guard; plugin-dev-shell's is a different
    assertion entirely (its browser entry must not reach `node:child_process`). The
    invariant that actually holds is the narrow one: every plugin whose `#capabilities` declares
    a headless condition carries a guard. The 8 tagged-but-unguarded plugins (heygen, ideogram,
@@ -301,7 +301,7 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
    its guard passes with nothing included. A plugin that produces no conditions at all carries no
    guard — tracing it would assert a property of a bundle no headless host loads.
 
-   **One exception, found 2026-08-25 and still open: plugin-computer.** It has
+   **One exception, found 2026-08-25 and still open: plugin-dev-shell.** It has
    `src/capabilities/index.ts` but no `composer-plugin` tag, so `dx-plugin gen` never runs for it
    and its `#capabilities` map carries only `source`/`types`/`default` — no `node`, no `workerd`.
    It is harmless today by accident rather than by design: both its modules (`SkillDefinition`,
@@ -314,7 +314,7 @@ Migration is mechanical per plugin (the two spike commits are the template) and 
 
    This is the case for inverting the default: tag membership is opt-in-to-safety, so a new plugin
    is unprotected until someone remembers. plugin-google, plugin-jmap and plugin-lingo each slipped
-   the net this way before plugin-computer did. The follow-up is a check that fails when a package
+   the net this way before plugin-dev-shell did. The follow-up is a check that fails when a package
    has `src/capabilities/index.ts` and lacks the tag, making the safe state automatic and the
    exception deliberate.
 

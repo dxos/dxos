@@ -32,6 +32,10 @@
  * itself and records from webview snapshots. Either way `tauri/recorder.mjs` records it.
  * The ops, the overlay and flow scripts are the same; `page` is `tauri/page.mjs`'s Playwright-shaped adapter.
  *
+ * `--caption-position top|middle|bottom` (bottom) places step captions, and `--caption-background <0–1>` (0.6) sets
+ * the opacity of their panel, which is blurred behind so the type stays legible. `--caption-colors white-on-black` or
+ * `black-on-white` fixes the title's and captions' colours whatever the page's theme.
+ *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
  * is the least time between two on-camera gestures. The app's `@dxos/log` output streams to `<out>/app.log`
@@ -76,6 +80,11 @@ const parseArgs = () => {
     'ready-timeout': 180_000,
     'settle': 5_000,
     'feed': 'top-right',
+    // Where captions sit (`top`, `middle` or `bottom`), and their background's opacity (0–1, translucent by default).
+    'caption-position': 'bottom',
+    'caption-background': 0.6,
+    // `white-on-black` or `black-on-white` for the title and captions; unset, floating panels invert the page's theme.
+    'caption-colors': undefined,
     'mode': 'record',
     // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
     // so the user's recording starts in a prepared app instead of onboarding.
@@ -108,6 +117,12 @@ const parseArgs = () => {
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
     const value = args[index + 1];
+    // Every flag takes a value, so a trailing flag, or one followed by the next flag, would otherwise be misread;
+    // `--chromium-args` is exempt because its value is itself a list of `--` flags.
+    if (value === undefined || (value.startsWith('--') && key !== 'chromium-args')) {
+      console.error(`--${key} needs a value`);
+      process.exit(1);
+    }
     options[key] = /^[\d.]+$/.test(value) ? Number(value) : value;
   }
   // A person recording their own screen wants the product on camera, not the agent's narration of it.
@@ -124,6 +139,25 @@ const parseArgs = () => {
 };
 
 const options = parseArgs();
+// An invalid caption flag would otherwise reach the frame as NaN or an unknown class and silently drop the caption's look.
+const background = options['caption-background'];
+if (typeof background !== 'number' || !Number.isFinite(background) || background < 0 || background > 1) {
+  console.error(`--caption-background must be a number from 0 to 1, not ${JSON.stringify(background)}`);
+  process.exit(1);
+}
+if (!['top', 'middle', 'bottom'].includes(options['caption-position'])) {
+  console.error(`--caption-position must be top, middle or bottom, not ${JSON.stringify(options['caption-position'])}`);
+  process.exit(1);
+}
+if (
+  options['caption-colors'] !== undefined &&
+  !['white-on-black', 'black-on-white'].includes(options['caption-colors'])
+) {
+  console.error(
+    `--caption-colors must be white-on-black or black-on-white, not ${JSON.stringify(options['caption-colors'])}`,
+  );
+  process.exit(1);
+}
 const manual = options.mode === 'manual';
 const tauri = options.target === 'tauri';
 mkdirSync(options.out, { recursive: true });
@@ -295,20 +329,25 @@ const speedChanges = [];
 
 /**
  * The caption and title are the `tools/autocue` Frame, in overlay mode over the recorded page. `update` names only
- * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear) and `open` (ms to
- * hold the title as a centred panel before it moves to the header).
+ * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear), `captionPosition` (`top`, `middle` or
+ * `bottom`), and `open` (ms to hold the title as a centred panel before it moves to the header).
  */
 const updateFrame = async (update) => {
   await injectModule(page, FRAME_MODULE, '__autocueFrame');
   await page.evaluate(
-    ({ id, update }) => {
+    ({ id, update, caption }) => {
       let host = document.getElementById(id);
       if (!host) {
         host = document.createElement('div');
         host.id = id;
         host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
         document.body.appendChild(host);
-        host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), { mode: 'overlay' });
+        host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), {
+          mode: 'overlay',
+          captionPosition: caption.position,
+          captionBackground: caption.background,
+          colors: caption.colors,
+        });
       }
       const frame = host.__frame;
       if ('headerBand' in update) {
@@ -317,6 +356,9 @@ const updateFrame = async (update) => {
       if ('header' in update) {
         frame.setHeader(update.header ?? undefined);
       }
+      if (update.captionPosition) {
+        frame.setCaptionPosition(update.captionPosition);
+      }
       if ('caption' in update) {
         frame.setCaption(update.caption ?? undefined);
       }
@@ -324,7 +366,15 @@ const updateFrame = async (update) => {
         void frame.playOpen(update.open);
       }
     },
-    { id: CAPTION_ID, update },
+    {
+      id: CAPTION_ID,
+      update,
+      caption: {
+        position: options['caption-position'],
+        background: options['caption-background'],
+        colors: options['caption-colors'],
+      },
+    },
   );
 };
 
@@ -853,9 +903,18 @@ const handlers = {
   },
   caption: async (command) => {
     if (options.captions !== 'off') {
-      await updateFrame({ caption: { title: command.value, subtitle: command.subtitle } });
+      // `position` moves this caption and the ones after it, so it can clear what the step shows.
+      await updateFrame({
+        caption: { title: command.value, subtitle: command.subtitle },
+        captionPosition: command.position,
+      });
     }
-    timeline.push({ ms: Date.now() - started, text: command.value, subtitle: command.subtitle });
+    timeline.push({
+      ms: Date.now() - started,
+      text: command.value,
+      subtitle: command.subtitle,
+      ...(command.hold ? { hold: command.hold } : {}),
+    });
     if (command.hold) {
       await page.waitForTimeout(command.hold);
     }

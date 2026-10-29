@@ -197,6 +197,11 @@
       "types": "./dist/types/src/flow/Show.d.ts",
       "import": "./dist/lib/Show.mjs"
     },
+    "./ColorPicker": {
+      "source": "./src/components/ColorPicker/ColorPicker.tsx",
+      "types": "./dist/types/src/components/ColorPicker/ColorPicker.d.ts",
+      "import": "./dist/lib/ColorPicker.mjs"
+    },
     "./Splitter": {
       "source": "./src/components/Splitter/Splitter.tsx",
       "types": "./dist/types/src/components/Splitter/Splitter.d.ts",
@@ -323,7 +328,6 @@
     "@zag-js/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
-    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },

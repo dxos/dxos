@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-studio",
   "version": "0.16.0",
-  "private": true,
   "description": "Image-creation plugin for Composer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -38,19 +24,16 @@
       "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/StudioPlugin.workerd.mjs",
+      "node": "./dist/lib/StudioPlugin.node.mjs",
+      "default": "./dist/lib/StudioPlugin.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -126,14 +109,21 @@
       "types": "./dist/types/src/types/StudioEvents.d.ts",
       "import": "./dist/lib/StudioEvents.mjs"
     },
+    "./StudioHooks": {
+      "source": "./src/hooks/StudioHooks.ts",
+      "types": "./dist/types/src/hooks/StudioHooks.d.ts",
+      "import": "./dist/lib/StudioHooks.mjs"
+    },
     "./StudioOperation": {
       "source": "./src/types/StudioOperation.ts",
       "types": "./dist/types/src/types/StudioOperation.d.ts",
       "import": "./dist/lib/StudioOperation.mjs"
     },
     "./StudioPlugin": {
-      "source": "./src/StudioPlugin.ts",
-      "types": "./dist/types/src/StudioPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/StudioPlugin.workerd.mjs",
+      "node": "./dist/lib/StudioPlugin.node.mjs",
       "import": "./dist/lib/StudioPlugin.mjs"
     },
     "./StudioSkill": {
@@ -160,8 +150,8 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "MediaArtifact": [
-        "dist/types/src/types/MediaArtifact.d.ts"
+      "Frame": [
+        "dist/types/src/types/Frame.d.ts"
       ],
       "Generation": [
         "dist/types/src/types/Generation.d.ts"
@@ -171,6 +161,12 @@
       ],
       "Lightbox": [
         "dist/types/src/types/Lightbox.d.ts"
+      ],
+      "MediaArtifact": [
+        "dist/types/src/types/MediaArtifact.d.ts"
+      ],
+      "Storyboard": [
+        "dist/types/src/types/Storyboard.d.ts"
       ],
       "StudioCapabilities": [
         "dist/types/src/types/StudioCapabilities.d.ts"
@@ -183,12 +179,6 @@
       ],
       "Variant": [
         "dist/types/src/types/Variant.d.ts"
-      ],
-      "Frame": [
-        "dist/types/src/types/Frame.d.ts"
-      ],
-      "Storyboard": [
-        "dist/types/src/types/Storyboard.d.ts"
       ]
     }
   },

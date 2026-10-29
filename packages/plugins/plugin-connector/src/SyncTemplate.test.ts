@@ -151,6 +151,7 @@ const capabilities = ({ scheduled }: { scheduled: boolean }) => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: {
       operation: TestSync,
       targetTypename: TARGET_TYPENAME,

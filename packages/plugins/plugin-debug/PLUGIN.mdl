@@ -16,6 +16,7 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -448,37 +449,108 @@ test QA-8: Alien Labs — how Cairn plugs into DXOS
 
 
 ```mdl
-test QA-9: Hello Worker — a diagram, then the code
+test QA-9: Hello Worker — the agent finishes the spec, plans the work and ships the Worker
   desc: |
-    The Hello Worker template run on camera: an agent draws the proposed architecture on the canvas and
-    files it on the project, then a second chat creates the sandbox and writes the Worker while the Gantt
-    fills in. Stops before the deploy, whose claim URL is a bearer credential. Recorded by
+    The Hello Worker template run on camera. The space holds a partial spec, the project's feature map and three
+    planning tasks; one chat assigned all three completes the spec in Composer, draws it on the canvas, files the
+    implementation as tasks of its own linked to the features, and works them until the deployed Worker answers.
+    The take never shows the chat, which carries the claim URL, a bearer credential. Recorded by
     autocue/hello-worker.mjs.
   actors: human
   status: unverified
   given:
-    - an identity exists, on a fresh profile, talking to an EDGE whose AI service serves the chosen model
-    - plugin-debug and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
+    - an identity exists, on a fresh profile, talking to an EDGE whose AI and sandbox services serve the chosen model
+    - plugin-debug, Code and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
   steps:
     - name: Create a space from the Hello Worker template
       do: Add a space and pick the "Hello Worker" template.
       expect: the space opens with the "Hello Worker" project in the navtree
     - name: Open the project and its tasks
       do: Open the project and its Tasks tab.
-      expect: six todo tasks, "Draw the proposed architecture" first and the claim, assigned to you, last
-    - name: Assign the diagram task to the agent
-      do: Tick "Draw the proposed architecture" and assign it to the agent.
-      expect: the Gantt opens with one band for the chat and a lane for the task
-    - name: Wait for the diagram
-      do: Wait for the agent.
-      expect: the task is done or in review
+      expect: three todo tasks, "Complete the spec", "Draw the proposed architecture", "Plan the implementation as tasks"
+    - name: Open the feature map and the spec
+      do: Open the Features tab as Kanban, then "Greeting endpoint" and its spec row.
+      expect: four planned features; the spec renders in Composer with F-1 written and F-2 to F-4 only named
+    - name: Assign the planning tasks to the agent
+      do: Back on Tasks, tick all three and assign them to the agent.
+      expect: the Gantt opens with one band for the chat and a lane for each task
+    - name: Watch the spec fill in
+      do: Wait for "Complete the spec", then open the spec.
+      expect: the spec has a `feat` block for each of F-2 to F-4 and a new Changelog decision
     - name: Open the diagram from the project
-      do: Open the project's Overview and the first artifact.
+      do: Wait for the diagram task, then open the project's Overview and the drawing.
       expect: a drawing of the sandbox, the Worker, the temporary Cloudflare account and the client's request and JSON response
-    - name: Assign the sandbox and code tasks to the agent
-      do: Back on Tasks, tick "Create a sandbox and install wrangler" and "Write the Worker" and assign them.
-      expect: a second band on the Gantt, its lanes starting as the agent picks each task up
-    - name: Watch the Gantt fill in
-      do: Wait for the agent.
-      expect: both tasks done or in review; the deploy, the fetch and the claim are still todo
+    - name: Watch the plan become tasks
+      do: Back on Tasks, wait for the plan task.
+      expect: new implementation tasks under the plan, each linked on the feature map; the claim is assigned to you
+    - name: Watch the Worker ship
+      do: Wait for the agent's implementation tasks.
+      expect: every task but the claim done or in review, and the Worker URL and its response filed on the project
+
+test QA-10: Ride Check — spec, diagram, deploy, edit a feature card, redeploy
+  desc: |
+    The Ride Check template as a demo of the whole loop. The space holds a written spec, a feature map with one card
+    per card on the page and three tasks. The take creates the space, reads the feature map and the spec, draws the
+    architecture, shows the deployed page, then adds a gust rule to the Go / no-go card, redeploys and reloads the
+    same URL. Recorded in two halves: autocue/ride-check.mjs in Composer and autocue/ride-check-redeploy.mjs on the
+    page and the terminal, spliced into one cut.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug, Code and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
+    - the Worker is deployed at its v1 (ride-check/prepare.sh), with the gust rule committed but not deployed
+  steps:
+    - name: Create a space from the Ride Check template
+      do: Add a space and pick the "Ride Check" template.
+      expect: the space opens with the "Ride Check" project in the navtree
+    - name: Open the feature map
+      do: Open the project's Features tab.
+      expect: four planned cards, "Go / no-go", "Hourly forecast", "Best window", "Daylight"
+    - name: Open the spec
+      do: Open "Go / no-go" and its spec row.
+      expect: the spec renders in Composer with F-1 to F-4 written
+    - name: Draw the architecture
+      do: Run "Draw the architecture" (the agent, or the Drawing skill's draw operation with the diagram source).
+      expect: a drawing of the browser, the Worker with its four cards, and Open-Meteo, filed on the project
+    - name: Open the live page
+      do: Open the Worker URL for a place with calm wind and gusts over 30 km/h.
+      expect: the verdict reads GO and lists no gusts
+    - name: Add the gust rule to the card
+      do: On "Go / no-go", add the subfeature "Gust rule — warn above 30 km/h".
+      expect: the card shows three subfeatures
+    - name: Redeploy and reload
+      do: Deploy the gust-rule commit and reload the same URL.
+      expect: the verdict reads MAYBE with "Gusts up to N km/h" and a highlighted Gusts row
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: [QA-9] records the Hello Worker template from a partial spec, feature map and planning tasks: the assistant completes the spec, draws it, files the implementation as tasks and works them until the Worker answers.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [QA-9]
+```
+
+```mdl
+decision D-2: The take assigns all three planning tasks to one chat and never shows the chat, which carries the claim URL. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-9]
+  why: One chat keeps the spec it wrote in its context when it plans and builds; the claim URL is a bearer credential for the account.
+  rejected: Stopping before the deploy, as the take did before, which would not show the Worker answering.
+```
+
+```mdl
+decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-forecast page built with DXOS UI on live Open-Meteo data, in place of [QA-9]'s JSON greeting.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-10]
+  why: Every step of the loop has to change something a viewer can see; a greeting endpoint gives the deploy and the edit nothing to show.
+  rejected: Rewriting Hello Worker in place, which its eval, QA-9 and the showcase speaking track still describe.
 ```

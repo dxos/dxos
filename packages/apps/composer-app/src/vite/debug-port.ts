@@ -10,16 +10,18 @@ import { type Plugin } from 'vite';
 /** Where the running dev server publishes its session, for an agent that cannot read the env it was started with. */
 export const SIDECAR_PATH = 'temp/debug-port.json';
 
-const isTrue = (str?: string) => str === 'true' || str === '1';
+const isFalse = (str?: string) => str === 'false' || str === '0';
 
 /**
- * Session id for a dev server started with the debug-port flag, or `''` when absent.
+ * Session id for the dev server's debug port, or `''` when opted out with `DX_DEBUG_PORT=false`.
  *
- * `DX_DEBUG_PORT_SESSION` lets the caller choose the id and skip the handshake; `DX_DEBUG_PORT`
- * alone mints one, which the caller reads back from the sidecar below.
+ * On by default because the port is loopback-only and compiled out of builds (see `vite.config.ts`).
+ * The opt-out wins over `DX_DEBUG_PORT_SESSION`, which may be left exported in the shell.
+ * `DX_DEBUG_PORT_SESSION` lets the caller choose the id and skip the handshake; otherwise one is
+ * minted, which the caller reads back from the sidecar below.
  */
 export const resolveDebugPortSession = (env = process.env): string =>
-  env.DX_DEBUG_PORT_SESSION || (isTrue(env.DX_DEBUG_PORT) ? randomUUID() : '');
+  isFalse(env.DX_DEBUG_PORT) ? '' : env.DX_DEBUG_PORT_SESSION || randomUUID();
 
 /**
  * Publishes the session to `temp/debug-port.json` and stdout, for a caller that cannot set the env

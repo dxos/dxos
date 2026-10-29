@@ -148,18 +148,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  // The play function exercises a deep timing race in dx-grid + React render
-  // pipeline (cell focus → keydown → `dispatchEditRequest` → `setEditing` →
-  // `FormCellEditor` `useEffect` → `Popover` mount). On chromium browser
-  // tests the combobox sometimes fails to render in time; local pass rate
-  // ~25%, which makes pure CI re-run lottery a poor fit. Excluding from
-  // automated test runs (the story still renders in Storybook for visual
-  // review and the production code path is covered by
-  // `playwright/smoke.spec.ts`). Re-enable once the underlying race is
-  // fixed — likely needs `dispatchEditRequest` to be synchronous from
-  // keydown and `FormCellEditor` to render the popover off `contextEditing`
-  // directly instead of mirroring it through local state.
-  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
@@ -206,12 +194,13 @@ export const Default: Story = {
     await expect(targetCell).toHaveFocus();
     await userEvent.keyboard('{Enter}');
 
-    // Look for the combobox that should appear in edit mode.
-    const combobox = await body.findByRole('combobox', undefined, { timeout: 5000 });
-    await userEvent.click(combobox);
-
-    const searchField = await body.findByPlaceholderText('Search…');
-    await userEvent.click(searchField);
+    const openPicker = async () => {
+      await userEvent.click(await body.findByRole('button', { name: /Employer/ }));
+      const search = await body.findByRole('combobox');
+      await waitFor(() => expect(search).toHaveFocus());
+      return search;
+    };
+    const searchField = await openPicker();
 
     // Get the first organization name from the first table to search for
     const orgCell = await within(firstGrid).findByTestId('grid.0.0', undefined, { timeout: 10_000 });
@@ -251,12 +240,7 @@ export const Default: Story = {
 
     await userEvent.keyboard('{Enter}');
 
-    // Look for the combobox that should appear in edit mode
-    const newCombobox = await body.findByRole('combobox');
-    await userEvent.click(newCombobox);
-
-    const newSearchField = await body.findByPlaceholderText('Search…');
-    await userEvent.click(newSearchField);
+    const newSearchField = await openPicker();
 
     // Type a new object name (this will create a new object).
     const newOrgName = 'Salieri LLC';

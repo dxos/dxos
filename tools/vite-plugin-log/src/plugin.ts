@@ -234,6 +234,8 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         }
       : undefined;
     const excludeId = tr?.excludeId ?? LOG_META_EXCLUDE_ID_DEFAULT;
+    // Specs match imports by exact package name, so a module that never names one has nothing to rewrite.
+    const specPackages = [...new Set(metaOptions?.to_transform.map((spec) => spec.package))];
     let isServe = false;
 
     Object.assign(plugin, {
@@ -254,7 +256,8 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
       },
       handler(code, id, meta) {
         const isWorkerEntry = WORKER_ENTRY_ID_RE.test(id);
-        const doMetaTransform = metaOptions !== undefined && !excludeId.test(id);
+        const doMetaTransform =
+          metaOptions !== undefined && !excludeId.test(id) && specPackages.some((pkg) => code.includes(pkg));
         // Worker injection only matters when the dev sink is reachable (serve mode + log enabled).
         const doWorkerInject = isWorkerEntry && isServe && log?.enabled === true;
         if (!doMetaTransform && !doWorkerInject) {
@@ -274,6 +277,10 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         }
         if (doWorkerInject) {
           ms.prepend(`import ${JSON.stringify(VITE_PLUGIN_LOG_RUNTIME_ID)};\n`);
+        }
+        // An unchanged module returns nothing, so Vite has no identity source map to merge.
+        if (!ms.hasChanged()) {
+          return null;
         }
         // Return a string + explicit source map (not the `RolldownMagicString` object): under the
         // Vite pipeline the transform result's `code` must be a string, so returning the object leaks

@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ThreadPlugin } from '#plugin';
+import * as ThreadPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { ThreadNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), ThreadPlugin.make()] });
+
+const moduleId = (name: string) => `${ThreadNamespace.key}.module.${name}`;
 
 describe('ThreadPlugin', () => {
   test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ThreadPlugin()],
+      plugins: [ClientPlugin.make({}), ThreadPlugin.make()],
     });
 
     // After autoStart: schema and OperationHandler auto-cascade. `CreateObject` is browser-only —

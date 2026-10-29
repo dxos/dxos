@@ -4,16 +4,18 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
+import { type ViewTree } from '../../builder/index.ts';
 import { type InspectorMode, createLatticeProjection } from '../../engine/index.ts';
 import { type BackgroundGrid, createMemoryStore } from '../../model/index.ts';
 import {
   createLatticeTree,
+  createLinkedPairTree,
   createModelViewTree,
   createNestedDeepTree,
   createNestedSimpleTree,
@@ -37,12 +39,28 @@ import { Canvas } from './Canvas.tsx';
  * 5. Double-click a frame (or zoom until it fills the view) drills in; Escape, Up or the breadcrumb drills out.
  * 6. G (or the Grid button) toggles the grid; with it off nothing snaps. The floating inspector (top right) edits the
  *    selected element.
+ * 7. Double-click (or Enter on) a shape to edit it: a box's label in place, a polyline's vertices as diamonds to drag
+ *    (a dot adds one, Backspace removes the last pressed). Enter, Escape or a press outside leaves edit mode.
  */
+/** The drawings a story opens, by name; only `elements` grows with `depth` (the others are fixed). */
+const FIXTURES = {
+  elements: (depth: number) => createViewTree(depth),
+  model: () => createModelViewTree(),
+  basic: () => createSquareTree(),
+  lattice: () => createLatticeTree(),
+  deep: () => createNestedDeepTree(),
+  view: () => createNestedViewTree(),
+  nested: () => createNestedSimpleTree(),
+  pair: () => createLinkedPairTree(),
+} satisfies Record<string, (depth: number) => ViewTree>;
+
+type Fixture = keyof typeof FIXTURES;
+
 type StoryArgs = {
   depth: number;
   liveDepth: number;
   readonly?: boolean;
-  fixture?: 'elements' | 'model' | 'square' | 'lattice' | 'deep' | 'view' | 'nested';
+  fixture?: Fixture;
   inspectors?: InspectorMode;
 };
 
@@ -92,28 +110,13 @@ const Editor = ({
       <Canvas.Views />
       <Canvas.Layers />
       <Canvas.Objects />
-      <Canvas.About />
     </Canvas.Root>
   );
 };
 
-const DefaultStory = ({ depth, liveDepth, readonly, fixture, inspectors }: StoryArgs) => {
+const DefaultStory = ({ depth, liveDepth, readonly, fixture = 'elements', inspectors }: StoryArgs) => {
   const { store, root } = useMemo(() => {
-    // The model fixture is a fixed three levels, so `depth` does not apply to it.
-    const tree =
-      fixture === 'model'
-        ? createModelViewTree()
-        : fixture === 'square'
-          ? createSquareTree()
-          : fixture === 'lattice'
-            ? createLatticeTree()
-            : fixture === 'deep'
-              ? createNestedDeepTree()
-              : fixture === 'view'
-                ? createNestedViewTree()
-                : fixture === 'nested'
-                  ? createNestedSimpleTree()
-                  : createViewTree(depth);
+    const tree = FIXTURES[fixture](depth);
     return { store: createMemoryStore(tree.views, {}, { root: tree.root }), root: tree.root };
   }, [depth, fixture]);
 
@@ -158,9 +161,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A single square at the origin: select it to style it, or draw more nodes and link them. */
+/** A square at the origin between a circle and a polygon: select one to style it, or draw more nodes and link them. */
 export const Default: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square' },
+  args: { depth: 0, liveDepth: 1, fixture: 'basic' },
 };
 
 /** The same scene to look at: select, pan, zoom and drill, but no handle, port, tool or key changes it. */
@@ -212,15 +215,16 @@ export const Lattice: Story = {
  * or closes its section, and the dock's close button floats the same column over the canvas.
  */
 export const Docked: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'docked' },
+  args: { depth: 0, liveDepth: 1, fixture: 'basic', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    // 1. With nothing selected the dock holds no properties; the layers section starts closed, and its header opens it.
+    // 1. With nothing selected the dock keeps its properties section, saying so; the layers section starts closed, and
+    //    its header opens it.
     const dock = await canvas.findByTestId('scene-view-dock');
     await waitFor(() =>
       expect(within(dock).getByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed'),
     );
-    await expect(within(dock).queryByTestId('dock-section-properties')).not.toBeInTheDocument();
+    await expect(await within(dock).findByTestId('properties-empty')).toBeVisible();
     await userEvent.click(
       within(within(dock).getByTestId('dock-section-layers')).getByRole('button', { name: 'Layers' }),
     );
@@ -234,24 +238,24 @@ export const Docked: Story = {
 
 /** Floating inspectors (the default): the panel over the canvas, with the same sections as docked; its toolbar docks them. */
 export const Floating: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'square', inspectors: 'floating' },
+  args: { depth: 0, liveDepth: 1, fixture: 'basic', inspectors: 'floating' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('layers')).toBeInTheDocument();
     await expect(canvas.getByTestId('scene-view-dock')).toHaveAttribute('data-floating');
     // Floating, the panel holds the same sections it does docked.
-    await expect(await canvas.findByTestId('dock-section-about')).toBeInTheDocument();
-    await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
+    await expect(await canvas.findByTestId('dock-section-views')).toBeInTheDocument();
     await expect(
       [...canvasElement.querySelectorAll('[data-testid^="dock-section-"]')].map((section) =>
         section.getAttribute('data-testid'),
       ),
-    ).toEqual(['dock-section-views', 'dock-section-objects', 'dock-section-layers', 'dock-section-about']);
+    ).toEqual(['dock-section-views', 'dock-section-objects', 'dock-section-layers']);
     // A switch at the foot of the properties takes focus without scrolling the panel itself (only its viewport scrolls).
     const node = canvasElement.querySelector<HTMLElement>('[data-testid="scene-view"] [data-node-id]');
     node && (await userEvent.click(node));
-    // The panel is split: the properties above the seam, the other sections below.
-    await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
+    // Floating, every section is in one scrolling list: no seam, the properties first.
+    await expect(await canvas.findByTestId('dock-section-properties')).toBeInTheDocument();
+    await expect(canvas.queryByTestId('dock-splitter')).toBeNull();
     const guide = await within(await canvas.findByTestId('properties')).findByText('Guide');
     guide.scrollIntoView();
     await userEvent.click(guide);
@@ -259,9 +263,11 @@ export const Floating: Story = {
     // The inspector panel's own toolbar docks the inspectors.
     await userEvent.click(canvas.getByTestId('dock-open'));
     await waitFor(() => expect(canvas.getByTestId('scene-view-dock')).not.toHaveAttribute('data-floating'));
-    // Docked, the same sections: about still closed until opened (only the properties start open).
-    await expect(await canvas.findByTestId('dock-section-about')).toHaveAttribute('data-state', 'closed');
+    // Docked, the same sections: layers still closed until opened (only the properties start open).
+    await expect(await canvas.findByTestId('dock-section-layers')).toHaveAttribute('data-state', 'closed');
     await expect(canvas.getByTestId('dock-section-views')).toBeInTheDocument();
+    // Docked, the panel splits: the properties above the seam, the other sections below.
+    await expect(await canvas.findByTestId('dock-splitter')).toBeInTheDocument();
   },
 };
 
@@ -277,6 +283,15 @@ export const View: Story = {
     await userEvent.click(await canvas.findByTestId('portal-open'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
+    // 3. The background's menu offers Back there, which returns to the root.
+    const viewport = await canvas.findByTestId('scene-view');
+    const { left, top } = viewport.getBoundingClientRect();
+    await fireEvent.contextMenu(viewport, { clientX: left + 8, clientY: top + 8 });
+    const back = await screen.findByTestId('menu-back');
+    const items = [...(back.closest('[role="menu"]')?.querySelectorAll('[role="menuitem"]') ?? [])];
+    // Keyboard, since zag ignores the synthetic pointer events a test can send.
+    await userEvent.keyboard('{ArrowDown}'.repeat(items.indexOf(back) + 1) + '{Enter}');
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled(), { timeout: 5_000 });
   },
 };
 
@@ -348,11 +363,12 @@ const topLevelNode = (root: HTMLElement, selector: string) =>
   );
 
 /**
- * Group and Ungroup over a nested scene: ⌘G makes an anonymous Object and one Instance in place of the selection,
- * ⇧⌘G puts its contents back and deletes the definition, and each is one undo step.
+ * Group and Ungroup: ⌘G makes an anonymous Object and one Instance in place of the selection, ⇧⌘G puts its contents
+ * back and deletes the definition, and each is one undo step. The fixture has no view node, since an Object cannot
+ * contain a View (SPEC.mdl F-9.9).
  */
 export const Group: Story = {
-  args: { depth: 0, liveDepth: 1, fixture: 'nested', inspectors: 'docked' },
+  args: { depth: 0, liveDepth: 1, fixture: 'pair', inspectors: 'docked' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const view = await canvas.findByTestId('scene-view');
@@ -399,5 +415,208 @@ export const Group: Story = {
     await userEvent.click(await within(views).findByTestId(`views-row-${id}/a`));
     await waitFor(() => expect(topLevelNode(canvasElement, '[data-node-id="a"]')).toBeDefined());
     await waitFor(() => expect(rowSelected(views, `${id}/a`)).toBe(true));
+  },
+};
+
+/** The polylines on the canvas, as drawn. */
+const polylines = (root: HTMLElement) => [
+  ...root.querySelectorAll('[data-testid="scene-view"] [data-node-id^="polyline-"]'),
+];
+
+/**
+ * The polyline tool (Y) draws an irregular line vertex by vertex: each click places one, Enter or a double-click ends
+ * it open, a click on the first vertex closes it, Backspace takes back the last vertex and Escape drops the drawing.
+ */
+export const Polyline: Story = {
+  args: { depth: 0, liveDepth: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view');
+    const rect = view.getBoundingClientRect();
+    const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const click = async (dx: number, dy: number) => {
+      const at = { clientX: center.x + dx, clientY: center.y + dy, button: 0, pointerId: 1 };
+      await fireEvent.pointerDown(view, at);
+      await fireEvent.pointerMove(view, at);
+      await fireEvent.pointerUp(view, at);
+    };
+
+    // 1. Three clicks and a click back on the first vertex draw a closed polyline, which is selected.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(-200, -100);
+    await click(-40, -100);
+    await click(-120, 0);
+    await expect(await canvas.findByTestId('vertex-band')).toBeInTheDocument();
+    await click(-200, -100);
+    await waitFor(() => expect(polylines(canvasElement)).toHaveLength(1));
+    await expect(canvas.queryByTestId('vertex-band')).toBeNull();
+    const closed = await canvas.findByRole('switch', { name: 'Closed' });
+    await waitFor(() => expect(closed).toBeChecked());
+
+    // 2. Enter ends a line open.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(40, 40);
+    await click(200, 120);
+    await click(120, 200);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(polylines(canvasElement)).toHaveLength(2));
+    await waitFor(() => expect(canvas.getByRole('switch', { name: 'Closed' })).not.toBeChecked());
+
+    // 3. The switch closes the open line.
+    await userEvent.click(canvas.getByRole('switch', { name: 'Closed' }));
+    await waitFor(() => expect(canvas.getByRole('switch', { name: 'Closed' })).toBeChecked());
+
+    // 4. Backspace takes back vertices and Escape drops the drawing: nothing lands.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(-200, 120);
+    await click(-40, 200);
+    await userEvent.keyboard('{Backspace}');
+    await userEvent.keyboard('{Escape}');
+    await expect(canvas.queryByTestId('vertex-band')).toBeNull();
+    await expect(polylines(canvasElement)).toHaveLength(2);
+  },
+};
+
+/** The vertex handles of the polyline in vertex edit mode. */
+const vertexHandles = (root: HTMLElement) => [...root.querySelectorAll('[data-testid="vertex-handle"]')];
+
+/** The centre of an element on screen. */
+const centreOf = (element: Element) => {
+  const { left, top, width, height } = element.getBoundingClientRect();
+  return { clientX: left + width / 2, clientY: top + height / 2 };
+};
+
+/**
+ * Edit mode: a double-click on a polyline shows its vertices to drag, and on a box opens its label; Enter, Escape or a
+ * press outside the node leaves either.
+ */
+export const PolylineEdit: Story = {
+  args: { depth: 0, liveDepth: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const view = await canvas.findByTestId('scene-view');
+    const rect = view.getBoundingClientRect();
+    const center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const at = (dx: number, dy: number) => ({
+      clientX: center.x + dx,
+      clientY: center.y + dy,
+      button: 0,
+      pointerId: 1,
+    });
+    const click = async (dx: number, dy: number) => {
+      await fireEvent.pointerDown(view, at(dx, dy));
+      await fireEvent.pointerMove(view, at(dx, dy));
+      await fireEvent.pointerUp(view, at(dx, dy));
+    };
+    const doubleClick = async (element: Element) => {
+      const point = centreOf(element);
+      await fireEvent.pointerDown(element, { ...point, button: 0, pointerId: 1 });
+      await fireEvent.pointerUp(view, { ...point, button: 0, pointerId: 1 });
+      await fireEvent.dblClick(element, point);
+    };
+
+    // 1. Draw an open polyline; a double-click on it shows a handle per vertex and hides the resize handles.
+    view.focus();
+    await userEvent.keyboard('y');
+    await click(-200, -120);
+    await click(-40, -40);
+    await click(-200, 40);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(polylines(canvasElement)).toHaveLength(1));
+    const [line] = polylines(canvasElement);
+    await doubleClick(line);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await expect(canvasElement.querySelectorAll('svg rect[style*="resize"]')).toHaveLength(0);
+
+    // 2. Dragging a vertex moves it and refits the frame, as one undo step.
+    const before = line.getBoundingClientRect();
+    const handle = vertexHandles(canvasElement)[1];
+    await fireEvent.pointerDown(handle, { ...centreOf(handle), button: 0, pointerId: 1 });
+    await fireEvent.pointerMove(view, at(80, -40));
+    await fireEvent.pointerUp(view, at(80, -40));
+    await waitFor(() => expect(line.getBoundingClientRect().width).toBeGreaterThan(before.width + 60));
+    await expect(vertexHandles(canvasElement)).toHaveLength(3);
+
+    // 3. Escape leaves vertex edit mode; the line stays selected.
+    view.focus();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+    await expect(canvasElement.querySelectorAll('svg rect[style*="resize"]').length).toBeGreaterThan(0);
+
+    // 4. Undo takes the vertex back in one step.
+    await userEvent.keyboard('{Meta>}z{/Meta}');
+    await waitFor(() => expect(line.getBoundingClientRect().width).toBeCloseTo(before.width, 0));
+
+    // 5. A segment's midpoint adds a vertex, Backspace removes the one last pressed, and Enter leaves the mode.
+    await doubleClick(line);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    const [midpoint] = canvas.getAllByTestId('vertex-midpoint');
+    await fireEvent.pointerDown(midpoint, { ...centreOf(midpoint), button: 0, pointerId: 1 });
+    await fireEvent.pointerUp(view, { ...centreOf(midpoint), button: 0, pointerId: 1 });
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(4));
+    view.focus();
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await expect(polylines(canvasElement)).toHaveLength(1);
+    view.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+
+    // 6. So does a press outside the node; Enter on the line selected alone enters the mode again.
+    await doubleClick(line);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await click(240, 200);
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+    await fireEvent.pointerDown(line, { ...centreOf(line), button: 0, pointerId: 1 });
+    await fireEvent.pointerUp(view, { ...centreOf(line), button: 0, pointerId: 1 });
+    view.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(3));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(vertexHandles(canvasElement)).toHaveLength(0));
+
+    // 7. A double-click on a box still edits its label: Escape rejects, Enter commits, a click outside commits.
+    view.focus();
+    await userEvent.keyboard('r');
+    await fireEvent.pointerDown(view, at(80, -160));
+    await fireEvent.pointerMove(view, at(240, -40));
+    await fireEvent.pointerUp(view, at(240, -40));
+    const box = await waitFor(() => {
+      const node = canvasElement.querySelector('[data-testid="scene-view"] [data-node-id^="rect-"]');
+      if (!node) {
+        throw new Error('The box has not landed.');
+      }
+      return node;
+    });
+    await doubleClick(box);
+    await userEvent.keyboard('Draft');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
+    await expect(box.textContent).not.toContain('Draft');
+
+    await doubleClick(box);
+    await expect(await canvas.findByTestId('part-editor')).toBeInTheDocument();
+    await userEvent.keyboard('Hello');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
+    await waitFor(() => expect(box.textContent).toContain('Hello'));
+
+    await doubleClick(box);
+    await expect(await canvas.findByTestId('part-editor')).toBeInTheDocument();
+    await userEvent.keyboard(' world');
+    await userEvent.click(view);
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
+    await waitFor(() => expect(box.textContent).toContain('Hello world'));
+
+    // 8. Enter on the box selected alone opens its label.
+    await click(160, -80);
+    view.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(await canvas.findByTestId('part-editor')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.queryByTestId('part-editor')).toBeNull());
   },
 };

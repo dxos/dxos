@@ -21,6 +21,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -52,9 +53,12 @@ type SearchResult
 component SearchDialog
   desc: |
     Modal command-palette style dialog invoked globally via the OpenSearch operation.
-    Renders a search input at the top; results populate below in real time.
+    Renders a search input at the top; results populate below in real time. Picking a result opens
+    it, or, when SelectObject opened the dialog, hands the object back to its caller.
   props:
-    space: Space              # current active space to scope the search
+    space: Space              # the space to search: SelectObject's spaceId, else the active space
+    title?: string            # SelectObject's title, in place of "Search"
+    handle?: SelectHandle       # present when SelectObject opened the dialog
   state:
     query: string             # live query text
     results: SearchResult[]   # objects matching the current query
@@ -112,6 +116,21 @@ op OpenSearch
   output: void
   effects: [layout:dialog]
   note: Registered as SearchOperation.OpenSearch; triggered from the command palette.
+```
+
+```mdl
+op SelectObject
+  key: org.dxos.operation.search.selectObject
+  desc: |
+    Opens the same SearchDialog as an object picker: the caller decides what the object is for (add it
+    to a chat's context, link it from a document), so picking a result returns it instead of opening
+    it. Settles with nothing when the dialog is dismissed.
+  input:
+    spaceId?: string          # the space to search; defaults to the active space
+    title?: string            # the dialog's title; defaults to "Search"
+  output: Obj | undefined
+  effects: [layout:dialog]
+  note: Registered as SearchOperation.SelectObject; the chat prompt's "+" > "Add an object…" uses it.
 ```
 
 ## Features
@@ -260,6 +279,26 @@ test QA-1: Open search and find an object
     - name: Close the dialog if still open
       do: Press Escape.
       expect: SearchDialog is closed
+```
+
+## Changelog
+
+```mdl
+decision D-1: The search dialog is also a generic object picker: a caller opens it to choose an object, and the choice goes back to the caller, which decides what it is for, instead of opening the object.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [SelectObject, SearchDialog]
+```
+
+```mdl
+decision D-2: The picker is its own operation, `SelectObject`, which settles with the chosen object, or with nothing when the dialog is dismissed. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SelectObject]
+  why: A picker has a result, so its caller can await it; plain search keeps navigating unchanged.
+  rejected:
+    - A mode of `OpenSearch`: every existing caller would have to opt out of a result it never reads.
 ```
 
 ---

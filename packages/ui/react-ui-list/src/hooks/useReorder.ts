@@ -220,9 +220,17 @@ export const useReorderList = <T>({
           }
         };
         refs.row.addEventListener('dragstart', handleNativeDragStart);
+        // A row that is its own handle (a tile) is dragged from anywhere, so a list must let its presses through.
+        const wholeRow = refs.handle === refs.row;
+        if (wholeRow) {
+          refs.row.setAttribute('data-drag-row', '');
+        }
         return combine(
           () => {
             refs.row.removeEventListener('dragstart', handleNativeDragStart);
+            if (wholeRow) {
+              refs.row.removeAttribute('data-drag-row');
+            }
             setDropTarget(refs.row, null);
           },
           draggable({
@@ -245,6 +253,8 @@ export const useReorderList = <T>({
                     getOffset: ({ container }) => ({ x: 20, y: container.getBoundingClientRect().height / 2 }),
                     render: ({ container }) => {
                       container.style.width = `${rect.width}px`;
+                      // Lets the theme drop a cloned row's live states (selection, hover) from the snapshot.
+                      container.setAttribute('data-drag-preview', '');
                       const current = lookup();
                       const preview = dragPreviewRef.current;
                       // Filled synchronously: the browser snapshots the preview when `dragstart`

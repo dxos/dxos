@@ -23,15 +23,19 @@ import {
   isFocusGroup,
   isTabbable,
 } from './focus.ts';
+import { ARROW_DIRECTIONS, findNearest } from './spatial.ts';
 
 export type FocusGroupKey = 'Tab' | 'Enter' | 'Escape';
 
 export type UseFocusGroupOptions = {
   /**
    * Arrow-key axis. Omit for a group that does not move focus between its items.
-   * `grid`, `grid-linear` and `both` step through items in DOM order on all four arrows.
+   * `both` steps through items in DOM order on all four arrows; `grid` moves to the item on screen in the arrow's
+   * direction, and `grid-linear` does so for up and down only.
    */
   axis?: FocusGroupAxis;
+  /** Names the arrow targets at any depth, instead of the group's top-level focusables (see `getFocusItems`). */
+  itemSelector?: string;
   /**
    * How `Tab` treats the group. Omit for a group that only moves focus with the arrow keys.
    * `unlimited` marks a boundary without limiting `Tab`, which is what makes a row holding its
@@ -119,6 +123,7 @@ export const useFocusGroup = ({
   cyclic = false,
   tabbable = false,
   ignoreKeys,
+  itemSelector,
 }: UseFocusGroupOptions = {}): UseFocusGroupResult => {
   const containerRef = useRef<HTMLElement | null>(null);
   const cleanupRef = useRef<(() => void) | undefined>(undefined);
@@ -127,8 +132,8 @@ export const useFocusGroup = ({
   const inTransitRef = useRef(false);
 
   // Read through a ref so the handlers stay referentially stable across option changes.
-  const optionsRef = useRef({ axis, tabBehavior, memorizeCurrent, cyclic, tabbable, ignoreKeys });
-  optionsRef.current = { axis, tabBehavior, memorizeCurrent, cyclic, tabbable, ignoreKeys };
+  const optionsRef = useRef({ axis, tabBehavior, memorizeCurrent, cyclic, tabbable, ignoreKeys, itemSelector });
+  optionsRef.current = { axis, tabBehavior, memorizeCurrent, cyclic, tabbable, ignoreKeys, itemSelector };
 
   const isGroupper = tabBehavior === 'limited' || tabBehavior === 'limited-trap-focus';
   // A group is only worth a boundary when something has to be intercepted there: a limited
@@ -220,7 +225,7 @@ export const useFocusGroup = ({
       return;
     }
 
-    const { axis, tabBehavior, cyclic, tabbable, ignoreKeys } = optionsRef.current;
+    const { axis, tabBehavior, cyclic, tabbable, ignoreKeys, itemSelector } = optionsRef.current;
     const ignored = (key: FocusGroupKey) => !!ignoreKeys?.includes(key);
     // Enter and Escape belong to any group; only a limited one takes Tab away from its contents.
     const groupper = !!tabBehavior;
@@ -287,7 +292,7 @@ export const useFocusGroup = ({
       return;
     }
 
-    const items = getFocusItems(container);
+    const items = getFocusItems(container, itemSelector);
     if (items.length === 0) {
       return;
     }
@@ -315,6 +320,16 @@ export const useFocusGroup = ({
       return;
     }
 
+    const direction = ARROW_DIRECTIONS[event.key];
+    if (axis === 'grid' || (axis === 'grid-linear' && (direction === 'up' || direction === 'down'))) {
+      const from = items[index].getBoundingClientRect();
+      const candidates = items
+        .filter((_, candidate) => candidate !== index)
+        .map((item) => ({ rect: item.getBoundingClientRect(), value: item }));
+      focus(findNearest(from, candidates, direction));
+      return;
+    }
+
     const next = index + (BACKWARD_KEYS.includes(event.key) ? -1 : 1);
     focus(cyclic ? items[(next + items.length) % items.length] : items[next]);
   }, []);
@@ -325,7 +340,7 @@ export const useFocusGroup = ({
       return;
     }
 
-    const items = getFocusItems(container);
+    const items = getFocusItems(container, optionsRef.current.itemSelector);
     const current = items.find((item) => item === event.target || item.contains(event.target));
     if (current) {
       for (const item of items) {

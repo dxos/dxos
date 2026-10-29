@@ -10,23 +10,19 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Operation from '@dxos/compute/Operation';
-import { Entity, Obj, Ref } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
-import { meta } from '#meta';
-import { Canvas, CanvasOperation } from '#types';
+import { Canvas } from '#types';
 
 import { canvasViewAspect } from '../containers/CanvasArticle/view-state.ts';
+import { CanvasNamespace } from '../namespace.ts';
 
 // Module-level: the graph dedupes action properties by reference, so a tuple rebuilt per evaluation re-emits the node.
 type LabelTuple = [string, { ns: string }];
-const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: meta.profile.key }];
-const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: meta.profile.key }];
-const IMPORT_TLDRAW_LABEL: LabelTuple = ['import-tldraw.label', { ns: meta.profile.key }];
+const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: CanvasNamespace.key }];
+const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: CanvasNamespace.key }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -36,9 +32,8 @@ export default Capability.makeModule(
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'canvasActions',
       match: (node, get) =>
-        Option.filter(
-          AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get),
-          (drawing) => get(Obj.atom(drawing.canvas))?.schema === Canvas.SCENE_SCHEMA,
+        Option.filter(AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get), (drawing) =>
+          Canvas.isSceneSchema(get(Obj.atom(drawing.canvas))?.schema),
         ),
       actions: (drawing, get) => {
         // The mode is this viewer's, kept in the canvas's view state where the article reads it; the item flips it, so
@@ -77,41 +72,6 @@ export default Capability.makeModule(
       },
     });
 
-    // Contributed here, keyed by the tldraw dialect, so plugin-tldraw takes no dependency on this plugin.
-    const importTldraw = yield* AppGraphBuilder.createExtension({
-      id: 'importTldraw',
-      match: (node, get) =>
-        Option.filter(
-          AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get),
-          (drawing) => get(Obj.atom(drawing.canvas))?.schema === Canvas.TLDRAW_SCHEMA,
-        ),
-      actions: (drawing) =>
-        Effect.succeed([
-          AppGraphNode.makeAction({
-            id: `${drawing.id}.importTldraw`,
-            data: () =>
-              Effect.gen(function* () {
-                // The handler runs against the drawing's own space, which the action context does not supply.
-                const result = yield* Operation.invoke(
-                  CanvasOperation.ImportTldraw,
-                  { drawing: Ref.make(drawing) },
-                  { spaceId: Obj.getDatabase(drawing)?.spaceId },
-                );
-                const created = yield* Effect.promise(() => result.drawing.load());
-                yield* Operation.invoke(LayoutOperation.Open, {
-                  subject: [GraphPath.getObjectPathFromObject(created)],
-                });
-              }),
-            properties: {
-              label: IMPORT_TLDRAW_LABEL,
-              icon: CanvasOperation.ImportTldraw.meta.icon,
-              disposition: 'list-item',
-              testId: 'canvas.importTldraw',
-            },
-          }),
-        ]),
-    });
-
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension, importTldraw]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension]);
   }),
 );

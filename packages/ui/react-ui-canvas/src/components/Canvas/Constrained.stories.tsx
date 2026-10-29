@@ -16,7 +16,7 @@ import {
   createCanvasAtoms,
   createConstrainedProjection,
 } from '../../engine/index.ts';
-import { useViewProjection } from '../../hooks/index.ts';
+import { useCanvasHistory, useRegistry, useViewProjection } from '../../hooks/index.ts';
 import { createMemoryStore } from '../../model/index.ts';
 import { PropertiesInspector } from '../inspectors/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
@@ -72,10 +72,18 @@ const DefaultStory = () => {
     [model],
   );
   const atoms = useMemo(() => createCanvasAtoms(CONSTRAINED_VIEW_ID), []);
-  const projection = useViewProjection({ store, atoms, createProjection });
+  // One history for the canvas and the panel beside it, so either's edits undo from the canvas.
+  const history = useCanvasHistory({ registry: useRegistry(), atoms, store });
+  const projection = useViewProjection({ store, atoms, createProjection, history });
   return (
     <div className='dx-fill grid grid-cols-[1fr_16rem_20rem]'>
-      <Canvas.Root store={store} root={CONSTRAINED_VIEW_ID} atoms={atoms} createProjection={createProjection}>
+      <Canvas.Root
+        store={store}
+        root={CONSTRAINED_VIEW_ID}
+        atoms={atoms}
+        createProjection={createProjection}
+        history={history}
+      >
         <Canvas.Viewport />
         <Canvas.Navigation />
         <Canvas.Actions />

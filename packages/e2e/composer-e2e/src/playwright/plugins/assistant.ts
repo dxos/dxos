@@ -56,19 +56,11 @@ export class Assistant {
     return (await this.thread.locator('.cm-content').allInnerTexts()).join('\n');
   }
 
-  /**
-   * Selects the chat's model through the options popover's model tab, then closes the popover so the
-   * prompt is reachable again. `model` is the model's full DXN (`dxn:…`), which is the id of its picker row.
-   */
-  async selectModel(model: string): Promise<void> {
+  async selectModel(modelDxn: string): Promise<void> {
     const page = this.#locator.page();
-    await this.#locator.getByTestId('assistant.options').click();
-    await page.getByTestId('assistant.options.model').click();
-    const option = page.getByTestId(`assistant.models.${model}`);
-    await option.click();
-    await expect(option).toHaveAttribute('aria-selected', 'true');
-    await page.keyboard.press('Escape');
-    await expect(page.getByTestId('assistant.models')).toBeHidden();
+    await this.#locator.getByTestId('assistant.agent-picker').click();
+    await page.getByTestId(`assistant.models.${modelDxn}`).click();
+    await expect(page.getByTestId(`assistant.models.${modelDxn}`)).toBeHidden();
   }
 
   /**

@@ -23,9 +23,9 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
-import { meta } from '#meta';
 import { type NavTreeNode } from '#types';
 
+import { NavTreeNamespace } from '../../namespace.ts';
 import { NAV_TREE_ITEM } from '../NavTree/index.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns.tsx';
@@ -59,7 +59,7 @@ export type L1PanelProps = {
  * unavailable-workspace message, so the sidebar is never blank.
  */
 const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   const pending = item?.properties.pending === true;
   const title = item ? Theme.toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
@@ -176,11 +176,14 @@ const COLUMNS = `var(--dx-half-block-size) var(--dx-block-size) minmax(0, 1fr) a
 
 const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
   <Tree.Item node={node}>
-    <Tree.ItemIndicator />
-    <Tree.ItemIcon />
-    <Tree.ItemText data-testid='treeItem.heading' />
-    <Tree.ItemCount />
-    {node.item && <NavTreeItemColumns path={node.path} item={node.item} open={node.open} />}
+    {/* `contents`, so the row's columns stay in its grid; right-clicking the row opens its node's actions. */}
+    <div className='contents' {...(node.item ? AppNode.contextMenuProps(node.item.id, NAV_TREE_ITEM) : {})}>
+      <Tree.ItemIndicator />
+      <Tree.ItemIcon />
+      <Tree.ItemText data-testid='treeItem.heading' />
+      <Tree.ItemCount />
+      {node.item && <NavTreeItemColumns path={node.path} item={node.item} open={node.open} />}
+    </div>
   </Tree.Item>
 );
 
@@ -188,7 +191,7 @@ const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
  * Header row.
  */
 const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = Theme.toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = AppNode.isPinnedWorkspace(item);
@@ -243,7 +246,7 @@ const MenuActions = ({
 }: {
   item: AppGraphNode.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
 
   if (menuActions.length === 0) {
     return null;

@@ -61,12 +61,14 @@ export const deepSeekCredentialForm = {
  * Builds the DeepSeek connector entry: stores the API key as `AccessToken.token` (source
  * `deepseek.com`) so consumers can resolve it via `CredentialsService`.
  */
-export const createDeepSeekConnectorEntry = () => ({
-  id: DEEPSEEK_CONNECTOR_ID,
-  source: DEEPSEEK_SOURCE,
-  label: 'DeepSeek',
-  credentialForm: deepSeekCredentialForm,
-});
+export const createDeepSeekConnectorEntry = () =>
+  ({
+    id: DEEPSEEK_CONNECTOR_ID,
+    source: DEEPSEEK_SOURCE,
+    label: 'DeepSeek',
+    kind: 'custom',
+    credentialForm: deepSeekCredentialForm,
+  }) satisfies ConnectorSpec.ConnectorEntry;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

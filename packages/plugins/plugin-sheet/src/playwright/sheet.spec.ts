@@ -5,20 +5,27 @@
 import { type Page, expect, test } from '@playwright/test';
 
 import { random } from '@dxos/random';
-import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl, warmStory } from '@dxos/test-utils/playwright';
 
 import { SheetManager } from './sheet-manager.ts';
+
+const url = storybookUrl('plugins-plugin-sheet-containers-sheetarticle--spec', 9005);
+const viewportSize = { width: 1280, height: 720 };
 
 test.describe('plugin-sheet', () => {
   let page: Page;
   let sheet: SheetManager;
   let close: () => Promise<void>;
 
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(180_000);
+    await warmStory(browser, url, (warm) =>
+      warm.locator('dx-grid .dx-grid').waitFor({ state: 'visible', timeout: 150_000 }),
+    );
+  });
+
   test.beforeEach(async ({ browser }) => {
-    const setup = await setupPage(browser, {
-      url: storybookUrl('plugins-plugin-sheet-containers-sheetarticle--spec', 9005),
-      viewportSize: { width: 1280, height: 720 },
-    });
+    const setup = await setupPage(browser, { url, viewportSize });
     page = setup.page;
     close = setup.close;
     sheet = new SheetManager(page);

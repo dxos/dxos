@@ -16,7 +16,8 @@ import * as Status from '@dxos/react-ui/Status';
 
 import { Loading } from '#components';
 import { useMobileDrawerActions, useMobileStack } from '#hooks';
-import { meta } from '#meta';
+
+import { MobileNamespace } from '../../namespace.ts';
 
 const DRAWER_NAME = 'MobileDeckLayout.Drawer';
 
@@ -24,7 +25,7 @@ const DRAWER_NAME = 'MobileDeckLayout.Drawer';
  * Companion drawer for the visible panel of the mobile stack.
  */
 export const MobileDrawer = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(MobileNamespace.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const { state } = DeckHooks.useDeckState();
   const { topId } = useMobileStack();
@@ -45,6 +46,7 @@ export const MobileDrawer = () => {
 
     return {
       attendableId: companionId,
+      nodeId: companionId,
       subject: node.data,
       companionTo: parentNode?.data,
       properties: node.properties,

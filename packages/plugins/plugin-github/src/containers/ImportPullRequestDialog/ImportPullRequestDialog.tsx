@@ -14,12 +14,12 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
 import { GitHubRepoInaccessibleError } from '../../errors.ts';
 import { parsePullRequestReference } from '../../extensions/index.ts';
 import { useOpenObject } from '../../hooks/index.ts';
+import { GitHubNamespace } from '../../namespace.ts';
 import { GitHubApi } from '../../services/index.ts';
 
 const ImportPullRequestForm = Schema.Struct({
@@ -59,7 +59,7 @@ const importFailureKey = (error: unknown): string => {
   if (!GitHubRepoInaccessibleError.is(error)) {
     return 'import-pull-request-failed.title';
   }
-  if (error.context.tokenStatus === 401) {
+  if (error.context.tokenStatus === 401 || error.context.tokenUnavailable === true) {
     return 'import-pull-request-token-rejected.title';
   }
   return error.context.connected === true
@@ -74,7 +74,7 @@ const importFailureKey = (error: unknown): string => {
  * user already is, and a picker would ask a question they have already answered.
  */
 export const ImportPullRequestDialog = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
   const space = ToolkitHooks.useActiveSpace();
@@ -89,9 +89,9 @@ export const ImportPullRequestDialog = () => {
         // The command is reachable from the root, which has no space of its own; saying so beats a
         // button that appears to do nothing.
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.import-pull-request`,
+          id: `${GitHubNamespace.key}.import-pull-request`,
           icon: 'ph--warning--regular',
-          title: ['import-pull-request-no-space.title', { ns: meta.profile.key }],
+          title: ['import-pull-request-no-space.title', { ns: GitHubNamespace.key }],
         });
         return;
       }
@@ -110,9 +110,9 @@ export const ImportPullRequestDialog = () => {
         // failure without saying what it was.
         log.warn('pull request import failed', { reference, errorName: error?.name, status, err: error });
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.import-pull-request`,
+          id: `${GitHubNamespace.key}.import-pull-request`,
           icon: 'ph--warning--regular',
-          title: [importFailureKey(error), { ns: meta.profile.key }],
+          title: [importFailureKey(error), { ns: GitHubNamespace.key }],
           // The status is what separates a reference the user should re-check from a connection they
           // should repair, and it is otherwise visible only in the logs.
           description: status ? `${reference} — HTTP ${status}` : reference,

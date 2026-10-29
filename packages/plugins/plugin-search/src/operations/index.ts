@@ -9,4 +9,5 @@ import { SearchOperation } from '#types';
 
 export const SearchOperationHandlerSet = OperationHandlerSet.lazy([
   SearchOperation.OpenSearch.pipe(Operation.lazyHandler(() => import('./open-search.ts'))),
+  SearchOperation.SelectObject.pipe(Operation.lazyHandler(() => import('./select-object.ts'))),
 ]);

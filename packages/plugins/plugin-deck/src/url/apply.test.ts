@@ -9,11 +9,13 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { DeckPlugin } from '#plugin';
+import * as DeckPlugin from '#meta';
 import { DeckCapabilities } from '#types';
 
 import { applyActive } from './apply.ts';
 import * as Navigation from './navigation.ts';
+
+await Harness.preload({ plugins: [DeckPlugin.make()] });
 
 describe('applyActive', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -34,7 +36,7 @@ describe('applyActive', () => {
       removeEventListener: () => {},
     });
 
-    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin.make()] });
     const read = () => harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState));
 
     await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:dialog' }));

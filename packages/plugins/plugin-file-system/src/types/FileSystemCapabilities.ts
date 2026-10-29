@@ -6,13 +6,13 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import type { FileSystemManager as FileSystemManagerNs } from '#capabilities';
-import { meta } from '#meta';
+import { FileSystemNamespace } from '../namespace.ts';
 
-export const State = Capability.makeSingleton<Atom.Writable<FileSystemState>>()(`${meta.profile.key}.state`);
-export const FileSystemManager = Capability.makeSingleton<FileSystemManagerNs.FileSystemManager>()(
-  `${meta.profile.key}.fileSystemManager`,
-);
+export const State = Capability.makeSingleton<Atom.Writable<FileSystemState>>()(`${FileSystemNamespace.key}.state`);
+// Inline type import: a namespace import named after the file would collide with this tag.
+export const FileSystemManager = Capability.makeSingleton<
+  import('../capabilities/state/FileSystemManager.ts').FileSystemManager
+>()(`${FileSystemNamespace.key}.fileSystemManager`);
 
 export type FileSystemFile = {
   id: string;

@@ -14,6 +14,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { ANTHROPIC_PROVIDER_ID, ANTHROPIC_SOURCE, DEEPSEEK_PROVIDER_ID, DEEPSEEK_SOURCE } from '../constants.ts';
 import { ConnectorKeyInvalidError } from '../operations/errors.ts';
+import { McpServerConnector } from './mcp-connector.ts';
 
 /** API-key form for the Anthropic BYOK provider; key is best-effort validated against `/v1/models`. */
 const AnthropicTokenForm = ConnectorSpec.TokenForm({
@@ -107,6 +108,7 @@ export default Capability.makeModule(
         id: ANTHROPIC_PROVIDER_ID,
         source: ANTHROPIC_SOURCE,
         label: 'Anthropic',
+        kind: 'custom',
         credentialForm: makeCredentialForm({
           schema: AnthropicTokenForm,
           source: ANTHROPIC_SOURCE,
@@ -118,6 +120,7 @@ export default Capability.makeModule(
         id: DEEPSEEK_PROVIDER_ID,
         source: DEEPSEEK_SOURCE,
         label: 'DeepSeek',
+        kind: 'custom',
         credentialForm: makeCredentialForm({
           schema: DeepSeekTokenForm,
           source: DEEPSEEK_SOURCE,
@@ -125,6 +128,7 @@ export default Capability.makeModule(
           validate: validateDeepSeekKey,
         }),
       },
+      McpServerConnector,
     ]);
   }),
 );

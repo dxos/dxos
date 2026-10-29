@@ -8,12 +8,8 @@ export default defineConfig({
   entry: {
     'ns/CrmSkill': 'src/skills/crm/CrmSkill.ts',
     'index': 'src/index.ts',
-    'CrmPlugin': 'src/CrmPlugin.ts',
     'skills': 'src/skills/index.ts',
-    'capabilities': 'src/capabilities/index.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin': 'src/plugin.ts',
     'sources': 'src/sources/index.ts',
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',

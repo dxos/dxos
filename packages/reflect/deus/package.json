@@ -23,9 +23,23 @@
       "source": "./src/extension/index.ts",
       "types": "./dist/types/src/extension/index.d.ts",
       "import": "./dist/lib/extension.mjs"
+    },
+    "./spec-index": {
+      "source": "./src/spec-index/index.ts",
+      "types": "./dist/types/src/spec-index/index.d.ts",
+      "import": "./dist/lib/spec-index.mjs"
+    },
+    "./cli": {
+      "source": "./src/cli/index.ts",
+      "types": "./dist/types/src/cli/index.d.ts",
+      "import": "./dist/lib/cli.mjs"
     }
   },
+  "bin": {
+    "deus": "./bin/deus.ts"
+  },
   "files": [
+    "bin",
     "dist",
     "docs",
     "lang",
@@ -37,7 +51,10 @@
     "@codemirror/lint": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
-    "@lezer/lr": "catalog:"
+    "@dxos/errors": "workspace:*",
+    "@effect/platform-node": "catalog:",
+    "@lezer/lr": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@lezer/generator": "catalog:",

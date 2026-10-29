@@ -110,7 +110,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Sheet.Sheet],
+      types: [Sheet.Sheet, Sheet.Chart],
       createIdentity: true,
       createSpace: true,
     }),

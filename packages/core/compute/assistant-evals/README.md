@@ -19,7 +19,7 @@ moon run assistant-evals:evals-watch                             # re-run on cha
 ```
 
 The tasks come from the `evalite` moon tag (`.moon/tasks/tag-evalite.yml`); the nightly
-`.depot/workflows/assistant-evals.yml` runs the same `evals` task.
+`.github/workflows/assistant-evals.yml` runs the same `evals` task.
 
 ## Code mode
 

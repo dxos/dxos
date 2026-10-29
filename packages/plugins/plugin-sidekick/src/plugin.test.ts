@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { SidekickPlugin } from '#plugin';
+import * as SidekickPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { SidekickNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), SidekickPlugin.make()] });
+
+const moduleId = (name: string) => `${SidekickNamespace.key}.module.${name}`;
 
 describe('SidekickPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SidekickPlugin()],
+      plugins: [ClientPlugin.make({}), SidekickPlugin.make()],
     });
 
     // SkillDefinition is a dependency-mode root, so it activates immediately too.

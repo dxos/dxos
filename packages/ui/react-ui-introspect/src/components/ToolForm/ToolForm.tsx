@@ -81,7 +81,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
   // resets. Without this, switching from list_packages to get_plugin would
   // try to re-validate the previous tool's values against the new schema.
   return (
-    <div className={mx('flex flex-col gap-3 p-3 overflow-auto', classNames)}>
+    <div className={mx('flex flex-col gap-3 p-trim-md overflow-auto', classNames)}>
       <header>
         <h2 className='text-lg font-semibold'>{tool.title}</h2>
         {tool.description && (

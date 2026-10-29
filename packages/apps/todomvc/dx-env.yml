@@ -5,3 +5,7 @@ LOG_FILTER:
 LOG_PREFIX:
   path: runtime.client.log.prefix
   type: string
+
+DX_EDGE_BASE_URL:
+  path: runtime.services.edge.url
+  type: string

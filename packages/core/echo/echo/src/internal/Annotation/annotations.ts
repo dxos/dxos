@@ -500,6 +500,47 @@ export type GeneratorAnnotationValue =
 
 export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationValue>(GeneratorAnnotationId);
 
+export const RawStringAnnotationId = 'org.dxos.annotation.rawString';
+
+/**
+ * Stores every string under the annotated field as an immutable Automerge string: one op per write
+ * instead of one per character, at the cost of collaborative (character-level) merging. For
+ * machine-written state that is replaced wholesale, never edited as text.
+ */
+export const RawStringAnnotation = createAnnotationHelper<boolean>(RawStringAnnotationId);
+
+/** True when `ast` (or, for an optional field, one of its union members) carries {@link RawStringAnnotation}. */
+export const hasRawStringAnnotation = (ast: SchemaAST.AST): boolean =>
+  RawStringAnnotation.getFromAst(ast).pipe(Option.getOrElse(() => false)) ||
+  (SchemaAST.isUnion(ast) && ast.types.some(hasRawStringAnnotation));
+
+const containsRawStringCache = new WeakMap<SchemaAST.AST, boolean>();
+
+/**
+ * True when {@link RawStringAnnotation} appears anywhere within `ast`; cached, so a write to a type that
+ * never uses it skips the per-value schema walk.
+ */
+export const containsRawStringAnnotation = (ast: SchemaAST.AST): boolean => {
+  const cached = containsRawStringCache.get(ast);
+  if (cached !== undefined) {
+    return cached;
+  }
+  // Seeded before descending so a recursive (suspended) schema terminates.
+  containsRawStringCache.set(ast, false);
+  const children: readonly SchemaAST.AST[] = SchemaAST.isObjects(ast)
+    ? [...ast.propertySignatures.map((property) => property.type), ...ast.indexSignatures.map((index) => index.type)]
+    : SchemaAST.isArrays(ast)
+      ? [...ast.elements, ...ast.rest]
+      : SchemaAST.isUnion(ast)
+        ? ast.types
+        : SchemaAST.isSuspend(ast)
+          ? [ast.thunk()]
+          : [];
+  const result = hasRawStringAnnotation(ast) || children.some(containsRawStringAnnotation);
+  containsRawStringCache.set(ast, result);
+  return result;
+};
+
 interface MakeAnnoationsProps<T> {
   id: string;
   schema: Schema.Codec<T, any, never>;
@@ -649,6 +690,30 @@ export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotation
   ...setParentAnnotation,
   set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
 };
+
+/** Value of {@link ContentVersionAnnotation}. */
+export type ContentVersionAnnotationValue = {
+  /** Sibling fields whose format the annotated field versions. */
+  readonly fields: readonly string[];
+};
+
+/**
+ * Marks a string field of an object schema as the content version of named sibling fields: the
+ * format and revision (e.g. `dxos.org/scene/1`) of data ECHO stores opaquely. Content migrations
+ * (`Migration.defineContent`) find the version through it.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({
+ *   schema: Schema.String.pipe(Annotation.ContentVersionAnnotation.set({ fields: ['content'] }), Schema.optional),
+ *   content: Schema.Record(Schema.String, Schema.Any),
+ * })
+ * ```
+ */
+export const ContentVersionAnnotation = makeUserAnnotation<ContentVersionAnnotationValue>({
+  id: 'org.dxos.annotation.contentVersion',
+  schema: Schema.Struct({ fields: Schema.Array(Schema.String) }),
+});
 
 /** Value of {@link UserTypeAnnotation}. */
 export type UserTypeAnnotationValue = {

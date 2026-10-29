@@ -3,8 +3,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// Stages `dx-agent`, the coding-agent helper plugin-code compiles (`moon run
-// plugin-code:compile-agent-helper`), and the agents plugins ship for it (each plugin's
+// Stages `dx-agent`, the coding-agent helper plugin-claude compiles (`moon run
+// plugin-claude:compile-agent-helper`), and the agents plugins ship for it (each plugin's
 // `dist/agent/<id>/`, e.g. `moon run plugin-claude:compile-agent`), where the desktop app bundles and
 // spawns them. The helper reads its agents from the `agents/` directory beside itself.
 //
@@ -26,8 +26,8 @@ const required = process.argv.includes('--required');
 
 /** The helper, and how to build it when missing. */
 const helper = {
-  file: join(pluginsDir, 'plugin-code', 'dist', 'sidecar', 'dx-agent'),
-  plugin: join(pluginsDir, 'plugin-code'),
+  file: join(pluginsDir, 'plugin-claude', 'dist', 'sidecar', 'dx-agent'),
+  plugin: join(pluginsDir, 'plugin-claude'),
   script: './scripts/build-agent-helper.ts',
 };
 

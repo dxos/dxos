@@ -70,4 +70,17 @@ describe('EntityId', () => {
       expect(left).not.toBe(right);
     });
   });
+
+  describe('getTimestamp', () => {
+    test('reads the time an id was generated', ({ expect }) => {
+      const before = Date.now();
+      const id = EntityId.random();
+      expect(EntityId.getTimestamp(id)).toBeGreaterThanOrEqual(before);
+      expect(EntityId.getTimestamp(id)).toBeLessThanOrEqual(Date.now());
+    });
+
+    test('reads a deterministic id as the epoch', ({ expect }) => {
+      expect(EntityId.getTimestamp(EntityId.deterministic('org.dxos.type.person', '0.1.0'))).toBe(0);
+    });
+  });
 });

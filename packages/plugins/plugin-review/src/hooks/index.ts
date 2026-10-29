@@ -9,3 +9,4 @@ export * from './useReviewExtensions.ts';
 export * from './useStatus.ts';
 export * from './useVersionedEditor.ts';
 export * from './useVersioning.ts';
+export * from './useThreadMessages.ts';

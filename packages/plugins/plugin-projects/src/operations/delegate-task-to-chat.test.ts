@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { describe, test } from 'vitest';
 
+import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AiContext } from '@dxos/assistant';
@@ -15,6 +16,7 @@ import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as AssistantOptions from '@dxos/plugin-assistant/AssistantOptions';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -25,8 +27,19 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { Task } from '@dxos/types';
 
-import { ProjectsPlugin } from '#plugin';
+import * as ProjectsPlugin from '#meta';
 import { ProjectOperation } from '#types';
+
+await Harness.preload({
+  plugins: [
+    ClientPlugin.make({}),
+    SpacePlugin.make({}),
+    TasksPlugin.make(),
+    AssistantPlugin.make(),
+    RoutinePlugin.make(),
+    ProjectsPlugin.make(),
+  ],
+});
 
 describe('ProjectOperation.DelegateTaskToChat', () => {
   test('opens a chat carrying the task in its checklist', async ({ expect }) => {
@@ -53,6 +66,62 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // The checklist is a plain ref array, so delegation does not claim ownership of the task: an
     // unparented one stays unparented.
     expect(Obj.getParent(task)).toBeUndefined();
+  });
+
+  test("opens Composer's agent on the task and its source by URI, fenced to them", async ({ expect }) => {
+    const prompts: string[] = [];
+    await using harness = await setup({
+      aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware((request) => {
+        prompts.push(request.text);
+        return { parts: [ScriptedLanguageModel.text('On it.')] };
+      }),
+    });
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const source = space.db.add(Task.make({ title: 'The email it came from', status: 'todo' }));
+    const task = space.db.add(Task.make({ title: 'Reply to Dana', status: 'todo', artifacts: [Ref.make(source)] }));
+    const other = space.db.add(Task.make({ title: 'Book the lunch', status: 'todo' }));
+    await space.db.flush();
+
+    await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    await expect.poll(() => prompts.find((text) => text.includes('Reply to Dana'))).toBeDefined();
+    const prompt = prompts.find((text) => text.includes('Reply to Dana')) ?? '';
+    expect(prompt).toContain(`${Obj.getURI(task)}; made from ${Obj.getURI(source)}`);
+    expect(prompt).toContain('Work on these tasks only');
+    expect(prompt).not.toContain(Obj.getURI(other));
+  });
+
+  test('names a chat handed several tasks from their titles', async ({ expect }) => {
+    await using harness = await setup({
+      aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+        {
+          match: ScriptedLanguageModel.promptIncludes('Suggest a name'),
+          turns: [{ parts: [ScriptedLanguageModel.text('Coffee Prep')] }],
+        },
+      ]),
+    });
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    // An agent of its own, as Claude Code is: its opening turn never reaches the chat UI that names chats.
+    const agent = contributeAgent(harness);
+
+    const roast = space.db.add(Task.make({ title: 'Roast the beans', status: 'todo' }));
+    const grind = space.db.add(Task.make({ title: 'Grind the beans', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: [Ref.make(roast), Ref.make(grind)], harness: agent.id },
+        { spaceId: space.id },
+      ),
+    );
+
+    await expect.poll(() => chat.name).toBe('Coffee Prep');
   });
 
   test("starts the chat on the project's session config", async ({ expect }) => {
@@ -346,7 +415,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
   });
 });
 
-const setup = async () => {
+const setup = async (assistant: AssistantOptions.AssistantPluginOptions = {}) => {
   const harness = await Harness.createComposerTestApp({
     // Tasks is declared in Projects' `dependsOn`; Assistant supplies the `CreateChat` handler.
     // Routine is what provides `RemoteProcessManager`, which Assistant's `AgentService` spec
@@ -355,9 +424,9 @@ const setup = async () => {
       ClientPlugin.make({}),
       SpacePlugin.make({}),
       TasksPlugin.make(),
-      AssistantPlugin.make(),
+      AssistantPlugin.make(assistant),
       RoutinePlugin.make(),
-      ProjectsPlugin(),
+      ProjectsPlugin.make(),
     ],
   });
   const client = harness.get(ClientCapabilities.Client);

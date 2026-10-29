@@ -7,7 +7,6 @@ import { type MouseEvent, type PointerEvent, useCallback, useEffect, useMemo, us
 import { type CanvasAtoms, type NavigationCommands, type Projection } from '../../engine/index.ts';
 import {
   type Capabilities,
-  type ElementId,
   type Link,
   type LinkId,
   type Node,
@@ -18,6 +17,7 @@ import {
 import { type PartKey, hitTest, partText, partValues } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
+import { type EditMode } from './useEditMode.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 
 /** How long a link stays hovered after the pointer leaves it, so the pointer can reach its end handles. */
@@ -45,13 +45,13 @@ export type UseElementHandlersOptions = {
   capabilities: Capabilities;
   navigation: NavigationCommands;
   scene: View;
-  select: (ids: Iterable<ElementId>) => void;
 } & Pick<
   PointerMachine,
   'toScene' | 'onNodePointerDown' | 'onLinkPointerDown' | 'onLinkDoubleClick' | 'onLinkContextMenu'
->;
+> &
+  Pick<EditMode, 'editNode'>;
 
-/** The handlers the scene's elements call, and the root's double-click, which opens a part's editor or a node. */
+/** The handlers the scene's elements call, and the root's double-click, which puts a node in edit mode or opens it. */
 export const useElementHandlers = ({
   registry,
   atoms,
@@ -60,8 +60,8 @@ export const useElementHandlers = ({
   capabilities,
   navigation,
   scene,
-  select,
   toScene,
+  editNode,
   onNodePointerDown,
   onLinkPointerDown,
   onLinkDoubleClick,
@@ -118,7 +118,8 @@ export const useElementHandlers = ({
   );
 
   // Resolved at the root from the model: pointer capture during a drag retargets the click, so a
-  // double-click never reaches the node element itself. A text part under the pointer opens its editor;
+  // double-click never reaches the node element itself. A type with its own editor enters it wherever the node is
+  // pressed; otherwise a text part under the pointer opens its editor;
   // the DOM is asked only which part, and the node comes from the model, so a part of a nested (live)
   // scene never matches the root node over it.
   const onDoubleClick = useCallback(
@@ -137,19 +138,23 @@ export const useElementHandlers = ({
       ) {
         return;
       }
+      if (nodeDef(nodeRegistry, node)?.editor === 'vertices') {
+        editNode(node);
+        return;
+      }
       const partElement = target.closest('[data-part]');
       const part =
         partElement?.closest('[data-node-id]')?.getAttribute('data-node-id') === node.id
           ? (partElement?.getAttribute('data-part') ?? undefined)
           : undefined;
-      if (part && capabilities.update && partText(nodeRegistry, node, part) !== undefined) {
-        select([node.id]);
-        registry.set(atoms.editing, { id: node.id, part });
-      } else if (nodeDef(nodeRegistry, node)?.openable) {
+      if (part && editNode(node, part)) {
+        return;
+      }
+      if (nodeDef(nodeRegistry, node)?.openable) {
         navigation.drillIn(node);
       }
     },
-    [scene, toScene, nodeRegistry, navigation, capabilities.update, select, registry, atoms.editing],
+    [scene, toScene, nodeRegistry, navigation, editNode],
   );
 
   return { handlers, onDoubleClick };

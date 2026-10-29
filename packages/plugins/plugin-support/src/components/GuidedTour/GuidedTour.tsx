@@ -15,8 +15,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tour from '@dxos/react-ui/Tour';
 
-import { meta } from '#meta';
-
+import { SupportNamespace } from '../../namespace.ts';
 import { TourContext } from './TourContext.ts';
 
 const resolveTarget = (target: ToolkitTour.Step['target']) =>
@@ -51,7 +50,7 @@ export type GuidedTourProps = {
 };
 
 export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: GuidedTourProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
   const layout = ToolkitHooks.useLayout();
   const paused = layout.dialogOpen;
@@ -76,6 +75,18 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
+  const skippedStepIds = useRef(new Set<string>());
+  const resumePastUnreachableStep = (index: number, stepId: string): boolean => {
+    const next = tourSteps[index + 1];
+    if (!next || skippedStepIds.current.has(stepId)) {
+      return false;
+    }
+    skippedStepIds.current.add(stepId);
+    log.warn('skipping a tour step whose target never appeared', { stepId });
+    resumeAt.current = next.id;
+    return true;
+  };
+
   const tour = Tour.useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
@@ -92,10 +103,16 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
         return;
       }
 
-      const ended = steps.find((step, index) => (step.id ?? String(index + 1)) === lastStepId.current);
+      const index = steps.findIndex((step, position) => (step.id ?? String(position + 1)) === lastStepId.current);
+      const ended = index < 0 ? undefined : steps[index];
       if (ended && !resolveTarget(ended.target)()) {
+        const stepId = lastStepId.current!;
+        if (resumePastUnreachableStep(index, stepId)) {
+          return;
+        }
+
         log.error('tour ended on a step whose target never appeared', {
-          stepId: lastStepId.current,
+          stepId,
           target: typeof ended.target === 'string' ? ended.target : '(resolver)',
         });
       }
@@ -109,6 +126,12 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   useEffect(() => {
     tour.setSteps([...tourSteps]);
   }, [tourSteps]);
+
+  useEffect(() => {
+    if (!running) {
+      skippedStepIds.current.clear();
+    }
+  }, [running]);
 
   // The machine exposes no dismiss beyond its close trigger, so a pause clicks it.
   const closeRef = useRef<HTMLButtonElement>(null);

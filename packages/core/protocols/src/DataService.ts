@@ -57,8 +57,13 @@ export const CreateDocumentRequest = Schema.Struct({
    */
   spaceId: Schema.String,
   /**
-   * Automerge encoded initial document value.
-   * Optional - if not provided, an empty document will be created.
+   * Initial document state, as `Automerge.save()` bytes.
+   * Optional - if neither this nor `initialValue` is provided, an empty document will be created.
+   */
+  initialDocument: Schema.optional(Schema.Uint8Array),
+  /**
+   * Initial document value as plain JSON, which cannot carry Automerge values such as `RawString` or bytes.
+   * @deprecated Use `initialDocument`; kept so a client older than its services can still create documents.
    */
   initialValue: Schema.optional(protoStruct),
 });

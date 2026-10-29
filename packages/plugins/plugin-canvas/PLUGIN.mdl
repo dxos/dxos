@@ -4,15 +4,48 @@ name: CanvasPlugin
 version: 0.1.0
 ---
 
+```mdl
+plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at multiple depths.
+  id: org.dxos.plugin.canvas
+  dependsOn: [org.dxos.plugin.illustrator]
+  modules:
+    - AppGraphBuilder: the lock and unlock actions on a canvas drawing
+    - CanvasSettings: whether the toolbar and palette overlays show
+    - DrawingVariant: the canvas drawing variant and its article, for the illustrator
+    - Migrations: the Scene type migrations
+    - OperationHandler: the canvas operations
+    - PluginAsset: this document, served as the plugin's own spec
+    - ReactSurface: the canvas properties panel of a drawing
+    - Schema: the canvas generator types
+    - SkillDefinition: the canvas generators skill
+    - SpaceTemplates: the architecture space template
+    - TldrawConverter: the illustrator converter from a tldraw drawing to a canvas
+    - Translations: the plugin's strings
+    - UndoMappings: undo for canvas edits
+```
+
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
-plugin as a drawing variant (`dxos.org/scene/1`). A drawing is a scene graph stored in ECHO as one record
-per scene, node and link; a frame holds a child scene that opens in place and can show its contents live.
+plugin as a drawing variant (`dxos.org/scene/1`). A drawing is stored in ECHO as one record per View,
+node and link; a `view` node opens a child View in place and can show its contents live.
+
+This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
+`Drawing` type, the variant contract and the converters this plugin registers with, and the canvas
+engine below.
+
+## Dependencies
+
+```mdl
+uses org.dxos.ui.react-ui-canvas: The engine — its Ontology, types, operations and features are the canvas's model, and this spec does not restate them.
+```
 
 ## Extensions
 
-| Term   | URI                        |
-|--------|----------------------------|
-| `test` | `org.dxos.mdl.test@1.0`    |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `plugin`   | `org.dxos.mdl.plugin@1.1`   |
+| `uses`     | `dxos.spec.core/uses`       |
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
 
@@ -49,7 +82,9 @@ test QA-1: Draw, connect, and nest a scene on a canvas
     - name: Zoom back out and show the frame's contents
       do: Click Up, select the Storage frame, and turn on "Show contents" in the Properties panel.
       expect: the frame draws its nested scene live inside it
+```
 
+```mdl
 test QA-2: Draw a nested architecture diagram of composer-app
   desc: |
     A complex diagram across three scenes — composer-app's top level, with the plugins and the client each
@@ -93,7 +128,9 @@ test QA-2: Draw a nested architecture diagram of composer-app
     - name: Go up and show both nested scenes live
       do: Click Up, then select each frame and turn on "Show contents" in the Properties panel.
       expect: each frame draws its own nested scene live inside it, alongside the top-level diagram
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 20s showcase clip: Select a shape in the Composer architecture drawing, read its properties, and rename it. Recorded light at 60 fps with no ident, captions or
@@ -114,11 +151,14 @@ test QA-4: Showcase clip
     - name: Rename it
       do: Turn off read-only, double-click the box, and type React components.
       expect: the box shows its new label
+```
 
+```mdl
 test QA-5: Copy a tldraw drawing as a canvas
   desc: |
-    The "Copy as canvas" action plugin-canvas contributes to every tldraw drawing runs `ImportTldraw`: a new canvas
-    drawing beside the tldraw one, opened once it is filed.
+    The illustrator's "Copy as Canvas" action converts a tldraw drawing through the converter plugin-canvas registers:
+    a drawing the scene DSL manages converts as every variant does, a hand-drawn one shape by shape. The copy is filed
+    beside the tldraw drawing and opened.
   actors: human
   covers: []
   status: unverified
@@ -128,11 +168,11 @@ test QA-5: Copy a tldraw drawing as a canvas
     - space: a tldraw drawing holding a labelled rectangle, an ellipse, an arrow bound between them and a frame
   steps:
     - name: Copy it
-      do: Open the tldraw drawing's object menu and choose "Copy as canvas".
+      do: Open the tldraw drawing's object menu and choose "Copy as Canvas".
       expect: a canvas drawing of the same name opens, filed beside the tldraw one, which is unchanged
     - name: Read the copy
-      do: Move the rectangle, then open the frame.
-      expect: the link follows the rectangle, and the frame opens onto a View holding the frame's shapes
+      do: Move the rectangle, then select a shape inside the frame.
+      expect: the link follows the rectangle; the frame is a labelled rectangle under its shapes, which sit on the drawing itself and select like any other
 ```
 
 ```mdl
@@ -165,3 +205,58 @@ test QA-3: DXOS Architecture tour
       expect: the EDGE drawing is embedded, with a sequence diagram of a device connecting below it
 ```
 
+## Changelog
+
+```mdl
+decision D-1: Converting a tldraw drawing to a canvas always makes a copy. When the diagram language manages the drawing, the conversion uses the generic scene converter; otherwise it falls back to the hand-drawn importer, shape by shape.
+  date: 2026-10-20
+  by: user:richburdon
+  affects: [QA-5]
+```
+
+```mdl
+decision D-2: plugin-canvas registers the hybrid conversion as an illustrator `Converter` for tldraw to canvas, which replaces the `ImportTldraw` operation; the copy is filed beside the source drawing and opened. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-5]
+  why: The illustrator's Convert operation already resolves variants and files the result, so a per-pair converter reuses it rather than duplicating it.
+  rejected:
+    - A separate plugin-canvas import operation, which would offer a second, conflicting menu action.
+```
+
+```mdl
+decision D-3: plugin-canvas builds on `org.dxos.plugin.illustrator` and `org.dxos.ui.react-ui-canvas`, and its spec references both rather than restating them.
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-4: The spec declares its dependencies rather than listing them in prose: `org.dxos.plugin.illustrator` in the `plugin` block's `dependsOn`, exactly as dx.config.ts declares it, and `org.dxos.ui.react-ui-canvas` under `## Dependencies`. Fills in [D-3].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-5: The `plugin CanvasPlugin` block lists the twelve modules plugin.tsx adds, one line each, and the `uses` reason keeps the prose list's wording. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  why: The plugin dialect requires `modules:` on every `plugin` block; reusing the prose keeps what the spec says about the engine unchanged.
+```
+
+```mdl
+decision D-6: The plugin's detail page links to this spec: dx.config.ts names `PLUGIN.mdl` as the plugin's spec.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [CanvasPlugin]
+```
+
+```mdl
+decision D-7: The plugin serves this document with a `PluginAsset` module, listed in the `plugin` block, and the package exports `./assets/PLUGIN.mdl`, as other plugins with a spec do. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The registry's open-spec action appears only when a plugin's asset module supplies the spec named by its profile.
+```

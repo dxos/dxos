@@ -13,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -42,14 +29,16 @@
       "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/CallsPlugin.workerd.mjs",
+      "node": "./dist/lib/CallsPlugin.node.mjs",
+      "default": "./dist/lib/CallsPlugin.mjs"
     },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -69,6 +58,11 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./CallOperation": {
+      "source": "./src/types/CallOperation.ts",
+      "types": "./dist/types/src/types/CallOperation.d.ts",
+      "import": "./dist/lib/CallOperation.mjs"
+    },
     "./CallManager": {
       "source": "./src/CallManager.ts",
       "types": "./dist/types/src/CallManager.d.ts",
@@ -85,8 +79,10 @@
       "import": "./dist/lib/CallsEvents.mjs"
     },
     "./CallsPlugin": {
-      "source": "./src/CallsPlugin.ts",
-      "types": "./dist/types/src/CallsPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/CallsPlugin.workerd.mjs",
+      "node": "./dist/lib/CallsPlugin.node.mjs",
       "import": "./dist/lib/CallsPlugin.mjs"
     },
     "./package.json": "./package.json",
@@ -99,6 +95,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "CallOperation": [
+        "dist/types/src/types/CallOperation.d.ts"
+      ],
       "CallsCapabilities": [
         "dist/types/src/types/CallsCapabilities.d.ts"
       ],
@@ -121,6 +120,7 @@
     "@dxos/av": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -150,6 +150,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-experimental": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

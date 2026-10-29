@@ -14,8 +14,10 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as TestingHarness from '@dxos/plugin-testing/Harness';
 
-import { TasksPlugin } from '#plugin';
+import * as TasksPlugin from '#meta';
 import { Journal, OutlineOperation } from '#types';
+
+await TestingHarness.preload({ plugins: [ClientPlugin.make({}), TasksPlugin.make()] });
 
 describe('OutlineOperation.QuickJournalEntry', () => {
   test("creates the default space's journal on first use and appends a bullet", async ({ expect }) => {
@@ -61,7 +63,7 @@ describe('OutlineOperation.QuickJournalEntry', () => {
 type Harness = Awaited<ReturnType<typeof TestingHarness.createComposerTestApp>>;
 
 const setup = async (): Promise<Harness> => {
-  const harness = await TestingHarness.createComposerTestApp({ plugins: [ClientPlugin.make({}), TasksPlugin()] });
+  const harness = await TestingHarness.createComposerTestApp({ plugins: [ClientPlugin.make({}), TasksPlugin.make()] });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
   await harness.waitForEvent(ClientEvents.SpacesAvailable);

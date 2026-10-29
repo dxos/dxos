@@ -5,8 +5,7 @@
 import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
-
+import { InboxNamespace } from '../../namespace.ts';
 import { deleteAction, openGroup } from '../Toolbar/index.ts';
 import { type ViewMode, viewModeGroup } from '../ViewMode/index.ts';
 
@@ -47,13 +46,14 @@ export const useEventToolbarActions = ({
   return useMenuBuilder(
     (get) =>
       MenuBuilder.make()
-        .root({ label: ['event-toolbar.menu', { ns: meta.profile.key }] })
+        .root({ label: ['event-toolbar.menu', { ns: InboxNamespace.key }] })
         .subgraph(
-          onOpen && openGroup({ ns: meta.profile.key, labelKey: 'event-toolbar-open.menu', onOpen, disabled: editing }),
+          onOpen &&
+            openGroup({ ns: InboxNamespace.key, labelKey: 'event-toolbar-open.menu', onOpen, disabled: editing }),
         )
         .subgraph(
           viewModeGroup({
-            ns: meta.profile.key,
+            ns: InboxNamespace.key,
             viewMode,
             setViewMode,
             modes: ['markdown', 'plain'],
@@ -69,7 +69,7 @@ export const useEventToolbarActions = ({
             b.action(
               'save',
               {
-                label: ['event-toolbar-save.menu', { ns: meta.profile.key }],
+                label: ['event-toolbar-save.menu', { ns: InboxNamespace.key }],
                 icon: 'ph--cloud-arrow-up--regular',
                 disabled: saveDisabled,
               },
@@ -78,7 +78,7 @@ export const useEventToolbarActions = ({
           }
 
           if (onDelete) {
-            deleteAction(b, { ns: meta.profile.key, labelKey: 'event-toolbar-delete.menu', onDelete });
+            deleteAction(b, { ns: InboxNamespace.key, labelKey: 'event-toolbar-delete.menu', onDelete });
           }
         })
         .build(),

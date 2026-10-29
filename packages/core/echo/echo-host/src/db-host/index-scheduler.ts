@@ -4,6 +4,8 @@
 
 import { DeferredTask, type ReadOnlyEvent, scheduleTask } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { BaseError } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
 /**
@@ -12,6 +14,14 @@ import { FeedProtocol } from '@dxos/protocols';
  * a reader that needs them sooner (a feed-scoped query, `flush`) drives the pass itself.
  */
 export const TRACE_INDEX_DELAY_MS = 1_000;
+
+/** Wait before retrying after a failed pass, doubled on each further failure up to {@link INDEX_RETRY_MAX_DELAY_MS}. */
+export const INDEX_RETRY_DELAY_MS = 1_000;
+
+export const INDEX_RETRY_MAX_DELAY_MS = 60_000;
+
+/** A pass failed before the changes a caller waited for were indexed; the cause is the pass's error. */
+export class IndexPassFailedError extends BaseError.extend('IndexPassFailedError', 'Index pass failed.') {}
 
 /**
  * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
@@ -24,6 +34,7 @@ export type IndexRunReason =
   | 'trace-blocks'
   | 'documents-saved'
   | 'batch-continuation'
+  | 'retry'
   | 'rpc-update-indexes'
   | 'feed-scoped-query'
   | 'epoch';
@@ -81,6 +92,16 @@ export class IndexScheduler extends Resource {
   /** Whether a throttled trace-triggered run is already waiting to start. */
   #traceRunPending = false;
 
+  /** Wait before the next retry; reset by a pass that succeeds. */
+  #retryDelay = INDEX_RETRY_DELAY_MS;
+
+  /** Whether a retry after a failed pass is already waiting to start. */
+  #retryPending = false;
+
+  /** Passes failed so far, so a waiter can tell that one failed while it waited, and the newest failure. */
+  #failures = 0;
+  #lastFailure: unknown;
+
   constructor({ feedBlocks, documentsSaved, runPass }: IndexSchedulerProps) {
     super();
     this.#feedBlocks = feedBlocks;
@@ -109,6 +130,10 @@ export class IndexScheduler extends Resource {
     await this.#task?.join();
     this.#releaseWaiters();
     this.#task = undefined;
+    // The disposed context cancelled the timers that would clear these, and a reopened scheduler reuses them.
+    this.#traceRunPending = false;
+    this.#retryPending = false;
+    this.#retryDelay = INDEX_RETRY_DELAY_MS;
   }
 
   /** Starts a pass soon, coalesced with any other request made before it starts. */
@@ -124,6 +149,8 @@ export class IndexScheduler extends Resource {
    * Waits until every change made before the call is indexed. Changes made during the wait are left
    * to later passes, so a stream of writes cannot hold the caller. A no-op once closed: a late
    * caller has nothing to wait for, and `runBlocking` would throw on the disposed context.
+   *
+   * @throws {IndexPassFailedError} when a pass fails before those changes are indexed.
    */
   async waitForIndexed(reason?: IndexRequestReason): Promise<void> {
     const task = this.#task;
@@ -133,6 +160,7 @@ export class IndexScheduler extends Resource {
     // Waits for the inputs that existed on entry, not for the index to go idle: writes arriving faster
     // than a pass completes never leave the empty batch that idleness needs.
     const target = this.#inputGeneration;
+    const failures = this.#failures;
     while (this.#indexedGeneration < target) {
       if (reason) {
         this.#noteReason(reason);
@@ -140,6 +168,10 @@ export class IndexScheduler extends Resource {
       await task.runBlocking();
       if (this._ctx.disposed) {
         return;
+      }
+      // Rerunning the pass at once would fail again; the retry is already scheduled.
+      if (this.#failures > failures) {
+        throw new IndexPassFailedError({ cause: this.#lastFailure });
       }
     }
     // One more pass when the last still found work, as the old wait-for-idle ended: under a quiet
@@ -189,6 +221,27 @@ export class IndexScheduler extends Resource {
     this.#indexedGeneration = this.#inputGeneration;
   }
 
+  /** Fails the waiters through {@link waitForIndexed} and retries with backoff. */
+  #retryAfterFailure(error: unknown): void {
+    const delayMs = this.#retryDelay;
+    log.error('index pass failed, retrying', { delayMs, error });
+    this.#failures++;
+    this.#lastFailure = error;
+    this.#retryDelay = Math.min(delayMs * 2, INDEX_RETRY_MAX_DELAY_MS);
+    if (this.#retryPending) {
+      return;
+    }
+    this.#retryPending = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#retryPending = false;
+        this.schedule('retry');
+      },
+      delayMs,
+    );
+  }
+
   #run = async (): Promise<void> => {
     if (this._ctx.disposed) {
       this.#releaseWaiters();
@@ -203,11 +256,19 @@ export class IndexScheduler extends Resource {
       // Read before the pass reads its sources, so an input landing mid-pass is left to the next one.
       const generation = this.#inputGeneration;
       // Drained here rather than inside the pass so the span can report what triggered it.
-      const result = await this.#runPass(passCtx, this.#takeReasons());
+      let result: IndexPassResult | undefined;
+      try {
+        result = await this.#runPass(passCtx, this.#takeReasons());
+      } catch (error) {
+        // Raising would put this resource, and the host whose context it was opened on, into ERROR for good.
+        this.#retryAfterFailure(error);
+        return;
+      }
       if (!result) {
         this.#releaseWaiters();
         return;
       }
+      this.#retryDelay = INDEX_RETRY_DELAY_MS;
       this.#lastPassIdle = result.done;
       if (result.drained) {
         this.#indexedGeneration = Math.max(this.#indexedGeneration, generation);
