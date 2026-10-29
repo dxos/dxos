@@ -51,8 +51,11 @@ Decided by the user (2026-10-28): the editor grows inside plugin-canvas; 3D edit
 move, rotate, scale, group, link), then extrude and join/subtract; existing canvases migrate to Scene/Element within
 stage 3; the work stays in dxos/dxos#14282.
 
-- [x] **Write the stage 3 design** — `agents/superpowers/specs/2026-10-28-scene-editor-design.md`; four questions
-      decided 2026-10-29, three open on provisional defaults.
-- [x] **Write the stage 3 plan** — `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md`, 16 tasks in four
-      phases; tasks 3, 4, 5 and 14 are provisional on the open questions.
-- [ ] **Execute the plan** — waits for the user's review of the plan and the three open questions.
+- [x] **Write the stage 3 design** — `agents/superpowers/specs/2026-10-28-scene-editor-design.md`; every question
+      decided 2026-10-29 (decisions 1–12).
+- [x] **Write the stage 3 plan** — `agents/superpowers/plans/2026-10-29-scene-editor-stage-3.md`, 21 tasks in four
+      phases (A 10, B 5, C 4, D 2), revised for the drawing model and every-mode parity.
+- [ ] **Execute the plan** — waits for the user's review of the plan.
+- [ ] Follow-up: a Library panel listing components (use case 6).
+- [ ] Follow-up: converge react-ui-canvas's `Intent` with `SceneIntent`.
+- [ ] Follow-up: remove `Drawing.LegacyCanvas` once every space has migrated.
