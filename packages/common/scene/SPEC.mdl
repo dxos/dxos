@@ -1,0 +1,265 @@
+---
+id: org.dxos.scene
+name: Scene
+version: 0.1.0
+---
+
+One data structure for 2D drawings and 3D scenes. The editor, the assistant and the animator all read and write it.
+`@dxos/scene` holds the schemas, validation, layout and the ECHO form; `@dxos/diagram` holds its text form (the
+`scene`, `camera` and `element` statements of `.dx`); `@dxos/react-ui-scene` draws it; plugin-canvas makes it an
+animator stage. The design is `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Types
+
+```mdl
+type Scene2D
+  desc: >
+    A 2D scene: its elements are records inside this one object. ECHO reserves `id`, so the scene's own id is `key`.
+  typename: org.dxos.type.scene.scene2d
+  fields:
+    key: string
+    name?: string
+    theme?: string
+    component?: boolean             # a reusable scene that instance elements place
+    camera: Camera2D
+    elements: Record<string, Element2D>
+```
+
+```mdl
+type Scene3D
+  desc: A 3D scene; as Scene2D with 3D geometry and camera.
+  typename: org.dxos.type.scene.scene3d
+  fields:
+    key: string
+    name?: string
+    theme?: string
+    component?: boolean
+    camera: Camera3D
+    elements: Record<string, Element3D>
+```
+
+```mdl
+type Element
+  desc: >
+    Every item in a scene: a shape, a link, a label, a group, a child scene or an instance. Its `kind` says which.
+    The fields below are shared; geometry comes from the scene type.
+  fields:
+    id: string                      # fixed when the element is created
+    kind: string
+    order?: string                  # paint order; z is depth
+    layer?: string
+    hidden?: boolean
+    locked?: boolean
+    label?: string
+    style?: Style
+    from?: Binding                  # a link's ends
+    to?: Binding
+    members?: string[]              # a group's elements
+    layout?: Layout                 # an arrangement a group applies to its members
+    pinned?: boolean                # placed by a person; layout leaves it
+    child?: Ref<Scene2D | Scene3D>  # a child scene's element
+    props?: Record<string, any>     # kind-specific fields
+```
+
+```mdl
+type Element2D
+  desc: Element with 2D geometry, in canvas pixels.
+  fields:
+    center?: Vec2
+    size?: Size2
+    rotation?: number
+```
+
+```mdl
+type Element3D
+  desc: Element with 3D geometry, in scene units; `scale` is the element's size.
+  fields:
+    position?: Vec3
+    scale?: Vec3
+    rotation?: Vec3                 # Euler degrees
+```
+
+```mdl
+type Style
+  desc: Semantic style tokens shared by both dimensions; a theme resolves them to CSS in 2D and materials in 3D.
+  fields:
+    hue?: string
+    tone?: number
+    surface?: string                # solid | tint | glass | none
+    border?: boolean
+    rounded?: boolean
+    opacity?: number
+```
+
+```mdl
+type Camera3D
+  desc: Where a 3D view looks from; angles in degrees, yaw 0 from the front, pitch above the horizon.
+  fields:
+    target: Vec3
+    yaw: number
+    pitch: number
+    distance: number
+    fov: number
+    projection: string              # perspective | orthographic
+```
+
+## Features
+
+```mdl
+feat F-1: One model for 2D and 3D
+
+  req F-1.1: A scene is one ECHO object, Scene2D or Scene3D, whose elements are records inside it; types are shared only where 2D and 3D share properties.
+  req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are Bindings to other elements of its scene.
+  req F-1.3: Element ids are never positional, and the id `camera` is reserved for the animator's camera target.
+  req F-1.4: A child scene is an element holding a Ref to another Scene object; it keeps its own units and is scaled to fit its frame.
+  req F-1.5: A group keeps its members in its parent's coordinates, and stores its arrangement so layout can be re-run; a pinned member is not moved.
+  req F-1.6: A solid is an operation tree (union, difference, extrude) over operand elements, recomputed when drawn.
+```
+
+```mdl
+feat F-2: The text form
+
+  req F-2.1: Records print to `.dx` text and parse back to the same records; printing a parsed canonical document returns the same text.
+  req F-2.2: Text that gives a group's arrangement but not its members' positions is laid out when parsed.
+  req F-2.3: Parsing reports duplicate ids, the reserved id, kinds from the other dimension, unbound links, missing members and missing child scenes.
+```
+
+```mdl
+feat F-3: Drawing and animation
+
+  req F-3.1: 2D scenes draw through react-ui-canvas, 3D scenes through Babylon, and a 2D scene may also be drawn in 3D on the ground plane.
+  req F-3.2: A renderer skips a link whose end is missing and stops at a child scene already on its path.
+  req F-3.3: Each scene type is an animator stage whose targets are its root scene's drawn elements, keyed by their annotated paths.
+```
+
+## Changelog
+
+```mdl
+decision D-1: Share a type between 2D and 3D only where they share properties; embedding one dimension in the other is a separate mechanism, not a reason to share a root type.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-1.1]
+```
+
+```mdl
+decision D-2: Do not distinguish nodes from links: every item in a scene is one kind of record, as in tldraw.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [Element, F-1.2]
+```
+
+```mdl
+decision D-3: The record is called Element, the container Scene, and reusable parts Component and Instance.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [Element, Scene2D, Scene3D]
+```
+
+```mdl
+decision D-4: A scene is stored as records inside one ECHO object.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [Scene2D, Scene3D, F-1.1]
+```
+
+```mdl
+decision D-5: The records are the source of truth; the DSL is a lossless text form of them.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-6: A solid is stored as an operation tree over operand elements and recomputed when loaded, not as a baked mesh.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-1.6]
+```
+
+```mdl
+decision D-7: Both groups and child scenes exist: a group keeps its members in its parent's coordinates, a child scene has its own and is a separate object.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-1.4, F-1.5]
+```
+
+```mdl
+decision D-8: A 2D scene can be rendered through a 3D projection.
+  date: 2026-10-28
+  by: user:richburdon
+  affects: [F-3.1]
+```
+
+```mdl
+decision D-9: A link's ends are Bindings (element id and optional anchor); moving an element moves what is bound to it. Fills in [D-2].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.2]
+  why: With one record kind, a link's geometry must come from what it connects, as tldraw's bindings do.
+```
+
+```mdl
+decision D-10: Paint order is `order` and `z` is depth; element ids are fixed at creation and never positional. Fills in [D-2].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Element, F-1.3]
+  why: Animator tracks and DSL edits refer to element ids, and a 3D z cannot share a name with paint order.
+```
+
+```mdl
+decision D-11: Layout intent is stored on groups as an arrangement, alongside the positions it produces; a hand-placed element is pinned. Fills in [D-5].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.5, F-2.2]
+  why: Storing positions keeps renderers and the animator free of layout; storing intent lets layout be re-run.
+```
+
+```mdl
+decision D-12: Each scene and each component is its own ECHO object, and a child scene is reached by Ref. Fills in [D-4].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4]
+  why: Undo, sharing and an animator shot each bind to one scene.
+```
+
+```mdl
+decision D-13: A child scene keeps its own units, scaled to 80% of its frame; a link binds only within its own scene. Fills in [D-7].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4]
+  why: The same rule canvas portals use, so a nested scene reads the same in 2D and 3D.
+```
+
+```mdl
+decision D-14: Style tokens are shared and a theme resolves them per renderer; glass in the presentation theme is a rim shell. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Style, F-3.1]
+  why: The tokens have the same meaning in both dimensions; only how they look differs.
+```
+
+```mdl
+decision D-15: A lifted 2D scene maps canvas (x, y) to (x/100, 0, −y/100), so its top-down view matches the canvas. Fills in [D-8].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.1]
+  why: Canvas y runs down the screen, which is −z seen from above at yaw 0.
+```

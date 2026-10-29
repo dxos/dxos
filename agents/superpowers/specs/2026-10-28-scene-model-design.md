@@ -1,6 +1,6 @@
 # Scene model: one ontology and DSL for 2D and 3D
 
-Status: approved by the user, 2026-10-28. Calls 12–24 are the agent's, accepted with the design.
+Status: approved by the user, 2026-10-28. Calls 12–24 are the agent's, accepted with the design. Stage 2 is built (plan: `agents/superpowers/plans/2026-10-28-scene-model-stage-2.md`, ledger: `packages/common/scene/TASKS.md`); its animator stages live in plugin-canvas, where the user chose to grow the stage 3 editor.
 
 ## Intent
 
