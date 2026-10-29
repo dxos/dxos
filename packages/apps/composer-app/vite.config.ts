@@ -39,6 +39,7 @@ import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
 import { fileSystemPlugin } from './src/vite/file-system.ts';
+import { bootPreload } from './src/vite/module-preload.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
@@ -426,6 +427,9 @@ export default defineConfig((env) => ({
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     target: [...browserTargets],
+    // The HTML preloads the boot graph; preloading each lazy chunk's dependencies at runtime is what
+    // kept the main thread busy before ready. The polyfill stays: Firefox below 115 has no modulepreload.
+    modulePreload: { resolveDependencies: bootPreload },
     rolldownOptions: {
       // Bundled dev otherwise forces Rolldown's lazy dev engine, which compiles a payload per
       // dynamic entry on request. Composer activates its plugin modules through ~270 concurrent
