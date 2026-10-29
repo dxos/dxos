@@ -106,7 +106,7 @@ type EdgeManifest
     compatibilityDate: Date
     compatibilityFlags: string[]
     bundled: PluginRef[]         # dependsOn plugins compiled into this release, each key@version
-    egress?: string[]            # hostnames the plugin fetches; see [F-8]
+    egress?: string[]            # hostnames the plugin fetches; see [F-11]
 ```
 
 ```mdl
